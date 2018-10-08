@@ -240,6 +240,23 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
         return request.promise;
     };
 
+	this.regenerateKSK = function(kskRequest, cdnKey) {
+		var request = $q.defer();
+
+		$http.post(ENV.api['root'] + cdnKey + "/dnsseckeys/ksk/generate", kskRequest)
+			.then(
+				function(result) {
+					request.resolve(result);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+					request.reject();
+				}
+			);
+
+		return request.promise;
+	};
+
 };
 
 CDNService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];

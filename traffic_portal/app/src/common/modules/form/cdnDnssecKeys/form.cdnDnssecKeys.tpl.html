@@ -25,6 +25,9 @@ under the License.
             <li class="active">DNSSEC Keys</li>
         </ol>
         <div class="pull-right">
+            <button class="btn btn-primary" title="Regenerate KSK" ng-click="confirmKSK()" ng-show="ksk_new">Regenerate KSK Keys</button>
+        </div>
+        <div class="pull-right">
             <button class="btn btn-primary" title="Generate DNSSEC Keys" ng-click="confirmGenerate()">{{generateLabel()}}</button>
         </div>
         <div class="clearfix"></div>
