@@ -45,20 +45,40 @@ def syncDSState() -> bool:
 		updateStatus = to_api.getUpdateStatus(configuration.HOSTNAME[0])[0]
 	except (IndexError, ConnectionError, requests.exceptions.RequestException) as e:
 		logging.critical("Server configuration not found in Traffic Ops!")
-		logging.debug("%s", e, exc_info=True, stack_info=True)
-		raise ORTException()
+		raise ORTException from e
 	except PermissionError as e:
 		logging.critical("Failed to authenticate with the Traffic Ops server!")
-		logging.debug("%s", e, exc_info=True, stack_info=True)
-		raise ORTException()
+		raise ORTException from e
 
-	logging.info("Retrieved raw update status: %r", updateStatus)
+	logging.debug("Retrieved raw update status: %r", updateStatus)
 
 	return 'upd_pending' in updateStatus and updateStatus['upd_pending']
 
 def revalidateState() -> bool:
-	"""pass"""
-	return True
+	"""
+	Checks the revalidation status of this server in Traffic Ops
+
+	:returns: whether or not this server has a revalidation pending
+	:raises ORTException:
+	"""
+	from . import to_api, configuration as conf
+	logging.info("starting revalidation state fetch")
+
+	try:
+		to_api.getRevalidationStatus(conf.HOSTNAME[0])[0]
+	except (IndexError, ConnectionError, requests.exceptions.RequestException) as e:
+		logging.critical("Server configuration not found in Traffic Ops!")
+		raise ORTException from e
+	except PermissionError as e:
+		logging.critical("Failed to authenticate with the Traffic Ops server!")
+		raise ORTException from e
+
+	logging.debug("Retrieved raw revalidation status: %r", updateStatus)
+	if "parent_reval_pending" in updateStatus and updateStatus["parent_reval_pending"]:
+		logging.info("Parent revalidation is pending - waiting for parent")
+		return False
+
+	return "reval_pending" in updateStatus and updateStatus["reval_pending"]
 
 def deleteOldStatusFiles(myStatus:str):
 	"""
@@ -170,6 +190,7 @@ def processPackages() -> bool:
 	:returns: whether or not the package processing was successfully completed
 	"""
 	from . import to_api
+	from .configuration import Modes, MODE
 
 	try:
 		myPackages = to_api.getMyPackages()
@@ -183,8 +204,10 @@ def processPackages() -> bool:
 		return False
 
 	for package in myPackages:
-		# TODO - install these packages
-		pass
+		if package.install():
+			if MODE is not Modes.BADASS:
+				return False
+			logging.warning("Failed to install %s, but we're BADASS, so moving on!", package)
 
 	return True
 
@@ -270,7 +293,12 @@ def run() -> int:
 
 	# If this is just a revalidation, then we can exit if there's no revalidation pending
 	if configuration.MODE == configuration.Modes.REVALIDATE:
-		updateRequired = revalidateState()
+		try:
+			updateRequired = revalidateState()
+		except ORTException as e:
+			logging.debug("%r", e, exc_info=True, stack_info=True)
+			return 2
+
 		if not updateRequired:
 			logging.info("No revalidation pending")
 			return 0
@@ -280,7 +308,11 @@ def run() -> int:
 	# In all other cases, we check for an update to the Delivery Service and apply any found
 	# changes
 	else:
-		updateRequired = syncDSState()
+		try:
+			updateRequired = syncDSState()
+		except ORTException as e:
+			logging.debug("%r", e, exc_info=True, stack_info=True)
+			return 2
 
 		# Bail on failures - unless this script is BADASS!
 		if not setStatusFile():
