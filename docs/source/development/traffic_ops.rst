@@ -27,6 +27,7 @@ To work on Traffic Ops you need a CentOS 7+ environment that has the following i
 
 - `Carton 1.0.12 <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_
 
+	- libpcap (plus development library - usually "libpcap-dev" or "libpcap-devel")
 	- cpan JSON
 	- cpan JSON\:\:PP
 
