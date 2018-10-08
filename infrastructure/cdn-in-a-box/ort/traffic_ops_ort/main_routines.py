@@ -65,7 +65,7 @@ def revalidateState() -> bool:
 	logging.info("starting revalidation state fetch")
 
 	try:
-		to_api.getRevalidationStatus(conf.HOSTNAME[0])[0]
+		to_api.getUpdateStatus(conf.HOSTNAME[0])[0]
 	except (IndexError, ConnectionError, requests.exceptions.RequestException) as e:
 		logging.critical("Server configuration not found in Traffic Ops!")
 		raise ORTException from e
