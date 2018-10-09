@@ -40,10 +40,10 @@ Traffic Portal Project Tree Overview
 
 Installing The Traffic Portal Developer Environment
 ===================================================
-
-	* Clone the `Traffic Control Repository <https://github.com/apache/trafficcontrol>`_
-	* Navigate to the ``traffic_portal`` subdirectory of your cloned repository.
-	* Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
-	* Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
-	- Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
-	* Navigate to https://localhost:8443 (default listening address/port)
+#. Clone the `Traffic Control Repository <https://github.com/apache/trafficcontrol>`_
+#. Navigate to the ``traffic_portal`` subdirectory of your cloned repository.
+#. Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
+#. Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
+#. Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
+#. Valid SSL certificates and keys are needed for Traffic Portal to run. Generate these (e.g. using `this SuperUser answer <https://superuser.com/questions/226192/avoid-password-prompt-for-keys-and-prompts-for-dn-information#answer-226229>`_) and edit the ``traffic_portal/conf/config.json`` file to reflect their names and locations
+#. Navigate to https://localhost:8443 (default listening address/port)
