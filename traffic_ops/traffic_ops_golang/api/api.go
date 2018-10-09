@@ -291,11 +291,11 @@ type APIInfo struct {
 //  }
 //
 func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (*APIInfo, error, error, int) {
-	db, err := getDB(r.Context())
+	db, err := GetDB(r.Context())
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting db: " + err.Error()), nil, http.StatusInternalServerError
 	}
-	cfg, err := getConfig(r.Context())
+	cfg, err := GetConfig(r.Context())
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
 	}
@@ -336,7 +336,8 @@ func (inf *APIInfo) Close() {
 	}
 }
 
-func getDB(ctx context.Context) (*sqlx.DB, error) {
+// GetDB returns the database from the context. This should very rarely be needed, rather `NewInfo` should always be used to get a transaction, except in extenuating circumstances.
+func GetDB(ctx context.Context) (*sqlx.DB, error) {
 	val := ctx.Value(DBContextKey)
 	if val != nil {
 		switch v := val.(type) {
@@ -349,7 +350,7 @@ func getDB(ctx context.Context) (*sqlx.DB, error) {
 	return nil, errors.New("No db found in Context")
 }
 
-func getConfig(ctx context.Context) (*config.Config, error) {
+func GetConfig(ctx context.Context) (*config.Config, error) {
 	val := ctx.Value(ConfigContextKey)
 	if val != nil {
 		switch v := val.(type) {
@@ -360,10 +361,6 @@ func getConfig(ctx context.Context) (*config.Config, error) {
 		}
 	}
 	return nil, errors.New("No config found in Context")
-}
-
-func GetConfig(ctx context.Context) (*config.Config, error) {
-	return getConfig(ctx)
 }
 
 func getReqID(ctx context.Context) (uint64, error) {
