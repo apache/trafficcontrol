@@ -45,23 +45,11 @@ func TestProfileParameters(t *testing.T) {
 func CreateTestProfileParameters(t *testing.T) {
 
 	firstProfile := testData.Profiles[0]
-	profileResp, _, err := TOSession.GetProfileByName(firstProfile.Name)
-	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v\n", firstProfile.Name, err)
-	}
-
 	firstParameter := testData.Parameters[0]
-	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v\n", firstParameter.Name, err)
-	}
-
-	profileID := profileResp[0].ID
-	parameterID := paramResp[0].ID
 
 	pp := tc.ProfileParameter{
-		ProfileID:   profileID,
-		ParameterID: parameterID,
+		Profile:   firstProfile.Name,
+		Parameter: firstParameter.Name,
 	}
 	resp, _, err := TOSession.CreateProfileParameter(pp)
 	log.Debugln("Response: ", resp)

@@ -17,6 +17,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -31,9 +32,62 @@ const (
 
 // Create a Delivery Service Request
 func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
-
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
+	if dsr.AssigneeID == 0 && dsr.Assignee != "" {
+		res, reqInf, err := to.GetUserByUsername(dsr.Assignee)
+		if err != nil {
+			return alerts, reqInf, err
+		}
+		if len(res) == 0 {
+			return alerts, reqInf, errors.New("no user with name " + dsr.Assignee)
+		}
+		dsr.AssigneeID = *res[0].ID
+	}
+
+	if dsr.AuthorID == 0 && dsr.Author != "" {
+		res, reqInf, err := to.GetUserByUsername(dsr.Author)
+		if err != nil {
+			return alerts, reqInf, err
+		}
+		if len(res) == 0 {
+			return alerts, reqInf, errors.New("no user with name " + dsr.Author)
+		}
+		dsr.AuthorID = tc.IDNoMod(*res[0].ID)
+	}
+
+	if dsr.DeliveryService.TypeID == 0 && dsr.DeliveryService.Type.String() != "" {
+		ty, reqInf, err := to.GetTypeByName(dsr.DeliveryService.Type.String())
+		if err != nil || len(ty) == 0 {
+			return alerts, reqInf, errors.New("no type named " + dsr.DeliveryService.Type.String())
+		}
+		dsr.DeliveryService.TypeID = ty[0].ID
+	}
+
+	if dsr.DeliveryService.CDNID == 0 && dsr.DeliveryService.CDNName != "" {
+		cdns, reqInf, err := to.GetCDNByName(dsr.DeliveryService.CDNName)
+		if err != nil || len(cdns) == 0 {
+			return alerts, reqInf, errors.New("no CDN named " + dsr.DeliveryService.CDNName)
+		}
+		dsr.DeliveryService.CDNID = cdns[0].ID
+	}
+
+	if dsr.DeliveryService.ProfileID == 0 && dsr.DeliveryService.ProfileName != "" {
+		profiles, reqInf, err := to.GetProfileByName(dsr.DeliveryService.ProfileName)
+		if err != nil || len(profiles) == 0 {
+			return alerts, reqInf, errors.New("no Profile named " + dsr.DeliveryService.ProfileName)
+		}
+		dsr.DeliveryService.ProfileID = profiles[0].ID
+	}
+
+	if dsr.DeliveryService.TenantID == 0 && dsr.DeliveryService.Tenant != "" {
+		ten, reqInf, err := to.TenantByName(dsr.DeliveryService.Tenant)
+		if err != nil || ten == nil {
+			return alerts, reqInf, errors.New("no Tenant named " + dsr.DeliveryService.Tenant)
+		}
+		dsr.DeliveryService.TenantID = ten.ID
+	}
+
 	reqBody, err := json.Marshal(dsr)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

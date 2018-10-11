@@ -55,49 +55,9 @@ func TestOrigins(t *testing.T) {
 func CreateTestOrigins(t *testing.T) {
 	failed := false
 
-	// GET ORIGIN1 profile
-	respProfiles, _, err := TOSession.GetProfileByName("ORIGIN1")
-	if err != nil {
-		t.Errorf("cannot GET Profiles - %v\n", err)
-		failed = true
-	}
-	respProfile := respProfiles[0]
-
-	// GET originCachegroup cachegroup
-	respCacheGroups, _, err := TOSession.GetCacheGroupNullableByName("originCachegroup")
-	if err != nil {
-		t.Errorf("cannot GET CacheGroup by name: originCachegroup - %v\n", err)
-		failed = true
-	}
-	respCacheGroup := respCacheGroups[0]
-
-	// GET deliveryservices
-	respDeliveryServices, _, err := TOSession.GetDeliveryServices()
-	if err != nil {
-		t.Errorf("cannot GET Delivery Services - %v\n", err)
-		failed = true
-	}
-	if len(respDeliveryServices) == 0 {
-		t.Errorf("no delivery services found")
-		failed = true
-	}
-
-	// GET coordinate1 coordinate
-	respCoordinates, _, err := TOSession.GetCoordinateByName("coordinate1")
-	if err != nil {
-		t.Errorf("cannot GET Coordinate by name: coordinate1 - %v\n", err)
-		failed = true
-	}
-	respCoordinate := respCoordinates[0]
-
 	// loop through origins, assign FKs and create
 	for _, origin := range testData.Origins {
-		origin.CachegroupID = respCacheGroup.ID
-		origin.CoordinateID = &respCoordinate.ID
-		origin.ProfileID = &respProfile.ID
-		origin.DeliveryServiceID = &respDeliveryServices[0].ID
-
-		_, _, err = TOSession.CreateOrigin(origin)
+		_, _, err := TOSession.CreateOrigin(origin)
 		if err != nil {
 			t.Errorf("could not CREATE origins: %v\n", err)
 			failed = true

@@ -35,11 +35,73 @@ const (
 func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(server)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+
+	if server.CachegroupID == 0 && server.Cachegroup != "" {
+		cg, _, err := to.GetCacheGroupByName(server.Cachegroup)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + server.Cachegroup + ":" + err.Error())
+		}
+		if len(cg) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + server.Cachegroup)
+		}
+		server.CachegroupID = cg[0].ID
+	}
+	if server.CDNID == 0 && server.CDNName != "" {
+		c, _, err := to.GetCDNByName(server.CDNName)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, errors.New("no CDN named " + server.CDNName + ":" + err.Error())
+		}
+		if len(c) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no CDN named " + server.CDNName)
+		}
+		server.CDNID = c[0].ID
+	}
+	if server.PhysLocationID == 0 && server.PhysLocation != "" {
+		ph, _, err := to.GetPhysLocationByName(server.PhysLocation)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, errors.New("no physlocation named " + server.PhysLocation + ":" + err.Error())
+		}
+		if len(ph) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no physlocation named " + server.PhysLocation)
+		}
+		server.PhysLocationID = ph[0].ID
+	}
+	if server.ProfileID == 0 && server.Profile != "" {
+		pr, _, err := to.GetProfileByName(server.Profile)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, errors.New("no profile named " + server.Profile + ":" + err.Error())
+		}
+		if len(pr) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no profile named " + server.Profile)
+		}
+		server.ProfileID = pr[0].ID
+	}
+	if server.StatusID == 0 && server.Status != "" {
+		st, _, err := to.GetStatusByName(server.Status)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, errors.New("no status named " + server.Status + ":" + err.Error())
+		}
+		if len(st) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no status named " + server.Status)
+		}
+		server.StatusID = st[0].ID
+	}
+	if server.TypeID == 0 && server.Type != "" {
+		ty, _, err := to.GetTypeByName(server.Type)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, errors.New("no type named " + server.Type + ":" + err.Error())
+		}
+		if len(ty) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no type named " + server.Type)
+		}
+		server.TypeID = ty[0].ID
+	}
+	reqBody, err := json.Marshal(server)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
+
 	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Servers, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

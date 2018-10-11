@@ -35,11 +35,12 @@ func TestDeliveryServiceRequests(t *testing.T) {
 
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
+	CreateTestTenants(t)
 	CreateTestDeliveryServiceRequests(t)
 	GetTestDeliveryServiceRequests(t)
 	UpdateTestDeliveryServiceRequests(t)
 	DeleteTestDeliveryServiceRequests(t)
-
+	DeleteTestTenants(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 
@@ -48,25 +49,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 func CreateTestDeliveryServiceRequests(t *testing.T) {
 	log.Debugln("CreateTestDeliveryServiceRequests")
 
-	// Attach CDNs
-	cdn := testData.CDNs[0]
-	resp, _, err := TOSession.GetCDNByName(cdn.Name)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: %v - %v\n", cdn.Name, err)
-	}
-	respCDN := resp[0]
-
-	// Attach Type
-	typ := testData.DeliveryServiceRequests[dsrGood].DeliveryService.Type.String()
-	respTypes, _, err := TOSession.GetTypeByName(typ)
-	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v\n", typ, err)
-	}
-	respTyp := respTypes[0]
-
 	dsr := testData.DeliveryServiceRequests[dsrGood]
-	dsr.DeliveryService.CDNID = respCDN.ID
-	dsr.DeliveryService.TypeID = respTyp.ID
 	respDSR, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	log.Debugln("Response: ", respDSR)
 	if err != nil {
@@ -105,24 +88,6 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 	dsr.DeliveryService.RoutingName = routingName
 	dsr.DeliveryService.XMLID = XMLID
 
-	// Attach Types
-	typ := testData.Types[3]
-	rt, _, err := TOSession.GetTypeByName(typ.Name)
-	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v\n", typ.Name, err)
-	}
-	respType := rt[0]
-
-	// Attach CDNs
-	cdn := testData.CDNs[3]
-	resp, _, err := TOSession.GetCDNByName(cdn.Name)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: %v - %v\n", cdn.Name, err)
-	}
-	respCDN := resp[0]
-	dsr.DeliveryService.TypeID = respType.ID
-	dsr.DeliveryService.CDNID = respCDN.ID
-
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
 		t.Errorf("Error occurred %v", err)
@@ -141,24 +106,6 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	CreateTestParameters(t)
 
 	dsr := testData.DeliveryServiceRequests[dsrBadTenant]
-
-	// Attach Types
-	typ := testData.Types[3]
-	rt, _, err := TOSession.GetTypeByName(typ.Name)
-	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v\n", typ.Name, err)
-	}
-	respType := rt[0]
-
-	// Attach CDNs
-	cdn := testData.CDNs[3]
-	resp, _, err := TOSession.GetCDNByName(cdn.Name)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: %v - %v\n", cdn.Name, err)
-	}
-	respCDN := resp[0]
-	dsr.DeliveryService.TypeID = respType.ID
-	dsr.DeliveryService.CDNID = respCDN.ID
 
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
@@ -198,24 +145,6 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 	}
 	src.Status = s
 
-	// Attach Types
-	typ := testData.Types[3]
-	rt, _, err := TOSession.GetTypeByName(typ.Name)
-	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v\n", typ.Name, err)
-	}
-	respType := rt[0]
-
-	// Attach CDNs
-	cdn := testData.CDNs[3]
-	resp, _, err := TOSession.GetCDNByName(cdn.Name)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: %v - %v\n", cdn.Name, err)
-	}
-	respCDN := resp[0]
-	src.DeliveryService.TypeID = respType.ID
-	src.DeliveryService.CDNID = respCDN.ID
-
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
 	if err != nil {
 		t.Errorf("Error creating DeliveryServiceRequest %v", err)
@@ -247,24 +176,6 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 	// Create a draft request
 	src := testData.DeliveryServiceRequests[dsrDraft]
-
-	// Attach Types
-	typ := testData.Types[3]
-	rt, _, err := TOSession.GetTypeByName(typ.Name)
-	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v\n", typ.Name, err)
-	}
-	respType := rt[0]
-
-	// Attach CDNs
-	cdn := testData.CDNs[3]
-	resp, _, err := TOSession.GetCDNByName(cdn.Name)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: %v - %v\n", cdn.Name, err)
-	}
-	respCDN := resp[0]
-	src.DeliveryService.TypeID = respType.ID
-	src.DeliveryService.CDNID = respCDN.ID
 
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
 	if err != nil {

@@ -42,7 +42,7 @@ type TrafficOps struct {
 	// UserPassword - The Traffic Ops test user password hitting the API
 	UserPassword string `json:"password" envconfig:"TO_USER_PASSWORD"`
 
-	// UserPassword - The Traffic Ops Users
+	// User - The Traffic Ops Users
 	Users Users `json:"users"`
 
 	// Insecure - ignores insecure ssls certs that were self-generated

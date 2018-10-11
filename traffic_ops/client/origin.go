@@ -17,6 +17,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -30,6 +31,57 @@ const (
 
 // Create an Origin
 func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, ReqInf, error) {
+	if origin.CachegroupID == nil && origin.Cachegroup != nil {
+		p, _, err := to.GetCacheGroupByName(*origin.Cachegroup)
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		if len(p) == 0 {
+			return nil, ReqInf{}, errors.New("no cachegroup named " + *origin.Cachegroup)
+		}
+		origin.CachegroupID = &p[0].ID
+	}
+
+	if origin.DeliveryServiceID == nil && origin.DeliveryService != nil {
+		dses, _, err := to.GetDeliveryServiceByXMLID(*origin.DeliveryService)
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		if len(dses) == 0 {
+			return nil, ReqInf{}, errors.New("no deliveryservice with name " + *origin.DeliveryService)
+		}
+		origin.DeliveryServiceID = &dses[0].ID
+	}
+
+	if origin.ProfileID == nil && origin.Profile != nil {
+		profiles, _, err := to.GetProfileByName(*origin.Profile)
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		if len(profiles) == 0 {
+			return nil, ReqInf{}, errors.New("no profile with name " + *origin.Profile)
+		}
+		origin.ProfileID = &profiles[0].ID
+	}
+
+	if origin.CoordinateID == nil && origin.Coordinate != nil {
+		coordinates, _, err := to.GetCoordinateByName(*origin.Coordinate)
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		if len(coordinates) == 0 {
+			return nil, ReqInf{}, errors.New("no coordinate with name " + *origin.Coordinate)
+		}
+		origin.CoordinateID = &coordinates[0].ID
+	}
+
+	if origin.TenantID == nil && origin.Tenant != nil {
+		tenant, _, err := to.TenantByName(*origin.Tenant)
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		origin.TenantID = &tenant.ID
+	}
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(origin)

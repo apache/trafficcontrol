@@ -65,6 +65,17 @@ func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
 
 // CreateTenant creates the Tenant it's passed
 func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
+	if t.ParentID == 0 && t.ParentName != "" {
+		tenant, _, err := to.TenantByName(t.ParentName)
+		if err != nil {
+			return nil, err
+		}
+		if tenant == nil {
+			return nil, errors.New("no tenant with name " + t.ParentName)
+		}
+		t.ParentID = tenant.ID
+	}
+
 	var data tc.TenantResponse
 	jsonReq, err := json.Marshal(t)
 	if err != nil {

@@ -62,44 +62,6 @@ func CreateTestDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot create parameter: %v\n", err)
 	}
 	for _, ds := range testData.DeliveryServices {
-		respCDNs, _, err := TOSession.GetCDNByName(ds.CDNName)
-		if err != nil {
-			t.Fatalf("cannot GET CDN - %v\n", err)
-		}
-		if len(respCDNs) < 1 {
-			t.Fatalf("cannot GET CDN - no CDNs\n")
-		}
-		ds.CDNID = respCDNs[0].ID
-
-		respTypes, _, err := TOSession.GetTypeByName(string(ds.Type))
-		if err != nil {
-			t.Fatalf("cannot GET Type by name: %v\n", err)
-		}
-		if len(respTypes) < 1 {
-			t.Fatalf("cannot GET Type - no Types\n")
-		}
-		ds.TypeID = respTypes[0].ID
-
-		if ds.ProfileName != "" {
-			respProfiles, _, err := TOSession.GetProfileByName(ds.ProfileName)
-			if err != nil {
-				t.Fatalf("cannot GET Profile by name: %v\n", err)
-			}
-			if len(respProfiles) < 1 {
-				t.Fatalf("cannot GET Profile - no Profiles\n")
-			}
-			ds.ProfileID = respProfiles[0].ID
-		}
-
-		respTenants, _, err := TOSession.Tenants()
-		if err != nil {
-			t.Fatalf("cannot GET tenants: %v\n", err)
-		}
-		if len(respTenants) < 1 {
-			t.Fatalf("cannot GET tenants: no tenants returned from Traffic Ops\n")
-		}
-		ds.TenantID = respTenants[0].ID
-
 		_, err = TOSession.CreateDeliveryService(&ds)
 		if err != nil {
 			t.Fatalf("could not CREATE delivery service '%s': %v\n", ds.XMLID, err)
