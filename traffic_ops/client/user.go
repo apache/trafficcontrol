@@ -17,6 +17,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -77,6 +78,34 @@ func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
 
 // CreateUser creates a user
 func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, error) {
+	if user.TenantID == nil && user.Tenant != nil {
+		tenant, _, err := to.TenantByName(*user.Tenant)
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		if tenant == nil {
+			return nil, ReqInf{}, errors.New("no tenant with name " + *user.Tenant)
+		}
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		user.TenantID = &tenant.ID
+	}
+
+	if user.RoleName != nil && *user.RoleName != "" {
+		roles, _, _, err := to.GetRoleByName(*user.RoleName)
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		if len(roles) == 0 || roles[0].ID == nil {
+			return nil, ReqInf{}, errors.New("no role with name " + *user.RoleName)
+		}
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		user.Role = roles[0].ID
+	}
+
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(user)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}

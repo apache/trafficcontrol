@@ -17,6 +17,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -32,7 +33,16 @@ const (
 
 // Create a Profile
 func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
-
+	if pl.CDNID == 0 && pl.CDNName != "" {
+		cdns, _, err := to.GetCDNByName(pl.CDNName)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, err
+		}
+		if len(cdns) == 0 {
+			return tc.Alerts{[]tc.Alert{tc.Alert{"no CDN with name " + pl.CDNName, "error"}}}, ReqInf{}, errors.New("no CDN with name " + pl.CDNName)
+		}
+		pl.CDNID = cdns[0].ID
+	}
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(pl)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}

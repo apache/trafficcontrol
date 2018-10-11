@@ -17,6 +17,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -112,6 +113,47 @@ func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNul
 
 // CreateDeliveryService creates the DeliveryService it's passed
 func (to *Session) CreateDeliveryService(ds *tc.DeliveryService) (*tc.CreateDeliveryServiceResponse, error) {
+	if ds.TypeID == 0 && ds.Type.String() != "" {
+		ty, _, err := to.GetTypeByName(ds.Type.String())
+		if err != nil {
+			return nil, err
+		}
+		if len(ty) == 0 {
+			return nil, errors.New("no type named " + ds.Type.String())
+		}
+		ds.TypeID = ty[0].ID
+	}
+
+	if ds.CDNID == 0 && ds.CDNName != "" {
+		cdns, _, err := to.GetCDNByName(ds.CDNName)
+		if err != nil {
+			return nil, err
+		}
+		if len(cdns) == 0 {
+			return nil, errors.New("no CDN named " + ds.CDNName)
+		}
+		ds.CDNID = cdns[0].ID
+	}
+
+	if ds.ProfileID == 0 && ds.ProfileName != "" {
+		profiles, _, err := to.GetProfileByName(ds.ProfileName)
+		if err != nil {
+			return nil, err
+		}
+		if len(profiles) == 0 {
+			return nil, errors.New("no Profile named " + ds.ProfileName)
+		}
+		ds.ProfileID = profiles[0].ID
+	}
+
+	if ds.TenantID == 0 && ds.Tenant != "" {
+		ten, _, err := to.TenantByName(ds.Tenant)
+		if err != nil {
+			return nil, err
+		}
+		ds.TenantID = ten.ID
+	}
+
 	var data tc.CreateDeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
@@ -125,8 +167,49 @@ func (to *Session) CreateDeliveryService(ds *tc.DeliveryService) (*tc.CreateDeli
 	return &data, nil
 }
 
-// CreateDeliveryService creates the DeliveryService it's passed
+// CreateDeliveryServiceNullable creates the DeliveryService it's passed
 func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable) (*tc.CreateDeliveryServiceNullableResponse, error) {
+	if ds.TypeID == nil && ds.Type != nil {
+		ty, _, err := to.GetTypeByName(ds.Type.String())
+		if err != nil {
+			return nil, err
+		}
+		if len(ty) == 0 {
+			return nil, errors.New("no type named " + ds.Type.String())
+		}
+		ds.TypeID = &ty[0].ID
+	}
+
+	if ds.CDNID == nil && ds.CDNName != nil {
+		cdns, _, err := to.GetCDNByName(*ds.CDNName)
+		if err != nil {
+			return nil, err
+		}
+		if len(cdns) == 0 {
+			return nil, errors.New("no CDN named " + *ds.CDNName)
+		}
+		ds.CDNID = &cdns[0].ID
+	}
+
+	if ds.ProfileID == nil && ds.ProfileName != nil {
+		profiles, _, err := to.GetProfileByName(*ds.ProfileName)
+		if err != nil {
+			return nil, err
+		}
+		if len(profiles) == 0 {
+			return nil, errors.New("no Profile named " + *ds.ProfileName)
+		}
+		ds.ProfileID = &profiles[0].ID
+	}
+
+	if ds.TenantID == nil && ds.Tenant != nil {
+		ten, _, err := to.TenantByName(*ds.Tenant)
+		if err != nil {
+			return nil, err
+		}
+		ds.TenantID = &ten.ID
+	}
+
 	var data tc.CreateDeliveryServiceNullableResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {

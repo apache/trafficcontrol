@@ -54,33 +54,7 @@ func TestStaticDNSEntries(t *testing.T) {
 }
 
 func CreateTestStaticDNSEntries(t *testing.T) {
-
 	for _, staticDNSEntry := range testData.StaticDNSEntries {
-
-		// GET StaticDNSEntry type
-		respTypes, _, err := TOSession.GetTypeByName(staticDNSEntry.Type)
-		if err != nil {
-			t.Errorf("cannot GET Type by name: %v\n", err)
-		}
-		respType := respTypes[0]
-		staticDNSEntry.TypeID = respType.ID
-
-		// GET DeliveryService to associate
-		respDSes, _, err := TOSession.GetDeliveryServiceByXMLID(staticDNSEntry.DeliveryService)
-		if err != nil {
-			t.Errorf("cannot GET DeliveryService by XMLID: %v\n", err)
-		}
-		respDS := respDSes[0]
-		staticDNSEntry.DeliveryServiceID = respDS.ID
-
-		// GET Cachegroup to associate
-		respGroups, _, err := TOSession.GetCacheGroupNullableByName(staticDNSEntry.CacheGroupName)
-		if err != nil {
-			t.Errorf("cannot GET CacheGroup by Name: %v\n", err)
-		}
-		respGroup := respGroups[0]
-		staticDNSEntry.CacheGroupID = *respGroup.ID
-
 		resp, _, err := TOSession.CreateStaticDNSEntry(staticDNSEntry)
 		log.Debugln("Response: ", resp)
 		if err != nil {
@@ -123,7 +97,7 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 
 func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 
-	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv4 address","error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name","error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv6 address","error"}}}}
+	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv4 address", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv6 address", "error"}}}}
 
 	// A_RECORD
 	firstStaticDNSEntry := testData.StaticDNSEntries[0]

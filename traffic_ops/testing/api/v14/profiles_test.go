@@ -68,10 +68,6 @@ func CreateBadProfiles(t *testing.T) {
 func CreateTestProfiles(t *testing.T) {
 
 	for _, pr := range testData.Profiles {
-		cdns, _, err := TOSession.GetCDNByName(pr.CDNName)
-		respCDN := cdns[0]
-		pr.CDNID = respCDN.ID
-
 		resp, _, err := TOSession.CreateProfile(pr)
 
 		log.Debugln("Response: ", resp)

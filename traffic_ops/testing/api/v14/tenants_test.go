@@ -19,6 +19,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestTenants(t *testing.T) {
@@ -30,15 +32,6 @@ func TestTenants(t *testing.T) {
 
 func CreateTestTenants(t *testing.T) {
 	for _, ten := range testData.Tenants {
-		// testData does not define ParentID -- look up by name and fill in
-		if ten.ParentID == 0 {
-			parent, _, err := TOSession.TenantByName(ten.ParentName)
-			if err != nil || parent == nil {
-				t.Errorf("parent tenant %s: %++v", ten.ParentName, err)
-				continue
-			}
-			ten.ParentID = parent.ID
-		}
 		resp, err := TOSession.CreateTenant(&ten)
 		t.Logf("response: %++v", resp)
 
@@ -54,6 +47,10 @@ func GetTestTenants(t *testing.T) {
 		t.Errorf("cannot GET all tenants: %v - %v\n", err, resp)
 		return
 	}
+	foundTenants := make(map[string]tc.Tenant, len(resp))
+	for _, ten := range resp {
+		foundTenants[ten.Name] = ten
+	}
 
 	t.Logf("resp: %++v\n", resp)
 	// expect root and badTenant (defined in todb.go) + all defined in testData.Tenants
@@ -62,14 +59,12 @@ func GetTestTenants(t *testing.T) {
 	}
 
 	for _, ten := range testData.Tenants {
-		resp, _, err := TOSession.TenantByName(ten.Name)
-		if err != nil {
-			t.Errorf("cannot GET Tenant by name: %v - %v\n", err, resp)
-			continue
-		}
-		if resp.Name != ten.Name {
-			t.Errorf("expected tenant %s,  got %s", ten.Name, resp.Name)
-			continue
+		if ft, ok := foundTenants[ten.Name]; ok {
+			if ft.ParentName != ten.ParentName {
+				t.Errorf("tenant %s: expected parent %s,  got %s", ten.Name, ten.ParentName, ft.ParentName)
+			}
+		} else {
+			t.Errorf("expected tenant %s: not found", ten.Name)
 		}
 	}
 }
@@ -123,7 +118,7 @@ func DeleteTestTenants(t *testing.T) {
 	if err == nil {
 		t.Errorf("%s has child tenants -- should not be able to delete", t1)
 	}
-	expected := `Tenant '`+ strconv.Itoa(tenant1.ID) + `' has child tenants. Please update these child tenants and retry.`
+	expected := `Tenant '` + strconv.Itoa(tenant1.ID) + `' has child tenants. Please update these child tenants and retry.`
 	if !strings.Contains(err.Error(), expected) {
 		t.Errorf("expected error: %s;  got %s", expected, err.Error())
 	}

@@ -17,6 +17,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -30,14 +31,45 @@ const (
 
 // Create a CacheGroup
 func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
+	if cachegroup.TypeID == nil && cachegroup.Type != nil {
+		ty, _, err := to.GetTypeByName(*cachegroup.Type)
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		if len(ty) == 0 {
+			return nil, ReqInf{}, errors.New("no type named " + *cachegroup.Type)
+		}
+		cachegroup.TypeID = &ty[0].ID
+	}
 
-	var remoteAddr net.Addr
+	if cachegroup.ParentCachegroupID == nil && cachegroup.ParentName != nil {
+		p, _, err := to.GetCacheGroupByName(*cachegroup.ParentName)
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		if len(p) == 0 {
+			return nil, ReqInf{}, errors.New("no cachegroup named " + *cachegroup.ParentName)
+		}
+		cachegroup.ParentCachegroupID = &p[0].ID
+	}
+
+	if cachegroup.SecondaryParentCachegroupID == nil && cachegroup.SecondaryParentName != nil {
+		p, _, err := to.GetCacheGroupByName(*cachegroup.SecondaryParentName)
+		if err != nil {
+			return nil, ReqInf{}, err
+		}
+		if len(p) == 0 {
+			return nil, ReqInf{}, errors.New("no cachegroup named " + *cachegroup.ParentName)
+		}
+		cachegroup.SecondaryParentCachegroupID = &p[0].ID
+	}
+
 	reqBody, err := json.Marshal(cachegroup)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, reqInf, err
+		return nil, ReqInf{}, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_CacheGroups, reqBody)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -52,14 +84,45 @@ func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*
 // Create a CacheGroup
 // Deprecated: Use CreateCacheGroupNullable
 func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroup) (tc.Alerts, ReqInf, error) {
+	if cachegroup.TypeID == 0 && cachegroup.Type != "" {
+		ty, _, err := to.GetTypeByName(cachegroup.Type)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, err
+		}
+		if len(ty) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no type named " + cachegroup.Type)
+		}
+		cachegroup.TypeID = ty[0].ID
+	}
 
-	var remoteAddr net.Addr
+	if cachegroup.ParentCachegroupID == 0 && cachegroup.ParentName != "" {
+		p, _, err := to.GetCacheGroupByName(cachegroup.ParentName)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, err
+		}
+		if len(p) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + cachegroup.ParentName)
+		}
+		cachegroup.ParentCachegroupID = p[0].ID
+	}
+
+	if cachegroup.SecondaryParentCachegroupID == 0 && cachegroup.SecondaryParentName != "" {
+		p, _, err := to.GetCacheGroupByName(cachegroup.SecondaryParentName)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, err
+		}
+		if len(p) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no cachegroup named " + cachegroup.ParentName)
+		}
+		cachegroup.SecondaryParentCachegroupID = p[0].ID
+	}
+
 	reqBody, err := json.Marshal(cachegroup)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return tc.Alerts{}, ReqInf{}, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_CacheGroups, reqBody)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}

@@ -17,6 +17,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -30,6 +31,16 @@ const (
 
 // Create a Region
 func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
+	if region.Division == 0 && region.DivisionName != "" {
+		divisions, _, err := to.GetDivisionByName(region.DivisionName)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, err
+		}
+		if len(divisions) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no division with name " + region.DivisionName)
+		}
+		region.Division = divisions[0].ID
+	}
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(region)

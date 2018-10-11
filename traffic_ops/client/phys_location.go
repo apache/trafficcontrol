@@ -17,6 +17,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -30,7 +31,16 @@ const (
 
 // Create a PhysLocation
 func (to *Session) CreatePhysLocation(pl tc.PhysLocation) (tc.Alerts, ReqInf, error) {
-
+	if pl.RegionID == 0 && pl.RegionName != "" {
+		regions, _, err := to.GetRegionByName(pl.RegionName)
+		if err != nil {
+			return tc.Alerts{}, ReqInf{}, err
+		}
+		if len(regions) == 0 {
+			return tc.Alerts{}, ReqInf{}, errors.New("no region with name " + pl.RegionName)
+		}
+		pl.RegionID = regions[0].ID
+	}
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(pl)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}

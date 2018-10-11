@@ -39,37 +39,7 @@ func CreateTestCacheGroups(t *testing.T) {
 	failed := false
 
 	for _, cg := range testData.CacheGroups {
-		// get the typeID
-		typeResp, _, err := TOSession.GetTypeByName(*cg.Type)
-		if err != nil {
-			t.Error("could not lookup a typeID for this cachegroup")
-			failed = true
-		}
-		cg.TypeID = &typeResp[0].ID
-
-		if cg.ParentName != nil && *cg.ParentName != "" {
-			// get parent cachegroup ID (must already be created)
-			resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.ParentName)
-			if err != nil {
-				t.Errorf("cannot GET CacheGroup by name: %v - %v\n", err, resp)
-				failed = true
-			}
-			cg.ParentCachegroupID = resp[0].ID
-			cg.ParentName = nil // to guarantee that parent IDs aren't looked up by name
-		}
-
-		if cg.SecondaryParentName != nil && *cg.SecondaryParentName != "" {
-			// get secondary parent cachegroup ID (must already be created)
-			resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.SecondaryParentName)
-			if err != nil {
-				t.Errorf("cannot GET CacheGroup by name: %v - %v\n", err, resp)
-				failed = true
-			}
-			cg.SecondaryParentCachegroupID = resp[0].ID
-			cg.SecondaryParentName = nil // to guarantee that parent IDs aren't looked up by name
-		}
-
-		_, _, err = TOSession.CreateCacheGroupNullable(cg)
+		_, _, err := TOSession.CreateCacheGroupNullable(cg)
 		if err != nil {
 			t.Errorf("could not CREATE cachegroups: %v, request: %v\n", err, cg)
 			failed = true

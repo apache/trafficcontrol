@@ -96,6 +96,7 @@
             "changeType": "create",
             "deliveryService": {
                 "active": true,
+                "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",
                 "displayName": "Good Kabletown CDN",
@@ -107,7 +108,7 @@
                 "longDesc": "long desc",
                 "regionalGeoBlocking": true,
                 "routingName": "goodroute",
-                "tenantId": 2,
+                "tenant": "tenant1",
                 "type": "HTTP",
                 "xmlId": "test-ds1"
             },
@@ -117,6 +118,7 @@
             "changeType": "create",
             "deliveryService": {
                 "active": true,
+                "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",
                 "displayName": "Bad Tenant",
@@ -127,9 +129,9 @@
                 "logsEnabled": false,
                 "longDesc": "long desc",
                 "regionalGeoBlocking": false,
-                "tenantId": 1,
+                "tenant": "root",
                 "type": "HTTP",
-                "xmlId": "test-ds1"
+                "xmlId": "test-ds2"
             },
             "status": "draft"
         },
@@ -149,9 +151,9 @@
                 "orgServerFqdn": "xxx",
                 "regionalGeoBlocking": true,
                 "routingName": "x routing",
-                "tenantId": 2,
+                "tenant": "tenant1",
                 "type": "HTTP",
-                "xmlId": "test ds1"
+                "xmlId": "test-ds3"
             },
             "status": "draft"
         },
@@ -159,6 +161,7 @@
             "changeType": "update",
             "deliveryService": {
                 "active": false,
+                "cdnName": "cdn1",
                 "ccrDnsTtl": 30,
                 "deepCachingType": "NEVER",
                 "displayName": "Testing transitions",
@@ -170,7 +173,7 @@
                 "longDesc": "long desc",
                 "regionalGeoBlocking": true,
                 "routingName": "goodroute",
-                "tenantId": 2,
+                "tenant": "tenant1",
                 "type": "HTTP",
                 "xmlId": "test-transitions"
             },
@@ -180,6 +183,7 @@
     "deliveryServices": [
         {
             "active": true,
+            "cdnName": "cdn1",
             "cacheurl": "cacheUrl1",
             "ccrDnsTtl": 3600,
             "cdnName": "cdn1",
@@ -227,7 +231,6 @@
             "orgServerFqdn": "http://origin.example.net",
             "originShield": null,
             "profileDescription": null,
-            "profileId": null,
             "profileName": null,
             "protocol": 2,
             "qstringIgnore": 1,
@@ -247,6 +250,7 @@
         },
         {
             "active": true,
+            "cdnName": "cdn1",
             "cacheurl": "cacheUrl2",
             "ccrDnsTtl": 3600,
             "cdnName": "cdn1",
@@ -352,7 +356,7 @@
             "ip6Address": "dead:beef:cafe::42",
             "port": 1234,
             "protocol": "http",
-            "tenantId": 2
+            "tenant": "tenant1"
         },
         {
             "name": "origin2",
@@ -361,7 +365,7 @@
             "ip6Address": "cafe::42",
             "port": 5678,
             "protocol": "https",
-            "tenantId": 2
+            "tenant": "tenant1"
         }
     ],
     "parameters": [
@@ -523,7 +527,7 @@
             "name": "Denver",
             "phone": "303-111-1111",
             "poc": null,
-            "regionId": 100,
+            "region": "region1",
             "shortName": "denver",
             "state": "CO",
             "zip": "80202"
@@ -537,7 +541,7 @@
             "name": "Boulder",
             "phone": "303-222-2222",
             "poc": null,
-            "regionId": 100,
+            "region": "region1",
             "shortName": "boulder",
             "state": "CO",
             "zip": "80301"
@@ -551,7 +555,7 @@
             "name": "HotAtlanta",
             "phone": "404-222-2222",
             "poc": null,
-            "regionId": 100,
+            "region": "region1",
             "shortName": "atlanta",
             "state": "GA",
             "zip": "30301"
@@ -657,6 +661,8 @@
     ],
     "servers": [
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-edge-01",
@@ -678,10 +684,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
             "updPending": true,
@@ -689,6 +698,8 @@
             "xmppPasswd": "X"
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "kabletown.net",
             "guid": null,
             "hostName": "influxdb02",
@@ -710,10 +721,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 8086,
             "type": "EDGE",
             "updPending": true,
@@ -721,6 +735,8 @@
             "xmppPasswd": ""
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-router-01",
@@ -742,10 +758,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
             "updPending": true,
@@ -753,6 +772,8 @@
             "xmppPasswd": "X"
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-edge-03",
@@ -774,10 +795,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
             "updPending": true,
@@ -785,6 +809,8 @@
             "xmppPasswd": "X"
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-edge-14",
@@ -806,10 +832,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
             "updPending": true,
@@ -817,6 +846,8 @@
             "xmppPasswd": "X"
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-edge-15",
@@ -838,10 +869,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
             "updPending": true,
@@ -849,6 +883,8 @@
             "xmppPasswd": "X"
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-mid-16",
@@ -870,10 +906,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 80,
             "type": "MID",
             "updPending": true,
@@ -881,6 +920,8 @@
             "xmppPasswd": "X"
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-org-1",
@@ -902,10 +943,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
             "updPending": true,
@@ -913,6 +957,8 @@
             "xmppPasswd": "X"
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-org-2",
@@ -934,10 +980,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
             "updPending": true,
@@ -945,6 +994,8 @@
             "xmppPasswd": "X"
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-mid-01",
@@ -966,10 +1017,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 80,
             "type": "MID",
             "updPending": true,
@@ -977,6 +1031,8 @@
             "xmppPasswd": "X"
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "kabletown.net",
             "guid": null,
             "hostName": "rascal01",
@@ -998,10 +1054,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 81,
             "type": "TRAFFIC_MONITOR",
             "updPending": true,
@@ -1009,6 +1068,8 @@
             "xmppPasswd": "X"
         },
         {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn1",
             "domainName": "local",
             "guid": null,
             "hostName": "riak",
@@ -1030,10 +1091,13 @@
             "mgmtIpGateway": "",
             "mgmtIpNetmask": "",
             "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGE1",
             "rack": "RR 119.02",
             "revalPending": false,
             "routerHostName": "",
             "routerPortName": "",
+            "status": "REPORTED",
             "tcpPort": 8088,
             "type": "RIAK",
             "updPending": true,
@@ -1102,7 +1166,7 @@
         {
             "active": false,
             "name": "tenant2",
-            "parentName": "root"
+            "parentName": "tenant1"
         }
     ],
     "types": [
@@ -1317,7 +1381,7 @@
             "publicSshKey": "",
             "role": 4,
             "stateOrProvince": "LA",
-            "tenantId": 1,
+            "tenant": "root",
             "uid": 0,
             "username": "adminuser"
         },
@@ -1339,7 +1403,7 @@
             "registrationSent": "",
             "role": 1,
             "stateOrProvince": "",
-            "tenantId": 2,
+            "tenant": "tenant1",
             "uid": 0,
             "username": "disalloweduser"
         }
