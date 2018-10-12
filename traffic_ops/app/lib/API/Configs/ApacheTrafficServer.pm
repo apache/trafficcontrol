@@ -1427,7 +1427,6 @@ sub drop_qstring_dot_config {
 sub logging_dot_config {
 	my $self        = shift;
 	my $profile_obj = shift;
-	my $filename    = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, "logging.config" );
 
@@ -1438,14 +1437,13 @@ sub logging_dot_config {
 	$text .= " --\n";
 
 	my $max_log_objects = 10;
-	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+
+	# Add formats and filters separately to the top of the file
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1) {
 		my $log_format_field = "LogFormat";
-		my $log_object_field = "LogObject";
 		if ( $i > 0 ) {
 			$log_format_field = $log_format_field . "$i";
-			$log_object_field = $log_object_field . "$i";
 		}
-
 		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
 		if ( length($log_format_name) > 0 ) {
 			my $format = $data->{$log_format_field . ".Format"};
@@ -1454,24 +1452,51 @@ sub logging_dot_config {
 			$text .= "	Format = '" . $format . " '\n";
 			$text .= "}\n";
 		}
+	}
+
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1) {
+		my $log_filter_field = "LogFilter";
+		if ( $i > 0 ) {
+			$log_filter_field = $log_filter_field . "$i";
+		}
+		my $log_filter_name = $data->{$log_filter_field . ".Name"} || "";
+		if ( length($log_filter_name) > 0) {
+			my $filter = $data->{$log_filter_field . ".Filter"};
+			$filter =~ s/"/\\\"/g;
+			$text .= $log_filter_name . " = filter." . $filter . "\n";
+		}
+	}
+
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_object_field = $log_object_field . "$i";
+		}
 
 		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
 		if ( length($log_object_filename) > 0 ) {
+			my $log_object_type					= $data->{$log_object_field . ".Type"} || "ascii";
 			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
 			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
 			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
 			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
 			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
-			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
+			my $log_object_filters				= $data->{$log_object_field . ".Filters"} || "";
 
-			$text .= "\nlog.ascii {\n";
-			$text .= "  Format = " . $log_format_name . ",\n";
-			$text .= "  Filename = '" . $log_object_filename . "',\n";
-			$text .= "  RollingEnabled = " . $log_object_rolling_enabled . ",\n" unless defined();
-			$text .= "  RollingIntervalSec = " . $log_object_rolling_interval_sec . ",\n";
-			$text .= "  RollingOffsetHr = " . $log_object_rolling_offset_hr . ",\n";
-			$text .= "  RollingSizeMb = " . $log_object_rolling_size_mb . "\n";
-			$text .= "}\n";
+			$text .= "\nlog." . $log_object_type . " {\n";
+			$text .= "  Format = " . $log_object_format . ",\n";
+			$text .= "  Filename = '" . $log_object_filename . "'";
+			if ( $log_object_type ne "pipe") {
+				$text .= ",\n";
+				$text .= "  RollingEnabled = " . $log_object_rolling_enabled . ",\n";
+				$text .= "  RollingIntervalSec = " . $log_object_rolling_interval_sec . ",\n";
+				$text .= "  RollingOffsetHr = " . $log_object_rolling_offset_hr . ",\n";
+				$text .= "  RollingSizeMb = " . $log_object_rolling_size_mb;
+			}
+			if ( length($log_object_filters) > 0 ) {
+				$text .= ",\n  Filters = { " . $log_object_filters . " }";
+			}
+			$text .= "\n\}\n";
 		}
 	}
 
