@@ -64,6 +64,7 @@ type Config struct {
 	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
 	StaticFileDir                string        `json:"static_file_dir"`
 	CRConfigHistoryCount         uint64        `json:"crconfig_history_count"`
+	TrafficOpsRetryInterval      time.Duration `json:"-"`
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
@@ -95,6 +96,7 @@ var DefaultConfig = Config{
 	HealthToStatRatio:            4,
 	StaticFileDir:                StaticFileDir,
 	CRConfigHistoryCount:         20000,
+	TrafficOpsRetryInterval:      3 * time.Second,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
@@ -139,6 +141,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
 		ServeReadTimeoutMs             *uint64 `json:"serve_read_timeout_ms"`
 		ServeWriteTimeoutMs            *uint64 `json:"serve_write_timeout_ms"`
+		TrafficOpsRetryIntervalSec     *uint64 `json:"traffic_ops_retry_interval_sec"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -176,6 +179,14 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.PeerOptimistic != nil {
 		c.PeerOptimistic = *aux.PeerOptimistic
+	}
+	if aux.TrafficOpsRetryIntervalSec != nil {
+		if *aux.TrafficOpsRetryIntervalSec <= 0 {
+			log.Errorf("The 'traffic_ops_retry_interval_sec: %v' setting is incorrect, needs to be a positive number of seconds, using default of 3 seconds", aux.TrafficOpsRetryIntervalSec)
+			c.TrafficOpsRetryInterval = 3 * time.Second
+		} else {
+			c.TrafficOpsRetryInterval = time.Duration(*aux.TrafficOpsRetryIntervalSec) * time.Second
+		}
 	}
 	return nil
 }
