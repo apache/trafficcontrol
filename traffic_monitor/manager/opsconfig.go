@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -132,13 +133,23 @@ func StartOpsConfigManager(
 		// TODO config? parameter?
 		useCache := false
 		trafficOpsRequestTimeout := time.Second * time.Duration(10)
+		var realToSession *to.Session
+		var toAddr net.Addr
 
-		realToSession, toAddr, err := to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
-		if err != nil {
-			handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops (%v): %s\n", toAddr, err))
-			return
+		// fixed an issue here where traffic_monitor loops forever, doing nothing useful if traffic_ops is down,
+		// and would never logging in again.  since traffic_monitor  is just starting up here, keep retrying until traffic_ops is reachable and a session can be established.
+		for {
+			realToSession, toAddr, err = to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
+			if err != nil {
+				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops (%v): %s\n", toAddr, err))
+				log.Errorf("cfg.TrafficOpsRetryInterval: %v", cfg.TrafficOpsRetryInterval)
+				time.Sleep(cfg.TrafficOpsRetryInterval)
+				continue
+			} else {
+				toSession.Set(realToSession)
+				break
+			}
 		}
-		toSession.Set(realToSession)
 
 		if cdn, err := getMonitorCDN(realToSession, staticAppData.Hostname); err != nil {
 			handleErr(fmt.Errorf("getting CDN name from Traffic Ops, using config CDN '%s': %s\n", newOpsConfig.CdnName, err))
@@ -149,9 +160,15 @@ func StartOpsConfigManager(
 			newOpsConfig.CdnName = cdn
 		}
 
-		if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
-			handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))
-			return
+		// fixed an issue when traffic_monitor receives corrupt data, CRConfig, from traffic_ops.
+		// Will loop and retry until a good CRConfig is received from traffic_ops
+		for {
+			if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
+				handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))
+				time.Sleep(cfg.TrafficOpsRetryInterval)
+				continue
+			}
+			break
 		}
 
 		// These must be in a goroutine, because the monitorConfigPoller tick sends to a channel this select listens for. Thus, if we block on sends to the monitorConfigPoller, we have a livelock race condition.
