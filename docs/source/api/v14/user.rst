@@ -13,17 +13,17 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-v13-users:
+.. _to-api-v14-users:
 
 Users
 =====
 
-.. _to-api-v13-users-route:
+.. _to-api-v14-users-route:
 
-/api/1.3/users
+/api/1.4/users
 ++++++++++++++
 
-**GET /api/1.3/users**
+**GET /api/1.4/users**
 
   Retrieves all users.
 
@@ -127,7 +127,7 @@ Users
 |
 
 
-**GET /api/1.3/users/:id**
+**GET /api/1.4/users/:id**
 
   Retrieves user by ID.
 
@@ -227,7 +227,7 @@ Users
 |
 
 
-**POST /api/1.3/users**
+**POST /api/1.4/users**
 
   Create a user.
 
@@ -332,10 +332,6 @@ Users
   +----------------------+--------+------------------------------------------------+
   | ``tenantId``         | int    | Owning tenant ID                               |
   +----------------------+--------+------------------------------------------------+
-  | ``uid``              | int    | Deprecated - will always return null           |
-  +----------------------+--------+------------------------------------------------+
-  | ``gid``              | int    | Deprecated - will always return null           |
-  +----------------------+--------+------------------------------------------------+
   | ``username``         | string |                                                |
   +----------------------+--------+------------------------------------------------+
 
@@ -358,7 +354,6 @@ Users
         "country": "blah",
         "email": "example@email.com",
         "fullName": "Charlie Simpson",
-        "gid": null,
         "id": 640,
         "newUser": false,
         "phoneNumber": "blah",
@@ -369,12 +364,11 @@ Users
         "stateOrProvince": "blah",
         "tenant": "root",
         "tenantId": 1,
-        "uid": null,
         "lastUpdated": "2018-09-14 20:57:34+00"
       }
     }
 
-**PUT /api/1.3/users**
+**PUT /api/1.4/users**
 
   Create a user.
 
@@ -479,10 +473,6 @@ Users
   +----------------------+--------+------------------------------------------------+
   | ``tenantId``         | int    | Owning tenant ID                               |
   +----------------------+--------+------------------------------------------------+
-  | ``uid``              | int    | Deprecated - will always return null           |
-  +----------------------+--------+------------------------------------------------+
-  | ``gid``              | int    | Deprecated - will always return null           |
-  +----------------------+--------+------------------------------------------------+
   | ``username``         | string |                                                |
   +----------------------+--------+------------------------------------------------+
 
@@ -505,7 +495,6 @@ Users
         "country": "blah",
         "email": "example@email.com",
         "fullName": "Charlie Simpson",
-        "gid": null,
         "id": 640,
         "newUser": false,
         "phoneNumber": "blah",
@@ -516,14 +505,13 @@ Users
         "stateOrProvince": "blah",
         "tenant": "root",
         "tenantId": 1,
-        "uid": null,
         "lastUpdated": "2018-09-14 20:57:34+00"
       }
     }
 |
 
 
-**POST /api/1.3/users/register**
+**POST /api/1.4/users/register**
 
   Register a user and send registration email.
 
@@ -567,7 +555,7 @@ Users
 
 |
 
-**GET /api/1.3/users/:id/deliveryservices**
+**GET /api/1.4/users/:id/deliveryservices**
 
   Retrieves all delivery services assigned to the user. See also `Using Traffic Ops - Delivery Service <http://trafficcontrol.apache.org/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
 
@@ -814,7 +802,7 @@ Users
 |
 
 
-**GET /api/1.3/user/current**
+**GET /api/1.4/user/current**
 
   Retrieves the profile for the authenticated user.
 
@@ -901,7 +889,7 @@ Users
 
 |
   
-**PUT /api/1.3/user/current**
+**PUT /api/1.4/user/current**
 
   Updates the date for the authenticated user.
 
@@ -959,7 +947,6 @@ Users
             "country": null,
             "fullName": null,
             "localUser": true,
-            "uid": null,
             "stateOrProvince": null,
             "username": "tommyboy",
             "newUser": false,
@@ -967,7 +954,6 @@ Users
             "role": 4,
             "rolename": "admin",
             "addressLine1": null,
-            "gid": null,
             "postalCode": null,
             "tenant": "root",
             "tenantId": 1,
@@ -1004,7 +990,7 @@ Users
 
 |
 
-**GET /api/1.3/user/current/jobs.json**
+**GET /api/1.4/user/current/jobs.json**
 
   Retrieves the user's list of jobs.
 
@@ -1080,7 +1066,7 @@ Users
 
 |
 
-**POST/api/1.3/user/current/jobs**
+**POST/api/1.4/user/current/jobs**
 
 Invalidating content on the CDN is sometimes necessary when the origin was mis-configured and something is cached in the CDN that needs to be removed. Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time. To speed up content invalidation, Traffic Ops will not try to remove the content from the caches, but it makes the content inaccessible using the *regex_revalidate* ATS plugin. This forces a *revalidation* of the content, rather than a new get.
 
@@ -1158,7 +1144,7 @@ Role(s) Required: None
 
 |
 
-**POST /api/1.3/user/login**
+**POST /api/1.4/user/login**
 
   Authentication of a user using username and password. Traffic Ops will send back a session cookie.
 
@@ -1210,7 +1196,7 @@ Role(s) Required: None
 
 |
 
-**GET /api/1.3/user/:id/deliveryservices/available**
+**GET /api/1.4/user/:id/deliveryservices/available**
 
   Authentication Required: Yes
 
@@ -1256,7 +1242,7 @@ Role(s) Required: None
 
 |
 
-**POST /api/1.3/user/login/token**
+**POST /api/1.4/user/login/token**
 
   Authentication of a user using a token.
 
@@ -1307,7 +1293,7 @@ Role(s) Required: None
 |
 
 
-**POST /api/1.3/user/logout**
+**POST /api/1.4/user/logout**
 
   User logout. Invalidates the session cookie.
 
@@ -1342,7 +1328,7 @@ Role(s) Required: None
 
 |
 
-**POST /api/1.3/user/reset_password**
+**POST /api/1.4/user/reset_password**
 
   Reset user password.
 
