@@ -53,10 +53,6 @@ API Routes
 	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
 	| /datalogs                          |   :ref:`to-api-v11-change-logs-route`              |   :ref:`to-api-v12-change-logs-route`              |   *Not Implemented*                                |
 	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datalocation/orderby/id           |   :ref:`to-api-v11-cachegroups-route`              |   :ref:`to-api-v12-cachegroups-route`              |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datalocationparameters            |   :ref:`to-api-v11-cachegroups-route`              |   :ref:`to-api-v12-cachegroups-route`              |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
 	| /dataparameter                     |   :ref:`to-api-v11-parameters-route`               |   :ref:`to-api-v12-parameters-route`               |   *Not Implemented*                                |
 	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
 	| /dataparameter/:parameter          |   /api/1.1/parameters/profile/:parameter.json      |   /api/1.2/parameters/profile/:parameter.json      |   *Not Implemented*                                |
@@ -111,6 +107,11 @@ API Routes
 	asns_id
 	cache_stats
 	caches_stats
+	cachegroup_parameterID_parameter
+	cachegroupparameters
+	cachegroups
+	cachegroups_id
+	cachegroups_trimmed
 	v11/index
 	v12/index
 	v13/index

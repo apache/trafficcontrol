@@ -1,158 +1,3 @@
-.. 
-.. 
-.. Licensed under the Apache License, Version 2.0 (the "License");
-.. you may not use this file except in compliance with the License.
-.. You may obtain a copy of the License at
-.. 
-..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
-.. Unless required by applicable law or agreed to in writing, software
-.. distributed under the License is distributed on an "AS IS" BASIS,
-.. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-.. See the License for the specific language governing permissions and
-.. limitations under the License.
-.. 
-
-.. _to-api-v12-cachegroup:
-
-Cache Group
-===========
-
-.. _to-api-v12-cachegroups-route:
-
-/api/1.2/cachegroups
-++++++++++++++++++++
-
-**GET /api/1.2/cachegroups**
-
-  Authentication Required: Yes
-
-  Role(s) Required: None
-
-  **Request Query Parameters**
-
-  +-----------------+----------+---------------------------------------------------+
-  | Name            | Required | Description                                       |
-  +=================+==========+===================================================+
-  | ``type``        | no       | Filter cache groups by Type ID.                   |
-  +-----------------+----------+---------------------------------------------------+
-
-  **Response Properties**
-
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | Parameter                         | Type   | Description                                                              |
-  +===================================+========+==========================================================================+
-  | ``id``                            | string | Local unique identifier for the Cache Group                              |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``lastUpdated``                   | string | The Time / Date this entry was last updated                              |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``latitude``                      | string | Latitude for the Cache Group                                             |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``longitude``                     | string | Longitude for the Cache Group                                            |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``name``                          | string | The name of the Cache Group entry                                        |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``parentCachegroupId``            | string | Parent cachegroup ID.                                                    |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``parentCachegroupName``          | string | Parent cachegroup name.                                                  |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``secondaryParentCachegroupId``   | string | Secondary parent cachegroup ID.                                          |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``secondaryParentCachegroupName`` | string | Secondary parent cachegroup name.                                        |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``localizationMethods``           | array  | Array of enabled localization methods (as strings)                       |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``shortName``                     | string | Abbreviation of the Cache Group Name                                     |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``typeId``                        | string | Unique identifier for the 'Type' of Cache Group entry                    |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``typeName``                      | string | The name of the type of Cache Group entry                                |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``fallbackToClosest``             | bool   | Behaviour during non-availability/ failure of configured fallbacks       |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``fallbacks``                     | array  | Array of fallback cache group names associated with a cache group        |
-  +-----------------------------------+--------+--------------------------------------------------------------------------+
-
-  **Response Example** ::
-
-    {
-     "response": [
-        {
-           "id": "21",
-           "lastUpdated": "2012-09-25 20:27:28",
-           "latitude": "0",
-           "longitude": "0",
-           "name": "dc-chicago",
-           "parentCachegroupId": null,
-           "parentCachegroupName": null,
-           "secondaryParentCachegroupId": null,
-           "secondaryParentCachegroupName": null,
-           "shortName": "dcchi",
-           "typeName": "MID_LOC",
-           "typeId": "4",
-           "localizationMethods": [
-             "DEEP_CZ",
-             "CZ",
-             "GEO"
-           ],
-           "fallbackToClosest":true,
-           "fallbacks": [
-             "cg_fallback_1",
-             "cg_fallback_2",
-             "cg_fallback_3"
-           ]
-        },
-        {
-           "id": "22",
-           "lastUpdated": "2012-09-25 20:27:28",
-           "latitude": "0",
-           "longitude": "0",
-           "name": "dc-chicago-1",
-           "parentCachegroupId": null,
-           "parentCachegroupName": null,
-           "secondaryParentCachegroupId": null,
-           "secondaryParentCachegroupName": null,
-           "shortName": "dcchi",
-           "typeName": "MID_LOC",
-           "typeId": "4",
-           "localizationMethods": null,
-           "fallbackToClosest":false,
-           "fallbacks": []
-        }
-     ],
-    }
-
-|
-
-**GET /api/1.2/cachegroups/trimmed**
-
-  Authentication Required: Yes
-
-  Role(s) Required: None
-
-  **Response Properties**
-
-  +----------------------+--------+------------------------------------------------+
-  | Parameter            | Type   | Description                                    |
-  +======================+========+================================================+
-  |``name``              | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-
-  **Response Example** ::
-
-      {
-       "response": [
-          {
-             "name": "dc-chicago"
-          },
-          {
-             "name": "dc-cmc"
-          }
-       ],
-     }
-
-|
-
 **GET /api/1.2/cachegroups/:id**
 
   Authentication Required: Yes
@@ -586,7 +431,7 @@ Cache Group
             ]
         }
     }
-   
+
 |
 
 **PUT /api/1.2/cachegroups/{:id}**
@@ -745,7 +590,7 @@ Cache Group
   +======+==========+======================================+
   | id   | yes      | The id of the cache group to delete. |
   +------+----------+--------------------------------------+
-  
+
   **Response Properties**
 
   +-------------+--------+----------------------------------+
@@ -849,7 +694,7 @@ Cache Group
   +==================+==========+==============================================================================+
   |      id          |   yes    | The cachegroup id.                                                           |
   +------------------+----------+------------------------------------------------------------------------------+
-  
+
   **Request Properties**
 
   +------------------+----------+------------------------------------------------------------------------------+
