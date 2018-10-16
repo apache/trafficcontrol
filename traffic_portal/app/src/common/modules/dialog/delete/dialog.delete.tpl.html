@@ -24,7 +24,7 @@ under the License.
 <div class="modal-body">
     <form name="deleteForm" novalidate>
         <p>This action CANNOT be undone. This will permanently delete '{{::params.key}}'. Please type in '{{::params.key}}' to confirm deletion.</p>
-        <input type="text" class="form-control" ng-model="confirmKey" match="params.key" required>
+        <input type="text" name="confirmWithNameInput" class="form-control" ng-model="confirmKey" match="params.key" required>
     </form>
 </div>
 <div class="modal-footer">

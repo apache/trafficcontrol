@@ -23,7 +23,7 @@ under the License.
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right" role="group">
-            <button class="btn btn-primary" title="Create Delivery Service" ng-click="selectDSType()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-primary" name="createDeliveryServiceButton" title="Create Delivery Service" ng-click="selectDSType()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
@@ -59,7 +59,7 @@ under the License.
             </thead>
             <tbody>
                 <tr ng-click="editDeliveryService(ds)" ng-repeat="ds in ::deliveryServices">
-                    <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
+                    <td name="xmlId" data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
                     <td data-search="^{{::ds.tenant}}$">{{::ds.tenant}}</td>
                     <td data-search="^{{::ds.orgServerFqdn}}$">{{::ds.orgServerFqdn}}</td>
                     <td data-search="^{{::ds.active}}$">{{::ds.active}}</td>
