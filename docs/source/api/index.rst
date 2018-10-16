@@ -111,6 +111,11 @@ API Routes
 	cachegroupparameters
 	cachegroups
 	cachegroups_id
+	cachegroups_id_deliveryservices
+	cachegroups_id_parameters
+	cachegroups_id_queue_updates
+	cachegroups_id_unassigned_parameters
+	cachegroups_parameterID_parameter_available
 	cachegroups_trimmed
 	v11/index
 	v12/index

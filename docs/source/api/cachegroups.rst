@@ -39,17 +39,17 @@ Request Structure
 
 Response Structure
 ------------------
-:fallbackToClosest:             If 'true', Traffic Router will direct clients to peers of this Cache Group in the event that it becomes unavailable.
-:id:                            Local unique identifier for the Cache Group
-:lastUpdated:                   The Time / Date this entry was last updated
+:fallbackToClosest:             If ``true``, Traffic Router will direct clients to peers of this Cache Group in the event that it becomes unavailable.
+:id:                            A numeric, unique identifier for the Cache Group
+:lastUpdated:                   The time and date at which this entry was last updated in ISO format
 :latitude:                      Latitude for the Cache Group
 :longitude:                     Longitude for the Cache Group
 :name:                          The name of the Cache Group entry
-:parentCachegroupId:            Parent cachegroup ID
-:parentCachegroupName:          Parent cachegroup name
-:secondaryParentCachegroupId:   Secondary parent cachegroup ID
-:secondaryParentCachegroupName: Secondary parent cachegroup name
-:shortName:                     Abbreviation of the Cache Group Name
+:parentCachegroupId:            ID of this Cache Group's parent Cache Group (if any)
+:parentCachegroupName:          Name of this Cache Group's parent Cache Group (if any)
+:secondaryParentCachegroupId:   ID of this Cache Group's secondary parent Cache Group (if any)
+:secondaryParentCachegroupName: Name of this Cache Group's secondary parent Cache Group (if any)
+:shortName:                     Abbreviation of the Cache Group name
 :typeId:                        Unique identifier for the 'Type' of Cache Group entry
 :typeName:                      The name of the type of Cache Group entry
 
@@ -172,6 +172,86 @@ Response Structure
 			"lastUpdated": "2018-10-15 13:35:36+00"
 		}
 	]}
+
+``POST``
+========
+Creates a cache group
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Object
+
+Request Structure
+-----------------
+.. table:: Request Data Parameters
+
+	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	| Name                            | Required | Type    |  Description                                                      |
+	+=================================+==========+=========+===================================================================+
+	| ``name``                        | yes      | string  | The name of the Cache Group entry                                 |
+	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	| ``shortName``                   | yes      | string  | Abbreviation of the Cache Group Name                              |
+	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	| ``latitude``                    | no       | float   | Latitude for the Cache Group                                      |
+	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	| ``longitude``                   | no       | float   | Longitude for the Cache Group                                     |
+	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	| ``parentCachegroup``            | no       | string  | Name of Parent Cache Group entry.                                 |
+	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	| ``secondaryParentCachegroup``   | no       | string  | Name of Secondary Parent Cache Group entry.                       |
+	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	| ``localizationMethods``         | no       | array   | Array of enabled localization methods (as strings)                |
+	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	| ``typeId``                      | yes      | integer | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
+	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	| ``fallbackToClosest``           | no       | boolean | Behaviour on configured fallbacks failure                         |
+	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+
+Response Structure
+------------------
+:fallbackToClosest:             If ``true``, Traffic Router will direct clients to peers of this Cache Group in the event that it becomes unavailable.
+:id:                            A numeric, unique identifier for the Cache Group
+:lastUpdated:                   The time and date at which this entry was last updated in ISO format
+:latitude:                      Latitude for the Cache Group
+:longitude:                     Longitude for the Cache Group
+:name:                          The name of the Cache Group entry
+:parentCachegroupId:            ID of this Cache Group's parent Cache Group (if any)
+:parentCachegroupName:          Name of this Cache Group's parent Cache Group (if any)
+:secondaryParentCachegroupId:   ID of this Cache Group's secondary parent Cache Group (if any)
+:secondaryParentCachegroupName: Name of this Cache Group's secondary parent Cache Group (if any)
+:shortName:                     Abbreviation of the Cache Group name
+:typeId:                        Unique identifier for the 'Type' of Cache Group entry
+:typeName:                      The name of the type of Cache Group entry
+
+.. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
+
+.. code-block:: json
+	:caption: Response Example
+
+	{ "alerts": [
+		{
+			"level": "success",
+			"text": "Cachegroup successfully created: cache_group_edge"
+		}
+	],
+	"response": {
+		"longitude" : 45,
+		"lastUpdated" : "2016-01-25 13:55:30",
+		"shortName" : "cg_edge",
+		"name" : "cache_group_edge",
+		"parentCachegroup" : "cache_group_mid",
+		"secondaryParentCachegroup" : null,
+		"latitude" : 12,
+		"localizationMethods": [
+			"CZ",
+			"GEO"
+		],
+		"typeName" : "EDGE_LOC",
+		"id" : 104,
+		"parentCachegroupId" : 103,
+		"secondaryParentCachegroupId" : null,
+		"fallbackToClosest":true
+	}}
 
 
 .. This doesn't appear to exist anymore - can't reproduce in CIAB nor production
