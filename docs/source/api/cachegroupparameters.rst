@@ -60,3 +60,55 @@ Response Structure
 			}
 		]
 	}}
+
+``POST``
+========
+Assign parameter(s) to Cache Group(s).
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Array
+
+Request Structure
+-----------------
+The request data can take the form of either a single object or an array of one or more objects.
+
+.. table:: Request Data Parameters
+	+------------------+----------+---------+------------------------------------------------------------------------------+
+	| Parameter        | Required | Type    | Description                                                                  |
+	+==================+==========+=========+==============================================================================+
+	| ``cacheGroupId`` | yes      | integer | Unique identifier for the Cache Group to which a parameter is being assigned |
+	+------------------+----------+---------+------------------------------------------------------------------------------+
+	| ``parameterId``  | yes      | integer | Unique identifier for the Parameter being assigned                           |
+	+------------------+----------+---------+------------------------------------------------------------------------------+
+
+
+Response Structure
+------------------
+:parameter:    Numeric ID of the parameter
+:last_updated: Date and time of last modification in ISO format
+:cachegroup:   Name of the Cache Group
+
+.. code-block:: json
+ 	:caption: Response Example
+
+	{ "response":[
+		{
+			"cacheGroupId": "2",
+			"parameterId": "6"
+		},
+		{
+			"cacheGroupId": "2",
+			"parameterId": "7"
+		},
+		{
+			"cacheGroupId": "3",
+			"parameterId": "6"
+		}
+	]
+	"alerts":[
+		{
+			"level": "success",
+			"text": "Cache group parameter associations were created."
+		}
+	]}
