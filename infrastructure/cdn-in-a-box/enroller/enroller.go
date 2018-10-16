@@ -433,7 +433,7 @@ func enrollDeliveryService(toSession *session, fn string) error {
 	alerts, err := toSession.CreateDeliveryServiceNullable(&s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("deliveryservice %s already exists\n", s.XMLID)
+			log.Printf("deliveryservice %s already exists\n", *s.XMLID)
 			return nil
 		}
 		log.Printf("error creating from %s: %s\n", fn, err)
@@ -606,65 +606,67 @@ func enrollParameter(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s tc.Parameter
-	err = dec.Decode(&s)
+	var params []tc.Parameter
+	err = dec.Decode(&params)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
-	paramID, err := toSession.getParameterIDMatching(s)
-	var alerts tc.Alerts
-	if err == nil {
-		// existing param -- update
-		alerts, _, err = toSession.UpdateParameterByID(paramID, s)
-		if err != nil {
-			log.Printf("error updating parameter %d: %s with %+v ", paramID, err.Error(), s)
-		}
-	} else {
-		alerts, _, err = toSession.CreateParameter(s)
-		if err != nil {
-			if strings.Contains(err.Error(), "already exists") {
-				log.Printf("parameter %s already exists\n", s.Name)
-				return nil
-			}
-			log.Printf("error creating from %s: %s\n", fn, err)
-			return err
-		}
-	}
-	// link parameter with profiles
-	if len(s.Profiles) > 0 {
-		paramID, err := toSession.getParameterIDMatching(s)
-		if err != nil {
-			return err
-		}
 
-		var profiles []string
-		err = json.Unmarshal(s.Profiles, &profiles)
-		if err != nil {
-			log.Printf("%v", err)
-		}
-
-		for _, n := range profiles {
-			pid, err := toSession.getProfileIDByName(n)
+	for _, p := range params {
+		paramID, err := toSession.getParameterIDMatching(p)
+		var alerts tc.Alerts
+		if err == nil {
+			// existing param -- update
+			alerts, _, err = toSession.UpdateParameterByID(paramID, p)
 			if err != nil {
-				log.Printf("%v", err)
-				continue
+				log.Printf("error updating parameter %d: %s with %+v ", paramID, err.Error(), p)
 			}
-			pp := tc.ProfileParameter{ParameterID: paramID, ProfileID: pid}
-			_, _, err = toSession.CreateProfileParameter(pp)
+		} else {
+			alerts, _, err = toSession.CreateParameter(p)
 			if err != nil {
 				if strings.Contains(err.Error(), "already exists") {
-					continue
+					log.Printf("parameter %s already exists\n", p.Name)
+					return nil
 				}
-				log.Printf("%v", err)
-				continue
+				log.Printf("error creating from %s: %s\n", fn, err)
+				return err
 			}
 		}
-	}
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	err = enc.Encode(&alerts)
+		// link parameter with profiles
+		if len(p.Profiles) > 0 {
+			paramID, err := toSession.getParameterIDMatching(p)
+			if err != nil {
+				return err
+			}
 
+			var profiles []string
+			err = json.Unmarshal(p.Profiles, &profiles)
+			if err != nil {
+				log.Printf("%v", err)
+			}
+
+			for _, n := range profiles {
+				pid, err := toSession.getProfileIDByName(n)
+				if err != nil {
+					log.Printf("%v", err)
+					continue
+				}
+				pp := tc.ProfileParameter{ParameterID: paramID, ProfileID: pid}
+				_, _, err = toSession.CreateProfileParameter(pp)
+				if err != nil {
+					if strings.Contains(err.Error(), "already exists") {
+						continue
+					}
+					log.Printf("%v", err)
+					continue
+				}
+			}
+		}
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		err = enc.Encode(&alerts)
+	}
 	return err
 }
 

@@ -39,7 +39,6 @@ RUN yum install -y epel-release && \
       git \ 
       golang 
 
-RUN cpanm Carton
 RUN yum install -y perl-DBIx-Connector
 
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
@@ -51,12 +50,12 @@ RUN yum install -y \
     yum clean all
 
 # copy any dir structure in overrides to TO -- allows modification of the install and shortcut to get perl modules/goose installed
-COPY traffic_ops/overrides/ /opt/traffic_ops/.
-
 WORKDIR /opt/traffic_ops/app
+COPY traffic_ops/overrides/ /opt/traffic_ops/.
+RUN cpanm -l ./local Carton
 
 # run carton whether or not local dir was installed
-RUN POSTGRES_HOME=/usr/pgsql-9.6 carton && \
+RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton && \
      rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
 
 RUN /opt/traffic_ops/install/bin/install_goose.sh
