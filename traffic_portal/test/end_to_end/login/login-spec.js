@@ -21,29 +21,26 @@ describe('Traffic Portal Login Test Suite', function() {
 
     beforeEach(function() {
         browser.get(browser.baseUrl);
-    });
-
-    it('should successfully login to Traffic Portal', function() {
-
-        browser.driver.findElement(by.name('loginUsername')).sendKeys(browser.params.adminUser);
-        browser.driver.findElement(by.name('loginPass')).sendKeys(browser.params.adminPassword);
-        browser.driver.findElement(by.name('loginSubmit')).click();
-        browser.debugger();
-
-        expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/dashboard");
-
+	    browser.driver.manage().window().maximize();
+	    browser.wait(function() {
+		    return element(by.name('loginUsername')).isPresent();
+	    }, 5000);
     });
 
     it('should fail login to Traffic Portal with bad user', function() {
-
         browser.driver.findElement(by.name('loginUsername')).sendKeys('badUser');
         browser.driver.findElement(by.name('loginPass')).sendKeys('badPassword');
         browser.driver.findElement(by.name('loginSubmit')).click();
         browser.sleep(250);
         browser.debugger();
-
         expect(browser.driver.findElement(by.css('div.ng-binding')).getText()).toEqual('Invalid username or password.');
-
-
     });
+
+	it('should successfully login to Traffic Portal', function() {
+		browser.driver.findElement(by.name('loginUsername')).sendKeys(browser.params.adminUser);
+		browser.driver.findElement(by.name('loginPass')).sendKeys(browser.params.adminPassword);
+		browser.driver.findElement(by.name('loginSubmit')).click();
+		browser.debugger();
+		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/");
+	});
 });

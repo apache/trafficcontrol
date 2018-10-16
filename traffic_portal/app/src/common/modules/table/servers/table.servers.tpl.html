@@ -23,7 +23,7 @@ under the License.
             <li class="active">Servers</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Create Server" ng-click="createServer()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-primary" name="createServersButton" title="Create Server" ng-click="createServer()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
@@ -63,7 +63,7 @@ under the License.
                     <i title="Updates Pending" ng-show="s.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
                     <i title="Updates Applied" ng-show="!s.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
                 </td>
-                <td data-search="^{{::s.hostName}}$">{{::s.hostName}}</td>
+                <td name="hostName" data-search="^{{::s.hostName}}$">{{::s.hostName}}</td>
                 <td data-search="^{{::s.domainName}}$">{{::s.domainName}}</td>
                 <td data-search="^{{::s.ipAddress}}$"><a ng-click="ssh(s.ipAddress, $event)">{{::s.ipAddress}}</a></td>
                 <td data-search="^{{::s.ip6Address}}$">{{::s.ip6Address}}</td>

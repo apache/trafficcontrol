@@ -23,7 +23,7 @@ under the License.
             <li class="active">CDNs</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Create CDN" ng-click="createCDN()"><i class="fa fa-plus"></i></button>
+            <button name="createCdnButton" class="btn btn-primary" title="Create CDN" ng-click="createCDN()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -40,7 +40,7 @@ under the License.
             </thead>
             <tbody>
                 <tr ng-click="editCDN(cdn.id)" ng-repeat="cdn in ::cdns">
-                    <td data-search="^{{::cdn.name}}$">{{::cdn.name}}</td>
+                    <td name="name" data-search="^{{::cdn.name}}$">{{::cdn.name}}</td>
                     <td data-search="^{{::cdn.domainName}}$">{{::cdn.domainName}}</td>
                     <td data-search="^{{::cdn.dnssecEnabled}}$">{{::cdn.dnssecEnabled}}</td>
                 </tr>
