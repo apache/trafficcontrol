@@ -89,13 +89,13 @@ Request Structure
 .. code-block:: json
 	:caption: Request Example
 
-		[
-			 {
-					"cacheGroupId": 1,
-					"fallbackId": 3,
-					"fallbackOrder": 10
-			 }
-		]
+	[
+		{
+			"cacheGroupId": 1,
+			"fallbackId": 3,
+			"fallbackOrder": 10
+		 }
+	]
 
 Response Structure
 ------------------

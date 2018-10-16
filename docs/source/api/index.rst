@@ -107,6 +107,7 @@ API Routes
 	asns_id
 	cache_stats
 	caches_stats
+	cachegroup_fallbacks
 	cachegroup_parameterID_parameter
 	cachegroupparameters
 	cachegroups
@@ -117,6 +118,8 @@ API Routes
 	cachegroups_id_unassigned_parameters
 	cachegroups_parameterID_parameter_available
 	cachegroups_trimmed
+	capabilities
+	capabilities_name
 	v11/index
 	v12/index
 	v13/index

@@ -74,6 +74,7 @@ Request Structure
 The request data can take the form of either a single object or an array of one or more objects.
 
 .. table:: Request Data Parameters
+
 	+------------------+----------+---------+------------------------------------------------------------------------------+
 	| Parameter        | Required | Type    | Description                                                                  |
 	+==================+==========+=========+==============================================================================+
