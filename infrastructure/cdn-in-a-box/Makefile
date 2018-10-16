@@ -34,11 +34,13 @@ TC_VERSION := $(shell cat "../../VERSION")
 TOMCAT_VERSION := $(shell grep 'export TOMCAT_VERSION=' ../../traffic_router/build/build_rpm.sh  | cut -d '=' -f 2)
 TOMCAT_RELEASE := $(shell grep 'export TOMCAT_RELEASE=' ../../traffic_router/build/build_rpm.sh  | cut -d '=' -f 2)
 
-ifeq ($(shell which rpm 2>/dev/null),)
 RHEL_VERSION :=el7
+ifeq ($(shell uname -s),Linux)
+ifeq ($(shell which rpm 2>/dev/null),)
 $(info Couldn't find 'rpm' binary, building for RHEL version $(RHEL_VERSION))
 else
 RHEL_VERSION :=el$(shell rpm -q --qf "%{VERSION}" $(shell rpm -q --whatprovides redhat-release))
+endif
 endif
 
 SPECIAL_SAUCE := $(TC_VERSION)-$(BUILD_NUMBER).$(RHEL_VERSION).x86_64.rpm
