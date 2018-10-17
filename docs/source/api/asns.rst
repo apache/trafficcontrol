@@ -25,7 +25,7 @@ List all ASNS
 =======
 :Auth. Required: Yes
 :Roles Required: None
-:Response Type:  Object
+:Response Type:  Array
 
 Request Structure
 -----------------
@@ -39,35 +39,34 @@ Request Structure
 
 Response Structure
 ------------------
-:asns: A collection of ASNs
-
-	:lastUpdated:  The Time / Date this server entry was last updated in ISO format
-	:id:           An integer which uniquely identifies the ASN
-	:asn:          Autonomous System Numbers per APNIC for identifying a service provider
-	:cachegroup:   Related Cache Group name
-	:cachegroupId: Related Cache Group ID
+:lastUpdated:  The Time / Date this server entry was last updated in ISO format
+:id:           An integer which uniquely identifies the ASN
+:asn:          Autonomous System Numbers per APNIC for identifying a service provider
+:cachegroup:   Related Cache Group name
+:cachegroupId: Related Cache Group ID
 
 .. code-block:: json
 	:caption: Response Example
 
-	{ "response": {
-		"asns": [
-			{
-				"lastUpdated": "2012-09-17 21:41:22",
-				"id": 27,
-				"asn": 7015,
-				"cachegroup": "us-ma-woburn",
-				"cachegroupId": 2
-			},
-			{
-				"lastUpdated": "2012-09-17 21:41:22",
-				"id": 28,
-				"asn": 7016,
-				"cachegroup": "us-pa-pittsburgh",
-				"cachegroupID": 3
-			}
-		]
-	}}
+	{ "response": [
+		{
+			"lastUpdated": "2012-09-17 21:41:22",
+			"id": 27,
+			"asn": 7015,
+			"cachegroup": "us-ma-woburn",
+			"cachegroupId": 2
+		},
+		{
+			"lastUpdated": "2012-09-17 21:41:22",
+			"id": 28,
+			"asn": 7016,
+			"cachegroup": "us-pa-pittsburgh",
+			"cachegroupID": 3
+		}
+	]}
+
+.. versionchanged:: 1.2
+	Used to contain the array in the ``response.asns`` object, changed so that ``response`` is an actual array
 
 ``POST``
 ========
