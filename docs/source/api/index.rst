@@ -120,6 +120,21 @@ API Routes
 	cachegroups_trimmed
 	capabilities
 	capabilities_name
+	cdns
+	cdns_capacity
+	cdns_configs
+	cdns_domains
+	cdns_health
+	cdns_id
+	cdns_metric_types_metric_start_date_start_end_date_end
+	cdns_name_configs_monitoring
+	cdns_name_routing
+	cdns_name_health
+	cdns_name_name
+	cdns_name_name_dnsseckeys
+	cdns_name_name_dnsseckeys_delete
+	cdns_routing
+	cdns_usage_overview
 	v11/index
 	v12/index
 	v13/index
