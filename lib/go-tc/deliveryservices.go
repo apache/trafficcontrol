@@ -385,7 +385,7 @@ func (ds *DeliveryServiceNullableV12) Validate(tx *sql.Tx) error {
 
 func (ds *DeliveryServiceNullable) Sanitize() {
 	ds.DeliveryServiceNullableV12.Sanitize()
-	signedAlgorithm := "url_sig"
+	signedAlgorithm := SigningAlgorithmURLSig
 	if ds.Signed && (ds.SigningAlgorithm == nil || *ds.SigningAlgorithm == "") {
 		ds.SigningAlgorithm = &signedAlgorithm
 	}
