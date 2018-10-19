@@ -20,7 +20,6 @@ package api
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
@@ -34,7 +33,8 @@ type CRUDer interface {
 }
 
 type Updater interface {
-	Update() (error, tc.ApiErrorType)
+	// Update returns any user error, any system error, and the HTTP error code to be returned if there was an error.
+	Update() (error, error, int)
 }
 
 type Identifier interface {
@@ -45,12 +45,14 @@ type Identifier interface {
 }
 
 type Creator interface {
-	Create() (error, tc.ApiErrorType)
+	// Create returns any user error, any system error, and the HTTP error code to be returned if there was an error.
+	Create() (error, error, int)
 	SetKeys(map[string]interface{})
 }
 
 type Deleter interface {
-	Delete() (error, tc.ApiErrorType)
+	// Delete returns any user error, any system error, and the HTTP error code to be returned if there was an error.
+	Delete() (error, error, int)
 }
 
 type Validator interface {
@@ -62,5 +64,6 @@ type Tenantable interface {
 }
 
 type Reader interface {
-	Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType)
+	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
+	Read() ([]interface{}, error, error, int)
 }

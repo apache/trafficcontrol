@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License. -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="198.80087mm" width="355.67175mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 1260.2542 704.41254">
+	<defs>
+		<marker id="e" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="f" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="g" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="h" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="i" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="j" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="k" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="l" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="m" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="n" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="o" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="p" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="d" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="b" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="a" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="c" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="q" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="r" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="s" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="t" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="u" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="v" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="w" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="x" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="y" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="z" refY="0" refX="0" overflow="visible" orient="auto">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="ab" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<clipPath id="aa" clipPathUnits="userSpaceOnUse">
+			<path stroke-linejoin="round" d="m1125.6855 353.07812a42.5 44.107143 0 0 0 -42.8261 43.72071 42.5 44.107143 0 0 0 0.055 2.19336 50.892857 36.964287 0 0 0 -0.8457 -0.0977 28.392857 22.5 0 0 0 0.072 -0.93359v-0.0899a28.392857 22.5 0 0 0 -28.1738 -22.65039 28.392857 22.5 0 0 0 -28.3399 19.54297 34.107143 30.178572 0 0 0 -13.043 -2.40039 34.107143 30.178572 0 0 0 -34.37106 29.91406 34.107143 30.178572 0 0 0 33.77346 30.44141 34.107143 30.178572 0 0 0 15.5254 -3.16016 50.892857 36.964287 0 0 0 46.4551 22.80274 50.892857 36.964287 0 0 0 43.4707 -17.24805 33.75 15.892858 0 0 0 18.125 2.60547 33.75 15.892858 0 0 0 34.0761 -15.7207v-0.0645a33.75 15.892858 0 0 0 -14.625 -13.19726 42.5 44.107143 0 0 0 12.8379 -31.07813v-0.17773a42.5 44.107143 0 0 0 -42.17 -44.40235z" stroke="#000" stroke-width=".99000001" fill="none"/>
+		</clipPath>
+	</defs>
+	<g transform="translate(19.048405,-58.882248)">
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="40px" y="77.730484" x="44.94297" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan font-size="12.5px" y="77.730484" x="44.94297">Ops Config Poller</tspan></text>
+		<rect height="29.7995" width="148.9975" stroke="#000" y="59.382252" x="24.243662" fill="none"/>
+		<g transform="translate(30)">
+			<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="40px" y="77.730484" x="197.58212" font-family="sans-serif" line-height="125%" fill="#000000"><tspan font-size="12.5px" y="77.730484" x="197.58212">Ops Config Handler</tspan></text>
+			<rect height="29.7995" width="148.9975" stroke="#000" y="59.382252" x="184.24365" fill="none"/>
+		</g>
+		<g transform="translate(60)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="40px" y="77.730484" x="354.78671" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan font-size="12.5px" y="77.730484" x="354.78671">Ops Config Manager</tspan></text>
+			<rect height="29.7995" width="148.9975" stroke="#000" y="59.382252" x="344.24365" fill="none"/>
+		</g>
+		<g stroke="#000" fill="none">
+			<path marker-end="url(#ab)" d="m173.61997 74.299617h39.48186" stroke-width=".99316341px"/>
+			<path marker-end="url(#z)" d="m363.61997 74.299617h39.48186" stroke-width=".99316341px"/>
+			<path marker-end="url(#y)" d="m553.21429 74.299617h36.42857" stroke-width="1px"/>
+		</g>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="40px" y="77.730484" x="602.05188" font-family="sans-serif" line-height="125%" fill="#000000"><tspan font-size="12.5px" y="77.730484" x="602.05188">Restart HTTP Server</tspan></text>
+		<rect height="29.7995" width="148.9975" stroke="#000" y="59.382248" x="591.13647" fill="none"/>
+		<g transform="translate(0,3.9508057)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="40px" y="117.73048" x="598.15942" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan font-size="12.5px" y="117.73048" x="598.15942">Ops Config Change Subscriber</tspan></text>
+			<rect height="29.628658" width="205.43379" stroke="#000" y="99.467667" x="591.22192" stroke-width="1.1708411" fill="none"/>
+		</g>
+		<path stroke-linejoin="round" marker-end="url(#x)" d="m566.61657 74.30219v41.82935h23.40799" stroke="#000" stroke-width=".9859066px" fill="none"/>
+		<g transform="translate(-5.2920856)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="165.63211" x="603.62378" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="165.63211" x="603.62378">Traffic Ops Client Change Subscriber</tspan></text>
+			<rect stroke-linejoin="round" height="27.5" width="242.85715" stroke="#000" y="148.43362" x="596.42859" fill="none"/>
+		</g>
+		<g stroke-linejoin="round" stroke="#000" fill="none">
+			<path marker-end="url(#w)" d="m566.5792 115.79885v47.39757h23.37602" stroke-width=".98499495px"/>
+			<path d="m796.42857 117.00506h57.5v47.3793" stroke-width="1px"/>
+			<path marker-end="url(#v)" d="m833.88093 162.67035h19.95051v45.7094h-796.252745v30.80966" stroke-width="1px"/>
+		</g>
+		<g transform="translate(10.73731,-68.757614)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="327.23929" x="-18.897272" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="327.23929" x="-18.897272">Monitor Config Poller</tspan></text>
+			<rect stroke-linejoin="round" height="27.142857" width="152.14285" stroke="#000" y="310.21936" x="-29.285715" fill="none"/>
+		</g>
+		<g transform="translate(0,-1.614746)">
+			<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="259.73926" x="169.16077" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="169.16077" y="259.73926">Monitor Config Manager</tspan></text>
+			<rect stroke-linejoin="round" height="26.428572" width="158.57143" stroke="#000" y="243.07649" x="165.71428" fill="none"/>
+		</g>
+		<path marker-end="url(#u)" d="m133.71894 255.05079h30.80966" stroke="#000" stroke-width="1px" fill="none"/>
+		<g transform="translate(3.9908142,-4.0975532)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="263.43362" x="391.78571" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="263.43362" x="391.78571">Stat Subscriber</tspan></text>
+			<rect stroke-linejoin="round" height="23.214285" width="116.07143" stroke="#000" y="247.16644" x="382.15393" fill="none"/>
+		</g>
+		<g transform="translate(-1.35672,-2.0488281)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="298.04077" x="391.78571" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="298.04077" x="391.78571">Health Subscriber</tspan></text>
+			<rect stroke-linejoin="round" height="24.285715" width="121.42857" stroke="#000" y="281.23788" x="387.50146" fill="none"/>
+		</g>
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="332.64792" x="391.78571" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="332.64792" x="391.78571">Peer Subscriber</tspan></text>
+		<rect stroke-linejoin="round" height="22.142857" width="110.71429" stroke="#000" y="316.91644" x="386.14474" fill="none"/>
+		<g stroke-linejoin="round" stroke="#000" fill="none">
+			<path marker-end="url(#t)" d="m324.28571 254.69365h60.00001" stroke-width="1px"/>
+			<path marker-end="url(#s)" d="m348.81527 254.9709v36.89474h35.23079" stroke-width="1.03820264px"/>
+			<path marker-end="url(#r)" d="m348.69062 289.38519v38.97108h35.4721" stroke-width=".96524209px"/>
+			<path marker-end="url(#q)" d="m502.04582 254.84677h53.033v160.10918h-474.771693v39.90102h36.365493" stroke-width="1px"/>
+		</g>
+		<g transform="translate(-4.8207485 -.94701795)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="460.41281" x="131.82491" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="460.41281" x="131.82491">Stat Poller</tspan></text>
+			<rect stroke-linejoin="round" height="20.203051" width="80.812202" stroke="#000" y="445.65125" x="123.7827" fill="none"/>
+		</g>
+		<g transform="translate(1.4105835,-5.6070722)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="465.07285" x="239.04759" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="465.07285" x="239.04759">Stat Fetcher</tspan></text>
+			<rect stroke-linejoin="round" height="19.192898" width="90.408653" stroke="#000" y="450.81638" x="232.33508" fill="none"/>
+		</g>
+		<g transform="translate(20,-3.533337)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="462.99911" x="338.80719" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="462.99911" x="338.80719">Stat Handler</tspan></text>
+			<rect stroke-linejoin="round" height="18.687822" width="93.43911" stroke="#000" y="448.99518" x="331.81238" fill="none"/>
+		</g>
+		<path marker-end="url(#c)" d="m199.75767 454.82632h31.33815" stroke="#000" stroke-width="1.16775703px" fill="none"/>
+		<path marker-end="url(#a)" d="m324.13648 454.82438h25.68822" stroke="#000" stroke-width="1.05726266px" fill="none"/>
+		<g transform="translate(1.4105835,26.392928)">
+			<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="465.07285" x="239.04759" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="239.04759" y="465.07285">Stat Fetcher</tspan></text>
+			<rect stroke-linejoin="round" height="19.192898" width="90.408653" stroke="#000" y="450.81638" x="232.33508" fill="none"/>
+		</g>
+		<g transform="translate(20,28.466663)">
+			<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="462.99911" x="338.80719" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="338.80719" y="462.99911">Stat Handler</tspan></text>
+			<rect stroke-linejoin="round" height="18.687822" width="93.43911" stroke="#000" y="448.99518" x="331.81238" fill="none"/>
+		</g>
+		<g stroke="#000" fill="none">
+			<path marker-end="url(#a)" d="m324.13648 486.82438h25.68822" stroke-width="1.05726266px"/>
+			<path stroke-linejoin="round" marker-end="url(#b)" d="m209.29773 454.83146v32.19643h23.23275" stroke-width=".98251468px"/>
+			<path d="m209.30647 486.99245v23.61232" stroke-width="1px"/>
+		</g>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="523.2948" x="203.34639" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="203.34639" y="523.2948">...</tspan></text>
+		<path marker-end="url(#d)" d="m445.47727 455.36205h42.37241" stroke="#000" stroke-width="1.30847371px" fill="none"/>
+		<path d="m459.2406 455.48832v54.67451" stroke="#000" stroke-width="1px" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="523.2948" x="453.28052" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="523.2948" x="453.28052">...</tspan></text>
+		<path d="m445.17857 486.80575h13.92857" stroke="#000" stroke-width="1px" fill="none"/>
+		<g transform="translate(-11.368655,-8.30116)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="466.97879" x="509.62195" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="466.97879" x="509.62195">Stat Manager</tspan></text>
+			<rect stroke-linejoin="round" height="20.203051" width="101.01525" stroke="#000" y="453.53864" x="501.63446" fill="none"/>
+		</g>
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="579.46576" x="118.97804" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="579.46576" x="118.97804">Health Poller</tspan></text>
+		<rect stroke-linejoin="round" height="20.203051" width="80.812202" stroke="#000" y="564.70422" x="118.96195" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="579.46576" x="233.86063" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="579.46576" x="233.86063">Health Fetcher</tspan></text>
+		<rect stroke-linejoin="round" height="19.177704" width="93.250603" stroke="#000" y="565.21686" x="233.75327" stroke-width="1.01519358" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="579.47858" x="354.6954" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="579.47858" x="354.6954">Health Handler</tspan></text>
+		<g stroke="#000" fill="none">
+			<rect stroke-linejoin="round" height="18.672918" width="101.22736" y="565.48206" x="351.83258" stroke-width="1.04042637"/>
+			<path marker-end="url(#c)" d="m199.75767 574.82632h31.33815" stroke-width="1.16775703px"/>
+			<path marker-end="url(#p)" d="m326.63648 574.82438h23.34915" stroke-width="1.00797892px"/>
+		</g>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="611.46576" x="234.21776" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="234.21776" y="611.46576">Health Fetcher</tspan></text>
+		<rect stroke-linejoin="round" height="19.173944" width="93.961128" stroke="#000" y="597.21875" x="233.75514" stroke-width="1.01895392" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="611.45306" x="354.6954" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="354.6954" y="611.45306">Health Handler</tspan></text>
+		<g stroke="#000" fill="none">
+			<rect stroke-linejoin="round" height="18.672918" width="101.22736" y="597.45654" x="351.83258" stroke-width="1.04042637"/>
+			<g>
+				<path marker-end="url(#o)" d="m327.52933 606.82438h22.50905" stroke-width=".98967898px"/>
+				<path stroke-linejoin="round" marker-end="url(#b)" d="m209.29773 574.83146v32.19643h23.23275" stroke-width=".98251468px"/>
+				<path d="m209.30647 606.99245v23.61232" stroke-width="1px"/>
+			</g>
+		</g>
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="643.2948" x="203.34639" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="643.2948" x="203.34639">...</tspan></text>
+		<path marker-end="url(#n)" d="m453.47727 575.36205h42.37241" stroke="#000" stroke-width="1.30847371px" fill="none"/>
+		<path d="m467.2406 575.48832v54.67451" stroke="#000" stroke-width="1px" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="643.2948" x="461.28052" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="461.28052" y="643.2948">...</tspan></text>
+		<path d="m453.17857 606.80575h13.92857" stroke="#000" stroke-width="1px" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="578.78748" x="501.51016" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="578.78748" x="501.51016">Health Manager</tspan></text>
+		<rect stroke-linejoin="round" height="20.172005" width="107.55019" stroke="#000" y="565.25299" x="498.28134" stroke-width="1.03104627" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="699.46576" x="125.69191" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="125.69191" y="699.46576">Peer Poller</tspan></text>
+		<rect stroke-linejoin="round" height="20.203051" width="80.812202" stroke="#000" y="684.70422" x="118.96195" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="699.46576" x="239.14592" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="239.14592" y="699.46576">Peer Fetcher</tspan></text>
+		<rect stroke-linejoin="round" height="19.192898" width="90.408653" stroke="#000" y="685.20929" x="233.74567" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="699.46582" x="357.49493" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="357.49493" y="699.46582">Peer Handler</tspan></text>
+		<rect stroke-linejoin="round" height="18.687822" width="93.43911" stroke="#000" y="685.46185" x="351.81238" fill="none"/>
+		<path marker-end="url(#c)" d="m199.75767 694.82632h31.33815" stroke="#000" stroke-width="1.16775703px" fill="none"/>
+		<path marker-end="url(#a)" d="m324.13648 694.82438h25.68822" stroke="#000" stroke-width="1.05726266px" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="731.46576" x="239.14592" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="731.46576" x="239.14592">Peer Fetcher</tspan></text>
+		<rect stroke-linejoin="round" height="19.192898" width="90.408653" stroke="#000" y="717.20929" x="233.74567" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="731.46582" x="357.49493" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="731.46582" x="357.49493">Peer Handler</tspan></text>
+		<rect stroke-linejoin="round" height="18.687822" width="93.43911" stroke="#000" y="717.46185" x="351.81238" fill="none"/>
+		<g stroke="#000" fill="none">
+			<path marker-end="url(#a)" d="m324.13648 726.82438h25.68822" stroke-width="1.05726266px"/>
+			<path stroke-linejoin="round" marker-end="url(#b)" d="m209.29773 694.83146v32.19643h23.23275" stroke-width=".98251468px"/>
+			<path d="m209.30647 726.99245v23.61232" stroke-width="1px"/>
+		</g>
+		<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="763.2948" x="203.34639" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="763.2948" x="203.34639">...</tspan></text>
+		<path marker-end="url(#d)" d="m445.47727 695.36205h42.37241" stroke="#000" stroke-width="1.30847371px" fill="none"/>
+		<path d="m459.2406 695.48832v54.67451" stroke="#000" stroke-width="1px" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="763.2948" x="453.28052" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="453.28052" y="763.2948">...</tspan></text>
+		<path d="m445.17857 726.80575h13.92857" stroke="#000" stroke-width="1px" fill="none"/>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="12.5px" y="698.59521" x="496.94104" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="496.94104" y="698.59521">Peer Manager</tspan></text>
+		<rect stroke-linejoin="round" height="20.203051" width="101.01525" stroke="#000" y="685.23749" x="490.26581" fill="none"/>
+		<path stroke-linejoin="round" marker-end="url(#m)" d="m507.5 291.29077h27.14286v92.50001h-480.714288v190.35714h62.857138" stroke="#000" stroke-width="1px" fill="none"/>
+		<path stroke-linejoin="round" marker-end="url(#l)" d="m496.99505 328.58791h13.63706v34.34518h-490.429059v331.83511h97.459419" stroke="#000" stroke-width="1px" fill="none"/>
+		<g transform="translate(-20,-18)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="20px" y="460.39252" x="756.67786" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="460.39252" x="756.67786">Shared Data</tspan></text>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="483.46613" x="756.66199" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="483.46613" x="756.66199">events</tspan><tspan y="499.09113" x="756.66199">toData</tspan><tspan y="514.71613" x="756.66199">errorCount</tspan><tspan y="530.34113" x="756.66199">healthIteration</tspan><tspan y="545.96613" x="756.66199">fetchCount</tspan><tspan y="561.59113" x="756.66199">localStates</tspan><tspan y="577.21613" x="756.66199">toSession</tspan><tspan y="592.84113" x="756.66199">peerStates</tspan><tspan y="608.46613" x="756.66199">monitorConfig</tspan><tspan y="624.09113" x="756.66199">combinedStates</tspan><tspan y="639.71613" x="756.66199">statInfoHistory</tspan><tspan y="655.34113" x="756.66199">statResultHistory</tspan><tspan y="670.96613" x="756.66199">statMaxKbpses</tspan><tspan y="686.59113" x="756.66199">lastKbpsStats</tspan><tspan y="702.21613" x="756.66199">dsStats</tspan><tspan y="717.84113" x="756.66199">localCacheStats</tspan><tspan y="733.46613" x="756.66199">lastHealthDurations</tspan><tspan y="749.09113" x="756.66199">healthHistory</tspan></text>
+			<rect stroke-linejoin="round" height="323.24881" width="161.6244" stroke="#000" y="440.71484" x="737.91644" fill="none"/>
+			<rect stroke-linejoin="round" height="26.974453" width="162.3349" stroke="#000" y="440.35959" x="737.56122" stroke-width=".99000001" fill="none"/>
+		</g>
+		<g stroke-width="1px" stroke="#000" fill="none">
+			<g>
+				<path marker-end="url(#k)" d="m590.93924 456.3722h125.74369"/>
+				<path marker-end="url(#j)" d="m605.58645 575.5702h110.08632"/>
+				<path marker-end="url(#i)" d="m590.93924 695.27328h125.25892"/>
+			</g>
+			<path stroke-linejoin="round" marker-end="url(#h)" d="m740 74.50506h162.85714v162.14286h-96.42857v35.35714"/>
+		</g>
+		<g transform="translate(-.35714286 -32.357143)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="323.51953" x="767.49884" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="323.51953" x="767.49884">HTTP Server</tspan></text>
+			<rect stroke-linejoin="round" height="23.134037" width="86.705467" stroke="#000" y="307.40234" x="763.25439" stroke-width="1.07024741" fill="none"/>
+		</g>
+		<path marker-end="url(#g)" d="m806.26765 422.00506v-121.77599" stroke="#000" stroke-width="1.00290549px" fill="none"/>
+		<g transform="translate(-10,-6.0651794)">
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="295.93362" x="910.35712" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="295.93362" x="910.35712">HTTP Request</tspan></text>
+			<rect stroke-linejoin="round" height="25" width="100" stroke="#000" y="280.1774" x="904.21393" stroke-width=".99000001" fill="none"/>
+		</g>
+		<path marker-end="url(#f)" d="m849.64286 286.62983h42.5" stroke="#000" stroke-width="1px" fill="none"/>
+		<g transform="translate(71.071429,-135)">
+			<path d="m1110.4531 405.29883a35.457748 34.207745 0 0 0 -34.7324 26.27734 23.571428 16.964285 0 0 0 -14.1094 -3.5 23.571428 16.964285 0 0 0 -23.5332 14.75781 42.857143 20.714285 0 0 0 -11.3457 4.07227 23.928572 16.964285 0 0 0 0.053 -0.61133v-0.0684a23.928572 16.964285 0 0 0 -23.7422 -17.07812 23.928572 16.964285 0 0 0 -24.11331 16.8164 23.928572 16.964285 0 0 0 23.69331 17.11133 23.928572 16.964285 0 0 0 12.0547 -2.23828 42.857143 20.714285 0 0 0 -0.033 0.27149 42.857143 20.714285 0 0 0 42.4375 20.89453 42.857143 20.714285 0 0 0 38.5586 -11.32032 35.457748 34.207745 0 0 0 14.1914 3.02735 35.457748 34.207745 0 0 0 30.8418 -16.8125 10.535714 7.8571429 0 0 0 1.545 0.10547 10.535714 7.8571429 0 0 0 10.6386 -7.77149v-0.0312a10.535714 7.8571429 0 0 0 -7.3359 -7.53906 35.457748 34.207745 0 0 0 0.1133 -1.78906v-0.13867a35.457748 34.207745 0 0 0 -35.1817 -34.43555z" clip-path="url(#aa)" fill="#bddbff"/>
+			<path stroke-linejoin="round" d="m1125.6855 353.07812a42.5 44.107143 0 0 0 -42.8261 43.72071 42.5 44.107143 0 0 0 0.055 2.19336 50.892857 36.964287 0 0 0 -0.8457 -0.0977 28.392857 22.5 0 0 0 0.072 -0.93359v-0.0899a28.392857 22.5 0 0 0 -28.1738 -22.65039 28.392857 22.5 0 0 0 -28.3399 19.54297 34.107143 30.178572 0 0 0 -13.043 -2.40039 34.107143 30.178572 0 0 0 -34.37106 29.91406 34.107143 30.178572 0 0 0 33.77346 30.44141 34.107143 30.178572 0 0 0 15.5254 -3.16016 50.892857 36.964287 0 0 0 46.4551 22.80274 50.892857 36.964287 0 0 0 43.4707 -17.24805 33.75 15.892858 0 0 0 18.125 2.60547 33.75 15.892858 0 0 0 34.0761 -15.7207v-0.0645a33.75 15.892858 0 0 0 -14.625 -13.19726 42.5 44.107143 0 0 0 12.8379 -31.07813v-0.17773a42.5 44.107143 0 0 0 -42.17 -44.40235z" stroke="#000" stroke-width=".99000001" fill="none"/>
+		</g>
+		<path marker-end="url(#e)" d="m993.92857 286.62983h50.00003" stroke="#000" stroke-width="1px" fill="none"/>
+	</g>
+</svg>

@@ -1,0 +1,59 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="dashboard_graph">
+    <div class="x_title">
+        <h3>HTTP Status By Class <br><small>{{dateRangeText}}</small></h3>
+        <div class="clearfix"></div>
+    </div>
+    <div class="col-md-9 col-sm-9 col-xs-12">
+        <div class="ds-chart-container">
+            <div id="ds-httpStatus-chart-{{::deliveryService.id}}" class="ds-chart"></div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-3 col-xs-12 bg-white summary-metrics">
+        <div class="x_title">
+            <h3>Summary Metrics</h3>
+            <div class="clearfix"></div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-6">
+            <table class="countries_list">
+                <tbody>
+                <tr>
+                    <td>Total 2xx</td>
+                    <td class="fs15 fw700 text-right total">{{summaryData2xx.totalTransactions | number:0}}</td>
+                </tr>
+                <tr>
+                    <td>Total 3xx</td>
+                    <td class="fs15 fw700 text-right">{{summaryData3xx.totalTransactions | number:0}}</td>
+                </tr>
+                <tr>
+                    <td>Total 4xx</td>
+                    <td class="fs15 fw700 text-right">{{summaryData4xx.totalTransactions | number:0}}</td>
+                </tr>
+                <tr>
+                    <td>Total 5xx</td>
+                    <td class="fs15 fw700 text-right">{{summaryData5xx.totalTransactions | number:0}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+</div>

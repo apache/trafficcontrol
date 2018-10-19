@@ -25,26 +25,57 @@
 # 
 # DB_SERVER
 # DB_PORT
-# DB_ROOT_PASS
 # DB_USER
 # DB_USER_PASS
 # DB_NAME
 # ADMIN_USER
 # ADMIN_PASS
-# CERT_COUNTRY
-# CERT_STATE
-# CERT_CITY
-# CERT_COMPANY
-# DOMAIN
-
 # TODO:  Unused -- should be removed?  TRAFFIC_VAULT_PASS
 
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY DOMAIN)
+envvars=( DB_SERVER DB_PORT DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS X509_CA_DIR TLD_DOMAIN INFRA_SUBDOMAIN CDN_SUBDOMAIN DS_HOSTS)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
+
+# Source to-access functions and FQDN vars
+source /to-access.sh
+
+# Create SSL certificates and trust the shared CA.
+source /generate-certs.sh
+
+# copy contents of /ca to /export/ssl
+# update the permissions 
+mkdir -p "$X509_CA_PERSIST_DIR" && chmod 777 "$X509_CA_PERSIST_DIR"
+chmod -R a+rw "$X509_CA_PERSIST_DIR"
+
+if [ -r "$X509_CA_PERSIST_ENV_FILE" ] ; then
+  umask $X509_CA_UMASK 
+  mkdir -p "$X509_CA_DIR" && chmod 777 $X509_CA_DIR
+  rsync -a "$X509_CA_PERSIST_DIR/" "$X509_CA_DIR/"
+  sync
+  echo "PERSIST CERTS FROM $X509_CA_PERSIST_DIR to $X509_CA_DIR"
+  sleep 4
+  source "$X509_CA_ENV_FILE"
+elif x509v3_init; then
+    umask $X509_CA_UMASK 
+		x509v3_create_cert "$INFRA_SUBDOMAIN" "$INFRA_FQDN"
+		for ds in $DS_HOSTS
+		do
+			x509v3_create_cert "$ds" "$ds.$CDN_FQDN"
+		done
+		x509v3_dump_env
+    # Save newly generated certs for future restarts.
+    rsync -av "$X509_CA_DIR/" "$X509_CA_PERSIST_DIR/"
+    chmod 777 "$X509_CA_PERSIST_DIR"
+    sync
+    echo "GENERATE CERTS FROM $X509_CA_DIR to $X509_CA_PERSIST_DIR"
+    sleep 4
+fi
+
+chown -R trafops:trafops "$X509_CA_PERSIST_DIR"
+chmod -R a+rw "$X509_CA_PERSIST_DIR"
 
 # Write config files
 set -x
@@ -52,12 +83,18 @@ if [[ -r /config.sh ]]; then
 	. /config.sh
 fi
 
-while ! nc $DB_SERVER $DB_PORT </dev/null; do # &>/dev/null; do
-        echo "waiting for $DB_SERVER $DB_PORT"
+pg_isready=$(rpm -ql postgresql96 | grep bin/pg_isready)
+if [[ ! -x $pg_isready ]] ; then
+    echo "Can't find pg_ready in postgresql96"
+    exit 1
+fi
+
+while ! $pg_isready -h$DB_SERVER -p$DB_PORT -d $DB_NAME; do
+        echo "waiting for db on $DB_SERVER $DB_PORT"
         sleep 3
 done
 
-TO_DIR=/opt/traffic_ops/app
+export TO_DIR=/opt/traffic_ops/app
 cat conf/production/database.conf
 
 export PERL5LIB=$TO_DIR/lib:$TO_DIR/local/lib/perl5
@@ -66,10 +103,24 @@ export GOPATH=/opt/traffic_ops/go
 
 cd $TO_DIR && \
 	./db/admin.pl --env=production reset && \
-	./db/admin.pl --env=production seed || echo "db setup failed!"
+	./db/admin.pl --env=production upgrade || echo "db upgrade failed!"
 
 # Add admin user -- all other users should be created using API
 /adduser.pl $TO_ADMIN_USER $TO_ADMIN_PASSWORD admin | psql -U$DB_USER -h$DB_SERVER $DB_NAME || echo "adding traffic_ops admin user failed!"
 
 cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
+
+until [[ -f ${ENROLLER_DIR}/enroller-started ]]; do
+    echo "waiting for enroller"
+    sleep 3
+done
+
+# Add initial data to traffic ops
+/trafficops-init.sh
+
+export TO_USER=$TO_ADMIN_USER
+export TO_PASSWORD=$TO_ADMIN_PASSWORD
+
+to-enroll "to" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
+
 exec tail -f /var/log/traffic_ops/traffic_ops.log

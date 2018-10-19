@@ -19,7 +19,7 @@
 
 module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.edit', [])
 	.controller('FormEditDeliveryServiceRequestController', require('./FormEditDeliveryServiceRequestController'))
-	.config(function($stateProvider, $urlRouterProvider) {
+	.config(function ($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.deliveryServiceRequests.edit', {
 				url: '/{deliveryServiceRequestId:[0-9]{1,8}}?type&fulfill',
@@ -30,13 +30,13 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 								template;
 
 							if (type.indexOf('ANY_MAP') != -1) {
-								template = 'common/modules/form/deliveryService/form.deliveryService.anyMap.tpl.html'
+								template = 'common/modules/form/deliveryService/form.deliveryService.anyMap.tpl.html';
 							} else if (type.indexOf('DNS') != -1) {
-								template = 'common/modules/form/deliveryService/form.deliveryService.DNS.tpl.html'
+								template = 'common/modules/form/deliveryService/form.deliveryService.DNS.tpl.html';
 							} else if (type.indexOf('HTTP') != -1) {
-								template = 'common/modules/form/deliveryService/form.deliveryService.HTTP.tpl.html'
+								template = 'common/modules/form/deliveryService/form.deliveryService.HTTP.tpl.html';
 							} else if (type.indexOf('STEERING') != -1) {
-								template = 'common/modules/form/deliveryService/form.deliveryService.Steering.tpl.html'
+								template = 'common/modules/form/deliveryService/form.deliveryService.Steering.tpl.html';
 							} else {
 
 							}
@@ -45,10 +45,10 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 						},
 						controller: 'FormEditDeliveryServiceRequestController',
 						resolve: {
-							deliveryServiceRequest: function($stateParams, deliveryServiceRequestService) {
-								return deliveryServiceRequestService.getDeliveryServiceRequests({ id: $stateParams.deliveryServiceRequestId });
+							deliveryServiceRequest: function ($stateParams, deliveryServiceRequestService) {
+								return deliveryServiceRequestService.getDeliveryServiceRequests({id: $stateParams.deliveryServiceRequestId});
 							},
-							deliveryService: function(deliveryServiceRequest, deliveryServiceService) {
+							deliveryService: function (deliveryServiceRequest, deliveryServiceService) {
 								var dsRequest = deliveryServiceRequest[0];
 
 								if (dsRequest.changeType == 'update') {
@@ -59,14 +59,29 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 									return dsRequest.deliveryService;
 								}
 							},
-							origin: function() {
+							origin: function () {
 								return [{}];
 							},
-							type: function($stateParams) {
+							type: function ($stateParams) {
 								return $stateParams.type;
 							},
-							types: function(typeService) {
-								return typeService.getTypes({ useInTable: 'deliveryservice' });
+							types: function (typeService) {
+								return typeService.getTypes({useInTable: 'deliveryservice'});
+							}
+						}
+					},
+					deliveryServiceRequestsComments: {
+						templateUrl: 'common/modules/table/deliveryServiceRequestComments/table.deliveryServiceRequestComments.tpl.html',
+						controller: 'TableDeliveryServiceRequestCommentsController',
+						resolve: {
+							request: function ($stateParams, deliveryServiceRequestService) {
+								return deliveryServiceRequestService.getDeliveryServiceRequests({id: $stateParams.deliveryServiceRequestId});
+							},
+							comments: function ($stateParams, deliveryServiceRequestService) {
+								return deliveryServiceRequestService.getDeliveryServiceRequestComments({
+									deliveryServiceRequestId: $stateParams.deliveryServiceRequestId,
+									orderby: 'id'
+								});
 							}
 						}
 					}

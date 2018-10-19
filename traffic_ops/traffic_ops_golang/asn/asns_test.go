@@ -71,6 +71,7 @@ func TestGetASNs(t *testing.T) {
 	for _, ts := range testCase {
 		rows = rows.AddRow(
 			*ts.ASN,
+			*ts.Cachegroup,
 			*ts.CachegroupID,
 			*ts.ID,
 			*ts.LastUpdated,
@@ -79,12 +80,11 @@ func TestGetASNs(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
-	v := map[string]string{"dsId": "1"}
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
-	asns, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
-	if len(errs) > 0 {
-		t.Errorf("asn.Read expected: no errors, actual: %v", errs)
+	asns, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
 
 	if len(asns) != 2 {

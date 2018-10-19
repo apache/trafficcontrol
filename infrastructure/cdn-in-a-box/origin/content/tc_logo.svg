@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License. -->
+<svg
+   xmlns:x="adobe:ns:meta/"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="967.35059"
+   height="1133.3221"
+   viewBox="0 0 967.35059 1133.3221"
+   id="svg4136"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="tc-logo.svg"
+   inkscape:export-filename="/home/bwilli415/src/Client-Integration-Document/logo.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <title
+     id="title4708">Apache Traffic Control Logo</title>
+  <defs
+     id="defs4144" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="2560"
+     inkscape:window-height="1387"
+     id="namedview4142"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="0.29729975"
+     inkscape:cx="401.38408"
+     inkscape:cy="310.19707"
+     inkscape:window-x="2560"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4136" />
+  <metadata
+     id="metadata4138">
+<?xpacket begin="ÿ" id="W5M0MpCehiHzreSzNTczkc9d"?>    <x:xmpmeta
+       x:xmptk="Adobe XMP Core 5.6-c138 79.159824, 2016/09/14-01:09:01        ">
+      <metadata>
+        <rdf:RDF>
+          <rdf:Description
+             rdf:about="" />
+          <cc:Work
+             rdf:about="">
+            <dc:format>image/svg+xml</dc:format>
+            <dc:type
+               rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+            <dc:title>Apache Traffic Control Logo</dc:title>
+            <dc:date>20/06/2018</dc:date>
+            <dc:creator>
+              <cc:Agent>
+                <dc:title>ocket8888</dc:title>
+              </cc:Agent>
+            </dc:creator>
+            <dc:language />
+          </cc:Work>
+        </rdf:RDF>
+      </metadata>
+    </x:xmpmeta>
+<?xpacket end="w"?>  </metadata>
+  <path
+     style="fill:#f49224;fill-opacity:1;stroke:none;stroke-opacity:1"
+     d="M 574.93448,0.06040155 A 566.66107,566.66107 0 0 0 165.97168,165.9706 a 566.66107,566.66107 0 0 0 0,801.38077 566.66107,566.66107 0 0 0 801.3789,0 l -91.9102,-91.91007 a 440.60428,440.60428 0 0 1 -272.4414,129.8066 l 0,-207.3925 A 235.0669,235.0669 0 0 0 796.74308,566.66 235.0669,235.0669 0 0 0 602.99898,335.3221 l 0,-207.0351 a 440.60428,440.60428 0 0 1 272.5937,129.4414 l 91.7579,-91.7578 A 566.66107,566.66107 0 0 0 574.93448,0.06040155 Z M 547.03218,126.5643 l 0,259.2168 21.1387,0 a 182.77501,182.77501 0 0 1 125.4199,54.3243 182.77501,182.77501 0 0 1 -2.3906,258.3417 182.77501,182.77501 0 0 1 -258.3418,-2.1289 182.77501,182.77501 0 0 1 -51.6172,-111.9863 l 0,-40.7598 -258.875,0 a 440.60428,440.60428 0 0 1 424.666,-417.0078 z m -424.3242,472.9727 206.4961,0 a 235.0669,235.0669 0 0 0 63.8437,130.8965 235.0669,235.0669 0 0 0 153.9844,70.5625 l 0,205.6211 A 440.60428,440.60428 0 0 1 122.70798,599.537 Z"
+     id="path4146"
+     inkscape:connector-curvature="0" />
+</svg>

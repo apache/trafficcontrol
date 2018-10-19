@@ -25,8 +25,8 @@ import (
 	"sync"
 
 	"fmt"
-	"github.com/Comcast/traffic_control/test/router/client"
-	"github.com/Comcast/traffic_control/test/router/data"
+	"github.com/apache/incubator-trafficcontrol/test/router/client"
+	"github.com/apache/incubator-trafficcontrol/test/router/data"
 )
 
 type LoadTest struct {

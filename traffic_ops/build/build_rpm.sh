@@ -29,7 +29,6 @@ function importFunctions() {
 	. "$functions_sh"
 }
 
-
 # ---------------------------------------
 function initBuildArea() {
 	echo "Initializing the build area."
@@ -53,7 +52,8 @@ function initBuildArea() {
 	cp -p bin/supermicro_udev_mapper.pl "$to_ort_dest"
 	tar -czvf "$to_ort_dest".tgz -C "$RPMBUILD"/SOURCES $(basename "$to_ort_dest") || \
 		 { echo "Could not create tar archive $to_ort_dest: $?"; exit 1; }
-	
+
+	export PLUGINS=$(grep -l -P '(?<!func )AddPlugin\(' ${TO_DIR}/traffic_ops_golang/plugin/*.go | xargs -I '{}' basename {} '.go')
 	echo "The build area has been initialized."
 }
 

@@ -17,9 +17,9 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, $location, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
+var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, $location, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
 
-	var createComment = function(request, placeholder) {
+	var createComment = function (request, placeholder) {
 		var params = {
 			title: 'Add Comment',
 			placeholder: placeholder,
@@ -35,7 +35,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 				}
 			}
 		});
-		modalInstance.result.then(function(commentValue) {
+		modalInstance.result.then(function (commentValue) {
 			var comment = {
 				deliveryServiceRequestId: request.id,
 				value: commentValue
@@ -56,31 +56,31 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 
 	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
-	$scope.refresh = function() {
+	$scope.refresh = function () {
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.fulfillable = function(request) {
+	$scope.fulfillable = function (request) {
 		return request.status == 'submitted';
 	};
 
-	$scope.rejectable = function(request) {
+	$scope.rejectable = function (request) {
 		return request.status == 'submitted';
 	};
 
-	$scope.completeable = function(request) {
+	$scope.completeable = function (request) {
 		return request.status == 'pending';
 	};
 
-	$scope.open = function(request) {
+	$scope.open = function (request) {
 		return (request.status == 'draft' || request.status == 'submitted');
 	};
 
-	$scope.closed = function(request) {
+	$scope.closed = function (request) {
 		return (request.status == 'rejected' || request.status == 'complete');
 	};
 
-	$scope.assignRequest = function(request, assign, $event) {
+	$scope.assignRequest = function (request, assign, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var params = {
 			title: 'Assign Delivery Service Request',
@@ -96,18 +96,17 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 				}
 			}
 		});
-		modalInstance.result.then(function() {
+		modalInstance.result.then(function () {
 			var assigneeId = (assign) ? userModel.user.id : null;
-			deliveryServiceRequestService.assignDeliveryServiceRequest(request.id, assigneeId).
-				then(function() {
-					$scope.refresh();
-				});
+			deliveryServiceRequestService.assignDeliveryServiceRequest(request.id, assigneeId).then(function () {
+				$scope.refresh();
+			});
 		}, function () {
 			// do nothing
 		});
 	};
 
-	$scope.editStatus = function(request, $event) {
+	$scope.editStatus = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var params = {
 			title: "Edit Delivery Service Request Status",
@@ -121,35 +120,32 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 				params: function () {
 					return params;
 				},
-				collection: function() {
+				collection: function () {
 					return [
-						{ id: $scope.DRAFT, name: 'Save as Draft' },
-						{ id: $scope.SUBMITTED, name: 'Submit for Review / Deployment' }
+						{id: $scope.DRAFT, name: 'Save as Draft'},
+						{id: $scope.SUBMITTED, name: 'Submit for Review / Deployment'}
 					];
 				}
 			}
 		});
-		modalInstance.result.then(function(action) {
+		modalInstance.result.then(function (action) {
 			var status = (action.id == $scope.DRAFT) ? 'draft' : 'submitted';
-			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, status).
-				then(function() {
-					$scope.refresh();
-				});
+			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, status).then(function () {
+				$scope.refresh();
+			});
 		}, function () {
 			// do nothing
 		});
 	};
 
-	$scope.viewComments = function(request, $event) {
-		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		$location.path($location.path() + '/' + request.id + '/comments');
-	};
-
-	$scope.rejectRequest = function(request, $event) {
+	$scope.rejectRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
 		if (request.assigneeId != userModel.user.id) {
-			messageModel.setMessages([ { level: 'error', text: 'Only the assignee can mark a delivery service request as rejected' } ], false);
+			messageModel.setMessages([{
+				level: 'error',
+				text: 'Only the assignee can mark a delivery service request as rejected'
+			}], false);
 			$anchorScroll(); // scrolls window to top
 			return;
 		}
@@ -168,23 +164,25 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 				}
 			}
 		});
-		modalInstance.result.then(function() {
-			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'rejected').
-				then(
-					function() {
-						$scope.refresh();
-						createComment(request, 'Enter rejection reason...');
-					});
+		modalInstance.result.then(function () {
+			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'rejected').then(
+				function () {
+					$scope.refresh();
+					createComment(request, 'Enter rejection reason...');
+				});
 		}, function () {
 			// do nothing
 		});
 	};
 
-	$scope.completeRequest = function(request, $event) {
+	$scope.completeRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
 		if (request.assigneeId != userModel.user.id) {
-			messageModel.setMessages([ { level: 'error', text: 'Only the assignee can mark a delivery service request as complete' } ], false);
+			messageModel.setMessages([{
+				level: 'error',
+				text: 'Only the assignee can mark a delivery service request as complete'
+			}], false);
 			$anchorScroll(); // scrolls window to top
 			return;
 		}
@@ -203,18 +201,17 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 				}
 			}
 		});
-		modalInstance.result.then(function() {
-			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'complete').
-				then(function() {
-					$scope.refresh();
-					createComment(request, 'Enter comment...');
+		modalInstance.result.then(function () {
+			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'complete').then(function () {
+				$scope.refresh();
+				createComment(request, 'Enter comment...');
 			});
 		}, function () {
 			// do nothing
 		});
 	};
 
-	$scope.deleteRequest = function(request, $event) {
+	$scope.deleteRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var params = {
 			title: 'Delete the ' + request.deliveryService.xmlId + ' ' + request.changeType + ' request?',
@@ -230,31 +227,30 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 				}
 			}
 		});
-		modalInstance.result.then(function() {
-			deliveryServiceRequestService.deleteDeliveryServiceRequest(request.id).
-				then(function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery service request deleted' } ], false);
-					$scope.refresh();
-				});
+		modalInstance.result.then(function () {
+			deliveryServiceRequestService.deleteDeliveryServiceRequest(request.id).then(function () {
+				messageModel.setMessages([{level: 'success', text: 'Delivery service request deleted'}], false);
+				$scope.refresh();
+			});
 		}, function () {
 			// do nothing
 		});
 	};
 
-	$scope.editDeliveryServiceRequest = function(request) {
+	$scope.editDeliveryServiceRequest = function (request) {
 		var path = '/delivery-service-requests/' + request.id + '?type=';
 		typeService.getType(request.deliveryService.typeId)
-			.then(function(result) {
+			.then(function (result) {
 				path += result.name;
 				locationUtils.navigateToPath(path);
 			});
 	};
 
-	$scope.fulfillRequest = function(request, $event) {
+	$scope.fulfillRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var path = '/delivery-service-requests/' + request.id + '?type=';
 		typeService.getType(request.deliveryService.typeId)
-			.then(function(result) {
+			.then(function (result) {
 				path += result.name;
 				locationUtils.navigateToPath(path);
 			});
@@ -265,7 +261,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			"paging": false,
 			"dom": '<"filter-checkbox">frtip',
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 7 }
+				{'orderable': false, 'targets': 7}
 			],
 			"aaSorting": []
 		});
@@ -274,7 +270,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		// only show "open" ds requests on render
 		dsRequestsTable.fnFilter('draft|submitted|pending', 2, true, false);
 
-		$('#showClosed').click(function() {
+		$('#showClosed').click(function () {
 			var checked = $('#showClosed').is(':checked');
 			if (checked) {
 				dsRequestsTable.fnFilter('', 2, true, false);

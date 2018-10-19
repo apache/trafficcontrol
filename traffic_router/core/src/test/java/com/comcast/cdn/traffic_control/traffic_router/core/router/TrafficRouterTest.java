@@ -17,6 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation.LocalizationMethod;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker;
@@ -175,6 +176,7 @@ public class TrafficRouterTest {
         when(trafficRouter.getClientLocation(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenReturn(clientLocation);
 
         when(trafficRouter.getCachesByGeo(any(DeliveryService.class), any(Geolocation.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.filterEnabledLocations(any(List.class), any(LocalizationMethod.class))).thenCallRealMethod();
         when(trafficRouter.orderCacheLocations(any(List.class), any(Geolocation.class))).thenCallRealMethod();
         when(trafficRouter.getSupportingCaches(any(List.class), any(DeliveryService.class))).thenCallRealMethod();
 

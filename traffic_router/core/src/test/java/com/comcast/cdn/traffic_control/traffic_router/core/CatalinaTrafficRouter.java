@@ -22,7 +22,6 @@ import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.core.StandardService;
 import org.apache.catalina.startup.Catalina;
 import org.springframework.util.SocketUtils;
-
 import java.util.logging.Level;
 
 public class CatalinaTrafficRouter {
@@ -33,7 +32,7 @@ public class CatalinaTrafficRouter {
 		java.util.logging.Logger logger = java.util.logging.Logger.getLogger("");
 		java.util.logging.Handler[] handlers = logger.getHandlers();
 		for (java.util.logging.Handler handler : handlers) {
-			handler.setLevel(Level.WARNING);
+			handler.setLevel(Level.FINE);
 		}
 
 		System.setProperty("dns.tcp.port", "1053");
@@ -42,8 +41,7 @@ public class CatalinaTrafficRouter {
 		System.setProperty("catalina.home", "");
 
 		catalina = new Catalina();
-		catalina.process(new String[] {"-config", serverXmlPath});
-		catalina.load();
+		catalina.load(new String[] {"-config", serverXmlPath});
 
 		// Override the port and app base property of server.xml
 		StandardService trafficRouterService = (StandardService) catalina.getServer().findService("traffic_router_core");
@@ -67,7 +65,7 @@ public class CatalinaTrafficRouter {
 		standardHost.setAppBase(appBase);
 
 		// We have to manually set up the default servlet, the Catalina class doesn't do this for us
-		StandardContext rootContext = (StandardContext) standardHost.findChild("/");
+		StandardContext rootContext = (StandardContext) standardHost.findChild("");
 		Wrapper defaultServlet = rootContext.createWrapper();
 		defaultServlet.setName("default");
 		defaultServlet.setServletClass("org.apache.catalina.servlets.DefaultServlet");
@@ -76,6 +74,8 @@ public class CatalinaTrafficRouter {
 		defaultServlet.setLoadOnStartup(1);
 
 		rootContext.addChild(defaultServlet);
+		// set docBase to "" so we can start from the root '/' context
+		rootContext.setDocBase("");
 	}
 
 	public void start() {

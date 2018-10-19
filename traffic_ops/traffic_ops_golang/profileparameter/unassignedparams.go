@@ -32,24 +32,23 @@ import (
 
 // my $rs_data = $self->db->resultset("Parameter")->search( 'me.id' => { 'not in' => \@assigned_params } );
 
-func GetUnassigned(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		_, intParams, userErr, sysErr, errCode := api.AllParams(r, []string{"id"}, []string{"id"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		api.RespWriter(w, r)(getUnassignedParametersByProfileID(intParams["id"], db))
+func GetUnassigned(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	api.RespWriter(w, r, inf.Tx.Tx)(getUnassignedParametersByProfileID(inf.Tx.Tx, inf.IntParams["id"]))
 }
 
-func getUnassignedParametersByProfileID(profileID int, db *sql.DB) ([]tc.ProfileParameterByName, error) {
+func getUnassignedParametersByProfileID(tx *sql.Tx, profileID int) ([]tc.ProfileParameterByName, error) {
 	q := `
 SELECT
 parameter.id, parameter.name, parameter.value, parameter.config_file, parameter.secure, parameter.last_updated
 FROM parameter WHERE id NOT IN (SELECT parameter FROM profile_parameter as pp WHERE pp.profile = $1)
 `
-	rows, err := db.Query(q, profileID)
+	rows, err := tx.Query(q, profileID)
 	if err != nil {
 		return nil, errors.New("querying profile name parameters: " + err.Error())
 	}

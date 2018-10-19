@@ -20,4 +20,5 @@
 module.exports = angular.module('trafficPortal.filters', [])
     .filter('offsetFilter', require('./OffsetFilter'))
 	.filter('percentFilter', require('./PercentFilter'))
+	.filter('unitsFilter', require('./UnitsFilter'))
 ;

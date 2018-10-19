@@ -25,7 +25,6 @@ under the License.
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Link Delivery Services to User" ng-if="useTenancy == '0'" ng-click="selectDSs()"><i class="fa fa-link"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -65,7 +64,6 @@ under the License.
                 <td data-search="^{{::qstring(ds)}}$">{{::qstring(ds)}}</td>
                 <td data-search="^{{::getRelativeTime(ds.lastUpdated)}}$" data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
                 <td style="text-align: right;">
-                    <a ng-if="useTenancy == '0'" class="link action-link" title="Unlink Delivery Service from User" ng-click="removeDS(ds.id, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
                     <span ng-if="showChartsButton"><a class="link action-link" title="View Charts" ng-click="openCharts(ds, $event)"><i class="fa fa-sm fa-bar-chart"></i></a></span>
                 </td>
             </tr>

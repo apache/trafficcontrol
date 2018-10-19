@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -36,9 +35,9 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestCoordinates() []v13.Coordinate {
-	coords := []v13.Coordinate{}
-	testCoord1 := v13.Coordinate{
+func getTestCoordinates() []tc.Coordinate {
+	coords := []tc.Coordinate{}
+	testCoord1 := tc.Coordinate{
 		ID:          1,
 		Name:        "coordinate1",
 		Latitude:    38.7,
@@ -47,7 +46,7 @@ func getTestCoordinates() []v13.Coordinate {
 	}
 	coords = append(coords, testCoord1)
 
-	testCoord2 := v13.Coordinate{
+	testCoord2 := tc.Coordinate{
 		ID:          2,
 		Name:        "coordinate2",
 		Latitude:    38.7,
@@ -70,7 +69,7 @@ func TestReadCoordinates(t *testing.T) {
 	defer db.Close()
 
 	testCoords := getTestCoordinates()
-	cols := test.ColsFromStructByTag("db", v13.Coordinate{})
+	cols := test.ColsFromStructByTag("db", tc.Coordinate{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCoords {
@@ -85,14 +84,12 @@ func TestReadCoordinates(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
-	v := map[string]string{"id": "1"}
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
-	coordinates, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
-	if len(errs) > 0 {
-		t.Errorf("coordinate.Read expected: no errors, actual: %v", errs)
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
+	coordinates, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
-
 	if len(coordinates) != 2 {
 		t.Errorf("coordinate.Read expected: len(coordinates) == 2, actual: %v", len(coordinates))
 	}
@@ -141,7 +138,7 @@ func TestValidate(t *testing.T) {
 	la := -190.0
 	lo := -190.0
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c := TOCoordinate{CoordinateNullable: v13.CoordinateNullable{ID: &id,
+	c := TOCoordinate{CoordinateNullable: tc.CoordinateNullable{ID: &id,
 		Name:        &nm,
 		Latitude:    &la,
 		Longitude:   &lo,
@@ -163,7 +160,7 @@ func TestValidate(t *testing.T) {
 	nm = "This.is.2.a-Valid---Coordinate."
 	la = 90.0
 	lo = 90.0
-	c = TOCoordinate{CoordinateNullable: v13.CoordinateNullable{ID: &id,
+	c = TOCoordinate{CoordinateNullable: tc.CoordinateNullable{ID: &id,
 		Name:        &nm,
 		Latitude:    &la,
 		Longitude:   &lo,

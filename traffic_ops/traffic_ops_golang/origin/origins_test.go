@@ -28,7 +28,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -38,9 +37,9 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestOrigins() []v13.Origin {
-	origins := []v13.Origin{}
-	testOrigin := v13.Origin{
+func getTestOrigins() []tc.Origin {
+	origins := []tc.Origin{}
+	testOrigin := tc.Origin{
 		Cachegroup:        util.StrPtr("Cachegroup"),
 		CachegroupID:      util.IntPtr(1),
 		Coordinate:        util.StrPtr("originCoordinate"),
@@ -87,11 +86,11 @@ func TestReadOrigins(t *testing.T) {
 	defer db.Close()
 
 	testOrigins := getTestOrigins()
-	cols := test.ColsFromStructByTag("db", v13.Origin{})
-	rows := sqlmock.NewRows(cols)
+	cols := test.ColsFromStructByTag("db", tc.Origin{})
+	originRows := sqlmock.NewRows(cols)
 
 	for _, to := range testOrigins {
-		rows = rows.AddRow(
+		originRows = originRows.AddRow(
 			to.Cachegroup,
 			to.CachegroupID,
 			to.Coordinate,
@@ -113,11 +112,17 @@ func TestReadOrigins(t *testing.T) {
 			to.TenantID,
 		)
 	}
+
+	tenantRows := sqlmock.NewRows([]string{"id"})
+	tenantRows.AddRow(1)
+
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("WITH").WillReturnRows(tenantRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(originRows)
 	v := map[string]string{}
 
-	origins, errs, errType := getOrigins(v, db.MustBegin(), auth.PrivLevelAdmin)
+	testUser := auth.CurrentUser{TenantID: 1}
+	origins, errs, errType := getOrigins(v, db.MustBegin(), &testUser)
 	log.Debugln("%v-->", origins)
 	if len(errs) > 0 {
 		t.Errorf("getOrigins expected: no errors, actual: %v with error type: %s", errs, errType.String())
@@ -176,7 +181,7 @@ func TestValidate(t *testing.T) {
 	const ip6Err = `'ip6Address' must be a valid IPv6 address`
 
 	// verify that non-null fields are invalid
-	c := TOOrigin{Origin: v13.Origin{ID: nil,
+	c := TOOrigin{Origin: tc.Origin{ID: nil,
 		Name:              nil,
 		DeliveryServiceID: nil,
 		FQDN:              nil,
@@ -204,7 +209,7 @@ func TestValidate(t *testing.T) {
 	port := 65535
 	pro := "http"
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c = TOOrigin{Origin: v13.Origin{ID: &id,
+	c = TOOrigin{Origin: tc.Origin{ID: &id,
 		Name:              &nm,
 		DeliveryServiceID: &id,
 		FQDN:              &fqdn,

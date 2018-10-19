@@ -57,7 +57,41 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    $scope.localizationMethods = {
+        DEEP_CZ: false,
+        CZ: false,
+        GEO: false
+    };
+
+    $scope.setLocalizationMethods = function(cacheGroup) {
+        var methods = [];
+        var keys = Object.keys($scope.localizationMethods);
+        for (var i = 0; i < keys.length; i++) {
+            if ($scope.localizationMethods[keys[i]]) {
+                methods.push(keys[i]);
+            }
+        }
+        cacheGroup.localizationMethods = methods;
+    };
+
+    var initLocalizationMethods = function() {
+        // by default, no explicitly enabled methods means ALL are enabled
+        if (!cacheGroup.localizationMethods) {
+            var keys = Object.keys($scope.localizationMethods);
+            for (var i = 0; i < keys.length; i++) {
+                $scope.localizationMethods[keys[i]] = true;
+            }
+            return;
+        }
+        for (var i = 0; i < cacheGroup.localizationMethods.length; i++) {
+            if ($scope.localizationMethods.hasOwnProperty(cacheGroup.localizationMethods[i])) {
+                $scope.localizationMethods[cacheGroup.localizationMethods[i]] = true;
+            }
+        }
+    };
+
     var init = function () {
+        initLocalizationMethods();
         getCacheGroups();
         getTypes();
     };

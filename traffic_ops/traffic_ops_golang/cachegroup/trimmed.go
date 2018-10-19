@@ -24,19 +24,24 @@ import (
 	"errors"
 	"net/http"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-func TrimmedHandler(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		api.RespWriter(w, r)(getCachegroupsTrimmed(db))
+func GetTrimmed(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+
+	defer inf.Close()
+	api.RespWriter(w, r, inf.Tx.Tx)(getCachegroupsTrimmed(inf.Tx.Tx))
 }
 
-func getCachegroupsTrimmed(db *sql.DB) ([]tc.CachegroupTrimmedName, error) {
+func getCachegroupsTrimmed(tx *sql.Tx) ([]tc.CachegroupTrimmedName, error) {
 	names := []tc.CachegroupTrimmedName{}
-	rows, err := db.Query(`SELECT name from cachegroup`)
+	rows, err := tx.Query(`SELECT name from cachegroup`)
 	if err != nil {
 		return nil, errors.New("selecting cachegroup names: " + err.Error())
 	}

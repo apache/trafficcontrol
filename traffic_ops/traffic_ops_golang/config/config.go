@@ -27,6 +27,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"strings"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/basho/riak-go-client"
@@ -58,25 +60,32 @@ type ConfigHypnotoad struct {
 
 // ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
 type ConfigTrafficOpsGolang struct {
-	Port                   string         `json:"port"`
-	ProxyTimeout           int            `json:"proxy_timeout"`
-	ProxyKeepAlive         int            `json:"proxy_keep_alive"`
-	ProxyTLSTimeout        int            `json:"proxy_tls_timeout"`
-	ProxyReadHeaderTimeout int            `json:"proxy_read_header_timeout"`
-	ReadTimeout            int            `json:"read_timeout"`
-	ReadHeaderTimeout      int            `json:"read_header_timeout"`
-	WriteTimeout           int            `json:"write_timeout"`
-	IdleTimeout            int            `json:"idle_timeout"`
-	LogLocationError       string         `json:"log_location_error"`
-	LogLocationWarning     string         `json:"log_location_warning"`
-	LogLocationInfo        string         `json:"log_location_info"`
-	LogLocationDebug       string         `json:"log_location_debug"`
-	LogLocationEvent       string         `json:"log_location_event"`
-	Insecure               bool           `json:"insecure"`
-	MaxDBConnections       int            `json:"max_db_connections"`
-	BackendMaxConnections  map[string]int `json:"backend_max_connections"`
-	ProfilingEnabled       bool           `json:"profiling_enabled"`
-	ProfilingLocation      string         `json:"profiling_location"`
+	Port                     string                     `json:"port"`
+	ProxyTimeout             int                        `json:"proxy_timeout"`
+	ProxyKeepAlive           int                        `json:"proxy_keep_alive"`
+	ProxyTLSTimeout          int                        `json:"proxy_tls_timeout"`
+	ProxyReadHeaderTimeout   int                        `json:"proxy_read_header_timeout"`
+	ReadTimeout              int                        `json:"read_timeout"`
+	RequestTimeout           int                        `json:"request_timeout"`
+	ReadHeaderTimeout        int                        `json:"read_header_timeout"`
+	WriteTimeout             int                        `json:"write_timeout"`
+	IdleTimeout              int                        `json:"idle_timeout"`
+	LogLocationError         string                     `json:"log_location_error"`
+	LogLocationWarning       string                     `json:"log_location_warning"`
+	LogLocationInfo          string                     `json:"log_location_info"`
+	LogLocationDebug         string                     `json:"log_location_debug"`
+	LogLocationEvent         string                     `json:"log_location_event"`
+	Insecure                 bool                       `json:"insecure"`
+	MaxDBConnections         int                        `json:"max_db_connections"`
+	DBMaxIdleConnections     int                        `json:"db_max_idle_connections"`
+	DBConnMaxLifetimeSeconds int                        `json:"db_conn_max_lifetime_seconds"`
+	BackendMaxConnections    map[string]int             `json:"backend_max_connections"`
+	DBQueryTimeoutSeconds    int                        `json:"db_query_timeout_seconds"`
+	Plugins                  []string                   `json:"plugins"`
+	PluginConfig             map[string]json.RawMessage `json:"plugin_config"`
+	PluginSharedConfig       map[string]interface{}     `json:"plugin_shared_config"`
+	ProfilingEnabled         bool                       `json:"profiling_enabled"`
+	ProfilingLocation        string                     `json:"profiling_location"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
@@ -102,6 +111,7 @@ type ConfigLDAP struct {
 }
 
 const DefaultLDAPTimeoutSecs = 60
+const DefaultDBQueryTimeoutSecs = 20
 
 // ErrorLog - critical messages
 func (c Config) ErrorLog() log.LogLocation {
@@ -165,7 +175,7 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appV
 	}
 	cfg, err = ParseConfig(cfg)
 	if err != nil {
-		return Config{}, []error{fmt.Errorf("parsing config '%s': %v", dbConfPath, err)}, BlockStartup
+		return Config{}, []error{fmt.Errorf("parsing config '%s': %v", cdnConfPath, err)}, BlockStartup
 	}
 
 	if riakConfPath != "" {
@@ -218,8 +228,9 @@ func (c Config) GetKeyPath() string {
 }
 
 const (
-	// MojoliciousConcurrentConnectionsDefault  ...
-	MojoliciousConcurrentConnectionsDefault = 12
+	MojoliciousConcurrentConnectionsDefault = 12 // MojoliciousConcurrentConnectionsDefault
+	DBMaxIdleConnectionsDefault             = 10 // if this is higher than MaxDBConnections it will be automatically adjusted below it by the db/sql library
+	DBConnMaxLifetimeSecondsDefault         = 60
 )
 
 // ParseConfig validates required fields, and parses non-JSON types
@@ -252,18 +263,31 @@ func ParseConfig(cfg Config) (Config, error) {
 	if cfg.BackendMaxConnections["mojolicious"] == 0 {
 		cfg.BackendMaxConnections["mojolicious"] = MojoliciousConcurrentConnectionsDefault
 	}
+	if cfg.DBMaxIdleConnections == 0 {
+		cfg.DBMaxIdleConnections = DBMaxIdleConnectionsDefault
+	}
+	if cfg.DBConnMaxLifetimeSeconds == 0 {
+		cfg.DBConnMaxLifetimeSeconds = DBConnMaxLifetimeSecondsDefault
+	}
+	if cfg.DBQueryTimeoutSeconds == 0 {
+		cfg.DBQueryTimeoutSeconds = DefaultDBQueryTimeoutSecs
+	}
 
 	invalidTOURLStr := ""
 	var err error
-	listen := cfg.Listen[0]
-	if cfg.URL, err = url.Parse(listen); err != nil {
-		invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
-	}
-	cfg.KeyPath = cfg.GetKeyPath()
-	cfg.CertPath = cfg.GetCertPath()
+	if len(cfg.Listen) < 1 {
+		missings += `"listen", `
+	} else {
+		listen := cfg.Listen[0]
+		if cfg.URL, err = url.Parse(listen); err != nil {
+			invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
+		}
+		cfg.KeyPath = cfg.GetKeyPath()
+		cfg.CertPath = cfg.GetCertPath()
 
-	newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
-	cfg.URL = &newURL
+		newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
+		cfg.URL = &newURL
+	}
 
 	if len(missings) > 0 {
 		missings = "missing fields: " + missings[:len(missings)-2] // strip final `, `
@@ -290,6 +314,22 @@ func GetLDAPConfig(LDAPConfPath string) (bool, *ConfigLDAP, error) {
 	if err != nil {
 		return false, LDAPconf, fmt.Errorf("parsing LDAP conf '%v': %v", LDAPConfBytes, err)
 	}
+	if strings.TrimSpace(LDAPconf.AdminPass) == "" {
+		return false, LDAPconf, fmt.Errorf("LDAP conf missing admin_pass field")
+	}
+	if strings.TrimSpace(LDAPconf.SearchBase) == "" {
+		return false, LDAPconf, fmt.Errorf("LDAP conf missing search_base field")
+	}
+	if strings.TrimSpace(LDAPconf.AdminDN) == "" {
+		return false, LDAPconf, fmt.Errorf("LDAP conf missing admin_dn field")
+	}
+	if strings.TrimSpace(LDAPconf.Host) == "" {
+		return false, LDAPconf, fmt.Errorf("LDAP conf missing host field")
+	}
+	if strings.TrimSpace(LDAPconf.SearchQuery) == "" {
+		return false, LDAPconf, fmt.Errorf("LDAP conf missing search_query field")
+	}
+
 	return true, LDAPconf, nil
 }
 

@@ -17,10 +17,10 @@ package com.comcast.cdn.traffic_control.traffic_router.secure;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class HandshakeData {
-	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(HandshakeData.class);
-
 	private final String deliveryService;
 	private final String hostname;
 	private final X509Certificate[] certificateChain;
@@ -51,5 +51,23 @@ public class HandshakeData {
 
 	public void setPrivateKey(final PrivateKey privateKey) {
 		this.privateKey = privateKey;
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (this == o) {return true;}
+		if (!(o instanceof HandshakeData)) {return false;}
+		final HandshakeData that = (HandshakeData) o;
+		return Objects.equals(deliveryService, that.deliveryService) &&
+				Objects.equals(hostname, that.hostname) &&
+				Arrays.equals(certificateChain, that.certificateChain) &&
+				Objects.equals(privateKey, that.privateKey);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Objects.hash(deliveryService, hostname, privateKey);
+		result = 31 * result + Arrays.hashCode(certificateChain);
+		return result;
 	}
 }

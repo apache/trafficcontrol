@@ -21,10 +21,9 @@ package parameter
 
 import (
 	"errors"
-	"fmt"
+	"net/http"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -33,8 +32,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 const (
@@ -54,6 +51,21 @@ type TOParameter struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.ParameterNullable
 }
+
+func (v *TOParameter) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TOParameter) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOParameter) InsertQuery() string           { return insertQuery() }
+func (v *TOParameter) NewReadObj() interface{}       { return &tc.ParameterNullable{} }
+func (v *TOParameter) SelectQuery() string           { return selectQuery() }
+func (v *TOParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		ConfigFileQueryParam: dbhelpers.WhereColumnInfo{"p.config_file", nil},
+		IDQueryParam:         dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
+		NameQueryParam:       dbhelpers.WhereColumnInfo{"p.name", nil},
+		SecureQueryParam:     dbhelpers.WhereColumnInfo{"p.secure", api.IsBool}}
+}
+func (v *TOParameter) UpdateQuery() string { return updateQuery() }
+func (v *TOParameter) DeleteQuery() string { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
@@ -99,63 +111,59 @@ func (param TOParameter) Validate() error {
 	// - Secure Flag is always set to either 1/0
 	// - Admin rights only
 	// - Do not allow duplicate parameters by name+config_file+value
+	// - Client can send NOT NULL constraint on 'value' so removed it's validation as .Required
 	errs := validation.Errors{
 		NameQueryParam:       validation.Validate(param.Name, validation.Required),
 		ConfigFileQueryParam: validation.Validate(param.ConfigFile, validation.Required),
-		ValueQueryParam:      validation.Validate(param.Value, validation.Required),
 	}
 
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-//The TOParameter implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a parameter with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted parameter and have
-//to be added to the struct
-func (param *TOParameter) Create() (error, tc.ApiErrorType) {
-	resultRows, err := param.ReqInfo.Tx.NamedQuery(insertQuery(), param)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a parameter with " + err.Error()), eType
-			}
-			return err, eType
-		}
-		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
+func (pa *TOParameter) Create() (error, error, int) {
+	if pa.Value == nil {
+		pa.Value = util.StrPtr("")
 	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no parameter was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected > 1 {
-		err = errors.New("too many ids returned from parameter insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-
-	param.SetKeys(map[string]interface{}{IDQueryParam: id})
-	param.LastUpdated = &lastUpdated
-
-	return nil, tc.NoError
+	return api.GenericCreate(pa)
 }
+
+func (param *TOParameter) Read() ([]interface{}, error, error, int) {
+	queryParamsToQueryCols := param.ParamColumns()
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(param.APIInfo().Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+
+	query := selectQuery() + where + ParametersGroupBy() + orderBy
+	rows, err := param.ReqInfo.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, nil, errors.New("querying " + param.GetType() + ": " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+
+	params := []interface{}{}
+	for rows.Next() {
+		var p tc.ParameterNullable
+		if err = rows.StructScan(&p); err != nil {
+			return nil, nil, errors.New("scanning " + param.GetType() + ": " + err.Error()), http.StatusInternalServerError
+		}
+		if p.Secure != nil && *p.Secure && param.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
+			p.Value = &HiddenField
+		}
+		params = append(params, p)
+	}
+
+	return params, nil, nil, http.StatusOK
+}
+
+func (pa *TOParameter) Update() (error, error, int) {
+	if pa.Value == nil {
+		pa.Value = util.StrPtr("")
+	}
+	return api.GenericUpdate(pa)
+}
+
+func (pa *TOParameter) Delete() (error, error, int) { return api.GenericDelete(pa) }
 
 func insertQuery() string {
 	query := `INSERT INTO parameter (
@@ -168,123 +176,6 @@ secure) VALUES (
 :value,
 :secure) RETURNING id,last_updated`
 	return query
-}
-
-func (param *TOParameter) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
-	privLevel := param.ReqInfo.User.PrivLevel
-
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		ConfigFileQueryParam: dbhelpers.WhereColumnInfo{"p.config_file", nil},
-		IDQueryParam:         dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
-		NameQueryParam:       dbhelpers.WhereColumnInfo{"p.name", nil},
-		SecureQueryParam:     dbhelpers.WhereColumnInfo{"p.secure", api.IsBool},
-	}
-
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
-	}
-
-	query := selectQuery() + where + ParametersGroupBy() + orderBy
-	log.Debugln("Query is ", query)
-
-	rows, err := param.ReqInfo.Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying Parameters: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	params := []interface{}{}
-	for rows.Next() {
-		var p tc.ParameterNullable
-		if err = rows.StructScan(&p); err != nil {
-			log.Errorf("error parsing Parameter rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		var isSecure bool
-		if p.Secure != nil {
-			isSecure = *p.Secure
-		}
-
-		if isSecure && (privLevel < auth.PrivLevelAdmin) {
-			p.Value = &HiddenField
-		}
-		params = append(params, p)
-	}
-
-	return params, []error{}, tc.NoError
-
-}
-
-//The TOParameter implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a parameter with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (param *TOParameter) Update() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with parameter: %++v", updateQuery(), param)
-	resultRows, err := param.ReqInfo.Tx.NamedQuery(updateQuery(), param)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a parameter with " + err.Error()), eType
-			}
-			return err, eType
-		}
-		log.Errorf("received error: %++v from update execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	defer resultRows.Close()
-
-	// get LastUpdated field -- updated by trigger in the db
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	param.LastUpdated = &lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no parameter found with this id"), tc.DataMissingError
-		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	return nil, tc.NoError
-}
-
-//The Parameter implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (param *TOParameter) Delete() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), param)
-	result, err := param.ReqInfo.Tx.NamedExec(deleteQuery(), param)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected < 1 {
-		return errors.New("no parameter with that id found"), tc.DataMissingError
-	}
-	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	return nil, tc.NoError
 }
 
 func selectQuery() string {

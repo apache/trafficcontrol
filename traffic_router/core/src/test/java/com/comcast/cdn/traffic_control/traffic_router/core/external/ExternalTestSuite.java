@@ -116,6 +116,7 @@ public class ExternalTestSuite {
 		System.setProperty("routerSecurePort", "" + findAvailableTcpPort());
 
 		setupFakeServers();
+		String prefix = System.getProperty("user.dir");
 
 		tmpDeployDir = Files.createTempDirectory("ext-test-").toFile();
 		new File(tmpDeployDir,"conf").mkdirs();
@@ -131,8 +132,7 @@ public class ExternalTestSuite {
 		System.setProperty("cache.config.json.refresh.period", "10000");
 		System.setProperty("dns.tcp.port", "" + findAvailableTcpPort());
 		System.setProperty("dns.udp.port", "" + findAvailableUdpPort());
-
-		System.setProperty("traffic_monitor.properties", "src/test/conf/traffic_monitor.properties");
+		System.setProperty("traffic_monitor.properties", "not_needed");
 
 		File dbDirectory = new File(tmpDeployDir, "db");
 		dbDirectory.mkdir();
@@ -142,9 +142,14 @@ public class ExternalTestSuite {
 
 		ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{ISO8601} [%-5p] %c{4}: %m%n"));
 		LogManager.getRootLogger().addAppender(consoleAppender);
-		LogManager.getRootLogger().setLevel(Level.WARN);
+		LogManager.getRootLogger().setLevel(Level.INFO);
 
-		catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/opt/tomcat/conf/server.xml", "src/main/webapp");
+		// This one test the actual war that is output by the build process
+		catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/conf/server.xml", "target/ROOT");
+
+		// Uncomment this configuration for a lot more logging but could contain changes or temporary configuration which won't be part of the final build
+		//catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/conf/server.xml", "src/main/webapp");
+		System.out.println("catalinaTrafficRouter: "+catalinaTrafficRouter.toString());
 		catalinaTrafficRouter.start();
 	}
 

@@ -18,7 +18,7 @@
  */
 
 module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.comments', [])
-	.config(function($stateProvider, $urlRouterProvider) {
+	.config(function ($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.deliveryServiceRequests.comments', {
 				url: '/{deliveryServiceRequestId:[0-9]{1,8}}/comments?type',
@@ -27,11 +27,8 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.c
 						templateUrl: 'common/modules/table/deliveryServiceRequestComments/table.deliveryServiceRequestComments.tpl.html',
 						controller: 'TableDeliveryServiceRequestCommentsController',
 						resolve: {
-							request: function($stateParams, deliveryServiceRequestService) {
-								return deliveryServiceRequestService.getDeliveryServiceRequests({ id: $stateParams.deliveryServiceRequestId });
-							},
-							comments: function($stateParams, deliveryServiceRequestService) {
-								return deliveryServiceRequestService.getDeliveryServiceRequestComments({ deliveryServiceRequestId: $stateParams.deliveryServiceRequestId, orderby: 'id' });
+							request: function ($stateParams, deliveryServiceRequestService) {
+								return deliveryServiceRequestService.getDeliveryServiceRequests({id: $stateParams.deliveryServiceRequestId});
 							}
 						}
 					}

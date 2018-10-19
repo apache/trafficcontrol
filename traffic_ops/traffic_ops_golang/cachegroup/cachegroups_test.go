@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -36,9 +35,9 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestCacheGroups() []v13.CacheGroup {
-	cgs := []v13.CacheGroup{}
-	testCG1 := v13.CacheGroup{
+func getTestCacheGroups() []tc.CacheGroup {
+	cgs := []tc.CacheGroup{}
+	testCG1 := tc.CacheGroup{
 		ID:                          1,
 		Name:                        "cachegroup1",
 		ShortName:                   "cg1",
@@ -46,13 +45,18 @@ func getTestCacheGroups() []v13.CacheGroup {
 		Longitude:                   90.7,
 		ParentCachegroupID:          2,
 		SecondaryParentCachegroupID: 2,
+		LocalizationMethods: []tc.LocalizationMethod{
+			tc.LocalizationMethodDeepCZ,
+			tc.LocalizationMethodCZ,
+			tc.LocalizationMethodGeo,
+		},
 		Type:        "EDGE_LOC",
 		TypeID:      6,
 		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 	}
 	cgs = append(cgs, testCG1)
 
-	testCG2 := v13.CacheGroup{
+	testCG2 := tc.CacheGroup{
 		ID:                          1,
 		Name:                        "parentCacheGroup",
 		ShortName:                   "pg1",
@@ -60,6 +64,11 @@ func getTestCacheGroups() []v13.CacheGroup {
 		Longitude:                   90.7,
 		ParentCachegroupID:          1,
 		SecondaryParentCachegroupID: 1,
+		LocalizationMethods: []tc.LocalizationMethod{
+			tc.LocalizationMethodDeepCZ,
+			tc.LocalizationMethodCZ,
+			tc.LocalizationMethodGeo,
+		},
 		Type:        "MID_LOC",
 		TypeID:      7,
 		LastUpdated: tc.TimeNoMod{Time: time.Now()},
@@ -80,8 +89,21 @@ func TestReadCacheGroups(t *testing.T) {
 	defer db.Close()
 
 	testCGs := getTestCacheGroups()
-	cols := test.ColsFromStructByTag("db", v13.CacheGroup{})
-	rows := sqlmock.NewRows(cols)
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"name",
+		"short_name",
+		"latitude",
+		"longitude",
+		"localization_methods",
+		"parent_cachegroup_id",
+		"parent_cachegroup_name",
+		"secondary_parent_cachegroup_id",
+		"secondary_parent_cachegroup_name",
+		"type_name",
+		"type_id",
+		"last_updated",
+	})
 
 	for _, ts := range testCGs {
 		rows = rows.AddRow(
@@ -90,11 +112,11 @@ func TestReadCacheGroups(t *testing.T) {
 			ts.ShortName,
 			ts.Latitude,
 			ts.Longitude,
-			ts.ParentName,
+			[]byte("{DEEP_CZ,CZ,GEO}"),
 			ts.ParentCachegroupID,
-			ts.SecondaryParentName,
+			ts.ParentName,
 			ts.SecondaryParentCachegroupID,
-			ts.FallbackToClosest,
+			ts.SecondaryParentName,
 			ts.Type,
 			ts.TypeID,
 			ts.LastUpdated,
@@ -103,12 +125,11 @@ func TestReadCacheGroups(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
-	v := map[string]string{"id": "1"}
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
-	cachegroups, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
-	if len(errs) > 0 {
-		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
+	cachegroups, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
 
 	if len(cachegroups) != 2 {
@@ -153,28 +174,49 @@ func TestInterfaces(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	rows := sqlmock.NewRows([]string{"name", "use_in_table"})
+	rows.AddRow("EDGE_LOC", "cachegroup")
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	tx := db.MustBegin()
+	reqInfo := api.APIInfo{Tx: tx}
+
 	// invalid name, shortname, loattude, and longitude
 	id := 1
 	nm := "not!a!valid!cachegroup"
 	sn := "not!a!valid!shortname"
 	la := -190.0
 	lo := -190.0
+	lm := []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodInvalid}
 	ty := "EDGE_LOC"
 	ti := 6
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c := TOCacheGroup{CacheGroupNullable: v13.CacheGroupNullable{ID: &id,
-		Name:        &nm,
-		ShortName:   &sn,
-		Latitude:    &la,
-		Longitude:   &lo,
-		Type:        &ty,
-		TypeID:      &ti,
-		LastUpdated: &lu,
+	c := TOCacheGroup{ReqInfo: &reqInfo, CacheGroupNullable: tc.CacheGroupNullable{
+		ID:                  &id,
+		Name:                &nm,
+		ShortName:           &sn,
+		Latitude:            &la,
+		Longitude:           &lo,
+		LocalizationMethods: &lm,
+		Type:                &ty,
+		TypeID:              &ti,
+		LastUpdated:         &lu,
 	}}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'latitude' Must be a floating point number within the range +-90`),
+		errors.New(`'localizationMethods' 'invalid' is not one of [CZ DEEP_CZ GEO]`),
 		errors.New(`'longitude' Must be a floating point number within the range +-180`),
 		errors.New(`'name' invalid characters found - Use alphanumeric . or - or _ .`),
 		errors.New(`'shortName' invalid characters found - Use alphanumeric . or - or _ .`),
@@ -184,21 +226,27 @@ func TestValidate(t *testing.T) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
 	}
 
+	rows.AddRow("EDGE_LOC", "cachegroup")
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+
 	//  valid name, shortName latitude, longitude
 	nm = "This.is.2.a-Valid---Cachegroup."
 	sn = `awesome-cachegroup`
 	la = 90.0
 	lo = 90.0
-	c = TOCacheGroup{CacheGroupNullable: v13.CacheGroupNullable{ID: &id,
-		Name:        &nm,
-		ShortName:   &sn,
-		Latitude:    &la,
-		Longitude:   &lo,
-		Type:        &ty,
-		TypeID:      &ti,
-		LastUpdated: &lu,
+	lm = []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ}
+	c = TOCacheGroup{ReqInfo: &reqInfo, CacheGroupNullable: tc.CacheGroupNullable{
+		ID:                  &id,
+		Name:                &nm,
+		ShortName:           &sn,
+		Latitude:            &la,
+		Longitude:           &lo,
+		LocalizationMethods: &lm,
+		Type:                &ty,
+		TypeID:              &ti,
+		LastUpdated:         &lu,
 	}}
-	err := c.Validate()
+	err = c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)
 	}

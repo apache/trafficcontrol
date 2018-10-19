@@ -20,102 +20,56 @@ package systeminfo
  */
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
+	"time"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-
-	"time"
 
 	"github.com/jmoiron/sqlx"
 )
 
-func Handler(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
-		ctx := r.Context()
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		privLevel := user.PrivLevel
-
-		resp, err := getSystemInfoResponse(db, privLevel)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBts)
+func Get(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
-}
-func getSystemInfoResponse(db *sqlx.DB, privLevel int) (*tc.SystemInfoResponse, error) {
-	info, err := getSystemInfo(db, privLevel)
-	if err != nil {
-		return nil, fmt.Errorf("getting SystemInfo: %v", err)
-	}
-
-	resp := tc.SystemInfoResponse{}
-	resp.Response.ParametersNullable = info
-	return &resp, nil
+	defer inf.Close()
+	api.RespWriter(w, r, inf.Tx.Tx)(getSystemInfo(inf.Tx, inf.User.PrivLevel, time.Duration(inf.Config.DBQueryTimeoutSeconds)*time.Second))
 }
 
-func getSystemInfo(db *sqlx.DB, privLevel int) (map[string]string, error) {
-	// system info returns all global parameters
-	query := `SELECT
-p.name,
-p.secure,
-p.last_updated,
-p.value
-FROM parameter p
-WHERE p.config_file='global'`
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-	rows, err := db.QueryxContext(ctx, query)
-
+func getSystemInfo(tx *sqlx.Tx, privLevel int, timeout time.Duration) (*tc.SystemInfo, error) {
+	q := `
+SELECT
+  p.name,
+  p.secure,
+  p.last_updated,
+  p.value
+FROM
+  parameter p
+WHERE
+  p.config_file = 'global'
+`
+	rows, err := tx.Queryx(q)
 	if err != nil {
-		return nil, fmt.Errorf("querying: %v", err)
+		return nil, errors.New("querying system info global parameters: " + err.Error())
 	}
 	defer rows.Close()
-
-	info := make(map[string]string)
+	info := map[string]string{}
 	for rows.Next() {
 		p := tc.ParameterNullable{}
 		if err = rows.StructScan(&p); err != nil {
-			return nil, fmt.Errorf("getting system_info: %v", err)
+			return nil, errors.New("sqlx scanning system info global parameters: " + err.Error())
 		}
-
-		var isSecure bool
-		if p.Secure != nil {
-			isSecure = *p.Secure
-		}
-
-		name := p.Name
-		value := p.Value
-		if isSecure && privLevel < auth.PrivLevelAdmin {
-			// Secure params only visible to admin
+		if p.Secure != nil && *p.Secure && privLevel < auth.PrivLevelAdmin {
 			continue
 		}
-
-		if name != nil && value != nil {
-			info[*name] = *value
+		if p.Name != nil && p.Value != nil {
+			info[*p.Name] = *p.Value
 		}
 	}
-	if err != nil {
-		return nil, err
-	}
-
-	return info, nil
+	return &tc.SystemInfo{ParametersNullable: info}, nil
 }

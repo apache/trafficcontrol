@@ -28,7 +28,7 @@
 # ORIGIN_URI # origin server (e.g. hotair), used to create a delivery service
 
 start() {
-	service tomcat start
+	systemctl start traffic_router
 	touch /opt/traffic_router/var/log/traffic_router.log
 	exec tail -f /opt/traffic_router/var/log/traffic_router.log
 }

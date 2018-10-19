@@ -326,11 +326,11 @@ Profile parameters
 
 	**Request Route Parameters**
 
-	+------------+----------+----------------------------------------------------+
-	| Name       | Required | Description                                        |
-	+============+==========+====================================================+
-	| ``id``     | yes      | profile id.                                      |
-	+------------+----------+----------------------------------------------------+
+    +--------+----------+-------------+
+    | Name   | Required | Description |
+    +========+==========+=============+
+    | ``id`` | yes      | profile id. |
+    +--------+----------+-------------+
 
     **Request Properties**
     The request properties accept 2 formats, both single paramter and parameters array formats are acceptable.

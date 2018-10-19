@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>2.3.0</version>
+		<version>3.0.0</version>
 	</parent>
 
 	<scm>
@@ -44,7 +44,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-			<artifactId>traffic_router_core</artifactId>
+			<artifactId>ROOT</artifactId>
 			<version>${project.parent.version}</version>
 			<type>war</type>
 		</dependency>
@@ -88,7 +88,12 @@
 							<rules>
 								<requireEnvironmentVariable>
 									<variableName>BUILD_NUMBER</variableName>
+									<variableName>BUILD_LOCK</variableName>
+									<variableName>TOMCAT_VERSION</variableName>
+									<variableName>TOMCAT_RELEASE</variableName>
 									<variableName>RHEL_VERSION</variableName>
+									<variableName>STARTUP_SCRIPT_DIR</variableName>
+									<variableName>STARTUP_SCRIPT_LOC</variableName>
 								</requireEnvironmentVariable>
 							</rules>
 							<fail>true</fail>
@@ -156,6 +161,18 @@
 									<groupname>root</groupname>
 								</mapping>
 								<mapping>
+									<directory>${deploy.dir}/temp</directory>
+									<filemode>755</filemode>
+									<username>root</username>
+									<groupname>root</groupname>
+								</mapping>
+								<mapping>
+									<directory>${deploy.dir}/work</directory>
+									<filemode>755</filemode>
+									<username>root</username>
+									<groupname>root</groupname>
+								</mapping>
+								<mapping>
 									<directory>${deploy.dir}/db</directory>
 									<filemode>755</filemode>
 									<username>root</username>
@@ -175,14 +192,15 @@
 									</dependency>
 								</mapping>
 								<mapping>
-									<directory>/etc/init.d</directory>
+									<directory>${env.STARTUP_SCRIPT_DIR}</directory>
 									<directoryIncluded>false</directoryIncluded>
 									<filemode>755</filemode>
 									<username>root</username>
 									<groupname>root</groupname>
+									<configuration>noreplace</configuration>
 									<sources>
 										<source>
-											<location>../core/src/main/etc/init.d</location>
+											<location>${env.STARTUP_SCRIPT_LOC}</location>
 										</source>
 									</sources>
 								</mapping>
@@ -195,36 +213,20 @@
 									<dependency>
 										<stripVersion>true</stripVersion>
 										<includes>
-											<include>com.comcast.cdn.traffic_control.traffic_router:traffic_router_core</include>
+											<include>com.comcast.cdn.traffic_control.traffic_router:ROOT</include>
 										</includes>
 									</dependency>
 								</mapping>
-								<mapping>
-									<directory>/opt/tomcat/conf</directory>
-									<directoryIncluded>false</directoryIncluded>
-									<configuration>true</configuration>
-									<filemode>755</filemode>
-									<username>root</username>
-									<groupname>root</groupname>
-									<sources>
-										<source>
-											<filter>true</filter>
-											<location>../core/src/main/opt/tomcat/conf</location>
-										</source>
-									</sources>
-								</mapping>
-								<mapping>
-									<directory>/var/run/tomcat</directory>
-									<filemode>755</filemode>
-									<username>root</username>
-									<groupname>root</groupname>
-								</mapping>
 							</mappings>
 							<requires>
-								<require>jdk1.8.0_92</require>
-								<require>wget</require>
-								<require>tar</require>
+								<require>jdk &gt;= 1.8</require>
+								<require>tomcat = ${env.TOMCAT_VERSION}.${env.TOMCAT_RELEASE}-${env.BUILD_LOCK}</require>
+								<require>apr &gt;= 1.4.8</require>
+								<require>tomcat-native &gt;= 1.2.16</require>
 							</requires>
+							<obsoletes>
+								<obsolete>traffic_router &lt; 3.0.0</obsolete>
+							</obsoletes>
 
 							<preinstallScriptlet>
 								<scriptFile>../core/src/main/scripts/preinstall.sh</scriptFile>

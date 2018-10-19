@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License. -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="33.17561mm" width="228.81166mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 810.74995 117.55137">
+	<defs>
+		<marker id="d" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="c" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="b" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="a" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="e" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+	</defs>
+	<text font-size="40px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="18.848236" x="21.199245" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="18.848236" x="21.199245" font-size="12.5px">Ops Config Poller</tspan></text>
+	<rect height="29.7995" width="148.9975" stroke="#000" y=".50000381" x=".49993896" fill="none"/>
+	<g transform="translate(6.2562755,-58.882248)">
+		<text font-size="40px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="77.730484" x="197.58212" font-family="sans-serif" fill="#000000"><tspan y="77.730484" x="197.58212" font-size="12.5px">Ops Config Handler</tspan></text>
+		<rect height="29.7995" width="148.9975" stroke="#000" y="59.382252" x="184.24365" fill="none"/>
+	</g>
+	<g transform="translate(36.256275,-58.882248)">
+		<text font-size="40px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="77.730484" x="354.78671" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="77.730484" x="354.78671" font-size="12.5px">Ops Config Manager</tspan></text>
+		<rect height="29.7995" width="148.9975" stroke="#000" y="59.382252" x="344.24365" fill="none"/>
+	</g>
+	<g fill="none" stroke="#000" transform="translate(-23.743725,-58.882248)">
+		<path marker-end="url(#e)" d="m173.61997 74.299617h39.48186" stroke-width=".99316341px"/>
+		<path marker-end="url(#a)" d="m363.61997 74.299617h39.48186" stroke-width=".99316341px"/>
+		<path marker-end="url(#b)" d="m553.21429 74.299617h36.42857" stroke-width="1px"/>
+	</g>
+	<text font-size="40px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="18.848236" x="578.30817" font-family="sans-serif" fill="#000000"><tspan y="18.848236" x="578.30817" font-size="12.5px">Restart HTTP Server</tspan></text>
+	<rect height="29.7995" width="148.9975" stroke="#000" y=".5" x="567.39276" fill="none"/>
+	<g transform="translate(-23.743725,-54.931442)">
+		<text font-size="40px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="117.73048" x="598.15942" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="117.73048" x="598.15942" font-size="12.5px">Ops Config Change Subscriber</tspan></text>
+		<rect height="29.628658" width="205.43379" stroke="#000" y="99.467667" x="591.22192" stroke-width="1.1708411" fill="none"/>
+	</g>
+	<path stroke-linejoin="round" marker-end="url(#c)" d="m542.87285 15.419942v41.82935h23.40799" stroke="#000" stroke-width=".9859066px" fill="none"/>
+	<g transform="translate(-29.035811,-58.882248)">
+		<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="165.63211" x="603.62378" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="165.63211" x="603.62378">Traffic Ops Client Change Subscriber</tspan></text>
+		<rect stroke-linejoin="round" height="27.5" width="242.85715" stroke="#000" y="148.43362" x="596.42859" fill="none"/>
+	</g>
+	<path stroke-linejoin="round" marker-end="url(#d)" d="m542.83548 56.916602v47.397568h23.37602" stroke="#000" stroke-width=".98499495px" fill="none"/>
+</svg>

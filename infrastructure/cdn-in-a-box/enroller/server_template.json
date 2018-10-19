@@ -1,0 +1,20 @@
+{
+  "hostName": "$MY_HOSTNAME",
+  "domainName": "$MY_DOMAINNAME",
+  "cachegroup": "$MY_CACHE_GROUP",
+  "interfaceName": "eth0",
+  "ipAddress": "$MY_IP",
+  "ipNetmask": "$MY_NETMASK",
+  "ipGateway": "$MY_GATEWAY",
+  "ip6Address": "$MY_IP6_ADDRESS",
+  "ip6Gateway": "$MY_IP6_GATEWAY",
+  "interfaceMtu": 1500,
+  "type": "$MY_TYPE",
+  "physLocation": "Apachecon North America 2018",
+  "profile": "$MY_PROFILE",
+  "cdnName": "$MY_CDN",
+  "updPending": false,
+  "status": "$MY_STATUS",
+  "tcpPort": 80,
+  "httpsPort": 443
+}

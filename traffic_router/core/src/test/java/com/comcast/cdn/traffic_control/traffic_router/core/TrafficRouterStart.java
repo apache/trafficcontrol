@@ -42,7 +42,7 @@ public class TrafficRouterStart {
 		LogManager.getRootLogger().setLevel(Level.INFO);
 
 		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Embedded Tomcat loading Traffic Router");
-		CatalinaTrafficRouter catalinaTrafficRouter = new CatalinaTrafficRouter(prefix + "/src/main/opt/tomcat/conf/server.xml", prefix + "/src/main/webapp");
+		CatalinaTrafficRouter catalinaTrafficRouter = new CatalinaTrafficRouter(prefix + "/src/main/conf/server.xml", prefix + "/src/main/webapp" );
 		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Starting Traffic Router");
 		catalinaTrafficRouter.start();
 		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router started, press q and <ENTER> to stop");

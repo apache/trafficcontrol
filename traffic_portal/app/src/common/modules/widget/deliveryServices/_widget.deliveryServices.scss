@@ -1,0 +1,87 @@
+/*
+
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+*/
+
+#delivery-services-outer-container {
+    #deliveryServicesContainer {
+        max-height: 552px;
+        margin-bottom: 0;
+        float: left;
+        width:100%;
+        .list-group-item {
+            background-color: transparent;
+        }
+        a {
+            background-color: #FFFFFF;
+        }
+        a:hover {
+            background-color: #F1FAF8;
+        }
+        .widgetTableContainer {
+            margin-bottom:16px;
+        }
+        .whitespace {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .widgetTable {
+            color: #73879C;
+            font-family: 'Lato', sans-serif;
+            font-size: 13px;
+        }
+        .delivery-services-health {
+            height: 52px;
+            .delivery-services-table {
+                margin-top: -10px;
+                border-style: none;
+                td {
+                    border-top: none !important;
+                    padding: 12px 8px !important;
+                }
+            }
+        }
+    }
+    .delivery-services-pagination {
+        margin: 0 0 10px 0;
+        float: left;
+    }
+    .delivery-services-search-form {
+        float: right;
+        min-width: 100px;
+        max-width: 220px;
+    }
+}
+.dsWidgetPagination {
+    height: 60px;
+}
+.dsWidgetMessages {
+    margin-left: 62px;
+    margin-bottom: 56px;
+}
+.dsWidgetButtonAlignFix {
+    margin-right: 16px;
+}
+.dsWidgetGray {
+    color: #efefef;
+}
+.dsWidgetGreen {
+    color: #32CD32;
+}
+#deliveryServicesLoadingContainer {
+    height: 555px;
+    background-color: transparent;
+}

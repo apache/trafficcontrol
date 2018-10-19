@@ -27,73 +27,67 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	tcv13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
-func QueueUpdates(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user, err := auth.GetCurrentUser(r.Context())
+func QueueUpdates(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	reqObj := tc.CachegroupQueueUpdatesRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+	if reqObj.Action != "queue" && reqObj.Action != "dequeue" {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
+		return
+	}
+	if reqObj.CDN == nil && reqObj.CDNID == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn does not exist"), nil)
+		return
+	}
+	if reqObj.CDN == nil || *reqObj.CDN == "" {
+		cdn, ok, err := getCDNNameFromID(inf.Tx.Tx, int64(*reqObj.CDNID))
 		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting user: "+err.Error()))
-			return
-		}
-		params, intParams, userErr, sysErr, errCode := api.AllParams(r, []string{"id"}, []string{"id"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		reqObj := tcv13.CachegroupQueueUpdatesRequest{}
-		if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-			return
-		}
-		if reqObj.Action != "queue" && reqObj.Action != "dequeue" {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
-			return
-		}
-		if reqObj.CDN == nil && reqObj.CDNID == nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("cdn does not exist"), nil)
-			return
-		}
-		if reqObj.CDN == nil || *reqObj.CDN == "" {
-			cdn, ok, err := getCDNNameFromID(db, int64(*reqObj.CDNID))
-			if err != nil {
-				api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+strconv.Itoa(int(*reqObj.CDNID))+"': "+err.Error()))
-				return
-			}
-			if !ok {
-				api.HandleErr(w, r, http.StatusBadRequest, errors.New("cdn "+strconv.Itoa(int(*reqObj.CDNID))+" does not exist"), nil)
-				return
-			}
-			reqObj.CDN = &cdn
-		}
-		cgID := int64(intParams["id"])
-		cgName, ok, err := getCGNameFromID(db, cgID)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting cachegroup name from ID '"+params["id"]+"': "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+strconv.Itoa(int(*reqObj.CDNID))+"': "+err.Error()))
 			return
 		}
 		if !ok {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("cachegroup "+params["id"]+" does not exist"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn "+strconv.Itoa(int(*reqObj.CDNID))+" does not exist"), nil)
 			return
 		}
-		queue := reqObj.Action == "queue"
-		updatedCaches, err := queueUpdates(db, cgID, *reqObj.CDN, queue)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("queueing updates: "+err.Error()))
-			return
-		}
-		api.WriteResp(w, r, QueueUpdatesResp{
-			CacheGroupName: cgName,
-			Action:         reqObj.Action,
-			ServerNames:    updatedCaches,
-			CDN:            *reqObj.CDN,
-			CacheGroupID:   cgID,
-		})
-		api.CreateChangeLogRaw(api.ApiChange, "Server updates "+reqObj.Action+"d for "+string(cgName), user, db)
+		reqObj.CDN = &cdn
 	}
+	cgID := int64(inf.IntParams["id"])
+	cgName, ok, err := getCGNameFromID(inf.Tx.Tx, cgID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cachegroup name from ID '"+inf.Params["id"]+"': "+err.Error()))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cachegroup "+inf.Params["id"]+" does not exist"), nil)
+		return
+	}
+	queue := reqObj.Action == "queue"
+	updatedCaches, err := queueUpdates(inf.Tx.Tx, cgID, *reqObj.CDN, queue)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("queueing updates: "+err.Error()))
+		return
+	}
+
+	api.WriteResp(w, r, QueueUpdatesResp{
+		CacheGroupName: cgName,
+		Action:         reqObj.Action,
+		ServerNames:    updatedCaches,
+		CDN:            *reqObj.CDN,
+		CacheGroupID:   cgID,
+	})
+	api.CreateChangeLogRawTx(api.ApiChange, "Server updates "+reqObj.Action+"d for "+string(cgName), inf.User, inf.Tx.Tx)
 }
 
 type QueueUpdatesResp struct {
@@ -104,9 +98,9 @@ type QueueUpdatesResp struct {
 	CacheGroupID   int64             `json:"cachegroupID"`
 }
 
-func getCDNNameFromID(db *sql.DB, id int64) (tc.CDNName, bool, error) {
+func getCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 	name := ""
-	if err := db.QueryRow(`SELECT name FROM cdn WHERE id = $1`, id).Scan(&name); err != nil {
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
 			return "", false, nil
 		}
@@ -115,9 +109,9 @@ func getCDNNameFromID(db *sql.DB, id int64) (tc.CDNName, bool, error) {
 	return tc.CDNName(name), true, nil
 }
 
-func getCGNameFromID(db *sql.DB, id int64) (tc.CacheGroupName, bool, error) {
+func getCGNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
 	name := ""
-	if err := db.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
+	if err := tx.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
 			return "", false, nil
 		}
@@ -126,14 +120,14 @@ func getCGNameFromID(db *sql.DB, id int64) (tc.CacheGroupName, bool, error) {
 	return tc.CacheGroupName(name), true, nil
 }
 
-func queueUpdates(db *sql.DB, cgID int64, cdn tc.CDNName, queue bool) ([]tc.CacheName, error) {
+func queueUpdates(tx *sql.Tx, cgID int64, cdn tc.CDNName, queue bool) ([]tc.CacheName, error) {
 	q := `
 UPDATE server SET upd_pending = $1
 WHERE server.cachegroup = $2
 AND server.cdn_id = (select id from cdn where name = $3)
 RETURNING server.host_name
 `
-	rows, err := db.Query(q, queue, cgID, cdn)
+	rows, err := tx.Query(q, queue, cgID, cdn)
 	if err != nil {
 		return nil, errors.New("querying queue updates: " + err.Error())
 	}

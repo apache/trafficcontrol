@@ -18,9 +18,55 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net"
+	"net/http"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
+
+const (
+	API_v13_Types = "/api/1.3/types"
+)
+
+// Create a Type
+func (to *Session) CreateType(typ tc.Type) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(typ)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Types, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
+// Update a Type by ID
+func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(typ)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	route := fmt.Sprintf("%s/%d", API_v13_Types, id)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
 
 // Types gets an array of Types.
 // optional parameter: userInTable
@@ -35,7 +81,7 @@ func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 		return nil, ReqInf{}, errors.New("Please pass in a single value for the 'useInTable' parameter")
 	}
 
-	url := "/api/1.2/types.json"
+	url := apiBase + "/types.json"
 	resp, remoteAddr, err := to.request("GET", url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -60,4 +106,54 @@ func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 	}
 
 	return types, reqInf, nil
+}
+
+// GET a Type by the Type ID
+func (to *Session) GetTypeByID(id int) ([]tc.Type, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_Types, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.TypesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GET a Type by the Type name
+func (to *Session) GetTypeByName(name string) ([]tc.Type, ReqInf, error) {
+	url := fmt.Sprintf("%s?name=%s", API_v13_Types, name)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.TypesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// DELETE a Type by ID
+func (to *Session) DeleteTypeByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_Types, id)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
 }

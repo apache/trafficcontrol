@@ -28,75 +28,78 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/lib/pq"
 )
 
-func GetDetailHandler(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting combined params: "+err.Error()))
-			return
-		}
-		servers, err := getDetailServers(db, params["hostName"], -1, "", 0)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting detail servers: "+err.Error()))
-			return
-		}
-		if len(servers) == 0 {
-			api.HandleErr(w, r, http.StatusNotFound, nil, nil)
-			return
-		}
-		server := servers[0]
-		api.WriteResp(w, r, server)
+func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	servers, err := getDetailServers(inf.Tx.Tx, inf.User, inf.Params["hostName"], -1, "", 0)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting detail servers: "+err.Error()))
+		return
+	}
+	if len(servers) == 0 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	server := servers[0]
+	api.WriteResp(w, r, server)
 }
 
-func GetDetailParamHandler(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting combined params: "+err.Error()))
-			return
-		}
-		hostName := params["hostName"]
-		physLocationIDStr := params["physLocationID"]
-		physLocationID := -1
-		if physLocationIDStr != "" {
-			physLocationID, err = strconv.Atoi(physLocationIDStr)
-			if err != nil {
-				api.HandleErr(w, r, http.StatusBadRequest, errors.New("physLocationID parameter is not an integer"), nil)
-				return
-			}
-		}
-		if hostName == "" && physLocationIDStr == "" {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("Missing required fields: 'hostname' or 'physLocationID'"), nil)
-			return
-		}
-		orderBy := "hostName"
-		if _, ok := params["orderby"]; ok {
-			orderBy = params["orderby"]
-		}
-		limit := 1000
-		if limitStr, ok := params["limit"]; ok {
-			limit, err = strconv.Atoi(limitStr)
-			if err != nil {
-				api.HandleErr(w, r, http.StatusBadRequest, errors.New("limit parameter is not an integer"), nil)
-				return
-			}
-		}
-		servers, err := getDetailServers(db, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit)
-		respVals := map[string]interface{}{
-			"orderby": orderBy,
-			"limit":   limit,
-			"size":    len(servers),
-		}
-		api.RespWriterVals(w, r, respVals)(servers, err)
+func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	hostName := inf.Params["hostName"]
+	physLocationIDStr := inf.Params["physLocationID"]
+	physLocationID := -1
+	if physLocationIDStr != "" {
+		err := error(nil)
+		physLocationID, err = strconv.Atoi(physLocationIDStr)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("physLocationID parameter is not an integer"), nil)
+			return
+		}
+	}
+	if hostName == "" && physLocationIDStr == "" {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Missing required fields: 'hostname' or 'physLocationID'"), nil)
+		return
+	}
+	orderBy := "hostName"
+	if _, ok := inf.Params["orderby"]; ok {
+		orderBy = inf.Params["orderby"]
+	}
+	limit := 1000
+	if limitStr, ok := inf.Params["limit"]; ok {
+		err := error(nil)
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("limit parameter is not an integer"), nil)
+			return
+		}
+	}
+	servers, err := getDetailServers(inf.Tx.Tx, inf.User, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit)
+	respVals := map[string]interface{}{
+		"orderby": orderBy,
+		"limit":   limit,
+		"size":    len(servers),
+	}
+	api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(servers, err)
 }
 
-func getDetailServers(db *sql.DB, hostName string, physLocationID int, orderBy string, limit int) ([]tc.ServerDetail, error) {
+func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int) ([]tc.ServerDetail, error) {
 	allowedOrderByCols := map[string]string{
 		"":                 "",
 		"cachegroup":       "s.cachegroup",
@@ -196,16 +199,16 @@ JOIN type t ON s.type = t.id
 	err := error(nil)
 	if hostName != "" && physLocationID != -1 {
 		q += ` WHERE s.host_name = $1::text AND s.phys_location = $2::bigint` + orderByStr + limitStr
-		rows, err = db.Query(q, hostName, physLocationID)
+		rows, err = tx.Query(q, hostName, physLocationID)
 	} else if hostName != "" {
 		q += ` WHERE s.host_name = $1::text` + orderByStr + limitStr
-		rows, err = db.Query(q, hostName)
+		rows, err = tx.Query(q, hostName)
 	} else if physLocationID != -1 {
 		q += ` WHERE s.phys_location = $1::int` + orderByStr + limitStr
-		rows, err = db.Query(q, physLocationID)
+		rows, err = tx.Query(q, physLocationID)
 	} else {
 		q += orderByStr + limitStr
-		rows, err = db.Query(q) // Should never happen for API <1.3, which don't allow querying without hostName or physLocation
+		rows, err = tx.Query(q) // Should never happen for API <1.3, which don't allow querying without hostName or physLocation
 	}
 	if err != nil {
 		return nil, errors.New("Error querying detail servers: " + err.Error())
@@ -218,11 +221,18 @@ JOIN type t ON s.type = t.id
 		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &s.InterfaceMTU, &s.InterfaceName, &s.IP6Address, &s.IP6Gateway, &s.IPAddress, &s.IPGateway, &s.IPNetmask, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
+
+		hiddenField := "********"
+		if user.PrivLevel < auth.PrivLevelOperations {
+			s.ILOPassword = &hiddenField
+			s.XMPPPasswd = &hiddenField
+		}
+
 		servers = append(servers, s)
 		sIDs = append(sIDs, *s.ID)
 	}
 
-	rows, err = db.Query(`SELECT serverid, description, val from hwinfo where serverid = ANY($1);`, pq.Array(sIDs))
+	rows, err = tx.Query(`SELECT serverid, description, val from hwinfo where serverid = ANY($1);`, pq.Array(sIDs))
 	if err != nil {
 		return nil, errors.New("Error querying detail servers hardware info: " + err.Error())
 	}

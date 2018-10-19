@@ -16,6 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
+import org.apache.log4j.Logger;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -23,7 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CertificateDataConverter {
-	private final static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(CertificateDataConverter.class);
+	private static final Logger log = Logger.getLogger(CertificateDataConverter.class);
 
 	private PrivateKeyDecoder privateKeyDecoder = new PrivateKeyDecoder();
 	private CertificateDecoder certificateDecoder = new CertificateDecoder();

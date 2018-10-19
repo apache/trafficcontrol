@@ -31,29 +31,29 @@ import (
 func GetBucketKey(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"bucket", "key"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, http.StatusInternalServerError, userErr, errors.New("riak.GetBucketKey: Riak is not configured!"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("riak.GetBucketKey: Riak is not configured!"))
 		return
 	}
 
 	val, ok, err := riaksvc.GetBucketKey(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Params["bucket"], inf.Params["key"])
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting bucket key from Riak: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting bucket key from Riak: "+err.Error()))
 		return
 	}
 	if !ok {
-		api.HandleErr(w, r, http.StatusNotFound, errors.New("not found"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("not found"), nil)
 		return
 	}
 
 	valObj := map[string]interface{}{}
 	if err := json.Unmarshal(val, &valObj); err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("GetBucketKey bucket '"+inf.Params["bucket"]+"' key '"+inf.Params["key"]+"' Riak returned invalid JSON: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetBucketKey bucket '"+inf.Params["bucket"]+"' key '"+inf.Params["key"]+"' Riak returned invalid JSON: "+err.Error()))
 		return
 	}
 	api.WriteResp(w, r, valObj)

@@ -20,34 +20,42 @@ package server
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
 type TOServer struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.ServerNullable
+	tc.ServerNullable
 }
+
+func (v *TOServer) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TOServer) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOServer) InsertQuery() string           { return insertQuery() }
+func (v *TOServer) UpdateQuery() string           { return updateQuery() }
+func (v *TOServer) DeleteQuery() string           { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOServer{reqInfo, v13.ServerNullable{}}
+		toReturn := TOServer{reqInfo, tc.ServerNullable{}}
 		return &toReturn
 	}
 }
@@ -83,8 +91,14 @@ func (server *TOServer) GetType() string {
 	return "server"
 }
 
-func (server *TOServer) Validate() error {
+func (server *TOServer) Sanitize() {
+	if server.IP6Address != nil && *server.IP6Address == "" {
+		server.IP6Address = nil
+	}
+}
 
+func (server *TOServer) Validate() error {
+	server.Sanitize()
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
 	validateErrs := validation.Errors{
@@ -97,35 +111,25 @@ func (server *TOServer) Validate() error {
 		"ipAddress":      validation.Validate(server.IPAddress, validation.NotNil, is.IPv4),
 		"ipNetmask":      validation.Validate(server.IPNetmask, validation.NotNil),
 		"ipGateway":      validation.Validate(server.IPGateway, validation.NotNil),
+		"ip6Address":     validation.Validate(server.IP6Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress)),
 		"physLocationId": validation.Validate(server.PhysLocationID, validation.NotNil),
 		"profileId":      validation.Validate(server.ProfileID, validation.NotNil),
 		"statusId":       validation.Validate(server.StatusID, validation.NotNil),
 		"typeId":         validation.Validate(server.TypeID, validation.NotNil),
 		"updPending":     validation.Validate(server.UpdPending, validation.NotNil),
+		"httpsPort":      validation.Validate(server.HTTPSPort, validation.By(tovalidate.IsValidPortNumber)),
+		"tcpPort":        validation.Validate(server.TCPPort, validation.By(tovalidate.IsValidPortNumber)),
 	}
 	errs := tovalidate.ToErrors(validateErrs)
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)
 	}
 
-	rows, err := server.ReqInfo.Tx.Query("select use_in_table from type where id=$1", server.TypeID)
-	if err != nil {
-		log.Error.Printf("could not execute select use_in_table from type: %s\n", err)
-		return tc.DBError
-	}
-	defer rows.Close()
-	var useInTable string
-	for rows.Next() {
-		if err := rows.Scan(&useInTable); err != nil {
-			log.Error.Printf("could not scan use_in_table from type: %s\n", err)
-			return tc.DBError
-		}
-	}
-	if useInTable != "server" {
-		errs = append(errs, errors.New("invalid server type"))
+	if _, err := tc.ValidateTypeID(server.ReqInfo.Tx.Tx, server.TypeID, "server"); err != nil {
+		return err
 	}
 
-	rows, err = server.ReqInfo.Tx.Query("select cdn from profile where id=$1", server.ProfileID)
+	rows, err := server.ReqInfo.Tx.Tx.Query("select cdn from profile where id=$1", server.ProfileID)
 	if err != nil {
 		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
 		errs = append(errs, tc.DBError)
@@ -136,7 +140,7 @@ func (server *TOServer) Validate() error {
 	for rows.Next() {
 		if err := rows.Scan(&cdnID); err != nil {
 			log.Error.Printf("could not scan cdnID from profile: %s\n", err)
-			errs = append(errs, tc.DBError)
+			errs = append(errs, errors.New("associated profile must have a cdn associated"))
 			return util.JoinErrs(errs)
 		}
 	}
@@ -175,32 +179,40 @@ func (server TOServer) ChangeLogMessage(action string) (string, error) {
 	return message, nil
 }
 
-func (server *TOServer) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
+func (server *TOServer) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 
-	privLevel := server.ReqInfo.User.PrivLevel
-
-	servers, errs, errType := getServers(params, server.ReqInfo.Tx, privLevel)
+	servers, errs, errType := getServers(server.ReqInfo.Params, server.ReqInfo.Tx, server.ReqInfo.User)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` {
-				return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
+				return nil, errors.New("Resource not found."), nil, http.StatusInternalServerError //matches perl response
 			}
 		}
-		return nil, errs, errType
+		userErr, sysErr, errCode := api.TypeErrsToAPIErr(errs, errType)
+		return nil, userErr, sysErr, errCode
 	}
 
 	for _, server := range servers {
 		returnable = append(returnable, server)
 	}
 
-	return returnable, nil, tc.NoError
+	return returnable, nil, nil, http.StatusOK
 }
 
-func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-	var err error
+// getDeliveryServiceType returns the type of the deliveryservice
+func getDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, error) {
+	var dsType tc.DSType
+	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DSTypeInvalid, errors.New("a deliveryservice with id '" + strconv.Itoa(dsID) + "' was not found")
+		}
+		return tc.DSTypeInvalid, errors.New("querying type from delivery service: " + err.Error())
+	}
+	return dsType, nil
+}
 
+func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
@@ -213,6 +225,32 @@ func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.Serv
 		"profileId":        dbhelpers.WhereColumnInfo{"s.profile", api.IsInt},
 		"status":           dbhelpers.WhereColumnInfo{"st.name", nil},
 		"type":             dbhelpers.WhereColumnInfo{"t.name", nil},
+		"dsId":             dbhelpers.WhereColumnInfo{"dss.deliveryservice", nil},
+	}
+
+	usesMids := false
+	queryAddition := ""
+	if dsIDStr, ok := params[`dsId`]; ok {
+		// don't allow query on ds outside user's tenant
+		dsID, err := strconv.Atoi(dsIDStr)
+		if err != nil {
+			return nil, []error{errors.New("dsId must be an integer")}, tc.DataMissingError
+		}
+		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
+		if userErr != nil || sysErr != nil {
+			return nil, []error{errors.New("Forbidden")}, tc.ForbiddenError
+		}
+		// only if dsId is part of params: add join on deliveryservice_server table
+		queryAddition = `
+FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
+`
+		// depending on ds type, also need to add mids
+		dsType, err := getDeliveryServiceType(dsID, tx.Tx)
+		if err != nil {
+			return nil, []error{err}, tc.DataConflictError
+		}
+		usesMids = dsType.UsesMidCache()
+		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
 	}
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
@@ -220,10 +258,10 @@ func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.Serv
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectQuery() + where + orderBy
+	query := selectQuery() + queryAddition + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err = tx.NamedQuery(query, queryValues)
+	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
 	}
@@ -238,22 +276,101 @@ func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.Serv
 		if err = rows.StructScan(&s); err != nil {
 			return nil, []error{fmt.Errorf("getting servers: %v", err)}, tc.SystemError
 		}
-		if privLevel < auth.PrivLevelAdmin {
+		if user.PrivLevel < auth.PrivLevelOperations {
 			s.ILOPassword = &HiddenField
 			s.XMPPPasswd = &HiddenField
 		}
 		servers = append(servers, s)
 	}
+
+	// if ds requested uses mid-tier caches, add those to the list as well
+	if usesMids {
+		mids, errs, errType := getMidServers(servers, tx)
+
+		log.Debugf("getting mids: %v, %v\n", errs, errType)
+		if len(errs) > 0 {
+			for _, err := range errs {
+				if err.Error() == `id cannot parse to integer` {
+					return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
+				}
+			}
+			return nil, errs, errType
+		}
+		for _, server := range mids {
+			servers = append(servers, server)
+		}
+	}
+
 	return servers, nil, tc.NoError
 }
 
+// getMidServers gets mids used by the servers in this ds
+// Original comment from the Perl code:
+// if the delivery service employs mids, we're gonna pull mid servers too by pulling the cachegroups of the edges and finding those cachegroups parent cachegroup...
+// then we see which servers have cachegroup in parent cachegroup list...that's how we find mids for the ds :)
+func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
+	if len(servers) == 0 {
+		return nil, nil, tc.NoError
+	}
+	var ids []string
+	for _, s := range servers {
+		ids = append(ids, strconv.Itoa(*s.ID))
+	}
+
+	edgeIDs := strings.Join(ids, ",")
+	// TODO: include secondary parent?
+	q := selectQuery() + `
+WHERE s.id IN (
+	SELECT mid.id FROM server mid
+	JOIN cachegroup cg ON cg.id IN (
+		SELECT cg.parent_cachegroup_id
+		FROM server s
+		JOIN cachegroup cg ON cg.id = s.cachegroup
+		WHERE s.id IN (` + edgeIDs + `))
+	JOIN type t ON mid.type = (SELECT id FROM type WHERE name = 'MID'))
+`
+	rows, err := tx.Queryx(q)
+	if err != nil {
+		return nil, []error{err}, tc.DataConflictError
+	}
+	defer rows.Close()
+
+	var mids []tc.ServerNullable
+	for rows.Next() {
+		var s tc.ServerNullable
+		if err := rows.StructScan(&s); err != nil {
+			log.Error.Printf("could not scan mid servers: %s\n", err)
+			return nil, []error{err}, tc.SystemError
+		}
+		mids = append(mids, s)
+	}
+	return mids, nil, tc.NoError
+}
+
+func (sv *TOServer) Update() (error, error, int) {
+	if sv.IP6Address != nil && len(strings.TrimSpace(*sv.IP6Address)) == 0 {
+		sv.IP6Address = nil
+	}
+	return api.GenericUpdate(sv)
+}
+
+func (sv *TOServer) Create() (error, error, int) {
+	// TODO put in Validate()
+	if sv.IP6Address != nil && len(strings.TrimSpace(*sv.IP6Address)) == 0 {
+		sv.IP6Address = nil
+	}
+	if sv.XMPPID == nil || *sv.XMPPID == "" {
+		hostName := *sv.HostName
+		sv.XMPPID = &hostName
+	}
+	return api.GenericCreate(sv)
+}
+
+func (sv *TOServer) Delete() (error, error, int) { return api.GenericDelete(sv) }
+
 func selectQuery() string {
-
 	const JumboFrameBPS = 9000
-
-	// COALESCE is needed to default values that are nil in the database
-	// because Go does not allow that to marshal into the struct
-	selectStmt := `SELECT
+	return `SELECT
 cg.name as cachegroup,
 s.cachegroup as cachegroup_id,
 s.cdn_id,
@@ -297,157 +414,14 @@ s.type as server_type_id,
 s.upd_pending as upd_pending,
 s.xmpp_id,
 s.xmpp_passwd
-
-FROM server s
-
+FROM
+  server s
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id`
-
-	return selectStmt
-}
-
-//The TOServer implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (server *TOServer) Update() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with server: %++v", updateQuery(), server)
-	resultRows, err := server.ReqInfo.Tx.NamedQuery(updateQuery(), server)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a server with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var lastUpdated tc.TimeNoMod
-	var id int
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-
-	if rowsAffected == 0 {
-		err = errors.New("no server was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from server insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	server.SetKeys(map[string]interface{}{"id": id})
-	server.LastUpdated = &lastUpdated
-
-	return nil, tc.NoError
-}
-
-func updateQuery() string {
-	query := `UPDATE
-server SET
-cachegroup=:cachegroup_id,
-cdn_id=:cdn_id,
-domain_name=:domain_name,
-host_name=:host_name,
-https_port=:https_port,
-ilo_ip_address=:ilo_ip_address,
-ilo_ip_netmask=:ilo_ip_netmask,
-ilo_ip_gateway=:ilo_ip_gateway,
-ilo_username=:ilo_username,
-ilo_password=:ilo_password,
-interface_mtu=:interface_mtu,
-interface_name=:interface_name,
-ip6_address=:ip6_address,
-ip6_gateway=:ip6_gateway,
-ip_address=:ip_address,
-ip_netmask=:ip_netmask,
-ip_gateway=:ip_gateway,
-mgmt_ip_address=:mgmt_ip_address,
-mgmt_ip_netmask=:mgmt_ip_netmask,
-mgmt_ip_gateway=:mgmt_ip_gateway,
-offline_reason=:offline_reason,
-phys_location=:phys_location_id,
-profile=:profile_id,
-rack=:rack,
-router_host_name=:router_host_name,
-router_port_name=:router_port_name,
-status=:status_id,
-tcp_port=:tcp_port,
-type=:server_type_id,
-upd_pending=:upd_pending,
-xmpp_id=:xmpp_id,
-xmpp_passwd=:xmpp_passwd
-WHERE id=:id RETURNING last_updated`
-	return query
-}
-
-//The TOServer implementation of the Inserter interface
-//all implementations of Inserter should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a server with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted server and have
-//to be added to the struct
-func (server *TOServer) Create() (error, tc.ApiErrorType) {
-	if server.XMPPID == nil || *server.XMPPID == "" {
-		hostName := *server.HostName
-		server.XMPPID = &hostName
-	}
-
-	resultRows, err := server.ReqInfo.Tx.NamedQuery(insertQuery(), server)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a server with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no server was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from server insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	server.SetKeys(map[string]interface{}{"id": id})
-	server.LastUpdated = &lastUpdated
-
-	return nil, tc.NoError
 }
 
 func insertQuery() string {
@@ -521,32 +495,45 @@ xmpp_passwd
 	return query
 }
 
-//The Server implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (server *TOServer) Delete() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with server: %++v", deleteServerQuery(), server)
-	result, err := server.ReqInfo.Tx.NamedExec(deleteServerQuery(), server)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no server with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-
-	return nil, tc.NoError
+func updateQuery() string {
+	query := `UPDATE
+server SET
+cachegroup=:cachegroup_id,
+cdn_id=:cdn_id,
+domain_name=:domain_name,
+host_name=:host_name,
+https_port=:https_port,
+ilo_ip_address=:ilo_ip_address,
+ilo_ip_netmask=:ilo_ip_netmask,
+ilo_ip_gateway=:ilo_ip_gateway,
+ilo_username=:ilo_username,
+ilo_password=:ilo_password,
+interface_mtu=:interface_mtu,
+interface_name=:interface_name,
+ip6_address=:ip6_address,
+ip6_gateway=:ip6_gateway,
+ip_address=:ip_address,
+ip_netmask=:ip_netmask,
+ip_gateway=:ip_gateway,
+mgmt_ip_address=:mgmt_ip_address,
+mgmt_ip_netmask=:mgmt_ip_netmask,
+mgmt_ip_gateway=:mgmt_ip_gateway,
+offline_reason=:offline_reason,
+phys_location=:phys_location_id,
+profile=:profile_id,
+rack=:rack,
+router_host_name=:router_host_name,
+router_port_name=:router_port_name,
+status=:status_id,
+tcp_port=:tcp_port,
+type=:server_type_id,
+upd_pending=:upd_pending,
+xmpp_id=:xmpp_id,
+xmpp_passwd=:xmpp_passwd
+WHERE id=:id RETURNING last_updated`
+	return query
 }
 
-func deleteServerQuery() string {
-	query := `DELETE FROM server
-WHERE id=:id`
-	return query
+func deleteQuery() string {
+	return `DELETE FROM server WHERE id = :id`
 }

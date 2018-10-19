@@ -188,7 +188,7 @@ sub migrate {
 sub seed {
 	print "Seeding database w/ required data.\n";
 	local $ENV{PGPASSWORD} = $db_password;
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/seeds.sql") != 0 ) {
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e -v ON_ERROR_STOP=1 < db/seeds.sql") != 0 ) {
 		die "Can't seed database w/ required data\n";
 	}
 }
@@ -196,7 +196,7 @@ sub seed {
 sub patches {
 	print "Patching database with required data fixes.\n";
 	local $ENV{PGPASSWORD} = $db_password;
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/patches.sql") != 0 ) {
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e -v ON_ERROR_STOP=1 < db/patches.sql") != 0 ) {
 		die "Can't patch database w/ required data\n";
 	}
 }
@@ -204,7 +204,7 @@ sub patches {
 sub load_schema {
 	print "Creating database tables.\n";
 	local $ENV{PGPASSWORD} = $db_password;
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/create_tables.sql") != 0 ) {
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e -v ON_ERROR_STOP=1 < db/create_tables.sql") != 0 ) {
 		die "Can't create database tables\n";
 	}
 }

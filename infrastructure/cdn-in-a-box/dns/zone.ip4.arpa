@@ -1,0 +1,40 @@
+; Licensed to the Apache Software Foundation (ASF) under one
+; or more contributor license agreements.  See the NOTICE file
+; distributed with this work for additional information
+; regarding copyright ownership.  The ASF licenses this file
+; to you under the Apache License, Version 2.0 (the
+; "License"); you may not use this file except in compliance
+; with the License.  You may obtain a copy of the License at
+;
+;   http://www.apache.org/licenses/LICENSE-2.0
+;
+; Unless required by applicable law or agreed to in writing,
+; software distributed under the License is distributed on an
+; "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+; KIND, either express or implied.  See the License for the
+; specific language governing permissions and limitations
+; under the License.
+$ORIGIN 239.16.172.in-addr.arpa.
+$TTL 30 ; 30 seconds
+@   IN SOA  dns.infra.ciab.test. admin.infra.ciab.test. (
+        0000000001 ; serial
+        7200       ; refresh
+        3600       ; retry
+        604800     ; expire
+        38400      ; minimum
+)
+              IN NS    dns.infra.ciab.test.
+1             IN PTR   gw.infra.ciab.test.
+10            IN PTR   db.infra.ciab.test.
+20            IN PTR   trafficops.infra.ciab.test.
+21            IN PTR   trafficops-perl.infra.ciab.test.
+30            IN PTR   trafficportal.infra.ciab.test.
+40            IN PTR   trafficmonitor.infra.ciab.test.
+50            IN PTR   trafficvault.infra.ciab.test.
+60            IN PTR   trafficrouter.infra.ciab.test.
+100           IN PTR   edge.infra.ciab.test.
+120           IN PTR   mid.infra.ciab.test.
+140           IN PTR   origin.infra.ciab.test.
+200           IN PTR   enroller.infra.ciab.test.
+250           IN PTR   client.infra.ciab.test.
+254           IN PTR   dns.infra.ciab.test.

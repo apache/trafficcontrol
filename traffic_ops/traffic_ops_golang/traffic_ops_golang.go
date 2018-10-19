@@ -24,15 +24,19 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -48,6 +52,7 @@ func init() {
 
 func main() {
 	showVersion := flag.Bool("version", false, "Show version and exit")
+	showPlugins := flag.Bool("plugins", false, "Show the list of plugins and exit")
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path")
@@ -55,6 +60,10 @@ func main() {
 
 	if *showVersion {
 		fmt.Println(about.About.RPMVersion)
+		os.Exit(0)
+	}
+	if *showPlugins {
+		fmt.Println(strings.Join(plugin.List(), "\n"))
 		os.Exit(0)
 	}
 	if len(os.Args) < 2 {
@@ -107,12 +116,18 @@ func main() {
 		Event Log:            %s
 		LDAP Enabled:         %v`, cfg.Port, cfg.DB.Hostname, cfg.DB.User, cfg.DB.DBName, cfg.DB.SSL, cfg.MaxDBConnections, cfg.Listen[0], cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout)*time.Second, time.Duration(cfg.ProxyKeepAlive)*time.Second, time.Duration(cfg.ProxyTLSTimeout)*time.Second, time.Duration(cfg.ProxyReadHeaderTimeout)*time.Second, time.Duration(cfg.ReadTimeout)*time.Second, time.Duration(cfg.ReadHeaderTimeout)*time.Second, time.Duration(cfg.WriteTimeout)*time.Second, time.Duration(cfg.IdleTimeout)*time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent, cfg.LDAPEnabled)
 
+	err := auth.LoadPasswordBlacklist("app/conf/invalid_passwords.txt")
+	if err != nil {
+		log.Errorf("loading password blacklist: %v\n", err)
+		return
+	}
+
 	sslStr := "require"
 	if !cfg.DB.SSL {
 		sslStr = "disable"
 	}
 
-	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.DB.User, cfg.DB.Password, cfg.DB.Hostname, cfg.DB.DBName, sslStr))
+	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s&fallback_application_name=trafficops", cfg.DB.User, cfg.DB.Password, cfg.DB.Hostname, cfg.DB.DBName, sslStr))
 	if err != nil {
 		log.Errorf("opening database: %v\n", err)
 		return
@@ -120,13 +135,32 @@ func main() {
 	defer db.Close()
 
 	db.SetMaxOpenConns(cfg.MaxDBConnections)
+	db.SetMaxIdleConns(cfg.DBMaxIdleConnections)
+	db.SetConnMaxLifetime(time.Duration(cfg.DBConnMaxLifetimeSeconds) * time.Second)
 
+	// TODO combine
+	plugins := plugin.Get(cfg)
 	profiling := cfg.ProfilingEnabled
 
-	if err := RegisterRoutes(ServerData{DB: db, Config: cfg, Profiling: &profiling}); err != nil {
+	pprofMux := http.DefaultServeMux
+	http.DefaultServeMux = http.NewServeMux() // this is so we don't serve pprof over 443.
+
+	pprofMux.Handle("/db-stats", dbStatsHandler(db))
+	pprofMux.Handle("/memory-stats", memoryStatsHandler())
+	go func() {
+		debugServer := http.Server{
+			Addr:    "localhost:6060",
+			Handler: pprofMux,
+		}
+		log.Errorln(debugServer.ListenAndServe())
+	}()
+
+	if err := RegisterRoutes(ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins}); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		return
 	}
+
+	plugins.OnStartup(plugin.StartupData{Data: plugin.Data{SharedCfg: cfg.PluginSharedConfig, AppCfg: cfg}})
 
 	log.Infof("Listening on " + cfg.Port)
 
@@ -177,6 +211,7 @@ func SetNewProfilingInfo(configFileName string, currentProfilingEnabled *bool, c
 	}
 	if *currentProfilingEnabled != newProfilingEnabled {
 		log.Infof("profiling enabled set to %t\n", newProfilingEnabled)
+		log.Infof("profiling location set to: %s\n", *currentProfilingLocation)
 		*currentProfilingEnabled = newProfilingEnabled
 		if *currentProfilingEnabled {
 			continuousProfile(currentProfilingEnabled, currentProfilingLocation, version)

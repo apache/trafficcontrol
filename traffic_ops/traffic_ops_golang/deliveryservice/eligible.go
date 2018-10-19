@@ -33,7 +33,7 @@ import (
 func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
@@ -41,25 +41,25 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 	// TODO create a helper function to check all this in a single line.
 	ok, err := tenant.IsTenancyEnabledTx(inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
 		return
 	}
 	if ok {
 		dsTenantID, ok, err := GetDSTenantIDByIDTx(inf.Tx.Tx, inf.IntParams["id"])
 		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
 		}
 		if !ok {
-			api.HandleErr(w, r, http.StatusNotFound, errors.New("delivery service "+inf.Params["id"]+" not found"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service "+inf.Params["id"]+" not found"), nil)
 			return
 		}
 		if dsTenantID != nil {
 			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx.Tx); err != nil {
-				api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 				return
 			} else if !authorized {
-				api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
@@ -67,7 +67,7 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 
 	servers, err := getEligibleServers(inf.Tx.Tx, inf.IntParams["id"])
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting eligible servers: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting eligible servers: "+err.Error()))
 		return
 	}
 	api.WriteResp(w, r, servers)

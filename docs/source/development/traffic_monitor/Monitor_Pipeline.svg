@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License. -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="27.826416mm" width="148.76547mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 527.12175 98.597537">
+	<defs>
+		<marker id="a" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="b" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+	</defs>
+	<g transform="translate(2192.1323,79.79371)">
+		<g transform="translate(-2162.3466,-389.51307)">
+			<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="327.23929" x="-18.897272" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="327.23929" x="-18.897272">Monitor Config Poller</tspan></text>
+			<rect stroke-linejoin="round" height="27.142857" width="152.14285" stroke="#000" y="310.21936" x="-29.285715" fill="none"/>
+		</g>
+		<g transform="translate(-2173.0839,-322.3702)">
+			<text font-size="12.5px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="259.73926" x="169.16077" font-family="sans-serif" fill="#000000"><tspan y="259.73926" x="169.16077">Monitor Config Manager</tspan></text>
+			<rect stroke-linejoin="round" height="26.428572" width="158.57143" stroke="#000" y="243.07649" x="165.71428" fill="none"/>
+		</g>
+		<path marker-end="url(#b)" d="m-2039.365-65.704665h30.8097" stroke="#000" stroke-width="1px" fill="none"/>
+		<g transform="translate(-2169.0931,-324.85301)">
+			<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="263.43362" x="391.78571" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="263.43362" x="391.78571">Stat Subscriber</tspan></text>
+			<rect stroke-linejoin="round" height="23.214285" width="116.07143" stroke="#000" y="247.16644" x="382.15393" fill="none"/>
+		</g>
+		<g transform="translate(-2174.4406,-322.80428)">
+			<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="298.04077" x="391.78571" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="298.04077" x="391.78571">Health Subscriber</tspan></text>
+			<rect stroke-linejoin="round" height="24.285715" width="121.42857" stroke="#000" y="281.23788" x="387.50146" fill="none"/>
+		</g>
+		<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="11.89245" x="-1781.2982" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="11.89245" x="-1781.2982">Peer Subscriber</tspan></text>
+		<g stroke-linejoin="round" stroke="#000" fill="none">
+			<rect height="22.142857" width="110.71429" y="-3.839026" x="-1786.9391"/>
+			<path marker-end="url(#a)" d="m-1848.7982-66.061805h60" stroke-width="1px"/>
+			<path marker-end="url(#a)" d="m-1824.2686-65.784555v36.89474h35.2308" stroke-width="1.03820264px"/>
+			<path marker-end="url(#a)" d="m-1824.3933-31.370265v38.9710797h35.4721" stroke-width=".96524209px"/>
+		</g>
+	</g>
+</svg>

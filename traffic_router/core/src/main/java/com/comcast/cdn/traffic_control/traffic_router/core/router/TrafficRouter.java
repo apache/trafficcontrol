@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ import org.xbill.DNS.Zone;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation.LocalizationMethod;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
@@ -252,7 +254,8 @@ public class TrafficRouter {
 		int locationsTested = 0;
 
 		final int locationLimit = ds.getLocationLimit();
-		final List<CacheLocation> cacheLocations1 = ds.filterAvailableLocations(getCacheRegister().getCacheLocations());
+		final List<CacheLocation> geoEnabledCacheLocations = filterEnabledLocations(getCacheRegister().getCacheLocations(), LocalizationMethod.GEO);
+		final List<CacheLocation> cacheLocations1 = ds.filterAvailableLocations(geoEnabledCacheLocations);
 		final List<CacheLocation> cacheLocations = orderCacheLocations(cacheLocations1, clientLocation);
 
 		for (final CacheLocation location : cacheLocations) {
@@ -711,6 +714,7 @@ public class TrafficRouter {
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final boolean useDeep, final Track track) {
 		final NetworkNode networkNode = useDeep ? getDeepNetworkNode(ip) : getNetworkNode(ip);
+		final LocalizationMethod localizationMethod = useDeep ? LocalizationMethod.DEEP_CZ : LocalizationMethod.CZ;
 
 		if (networkNode == null) {
 			return null;
@@ -722,6 +726,10 @@ public class TrafficRouter {
 		if (useDeep && cacheLocation != null) {
 			// lazily load deep Caches into the deep CacheLocation
 			cacheLocation.loadDeepCaches(networkNode.getDeepCacheNames(), cacheRegister);
+		}
+
+		if (cacheLocation != null && !cacheLocation.isEnabledFor(localizationMethod)) {
+			return null;
 		}
 
 		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
@@ -739,6 +747,11 @@ public class TrafficRouter {
 
 		// find CacheLocation
 		cacheLocation = getCacheRegister().getCacheLocationById(networkNode.getLoc());
+		if (cacheLocation != null && !cacheLocation.isEnabledFor(localizationMethod)) {
+			track.continueGeo = false; // hit in the CZF but the cachegroup doesn't allow CZ-localization, don't fall back to GEO
+			return null;
+		}
+
 		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
 			// lazy loading in case a CacheLocation has not yet been associated with this NetworkNode
 			networkNode.setCacheLocation(cacheLocation);
@@ -748,6 +761,9 @@ public class TrafficRouter {
 		if (cacheLocation != null && cacheLocation.getBackupCacheGroups() != null) {
 			for (final String cacheGroup : cacheLocation.getBackupCacheGroups()) {
 				final CacheLocation bkCacheLocation = getCacheRegister().getCacheLocationById(cacheGroup);
+				if (bkCacheLocation != null && !bkCacheLocation.isEnabledFor(localizationMethod)) {
+					continue;
+				}
 				if (bkCacheLocation != null && !getSupportingCaches(bkCacheLocation.getCaches(), deliveryService).isEmpty()) {
 					LOGGER.debug("Got backup CZ cache group " + bkCacheLocation.getId() + " for " + ip + ", ds " + deliveryServiceId);
 					if (track != null) {
@@ -767,7 +783,9 @@ public class TrafficRouter {
 
 		// We had a hit in the CZF but the name does not match a known cache location.
 		// Check whether the CZF entry has a geolocation and use it if so.
-		final CacheLocation closestCacheLocation = getClosestCacheLocation(cacheRegister.filterAvailableLocations(deliveryServiceId), networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId));
+		List<CacheLocation> availableLocations = cacheRegister.filterAvailableLocations(deliveryServiceId);
+		availableLocations = filterEnabledLocations(availableLocations, localizationMethod);
+		final CacheLocation closestCacheLocation = getClosestCacheLocation(availableLocations, networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId));
 		if (closestCacheLocation != null) {
 			LOGGER.debug("Got closest CZ cache group " + closestCacheLocation.getId() + " for " + ip + ", ds " + deliveryServiceId);
 			if (track != null) {
@@ -775,6 +793,12 @@ public class TrafficRouter {
 			}
 		}
 		return closestCacheLocation;
+	}
+
+	public List<CacheLocation> filterEnabledLocations(final Collection<CacheLocation> locations, final LocalizationMethod localizationMethod) {
+		return locations.stream()
+				.filter(loc -> loc.isEnabledFor(localizationMethod))
+				.collect(Collectors.toList());
 	}
 
 	public CacheLocation getDeepCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService) {

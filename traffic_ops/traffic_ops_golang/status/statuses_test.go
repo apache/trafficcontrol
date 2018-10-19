@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -75,13 +74,12 @@ func TestReadStatuses(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
-	v := map[string]string{"dsId": "1"}
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
-	statuses, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
-	if len(errs) > 0 {
-		t.Errorf("status.Read expected: no errors, actual: %v", errs)
+	statuses, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
 
 	if len(statuses) != 2 {

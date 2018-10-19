@@ -55,7 +55,7 @@ Delivery Service Regexes
           "regexes": [
             {
               "type": "HOST_REGEXP",
-              "pattern": ".*\.foo-bar\..*",
+              "pattern": ".*\\.foo-bar\\..*",
               "setNumber": 0
             },
             {
@@ -111,7 +111,7 @@ Delivery Service Regexes
           "id": 852,
           "type": 18,
           "typeName": "HOST_REGEXP",
-          "pattern": ".*\.foo-bar\..*",
+          "pattern": ".*\\.foo-bar\\..*",
           "setNumber": 0
         },
         {
@@ -168,7 +168,7 @@ Delivery Service Regexes
           "id": 852,
           "type": 18,
           "typeName": "HOST_REGEXP",
-          "pattern": ".*\.foo-bar\..*",
+          "pattern": ".*\\.foo-bar\\..*",
           "setNumber": 0
         }
       ]
@@ -207,8 +207,8 @@ Delivery Service Regexes
   **Request Example** ::
 
     {
-        "pattern": ".*\.foo-bar\..*"
-        "type": 18
+        "pattern": ".*\\.foo-bar\\..*",
+        "type": 18,
         "setNumber": 0
     }
 
@@ -237,7 +237,7 @@ Delivery Service Regexes
         "id": 852,
         "type": 18,
         "typeName": "HOST_REGEXP",
-        "pattern": ".*\.foo-bar\..*",
+        "pattern": ".*\\.foo-bar\\..*",
         "setNumber": 0
       },
       "alerts":[
@@ -283,8 +283,8 @@ Delivery Service Regexes
   **Request Example** ::
 
     {
-        "pattern": ".*\.foo-bar\..*"
-        "type": 18
+        "pattern": ".*\\.foo-bar\\..*",
+        "type": 18,
         "setNumber": 0
     }
 
@@ -313,7 +313,7 @@ Delivery Service Regexes
         "id": 852,
         "type": 18,
         "typeName": "HOST_REGEXP",
-        "pattern": ".*\.foo-bar\..*",
+        "pattern": ".*\\.foo-bar\\..*",
         "setNumber": 0
       },
       "alerts":[

@@ -1,0 +1,20 @@
+{
+  "hostName": "enroller",
+  "domainName": "infra.ciab.test",
+  "cachegroup": "CDN_in_a_Box_Edge",
+  "interfaceName": "eth0",
+  "ipAddress": "172.16.239.200",
+  "ipNetmask": "255.255.255.0",
+  "ipGateway": "172.16.239.1",
+  "ip6Address": "fc01:9400:1000:8::200",
+  "ip6Gateway": "fc01:9400:1000:8::1",
+  "interfaceMtu": 1500,
+  "type": "ENROLLER",
+  "physLocation": "Apachecon North America 2018",
+  "profile": "ENROLLER_ALL",
+  "cdnName": "ALL",
+  "updPending": false,
+  "status": "ONLINE",
+  "tcpPort": 53,
+  "httpsPort": 443
+}

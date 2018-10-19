@@ -1,5 +1,4 @@
 # TO Client Library Golang
-_This version of the SDK is deprecated in favor of the newer [TO API v1.3 Client Library](https://github.com/apache/trafficcontrol/tree/master/traffic_ops/client/v13)_
 
 ## Getting Started
 1. Obtain the latest version of the library
@@ -15,7 +14,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 

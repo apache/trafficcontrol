@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License. -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="22.321117mm" width="133.58116mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 473.31906 79.090573">
+	<defs>
+		<marker id="e" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="g" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="a" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="f" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+	</defs>
+	<text font-size="12.5px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="15.261536" x="7.2298889" font-family="sans-serif" fill="#000000"><tspan y="15.261536" x="7.2298889">Peer Poller</tspan></text>
+	<rect stroke-linejoin="round" height="20.203051" width="80.812202" stroke="#000" y=".5" x=".49993896" fill="none"/>
+	<text font-size="12.5px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="15.261536" x="120.68391" font-family="sans-serif" fill="#000000"><tspan y="15.261536" x="120.68391">Peer Fetcher</tspan></text>
+	<rect stroke-linejoin="round" height="19.192898" width="90.408653" stroke="#000" y="1.0050659" x="115.28365" fill="none"/>
+	<text font-size="12.5px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="15.261597" x="239.03291" font-family="sans-serif" fill="#000000"><tspan y="15.261597" x="239.03291">Peer Handler</tspan></text>
+	<g stroke="#000" fill="none">
+		<rect stroke-linejoin="round" height="18.687822" width="93.43911" y="1.2576294" x="233.35036"/>
+		<path marker-end="url(#f)" d="m81.295648 10.62211h31.338152" stroke-width="1.16775703px"/>
+		<path marker-end="url(#a)" d="m205.67446 10.62017h25.68822" stroke-width="1.05726266px"/>
+	</g>
+	<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="47.261536" x="120.68391" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="47.261536" x="120.68391">Peer Fetcher</tspan></text>
+	<rect stroke-linejoin="round" height="19.192898" width="90.408653" stroke="#000" y="33.005066" x="115.28365" fill="none"/>
+	<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="47.261597" x="239.03291" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="47.261597" x="239.03291">Peer Handler</tspan></text>
+	<rect stroke-linejoin="round" height="18.687822" width="93.43911" stroke="#000" y="33.257629" x="233.35036" fill="none"/>
+	<g fill="none" stroke="#000" transform="translate(-118.46202,-684.20421)">
+		<path marker-end="url(#a)" d="m324.13648 726.82438h25.68822" stroke-width="1.05726266px"/>
+		<path stroke-linejoin="round" marker-end="url(#g)" d="m209.29773 694.83146v32.19643h23.23275" stroke-width=".98251468px"/>
+		<path d="m209.30647 726.99245v23.61232" stroke-width="1px"/>
+	</g>
+	<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="79.090576" x="84.884369" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="79.090576" x="84.884369">...</tspan></text>
+	<path marker-end="url(#e)" d="m327.01525 11.15784h42.37241" stroke="#000" stroke-width="1.30847371px" fill="none"/>
+	<path d="m340.77858 11.28411v54.67451" stroke="#000" stroke-width="1px" fill="none"/>
+	<text font-size="12.5px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="79.090576" x="334.81848" font-family="sans-serif" fill="#000000"><tspan y="79.090576" x="334.81848">...</tspan></text>
+	<path d="m326.71655 42.60154h13.92857" stroke="#000" stroke-width="1px" fill="none"/>
+	<text font-size="12.5px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="14.390991" x="378.479" font-family="sans-serif" fill="#000000"><tspan y="14.390991" x="378.479">Peer Manager</tspan></text>
+	<rect stroke-linejoin="round" height="20.203051" width="101.01525" stroke="#000" y="1.0332642" x="371.80377" fill="none"/>
+</svg>

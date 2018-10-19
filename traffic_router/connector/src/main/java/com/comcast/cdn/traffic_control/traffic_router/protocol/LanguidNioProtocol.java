@@ -15,58 +15,65 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
-import org.apache.coyote.http11.Http11NioProtocol;
-import org.apache.tomcat.util.net.SSLImplementation;
-import org.apache.tomcat.util.net.jsse.JSSEImplementation;
+import org.apache.coyote.http11.AbstractHttp11JsseProtocol;
+import org.apache.juli.logging.Log;
+import org.apache.tomcat.util.net.NioChannel;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import java.security.Security;
 
-public class LanguidNioProtocol extends Http11NioProtocol implements RouterProtocolHandler {
+
+public class LanguidNioProtocol extends AbstractHttp11JsseProtocol<NioChannel> implements RouterProtocolHandler {
 	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidNioProtocol.class);
 	private boolean ready = false;
 	private boolean initialized = false;
 	private String mbeanPath;
 	private String readyAttribute;
 	private String portAttribute;
-	private String sslClassName = JSSEImplementation.class.getCanonicalName();
 
-	public LanguidNioProtocol() {
-		log.warn("Serving wildcard certs for multiple domains");
-		ep = new RouterNioEndpoint();
-		setSSLImplementation(RouterSslImplementation.class.getCanonicalName());
+
+	//add BouncyCastle provider to support converting PKCS1 to PKCS8 since OpenSSL does not support PKCS1
+	//TODO:  Figure out if we can convert from PKCS1 to PKCS8 with out BC
+	static { log.warn("Adding BouncyCastle provider");
+			Security.addProvider(new BouncyCastleProvider());
 	}
 
-	public boolean setSSLImplementation(final String sslClassName) {
+	public LanguidNioProtocol() {
+		super(new RouterNioEndpoint());
+		log.warn("Serving wildcard certs for multiple domains");
+	}
+
+	@Override
+	public void setSslImplementationName(final String sslClassName) {
 		try {
 			Class.forName(sslClassName);
-			this.sslClassName = sslClassName;
-			return true;
+			log.info("setSslImplementation: "+sslClassName);
+			super.setSslImplementationName(sslClassName);
 		} catch (ClassNotFoundException e) {
-			log.error("Failed to set SSL implementation to " + sslClassName + " class was not found, defaulting to JSSE");
-			this.sslClassName = JSSEImplementation.class.getCanonicalName();
+			log.error("LanguidNIOProtocol: Failed to set SSL implementation to " + sslClassName + " class was not found, defaulting to OpenSSL");
 		}
 
-		return false;
 	}
 
 	@Override
 	@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 	public void init() throws Exception {
+
 		if (!isReady()) {
 			log.info("Init called; creating thread to monitor the state of Traffic Router");
 			new LanguidPoller(this).start();
 			return;
 		}
 
-		log.info("Traffic Router is ready; calling super.init()");
+		log.info("Traffic Router SSL Protocol is ready; calling super.init()");
+		getEndpoint().setBindOnInit(false);
 		super.init();
-
-		sslImplementation = (JSSEImplementation) SSLImplementation.getInstance(sslClassName);
 		setInitialized(true);
 	}
 
 	@Override
 	@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 	public void start() throws Exception {
-		log.info("Start called; waiting for initialization to occur");
+		log.info("LanguidNioProtocol Handler Start called; waiting for initialization to occur");
 
 		while (!isInitialized()) {
 			try {
@@ -76,10 +83,11 @@ public class LanguidNioProtocol extends Http11NioProtocol implements RouterProto
 			}
 		}
 
-		log.info("Initialization complete; calling super.start()");
+		log.info("LanguidNioProtocol Handler Initialization complete; calling super.start()");
 
 		super.start();
 	}
+
 
 	@Override
 	public boolean isReady() {
@@ -130,4 +138,21 @@ public class LanguidNioProtocol extends Http11NioProtocol implements RouterProto
 	public void setPortAttribute(final String portAttribute) {
 		this.portAttribute = portAttribute;
 	}
+
+	@Override
+	protected String getSslImplementationShortName() {
+		return "openssl";
+	}
+
+	@Override
+	protected String getNamePrefix() {
+		if (isSSLEnabled()) {
+			return ("https-" + getSslImplementationShortName()+ "-nio");
+		} else {
+			return ("http-nio");
+		}
+	}
+
+	@Override
+	protected Log getLog() { return log; }
 }

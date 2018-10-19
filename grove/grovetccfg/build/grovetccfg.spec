@@ -13,7 +13,7 @@
 Summary: Grove HTTP Caching Proxy Traffic Control config generator
 Name: grovetccfg
 Version: %{version}
-Release: 1
+Release: %{build_number}
 License: Apache License, Version 2.0
 Group: Base System/System Tools
 Prefix: /usr/sbin/%{name}

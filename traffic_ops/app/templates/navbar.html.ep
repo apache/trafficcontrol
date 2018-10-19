@@ -14,6 +14,8 @@
  -->
 
 <!-- Note: add a page here, mod the site.css as well! -->
+
+<div class="deprecatedBar">WARNING: This old interface is deprecated! It will be removed in Traffic Control 4.0! Please use Traffic Portal</div>
 	<ul id="jMenu">
 	  	<li><a id="nav-eh">Health</a>
 	  		<ul>

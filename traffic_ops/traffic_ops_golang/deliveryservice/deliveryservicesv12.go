@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -39,6 +38,11 @@ import (
 type TODeliveryServiceV12 struct {
 	ReqInfo *api.APIInfo
 	tc.DeliveryServiceNullableV12
+}
+
+func (v *TODeliveryServiceV12) APIInfo() *api.APIInfo { return v.ReqInfo }
+func (v *TODeliveryServiceV12) DeleteQuery() string {
+	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
 func GetTypeV12Factory() api.CRUDFactory {
@@ -201,106 +205,83 @@ func (ds *TODeliveryServiceV12) Validate() error {
 }
 
 // Create is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
-func (ds *TODeliveryServiceV12) Create() (error, tc.ApiErrorType) {
-	return errors.New("The Create method is not implemented"), http.StatusNotImplemented
+func (ds *TODeliveryServiceV12) Create() (error, error, int) {
+	return nil, nil, http.StatusNotImplemented
 }
 
-func CreateV12() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-		ds := tc.DeliveryServiceNullableV12{}
-		if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-			return
-		}
-		dsv13 := tc.NewDeliveryServiceNullableV13FromV12(ds)
-		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-			return
-		} else if !authorized {
-			api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-			return
-		}
-		dsv13, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, dsv13)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		*inf.CommitTx = true
-		api.WriteResp(w, r, []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
+func CreateV12(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	ds := tc.DeliveryServiceNullableV12{}
+	if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
+	dsv13 := tc.NewDeliveryServiceNullableFromV12(ds)
+	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	} else if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+	dsv13, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, dsv13)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
 }
 
-func (ds *TODeliveryServiceV12) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
+func (ds *TODeliveryServiceV12) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
-	dses, errs, errType := readGetDeliveryServices(params, ds.ReqInfo.Tx, ds.ReqInfo.User)
+	dses, errs, _ := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` {
-				return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
+				return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
 			}
 		}
-		return nil, errs, errType
+		return nil, nil, errors.New("reading ds v12: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
 	}
 
 	for _, ds := range dses {
 		returnable = append(returnable, ds.DeliveryServiceNullableV12)
 	}
-	return returnable, nil, tc.NoError
+	return returnable, nil, nil, http.StatusOK
 }
 
 //Delete is the DeliveryService implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (ds *TODeliveryServiceV12) Delete() (error, tc.ApiErrorType) {
-	log.Debugln("TODeliveryServiceV12.Delete calling id '%v' xmlid '%v'\n", ds.ID, ds.XMLID)
-	// return nil, tc.NoError // debug
-
+func (ds *TODeliveryServiceV12) Delete() (error, error, int) {
 	if ds.ID == nil {
-		log.Errorln("TODeliveryServiceV12.Delete called with nil ID")
-		return tc.DBError, tc.DataMissingError
+		return errors.New("missing id"), nil, http.StatusBadRequest
 	}
 	xmlID, ok, err := ds.GetXMLID(ds.ReqInfo.Tx)
 	if err != nil {
-		log.Errorln("TODeliveryServiceV12.Delete ID '" + string(*ds.ID) + "' loading XML ID: " + err.Error())
-		return tc.DBError, tc.SystemError
-	}
-	if !ok {
-		log.Errorln("TODeliveryServiceV12.Delete ID '" + string(*ds.ID) + "' had no delivery service!")
-		return tc.DBError, tc.DataMissingError
+		return nil, errors.New("dsv12 delete: getting xmlid: " + err.Error()), http.StatusInternalServerError
+	} else if !ok {
+		return errors.New("delivery service not found"), nil, http.StatusNotFound
 	}
 	ds.XMLID = &xmlID
 
 	// Note ds regexes MUST be deleted before the ds, because there's a ON DELETE CASCADE on deliveryservice_regex (but not on regex).
 	// Likewise, it MUST happen in a transaction with the later DS delete, so they aren't deleted if the DS delete fails.
-	if _, err := ds.ReqInfo.Tx.Exec(`DELETE FROM regex WHERE id IN (SELECT regex FROM deliveryservice_regex WHERE deliveryservice=$1)`, *ds.ID); err != nil {
-		log.Errorln("TODeliveryServiceV12.Delete deleting regexes for delivery service: " + err.Error())
-		return tc.DBError, tc.SystemError
+	if _, err := ds.ReqInfo.Tx.Tx.Exec(`DELETE FROM regex WHERE id IN (SELECT regex FROM deliveryservice_regex WHERE deliveryservice=$1)`, *ds.ID); err != nil {
+		return nil, errors.New("TODeliveryServiceV12.Delete deleting regexes for delivery service: " + err.Error()), http.StatusInternalServerError
 	}
 
-	if _, err := ds.ReqInfo.Tx.Exec(`DELETE FROM deliveryservice_regex WHERE deliveryservice=$1`, *ds.ID); err != nil {
-		log.Errorln("TODeliveryServiceV12.Delete deleting delivery service regexes: " + err.Error())
-		return tc.DBError, tc.SystemError
+	if _, err := ds.ReqInfo.Tx.Tx.Exec(`DELETE FROM deliveryservice_regex WHERE deliveryservice=$1`, *ds.ID); err != nil {
+		return nil, errors.New("TODeliveryServiceV12.Delete deleting delivery service regexes: " + err.Error()), http.StatusInternalServerError
 	}
 
-	result, err := ds.ReqInfo.Tx.Exec(`DELETE FROM deliveryservice WHERE id=$1`, *ds.ID)
-	if err != nil {
-		log.Errorln("TODeliveryServiceV12.Delete deleting delivery service: " + err.Error())
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no delivery service with that id found"), tc.DataMissingError
-		}
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+	userErr, sysErr, errCode := api.GenericDelete(ds)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	paramConfigFilePrefixes := []string{"hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_"}
@@ -309,48 +290,44 @@ func (ds *TODeliveryServiceV12) Delete() (error, tc.ApiErrorType) {
 		configFiles = append(configFiles, prefix+*ds.XMLID+".config")
 	}
 
-	if _, err := ds.ReqInfo.Tx.Exec(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`, pq.Array(configFiles)); err != nil {
-		log.Errorln("TODeliveryServiceV12.Delete deleting delivery service parameters: " + err.Error())
-		return tc.DBError, tc.SystemError
+	if _, err := ds.ReqInfo.Tx.Tx.Exec(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`, pq.Array(configFiles)); err != nil {
+		return nil, errors.New("TODeliveryServiceV12.Delete deleting delivery service parameteres: " + err.Error()), http.StatusInternalServerError
 	}
 
-	return nil, tc.NoError
+	return nil, nil, http.StatusOK
 }
 
 // Update is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
-func (ds *TODeliveryServiceV12) Update() (error, tc.ApiErrorType) {
-	return errors.New("The Update method is not implemented"), http.StatusNotImplemented
+func (ds *TODeliveryServiceV12) Update() (error, error, int) {
+	return nil, nil, http.StatusNotImplemented
 }
 
-func UpdateV12() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-
-		ds := tc.DeliveryServiceNullableV12{}
-		ds.ID = util.IntPtr(inf.IntParams["id"])
-		if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-			return
-		}
-		dsv13 := tc.NewDeliveryServiceNullableV13FromV12(ds)
-		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-			return
-		} else if !authorized {
-			api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-			return
-		}
-		dsv13, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &dsv13)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		*inf.CommitTx = true
-		api.WriteResp(w, r, []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
+func UpdateV12(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	ds := tc.DeliveryServiceNullableV12{}
+	ds.ID = util.IntPtr(inf.IntParams["id"])
+	if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
+	dsv13 := tc.NewDeliveryServiceNullableFromV12(ds)
+	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	} else if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+	dsv13, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &dsv13)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
 }

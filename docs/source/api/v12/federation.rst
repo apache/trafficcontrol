@@ -173,21 +173,24 @@ Federation
   +---------------------+--------+----------------------------------------------------+
   | ``>>xmlId``         | string | Delivery service xml id                            |
   +---------------------+--------+----------------------------------------------------+
+  | ``lastUpdated``     | string |                                                    | 
+  +---------------------+--------+----------------------------------------------------+
 
   **Response Example** ::
 
     {
      "response": [
         {
-			"id": 41
-			"cname": "booya.com.",
-			"ttl": 34,
-			"description": "fooya",
-			"deliveryService": {
-				"id": 61,
-				"xmlId": "the-xml-id"
-			}
-		}
+            "id": 41
+            "cname": "booya.com.",
+            "ttl": 34,
+            "description": "fooya",
+            "deliveryService": {
+                "id": 61,
+                "xmlId": "the-xml-id"
+            },
+            "lastUpdated": "2018-08-01 14:41:48+00"
+        }
       ]
     }
 
@@ -226,21 +229,25 @@ Federation
   +---------------------+--------+----------------------------------------------------+
   | ``>>xmlId``         | string | Delivery service xml id                            |
   +---------------------+--------+----------------------------------------------------+
+  | ``lastUpdated``     | string |                                                    | 
+  +---------------------+--------+----------------------------------------------------+
+
 
   **Response Example** ::
 
     {
      "response": [
         {
-			"id": 41
-			"cname": "booya.com.",
-			"ttl": 34,
-			"description": "fooya",
-			"deliveryService": {
-				"id": 61,
-				"xmlId": "the-xml-id"
-			}
-		}
+            "id": 41
+            "cname": "booya.com.",
+            "ttl": 34,
+            "description": "fooya",
+            "deliveryService": {
+                "id": 61,
+                "xmlId": "the-xml-id"
+            },
+            "lastUpdated": "2018-08-01 14:41:48+00"
+        }
       ]
     }
 
@@ -288,29 +295,33 @@ Federation
   +----------------------+--------+------------------------------------------------+
   | Parameter            | Type   | Description                                    |
   +======================+========+================================================+
-  |``cname``             | string |                                                |
+  | ``cname``            | string |                                                |
   +----------------------+--------+------------------------------------------------+
-  |``ttl``               | string |                                                |
+  | ``ttl``              | string |                                                |
   +----------------------+--------+------------------------------------------------+
-  |``description``       | string |                                                |
+  | ``description``      | string |                                                |
   +----------------------+--------+------------------------------------------------+
+  | ``lastUpdated``      | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+
 
   **Response Example** ::
 
-	{
-		"alerts": [
-			{
-				"level": "success",
-				"text": "Federation created [ cname = the.cname. ] with id: 26."
-			}
-		],
-		"response": {
-			"id": 26,
-			"cname": "the.cname.com.",
-			"ttl": 48,
-			"description": "the description",
-		}
-	}
+    {
+        "alerts": [
+            {
+                "level": "success",
+                "text": "Federation created [ cname = the.cname. ] with id: 26."
+            }
+        ],
+        "response": {
+            "id": 26,
+            "cname": "the.cname.com.",
+            "ttl": 48,
+            "description": "the description",
+            "lastUpdated": "2018-08-01 14:41:48+00"
+        }
+    }
 
 |
 
@@ -358,29 +369,33 @@ Federation
   +----------------------+--------+------------------------------------------------+
   | Parameter            | Type   | Description                                    |
   +======================+========+================================================+
-  |``cname``             | string |                                                |
+  | ``cname``            | string |                                                |
   +----------------------+--------+------------------------------------------------+
-  |``ttl``               | string |                                                |
+  | ``ttl``              | string |                                                |
   +----------------------+--------+------------------------------------------------+
-  |``description``       | string |                                                |
+  | ``description``      | string |                                                |
+  +----------------------+--------+------------------------------------------------+ 
+  | ``lastUpdated``      | string |                                                |
   +----------------------+--------+------------------------------------------------+
+
 
   **Response Example** ::
 
-	{
-		"alerts": [
-			{
-				"level": "success",
-				"text": "Federation updated [ cname = the.cname. ] with id: 26."
-			}
-		],
-		"response": {
-			"id": 26,
-			"cname": "the.cname.com.",
-			"ttl": 48,
-			"description": "the description",
-		}
-	}
+    {
+        "alerts": [
+            {
+                "level": "success",
+                "text": "Federation updated [ cname = the.cname. ] with id: 26."
+            }
+        ],
+        "response": {
+            "id": 26,
+            "cname": "the.cname.com.",
+            "ttl": 48,
+            "description": "the description",
+            "lastUpdated": "2018-08-01 14:41:48+00"
+        }
+    }
 
 |
 

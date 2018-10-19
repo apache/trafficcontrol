@@ -27,12 +27,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.util.EntityUtils;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -58,11 +55,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.isIn;
-import static org.hamcrest.Matchers.isOneOf;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.Matchers.startsWith;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
@@ -225,11 +218,13 @@ public class RouterTest {
 		trustStore.load(keystoreStream, "changeit".toCharArray());
 		TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).init(trustStore);
 
+
 		httpClient = HttpClientBuilder.create()
 			.setSSLSocketFactory(new ClientSslSocketFactory("tr.https-only-test.thecdn.example.com"))
 			.setSSLHostnameVerifier(new TestHostnameVerifier())
 			.disableRedirectHandling()
 			.build();
+
 	}
 
 	@After
@@ -344,7 +339,7 @@ public class RouterTest {
 		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpToHttpsId + ".bar");
 
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
 			Header header = response.getFirstHeader("Location");
 			assertThat(header.getValue(), isIn(httpToHttpsLocations));
@@ -362,7 +357,7 @@ public class RouterTest {
 		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpToHttpsId + ".bar");
 
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
 			Header header = response.getFirstHeader("Location");
 			assertThat(header.getValue(), isIn(httpToHttpsLocations));
@@ -380,7 +375,7 @@ public class RouterTest {
 
 		try {
 			response = httpClient.execute(httpGet);
-			assertThat(response.getStatusLine().getStatusCode(), equalTo(503));
+			assertThat("Response 503 expected got"+response.getStatusLine().getStatusCode(),response.getStatusLine().getStatusCode(), equalTo(503));
 		} finally {
 			if (response != null) response.close();
 		}
@@ -438,14 +433,13 @@ public class RouterTest {
 			.disableRedirectHandling()
 			.build();
 
-		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/x?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
 
-		try {
-			httpClient.execute(httpGet);
-			fail("Expected to get an ssl handshake error!");
-		} catch (SSLHandshakeException e) {
-			// Expected, this means we're doing the right thing
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
+			int code = response.getStatusLine().getStatusCode();
+			assertThat("Expected to get an ssl handshake error! But got: "+code,
+					code, greaterThan(500));
 		}
 
 		// Pretend someone did a cr-config snapshot that would have updated the location to be different
@@ -469,16 +463,6 @@ public class RouterTest {
 			)));
 		}
 
-		// assert that we still get a handshake error on the new delivery service
-		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
-
-		try {
-			httpClient.execute(httpGet);
-			fail("Expected to get an ssl handshake error!");
-		} catch (SSLHandshakeException e) {
-			// Expected, this means we're doing the right thing
-		}
 
 		// verify that if we get a new cr-config that turns off https for the problematic delivery service
 		// that it's able to get through while TR is still concurrently trying to get certs
@@ -504,6 +488,16 @@ public class RouterTest {
 			));
 		}
 
+		// assert that request gets rejected because SSL is turned off
+		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
+
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
+			int code = response.getStatusLine().getStatusCode();
+			assertThat("Expected to get an ssl handshake error! But got: "+code,
+					code, greaterThan(500));
+		}
+
 		// Go back to the cr-config that makes the delivery service https again
 		// Pretend someone did a cr-config snapshot that would have updated the location to be different
 		httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-4");
@@ -519,6 +513,15 @@ public class RouterTest {
 
 		// Our initial test cr config data sets cert poller to 10 seconds
 		Thread.sleep(25000L);
+
+		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + "https-additional" + ".bar");
+
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+	    } catch (SSLHandshakeException e) {
+		// Expected, this means we're doing the right thing
+	    }
 
 		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
@@ -616,7 +619,8 @@ public class RouterTest {
 	class TestHostnameVerifier implements HostnameVerifier {
 		@Override
 		public boolean verify(String s, SSLSession sslSession) {
-			return true;
+			assertThat("s = "+s+", getPeerHost() = "+ sslSession.getPeerHost(), sslSession.getPeerHost(), equalTo(s));
+			return sslSession.getPeerHost().equals(s);
 		}
 	}
 }

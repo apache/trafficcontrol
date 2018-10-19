@@ -103,7 +103,7 @@ The config file has the following fields:
 
 The remap rules file is specified in the [config file](#configuration).
 
-Note there exists a tool for generating remap rules from [Traffic Control](https://github.com/apache/trafficcontrol), available [here](https://github.com/apache/trafficcontrol/grove/tree/master/grovetccfg).
+Note there exists a tool for generating remap rules from [Traffic Control](https://github.com/apache/trafficcontrol), available [here](https://github.com/apache/trafficcontrol/tree/master/grove/grovetccfg).
 
 The remap rules file is JSON of the following form:
 

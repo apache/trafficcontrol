@@ -151,18 +151,16 @@ type CRConfigDispersion struct {
 	Shuffled bool `json:"shuffled,string"`
 }
 
-
 type CRConfigBackupLocations struct {
 	FallbackToClosest bool     `json:"fallbackToClosest,string"`
 	List              []string `json:"list,omitempty"`
-
 }
 
 type CRConfigLatitudeLongitude struct {
-	Lat               float64                 `json:"latitude"`
-	Lon               float64                 `json:"longitude"`
-	BackupLocations   CRConfigBackupLocations `json:"backupLocations,omitempty"`
-
+	Lat                 float64                 `json:"latitude"`
+	Lon                 float64                 `json:"longitude"`
+	BackupLocations     CRConfigBackupLocations `json:"backupLocations,omitempty"`
+	LocalizationMethods []LocalizationMethod    `json:"localizationMethods"`
 }
 
 type CRConfigLatitudeLongitudeShort struct {

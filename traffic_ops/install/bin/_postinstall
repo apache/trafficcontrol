@@ -617,8 +617,9 @@ QUERY
     # Skip the insert if the admin 'username' is already there.
     my $hashed_passwd = hash_pass( $adminconf->{"password"} );
     my $insert_admin = <<"ADMIN";
-    insert into tm_user (username, role, local_passwd, confirm_local_passwd)
+    insert into tm_user (username, tenant_id, role, local_passwd, confirm_local_passwd)
                 values  ('$adminconf->{"username"}',
+                        (select id from tenant where name = 'root'),
                         (select id from role where name = 'admin'),
                          '$hashed_passwd',
                         '$hashed_passwd' )
@@ -772,8 +773,8 @@ sub insert_profiles {
     my $insert_stmt = <<INSERTS;
 
     -- global parameters
-    insert into profile (name, description, type) 
-                values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE') 
+    insert into profile (name, description, type, cdn) 
+                values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE',  (SELECT id FROM cdn WHERE name='ALL')) 
                 ON CONFLICT (name) DO NOTHING;
 
     insert into profile_parameter (profile, parameter) 

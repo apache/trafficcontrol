@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -94,6 +95,8 @@ public class ConfigHandler {
 
 	private final static String NEUSTAR_POLLING_URL = "neustar.polling.url";
 	private final static String NEUSTAR_POLLING_INTERVAL = "neustar.polling.interval";
+
+	private final static String LOCALIZATION_METHODS = "localizationMethods";
 
 	public String getConfigDir() {
 		return configDir;
@@ -686,13 +689,49 @@ public class ConfigHandler {
 				}
 
 			}
+
+			final Set<CacheLocation.LocalizationMethod> enabledLocalizationMethods = parseLocalizationMethods(loc, jo);
+
 			try {
-				locations.add(new CacheLocation(loc, new Geolocation(JsonUtils.getDouble(jo, "latitude"), JsonUtils.getDouble(jo, "longitude")), backupCacheGroups, useClosestOnBackupFailure));
+				locations.add(
+						new CacheLocation(
+								loc,
+								new Geolocation(
+										JsonUtils.getDouble(jo, "latitude"),
+										JsonUtils.getDouble(jo, "longitude")),
+								backupCacheGroups,
+								useClosestOnBackupFailure,
+								enabledLocalizationMethods));
 			} catch (JsonUtilsException e) {
 				LOGGER.warn(e,e);
 			}
 		}
 		cacheRegister.setConfiguredLocations(locations);
+	}
+
+	private Set<CacheLocation.LocalizationMethod> parseLocalizationMethods(final String loc, final JsonNode jo) throws JsonUtilsException {
+		final Set<CacheLocation.LocalizationMethod> enabledLocalizationMethods = new HashSet<>();
+		if (jo != null && jo.hasNonNull(LOCALIZATION_METHODS) && JsonUtils.getJsonNode(jo, LOCALIZATION_METHODS).isArray()) {
+			final JsonNode localizationMethodsJson = JsonUtils.getJsonNode(jo, LOCALIZATION_METHODS);
+			for (final JsonNode methodJson : localizationMethodsJson) {
+				if (methodJson.isNull() || !methodJson.isTextual()) {
+					LOGGER.error("Location '" + loc + "' has a non-string localizationMethod, skipping");
+					continue;
+				}
+				final String method = methodJson.asText();
+				try {
+					enabledLocalizationMethods.add(CacheLocation.LocalizationMethod.valueOf(method));
+				} catch (IllegalArgumentException e) {
+					LOGGER.error("Location '" + loc + "' has an unknown localizationMethod (" + method + "), skipping");
+					continue;
+				}
+			}
+		}
+		// by default or if NO localization methods are explicitly enabled, enable ALL
+		if (enabledLocalizationMethods.isEmpty()) {
+			enabledLocalizationMethods.addAll(Arrays.asList(CacheLocation.LocalizationMethod.values()));
+		}
+		return enabledLocalizationMethods;
 	}
 
 	/**

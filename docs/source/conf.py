@@ -25,9 +25,45 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+here = os.path.dirname(__file__)
+ortPath = os.path.join(here, '..', '..', 'infrastructure', 'cdn-in-a-box', 'ort')
+ortPath = os.path.abspath(ortPath)
+sys.path.insert(0, ortPath)
+
+# -- Custom Lexical Analyzer for DNS -----------------------------------------
+
+from pygments.lexer import RegexLexer, bygroups
+from pygments.token import *
+from sphinx.highlighting import lexers
+
+class DNSLexer(RegexLexer):
+    name = 'DNS'
+    aliases = ['dns', 'dig']
+
+    tokens = {
+        'root': [
+            (r"^;( <<>> .*?| \((\d+|no) server(s)? found\)\s*|; global options:.*?|; Got answer:\s*)$", Comment.Singleline),
+            (r"^;;", Operator),
+            (r"^;\w.*?$", String),
+            (r"->>HEADER<<-", Keyword),
+            (r"(WARNING)(:)( )(.*?)$", bygroups(Generic.Subheading, Operator, Text, Error)),
+            (r"(WHEN)(:)( )(.*?)$", bygroups(Generic.Subheading, Operator, Text, Literal.Date)),
+            (r"(\w+)(:)(\s*)(\w+)(,)?", bygroups(Name.Variable, Operator, Text, String, Text)),
+            (r"(flags:)( )(?=(\w+)( )?)+", bygroups(Name.Entity, Text, String, Text)),
+            (r";", Keyword),
+            (r"[a-zA-Z]+ SECTION:", Generic.Heading),
+            (r"(\d+\.){3}\d+", String.Other),
+            (r"\d", Number),
+            (r"[\w\.\-#\(\)]+", String),
+            (r'\s', Text)
+        ]
+    }
+
+lexers['DNS'] = DNSLexer(startinline=True)
+
+
 
 
 # -- Project information -----------------------------------------------------
@@ -36,10 +72,12 @@ project = 'Traffic Control'
 copyright = '2018, Apache Traffic Control'
 author = 'Apache Traffic Control'
 
-# The short X.Y version
-version = ''
+with open(os.path.abspath(os.path.join(here, '..', '..', 'VERSION'))) as fd:
+	# The short X.Y version
+	version = fd.read().strip()
+
 # The full version, including alpha/beta/rc tags
-release = '3'
+release = version
 
 
 # -- General configuration ---------------------------------------------------
@@ -52,6 +90,8 @@ release = '3'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+	'sphinx.ext.autodoc',
+	'sphinx_autodoc_typehints'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -110,6 +150,12 @@ html_static_path = ['_static']
 #
 # html_sidebars = {}
 
+# Sets the favicon for the HTML pages
+html_favicon="favicon.ico"
+
+# Sets the sidebar logo for HTML pages
+html_logo="../../misc/logos/ATC-SVG-FULL-WHITE.svg"
+
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
@@ -122,28 +168,29 @@ htmlhelp_basename = 'traffic-control-cdn-doc'
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
-    # 'papersize': 'letterpaper',
+    'papersize': 'a4paper',
 
     # The font size ('10pt', '11pt' or '12pt').
     #
-    # 'pointsize': '10pt',
+    'pointsize': '12pt',
+	# Additional stuff for the LaTeX preamble.
+	#
+	# 'preamble': '',
 
-    # Additional stuff for the LaTeX preamble.
-    #
-    # 'preamble': '',
-
-    # Latex figure (float) alignment
-    #
-    # 'figure_align': 'htbp',
+	# Latex figure (float) alignment
+	#
+	# 'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'trafficcontrol.tex', 'Apache Traffic Control Documentation',
-     'Apache Traffic Control', 'manual'),
+	(master_doc, 'trafficcontrol.tex', 'Apache Traffic Control Documentation',
+	 'Apache Traffic Control', 'manual'),
 ]
+
+latex_logo = "../../misc/logos/ATC-PNG-FULL-BLACK-LARGE.png"
 
 
 # -- Options for manual page output ------------------------------------------
@@ -151,8 +198,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'Apache Traffic Control', 'Apache Traffic Control Documentation',
-     [author], 1)
+	(master_doc, 'Apache Traffic Control', 'Apache Traffic Control Documentation',
+	 [author], 1)
 ]
 
 
@@ -162,7 +209,11 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'trafficcontrol', 'trafficcontrol Documentation',
-     author, 'trafficcontrol', 'Traffic Control is an Open Source implementation of a Content Delivery Network.',
-     'Miscellaneous'),
+	(master_doc, 'trafficcontrol', 'trafficcontrol Documentation',
+	 author, 'trafficcontrol', 'Traffic Control is an Open Source implementation of a Content Delivery Network.',
+	 'Miscellaneous'),
 ]
+
+# Hopefully this will cause tab expansion to use 4 spaces rather than the
+# (GNU-supported) default of 8.
+tab_width=4

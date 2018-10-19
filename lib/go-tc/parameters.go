@@ -258,3 +258,10 @@ func ParamsExist(ids []int64, tx *sql.Tx) (bool, error) {
 	}
 	return count == len(ids), nil
 }
+
+// ProfileParametersNullable is an object of the form returned by the Traffic Ops /profileparameters endpoint.
+type ProfileParametersNullable struct {
+	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Profile     *string    `json:"profile" db:"profile"`
+	Parameter   *int       `json:"parameter" db:"parameter_id"`
+}

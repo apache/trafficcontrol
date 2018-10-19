@@ -20,11 +20,8 @@ package physlocation
  */
 
 import (
-	"errors"
-	"fmt"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -32,8 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
@@ -41,6 +36,21 @@ type TOPhysLocation struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.PhysLocationNullable
 }
+
+func (v *TOPhysLocation) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TOPhysLocation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOPhysLocation) InsertQuery() string           { return insertQuery() }
+func (v *TOPhysLocation) NewReadObj() interface{}       { return &tc.PhysLocationNullable{} }
+func (v *TOPhysLocation) SelectQuery() string           { return selectQuery() }
+func (v *TOPhysLocation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"name":   dbhelpers.WhereColumnInfo{"pl.name", nil},
+		"id":     dbhelpers.WhereColumnInfo{"pl.id", api.IsInt},
+		"region": dbhelpers.WhereColumnInfo{"pl.region", api.IsInt},
+	}
+}
+func (v *TOPhysLocation) UpdateQuery() string { return updateQuery() }
+func (v *TOPhysLocation) DeleteQuery() string { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
@@ -96,48 +106,14 @@ func (pl *TOPhysLocation) Validate() error {
 	return nil
 }
 
-func (pl *TOPhysLocation) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name":   dbhelpers.WhereColumnInfo{"pl.name", nil},
-		"id":     dbhelpers.WhereColumnInfo{"pl.id", api.IsInt},
-		"region": dbhelpers.WhereColumnInfo{"pl.region", api.IsInt},
-	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
-	}
-
-	query := selectQuery() + where + orderBy
-	log.Debugln("Query is ", query)
-
-	rows, err := pl.ReqInfo.Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying PhysLocations: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	physLocations := []interface{}{}
-	for rows.Next() {
-		var s tc.PhysLocationNullable
-		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing PhysLocation rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		physLocations = append(physLocations, s)
-	}
-
-	return physLocations, []error{}, tc.NoError
-
-}
+func (pl *TOPhysLocation) Read() ([]interface{}, error, error, int) { return api.GenericRead(pl) }
+func (pl *TOPhysLocation) Update() (error, error, int)              { return api.GenericUpdate(pl) }
+func (pl *TOPhysLocation) Create() (error, error, int)              { return api.GenericCreate(pl) }
+func (pl *TOPhysLocation) Delete() (error, error, int)              { return api.GenericDelete(pl) }
 
 func selectQuery() string {
-
-	query := `SELECT
+	return `
+SELECT
 pl.address,
 pl.city,
 pl.comments,
@@ -153,124 +129,8 @@ pl.short_name,
 pl.state,
 pl.zip
 FROM phys_location pl
-JOIN region r ON pl.region = r.id`
-
-	return query
-}
-
-//The TOPhysLocation implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a phys_location with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (pl *TOPhysLocation) Update() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with phys_location: %++v", updateQuery(), pl)
-	resultRows, err := pl.ReqInfo.Tx.NamedQuery(updateQuery(), pl)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a phys_location with " + err.Error()), eType
-			}
-			return err, eType
-		}
-		log.Errorf("received error: %++v from update execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	defer resultRows.Close()
-
-	// get LastUpdated field -- updated by trigger in the db
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	pl.LastUpdated = &lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no phys_location found with this id"), tc.DataMissingError
-		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-	return nil, tc.NoError
-}
-
-//The TOPhysLocation implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a phys_location with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted phys_location and have
-//to be added to the struct
-func (pl *TOPhysLocation) Create() (error, tc.ApiErrorType) {
-	resultRows, err := pl.ReqInfo.Tx.NamedQuery(insertQuery(), pl)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a phys_location with " + err.Error()), eType
-			}
-			return err, eType
-		}
-		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no phys_location was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected > 1 {
-		err = errors.New("too many ids returned from phys_location insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-
-	pl.SetKeys(map[string]interface{}{"id": id})
-	pl.LastUpdated = &lastUpdated
-
-	return nil, tc.NoError
-}
-
-//The PhysLocation implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (pl *TOPhysLocation) Delete() (error, tc.ApiErrorType) {
-
-	log.Debugf("about to run exec query: %s with phys_location: %++v", deleteQuery(), pl)
-	result, err := pl.ReqInfo.Tx.NamedExec(deleteQuery(), pl)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected < 1 {
-		return errors.New("no phys_location with that id found"), tc.DataMissingError
-	}
-	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	return nil, tc.NoError
+JOIN region r ON pl.region = r.id
+`
 }
 
 func updateQuery() string {

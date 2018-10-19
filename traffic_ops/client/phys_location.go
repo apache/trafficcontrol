@@ -25,19 +25,19 @@ import (
 )
 
 const (
-	API_v13_PHYS_LOCATIONS = "/api/1.3/phys_locations"
+	API_v13_PhysLocations = "/api/1.3/phys_locations"
 )
 
 // Create a PhysLocation
-func (to *Session) CreatePhysLocation(physLocation tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreatePhysLocation(pl tc.PhysLocation) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(physLocation)
+	reqBody, err := json.Marshal(pl)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_PHYS_LOCATIONS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_PhysLocations, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -48,15 +48,15 @@ func (to *Session) CreatePhysLocation(physLocation tc.PhysLocation) (tc.Alerts, 
 }
 
 // Update a PhysLocation by ID
-func (to *Session) UpdatePhysLocationByID(id int, physLocation tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(physLocation)
+	reqBody, err := json.Marshal(pl)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+	route := fmt.Sprintf("%s/%d", API_v13_PhysLocations, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,9 +67,9 @@ func (to *Session) UpdatePhysLocationByID(id int, physLocation tc.PhysLocation) 
 	return alerts, reqInf, nil
 }
 
-// Returns a list of physLocations
+// Returns a list of PhysLocations
 func (to *Session) GetPhysLocations() ([]tc.PhysLocation, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_PHYS_LOCATIONS, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_PhysLocations, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -81,9 +81,9 @@ func (to *Session) GetPhysLocations() ([]tc.PhysLocation, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a PhysLocation by the PhysLocation id
+// GET a PhysLocation by the PhysLocation ID
 func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+	route := fmt.Sprintf("%s/%d", API_v13_PhysLocations, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -101,7 +101,7 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 
 // GET a PhysLocation by the PhysLocation name
 func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_PHYS_LOCATIONS, name)
+	url := fmt.Sprintf("%s?name=%s", API_v13_PhysLocations, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -119,7 +119,7 @@ func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf
 
 // DELETE a PhysLocation by ID
 func (to *Session) DeletePhysLocationByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+	route := fmt.Sprintf("%s/%d", API_v13_PhysLocations, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

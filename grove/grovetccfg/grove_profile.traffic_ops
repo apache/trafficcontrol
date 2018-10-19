@@ -1,0 +1,190 @@
+{
+  "parameters": 
+  [
+    {
+      "value": "::1",
+      "name": "allow_ip6",
+      "config_file": "astats.config"
+    },
+    {
+      "value": "127.0.0.1,192.168.1.0/255",
+      "name": "allow_ip",
+      "config_file": "astats.config"
+    },
+    {
+      "value": "false",
+      "name": "rfc_compliant",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "80",
+      "name": "port",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "443",
+      "name": "https_port",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "50000000000",
+      "name": "cache_size_bytes",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "/etc/grove/remap.json",
+      "name": "remap_rules_file",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "100",
+      "name": "concurrent_rule_requests",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "/etc/grove/cert.pem",
+      "name": "cert_file",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "/etc/grove/key.pem",
+      "name": "key_file",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "bond0",
+      "name": "interface_name",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "false",
+      "name": "connection_close",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "/var/log/grove/error.log",
+      "name": "log_location_error",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "/var/log/grove/error.log",
+      "name": "log_location_warning",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "null",
+      "name": "log_location_info",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "null",
+      "name": "log_location_debug",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "/opt/trafficserver/var/log/trafficserver/custom_ats_2.log",
+      "name": "log_location_event",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "1000",
+      "name": "parent_request_timeout_ms",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "1000",
+      "name": "parent_request_keep_alive_ms",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "1000",
+      "name": "parent_request_max_idle_connections",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "1000",
+      "name": "parent_request_idle_connection_timeout_ms",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "5000",
+      "name": "server_read_timeout_ms",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "5000",
+      "name": "server_write_timeout_ms",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "5000",
+      "name": "server_idle_timeout_ms",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "ats_log",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "http_cacheinspector",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "http_callgc",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "http_memstats",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "http_stats",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "if_modified_since",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "modify_headers",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "modify_response_headers_global",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "modify_parent_request_headers",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "plugin",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "range_request_handler",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    },
+    {
+      "value": "record_stats",
+      "name": "plugins",
+      "config_file": "grove.cfg"
+    }
+  ],
+  "profile": {
+    "name": "EDGE_GROVE_PROFILE",
+    "type": "GROVE_PROFILE",
+    "description": "Edge Cache - Grove profile"
+  }
+}

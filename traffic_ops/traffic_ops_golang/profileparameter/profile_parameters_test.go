@@ -24,8 +24,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -33,14 +31,14 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestProfileParameters() []v13.ProfileParameterNullable {
-	pps := []v13.ProfileParameterNullable{}
+func getTestProfileParameters() []tc.ProfileParameterNullable {
+	pps := []tc.ProfileParameterNullable{}
 	lastUpdated := tc.TimeNoMod{}
 	lastUpdated.Scan(time.Now())
 	profileID := 1
 	parameterID := 1
 
-	pp := v13.ProfileParameterNullable{
+	pp := tc.ProfileParameterNullable{
 		LastUpdated: &lastUpdated,
 		ProfileID:   &profileID,
 		ParameterID: &parameterID,
@@ -66,28 +64,25 @@ func TestGetProfileParameters(t *testing.T) {
 	defer db.Close()
 
 	testPPs := getTestProfileParameters()
-	cols := test.ColsFromStructByTag("db", v13.ProfileParameterNullable{})
+	cols := test.ColsFromStructByTag("db", tc.ProfileParametersNullable{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testPPs {
 		rows = rows.AddRow(
 			ts.LastUpdated,
 			ts.Profile,
-			ts.ProfileID,
-			ts.Parameter,
 			ts.ParameterID,
 		)
 	}
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
-	v := map[string]string{"profile": "1"}
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
-
-	pps, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
-	if len(errs) > 0 {
-		t.Errorf("profileparameter.Read expected: no errors, actual: %v", errs)
+	txx := db.MustBegin()
+	reqInfo := api.APIInfo{Tx: txx, Params: map[string]string{"profile": "1"}}
+	pps, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
 
 	if len(pps) != 2 {

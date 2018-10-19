@@ -21,14 +21,10 @@ package region
 
 import (
 	"errors"
-	"fmt"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
@@ -36,6 +32,21 @@ type TORegion struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.Region
 }
+
+func (v *TORegion) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TORegion) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = t }
+func (v *TORegion) InsertQuery() string           { return insertQuery() }
+func (v *TORegion) NewReadObj() interface{}       { return &tc.Region{} }
+func (v *TORegion) SelectQuery() string           { return selectQuery() }
+func (v *TORegion) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"name":     dbhelpers.WhereColumnInfo{"r.name", nil},
+		"division": dbhelpers.WhereColumnInfo{"r.division", nil},
+		"id":       dbhelpers.WhereColumnInfo{"r.id", api.IsInt},
+	}
+}
+func (v *TORegion) UpdateQuery() string { return updateQuery() }
+func (v *TORegion) DeleteQuery() string { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
@@ -73,47 +84,13 @@ func (region *TORegion) Validate() error {
 	return nil
 }
 
-func (region *TORegion) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name":     dbhelpers.WhereColumnInfo{"r.name", nil},
-		"division": dbhelpers.WhereColumnInfo{"r.division", nil},
-		"id":       dbhelpers.WhereColumnInfo{"r.id", api.IsInt},
-	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
-	}
-
-	query := selectQuery() + where + orderBy
-	log.Debugln("Query is ", query)
-
-	rows, err := region.ReqInfo.Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying Regions: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	regions := []interface{}{}
-	for rows.Next() {
-		var s tc.Region
-		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing Region rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		regions = append(regions, s)
-	}
-
-	return regions, []error{}, tc.NoError
-}
+func (rg *TORegion) Read() ([]interface{}, error, error, int) { return api.GenericRead(rg) }
+func (rg *TORegion) Update() (error, error, int)              { return api.GenericUpdate(rg) }
+func (rg *TORegion) Create() (error, error, int)              { return api.GenericCreate(rg) }
+func (rg *TORegion) Delete() (error, error, int)              { return api.GenericDelete(rg) }
 
 func selectQuery() string {
-
-	query := `SELECT
+	return `SELECT
 r.division,
 d.name as divisionname,
 r.id,
@@ -121,120 +98,6 @@ r.last_updated,
 r.name
 FROM region r
 JOIN division d ON r.division = d.id`
-	return query
-}
-
-//The TORegion implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a region with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (region *TORegion) Update() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with region: %++v", updateQuery(), region)
-	resultRows, err := region.ReqInfo.Tx.NamedQuery(updateQuery(), region)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a region with " + err.Error()), eType
-			}
-			return err, eType
-		}
-		log.Errorf("received error: %++v from update execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	defer resultRows.Close()
-
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	region.LastUpdated = lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no region found with this id"), tc.DataMissingError
-		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	return nil, tc.NoError
-}
-
-//The TORegion implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a region with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted region and have
-//to be added to the struct
-func (region *TORegion) Create() (error, tc.ApiErrorType) {
-	resultRows, err := region.ReqInfo.Tx.NamedQuery(insertQuery(), region)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a region with " + err.Error()), eType
-			}
-			return err, eType
-		}
-		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no region was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected > 1 {
-		err = errors.New("too many ids returned from region insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	region.SetKeys(map[string]interface{}{"id": id})
-	region.LastUpdated = lastUpdated
-
-	return nil, tc.NoError
-}
-
-//The Region implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (region *TORegion) Delete() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with region: %++v", deleteQuery(), region)
-	result, err := region.ReqInfo.Tx.NamedExec(deleteQuery(), region)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected < 1 {
-		return errors.New("no region with that id found"), tc.DataMissingError
-	}
-	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	return nil, tc.NoError
 }
 
 func updateQuery() string {

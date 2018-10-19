@@ -66,7 +66,7 @@ class TOSession(restapi.RestApiSession):
     of loading up dictionaries for request data.
 
     As of now you can see the following URL for API details:
-       https://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html#api for details
+       https://traffic-control-cdn.readthedocs.io/en/latest/api/index.html #api for details
 
     Adding end-point methods: (See "Implemented Direct API URL Endpoint Methods" for actual examples)
         E.g. End-point with no URL parameters and no query parameters:
@@ -146,10 +146,10 @@ class TOSession(restapi.RestApiSession):
 
     NOTE: Only a small subset of the API endpoints are implemented.  More can be implemented as needed.
           See the Traffic Ops API documentation for more detail:
-              https://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html#api
+                     https://traffic-control-cdn.readthedocs.io/en/latest/api/index.html #api for details #api
     """
 
-    def __init__(self, host_ip, host_port=443, api_version=u'1.2', ssl=True, headers=default_headers,
+    def __init__(self, host_ip, host_port=443, api_version=u'1.3', ssl=True, headers=default_headers,
                  verify_cert=True):
         """
         The class initializer.
@@ -280,9 +280,8 @@ class TOSession(restapi.RestApiSession):
         return result_set, response  # Note: Return last response object received
 
     # Implemented Direct API URL Endpoint Methods
-    # See https://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html#api for details
-
-    @restapi.api_request(u'get', u'asns', (u'1.1', u'1.2',))
+    # See https://traffic-control-cdn.readthedocs.io/en/latest/api/index.html #api for detail
+    @restapi.api_request(u'get', u'asns', (u'1.1', u'1.2', u'1.3',))
     def get_asns(self, query_params=None):
         """
         Get ASNs.
@@ -290,7 +289,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'cachegroups', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'cachegroups', (u'1.1', u'1.2', u'1.3',))
     def get_cachegroups(self, query_params=None):
         """
         Get Cache Groups.
@@ -304,7 +303,7 @@ class TOSession(restapi.RestApiSession):
     # of 'cachegroups/{cache_group_id}' will try to convert any value passed to a string, which basically does
     # no type checking, unless of course the value cannot be cast to a string.
     # E.g. get_cachegroups_by_id(cache_group_id=23) -> call end-point .../api/1.2/cachegroups/23
-    @restapi.api_request(u'get', u'cachegroups/{cache_group_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'cachegroups/{cache_group_id:d}', (u'1.1', u'1.2', u'1.3',))
     def get_cachegroup_by_id(self, cache_group_id=None):
         """
         Get a Cache Group by Id.
@@ -314,7 +313,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'deliveryservices', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'deliveryservices', (u'1.1', u'1.2', u'1.3',))
     def get_deliveryservices(self, query_params=None):
         """
         Get Delivery Services.
@@ -322,7 +321,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'deliveryservices/{delivery_service_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'deliveryservices/{delivery_service_id:d}', (u'1.1', u'1.2', u'1.3',))
     def get_deliveryservice_by_id(self, delivery_service_id=None):
         """
         Get a Delivery Service by Id.
@@ -331,17 +330,17 @@ class TOSession(restapi.RestApiSession):
         :rtype: Tuple[Dict[Text, Any], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
-    @restapi.api_request(u'get', u'servers/hostname/{name}/details', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'servers/hostname/{name}/details', (u'1.1', u'1.2', u'1.3',))
     def get_server_details(self, name=None):
         """
         #GET /api/1.2/servers/hostname/:name/details
         Get server details from trafficOps
-        https://trafficcontrol.apache.org/docs/latest/development/traffic_ops_api/v12/server.html
+        https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/server.html
         :param hostname: Server hostname
         :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
-    @restapi.api_request(u'post', u'deliveryservices', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'deliveryservices', (u'1.1', u'1.2', u'1.3',))
     def create_deliveryservice(self, data=None):
         """
         Create a Delivery Service.
@@ -351,7 +350,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'put', u'deliveryservices/{delivery_service_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'put', u'deliveryservices/{delivery_service_id:d}', (u'1.1', u'1.2', u'1.3',))
     def update_deliveryservice_by_id(self, delivery_service_id=None, data=None):
         """
         Update a Delivery Service by Id.
@@ -363,7 +362,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'delete', u'deliveryservices/{delivery_service_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'delete', u'deliveryservices/{delivery_service_id:d}', (u'1.1', u'1.2', u'1.3',))
     def delete_deliveryservice_by_id(self, delivery_service_id=None):
         """
         Delete a Delivery Service by Id.
@@ -373,7 +372,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'deliveryservices/{delivery_service_id:d}/servers', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'deliveryservices/{delivery_service_id:d}/servers', (u'1.1', u'1.2', u'1.3',))
     def get_deliveryservices_servers(self, delivery_service_id=None):
         """
         Get all servers associated with a Delivery Service Id.
@@ -383,7 +382,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'deliveryserviceserver', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'deliveryserviceserver', (u'1.1', u'1.2', u'1.3',))
     def get_deliveryserviceserver(self, query_params=None):
         """
         Get Servers for all defined Delivery Services.
@@ -393,7 +392,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'deliveryserviceserver', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'deliveryserviceserver', (u'1.1', u'1.2', u'1.3',))
     def assign_deliveryservice_servers_by_ids(self, data=None):
         """
         Assign servers by id to a Delivery Service. (New Method)
@@ -403,7 +402,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'deliveryservices/{xml_id}/servers', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'deliveryservices/{xml_id}/servers', (u'1.1', u'1.2', u'1.3',))
     def assign_deliveryservice_servers_by_names(self, xml_id=None, data=None):
         """
         Assign severs by name to a Delivery Service by xmlId. (Old Method)
@@ -415,7 +414,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'deliveryservices_regexes', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'deliveryservices_regexes', (u'1.1', u'1.2', u'1.3',))
     def get_deliveryservices_regexes(self):
         """
         Get RegExes for all Delivery Services.
@@ -423,7 +422,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'deliveryservices/{delivery_service_id:d}/regexes', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'deliveryservices/{delivery_service_id:d}/regexes', (u'1.1', u'1.2', u'1.3',))
     def get_deliveryservice_regexes_by_id(self, delivery_service_id=None):
         """
         Get RegExes for a Delivery Service by Id.
@@ -433,7 +432,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'deliveryservices/regexes', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'deliveryservices/regexes', (u'1.1', u'1.2', u'1.3',))
     def delete_deliveryservice_regexes(self, data=None):
         """
         Delete RegExes.
@@ -444,7 +443,7 @@ class TOSession(restapi.RestApiSession):
         """
 
     @restapi.api_request(u'delete', u'deliveryservices/{delivery_service_id:d}/regexes/{delivery_service_regex_id:d}',
-                         (u'1.1',))
+                         (u'1.1', u'1.2', u'1.3',))
     def delete_deliveryservice_regex_by_regex_id(self, delivery_service_id=None, delivery_service_regex_id=None):
         """
         Delete a RegEx by Id for a Delivery Service by Id.
@@ -456,7 +455,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'deliveryservices/xmlId/{xml_id}/sslkeys', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'deliveryservices/xmlId/{xml_id}/sslkeys', (u'1.1', u'1.2', u'1.3',))
     def get_deliveryservice_ssl_keys_by_xml_id(self, xml_id=None, query_params=None):
         """
         Get SSL keys for a Delivery Service by xmlId.
@@ -468,7 +467,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'deliveryservices/xmlId/{xml_id}/sslkeys/delete', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'deliveryservices/xmlId/{xml_id}/sslkeys/delete', (u'1.1', u'1.2', u'1.3',))
     def delete_deliveryservice_ssl_keys_by_xml_id(self, xml_id=None, query_params=None):
         """
         Delete SSL keys for a Delivery Service by xmlId.
@@ -480,7 +479,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'deliveryservices/sslkeys/generate', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'deliveryservices/sslkeys/generate', (u'1.1', u'1.2', u'1.3',))
     def generate_deliveryservice_ssl_keys(self, data=None):
         """
         Generate an SSL certificate. (self-signed)
@@ -490,7 +489,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'deliveryservices/sslkeys/add', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'deliveryservices/sslkeys/add', (u'1.1', u'1.2', u'1.3',))
     def add_ssl_keys_to_deliveryservice(self, data=None):
         """
         Add SSL keys to a Delivery Service.
@@ -500,7 +499,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'deliveryservices/xmlId/{xml_id}/urlkeys/generate', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'deliveryservices/xmlId/{xml_id}/urlkeys/generate', (u'1.1', u'1.2', u'1.3',))
     def generate_deliveryservice_url_signature_keys(self, xml_id=None):
         """
         Generate URL Signature Keys for a Delivery Service by xmlId.
@@ -510,7 +509,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'cdns', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'cdns', (u'1.1', u'1.2', u'1.3',))
     def get_cdns(self):
         """
         Get all CDNs.
@@ -518,7 +517,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'cdns', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'cdns', (u'1.1', u'1.2', u'1.3',))
     def create_cdn(self, data=None):
         """
         Create a new CDN.
@@ -527,7 +526,7 @@ class TOSession(restapi.RestApiSession):
         :rtype: Tuple[Dict[Text, Any], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
-    @restapi.api_request(u'get', u'cdns/{cdn_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'cdns/{cdn_id:d}', (u'1.1', u'1.2', u'1.3',))
     def get_cdn_by_id(self, cdn_id=None):
         """
         Get a CDN by Id.
@@ -537,7 +536,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'cdns/name/{cdn_name}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'cdns/name/{cdn_name}', (u'1.1', u'1.2', u'1.3',))
     def get_cdn_by_name(self, cdn_name=None):
         """
         Get a CDN by name.
@@ -547,7 +546,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'put', u'cdns/{cdn_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'put', u'cdns/{cdn_id:d}', (u'1.1', u'1.2', u'1.3',))
     def update_cdn_by_id(self, cdn_id=None, data=None):
         """
         Update a CDN by Id.
@@ -559,7 +558,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'servers', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'servers', (u'1.1', u'1.2',u'1.3',))
     def get_servers(self, query_params=None):
         """
         Get Servers.
@@ -569,7 +568,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'servers', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'servers', (u'1.1', u'1.2', u'1.3',))
     def create_server(self, data=None):
         """
         Create a new Server.
@@ -579,7 +578,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'put', u'servers/{server_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'put', u'servers/{server_id:d}', (u'1.1', u'1.2', u'1.3',))
     def update_server_by_id(self, server_id=None, data=None):
         """
         Update a Server by Id.
@@ -590,18 +589,18 @@ class TOSession(restapi.RestApiSession):
         :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
-    @restapi.api_request(u'put', u'servers/{server_id:d}/status', (u'1.1', u'1.2',))
+    @restapi.api_request(u'put', u'servers/{server_id:d}/status', (u'1.1', u'1.2', u'1.3',))
     def update_server_status_by_id(self, server_id=None, data=None):
         """
         Update server_status by Id.
         :param server_id: The server Id
         :type server_id: int
-        :status: https://trafficcontrol.apache.org/docs/latest/development/traffic_ops_api/v12/server.html   
+        :status: https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/server.html   
         :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'delete', u'servers/{server_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'delete', u'servers/{server_id:d}', (u'1.1', u'1.2', u'1.3',))
     def delete_server_by_id(self, server_id=None):
         """
         Delete a Server by Id.
@@ -611,7 +610,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'parameters', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'parameters', (u'1.1', u'1.2', u'1.3',))
     def get_parameters(self):
         """
         Get all Profile Parameters.
@@ -619,7 +618,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'profiles', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'profiles', (u'1.1', u'1.2', u'1.3',))
     def get_profiles(self, query_params=None):
         """
         Get Profiles.
@@ -627,7 +626,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'profiles/{profile_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'profiles/{profile_id:d}', (u'1.1', u'1.2', u'1.3',))
     def get_profile_by_id(self, profile_id=None):
         """
         Get Profile by Id.
@@ -637,7 +636,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'put', u'profiles/{profile_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'put', u'profiles/{profile_id:d}', (u'1.1', u'1.2', u'1.3',))
     def update_profile_by_id(self, profile_id=None, data=None):
         """
         Update Profile by Id.
@@ -649,7 +648,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'delete', u'profiles/{profile_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'delete', u'profiles/{profile_id:d}', (u'1.1', u'1.2', u'1.3',))
     def delete_profile_by_id(self, profile_id=None):
         """
         Delete Profile by Id.
@@ -659,7 +658,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'parameters/validate', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'parameters/validate', (u'1.1', u'1.2', u'1.3',))
     def validate_parameter_exists(self, data=None):
         """
         Validate that a Parameter exists.
@@ -669,7 +668,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'parameters/{parameter_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'parameters/{parameter_id:d}', (u'1.1', u'1.2', u'1.3',))
     def get_parameter_by_id(self, parameter_id=None):
         """
         Get a Parameter by Id.
@@ -679,7 +678,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'profiles/{id:d}/parameters', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'profiles/{id:d}/parameters', (u'1.1', u'1.2', u'1.3',))
     def get_parameters_by_profile_id(self, profile_id=None):
         """
         Get all Parameters associated with a Profile by Id.
@@ -689,7 +688,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'profiles/name/{profile_name}/parameters', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'profiles/name/{profile_name}/parameters', (u'1.1', u'1.2', u'1.3',))
     def get_parameters_by_profile_name(self, profile_name=None):
         """
         Get all Parameters associated with a Profile by Name.
@@ -699,7 +698,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'parameters', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'parameters', (u'1.1', u'1.2', u'1.3',))
     def create_parameters(self, data=None):
         """
         Create Parameters
@@ -709,7 +708,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'parameters/{parameter_id:d}/profiles', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'parameters/{parameter_id:d}/profiles', (u'1.1', u'1.2', u'1.3',))
     def get_associated_profiles_by_parameter_id(self, parameter_id=None):
         """
         Get all Profiles associated to a Parameter by Id.
@@ -719,7 +718,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'profiles/id/{profile_id:d}/parameters', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'profiles/id/{profile_id:d}/parameters', (u'1.1', u'1.2', u'1.3',))
     def associate_parameters_by_profile_id(self, profile_id=None, data=None):
         """
         Associate Parameters to a Profile by Id.
@@ -731,7 +730,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'profiles/name/{profile_name}/parameters', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'profiles/name/{profile_name}/parameters', (u'1.1', u'1.2', u'1.3',))
     def associate_parameters_by_profile_name(self, profile_name=None, data=None):
         """
         Associate Parameters to a Profile by Name.
@@ -743,7 +742,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'delete', u'profileparameters/{profile_id:d}/{parameter_id:d}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'delete', u'profileparameters/{profile_id:d}/{parameter_id:d}', (u'1.1', u'1.2', u'1.3',))
     def delete_profile_parameter_association_by_id(self, profile_id=None, parameter_id=None):
         """
         Delete Parameter association by Id for a Profile by Id.
@@ -755,7 +754,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'phys_locations', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'phys_locations', (u'1.1', u'1.2', u'1.3',))
     def get_physical_locations(self, query_params=None):
         """
         Get Physical Locations.
@@ -763,7 +762,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'users', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'users', (u'1.1', u'1.2', u'1.3',))
     def get_users(self):
         """
         Get Users.
@@ -771,7 +770,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'roles', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'roles', (u'1.1', u'1.2', u'1.3',))
     def get_roles(self):
         """
         Get Roles.
@@ -779,7 +778,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'statuses', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'statuses', (u'1.1', u'1.2', u'1.3',))
     def get_statuses(self):
         """
         Get Statuses.
@@ -787,7 +786,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'types', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'types', (u'1.1', u'1.2', u'1.3',))
     def get_types(self, query_params=None):
         """
         Get Data Types.
@@ -795,7 +794,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'staticdnsentries', (u'1.1', u'1.2',))
+    @restapi.api_request(u'get', u'staticdnsentries', (u'1.1', u'1.2', u'1.3',))
     def get_static_dns_entries(self):
         """
         Get Static DNS Entries.
@@ -803,7 +802,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'cdns/{cdn_id:d}/queue_update', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'cdns/{cdn_id:d}/queue_update', (u'1.1', u'1.2', u'1.3',))
     def cdns_queue_update(self, cdn_id=None, data=None):
         """
         Queue Updates by CDN Id.
@@ -815,7 +814,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'post', u'servers/{server_id:d}/queue_update', (u'1.1', u'1.2',))
+    @restapi.api_request(u'post', u'servers/{server_id:d}/queue_update', (u'1.1', u'1.2', u'1.3',))
     def servers_queue_update(self, server_id=None, data=None):
         """
         Queue Updates by Server Id.
@@ -827,7 +826,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'put', u'snapshot/{cdn_name}', (u'1.1', u'1.2',))
+    @restapi.api_request(u'put', u'snapshot/{cdn_name}', (u'1.1', u'1.2', u'1.3',))
     def snapshot_crconfig(self, cdn_name=None):
         """
         Snapshot CRConfig by CDN Name.
@@ -837,7 +836,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'cdns/{cdn_name}/snapshot', (u'1.2',))
+    @restapi.api_request(u'get', u'cdns/{cdn_name}/snapshot', (u'1.2', u'1.3',))
     def get_current_snapshot_crconfig(self, cdn_name=None):
         """
         Retrieve the currently implemented CR Snapshot
@@ -846,7 +845,7 @@ class TOSession(restapi.RestApiSession):
         :rtype: Tuple[Dict[Text, Any], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
-    @restapi.api_request(u'get', u'cdns/{cdn_name}/snapshot/new', (u'1.2',))
+    @restapi.api_request(u'get', u'cdns/{cdn_name}/snapshot/new', (u'1.2', u'1.3',))
     def get_pending_snapshot_crconfig(self, cdn_name=None):
         """
         Retrieve the pending CR Snapshot
@@ -856,7 +855,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'logs', (u'1.2',))
+    @restapi.api_request(u'get', u'logs', (u'1.2', u'1.3',))
     def get_change_logs(self):
         """
         Retrieve all change logs from traffic ops
@@ -864,7 +863,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'logs/{days:d}/days', (u'1.2',))
+    @restapi.api_request(u'get', u'logs/{days:d}/days', (u'1.2', u'1.3',))
     def get_change_logs_for_days(self, days=None):
         """
         Retrieve all change logs from Traffic Ops
@@ -873,11 +872,29 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
-    @restapi.api_request(u'get', u'logs/newcount', (u'1.2',))
+    @restapi.api_request(u'get', u'logs/newcount', (u'1.2', u'1.3',))
     def get_change_logs_newcount(self):
         """
         Get amount of new logs from traffic ops
         :rtype: Tuple[Dict[Text, Any], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+
+    ###                                                                              ###
+    ###                                                                              ###
+    ### add version 3 endpoints from here                                            ###
+    ### ref: http://traffic-control-cdn.readthedocs.io/en/latest/api/v13/index.html  ###
+    ###                                                                              ###
+    ###                                                                              ###
+    ###                                                                              ###
+
+    @restapi.api_request(u'get', u'coordinates', (u'1.3',))
+    def get_coordinates(self, query_params=None):
+        """
+        Get all coordinates associated with the cdn
+        :param query_params: The optional url query parameters for the call
+        :type query_params: Dict[Text, Any]
+        :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 

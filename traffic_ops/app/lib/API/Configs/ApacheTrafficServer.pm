@@ -1048,14 +1048,16 @@ sub ds_data {
 sub parent_ds_data {
 	my $self = shift;
 	my $server_obj = shift;
+	my $is_top_level_cache = shift;
 	my $response_obj;
 
 	$response_obj->{host_name}   = $server_obj->host_name;
 	$response_obj->{domain_name} = $server_obj->domain_name;
+	
+	# Top level caches (no parent caches defined)
+	if ( $is_top_level_cache == 1 ) {
 
-
-	if ( $server_obj->type->name =~ m/^MID/ ) {
-		# the mids will do all deliveryservices in this CDN
+		# Top level caches will do all deliveryservices in this CDN
 		my $rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [ $server_obj->cdn->name ] } );
 
 		my $j = 0;
@@ -1084,6 +1086,7 @@ sub parent_ds_data {
 		}
 		return $response_obj;
 	}
+	# Caches with parent caches defined
 	else {
 		my $rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForServerList')->search( {}, { bind => [ $server_obj->id ] } );
 
@@ -2268,15 +2271,19 @@ sub cachegroup_profiles {
 sub parent_data {
 	my $self       = shift;
 	my $server_obj = shift;
+	my $is_top_level_cache = shift;
 
 	my @parent_cachegroup_ids;
 	my @secondary_parent_cachegroup_ids;
 	my $org_cachegroup_type_id = &type_id( $self, "ORG_LOC" );
-	if ( $server_obj->type->name =~ m/^MID/ ) {
+	
+	# Top level caches (no parent caches defined)
+	if ( $is_top_level_cache == 1 ) {
 
 		# multisite origins take all the org groups in to account
 		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { type => $org_cachegroup_type_id } )->get_column('id')->all();
 	}
+	# Caches with parent caches defined
 	else {
 		@parent_cachegroup_ids =
 			grep {defined} $self->db->resultset('Cachegroup')->search( { id => $server_obj->cachegroup->id } )->get_column('parent_cachegroup_id')->all();
@@ -2347,6 +2354,33 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 	my $server_obj = shift;
 	my $data;
 	my $server_type = $server_obj->type->name;
+	
+	## By default we're going to assume that our cache is not a top level cache (mids, edges without parents, etc.)
+	my $is_top_level_cache = 0;
+
+	## Look up parent cachegroup IDs.
+	my $parent_cachegroup_id =
+			$self->db->resultset('Cachegroup')->search( { id => $server_obj->cachegroup->id } )->get_column('parent_cachegroup_id')->single();
+	my $secondary_parent_cachegroup_id =
+			$self->db->resultset('Cachegroup')->search( { id => $server_obj->cachegroup->id } )->get_column('secondary_parent_cachegroup_id')->single();
+	
+	## Now let's find out what sort of cachegroups they are.
+	my $parent_cachegroup_type;
+	my $secondary_parent_cachegroup_type;
+	if (defined($parent_cachegroup_id) ) {
+		$parent_cachegroup_type = $self->db->resultset('Cachegroup')->search( { id => $parent_cachegroup_id } )->get_column('type')->single();
+	}
+	if (defined($secondary_parent_cachegroup_id) ) {
+		$secondary_parent_cachegroup_type = $self->db->resultset('Cachegroup')->search( { id => $secondary_parent_cachegroup_id } )->get_column('type')->single();
+	}
+	
+	## If our parent cachegroups are either not defined or are origin cachegroups, then set the 
+	## is_top_level_cache flag so we generate the parent entries accordingly and handle MSO properly.
+	my $org_cachegroup_type_id = &type_id( $self, "ORG_LOC" );
+	if ( ( $parent_cachegroup_type == $org_cachegroup_type_id || !defined($parent_cachegroup_type) ) && 
+	( $secondary_parent_cachegroup_type == $org_cachegroup_type_id || !defined($secondary_parent_cachegroup_type) ) ) {
+		$is_top_level_cache = 1;
+	}
 
 	my $ats_ver =
 		$self->db->resultset('ProfileParameter')
@@ -2357,12 +2391,13 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 	my $header = $self->header_comment( $server_obj->host_name );
 	my @text_array;
 
-
-	if ( $server_type =~ m/^MID/ ) {
+	# Top level caches (no parent caches defined)
+	if ( $is_top_level_cache == 1 ) {
 		my @unique_origins;
 		if ( !defined($data) ) {
-			$data = $self->parent_ds_data($server_obj);
+			$data = $self->parent_ds_data($server_obj, $is_top_level_cache);
 		}
+
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			my $text;
 			my $xml_id                             = $ds->{ds_xml_id};
@@ -2399,7 +2434,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 
 				# If we have multi-site origin, get parent_data once
 				if ( not defined($parent_info) ) {
-					$parent_info = $self->parent_data($server_obj);
+					$parent_info = $self->parent_data($server_obj, $is_top_level_cache);
 				}
 
 				my @ranked_parents = ();
@@ -2474,8 +2509,6 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 			}
 		}
 
-		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
-		#$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
 		my $text = $header;
 		foreach my $line (sort @text_array ){
 			$text .= $line;
@@ -2483,7 +2516,8 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 
 		return $text;
 	}
-	else {    #"True" Parent - we are genning a EDGE config that points to a parent proxy.
+	# Caches with parent caches defined
+	else {    #"True" Parent - we are genning a cache config that points to a parent proxy.
 		$parent_info = $self->parent_data($server_obj);
 		my %done = ();
 		my $qsh = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'psel.qstring_handling');
@@ -2524,7 +2558,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 		my $go_direct   = 'go_direct=false';
 
 		if ( !defined($data) ) {
-			$data = $self->parent_ds_data($server_obj);
+			$data = $self->parent_ds_data($server_obj, $is_top_level_cache);
 		}
 
 		if (defined($data->{dslist})) {

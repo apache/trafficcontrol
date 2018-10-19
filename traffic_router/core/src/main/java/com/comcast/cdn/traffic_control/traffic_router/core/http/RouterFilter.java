@@ -82,6 +82,7 @@ public class RouterFilter extends OncePerRequestFilter {
 		final HTTPAccessRecord.Builder httpAccessRecordBuilder = new HTTPAccessRecord.Builder(httpAccessRecord);
 		HTTPRouteResult routeResult = null;
 
+
 		try {
 			final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 			routeResult = trafficRouter.route(request, track);

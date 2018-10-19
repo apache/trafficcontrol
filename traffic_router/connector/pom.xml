@@ -19,7 +19,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-        <version>2.3.0</version>
+        <version>3.0.0</version>
 	</parent>
 
 	<artifactId>traffic_router_connector</artifactId>
@@ -43,7 +43,7 @@
 					<verbose>true</verbose>
 					<failurePriority>5</failurePriority>
 					<rulesets>
-						<ruleset>build/pmd/ruleset.xml</ruleset>
+						<ruleset>file://${project.basedir}/build/pmd/ruleset.xml</ruleset>
 					</rulesets>
 				</configuration>
 			</plugin>
@@ -58,14 +58,6 @@
 					<showDeprecation>true</showDeprecation>
 					<fork>true</fork>
 					<compilerArgument>-XDignore.symbol.file</compilerArgument>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-eclipse-plugin</artifactId>
-				<version>2.9</version>
-				<configuration>
-					<downloadSources>true</downloadSources>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -92,8 +84,14 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
-			<artifactId>coyote</artifactId>
-			<version>6.0.33</version>
+			<artifactId>tomcat-coyote</artifactId>
+			<version>8.5.32</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-catalina</artifactId>
+			<version>8.5.32</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -103,18 +101,22 @@
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-api-mockito</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-module-junit4</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

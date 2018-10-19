@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License. -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="174.47356mm" width="174.47356mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 618.21339 618.21339">
+	<g transform="translate(-105.05585,-181.61069)">
+		<path fill="#a7fffc" d="m723.25132 494.0449a309.10669 309.10669 0 0 1 -312.10398 305.76446 309.10669 309.10669 0 0 1 -306.07968 -311.79485 309.10669 309.10669 0 0 1 311.48541 -306.39458 309.10669 309.10669 0 0 1 306.70917 311.17564"/>
+		<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="40px" y="276.99146" x="334.69965" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="334.69965" y="276.99146">Division</tspan></text>
+		<g transform="translate(81.26128 -.28444541)">
+			<path d="m273.74536 407.9839a103.03556 103.03556 0 0 1 -104.03465 101.92148 103.03556 103.03556 0 0 1 -102.026557 -103.93161 103.03556 103.03556 0 0 1 103.828467 -102.13152 103.03556 103.03556 0 0 1 102.23639 103.72521" fill="#ff7679"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="25px" y="343.49908" x="127.76534" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="343.49908" x="127.76534">Region</tspan></text>
+			<path d="m215.38211 463.39205a44.95179 44.95179 0 0 1 -45.38767 44.46574 44.95179 44.95179 0 0 1 -44.51159 -45.34271 44.95179 44.95179 0 0 1 45.29772 -44.55738 44.95179 44.95179 0 0 1 44.60313 45.25266" fill="#caff8a"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="17.5px" y="468.03418" x="133.30951" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="468.03418" x="133.30951">Location</tspan></text>
+			<path fill="#caff8a" d="m163.76043 389.12456a44.95179 44.95179 0 0 1 -45.38767 44.46575 44.95179 44.95179 0 0 1 -44.511583 -45.34272 44.95179 44.95179 0 0 1 45.297713 -44.55738 44.95179 44.95179 0 0 1 44.60313 45.25267"/>
+			<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="17.5px" y="393.76669" x="81.687836" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="81.687836" y="393.76669">Location</tspan></text>
+			<path d="m264.5206 388.13173a44.95179 44.95179 0 0 1 -45.38767 44.46575 44.95179 44.95179 0 0 1 -44.51159 -45.34272 44.95179 44.95179 0 0 1 45.29771 -44.55738 44.95179 44.95179 0 0 1 44.60314 45.25267" fill="#caff8a"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="17.5px" y="392.77386" x="182.448" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="392.77386" x="182.448">Location</tspan></text>
+		</g>
+		<g transform="translate(397.38317 -.51219714)">
+			<path fill="#ff7679" d="m273.74536 407.9839a103.03556 103.03556 0 0 1 -104.03465 101.92148 103.03556 103.03556 0 0 1 -102.026557 -103.93161 103.03556 103.03556 0 0 1 103.828467 -102.13152 103.03556 103.03556 0 0 1 102.23639 103.72521"/>
+			<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="25px" y="343.49908" x="127.76534" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="127.76534" y="343.49908">Region</tspan></text>
+			<path fill="#caff8a" d="m215.38211 463.39205a44.95179 44.95179 0 0 1 -45.38767 44.46574 44.95179 44.95179 0 0 1 -44.51159 -45.34271 44.95179 44.95179 0 0 1 45.29772 -44.55738 44.95179 44.95179 0 0 1 44.60313 45.25266"/>
+			<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="17.5px" y="468.03418" x="133.30951" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="133.30951" y="468.03418">Location</tspan></text>
+			<path d="m163.76043 389.12456a44.95179 44.95179 0 0 1 -45.38767 44.46575 44.95179 44.95179 0 0 1 -44.511583 -45.34272 44.95179 44.95179 0 0 1 45.297713 -44.55738 44.95179 44.95179 0 0 1 44.60313 45.25267" fill="#caff8a"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="17.5px" y="393.76669" x="81.687836" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="393.76669" x="81.687836">Location</tspan></text>
+			<path fill="#caff8a" d="m264.5206 388.13173a44.95179 44.95179 0 0 1 -45.38767 44.46575 44.95179 44.95179 0 0 1 -44.51159 -45.34272 44.95179 44.95179 0 0 1 45.29771 -44.55738 44.95179 44.95179 0 0 1 44.60314 45.25267"/>
+			<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="17.5px" y="392.77386" x="182.448" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="182.448" y="392.77386">Location</tspan></text>
+		</g>
+		<g transform="translate(242.65532,247.40291)">
+			<path d="m273.74536 407.9839a103.03556 103.03556 0 0 1 -104.03465 101.92148 103.03556 103.03556 0 0 1 -102.026557 -103.93161 103.03556 103.03556 0 0 1 103.828467 -102.13152 103.03556 103.03556 0 0 1 102.23639 103.72521" fill="#ff7679"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="25px" y="343.49908" x="127.76534" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="343.49908" x="127.76534">Region</tspan></text>
+			<path d="m215.38211 463.39205a44.95179 44.95179 0 0 1 -45.38767 44.46574 44.95179 44.95179 0 0 1 -44.51159 -45.34271 44.95179 44.95179 0 0 1 45.29772 -44.55738 44.95179 44.95179 0 0 1 44.60313 45.25266" fill="#caff8a"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="17.5px" y="468.03418" x="133.30951" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="468.03418" x="133.30951">Location</tspan></text>
+			<path fill="#caff8a" d="m163.76043 389.12456a44.95179 44.95179 0 0 1 -45.38767 44.46575 44.95179 44.95179 0 0 1 -44.511583 -45.34272 44.95179 44.95179 0 0 1 45.297713 -44.55738 44.95179 44.95179 0 0 1 44.60313 45.25267"/>
+			<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="17.5px" y="393.76669" x="81.687836" font-family="sans-serif" line-height="125%" fill="#000000"><tspan x="81.687836" y="393.76669">Location</tspan></text>
+			<path d="m264.5206 388.13173a44.95179 44.95179 0 0 1 -45.38767 44.46575 44.95179 44.95179 0 0 1 -44.51159 -45.34272 44.95179 44.95179 0 0 1 45.29771 -44.55738 44.95179 44.95179 0 0 1 44.60314 45.25267" fill="#caff8a"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="17.5px" y="392.77386" x="182.448" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="392.77386" x="182.448">Location</tspan></text>
+		</g>
+	</g>
+</svg>

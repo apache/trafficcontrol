@@ -23,12 +23,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -38,18 +38,17 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
 type TOOrigin struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.Origin
+	tc.Origin
 }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOOrigin{reqInfo, v13.Origin{}}
+		toReturn := TOOrigin{reqInfo, tc.Origin{}}
 		return &toReturn
 	}
 }
@@ -142,65 +141,23 @@ func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 	return true, nil
 }
 
-// filterAuthorized will filter a slice of Origins based upon tenant. It assumes that tenancy is enabled
-func filterAuthorized(origins []v13.Origin, user *auth.CurrentUser, tx *sqlx.Tx) ([]v13.Origin, error) {
-	newOrigins := []v13.Origin{}
-	for _, origin := range origins {
-		if origin.TenantID == nil {
-			if origin.ID == nil {
-				return nil, errors.New("isResourceAuthorized for origin with nil ID: no tenant ID")
-			} else {
-				return nil, fmt.Errorf("isResourceAuthorized for origin %d: no tenant ID", *origin.ID)
-			}
-		}
-		// TODO add/use a helper func to make a single SQL call, for performance
-		ok, err := tenant.IsResourceAuthorizedToUserTx(*origin.TenantID, user, tx.Tx)
-		if err != nil {
-			if origin.ID == nil {
-				return nil, errors.New("isResourceAuthorized for origin with nil ID: " + err.Error())
-			} else {
-				return nil, fmt.Errorf("isResourceAuthorized for origin %d: "+err.Error(), *origin.ID)
-			}
-		}
-		if !ok {
-			continue
-		}
-		newOrigins = append(newOrigins, origin)
-	}
-	return newOrigins, nil
-}
-
-func (origin *TOOrigin) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
+func (origin *TOOrigin) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 
-	privLevel := origin.ReqInfo.User.PrivLevel
-
-	origins, errs, errType := getOrigins(params, origin.ReqInfo.Tx, privLevel)
+	origins, errs, errType := getOrigins(origin.ReqInfo.Params, origin.ReqInfo.Tx, origin.ReqInfo.User)
 	if len(errs) > 0 {
-		return nil, errs, errType
-	}
-
-	var err error
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx.Tx)
-	if err != nil {
-		return nil, []error{errors.New("Error checking if tenancy enabled.")}, tc.SystemError
-	}
-	if tenancyEnabled {
-		origins, err = filterAuthorized(origins, origin.ReqInfo.User, origin.ReqInfo.Tx)
-		if err != nil {
-			log.Errorln("Checking tenancy: " + err.Error())
-			return nil, []error{errors.New("Error checking tenancy.")}, tc.SystemError
-		}
+		userErr, sysErr, errCode := api.TypeErrsToAPIErr(errs, errType)
+		return nil, userErr, sysErr, errCode
 	}
 
 	for _, origin := range origins {
 		returnable = append(returnable, origin)
 	}
 
-	return returnable, nil, tc.NoError
+	return returnable, nil, nil, http.StatusOK
 }
 
-func getOrigins(params map[string]string, tx *sqlx.Tx, privLevel int) ([]v13.Origin, []error, tc.ApiErrorType) {
+func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.Origin, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -222,6 +179,13 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, privLevel int) ([]v13.Ori
 		return nil, errs, tc.DataConflictError
 	}
 
+	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
+	if err != nil {
+		log.Errorln("received error querying for user's tenants: " + err.Error())
+		return nil, []error{tc.DBError}, tc.SystemError
+	}
+	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "o.tenant", tenantIDs)
+
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
@@ -231,10 +195,10 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, privLevel int) ([]v13.Ori
 	}
 	defer rows.Close()
 
-	origins := []v13.Origin{}
+	origins := []tc.Origin{}
 
 	for rows.Next() {
-		var s v13.Origin
+		var s tc.Origin
 		if err = rows.StructScan(&s); err != nil {
 			return nil, []error{fmt.Errorf("getting origins: %v", err)}, tc.SystemError
 		}
@@ -322,37 +286,27 @@ func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *aut
 //ParsePQUniqueConstraintError is used to determine if an origin with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (origin *TOOrigin) Update() (error, tc.ApiErrorType) {
+func (origin *TOOrigin) Update() (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
 	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
 	if err != nil {
-		return err, errType
+		return api.TypeErrToAPIErr(err, errType)
 	}
 
 	isPrimary := false
 	ds := 0
 	q := `SELECT is_primary, deliveryservice FROM origin WHERE id = $1`
 	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary, &ds); err != nil {
-		log.Errorf("updating origin %d, received error in select: %v", *origin.ID, err)
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("origin update: querying: " + err.Error()), http.StatusInternalServerError
 	}
 	if isPrimary && *origin.DeliveryServiceID != ds {
-		return errors.New("cannot update the delivery service of a primary origin"), tc.DataConflictError
+		return errors.New("cannot update the delivery service of a primary origin"), nil, http.StatusBadRequest
 	}
 
 	log.Debugf("about to run exec query: %s with origin: %++v", updateQuery(), origin)
 	resultRows, err := origin.ReqInfo.Tx.NamedQuery(updateQuery(), origin)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("an origin with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
-		}
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -361,22 +315,17 @@ func (origin *TOOrigin) Update() (error, tc.ApiErrorType) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return nil, errors.New("origin update: scanning: " + err.Error()), http.StatusInternalServerError
 		}
 	}
 
 	if rowsAffected == 0 {
-		err = errors.New("no origin was updated, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("origin update: no rows returned"), http.StatusInternalServerError
 	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from origin update")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("origin update: multiple rows returned"), http.StatusInternalServerError
 	}
 	origin.LastUpdated = &lastUpdated
-	return nil, tc.NoError
+	return nil, nil, http.StatusOK
 }
 
 func updateQuery() string {
@@ -404,25 +353,16 @@ WHERE id=:id RETURNING last_updated`
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted origin and have
 //to be added to the struct
-func (origin *TOOrigin) Create() (error, tc.ApiErrorType) {
+func (origin *TOOrigin) Create() (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
 	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
 	if err != nil {
-		return err, errType
+		return api.TypeErrToAPIErr(err, errType)
 	}
 
 	resultRows, err := origin.ReqInfo.Tx.NamedQuery(insertQuery(), origin)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("an origin with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
-		}
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -432,23 +372,18 @@ func (origin *TOOrigin) Create() (error, tc.ApiErrorType) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return nil, errors.New("origin create: scanning: " + err.Error()), http.StatusInternalServerError
 		}
 	}
 	if rowsAffected == 0 {
-		err = errors.New("no origin was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("origin create: no rows returned"), http.StatusInternalServerError
 	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from origin insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("origin create: multiple rows returned"), http.StatusInternalServerError
 	}
 	origin.SetKeys(map[string]interface{}{"id": id})
 	origin.LastUpdated = &lastUpdated
 
-	return nil, tc.NoError
+	return nil, nil, http.StatusOK
 }
 
 func insertQuery() string {
@@ -480,36 +415,33 @@ tenant) VALUES (
 
 //The Origin implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (origin *TOOrigin) Delete() (error, tc.ApiErrorType) {
+func (origin *TOOrigin) Delete() (error, error, int) {
 	isPrimary := false
 	q := `SELECT is_primary FROM origin WHERE id = $1`
 	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary); err != nil {
-		log.Errorf("deleting origin %d, received error selecting is_primary: %v", *origin.ID, err)
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("origin delete: is_primary scanning: " + err.Error()), http.StatusInternalServerError
 	}
 	if isPrimary {
-		return errors.New("cannot delete a primary origin"), tc.DataConflictError
+		return errors.New("cannot delete a primary origin"), nil, http.StatusBadRequest
 	}
 
-	log.Debugf("about to run exec query: %s with origin: %++v", deleteQuery(), origin)
 	result, err := origin.ReqInfo.Tx.NamedExec(deleteQuery(), origin)
 	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("origin delete: query: " + err.Error()), http.StatusInternalServerError
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("origin delete: getting rows affected: " + err.Error()), http.StatusInternalServerError
 	}
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no origin with that id found"), tc.DataMissingError
+			return nil, nil, http.StatusNotFound
 		} else {
-			return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
+			return nil, errors.New("origin delete: multiple rows affected"), http.StatusInternalServerError
 		}
 	}
 
-	return nil, tc.NoError
+	return nil, nil, http.StatusOK
 }
 
 func deleteQuery() string {

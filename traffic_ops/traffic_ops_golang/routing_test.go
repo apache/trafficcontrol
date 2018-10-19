@@ -37,7 +37,7 @@ type key int
 const AuthWasCalled key = iota
 
 func TestCreateRouteMap(t *testing.T) {
-	authBase := AuthBase{"secret", nil, func(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	authBase := AuthBase{"secret", func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			ctx := context.WithValue(r.Context(), AuthWasCalled, "true")
 			handlerFunc(w, r.WithContext(ctx))
@@ -69,7 +69,7 @@ func TestCreateRouteMap(t *testing.T) {
 	}
 
 	rawRoutes := []RawRoute{}
-	routeMap := CreateRouteMap(routes, rawRoutes, authBase)
+	routeMap := CreateRouteMap(routes, rawRoutes, authBase, 60)
 
 	route1Handler := routeMap["GET"][0].Handler
 

@@ -30,7 +30,7 @@ import (
 )
 
 // Snapshot takes the CRConfig JSON-serializable object (which may be generated via crconfig.Make), and writes it to the snapshot table.
-func Snapshot(db *sql.DB, crc *tc.CRConfig) error {
+func Snapshot(tx *sql.Tx, crc *tc.CRConfig) error {
 	log.Debugln("calling Snapshot")
 	bts, err := json.Marshal(crc)
 	if err != nil {
@@ -42,7 +42,7 @@ func Snapshot(db *sql.DB, crc *tc.CRConfig) error {
 	}
 	log.Debugf("calling Snapshot, writing %+v\n", date)
 	q := `insert into snapshot (cdn, content, last_updated) values ($1, $2, $3) on conflict(cdn) do update set content=$2, last_updated=$3`
-	if _, err := db.Exec(q, crc.Stats.CDNName, bts, date); err != nil {
+	if _, err := tx.Exec(q, crc.Stats.CDNName, bts, date); err != nil {
 		return errors.New("Error inserting the snapshot into database: " + err.Error())
 	}
 	return nil
@@ -52,7 +52,7 @@ func Snapshot(db *sql.DB, crc *tc.CRConfig) error {
 // If the CDN does not exist, false is returned.
 // If the CDN exists, but the snapshot does not, the string for an empty JSON object "{}" is returned.
 // An error is only returned on database error, never if the CDN or snapshot does not exist.
-func GetSnapshot(db *sql.DB, cdn string) (string, bool, error) {
+func GetSnapshot(tx *sql.Tx, cdn string) (string, bool, error) {
 	log.Debugln("calling GetSnapshot")
 
 	snapshot := sql.NullString{}
@@ -63,7 +63,7 @@ from cdn as c
 left join snapshot as s on s.cdn = c.name
 where c.name = $1
 `
-	if err := db.QueryRow(q, cdn).Scan(&snapshot); err != nil {
+	if err := tx.QueryRow(q, cdn).Scan(&snapshot); err != nil {
 		if err == sql.ErrNoRows {
 			// CDN doesn't exist
 			return "", false, nil

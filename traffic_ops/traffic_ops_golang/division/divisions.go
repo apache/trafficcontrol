@@ -20,12 +20,9 @@ package division
  */
 
 import (
-	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -33,7 +30,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
@@ -41,6 +37,20 @@ type TODivision struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.DivisionNullable
 }
+
+func (v *TODivision) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TODivision) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TODivision) InsertQuery() string           { return insertQuery() }
+func (v *TODivision) NewReadObj() interface{}       { return &tc.Division{} }
+func (v *TODivision) SelectQuery() string           { return selectQuery() }
+func (v *TODivision) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},
+		"name": dbhelpers.WhereColumnInfo{"name", nil},
+	}
+}
+func (v *TODivision) UpdateQuery() string { return updateQuery() }
+func (v *TODivision) DeleteQuery() string { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
@@ -87,184 +97,37 @@ func (division TODivision) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-//The TODivision implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a division with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted division and have
-//to be added to the struct
-func (division *TODivision) Create() (error, tc.ApiErrorType) {
-	resultRows, err := division.ReqInfo.Tx.NamedQuery(insertQuery(), division)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a division with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
-		}
+func (dv *TODivision) Create() (error, error, int) { return api.GenericCreate(dv) }
+func (dv *TODivision) Read() ([]interface{}, error, error, int) {
+	params := dv.APIInfo().Params
+	// TODO move to router, and do for all endpoints
+	if strings.HasSuffix(params["name"], ".json") {
+		params["name"] = params["name"][:len(params["name"])-len(".json")]
 	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no division was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from division insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	division.SetKeys(map[string]interface{}{"id": id})
-	division.LastUpdated = &lastUpdated
-	return nil, tc.NoError
+	return api.GenericRead(dv)
 }
-
-func (division *TODivision) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	if strings.HasSuffix(parameters["name"], ".json") {
-		parameters["name"] = parameters["name"][:len(parameters["name"])-len(".json")]
-	}
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"name": dbhelpers.WhereColumnInfo{"name", nil},
-	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
-	}
-
-	query := selectQuery() + where + orderBy
-	log.Debugln("Query is ", query)
-
-	rows, err := division.ReqInfo.Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying Divisions: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	divisions := []interface{}{}
-	for rows.Next() {
-		var s tc.Division
-		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing Division rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		divisions = append(divisions, s)
-	}
-
-	return divisions, []error{}, tc.NoError
-}
-
-//The TODivision implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a division with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (division *TODivision) Update() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with division: %++v", updateQuery(), division)
-	resultRows, err := division.ReqInfo.Tx.NamedQuery(updateQuery(), division)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a division with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	division.LastUpdated = &lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no division found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	return nil, tc.NoError
-}
-
-//The Division implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (division *TODivision) Delete() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with division: %++v", deleteQuery(), division)
-	result, err := division.ReqInfo.Tx.NamedExec(deleteQuery(), division)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no division with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	return nil, tc.NoError
-}
+func (dv *TODivision) Update() (error, error, int) { return api.GenericUpdate(dv) }
+func (dv *TODivision) Delete() (error, error, int) { return api.GenericDelete(dv) }
 
 func insertQuery() string {
-	query := `INSERT INTO division (
-name) VALUES (:name) RETURNING id,last_updated`
-	return query
+	return `INSERT INTO division (name) VALUES (:name) RETURNING id,last_updated`
 }
 
 func selectQuery() string {
-
-	query := `SELECT
+	return `SELECT
 id,
 last_updated,
-name 
-
+name
 FROM division d`
-	return query
 }
 
 func updateQuery() string {
-	query := `UPDATE
+	return `UPDATE
 division SET
 name=:name
 WHERE id=:id RETURNING last_updated`
-	return query
 }
 
 func deleteQuery() string {
-	query := `DELETE FROM division
-WHERE id=:id`
-	return query
+	return `DELETE FROM division WHERE id=:id`
 }

@@ -19,7 +19,7 @@ package v13
  * under the License.
  */
 
-import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
+import "github.com/apache/trafficcontrol/lib/go-tc"
 
 // PhysLocations -  PhysLocationsResponse to get the "response" top level key
 // swagger:response PhysLocations
@@ -27,7 +27,7 @@ import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
 type PhysLocations struct {
 	// PhysLocation Response Body
 	// in: body
-	PhysLocationsResponse v13.PhysLocationsResponse `json:"response"`
+	PhysLocationsResponse tc.PhysLocationsResponse `json:"response"`
 }
 
 // PhysLocation -  PhysLocationResponse to get the "response" top level key
@@ -36,7 +36,7 @@ type PhysLocations struct {
 type PhysLocation struct {
 	// PhysLocation Response Body
 	// in: body
-	PhysLocationResponse v13.PhysLocationResponse
+	PhysLocationResponse tc.PhysLocationResponse
 }
 
 // PhysLocationQueryParams
@@ -61,7 +61,7 @@ type PhysLocationPostParam struct {
 	//
 	// in: body
 	// required: true
-	PhysLocation v13.PhysLocationNullable
+	PhysLocation tc.PhysLocationNullable
 }
 
 // swagger:parameters GetPhysLocationById DeletePhysLocation
@@ -108,7 +108,7 @@ type PhysLocationPutParam struct {
 	//
 	// in: body
 	// required: true
-	PhysLocation v13.PhysLocationNullable
+	PhysLocation tc.PhysLocationNullable
 }
 
 // PutPhysLocation swagger:route PUT /phys_locations/{id} PhysLocation PutPhysLocation

@@ -1,17 +1,17 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 .. _to-api-v12-users:
 
@@ -279,8 +279,8 @@ Users
 
 
   **Request Example** ::
-  
-    {   
+
+    {
         "username": "tsimpson"
         "tenantId": 1,
         "fullName": "Tom Simpson"
@@ -341,7 +341,7 @@ Users
   +----------------------+--------+------------------------------------------------+
 
   **Response Example** ::
-  
+
     {"alerts": [
              {
                  "level":"success",
@@ -529,9 +529,9 @@ Users
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``missLong``             | string | The longitude to use when the client cannot be found in the CZF or the Geo lookup.                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOriginAlgor`` |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOriginAlgor`` |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``        | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                          |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
@@ -747,7 +747,7 @@ Users
     }
 
 |
-  
+
 **PUT /api/1.2/user/current**
 
   Updates the date for the authenticated user.
@@ -934,7 +934,7 @@ Users
 
 **POST/api/1.2/user/current/jobs**
 
-Invalidating content on the CDN is sometimes necessary when the origin was mis-configured and something is cached in the CDN that needs to be removed. Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time. To speed up content invalidation, Traffic Ops will not try to remove the content from the caches, but it makes the content inaccessible using the *regex_revalidate* ATS plugin. This forces a *revalidation* of the content, rather than a new get.
+Invalidating content on the CDN is sometimes necessary when the origin was mis-configured and something is cached in the CDN that needs to be removed. Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time. To speed up content invalidation, Traffic Ops will not try to remove the content from the caches, but it makes the content inaccessible using the *regex_revalidate* ATS plugin (https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_revalidate.en.html). This forces a *revalidation* of the content, rather than a new get.
 
 .. Note:: This method forces a HTTP *revalidation* of the content, and not a new *GET* - the origin needs to support revalidation according to the HTTP/1.2 specification, and send a ``200 OK`` or ``304 Not Modified`` as applicable.
 
@@ -957,11 +957,15 @@ Role(s) Required: None
   |                      |        | revalidation is an expensive operation for     |
   |                      |        | many origins, and a simple ``/.*`` can cause   |
   |                      |        | an overload condition of the origin.           |
+  |                      |        |                                                |
+  |                      |        | Examples:                                      |
+  |                      |        | ``/path/to/content/.*``                        |
+  |                      |        | ``/path/to/content/.*\.jpg``                   |
   +----------------------+--------+------------------------------------------------+
-  |``startTime``         | string | Start Time is the time when the revalidation   |
+  |``startTime``         | string | Start Time is the UTC time when revalidation   |
   |                      |        | rule will be made active. Populate             |
   |                      |        | with the current time to schedule ASAP. This   |
-  |                      |        | value cannot be more than 2 days before now.   |
+  |                      |        | value cannot be more than 2 days in the future.|
   +----------------------+--------+------------------------------------------------+
   |``ttl``               | int    | Time To Live is how long the revalidation rule |
   |                      |        | will be active for in hours. It usually makes  |
@@ -976,8 +980,8 @@ Role(s) Required: None
   **Request Example** ::
 
     {
-           "dsId": "9999",
-           "regex": "/path/to/content.jpg",
+           "dsId": 9999,
+           "regex": "/path/to/content/.*\.jpg",
            "startTime": "2015-01-27 11:08:37",
            "ttl": 54
     }
@@ -1003,9 +1007,9 @@ Role(s) Required: None
     {
           "alerts":
                   [
-                      { 
+                      {
                             "level": "success",
-                            "text": "Successfully created purge job for: ."
+                            "text": "Invalidate content request submitted for my-ds [ http://my-cdn-origin.foo.net/path/to/content/.*\.jpg - TTL:54h ]"
                       }
                   ],
     }
@@ -1255,4 +1259,4 @@ Role(s) Required: None
     }
 
 |
-  
+

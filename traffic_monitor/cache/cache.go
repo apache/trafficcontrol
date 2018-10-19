@@ -272,7 +272,7 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
-func (handler Handler) Handle(id string, r io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v (format '%v') handle start\n", pollID, time.Now(), format)
 	result := Result{
 		ID:           tc.CacheName(id),
@@ -289,23 +289,16 @@ func (handler Handler) Handle(id string, r io.Reader, format string, reqTime tim
 		return
 	}
 
-	if r == nil {
-		log.Warnf("%v handle reader nil\n", id)
-		result.Error = fmt.Errorf("handler got nil reader")
-		handler.resultChan <- result
-		return
-	}
-
 	statDecoder, ok := StatsTypeDecoders[format]
 	if !ok {
 		log.Errorf("Handler cache '%s' stat type '%s' not found! Returning handle error for this cache poll.\n", id, format)
-		result.Error = fmt.Errorf("handler stat type %s missing")
+		result.Error = fmt.Errorf("handler stat type %s missing", format)
 		handler.resultChan <- result
 		return
 	}
 
 	decodeErr := error(nil)
-	if decodeErr, result.Astats.Ats, result.Astats.System = statDecoder.Parse(result.ID, r); decodeErr != nil {
+	if decodeErr, result.Astats.Ats, result.Astats.System = statDecoder.Parse(result.ID, rdr); decodeErr != nil {
 		log.Warnf("%s decode error '%v'\n", id, decodeErr)
 		result.Error = decodeErr
 		handler.resultChan <- result

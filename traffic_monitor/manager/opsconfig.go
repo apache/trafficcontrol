@@ -178,7 +178,7 @@ func StartOpsConfigManager(
 // getMonitorCDN returns the CDN of a given Traffic Monitor.
 // TODO change to get by name, when Traffic Ops supports querying a single server.
 func getMonitorCDN(toc *to.Session, monitorHostname string) (string, error) {
-	servers, err := toc.Servers()
+	servers, _, err := toc.GetServers()
 	if err != nil {
 		return "", fmt.Errorf("getting monitor %s CDN: %v", monitorHostname, err)
 	}

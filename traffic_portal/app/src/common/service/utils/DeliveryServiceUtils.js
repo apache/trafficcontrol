@@ -37,7 +37,7 @@ var DeliveryServiceUtils = function($window, propertiesModel) {
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		}
 		$window.open(
-			propertiesModel.properties.deliveryServices.charts.baseUrl + ds.xmlId,
+			propertiesModel.properties.deliveryServices.charts.customLink.baseUrl + ds.xmlId,
 			'_blank'
 		);
 	};

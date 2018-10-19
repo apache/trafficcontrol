@@ -1619,10 +1619,12 @@ sub get_cookie {
 		&sleep_rand($login_dispersion);
 	}
 
-	my $url = $to_host . "/login";
-	my $response = $lwp_conn->post( $url, [ 'u' => $u, 'p' => $p ], %headers );
+	my $url = $to_host . "/api/1.3/user/login";
+    	my $json = qq/{ "u": "$u", "p": "$p"}/;
+    	my $lwp = LWP::UserAgent->new;
+    	my $response = $lwp->post($url, Content => $json);
 
-	&check_lwp_response_code($response, $FATAL);
+    	&check_lwp_response_code($response, $FATAL);
 
 	my $cookie;
 	if ( $response->header('Set-Cookie') ) {

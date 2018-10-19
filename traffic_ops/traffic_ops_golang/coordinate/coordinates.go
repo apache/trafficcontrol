@@ -20,33 +20,41 @@ package coordinate
  */
 
 import (
-	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
 type TOCoordinate struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.CoordinateNullable
+	tc.CoordinateNullable
 }
+
+func (v *TOCoordinate) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TOCoordinate) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOCoordinate) InsertQuery() string           { return insertQuery() }
+func (v *TOCoordinate) NewReadObj() interface{}       { return &tc.CoordinateNullable{} }
+func (v *TOCoordinate) SelectQuery() string           { return selectQuery() }
+func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},
+		"name": dbhelpers.WhereColumnInfo{"name", nil},
+	}
+}
+func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
+func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOCoordinate{reqInfo, v13.CoordinateNullable{}}
+		toReturn := TOCoordinate{reqInfo, tc.CoordinateNullable{}}
 		return &toReturn
 	}
 }
@@ -117,155 +125,10 @@ func (coordinate TOCoordinate) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-//The TOCoordinate implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a coordinate with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted coordinate and have
-//to be added to the struct
-func (coordinate *TOCoordinate) Create() (error, tc.ApiErrorType) {
-	resultRows, err := coordinate.ReqInfo.Tx.NamedQuery(insertQuery(), coordinate)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a coordinate with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no coordinate was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from coordinate insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	coordinate.SetKeys(map[string]interface{}{"id": id})
-	coordinate.LastUpdated = &lastUpdated
-	return nil, tc.NoError
-}
-
-func (coordinate *TOCoordinate) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"name": dbhelpers.WhereColumnInfo{"name", nil},
-	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
-	}
-
-	query := selectQuery() + where + orderBy
-	log.Debugln("Query is ", query)
-
-	rows, err := coordinate.ReqInfo.Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying Coordinate: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	Coordinates := []interface{}{}
-	for rows.Next() {
-		var s TOCoordinate
-		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing Coordinate rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		Coordinates = append(Coordinates, s)
-	}
-
-	return Coordinates, []error{}, tc.NoError
-}
-
-//The TOCoordinate implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a coordinate with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (coordinate *TOCoordinate) Update() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with coordinate: %++v", updateQuery(), coordinate)
-	resultRows, err := coordinate.ReqInfo.Tx.NamedQuery(updateQuery(), coordinate)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a coordinate with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	coordinate.LastUpdated = &lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no coordinate found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	return nil, tc.NoError
-}
-
-//The Coordinate implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (coordinate *TOCoordinate) Delete() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with coordinate: %++v", deleteQuery(), coordinate)
-	result, err := coordinate.ReqInfo.Tx.NamedExec(deleteQuery(), coordinate)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no coordinate with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	return nil, tc.NoError
-}
+func (coord *TOCoordinate) Create() (error, error, int)              { return api.GenericCreate(coord) }
+func (coord *TOCoordinate) Read() ([]interface{}, error, error, int) { return api.GenericRead(coord) }
+func (coord *TOCoordinate) Update() (error, error, int)              { return api.GenericUpdate(coord) }
+func (coord *TOCoordinate) Delete() (error, error, int)              { return api.GenericDelete(coord) }
 
 func selectQuery() string {
 	query := `SELECT
@@ -301,7 +164,5 @@ name) VALUES (
 }
 
 func deleteQuery() string {
-	query := `DELETE FROM coordinate
-WHERE id=:id`
-	return query
+	return `DELETE FROM coordinate WHERE id = :id`
 }

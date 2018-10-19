@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -36,9 +35,9 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestCDNs() []v13.CDN {
-	cdns := []v13.CDN{}
-	testCDN := v13.CDN{
+func getTestCDNs() []tc.CDN {
+	cdns := []tc.CDN{}
+	testCDN := tc.CDN{
 		DNSSECEnabled: false,
 		DomainName:    "domainName",
 		ID:            1,
@@ -66,7 +65,7 @@ func TestReadCDNs(t *testing.T) {
 	defer db.Close()
 
 	testCDNs := getTestCDNs()
-	cols := test.ColsFromStructByTag("db", v13.CDN{})
+	cols := test.ColsFromStructByTag("db", tc.CDN{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCDNs {
@@ -82,15 +81,14 @@ func TestReadCDNs(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	v := map[string]string{"dsId": "1"}
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
-	servers, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
-	if len(errs) > 0 {
-		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	cdns, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
 
-	if len(servers) != 2 {
-		t.Errorf("cdn.Read expected: len(servers) == 2, actual: %v", len(servers))
+	if len(cdns) != 2 {
+		t.Errorf("cdn.Read expected: len(cdns) == 2, actual: %v", len(cdns))
 	}
 }
 
@@ -133,7 +131,7 @@ func TestInterfaces(t *testing.T) {
 func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	n := "not_a_valid_cdn"
-	c := TOCDN{CDNNullable: v13.CDNNullable{Name: &n}}
+	c := TOCDN{CDNNullable: tc.CDNNullable{Name: &n}}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
 
 	expectedErrs := util.JoinErrsStr([]error{
@@ -148,7 +146,7 @@ func TestValidate(t *testing.T) {
 	//  name,  domainname both valid
 	n = "This.is.2.a-Valid---CDNNAME."
 	d := `awesome-cdn.example.net`
-	c = TOCDN{CDNNullable: v13.CDNNullable{Name: &n, DomainName: &d}}
+	c = TOCDN{CDNNullable: tc.CDNNullable{Name: &n, DomainName: &d}}
 	err := c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)

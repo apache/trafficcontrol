@@ -19,10 +19,11 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.spec.KeySpec;
 
-import static com.comcast.cdn.traffic_control.traffic_router.secure.Pkcs1KeySpecDecoder.FOOTER;
-import static com.comcast.cdn.traffic_control.traffic_router.secure.Pkcs1KeySpecDecoder.HEADER;
-
 public class Pkcs1 extends Pkcs {
+
+	static public final String HEADER = "-----BEGIN RSA PRIVATE KEY-----";
+	static public final String FOOTER = "-----END RSA PRIVATE KEY-----";
+
 	public Pkcs1(final String data) throws IOException, GeneralSecurityException {
 		super(data);
 	}

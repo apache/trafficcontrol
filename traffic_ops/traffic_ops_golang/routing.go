@@ -21,7 +21,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"regexp"
 	"sort"
@@ -33,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -66,8 +66,8 @@ type RawRoute struct {
 	Middlewares       []Middleware
 }
 
-func getDefaultMiddleware(secret string) []Middleware {
-	return []Middleware{getWrapAccessLog(secret), wrapHeaders}
+func getDefaultMiddleware(secret string, requestTimeout time.Duration) []Middleware {
+	return []Middleware{getWrapAccessLog(secret), timeOutWrapper(requestTimeout), wrapHeaders, wrapPanicRecover}
 }
 
 // ServerData ...
@@ -75,6 +75,7 @@ type ServerData struct {
 	config.Config
 	DB        *sqlx.DB
 	Profiling *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
+	Plugins   plugin.Plugins
 }
 
 // CompiledRoute ...
@@ -104,9 +105,13 @@ type PathHandler struct {
 }
 
 // CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
-func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase) map[string][]PathHandler {
+func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTimeOutSeconds int) map[string][]PathHandler {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
+	requestTimeout := time.Second * time.Duration(60)
+	if reqTimeOutSeconds > 0 {
+		requestTimeout = time.Second * time.Duration(reqTimeOutSeconds)
+	}
 	m := map[string][]PathHandler{}
 	for _, r := range rs {
 		versionI := sort.SearchFloat64s(versions, r.Version)
@@ -117,22 +122,22 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase) map[str
 			}
 			vstr := strconv.FormatFloat(version, 'f', -1, 64)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
-			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel)
+			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
 			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares)})
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
 	for _, r := range rawRoutes {
-		middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel)
+		middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
 		m[r.Method] = append(m[r.Method], PathHandler{Path: r.Path, Handler: use(r.Handler, middlewares)})
 		log.Infof("adding raw route %v %v\n", r.Method, r.Path)
 	}
 	return m
 }
 
-func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int) []Middleware {
+func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int, requestTimeout time.Duration) []Middleware {
 	if middlewares == nil {
-		middlewares = getDefaultMiddleware(authBase.secret)
+		middlewares = getDefaultMiddleware(authBase.secret, requestTimeout)
 	}
 	if authenticated { // a privLevel of zero is an unauthenticated endpoint.
 		authWrapper := authBase.GetWrapper(privLevel)
@@ -167,7 +172,16 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 }
 
 // Handler - generic handler func used by the Handlers hooking into the routes
-func Handler(routes map[string][]CompiledRoute, catchall http.Handler, db *sqlx.DB, cfg *config.Config, getReqID func() uint64, w http.ResponseWriter, r *http.Request) {
+func Handler(
+	routes map[string][]CompiledRoute,
+	catchall http.Handler,
+	db *sqlx.DB,
+	cfg *config.Config,
+	getReqID func() uint64,
+	plugins plugin.Plugins,
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	reqID := getReqID()
 
 	reqIDStr := strconv.FormatUint(reqID, 10)
@@ -176,6 +190,20 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, db *sqlx.
 	defer func() {
 		log.Infoln(r.Method + " " + r.URL.Path + " handled (reqid " + reqIDStr + ") in " + time.Since(start).String())
 	}()
+
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, api.DBContextKey, db)
+	ctx = context.WithValue(ctx, api.ConfigContextKey, cfg)
+	ctx = context.WithValue(ctx, api.ReqIDContextKey, reqID)
+
+	// plugins have no pre-parsed path params, but add an empty map so they can use the api helper funcs that require it.
+	pluginCtx := context.WithValue(ctx, api.PathParamsKey, map[string]string{})
+	pluginReq := r.WithContext(pluginCtx)
+
+	onReqData := plugin.OnRequestData{Data: plugin.Data{RequestID: reqID, AppCfg: *cfg}, W: w, R: pluginReq}
+	if handled := plugins.OnRequest(onReqData); handled {
+		return
+	}
 
 	requested := r.URL.Path[1:]
 	mRoutes, ok := routes[r.Method]
@@ -194,12 +222,8 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, db *sqlx.
 			params[v] = match[i+1]
 		}
 
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, api.PathParamsKey, params)
-		ctx = context.WithValue(ctx, api.DBContextKey, db)
-		ctx = context.WithValue(ctx, api.ConfigContextKey, cfg)
-		ctx = context.WithValue(ctx, api.ReqIDContextKey, reqID)
-		r = r.WithContext(ctx)
+		routeCtx := context.WithValue(ctx, api.PathParamsKey, params)
+		r = r.WithContext(routeCtx)
 		compiledRoute.Handler(w, r)
 		return
 	}
@@ -213,23 +237,14 @@ func RegisterRoutes(d ServerData) error {
 		return err
 	}
 
-	userInfoStmt, err := prepareUserInfoStmt(d.DB)
-	if err != nil {
-		return fmt.Errorf("Error preparing db priv level query: %s", err)
-	}
-
-	authBase := AuthBase{secret: d.Config.Secrets[0], getCurrentUserInfoStmt: userInfoStmt, override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
-	routes := CreateRouteMap(routeSlice, rawRoutes, authBase)
+	authBase := AuthBase{secret: d.Config.Secrets[0], override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
+	routes := CreateRouteMap(routeSlice, rawRoutes, authBase, d.RequestTimeout)
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Handler(compiledRoutes, catchall, d.DB, &d.Config, getReqID, w, r)
+		Handler(compiledRoutes, catchall, d.DB, &d.Config, getReqID, d.Plugins, w, r)
 	})
 	return nil
-}
-
-func prepareUserInfoStmt(db *sqlx.DB) (*sqlx.Stmt, error) {
-	return db.Preparex("SELECT r.priv_level, u.id, u.username, COALESCE(u.tenant_id, -1) AS tenant_id, ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=r.id) AS capabilities FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
 }
 
 func use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {

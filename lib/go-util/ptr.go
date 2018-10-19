@@ -34,3 +34,7 @@ func Int64Ptr(i int64) *int64 {
 func BoolPtr(b bool) *bool {
 	return &b
 }
+
+func FloatPtr(f float64) *float64 {
+	return &f
+}

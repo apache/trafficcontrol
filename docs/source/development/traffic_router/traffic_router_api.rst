@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _reference-tr-api:
+.. _tr-api:
 
 
 Traffic Router API

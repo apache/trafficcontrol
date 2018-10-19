@@ -18,16 +18,22 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>2.3.0</version>
+		<version>3.0.0</version>
 	</parent>
 
-	<artifactId>traffic_router_core</artifactId>
+	<artifactId>ROOT</artifactId>
 	<packaging>war</packaging>
 
 	<scm>
 		<connection>scm:git:file://</connection>
 		<developerConnection>scm:git:file://</developerConnection>
 	</scm>
+	<properties>
+		    <!-- Make sure to add -Djava.library.path=[tomcat native library path on your box] on the Maven
+		         command line -->
+			<java.library.path>must be passed on the Maven commandline</java.library.path>
+			<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
 	<repositories>
 		<repository>
 			<id>cloudera</id>
@@ -95,7 +101,7 @@
 					<verbose>true</verbose>
 					<failurePriority>5</failurePriority>
 					<rulesets>
-						<ruleset>build/pmd/ruleset.xml</ruleset>
+						<ruleset>file://${project.basedir}/build/pmd/ruleset.xml</ruleset>
 					</rulesets>
 				</configuration>
 			</plugin>
@@ -122,9 +128,9 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>tomcat-maven-plugin</artifactId>
-				<version>1.1</version>
+				<groupId>org.apache.tomcat.maven</groupId>
+				<artifactId>tomcat7-maven-plugin</artifactId>
+				<version>2.2</version>
 				<configuration>
 				</configuration>
 			</plugin>
@@ -153,7 +159,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.3.1</version>
+				<version>3.0.0</version>
 				<configuration>
 					<archive>
 						<manifest>
@@ -175,7 +181,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.19.1</version>
 				<configuration>
-					<argLine>-XX:-UseSplitVerifier</argLine>
+					<argLine>-XX:-UseSplitVerifier -Djava.library.path=${java.library.path}</argLine>
 					<excludedGroups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest,com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</excludedGroups>
 				</configuration>
 			</plugin>
@@ -184,28 +190,29 @@
 				<version>2.19</version>
 				<executions>
 					<execution>
+						<id>external</id>
+						<goals>
+							<goal>integration-test</goal>
+						</goals>
+						<configuration>
+							<argLine>-Djava.library.path=${java.library.path}</argLine> <!-- This needs to be parameterized -->
+							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</groups>
+							<includes>
+								<include>**/*Suite.java</include>
+							</includes>
+						</configuration>
+					</execution>
+					<execution>
 						<id>integration</id>
 						<goals>
 							<goal>integration-test</goal>
 							<goal>verify</goal>
 						</goals>
 						<configuration>
+							<argLine>-Djava.library.path=${java.library.path}</argLine> <!-- This needs to be parameterized -->
 							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest</groups>
 							<includes>
 								<include>**/*.java</include>
-							</includes>
-						</configuration>
-					</execution>
-					<execution>
-						<id>external</id>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-						<configuration>
-							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</groups>
-							<includes>
-								<include>**/*Suite.java</include>
 							</includes>
 						</configuration>
 					</execution>
@@ -293,8 +300,8 @@
 
 		<dependency>
 			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.1.0</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -332,15 +339,21 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
-			<artifactId>catalina</artifactId>
-			<version>6.0.33</version>
-			<scope>test</scope>
+			<artifactId>tomcat-catalina</artifactId>
+			<version>8.5.32</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
-			<artifactId>coyote</artifactId>
-			<version>6.0.33</version>
-			<scope>test</scope>
+			<artifactId>tomcat-coyote</artifactId>
+			<version>8.5.32</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jni</artifactId>
+			<version>8.5.32</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -348,12 +361,17 @@
 			<version>${spring.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-websocket</artifactId>
+			<version>4.0.0.RELEASE</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_connector</artifactId>
 			<version>${project.parent.version}</version>
-			<scope>test</scope>
+			<!--scope>test</scope-->
 		</dependency>
 
 		<dependency>
@@ -363,18 +381,22 @@
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-api-mockito</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-module-junit4</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

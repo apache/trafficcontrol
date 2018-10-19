@@ -24,18 +24,22 @@ import (
 	"errors"
 	"net/http"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-func GetConfigs(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		api.RespWriter(w, r)(getConfigs(db))
+func GetConfigs(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	api.RespWriter(w, r, inf.Tx.Tx)(getConfigs(inf.Tx.Tx))
 }
 
-func getConfigs(db *sql.DB) ([]tc.CDNConfig, error) {
-	rows, err := db.Query(`SELECT name, id FROM cdn`)
+func getConfigs(tx *sql.Tx) ([]tc.CDNConfig, error) {
+	rows, err := tx.Query(`SELECT name, id FROM cdn`)
 	if err != nil {
 		return nil, errors.New("querying cdn configs: " + err.Error())
 	}

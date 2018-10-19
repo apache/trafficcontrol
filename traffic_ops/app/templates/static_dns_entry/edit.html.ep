@@ -139,7 +139,7 @@ function deleteStaticDnsEntry(staticDnsId, staticDnsName) {
                 <tr id="row_<%= $dns->id %>">
                     <td inputsize=24 class="editable"   name="host_<%= $dns->id %>"    id="host_<%= $dns->id %>"><%= $dns->host %></td>
                     <td inputsize=10 class="type"       name="type_<%= $dns->id %>"    id="type_<%= $dns->id %>"><%= $dns->type->name %></td>
-                    <td inputsize=10 class="cachegroup" name="cg_<%= $dns->id %>"      id="cg_<%= $dns->id %>"><%= $dns->cachegroup->name %></td>
+                    <td inputsize=10 class="cachegroup" name="cg_<%= $dns->id %>"      id="cg_<%= $dns->id %>"><%= defined $dns->cachegroup && $dns->cachegroup->name %></td>
                     <td inputsize=4  class="editable"   name="ttl_<%= $dns->id %>"     id="ttl_<%= $dns->id %>"><%= $dns->ttl %></td>
                     <td inputsize=20 class="editable"   name="address_<%= $dns->id %>" id="address_<%= $dns->id %>"><%= $dns->address %></td>
                     <td id="rm_id_<%= $dns->id %>"><a href="#" onclick="deleteStaticDnsEntry(<%= $dns->id %>, '<%= $dns->host %>')">remove</a></td>

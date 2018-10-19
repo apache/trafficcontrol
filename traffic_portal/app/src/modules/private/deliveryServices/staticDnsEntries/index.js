@@ -22,18 +22,10 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.staticDn
 		$stateProvider
 			.state('trafficPortal.private.deliveryServices.staticDnsEntries', {
 				url: '/{deliveryServiceId}/static-dns-entries',
+				abstract: true,
 				views: {
 					deliveryServicesContent: {
-						templateUrl: 'common/modules/table/deliveryServiceStaticDnsEntries/table.deliveryServiceStaticDnsEntries.tpl.html',
-						controller: 'TableDeliveryServiceStaticDnsEntriesController',
-						resolve: {
-							deliveryService: function($stateParams, deliveryServiceService) {
-								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
-							},
-							staticDnsEntries: function($stateParams, staticDnsEntryService) {
-								return staticDnsEntryService.getStaticDnsEntries($stateParams.deliveryServiceId);
-							}
-						}
+						templateUrl: 'modules/private/deliveryServices/staticDnsEntries/deliveryServiceStaticDnsEntries.tpl.html'
 					}
 				}
 			})

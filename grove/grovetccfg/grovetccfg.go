@@ -28,12 +28,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	tcv13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
 	to "github.com/apache/trafficcontrol/traffic_ops/client"
 
 	"github.com/apache/trafficcontrol/grove/config"
@@ -49,7 +50,11 @@ const Version = "0.1"
 const UserAgent = "grove-tc-cfg/" + Version
 const TrafficOpsTimeout = time.Second * 90
 const DefaultCertificateDir = "/etc/grove/ssl"
-const GroveConfigPath = "/etc/grove/grove.cfg"
+const GroveConfigFile = "grove.cfg"
+const GroveConfigPath = "/etc/grove/" + GroveConfigFile
+const ConfigHistory = "cfg_history/"
+const RemapHistory = "remap_history/"
+const GroveProfileType = "GROVE_PROFILE"
 
 func AvailableStatuses() map[string]struct{} {
 	return map[string]struct{}{
@@ -94,13 +99,13 @@ func CopyAndGzipFile(src, dst string) error {
 }
 
 // BackupFile copies the given file to a new file in the subdirectory "/remap_history", with the name suffixed by the current timestamp. Returns nil if the given file doesn't exist (nothing to back up).
-func BackupFile(path string) error {
+func BackupFile(path string, backupDirectory string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil
 	}
 
 	fileTimeFormat := "2006-01-02T15_04_05_999999999Z07_00" // this is time.RFC3339Nano with : replaced by _
-	backupDir := filepath.Join(filepath.Dir(path), "remap_history")
+	backupDir := filepath.Join(filepath.Dir(path), backupDirectory)
 	backupFile := filepath.Base(path) + "." + time.Now().Format(fileTimeFormat) + ".gz"
 	backupPath := filepath.Join(backupDir, backupFile)
 
@@ -133,8 +138,8 @@ func WriteNewFile(path string, bts []byte) error {
 }
 
 // WriteAndBackup creates a backup of the existing file at the given path, then writes the given bytes to the path. The write is fail-safe on operating systems with atomic file rename (Linux is).
-func WriteAndBackup(path string, bts []byte) error {
-	if err := BackupFile(path); err != nil {
+func WriteAndBackup(path string, backupDirectory string, bts []byte) error {
+	if err := BackupFile(path, backupDirectory); err != nil {
 		return errors.New("backing up file: " + err.Error())
 	}
 	if err := WriteNewFile(path, bts); err != nil {
@@ -182,6 +187,11 @@ func main() {
 	certDir := flag.String("certdir", DefaultCertificateDir, "Directory to save certificates to")
 	flag.Parse()
 
+	if host == nil || *host == "" {
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error, a 'host' is required, use '-host'")
+		os.Exit(1)
+	}
+
 	useCache := false
 	toc, _, err := to.LoginWithAgent(*toURL, *toUser, *toPass, *toInsecure, UserAgent, useCache, TrafficOpsTimeout)
 	if err != nil {
@@ -202,11 +212,72 @@ func main() {
 		}
 	}
 
+	// TODO remove this once converted to 1.3 API
+	// using the 1.2 API
+	var hostServer tc.Server
+	var hostProfile tc.Profile
+	var ok bool
+	var profiles map[string]tc.Profile
+	var servers map[string]tc.Server
+
+	serversArr, err := toc.Servers()
+	if err != nil {
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Servers: " + err.Error())
+		os.Exit(1)
+	}
+	servers = makeServersHostnameMap(serversArr)
+
+	hostServer, ok = servers[*host]
+	if !ok {
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error: host '" + *host + "' not in Servers\n")
+		os.Exit(1)
+	}
+
+	profilesArr, _, err := toc.GetProfiles()
+	if err != nil {
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Profiles: " + err.Error())
+		os.Exit(1)
+	}
+	profiles = makeProfileNameMap(profilesArr)
+
+	hostProfile, ok = profiles[hostServer.Profile]
+	if !ok {
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error: profile '" + hostServer.Profile + "' not in Profiles\n")
+		os.Exit(1)
+	}
+	// end of API 1.2 stuff
+
+	if hostProfile.Type == GroveProfileType {
+		updateRequired, cfg, err := createGroveCfg(toc, hostServer)
+		if err != nil {
+			fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting config rules for '" + GroveConfigPath + "' :" + err.Error())
+			os.Exit(1)
+		}
+		if updateRequired {
+			cfgBytes := []byte{}
+			if *pretty {
+				cfgBytes, err = json.MarshalIndent(cfg, "", "  ")
+			} else {
+				cfgBytes, err = json.Marshal(cfg)
+			}
+			if err != nil {
+				fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error creating JSON Remap Rules: " + err.Error())
+				os.Exit(1)
+			}
+			if err := WriteAndBackup(GroveConfigPath, ConfigHistory, cfgBytes); err != nil {
+				fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error writing new config file: " + err.Error())
+				os.Exit(1)
+			}
+		}
+	} else {
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Warning: the profile '" + hostServer.Profile + "' is not a '" + GroveProfileType + "', will not build a config from it.")
+	}
+
 	rules := remap.RemapRules{}
 	// if *api == "1.3" {
 	// 	rules, err = createRulesNewAPI(toc, *host, *certDir)
 	// } else {
-	rules, err = createRulesOldAPI(toc, *host, *certDir) // TODO remove once 1.3 / traffic_ops_golang is deployed to production.
+	rules, err = createRulesOldAPI(toc, *host, *certDir, servers) // TODO remove once 1.3 / traffic_ops_golang is deployed to production.
 	// }
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error creating rules: " + err.Error())
@@ -239,7 +310,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := WriteAndBackup(remapPath, bts); err != nil {
+	if err := WriteAndBackup(remapPath, RemapHistory, bts); err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error writing new config file: " + err.Error())
 		os.Exit(1)
 	}
@@ -259,20 +330,119 @@ func main() {
 	os.Exit(0)
 }
 
-func createRulesOldAPI(toc *to.Session, host string, certDir string) (remap.RemapRules, error) {
+func createGroveCfg(toc *to.Session, server tc.Server) (bool, config.Config, error) {
+	var newCfg config.Config
+	var currCfg config.Config
+	var pluginParams = []string{}
+
+	// load the servers current config parameters.
+	if _, err := os.Stat(GroveConfigPath); err == nil {
+		currCfg, err = config.LoadConfig(GroveConfigPath)
+		if err != nil {
+			fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error loading current config from '" + GroveConfigPath + "' " + err.Error())
+			return false, currCfg, err
+		} else {
+			// make sure this array is sorted for later comparison
+			sort.Strings(currCfg.Plugins)
+		}
+	}
+
+	serverParameters, err := toc.Parameters(server.Profile)
+	if err != nil {
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + server.HostName + "' profile '" + server.Profile + "': " + err.Error())
+		return false, currCfg, err
+	} else {
+		// load config parameters from the servers profile
+		for _, p := range serverParameters {
+			if p.ConfigFile == GroveConfigFile {
+				if p.Name == "plugins" {
+					pluginParams = append(pluginParams, p.Value)
+				} else {
+					err := setConfigParameter(&newCfg, p.Name, p.Value)
+					if err != nil {
+						fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error setting config parameter '" + p.Name + "' :" + err.Error())
+						return false, currCfg, err
+					}
+				}
+			}
+		}
+		sort.Strings(pluginParams)
+		newCfg.Plugins = pluginParams
+	}
+	// no update is required if the configs are the same
+	areEqual := reflect.DeepEqual(newCfg, currCfg)
+	if areEqual == true {
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " There are no changes needed to '" + GroveConfigPath + "'")
+		return false, currCfg, nil
+	} else { // updates are required, send the new config
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Config updates are required to '" + GroveConfigPath + "'")
+		return true, newCfg, nil
+	}
+}
+
+func setConfigParameter(cfg *config.Config, name string, value string) error {
+	var err error
+
+	switch name {
+	case "rfc_compliant":
+		cfg.RFCCompliant, err = strconv.ParseBool(value)
+	case "port":
+		cfg.Port, err = strconv.Atoi(value)
+	case "https_port":
+		cfg.HTTPSPort, err = strconv.Atoi(value)
+	case "cache_size_bytes":
+		cfg.CacheSizeBytes, err = strconv.Atoi(value)
+	case "concurrent_rule_requests":
+		cfg.ConcurrentRuleRequests, err = strconv.Atoi(value)
+	case "remap_rules_file":
+		cfg.RemapRulesFile = value
+	case "cert_file":
+		cfg.CertFile = value
+	case "key_file":
+		cfg.KeyFile = value
+	case "interface_name":
+		cfg.InterfaceName = value
+	case "connection_close":
+		cfg.ConnectionClose, err = strconv.ParseBool(value)
+	case "log_location_error":
+		cfg.LogLocationError = value
+	case "log_location_warning":
+		cfg.LogLocationWarning = value
+	case "log_location_info":
+		cfg.LogLocationInfo = value
+	case "log_location_debug":
+		cfg.LogLocationDebug = value
+	case "log_location_event":
+		cfg.LogLocationEvent = value
+	case "parent_request_timeout_ms":
+		cfg.ReqTimeoutMS, err = strconv.Atoi(value)
+	case "parent_request_keep_alive_ms":
+		cfg.ReqKeepAliveMS, err = strconv.Atoi(value)
+	case "parent_request_max_idle_connections":
+		cfg.ReqMaxIdleConns, err = strconv.Atoi(value)
+	case "parent_request_idle_connection_timeout_ms":
+		cfg.ReqIdleConnTimeoutMS, err = strconv.Atoi(value)
+	case "server_idle_timeout_ms":
+		cfg.ServerIdleTimeoutMS, err = strconv.Atoi(value)
+	case "server_write_timeout_ms":
+		cfg.ServerWriteTimeoutMS, err = strconv.Atoi(value)
+	case "server_read_timeout_ms":
+		cfg.ServerReadTimeoutMS, err = strconv.Atoi(value)
+	case "file_mem_bytes":
+		cfg.FileMemBytes, err = strconv.Atoi(value)
+	default:
+		err = fmt.Errorf(time.Now().Format(time.RFC3339Nano) + "No such config parameter '" + name + "', parameter ignored")
+	}
+	return err
+}
+
+func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map[string]tc.Server) (remap.RemapRules, error) {
 	cachegroupsArr, err := toc.CacheGroups()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Cachegroups: " + err.Error())
 		os.Exit(1)
 	}
 	cachegroups := makeCachegroupsNameMap(cachegroupsArr)
-
-	serversArr, err := toc.Servers()
-	if err != nil {
-		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Servers: " + err.Error())
-		os.Exit(1)
-	}
-	servers := makeServersHostnameMap(serversArr)
 
 	hostServer, ok := servers[host]
 	if !ok {
@@ -458,6 +628,14 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (remap.Rema
 // 	return remapRules, nil
 // }
 
+func makeProfileNameMap(profiles []tc.Profile) map[string]tc.Profile {
+	m := map[string]tc.Profile{}
+	for _, profile := range profiles {
+		m[profile.Name] = profile
+	}
+	return m
+}
+
 func makeServersHostnameMap(servers []tc.Server) map[string]tc.Server {
 	m := map[string]tc.Server{}
 	for _, server := range servers {
@@ -466,8 +644,8 @@ func makeServersHostnameMap(servers []tc.Server) map[string]tc.Server {
 	return m
 }
 
-func makeCachegroupsNameMap(cgs []tcv13.CacheGroup) map[string]tcv13.CacheGroup {
-	m := map[string]tcv13.CacheGroup{}
+func makeCachegroupsNameMap(cgs []tc.CacheGroup) map[string]tc.CacheGroup {
+	m := map[string]tc.CacheGroup{}
 	for _, cg := range cgs {
 		m[cg.Name] = cg
 	}
@@ -498,16 +676,16 @@ func makeDeliveryserviceRegexMap(dsrs []tc.DeliveryServiceRegexes) map[string][]
 	return m
 }
 
-func makeCDNMap(cdns []tcv13.CDN) map[string]tcv13.CDN {
-	m := map[string]tcv13.CDN{}
+func makeCDNMap(cdns []tc.CDN) map[string]tc.CDN {
+	m := map[string]tc.CDN{}
 	for _, cdn := range cdns {
 		m[cdn.Name] = cdn
 	}
 	return m
 }
 
-func makeDSCertMap(sslKeys []tcv13.CDNSSLKeys) map[string]tcv13.CDNSSLKeys {
-	m := map[string]tcv13.CDNSSLKeys{}
+func makeDSCertMap(sslKeys []tc.CDNSSLKeys) map[string]tc.CDNSSLKeys {
+	m := map[string]tc.CDNSSLKeys{}
 	for _, sslkey := range sslKeys {
 		m[sslkey.DeliveryService] = sslkey
 	}
@@ -543,7 +721,7 @@ func getServerDeliveryservices(hostname string, servers map[string]tc.Server, ds
 	return serverDses, nil
 }
 
-func getParents(hostname string, servers map[string]tc.Server, cachegroups map[string]tcv13.CacheGroup) ([]tc.Server, error) {
+func getParents(hostname string, servers map[string]tc.Server, cachegroups map[string]tc.CacheGroup) ([]tc.Server, error) {
 	server, ok := servers[hostname]
 	if !ok {
 		return nil, fmt.Errorf("hostname not found in Servers")
@@ -701,9 +879,9 @@ func createRulesOld(
 	dses []tc.DeliveryService,
 	parents []tc.Server,
 	dsRegexes map[string][]tc.DeliveryServiceRegex,
-	cdns map[string]tcv13.CDN,
+	cdns map[string]tc.CDN,
 	hostParams []tc.Parameter,
-	dsCerts map[string]tcv13.CDNSSLKeys,
+	dsCerts map[string]tc.CDNSSLKeys,
 	certDir string,
 ) (remap.RemapRules, error) {
 	rules := []remapdata.RemapRule{}
@@ -787,32 +965,31 @@ func createRulesOld(
 				}
 
 				rule.PluginsShared = map[string]json.RawMessage{}
-				for _, parent := range parents {
-					to, proxyURLStr := buildTo(parent, protocolStr.To, ds.OrgServerFQDN, dsType)
+				// if the delivery service skips the mid's ie, http_no_cache, http_live, and dns_live
+				// only add the url rule to the origin.
+				if dsTypeSkipsMid(dsType) {
+					var proxyURLStr = ""
 					proxyURL, err := url.Parse(proxyURLStr)
 					if err != nil {
-						return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.HostName, proxyURLStr)
+						return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v proxy_url: %v", ds.XMLID, proxyURLStr)
 					}
-
 					ruleTo := remapdata.RemapRuleTo{
 						RemapRuleToBase: remapdata.RemapRuleToBase{
-							URL:      to,
+							URL:      ds.OrgServerFQDN,
 							Weight:   &weight,
 							RetryNum: &retryNum,
 						},
-						ProxyURL:   proxyURL,
 						RetryCodes: DefaultRetryCodes(),
+						ProxyURL:   proxyURL,
 						Timeout:    &timeout,
 					}
 					rule.To = append(rule.To, ruleTo)
-					// TODO get from TO?
 					rule.RetryNum = &retryNum
 					rule.Timeout = &timeout
 					rule.RetryCodes = DefaultRetryCodes()
 					rule.QueryString = queryStringRule
 					rule.DSCP = ds.DSCP
 					rule.ConnectionClose = DefaultRuleConnectionClose
-					rule.ParentSelection = &parentSelection
 					rule.Allow = acl
 					rule.Plugins = map[string]interface{}{}
 					rule.Plugins["modify_headers"] = toClientHeaders
@@ -822,6 +999,43 @@ func createRulesOld(
 						return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", ds.XMLID, ds.RemapText, err)
 					}
 					rule.PluginsShared[web.RemapTextKey] = remapTextJSON
+				} else {
+					for _, parent := range parents {
+						to, proxyURLStr := buildTo(parent, protocolStr.To, ds.OrgServerFQDN, dsType)
+						proxyURL, err := url.Parse(proxyURLStr)
+						if err != nil {
+							return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.HostName, proxyURLStr)
+						}
+
+						ruleTo := remapdata.RemapRuleTo{
+							RemapRuleToBase: remapdata.RemapRuleToBase{
+								URL:      to,
+								Weight:   &weight,
+								RetryNum: &retryNum,
+							},
+							ProxyURL:   proxyURL,
+							RetryCodes: DefaultRetryCodes(),
+							Timeout:    &timeout,
+						}
+						rule.To = append(rule.To, ruleTo)
+						// TODO get from TO?
+						rule.RetryNum = &retryNum
+						rule.Timeout = &timeout
+						rule.RetryCodes = DefaultRetryCodes()
+						rule.QueryString = queryStringRule
+						rule.DSCP = ds.DSCP
+						rule.ConnectionClose = DefaultRuleConnectionClose
+						rule.ParentSelection = &parentSelection
+						rule.Allow = acl
+						rule.Plugins = map[string]interface{}{}
+						rule.Plugins["modify_headers"] = toClientHeaders
+						rule.Plugins["modify_parent_request_headers"] = toOriginHeaders
+						remapTextJSON, err := json.Marshal(ds.RemapText)
+						if err != nil {
+							return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", ds.XMLID, ds.RemapText, err)
+						}
+						rule.PluginsShared[web.RemapTextKey] = remapTextJSON
+					}
 				}
 				rules = append(rules, rule)
 			}
@@ -846,15 +1060,15 @@ func createRulesOld(
 	return remapRules, nil
 }
 
-func getCertFileName(cert tcv13.CDNSSLKeys, dir string) string {
+func getCertFileName(cert tc.CDNSSLKeys, dir string) string {
 	return dir + string(os.PathSeparator) + strings.Replace(cert.Hostname, "*.", "", -1) + ".crt"
 }
 
-func getCertKeyFileName(cert tcv13.CDNSSLKeys, dir string) string {
+func getCertKeyFileName(cert tc.CDNSSLKeys, dir string) string {
 	return dir + string(os.PathSeparator) + strings.Replace(cert.Hostname, "*.", "", -1) + ".key"
 }
 
-func createCertificateFiles(cert tcv13.CDNSSLKeys, dir string) error {
+func createCertificateFiles(cert tc.CDNSSLKeys, dir string) error {
 	certFileName := getCertFileName(cert, dir)
 	crt, err := base64.StdEncoding.DecodeString(cert.Certificate.Crt)
 	if err != nil {

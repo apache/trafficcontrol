@@ -17,6 +17,11 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div id="deliveryServiceRequestsContainer">
-    <div ui-view="deliveryServiceRequestsContent"></div>
+<div class="row">
+    <div ng-class="isState('trafficPortal.private.deliveryServiceRequests.list') ? 'col-md-12 col-sm-12 col-xs-12' : 'col-md-6 col-sm-6 col-xs-12'">
+        <div ui-view="deliveryServiceRequestsContent"></div>
+    </div>
+    <div class="col-md-6 col-sm-6 col-xs-12" ng-show="isState('trafficPortal.private.deliveryServiceRequests.edit')">
+        <div ui-view="deliveryServiceRequestsComments"></div>
+    </div>
 </div>

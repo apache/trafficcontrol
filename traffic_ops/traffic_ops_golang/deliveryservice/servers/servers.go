@@ -20,9 +20,9 @@ package servers
  */
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -32,7 +32,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
@@ -42,13 +41,14 @@ import (
 )
 
 // TODeliveryServiceRequest provides a type alias to define functions on
-type TODeliveryServiceServer tc.DeliveryServiceServer
+type TODeliveryServiceServer struct {
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.DeliveryServiceServer
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TODeliveryServiceServer(tc.DeliveryServiceServer{})
-
-func GetRefType() *TODeliveryServiceServer {
-	return &refType
+func GetRefType(inf *api.APIInfo) *TODeliveryServiceServer {
+	s := TODeliveryServiceServer{ReqInfo: inf}
+	return &s
 }
 
 func (dss TODeliveryServiceServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -92,7 +92,7 @@ func (dss *TODeliveryServiceServer) SetKeys(keys map[string]interface{}) {
 }
 
 // Validate fulfills the api.Validator interface
-func (dss *TODeliveryServiceServer) Validate(db *sqlx.DB) error {
+func (dss *TODeliveryServiceServer) Validate(tx *sql.Tx) error {
 
 	errs := validation.Errors{
 		"deliveryservice": validation.Validate(dss.DeliveryService, validation.Required),
@@ -103,151 +103,66 @@ func (dss *TODeliveryServiceServer) Validate(db *sqlx.DB) error {
 }
 
 // ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$
-func ReadDSSHandler(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		//create error function with ResponseWriter and Request
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
-		ctx := r.Context()
-
-		// Load the PathParams into the query parameters for pass through
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-		}
-
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			log.Errorf("unable to retrieve current user from context: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		results, errs, errType := GetRefType().readDSS(db, params, *user)
-		if len(errs) > 0 {
-			tc.HandleErrorsWithType(errs, errType, handleErrs)
-			return
-		}
-		respBts, err := json.Marshal(results)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBts)
+func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	results, err := GetRefType(inf).readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	api.WriteRespRaw(w, r, results)
 }
-func (dss *TODeliveryServiceServer) readDSS(db *sqlx.DB, params map[string]string, user auth.CurrentUser) (*tc.DeliveryServiceServerResponse, []error, tc.ApiErrorType) {
-	limitstr := params["limit"]
-	pagestr := params["page"]
+
+func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int) (*tc.DeliveryServiceServerResponse, error) {
 	orderby := params["orderby"]
 	limit := 20
 	offset := 0
 	page := 0
-	var err error = nil
-
-	if limitstr != "" {
-		limit, err = strconv.Atoi(limitstr)
-
-		if err != nil {
-			log.Errorf("limit parameter is not an integer")
-			return nil, []error{errors.New("limit parameter must be an integer.")}, tc.SystemError
-		}
+	err := error(nil)
+	if plimit, ok := intParams["limit"]; ok {
+		limit = plimit
 	}
-
-	if pagestr != "" {
-		offset, err = strconv.Atoi(pagestr)
-		page, err = strconv.Atoi(pagestr)
-
-		if err != nil {
-			log.Errorf("page parameter is not an integer")
-			return nil, []error{errors.New("page parameter must be an integer.")}, tc.SystemError
-		}
-
+	if ppage, ok := intParams["page"]; ok {
+		page = ppage
+		offset = page
 		if offset > 0 {
 			offset -= 1
 		}
-
 		offset *= limit
 	}
-
 	if orderby == "" {
 		orderby = "deliveryService"
 	}
 
 	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset))
+	if err != nil {
+		return nil, errors.New("creating query for DeliveryserviceServers: " + err.Error())
+	}
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, dss)
+	rows, err := tx.NamedQuery(query, dss)
 	if err != nil {
-		log.Errorf("Error querying DeliveryserviceServers: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, errors.New("Error querying DeliveryserviceServers: " + err.Error())
 	}
 	defer rows.Close()
-
 	servers := []tc.DeliveryServiceServer{}
 	for rows.Next() {
-		var s tc.DeliveryServiceServer
+		s := tc.DeliveryServiceServer{}
 		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing dss rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, errors.New("error parsing dss rows: " + err.Error())
 		}
 		servers = append(servers, s)
 	}
-
-	return &tc.DeliveryServiceServerResponse{orderby, servers, page, limit}, []error{}, tc.NoError
-}
-
-//all implementations of Deleter should use transactions and return the proper errorType
-
-//The Parameter implementation of the Deleter interface
-func (dss *TODeliveryServiceServer) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Errorln("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), dss)
-	result, err := tx.NamedExec(deleteQuery(), dss)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected < 1 {
-		return errors.New("no parameter with that id found"), tc.DataMissingError
-	}
-	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
-	return nil, tc.NoError
+	return &tc.DeliveryServiceServerResponse{orderby, servers, page, limit}, nil
 }
 
 func selectQuery(orderBy string, limit string, offset string) (string, error) {
-
 	selectStmt := `SELECT
 	s.deliveryService,
 	s.server,
@@ -295,136 +210,69 @@ func createServersForDsIdRef() *TODSServerIds {
 	return &dsserversRef
 }
 
-func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-		ctx := r.Context()
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			log.Errorf("unable to retrieve current user from context: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		// get list of server Ids to insert
-		payload := createServersForDsIdRef()
-
-		if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
-			log.Errorf("Error trying to decode the request body: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		servers := payload.Servers
-		dsId := payload.DsId
-
-		if servers == nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("servers must exist in post"), nil)
-			return
-		}
-
-		if dsId == nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("dsid must exist in post"), nil)
-			return
-		}
-
-		if payload.Replace == nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("replace must exist in post"), nil)
-			return
-		}
-
-		// perform the insert transaction
-		rollbackTransaction := true
-		tx, err := db.Beginx()
-		if err != nil {
-			log.Errorln("could not begin transaction: %v", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		defer func() {
-			if tx == nil || !rollbackTransaction {
-				return
-			}
-			err := tx.Rollback()
-			if err != nil {
-				log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-			}
-		}()
-
-		xmlID, ok, err := deliveryservice.GetXMLID(tx.Tx, *dsId)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("deliveryserviceserver getting XMLID: "+err.Error()))
-			return
-		}
-		if !ok {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("no delivery service with that ID exists"), nil)
-			return
-		}
-		if userErr, sysErr, errCode := tenant.Check(user, xmlID, tx.Tx); userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-
-		if *payload.Replace {
-			// delete existing
-			rows, err := db.Queryx("DELETE FROM deliveryservice_server WHERE deliveryservice = $1", *dsId)
-			if err != nil {
-				log.Errorf("unable to remove the existing servers assigned to the delivery service: %s", err)
-				handleErrs(http.StatusInternalServerError, err)
-				return
-			}
-
-			defer rows.Close()
-		}
-
-		i := 0
-		respServers := []int{}
-
-		for _, server := range servers {
-			dtos := map[string]interface{}{"id": dsId, "server": server}
-			resultRows, err := tx.NamedQuery(insertIdsQuery(), dtos)
-			if err != nil {
-				if pqErr, ok := err.(*pq.Error); ok {
-					err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-					log.Errorln("could not begin transaction: %v", err)
-					if eType == tc.DataConflictError {
-						handleErrs(http.StatusInternalServerError, err)
-						return
-					}
-					handleErrs(http.StatusInternalServerError, err)
-					return
-				}
-				log.Errorf("received non pq error: %++v from create execution", err)
-				return
-			}
-			respServers = append(respServers, server)
-			resultRows.Next()
-			i++
-			defer resultRows.Close()
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			log.Errorln("Could not commit transaction: ", err)
-			return
-		}
-		resAlerts := []tc.Alert{tc.Alert{"server assignements complete", "success"}}
-		repRes := tc.DSSReplaceResponse{resAlerts, tc.DSSMapResponse{*dsId, *payload.Replace, respServers}}
-
-		// marshal the results to the response stream
-		respBts, err := json.Marshal(repRes)
-		if err != nil {
-			log.Errorln("Could not marshal the response as expected: ", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		rollbackTransaction = false
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		fmt.Fprintf(w, "%s", respBts)
+func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	defer inf.Close()
+
+	payload := DSServerIds{}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
+		return
+	}
+
+	servers := payload.Servers
+	dsId := payload.DsId
+	if servers == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("servers must exist in post"), nil)
+		return
+	}
+	if dsId == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("dsid must exist in post"), nil)
+		return
+	}
+	if payload.Replace == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("replace must exist in post"), nil)
+		return
+	}
+
+	xmlID, ok, err := deliveryservice.GetXMLID(inf.Tx.Tx, *dsId)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryserviceserver getting XMLID: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no delivery service with that ID exists"), nil)
+		return
+	}
+	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if *payload.Replace {
+		// delete existing
+		_, err := inf.Tx.Tx.Exec("DELETE FROM deliveryservice_server WHERE deliveryservice = $1", *dsId)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("unable to remove the existing servers assigned to the delivery service: "+err.Error()))
+			return
+		}
+	}
+
+	respServers := []int{}
+	for _, server := range servers {
+		dtos := map[string]interface{}{"id": dsId, "server": server}
+		if _, err := inf.Tx.NamedExec(insertIdsQuery(), dtos); err != nil {
+			usrErr, sysErr, code := api.ParseDBError(err)
+			api.HandleErr(w, r, inf.Tx.Tx, code, usrErr, sysErr)
+			return
+		}
+		respServers = append(respServers, server)
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server assignements complete", tc.DSSMapResponse{*dsId, *payload.Replace, respServers})
 }
 
 type TODeliveryServiceServers tc.DeliveryServiceServers
@@ -435,133 +283,55 @@ func createServersRef() *TODeliveryServiceServers {
 }
 
 // GetCreateHandler assigns an existing Server to and existing Deliveryservice in response to api/1.1/deliveryservices/{xml_id}/servers
-func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
-		// find the delivery service Id dsId matching the xml_id
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		xmlId, ok := params["xml_id"]
-		if !ok {
-			log.Errorf("unable to get xml_id parameter from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		ctx := r.Context()
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			log.Errorf("unable to retrieve current user from context: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		rollbackTransaction := true
-		tx, err := db.Beginx()
-		if err != nil {
-			log.Errorln("could not begin transaction: %v", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		defer func() {
-			if tx == nil || !rollbackTransaction {
-				return
-			}
-			err := tx.Rollback()
-			if err != nil {
-				log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-			}
-		}()
-
-		if userErr, sysErr, errCode := tenant.Check(user, xmlId, tx.Tx); userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-
-		row := db.QueryRow(selectDeliveryService(), xmlId)
-		var dsId int
-		row.Scan(&dsId)
-
-		// get list of server Ids to insert
-		defer r.Body.Close()
-		payload := createServersRef()
-
-		if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
-			log.Errorf("Error trying to decode the request body: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		payload.XmlId = xmlId
-		serverNames := payload.ServerNames
-		q, arg, err := sqlx.In(selectServerIds(), serverNames)
-
-		if err != nil {
-			log.Errorln("Could not form IN query : %v", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		q = sqlx.Rebind(sqlx.DOLLAR, q)
-		serverIds, err := db.Query(q, arg...)
-		defer serverIds.Close()
-		if err != nil {
-			log.Errorln("Could not select the ServerIds: %v", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		// We have to get the server Ids and iterate through them because of a bug in the Go
-		// transaction which returns an error if you perform a Select after an Insert in
-		// the same transaction
-		for serverIds.Next() {
-			var serverId int
-			err := serverIds.Scan(&serverId)
-			dtos := map[string]interface{}{"id": dsId, "server": serverId}
-			resultRows, err := tx.NamedQuery(insertIdsQuery(), dtos)
-			if err != nil {
-				if pqErr, ok := err.(*pq.Error); ok {
-					err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-					log.Errorln("could not begin transaction: %v", err)
-					if eType == tc.DataConflictError {
-						handleErrs(http.StatusInternalServerError, err)
-						return
-					}
-					handleErrs(http.StatusInternalServerError, err)
-					return
-				}
-				log.Errorf("received non pq error: %++v from create execution", err)
-				return
-			}
-			resultRows.Next()
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			log.Errorln("Could not commit transaction: ", err)
-			return
-		}
-
-		// marshal the results to the response stream
-		tcPayload := tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId}
-		payloadResp := tc.DSServersResponse{tcPayload}
-		respBts, err := json.Marshal(payloadResp)
-		if err != nil {
-			log.Errorln("Could not marshal the response as expected: ", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		rollbackTransaction = false
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		fmt.Fprintf(w, "%s", respBts)
+func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xml_id"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	defer inf.Close()
+
+	if userErr, sysErr, errCode := tenant.Check(inf.User, inf.Params["xml_id"], inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	dsID := 0
+	if err := inf.Tx.Tx.QueryRow(selectDeliveryService(), inf.Params["xml_id"]).Scan(&dsID); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, errors.New("delivery service not found"))
+			return
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("ds servers create scanning: "+err.Error()))
+		return
+	}
+
+	// get list of server Ids to insert
+	payload := tc.DeliveryServiceServers{}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
+		return
+	}
+	payload.XmlId = inf.Params["xml_id"]
+	serverNames := payload.ServerNames
+
+	res, err := inf.Tx.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, dsID, pq.Array(serverNames))
+	if err != nil {
+
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, inf.Tx.Tx, code, usrErr, sysErr)
+		return
+	}
+
+	if rowsAffected, err := res.RowsAffected(); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers: getting rows affected: "+err.Error()))
+		return
+	} else if int(rowsAffected) != len(serverNames) {
+		// this happens when the names they gave don't exist
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("servers not found"), nil)
+		return
+	}
+	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
 }
 
 func selectDeliveryService() string {
@@ -570,7 +340,7 @@ func selectDeliveryService() string {
 }
 
 func insertIdsQuery() string {
-	query := `INSERT INTO deliveryservice_server (deliveryservice, server) 
+	query := `INSERT INTO deliveryservice_server (deliveryservice, server)
 VALUES (:id, :server )`
 	return query
 }
@@ -580,80 +350,57 @@ func selectServerIds() string {
 	return query
 }
 
-// GetReadHandler retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
-func GetReadHandler(db *sqlx.DB, filter tc.Filter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-		}
-
-		where := `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
-
-		if filter == tc.Unassigned {
-			where = `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
-		}
-
-		servers, errors, etype := read(db, params, auth.CurrentUser{}, where)
-
-		if len(errors) > 0 {
-			tc.HandleErrorsWithType(errors, etype, handleErrs)
-			return
-		}
-
-		dssres := tc.DSServersAttrResponse{servers}
-		respBts, err := json.Marshal(dssres)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		fmt.Fprintf(w, "%s", respBts)
-	}
+// GetReadAssigned retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
+func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
+	getRead(w, r, false)
 }
 
-func read(db *sqlx.DB, params map[string]string, user auth.CurrentUser, where string) ([]tc.DSServer, []error, tc.ApiErrorType) {
-	idstr, ok := params["id"]
+// GetReadUnassigned retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
+func GetReadUnassigned(w http.ResponseWriter, r *http.Request) {
+	getRead(w, r, true)
+}
 
-	if !ok {
-		log.Errorf("Deliveryservice Server Id missing")
-		return nil, []error{errors.New("Deliverservice id is required.")}, tc.DataMissingError
+func getRead(w http.ResponseWriter, r *http.Request, unassigned bool) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
-	id, err := strconv.Atoi(idstr)
+	defer inf.Close()
 
+	servers, err := read(inf.Tx, inf.IntParams["id"], inf.User, unassigned)
 	if err != nil {
-		log.Errorf("Deliveryservice Server Id is not an integer")
-		return nil, []error{errors.New("Deliverservice id is not an integer.")}, tc.SystemError
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
 	}
+	api.WriteResp(w, r, servers)
+}
 
+func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServer, error) {
+	where := `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
+	if unassigned {
+		where = `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
+	}
 	query := dssSelectQuery() + where
 	log.Debugln("Query is ", query)
-
-	rows, err := db.Queryx(query, id)
+	rows, err := tx.Queryx(query, dsID)
 	if err != nil {
-		log.Errorf("Error querying DeliveryserviceServers: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, errors.New("error querying dss rows: " + err.Error())
 	}
 	defer rows.Close()
 
 	servers := []tc.DSServer{}
 	for rows.Next() {
-		var s tc.DSServer
+		s := tc.DSServer{}
 		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing dss rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, errors.New("error scanning dss rows: " + err.Error())
 		}
-		hiddenField := ""
 		if user.PrivLevel < auth.PrivLevelAdmin {
-			s.ILOPassword = &hiddenField
+			s.ILOPassword = util.StrPtr("")
 		}
 		servers = append(servers, s)
 	}
-
-	return servers, []error{}, tc.NoError
+	return servers, nil
 }
 
 func dssSelectQuery() string {
@@ -719,19 +466,17 @@ type TODSSDeliveryService struct {
 	tc.DSSDeliveryService
 }
 
-func GetDSSDeliveryServiceReaderSingleton() func(reqInfo *api.APIInfo) api.Reader {
-	return func(reqInfo *api.APIInfo) api.Reader {
-		toReturn := TODSSDeliveryService{reqInfo, tc.DSSDeliveryService{}}
-		return &toReturn
-	}
+func (dss *TODSSDeliveryService) APIInfo() *api.APIInfo {
+	return dss.ReqInfo
+}
+
+func TypeSingleton(reqInfo *api.APIInfo) api.Reader {
+	return &TODSSDeliveryService{reqInfo, tc.DSSDeliveryService{}}
 }
 
 // Read shows all of the delivery services associated with the specified server.
-func (dss *TODSSDeliveryService) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var err error = nil
-	orderby := params["orderby"]
-	serverId := params["id"]
-
+func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
+	orderby := dss.APIInfo().Params["orderby"]
 	if orderby == "" {
 		orderby = "deliveryService"
 	}
@@ -739,10 +484,10 @@ func (dss *TODSSDeliveryService) Read(params map[string]string) ([]interface{}, 
 	query := SDSSelectQuery()
 	log.Debugln("Query is ", query)
 
-	rows, err := dss.ReqInfo.Tx.Queryx(query, serverId)
+	rows, err := dss.APIInfo().Tx.Queryx(query, dss.APIInfo().Params["id"])
 	if err != nil {
 		log.Errorf("Error querying DeliveryserviceServers: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, nil, errors.New("dss querying: " + err.Error()), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -750,13 +495,12 @@ func (dss *TODSSDeliveryService) Read(params map[string]string) ([]interface{}, 
 	for rows.Next() {
 		var s tc.DSSDeliveryService
 		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing dss rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, nil, errors.New("dss scanning: " + err.Error()), http.StatusInternalServerError
 		}
 		services = append(services, s)
 	}
 
-	return services, []error{}, tc.NoError
+	return services, nil, nil, http.StatusOK
 }
 
 func SDSSelectQuery() string {

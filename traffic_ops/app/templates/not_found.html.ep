@@ -20,10 +20,14 @@
 	<div>
 	<h3><a href="#">Resource Not Found</a></h3>
 	  <div>
-	       Traffic Ops error, could not find the requested resource.
+			Traffic Ops error, could not find the requested resource.
 
-		  <div style="margin-top:20px;clear:both;">
-				<h2><a href="/">Click here to navigate to the main site if you so desire.</a></h2>
+			<div style="margin-top:20px;clear:both;">
+					If you are looking for an API endpoint, see the <a href="https://traffic-control-cdn.readthedocs.io/en/latest/api/index.html">API Documentation.</a>
+		  </div>
+
+			<div style="margin-top:20px;clear:both;">
+					If you are looking for a web page, the old Traffic Ops user interface was removed in Traffic Ops 4.0. Please use the <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_portal/usingtrafficportal.html#usingtrafficportal">Traffic Portal</a> instead.
 		  </div>
 	  </div>
 	</div>

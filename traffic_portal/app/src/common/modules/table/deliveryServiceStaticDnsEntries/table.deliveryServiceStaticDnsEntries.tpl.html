@@ -25,6 +25,7 @@ under the License.
             <li class="active">Static DNS Entries</li>
         </ol>
         <div class="pull-right">
+            <button class="btn btn-primary" title="Create Delivery Service Static Dns Entry" ng-click="createStaticDnsEntry(deliveryService.id)"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -42,7 +43,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="s in ::staticDnsEntries">
+            <tr ng-click="editDeliveryServiceStaticDnsEntry(deliveryService.id, s.id)" ng-repeat="s in ::staticDnsEntries">
                 <td data-search="^{{::s.host}}$">{{::s.host}}</td>
                 <td data-search="^{{::s.address}}$">{{::s.address}}</td>
                 <td data-search="^{{::s.type}}$">{{::s.type}}</td>

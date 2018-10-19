@@ -20,11 +20,8 @@ package status
  */
 
 import (
-	"errors"
-	"fmt"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -32,8 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
@@ -41,6 +36,21 @@ type TOStatus struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.StatusNullable
 }
+
+func (v *TOStatus) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TOStatus) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOStatus) InsertQuery() string           { return insertQuery() }
+func (v *TOStatus) NewReadObj() interface{}       { return &tc.Status{} }
+func (v *TOStatus) SelectQuery() string           { return selectQuery() }
+func (v *TOStatus) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"id":          dbhelpers.WhereColumnInfo{"id", api.IsInt},
+		"description": dbhelpers.WhereColumnInfo{"description", nil},
+		"name":        dbhelpers.WhereColumnInfo{"name", nil},
+	}
+}
+func (v *TOStatus) UpdateQuery() string { return updateQuery() }
+func (v *TOStatus) DeleteQuery() string { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
@@ -76,9 +86,7 @@ func (status TOStatus) GetAuditName() string {
 	return "unknown"
 }
 
-func (status TOStatus) GetType() string {
-	return "status"
-}
+func (status TOStatus) GetType() string { return "status" }
 
 func (status TOStatus) Validate() error {
 	errs := validation.Errors{
@@ -87,192 +95,39 @@ func (status TOStatus) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (status *TOStatus) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":          dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"description": dbhelpers.WhereColumnInfo{"description", nil},
-		"name":        dbhelpers.WhereColumnInfo{"name", nil},
-	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
-	}
-
-	query := selectQuery() + where + orderBy
-	log.Debugln("Query is ", query)
-
-	rows, err := status.ReqInfo.Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying Status: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	st := []interface{}{}
-	for rows.Next() {
-		var s tc.Status
-		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing Status rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		st = append(st, s)
-	}
-
-	return st, []error{}, tc.NoError
-}
+func (st *TOStatus) Read() ([]interface{}, error, error, int) { return api.GenericRead(st) }
+func (st *TOStatus) Update() (error, error, int)              { return api.GenericUpdate(st) }
+func (st *TOStatus) Create() (error, error, int)              { return api.GenericCreate(st) }
+func (st *TOStatus) Delete() (error, error, int)              { return api.GenericDelete(st) }
 
 func selectQuery() string {
-
-	query := `SELECT
-description,
-id,
-last_updated,
-name 
-
-FROM status s`
-	return query
-}
-
-//The TOStatus implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a status with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (status *TOStatus) Update() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with status: %++v", updateQuery(), status)
-	resultRows, err := status.ReqInfo.Tx.NamedQuery(updateQuery(), status)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a status with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	status.LastUpdated = &lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no status found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-
-	return nil, tc.NoError
-}
-
-//The TOStatus implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a status with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted status and have
-//to be added to the struct
-func (status *TOStatus) Create() (error, tc.ApiErrorType) {
-	resultRows, err := status.ReqInfo.Tx.NamedQuery(insertQuery(), status)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a status with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no status was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from status insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	status.SetKeys(map[string]interface{}{"id": id})
-	status.LastUpdated = &lastUpdated
-
-	return nil, tc.NoError
-}
-
-//The Status implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (status *TOStatus) Delete() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with status: %++v", deleteQuery(), status)
-	result, err := status.ReqInfo.Tx.NamedExec(deleteQuery(), status)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no status with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-
-	return nil, tc.NoError
+	return `
+SELECT
+  description,
+  id,
+  last_updated,
+  name
+FROM
+  status s
+`
 }
 
 func updateQuery() string {
-	query := `UPDATE
+	return `UPDATE
 status SET
 name=:name,
 description=:description
 WHERE id=:id RETURNING last_updated`
-	return query
 }
 
 func insertQuery() string {
-	query := `INSERT INTO status (
+	return `INSERT INTO status (
 name,
 description) VALUES (
 :name,
 :description) RETURNING id,last_updated`
-	return query
 }
 
 func deleteQuery() string {
-	query := `DELETE FROM status
-WHERE id=:id`
-	return query
+	return `DELETE FROM status WHERE id=:id`
 }

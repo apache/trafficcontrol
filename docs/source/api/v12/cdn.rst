@@ -1324,6 +1324,8 @@ DNSSEC Keys
   +-----------------------+---------+------------------------------------------------+
   | ``zskExpirationDays`` | string  | Expiration (in days) for the zone signing keys |
   +-----------------------+---------+------------------------------------------------+
+  | ``effectiveDate``     | int     | UNIX epoch start date for the signing keys     |
+  +-----------------------+---------+------------------------------------------------+
 
   **Request Example** ::
 
@@ -1332,7 +1334,8 @@ DNSSEC Keys
       "name" "ott.kabletown.com",
       "ttl": "60",
       "kskExpirationDays": "365",
-      "zskExpirationDays": "90"
+      "zskExpirationDays": "90",
+      "effectiveDate": 1012615322
     }
 
   **Response Properties**

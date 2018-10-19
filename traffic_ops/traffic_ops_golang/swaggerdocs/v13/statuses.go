@@ -20,7 +20,7 @@ package v13
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Statuses -  StatusesResponse to get the "response" top level key
@@ -29,7 +29,7 @@ import (
 type Statuses struct {
 	// Status Response Body
 	// in: body
-	StatusesResponse v13.StatusesResponse `json:"response"`
+	StatusesResponse tc.StatusesResponse `json:"response"`
 }
 
 // Status -  StatusResponse to get the "response" top level key
@@ -38,7 +38,7 @@ type Statuses struct {
 type Status struct {
 	// Status Response Body
 	// in: body
-	StatusResponse v13.StatusResponse
+	StatusResponse tc.StatusResponse
 }
 
 // StatusQueryParams
@@ -71,7 +71,7 @@ type StatusPostParam struct {
 	//
 	// in: body
 	// required: true
-	Status v13.Status
+	Status tc.Status
 }
 
 // swagger:parameters GetStatusById DeleteStatus
@@ -114,7 +114,7 @@ type StatusPutParam struct {
 	//
 	// in: body
 	// required: true
-	Status v13.Status
+	Status tc.Status
 }
 
 // PutStatus swagger:route PUT /statuses/{id} Status PutStatus

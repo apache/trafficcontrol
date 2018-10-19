@@ -37,7 +37,7 @@ type Config struct {
 // TrafficOps - config section
 type TrafficOps struct {
 	// URL - The point to the Traffic Ops instance being tested
-	URL string `json:"URL" envconfig:"TO_URL" default:"https://localhost:8443"`
+	URL string `json:"URL" envconfig:"TO_URL"`
 
 	// UserPassword - The Traffic Ops test user password hitting the API
 	UserPassword string `json:"password" envconfig:"TO_USER_PASSWORD"`

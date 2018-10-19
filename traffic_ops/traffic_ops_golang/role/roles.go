@@ -22,12 +22,12 @@ package role
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -37,16 +37,30 @@ import (
 	"github.com/lib/pq"
 )
 
-//we need a type alias to define functions on
 type TORole struct {
-	ReqInfo *api.APIInfo `json:"-"`
-	v13.Role
+	tc.Role
+	ReqInfo        *api.APIInfo    `json:"-"`
+	LastUpdated    *tc.TimeNoMod   `json:"-"`
+	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
 }
+
+func (v *TORole) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TORole) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TORole) InsertQuery() string           { return insertQuery() }
+func (v *TORole) NewReadObj() interface{}       { return &TORole{} }
+func (v *TORole) SelectQuery() string           { return selectQuery() }
+func (v *TORole) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"name": dbhelpers.WhereColumnInfo{"name", nil},
+		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},
+	}
+}
+func (v *TORole) UpdateQuery() string { return updateQuery() }
+func (v *TORole) DeleteQuery() string { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TORole{reqInfo, v13.Role{}}
-		return &toReturn
+		return &TORole{ReqInfo: reqInfo}
 	}
 }
 
@@ -104,271 +118,140 @@ func (role TORole) Validate() error {
 	return util.JoinErrs(errsToReturn)
 }
 
-//The TORole implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a role with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted role and have
-//to be added to the struct
-func (role *TORole) Create() (error, tc.ApiErrorType) {
+func (role *TORole) Create() (error, error, int) {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
-		return errors.New("can not create a role with a higher priv level than your own"), tc.ForbiddenError
+		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusBadRequest
 	}
-	resultRows, err := role.ReqInfo.Tx.NamedQuery(insertQuery(), role)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a role with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
 
-	var id int
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
+	userErr, sysErr, errCode := api.GenericCreate(role)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
-	if rowsAffected == 0 {
-		err = errors.New("no role was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from role insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	role.SetKeys(map[string]interface{}{"id": id})
+
 	//after we have role ID we can associate the capabilities:
-	err, errType := role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
-	if err != nil {
-		return err, errType
+	userErr, sysErr, errCode = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
-
-	return nil, tc.NoError
+	return nil, nil, http.StatusOK
 }
 
-func (role *TORole) createRoleCapabilityAssociations(tx *sqlx.Tx) (error, tc.ApiErrorType) {
+func (role *TORole) createRoleCapabilityAssociations(tx *sqlx.Tx) (error, error, int) {
 	result, err := tx.Exec(associateCapabilities(), role.ID, pq.Array(role.Capabilities))
 	if err != nil {
-		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("creating role capabilities: " + err.Error()), http.StatusInternalServerError
 	}
-	rows, err := result.RowsAffected()
-	if err != nil {
+
+	if rows, err := result.RowsAffected(); err != nil {
 		log.Errorf("could not check result after inserting role_capability relations: %v", err)
-	}
-	expected := len(*role.Capabilities)
-	if int(rows) != expected {
+	} else if expected := len(*role.Capabilities); int(rows) != expected {
 		log.Errorf("wrong number of role_capability rows created: %d expected: %d", rows, expected)
 	}
-	return nil, tc.NoError
+	return nil, nil, http.StatusOK
 }
 
-func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, tc.ApiErrorType) {
+func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error, int) {
 	result, err := tx.Exec(deleteAssociatedCapabilities(), role.ID)
 	if err != nil {
-
-		log.Errorf("received error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
-
+		return nil, errors.New("deleting role capabilities: " + err.Error()), http.StatusInternalServerError
 	}
-	_, err = result.RowsAffected()
-	if err != nil {
+
+	if _, err = result.RowsAffected(); err != nil {
 		log.Errorf("could not check result after inserting role_capability relations: %v", err)
 	}
-	return nil, tc.NoError
+	// TODO verify expected row count shouldn't be checked?
+	return nil, nil, http.StatusOK
 }
 
-func (role *TORole) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name": dbhelpers.WhereColumnInfo{"name", nil},
-		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},
+func (role *TORole) Read() ([]interface{}, error, error, int) {
+	vals, userErr, sysErr, errCode := api.GenericRead(role)
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, errCode
 	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+	for _, val := range vals {
+		rl := val.(*TORole)
+		caps := ([]string)(*rl.PQCapabilities)
+		rl.Capabilities = &caps
 	}
-
-	query := selectQuery() + where + orderBy
-	log.Debugln("Query is ", query)
-
-	rows, err := role.ReqInfo.Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying Roles: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	Roles := []interface{}{}
-	for rows.Next() {
-		var r TORole
-		var caps []string
-		if err = rows.Scan(&r.ID, &r.Name, &r.Description, &r.PrivLevel, pq.Array(&caps)); err != nil {
-			log.Errorf("error parsing Role rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		r.Capabilities = &caps
-		Roles = append(Roles, r)
-	}
-
-	return Roles, []error{}, tc.NoError
+	return vals, nil, nil, http.StatusOK
 }
 
-//The TORole implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a role with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (role *TORole) Update() (error, tc.ApiErrorType) {
+func (role *TORole) Update() (error, error, int) {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
-		return errors.New("can not create a role with a higher priv level than your own"), tc.ForbiddenError
+		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusForbidden
 	}
-
-	log.Debugf("about to run exec query: %s with role: %++v\n", updateQuery(), role)
-	result, err := role.ReqInfo.Tx.NamedExec(updateQuery(), role)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a role with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
-		}
+	userErr, sysErr, errCode := api.GenericUpdate(role)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		log.Errorf("received error: %++v from checking result of update", err)
-		return tc.DBError, tc.SystemError
+	// TODO cascade delete, to automatically do this in SQL?
+	userErr, sysErr, errCode = role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
-
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no role found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	//remove associations
-	err, errType := role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
-	if err != nil {
-		return err, errType
-	}
-	//create new associations
-	err, errType = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
-	if err != nil {
-		return err, errType
-	}
-
-	return nil, tc.NoError
+	return role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
 }
 
-//The Role implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (role *TORole) Delete() (error, tc.ApiErrorType) {
+func (role *TORole) Delete() (error, error, int) {
 	assignedUsers := 0
-	err := role.ReqInfo.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID)
-	if err != nil {
-		log.Errorf("received error: %++v from assigned users check", err)
-		return tc.DBError, tc.SystemError
-	}
-	if assignedUsers != 0 {
-		return fmt.Errorf("can not delete a role with %d assigned users", assignedUsers), tc.DataConflictError
+	if err := role.ReqInfo.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID); err != nil {
+		return nil, errors.New("role delete counting assigned users: " + err.Error()), http.StatusInternalServerError
+	} else if assignedUsers != 0 {
+		return fmt.Errorf("can not delete a role with %d assigned users", assignedUsers), nil, http.StatusBadRequest
 	}
 
-	log.Debugf("about to run exec query: %s with role: %++v", deleteQuery(), role)
-	result, err := role.ReqInfo.Tx.NamedExec(deleteQuery(), role)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
+	userErr, sysErr, errCode := api.GenericDelete(role)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no role with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	//remove associations
-	err, errType := role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
-	if err != nil {
-		return err, errType
-	}
-
-	return nil, tc.NoError
+	return role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
 }
 
 func selectQuery() string {
-	query := `SELECT
+	return `SELECT
 id,
 name,
 description,
 priv_level,
 ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=id) AS capabilities
-
 FROM role`
-	return query
 }
 
 func updateQuery() string {
-	query := `UPDATE
+	return `UPDATE
 role SET
 name=:name,
 description=:description
-WHERE id=:id`
-	return query
+WHERE id=:id RETURNING last_updated`
 }
 
 func deleteAssociatedCapabilities() string {
-	query := `DELETE FROM role_capability
+	return `DELETE FROM role_capability
 WHERE role_id=$1`
-	return query
 }
 
 func associateCapabilities() string {
-	query := `INSERT INTO role_capability (
+	return `INSERT INTO role_capability (
 role_id,
 cap_name) WITH
 	q1 AS ( SELECT * FROM (VALUES ($1::bigint)) AS role_id ),
 	q2 AS (SELECT UNNEST($2::text[]))
 	SELECT * FROM q1,q2`
-	return query
 }
 
 func insertQuery() string {
-	query := `INSERT INTO role (
+	return `INSERT INTO role (
 name,
 description,
-priv_level) VALUES (
+priv_level
+) VALUES (
 :name,
 :description,
-:priv_level) RETURNING id`
-	return query
+:priv_level
+)
+RETURNING id, last_updated`
 }
 
 func deleteQuery() string {
-	query := `DELETE FROM role
-WHERE id=:id`
-	return query
+	return `DELETE FROM role WHERE id = :id`
 }

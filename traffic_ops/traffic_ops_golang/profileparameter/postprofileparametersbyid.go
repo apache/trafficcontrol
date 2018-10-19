@@ -32,35 +32,34 @@ import (
 func PostProfileParamsByID(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	profParams := tc.ProfileParametersByNamePost{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &profParams); err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
 		return
 	}
 
 	profileID := inf.IntParams["id"]
 	profileName, profileExists, err := dbhelp.GetProfileNameFromID(profileID, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("getting profile ID %d: "+err.Error(), profileID))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting profile ID %d: "+err.Error(), profileID))
 		return
 	}
 	if !profileExists {
-		api.HandleErr(w, r, http.StatusBadRequest, fmt.Errorf("no profile with ID %d exists", profileID), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("no profile with ID %d exists", profileID), nil)
 		return
 	}
 
 	insertedObjs, err := insertParametersForProfile(profileName, profParams, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("posting profile parameters by name: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting profile parameters by name: "+err.Error()))
 		return
 	}
 
 	resp := tc.ProfileParameterPostResp{Parameters: insertedObjs, ProfileName: profileName, ProfileID: profileID}
-	*inf.CommitTx = true
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Assign parameters successfully to profile "+profileName, resp)
 }

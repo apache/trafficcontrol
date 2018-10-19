@@ -25,7 +25,7 @@ FROM centos:7
 RUN curl -sL https://rpm.nodesource.com/setup_6.x | bash -
 
 # Override TRAFFIC_PORTAL_RPM arg to use a different one using --build-arg TRAFFIC_PORTAL_RPM=...  Can be local file or http://...
-ARG TRAFFIC_PORTAL_RPM=traffic_portal.rpm
+ARG TRAFFIC_PORTAL_RPM=traffic_portal/traffic_portal.rpm
 ADD $TRAFFIC_PORTAL_RPM /
 
 ARG TO_HOST=$TO_HOST
@@ -37,10 +37,16 @@ RUN yum install -y \
       jq \
       nodejs \
       openssl \
+      gettext \
+      bind-utils \
+      net-tools \
       /$(basename $TRAFFIC_PORTAL_RPM) && \
     rm /$(basename $TRAFFIC_PORTAL_RPM) && \
     yum clean all || \
     echo "ERROR INSTALLING PACKAGES"
 
-ADD run.sh /
+ADD enroller/server_template.json \
+    traffic_portal/run.sh \
+    traffic_ops/to-access.sh /
+
 CMD /run.sh

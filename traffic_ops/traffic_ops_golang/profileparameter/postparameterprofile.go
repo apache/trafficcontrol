@@ -34,21 +34,20 @@ import (
 func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	paramProfile := tc.PostParamProfile{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &paramProfile); err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
 		return
 	}
 	if err := insertParameterProfile(paramProfile, inf.Tx.Tx); err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("posting parameter profile: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting parameter profile: "+err.Error()))
 		return
 	}
-	*inf.CommitTx = true
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d profiles were assigned to the %d parameter", len(*paramProfile.ProfileIDs), *paramProfile.ParamID), paramProfile)
 }
 

@@ -80,6 +80,8 @@ WHERE
             deliveryservice_server.deliveryservice
         FROM
             deliveryservice_server)
+    AND deliveryservice.active = true
+
 ORDER BY
     ds_id,
     re_type,

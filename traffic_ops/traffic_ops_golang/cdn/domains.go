@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 	"github.com/jmoiron/sqlx"
@@ -31,9 +31,9 @@ import (
 
 const RouterProfilePrefix = "CCR"
 
-func getDomainsList(tx *sqlx.Tx) ([]v13.Domain, error) {
+func getDomainsList(tx *sqlx.Tx) ([]tc.Domain, error) {
 
-	domains := []v13.Domain{}
+	domains := []tc.Domain{}
 
 	q := `SELECT p.id, p.name, p.description, domain_name FROM profile AS p
 	JOIN cdn ON p.cdn = cdn.id WHERE p.name LIKE '` + RouterProfilePrefix + `%'`
@@ -46,7 +46,7 @@ func getDomainsList(tx *sqlx.Tx) ([]v13.Domain, error) {
 
 	for rows.Next() {
 
-		d := v13.Domain{ParameterID: -1}
+		d := tc.Domain{ParameterID: -1}
 		err := rows.Scan(&d.ProfileID, &d.ProfileName, &d.ProfileDescription, &d.DomainName)
 		if err != nil {
 			return nil, fmt.Errorf("getting profile: %s", err)
@@ -61,14 +61,14 @@ func DomainsHandler(w http.ResponseWriter, r *http.Request) {
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	domains, err := getDomainsList(inf.Tx)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, err, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, err)
 		return
 	}
 

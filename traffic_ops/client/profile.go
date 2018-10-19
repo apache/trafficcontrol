@@ -17,9 +17,57 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
+	"net"
+	"net/http"
+	"net/url"
+	"strconv"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
+
+const (
+	API_v13_Profiles = "/api/1.3/profiles"
+)
+
+// Create a Profile
+func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(pl)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Profiles, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
+// Update a Profile by ID
+func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(pl)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	route := fmt.Sprintf("%s/%d", API_v13_Profiles, id)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
 
 // Profiles gets an array of Profiles
 // Deprecated: use GetProfiles
@@ -28,9 +76,24 @@ func (to *Session) Profiles() ([]tc.Profile, error) {
 	return ps, err
 }
 
+// Returns a list of Profiles
 func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
-	url := "/api/1.2/profiles.json"
-	resp, remoteAddr, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Profiles, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ProfilesResponse
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data.Response, reqInf, nil
+}
+
+// GET a Profile by the Profile ID
+func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_Profiles, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -43,4 +106,72 @@ func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GET a Profile by the Profile name
+func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
+	URI := API_v13_Profiles + "?name=" + url.QueryEscape(name)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ProfilesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GET a Profile by the Profile "param"
+func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, error) {
+	URI := API_v13_Profiles + "?param=" + url.QueryEscape(param)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ProfilesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GET a Profile by the Profile cdn id
+func (to *Session) GetProfileByCDNID(cdnID int) ([]tc.Profile, ReqInf, error) {
+	URI := API_v13_Profiles + "?cdn=" + strconv.Itoa(cdnID)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ProfilesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// DELETE a Profile by ID
+func (to *Session) DeleteProfileByID(id int) (tc.Alerts, ReqInf, error) {
+	URI := fmt.Sprintf("%s/%d", API_v13_Profiles, id)
+	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
 }

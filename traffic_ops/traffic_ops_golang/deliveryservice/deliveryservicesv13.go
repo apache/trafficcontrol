@@ -46,7 +46,7 @@ import (
 
 type TODeliveryServiceV13 struct {
 	ReqInfo *api.APIInfo
-	tc.DeliveryServiceNullableV13
+	tc.DeliveryServiceNullable
 }
 
 func (ds *TODeliveryServiceV13) V12() *TODeliveryServiceV12 {
@@ -54,15 +54,17 @@ func (ds *TODeliveryServiceV13) V12() *TODeliveryServiceV12 {
 }
 
 func (ds TODeliveryServiceV13) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ds.DeliveryServiceNullableV13)
+	return json.Marshal(ds.DeliveryServiceNullable)
 }
 func (ds *TODeliveryServiceV13) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, ds.DeliveryServiceNullableV13)
+	return json.Unmarshal(data, ds.DeliveryServiceNullable)
 }
+
+func (ds *TODeliveryServiceV13) APIInfo() *api.APIInfo { return ds.ReqInfo }
 
 func GetTypeV13Factory() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TODeliveryServiceV13{reqInfo, tc.DeliveryServiceNullableV13{}}
+		toReturn := TODeliveryServiceV13{reqInfo, tc.DeliveryServiceNullable{}}
 		return &toReturn
 	}
 }
@@ -90,57 +92,53 @@ func (ds *TODeliveryServiceV13) GetType() string {
 }
 
 func (ds *TODeliveryServiceV13) Validate() error {
-	return ds.DeliveryServiceNullableV13.Validate(ds.ReqInfo.Tx.Tx)
+	return ds.DeliveryServiceNullable.Validate(ds.APIInfo().Tx.Tx)
 }
 
 // Create is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
-func (ds *TODeliveryServiceV13) Create() (error, tc.ApiErrorType) {
-	return errors.New("The Create method is not implemented"), http.StatusNotImplemented
+func (ds *TODeliveryServiceV13) Create() (error, error, int) {
+	return nil, nil, http.StatusNotImplemented
 }
 
 // 	TODO allow users to post names (type, cdn, etc) and get the IDs from the names. This isn't trivial to do in a single query, without dynamically building the entire insert query, and ideally inserting would be one query. But it'd be much more convenient for users. Alternatively, remove IDs from the database entirely and use real candidate keys.
-func CreateV13() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-
-		ds := tc.DeliveryServiceNullableV13{}
-		if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-			return
-		}
-
-		if ds.RoutingName == nil || *ds.RoutingName == "" {
-			ds.RoutingName = util.StrPtr("cdn")
-		}
-		if err := ds.Validate(inf.Tx.Tx); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
-			return
-		}
-		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-			return
-		} else if !authorized {
-			api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-			return
-		}
-		ds, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, ds)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		*inf.CommitTx = true
-		api.WriteResp(w, r, []tc.DeliveryServiceNullableV13{ds})
+func CreateV13(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	ds := tc.DeliveryServiceNullable{}
+	if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
+
+	if ds.RoutingName == nil || *ds.RoutingName == "" {
+		ds.RoutingName = util.StrPtr("cdn")
+	}
+	if err := ds.Validate(inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
+		return
+	}
+	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	} else if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+	ds, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullable{ds})
 }
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV13) (tc.DeliveryServiceNullableV13, int, error, error) {
+func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.DeliveryServiceNullable) (tc.DeliveryServiceNullable, int, error, error) {
 	// TODO change DeepCachingType to implement sql.Valuer and sql.Scanner, so sqlx struct scan can be used.
 	deepCachingType := tc.DeepCachingType("").String()
 	if ds.DeepCachingType != nil {
@@ -149,108 +147,105 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 
 	resultRows, err := tx.Query(insertQuery(), &ds.Active, &ds.AnonymousBlockingEnabled, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID)
 	if err != nil {
-		if pqerr, ok := err.(*pq.Error); ok {
-			err, _ := dbhelpers.ParsePQUniqueConstraintError(pqerr)
-			return tc.DeliveryServiceNullableV13{}, http.StatusBadRequest, errors.New("a delivery service with " + err.Error()), nil
-		}
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("inserting ds: " + err.Error())
+		usrErr, sysErr, code := api.ParseDBError(err)
+		return tc.DeliveryServiceNullable{}, code, usrErr, sysErr
 	}
 	defer resultRows.Close()
 
 	id := 0
 	lastUpdated := tc.TimeNoMod{}
 	if !resultRows.Next() {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("no deliveryservice request inserted, no id was returned")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("no deliveryservice request inserted, no id was returned")
 	}
 	if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("could not scan id from insert: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("could not scan id from insert: " + err.Error())
 	}
 	if resultRows.Next() {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("too many ids returned from deliveryservice request insert")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("too many ids returned from deliveryservice request insert")
 	}
 	ds.ID = &id
 
 	if ds.ID == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing id after insert")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("missing id after insert")
 	}
 	if ds.XMLID == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing xml_id after insert")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("missing xml_id after insert")
 	}
 	if ds.TypeID == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing type after insert")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("missing type after insert")
 	}
 	dsType, err := getTypeFromID(*ds.TypeID, tx)
 	if err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting delivery service type: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("getting delivery service type: " + err.Error())
 	}
 	ds.Type = &dsType
 
 	if err := createDefaultRegex(tx, *ds.ID, *ds.XMLID); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating default regex: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating default regex: " + err.Error())
 	}
 
 	matchlists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
 	if err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DS: reading matchlists: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating DS: reading matchlists: " + err.Error())
 	}
 	if matchlist, ok := matchlists[*ds.XMLID]; !ok {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DS: reading matchlists: not found")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating DS: reading matchlists: not found")
 	} else {
 		ds.MatchList = &matchlist
 	}
 
 	cdnName, cdnDomain, dnssecEnabled, err := getCDNNameDomainDNSSecEnabled(*ds.ID, tx)
 	if err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DS: getting CDN info: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating DS: getting CDN info: " + err.Error())
 	}
 
 	ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 
 	if err := ensureHeaderRewriteParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, edgeTier, *ds.Type); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating edge header rewrite parameters: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating edge header rewrite parameters: " + err.Error())
 	}
 	if err := ensureHeaderRewriteParams(tx, *ds.ID, *ds.XMLID, ds.MidHeaderRewrite, midTier, *ds.Type); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating mid header rewrite parameters: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating mid header rewrite parameters: " + err.Error())
 	}
 	if err := ensureRegexRemapParams(tx, *ds.ID, *ds.XMLID, ds.RegexRemap); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating regex remap parameters: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating regex remap parameters: " + err.Error())
 	}
 	if err := ensureCacheURLParams(tx, *ds.ID, *ds.XMLID, ds.CacheURL); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating cache url parameters: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating cache url parameters: " + err.Error())
 	}
 	if dnssecEnabled {
 		if err := PutDNSSecKeys(tx, &cfg, *ds.XMLID, cdnName, ds.ExampleURLs); err != nil {
-			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys: " + err.Error())
+			return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys: " + err.Error())
 		}
 	}
 
 	if err := createPrimaryOrigin(tx, user, ds); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating delivery service: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating delivery service: " + err.Error())
 	}
 
 	ds.LastUpdated = &lastUpdated
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Created ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 	return ds, http.StatusOK, nil, nil
 }
 
-func (ds *TODeliveryServiceV13) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
+func (ds *TODeliveryServiceV13) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
-	dses, errs, errType := readGetDeliveryServices(params, ds.ReqInfo.Tx, ds.ReqInfo.User)
+	dses, errs, _ := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` { // TODO create const for string
-				return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
+				return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
 			}
 		}
-		return nil, errs, errType
+		return nil, nil, errors.New("reading dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
 	}
 
 	for _, ds := range dses {
 		returnable = append(returnable, ds)
 	}
-	return returnable, nil, tc.NoError
+	return returnable, nil, nil, http.StatusOK
 }
 
 func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
@@ -265,7 +260,7 @@ func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
 	return nil
 }
 
-func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV13) error {
+func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullable) error {
 	if ds.OrgServerFQDN == nil {
 		return nil
 	}
@@ -286,7 +281,7 @@ func createPrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServi
 	return nil
 }
 
-func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV13) error {
+func updatePrimaryOrigin(tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullable) error {
 	count := 0
 	q := `SELECT count(*) FROM origin WHERE deliveryservice = $1 AND is_primary`
 	if err := tx.QueryRow(q, *ds.ID).Scan(&count); err != nil {
@@ -371,51 +366,46 @@ func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
 }
 
 // Update is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
-func (ds *TODeliveryServiceV13) Update() (error, tc.ApiErrorType) {
-	return errors.New("The Update method is not implemented"), http.StatusNotImplemented
+func (ds *TODeliveryServiceV13) Update() (error, error, int) {
+	return nil, nil, http.StatusNotImplemented
 }
 
-func UpdateV13() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-
-		id := inf.IntParams["id"]
-
-		ds := tc.DeliveryServiceNullableV13{}
-		if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-			return
-		}
-		ds.ID = &id
-
-		if err := ds.Validate(inf.Tx.Tx); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
-			return
-		}
-
-		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-			return
-		} else if !authorized {
-			api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-			return
-		}
-
-		ds, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &ds)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-
-		*inf.CommitTx = true
-		api.WriteResp(w, r, []tc.DeliveryServiceNullableV13{ds})
+func UpdateV13(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	id := inf.IntParams["id"]
+
+	ds := tc.DeliveryServiceNullable{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+	ds.ID = &id
+
+	if err := ds.Validate(inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
+		return
+	}
+
+	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	} else if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	ds, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullable{ds})
 }
 
 func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
@@ -429,20 +419,20 @@ func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
 	return tc.DSTypeFromString(name), true, nil
 }
 
-func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.DeliveryServiceNullableV13) (tc.DeliveryServiceNullableV13, int, error, error) {
+func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.DeliveryServiceNullable) (tc.DeliveryServiceNullable, int, error, error) {
 	if ds.XMLID == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusBadRequest, errors.New("missing xml_id"), nil
+		return tc.DeliveryServiceNullable{}, http.StatusBadRequest, errors.New("missing xml_id"), nil
 	}
 	if ds.ID == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusBadRequest, errors.New("missing id"), nil
+		return tc.DeliveryServiceNullable{}, http.StatusBadRequest, errors.New("missing id"), nil
 	}
 
 	dsType, ok, err := getDSType(tx, *ds.XMLID)
 	if !ok {
-		return tc.DeliveryServiceNullableV13{}, http.StatusNotFound, errors.New("delivery service '" + *ds.XMLID + "' not found"), nil
+		return tc.DeliveryServiceNullable{}, http.StatusNotFound, errors.New("delivery service '" + *ds.XMLID + "' not found"), nil
 	}
 	if err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting delivery service type during update: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("getting delivery service type during update: " + err.Error())
 	}
 
 	// oldHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
@@ -450,7 +440,7 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 	if dsType.HasSSLKeys() {
 		oldHostName, err = getOldHostName(*ds.ID, tx)
 		if err != nil {
-			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting existing delivery service hostname: " + err.Error())
+			return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("getting existing delivery service hostname: " + err.Error())
 		}
 	}
 
@@ -463,52 +453,46 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 	resultRows, err := tx.Query(updateDSQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID, &ds.AnonymousBlockingEnabled, &ds.ID)
 
 	if err != nil {
-		if err, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
-			if eType == tc.DataConflictError {
-				return tc.DeliveryServiceNullableV13{}, http.StatusBadRequest, errors.New("a delivery service with " + err.Error()), nil
-			}
-			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("query updating delivery service: pq: " + err.Error())
-		}
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("query updating delivery service: " + err.Error())
+		usrErr, sysErr, code := api.ParseDBError(err)
+		return tc.DeliveryServiceNullable{}, code, usrErr, sysErr
 	}
-	resultRows.Close()
+	defer resultRows.Close()
 	if !resultRows.Next() {
-		return tc.DeliveryServiceNullableV13{}, http.StatusNotFound, errors.New("no delivery service found with this id"), nil
+		return tc.DeliveryServiceNullable{}, http.StatusNotFound, errors.New("no delivery service found with this id"), nil
 	}
 	lastUpdated := tc.TimeNoMod{}
 	if err := resultRows.Scan(&lastUpdated); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("scan updating delivery service: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("scan updating delivery service: " + err.Error())
 	}
 	if resultRows.Next() {
 		xmlID := ""
 		if ds.XMLID != nil {
 			xmlID = *ds.XMLID
 		}
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("updating delivery service " + xmlID + ": " + "this update affected too many rows: > 1")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("updating delivery service " + xmlID + ": " + "this update affected too many rows: > 1")
 	}
 
 	if ds.ID == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing id after update")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("missing id after update")
 	}
 	if ds.XMLID == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing xml_id after update")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("missing xml_id after update")
 	}
 	if ds.TypeID == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing type after update")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("missing type after update")
 	}
 	if ds.RoutingName == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing routing name after update")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("missing routing name after update")
 	}
 	newDSType, err := getTypeFromID(*ds.TypeID, tx)
 	if err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting delivery service type after update: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("getting delivery service type after update: " + err.Error())
 	}
 	ds.Type = &newDSType
 
 	cdnDomain, err := getCDNDomain(*ds.ID, tx) // need to get the domain again, in case it changed.
 	if err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting CDN domain after update: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("getting CDN domain after update: " + err.Error())
 	}
 
 	// newHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
@@ -516,54 +500,54 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 	if dsType.HasSSLKeys() {
 		newHostName, err = getHostName(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 		if err != nil {
-			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting hostname after update: " + err.Error())
+			return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("getting hostname after update: " + err.Error())
 		}
 	}
 
 	matchLists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
 	if err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting matchlists after update: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("getting matchlists after update: " + err.Error())
 	}
 	if ml, ok := matchLists[*ds.XMLID]; !ok {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("no matchlists after update")
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("no matchlists after update")
 	} else {
 		ds.MatchList = &ml
 	}
 
 	if newDSType.HasSSLKeys() && oldHostName != newHostName {
 		if err := updateSSLKeys(ds, newHostName, tx, cfg); err != nil {
-			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("updating delivery service " + *ds.XMLID + ": updating SSL keys: " + err.Error())
+			return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("updating delivery service " + *ds.XMLID + ": updating SSL keys: " + err.Error())
 		}
 	}
 
 	if err := ensureHeaderRewriteParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, edgeTier, *ds.Type); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating edge header rewrite parameters: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating edge header rewrite parameters: " + err.Error())
 	}
 	if err := ensureHeaderRewriteParams(tx, *ds.ID, *ds.XMLID, ds.MidHeaderRewrite, midTier, *ds.Type); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating mid header rewrite parameters: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating mid header rewrite parameters: " + err.Error())
 	}
 	if err := ensureRegexRemapParams(tx, *ds.ID, *ds.XMLID, ds.RegexRemap); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating mid regex remap parameters: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating mid regex remap parameters: " + err.Error())
 	}
 	if err := ensureCacheURLParams(tx, *ds.ID, *ds.XMLID, ds.CacheURL); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating mid cacheurl parameters: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating mid cacheurl parameters: " + err.Error())
 	}
 
 	if err := updatePrimaryOrigin(tx, user, *ds); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
 	}
 
 	ds.LastUpdated = &lastUpdated
 
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
 	}
 	return *ds, http.StatusOK, nil, nil
 }
 
 // Delete is the DeliveryService implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (ds *TODeliveryServiceV13) Delete() (error, tc.ApiErrorType) {
+func (ds *TODeliveryServiceV13) Delete() (error, error, int) {
 	return ds.V12().Delete()
 }
 
@@ -572,27 +556,7 @@ func (ds *TODeliveryServiceV13) IsTenantAuthorized(user *auth.CurrentUser) (bool
 	return ds.V12().IsTenantAuthorized(user)
 }
 
-func filterAuthorized(dses []tc.DeliveryServiceNullableV13, user *auth.CurrentUser, db *sqlx.DB) ([]tc.DeliveryServiceNullableV13, error) {
-	newDSes := []tc.DeliveryServiceNullableV13{}
-	for _, ds := range dses {
-		// TODO add/use a helper func to make a single SQL call, for performance
-		ok, err := tenant.IsResourceAuthorizedToUser(*ds.TenantID, user, db)
-		if err != nil {
-			if ds.XMLID == nil {
-				return nil, errors.New("isResourceAuthorized for delivery service with nil XML ID: " + err.Error())
-			} else {
-				return nil, errors.New("isResourceAuthorized for '" + *ds.XMLID + "': " + err.Error())
-			}
-		}
-		if !ok {
-			continue
-		}
-		newDSes = append(newDSes, ds)
-	}
-	return newDSes, nil
-}
-
-func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullableV13, []error, tc.ApiErrorType) {
+func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullable, []error, tc.ApiErrorType) {
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]
 	}
@@ -645,10 +609,10 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 	}
 	defer rows.Close()
 
-	dses := []tc.DeliveryServiceNullableV13{}
+	dses := []tc.DeliveryServiceNullable{}
 	dsCDNDomains := map[string]string{}
 	for rows.Next() {
-		ds := tc.DeliveryServiceNullableV13{}
+		ds := tc.DeliveryServiceNullable{}
 		cdnDomain := ""
 		err := rows.Scan(&ds.Active, &ds.AnonymousBlockingEnabled, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CDNName, &ds.CheckPath, &ds.DeepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.ID, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LastUpdated, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OrgServerFQDN, &ds.OriginShield, &ds.ProfileID, &ds.ProfileName, &ds.ProfileDesc, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.Tenant, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.Type, &ds.TypeID, &ds.XMLID, &cdnDomain)
 		if err != nil {
@@ -684,11 +648,11 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 	return dses, nil, tc.NoError
 }
 
-func updateSSLKeys(ds *tc.DeliveryServiceNullableV13, hostName string, tx *sql.Tx, cfg config.Config) error {
+func updateSSLKeys(ds *tc.DeliveryServiceNullable, hostName string, tx *sql.Tx, cfg config.Config) error {
 	if ds.XMLID == nil {
 		return errors.New("delivery services has no XMLID!")
 	}
-	key, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjTx(*ds.XMLID, "latest", tx, cfg.RiakAuthOptions)
+	key, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(*ds.XMLID, riaksvc.DSSSLKeyVersionLatest, tx, cfg.RiakAuthOptions)
 	if err != nil {
 		return errors.New("getting SSL key: " + err.Error())
 	}
@@ -697,7 +661,7 @@ func updateSSLKeys(ds *tc.DeliveryServiceNullableV13, hostName string, tx *sql.T
 	}
 	key.DeliveryService = *ds.XMLID
 	key.Hostname = hostName
-	if err := riaksvc.PutDeliveryServiceSSLKeysObjTx(key, tx, cfg.RiakAuthOptions); err != nil {
+	if err := riaksvc.PutDeliveryServiceSSLKeysObj(key, tx, cfg.RiakAuthOptions); err != nil {
 		return errors.New("putting updated SSL key: " + err.Error())
 	}
 	return nil

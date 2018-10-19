@@ -1,4 +1,3 @@
-#!/bin/bash#
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,22 +13,24 @@
 # limitations under the License.
 #
 
-if [[ -e /opt/tomcat ]]
-then
-  echo "/opt/tomcat installed"
+# figure out which version of traffic_router is currently running
+# and then shut it down
+set +e
+chkconfig --list tomcat >/dev/null
+
+if [ $? -eq 0 ]; then
+  /sbin/service tomcat stop
 else
-  echo "Installing tomcat"
-  cd /tmp
-  wget http://archive.apache.org/dist/tomcat/tomcat-6/v6.0.33/bin/apache-tomcat-6.0.33.tar.gz
-  cd /opt
-  tar xfz /tmp/apache-tomcat-6.0.33.tar.gz
-  ln -s apache-tomcat-6.0.33 tomcat
-  ls -l /opt/tomcat/webapps/*
-fi      
+  /usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
+
+  [ $? -eq 0 ] && /usr/bin/systemctl stop traffic_router
+fi
+
+# delete the expanded war files from the previous version
+if [[ -e /opt/traffic_router/webapps/core ]]; then
+  echo "Deleting previous version of Traffic Router webapp"
+  rm -rf /opt/traffic_router/webapps/core
+fi
 
 rm -rf /opt/traffic_router/webapps/*
-rm -rf /opt/tomcat/webapps/*
-rm -f /opt/tomcat/bin/*.bat
-chmod +x /opt/tomcat/bin/*.sh
 
-for brokenlink in $(find /opt/tomcat/lib -type l ! -exec test -e {} \; -print) ; do rm $brokenlink ; done

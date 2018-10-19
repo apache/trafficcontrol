@@ -21,24 +21,26 @@ import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCert
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleListener;
+import org.apache.log4j.Logger;
+
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 
 public class TomcatLifecycleListener implements LifecycleListener {
-	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(TomcatLifecycleListener.class);
+	private static final Logger log = Logger.getLogger(LifecycleListener.class);
 	private CertificateDataListener certificateDataListener = new CertificateDataListener();
 
 	@Override
 	@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 	public void lifecycleEvent(final LifecycleEvent event) {
-		if (!Lifecycle.INIT_EVENT.equals(event.getType())) {
+		if (!Lifecycle.AFTER_INIT_EVENT.equals(event.getType())) {
 			return;
 		}
 
 		try {
-			log.info("Registering delivery service certifcates mbean");
+			log.info("Registering delivery service certificates mbean");
 			final ObjectName objectName = new ObjectName(DeliveryServiceCertificatesMBean.OBJECT_NAME);
 
 			final MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();

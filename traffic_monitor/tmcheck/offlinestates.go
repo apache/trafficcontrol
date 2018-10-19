@@ -39,7 +39,7 @@ func ValidateOfflineStates(tmURI string, toClient *to.Session) error {
 
 // ValidateOfflineStatesWithCDN validates per ValidateOfflineStates, but saves an additional query if the Traffic Monitor's CDN is known.
 func ValidateOfflineStatesWithCDN(tmURI string, tmCDN string, toClient *to.Session) error {
-	crConfigBytes, err := toClient.CRConfigRaw(tmCDN)
+	crConfigBytes, _, err := toClient.GetCRConfig(tmCDN)
 	if err != nil {
 		return fmt.Errorf("getting CRConfig: %v", err)
 	}
@@ -65,8 +65,8 @@ func ValidateOfflineStatesWithCRConfig(tmURI string, crConfig *tc.CRConfig, toCl
 // ValidateCRStates validates that no OFFLINE or ADMIN_DOWN caches in the given CRConfig are marked Available in the given CRStates.
 func ValidateCRStates(crstates *tc.CRStates, crconfig *tc.CRConfig) error {
 	for cacheName, cacheInfo := range crconfig.ContentServers {
-		status := tc.CacheStatusFromString(string(*cacheInfo.Status))
-		if status != tc.CacheStatusAdminDown || status != tc.CacheStatusOffline {
+		status := tc.CacheStatusFromString(string(*cacheInfo.ServerStatus))
+		if status != tc.CacheStatusAdminDown && status != tc.CacheStatusOffline {
 			continue
 		}
 

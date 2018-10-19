@@ -27,17 +27,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 const DBContextKey = "db"
@@ -81,9 +84,23 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 	w.Write(respBts)
 }
 
-// HandleErr handles an API error, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
+// HandleErr handles an API error, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
+//
+// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common APIInfo use case.
+//
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
-func HandleErr(w http.ResponseWriter, r *http.Request, statusCode int, userErr error, sysErr error) {
+func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error) {
+	if tx != nil {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Errorln("rolling back transaction: " + err.Error())
+		}
+	}
+	handleSimpleErr(w, r, statusCode, userErr, sysErr)
+}
+
+// handleSimpleErr is a helper for HandleErr.
+// This exists to prevent exposing HandleErr calls in this file with nil transactions, which might be copy-pasted creating bugs.
+func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, userErr error, sysErr error) {
 	if sysErr != nil {
 		log.Errorln(r.RemoteAddr + " " + sysErr.Error())
 	}
@@ -104,10 +121,10 @@ func HandleErr(w http.ResponseWriter, r *http.Request, statusCode int, userErr e
 
 // RespWriter is a helper to allow a one-line response, for endpoints with a function that returns the object that needs to be written and an error.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
-func RespWriter(w http.ResponseWriter, r *http.Request) func(v interface{}, err error) {
+func RespWriter(w http.ResponseWriter, r *http.Request, tx *sql.Tx) func(v interface{}, err error) {
 	return func(v interface{}, err error) {
 		if err != nil {
-			HandleErr(w, r, http.StatusInternalServerError, nil, err)
+			HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 			return
 		}
 		WriteResp(w, r, v)
@@ -116,10 +133,10 @@ func RespWriter(w http.ResponseWriter, r *http.Request) func(v interface{}, err 
 
 // RespWriterVals is like RespWriter, but also takes a map of root-level values to write. The API most commonly needs these for meta-parameters, like size, limit, and orderby.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
-func RespWriterVals(w http.ResponseWriter, r *http.Request, vals map[string]interface{}) func(v interface{}, err error) {
+func RespWriterVals(w http.ResponseWriter, r *http.Request, tx *sql.Tx, vals map[string]interface{}) func(v interface{}, err error) {
 	return func(v interface{}, err error) {
 		if err != nil {
-			HandleErr(w, r, http.StatusInternalServerError, nil, err)
+			HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 			return
 		}
 		WriteRespVals(w, r, v, vals)
@@ -132,7 +149,7 @@ func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel,
 	resp := struct{ tc.Alerts }{tc.CreateAlerts(level, msg)}
 	respBts, err := json.Marshal(resp)
 	if err != nil {
-		HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
 		return
 	}
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
@@ -151,7 +168,7 @@ func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLev
 	}
 	respBts, err := json.Marshal(resp)
 	if err != nil {
-		HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
 		return
 	}
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
@@ -241,54 +258,64 @@ type APIInfo struct {
 	User      *auth.CurrentUser
 	ReqID     uint64
 	Tx        *sqlx.Tx
-	CommitTx  *bool
 	Config    *config.Config
 }
 
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
-// Close() must be called to free resources, and should be called in a defer immediately after NewInfo(), to commit or rollback the transaction.
+//
+// It is encouraged to call APIInfo.Tx.Tx.Commit() manually when all queries are finished, to release database resources early, and also to return an error to the user if the commit failed.
+//
+// NewInfo guarantees the returned APIInfo.Tx is non-nil and APIInfo.Tx.Tx is nil or valid, even if a returned error is not nil. Hence, it is safe to pass the Tx.Tx to HandleErr when this returns errors.
+//
+// Close() must be called to free resources, and should be called in a defer immediately after NewInfo(), to finish the transaction.
 //
 // Example:
 //  func handler(w http.ResponseWriter, r *http.Request) {
 //    inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 //    if userErr != nil || sysErr != nil {
-//      api.HandleErr(w, r, errCode, userErr, sysErr)
+//      api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 //      return
 //    }
 //    defer inf.Close()
 //
-//    ...
-//
-//    err := finalDatabaseOperation(inf.Tx)
-//    if err == nil {
-//      *inf.CommitTx = true
+//    respObj, err := finalDatabaseOperation(inf.Tx)
+//    if err != nil {
+//      api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("final db op: " + err.Error()))
+//      return
 //    }
+//    if err := inf.Tx.Tx.Commit(); err != nil {
+//      api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("committing transaction: " + err.Error()))
+//      return
+//    }
+//    api.WriteResp(w, r, respObj)
+//  }
 //
 func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (*APIInfo, error, error, int) {
 	db, err := getDB(r.Context())
 	if err != nil {
-		return nil, errors.New("getting db: " + err.Error()), nil, http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting db: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	cfg, err := getConfig(r.Context())
 	if err != nil {
-		return nil, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	reqID, err := getReqID(r.Context())
 	if err != nil {
-		return nil, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
 	}
 
 	user, err := auth.GetCurrentUser(r.Context())
 	if err != nil {
-		return nil, errors.New("getting user: " + err.Error()), nil, http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting user: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	params, intParams, userErr, sysErr, errCode := AllParams(r, requiredParams, intParamNames)
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode
+		return &APIInfo{Tx: &sqlx.Tx{}}, userErr, sysErr, errCode
 	}
-	tx, err := db.Beginx() // must be last, MUST not return an error if this suceeds, without closing the tx
+	dbCtx, _ := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
+	tx, err := db.BeginTxx(dbCtx, nil)                                                                 // must be last, MUST not return an error if this succeeds, without closing the tx
 	if err != nil {
-		return nil, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
 	}
 	return &APIInfo{
 		Config:    cfg,
@@ -297,15 +324,16 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		IntParams: intParams,
 		User:      user,
 		Tx:        tx,
-		CommitTx:  util.BoolPtr(false),
 	}, nil, nil, http.StatusOK
 }
 
 // Close implements the io.Closer interface. It should be called in a defer immediately after NewInfo().
 //
-// Close will commit or rollback the transaction, depending whether *info.CommitTx is true.
+// Close will commit the transaction, if it hasn't been rolled back.
 func (inf *APIInfo) Close() {
-	dbhelpers.FinishTxX(inf.Tx, inf.CommitTx)
+	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
+		log.Errorln("committing transaction: " + err.Error())
+	}
 }
 
 func getDB(ctx context.Context) (*sqlx.DB, error) {
@@ -334,6 +362,10 @@ func getConfig(ctx context.Context) (*config.Config, error) {
 	return nil, errors.New("No config found in Context")
 }
 
+func GetConfig(ctx context.Context) (*config.Config, error) {
+	return getConfig(ctx)
+}
+
 func getReqID(ctx context.Context) (uint64, error) {
 	val := ctx.Value(ReqIDContextKey)
 	if val != nil {
@@ -345,4 +377,160 @@ func getReqID(ctx context.Context) (uint64, error) {
 		}
 	}
 	return 0, errors.New("No ReqID found in Context")
+}
+
+// TypeErrToAPIErr takes a slice of errors and an ApiErrorType, and converts them to the (userErr, sysErr, errCode) idiom used by the api package.
+func TypeErrsToAPIErr(errs []error, errType tc.ApiErrorType) (error, error, int) {
+	if len(errs) == 0 {
+		return nil, nil, http.StatusOK
+	}
+	switch errType {
+	case tc.SystemError:
+		return nil, util.JoinErrs(errs), http.StatusInternalServerError
+	case tc.DataConflictError:
+		return util.JoinErrs(errs), nil, http.StatusBadRequest
+	case tc.DataMissingError:
+		return util.JoinErrs(errs), nil, http.StatusNotFound
+	default:
+		log.Errorln("TypeErrsToAPIErr received unknown ApiErrorType from read: " + errType.String())
+		return nil, util.JoinErrs(errs), http.StatusInternalServerError
+	}
+}
+
+// TypeErrToAPIErr takes an error and an ApiErrorType, and converts them to the (userErr, sysErr, errCode) idiom used by the api package.
+func TypeErrToAPIErr(err error, errType tc.ApiErrorType) (error, error, int) {
+	if err == nil {
+		return nil, nil, http.StatusOK
+	}
+	switch errType {
+	case tc.SystemError:
+		return nil, err, http.StatusInternalServerError
+	case tc.DataConflictError:
+		return err, nil, http.StatusBadRequest
+	case tc.DataMissingError:
+		return err, nil, http.StatusNotFound
+	case tc.ForbiddenError:
+		return err, nil, http.StatusForbidden
+	default:
+		log.Errorln("TypeErrToAPIErr received unknown ApiErrorType from read: " + errType.String())
+		return nil, err, http.StatusInternalServerError
+	}
+}
+
+// small helper function to help with parsing below
+func toCamelCase(str string) string {
+	mutable := []byte(str)
+	for i := 0; i < len(str); i++ {
+		if mutable[i] == '_' && i+1 < len(str) {
+			mutable[i+1] = strings.ToUpper(string(str[i+1]))[0]
+		}
+	}
+	return strings.Replace(string(mutable[:]), "_", "", -1)
+}
+
+// parses pq errors for not null constraint
+func parseNotNullConstraintError(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`null value in column "(.+)" violates not-null constraint`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s is a required field", toCamelCase(match[1])), nil, http.StatusBadRequest
+}
+
+// parses pq errors for violated foreign key constraints
+func parseNotPresentFKConstraintError(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`Key \(.+\)=\(.+\) is not present in table "(.+)"`)
+	match := pattern.FindStringSubmatch(err.Detail)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s not found", match[1]), nil, http.StatusNotFound
+}
+
+// parses pq errors for uniqueness constraint violations
+func parseUniqueConstraintError(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`Key \((.+)\)=\((.+)\) already exists`)
+	match := pattern.FindStringSubmatch(err.Detail)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s %s already exists.", match[1], match[2]), nil, http.StatusBadRequest
+}
+
+// ParseDBError parses pq errors for uniqueness constraint violations, and returns the (userErr, sysErr, httpCode) format expected by the API helpers.
+func ParseDBError(ierr error) (error, error, int) {
+
+	err, ok := ierr.(*pq.Error)
+	if !ok {
+		return nil, errors.New("database returned non pq error: " + err.Error()), http.StatusInternalServerError
+	}
+
+	if usrErr, sysErr, errCode := parseNotNullConstraintError(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseNotPresentFKConstraintError(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseUniqueConstraintError(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	return nil, err, http.StatusInternalServerError
+}
+
+// GetUserFromReq returns the current user, any user error, any system error, and an error code to be returned if either error was not nil.
+// This also uses the given ResponseWriter to refresh the cookie, if it was valid.
+func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth.CurrentUser, error, error, int) {
+	cookie, err := r.Cookie(tocookie.Name)
+	if err != nil {
+		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error getting cookie: " + err.Error()), http.StatusUnauthorized
+	}
+
+	if cookie == nil {
+		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+	}
+
+	oldCookie, err := tocookie.Parse(secret, cookie.Value)
+	if err != nil {
+		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
+	}
+
+	username := oldCookie.AuthData
+	if username == "" {
+		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+	}
+	db := (*sqlx.DB)(nil)
+	val := r.Context().Value(DBContextKey)
+	if val == nil {
+		return auth.CurrentUser{}, nil, errors.New("request context db missing"), http.StatusInternalServerError
+	}
+	switch v := val.(type) {
+	case *sqlx.DB:
+		db = v
+	default:
+		return auth.CurrentUser{}, nil, fmt.Errorf("request context db unknown type %T", val), http.StatusInternalServerError
+	}
+
+	cfg, err := GetConfig(r.Context())
+	if err != nil {
+		return auth.CurrentUser{}, nil, errors.New("request context config missing"), http.StatusInternalServerError
+	}
+
+	user, userErr, sysErr, code := auth.GetCurrentUserFromDB(db, username, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+	if userErr != nil || sysErr != nil {
+		return auth.CurrentUser{}, userErr, sysErr, code
+	}
+
+	newCookieVal := tocookie.Refresh(oldCookie, secret)
+	http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
+	return user, nil, nil, http.StatusOK
+}
+
+func AddUserToReq(r *http.Request, u auth.CurrentUser) *http.Request {
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, auth.CurrentUserKey, u)
+	return r.WithContext(ctx)
 }

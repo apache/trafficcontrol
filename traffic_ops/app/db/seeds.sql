@@ -27,7 +27,7 @@ insert into job_status (name, description) values ('PENDING', 'Job is queued, bu
 
 -- parameters
 -- Moved into postinstall global parameters
-insert into profile (name, description, type) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
 
 ---------------------------------
 
@@ -45,21 +45,25 @@ BEGIN
                 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = 'Traffic Ops') ) ON CONFLICT (profile, parameter) DO NOTHING;
         END IF;
         IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'use_tenancy' AND config_file = 'global') THEN
-                insert into parameter (name, config_file, value) values ('use_tenancy', 'global', '0');
-                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'use_tenancy' and config_file = 'global' and value = '0') ) ON CONFLICT (profile, parameter) DO NOTHING;
+                insert into parameter (name, config_file, value) values ('use_tenancy', 'global', '1');
+                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'use_tenancy' and config_file = 'global' and value = '1') ) ON CONFLICT (profile, parameter) DO NOTHING;
+        END IF;
+        IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'maxRevalDurationDays' AND config_file = 'regex_revalidate.config') THEN
+                insert into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90');
+                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'maxRevalDurationDays' and config_file = 'regex_revalidate.config' and value = '90') ) ON CONFLICT (profile, parameter) DO NOTHING;
         END IF;
 END
 $do$;
 
 -- profiles
 ---------------------------------
-insert into profile (name, description, type) values ('TRAFFIC_ANALYTICS', 'Traffic Analytics profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('TRAFFIC_OPS', 'Traffic Ops profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('TRAFFIC_OPS_DB', 'Traffic Ops DB profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('TRAFFIC_PORTAL', 'Traffic Portal profile', 'TP_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('TRAFFIC_STATS', 'Traffic Stats profile', 'TS_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('INFLUXDB', 'InfluxDb profile', 'INFLUXDB_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE') ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('TRAFFIC_ANALYTICS', 'Traffic Analytics profile', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('TRAFFIC_OPS', 'Traffic Ops profile', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('TRAFFIC_OPS_DB', 'Traffic Ops DB profile', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('TRAFFIC_PORTAL', 'Traffic Portal profile', 'TP_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('TRAFFIC_STATS', 'Traffic Stats profile', 'TS_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('INFLUXDB', 'InfluxDb profile', 'INFLUXDB_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
 
 -- statuses
 insert into status (name, description) values ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT (name) DO NOTHING;
@@ -69,280 +73,628 @@ insert into status (name, description) values ('ADMIN_DOWN', 'Sever is administr
 insert into status (name, description) values ('CCR_IGNORE', 'Server is ignored by traffic router.') ON CONFLICT (name) DO NOTHING;
 insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT (name) DO NOTHING;
 
--- roles
-insert into role (name, description, priv_level) values ('admin', 'super-user', 30) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('operations', 'Operations user', 20) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('federation', 'Role for Secondary CZF', 15) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('steering', 'Role for Steering Delivery Services', 15) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('portal', 'Portal User', 15) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('ort', 'ORT User', 11) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('read-only', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
-
 -- tenants
 insert into tenant (name, active, parent_id) values ('root', true, null) ON CONFLICT DO NOTHING;
+insert into tenant (name, active, parent_id) values ('unassigned', true, (select id from tenant where name='root')) ON CONFLICT DO NOTHING;
+
+-- roles
+-- out of the box, only 3 roles are defined. Other roles can be created by the admin as needed.
+insert into role (name, description, priv_level) values ('admin', 'Has access to everything.', 30) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('operations', 'Has all reads and most write capabilities', 20) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('read-only', 'Has access to all read capabilities', 10) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
 
 -- capabilities
-insert into capability (name, description) values ('all-read', 'Full read access') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('all-write', 'Full write access') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('asn-read', 'View ASN configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('asn-write', 'Create, edit or delete ASN configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('basic-read', 'Basic read operations. Every user should have this capability') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('basic-write', 'Basic write operations. Every user should have this capability') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cache-config-files-read', 'View the generated cache configuration files') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cache-group-read', 'View cache-group configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cache-group-write', 'Create, edit or delete cache-group configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cache-stats-read', 'View Cache statistics read access') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cdn-config-snapshot-read', 'View config snapshot at CDN level') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cdn-config-snapshot-write', 'Config snapshot write access at CDN level') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cdn-health-read', 'View CDN health') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cdn-read', 'View CDN configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cdn-write', 'Create, edit or delete CDN configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cdn-security-keys-read', 'View CDN DNSSEC keys') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cdn-security-keys-write', 'Create, edit or delete CDN DNSSEC keys') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cdn-stats-read', 'View CDN statistics') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('cdn-stats-write', 'Create, edit or delete CDN statistics') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('change-log-read', 'View change-log') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('change-log-write', 'Create change-log entries') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('division-read', 'View division configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('division-write', 'Create, edit or delete division configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-cache-read', 'View delivery-service cache assignment') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-cache-write', 'Create, edit or delete delivery-service cache assignment') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-health-read', 'View delivery-service health') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-read', 'View delivery-service configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-write', 'Create, edit or delete delivery-service configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-security-keys-read', 'View delivery-service security keys') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-security-keys-write', 'Create, edit or delete delivery-service security keys') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-stats-read', 'View delivery-service statistics') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-steering-read', 'View delivery-service steering configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-steering-write', 'Create, edit or delete delivery-service steering configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-steering-target-read', 'View delivery-service steering targets') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-steering-target-write', 'Create, edit or delete delivery-service steering targets') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('federation-routing-read', 'View federation routing') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('federation-routing-write', 'Create, edit or delete federation routing') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('iso-generate', 'Generate ISOs') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('job-read', 'View jobs') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('job-write', 'Create, edit or delete jobs') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('params-read', 'View parameters') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('params-write', 'Create, edit or delete parameters') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('phys-location-read', 'View physical location configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('phys-location-write', 'Create, edit or delete physical location configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('profile-read', 'View profiles') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('profile-write', 'Create, edit or delete profiles') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('queue-updates-write', 'Queue updates to caches') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('region-read', 'View region configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('region-write', 'Create, edit or delete region configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('role-read', 'View role configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('role-write', 'Create, edit or delete role configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('security-keys-read', 'View security keys') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('security-keys-write', 'Create, edit or delete security keys') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('server-pull-updates-read', 'Read server update indication') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('server-pull-updates-write', 'Write server update indication') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('server-read', 'View server configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('server-write', 'Create, edit or delete server configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('static-dns-read', 'View static DNS configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('static-dns-write', 'Create, edit or delete static DNS configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('status-read', 'View the list of defined statuses') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('to-extension-read', 'View Traffic Ops extensions') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('to-extension-write', 'Create, edit or delete Traffic Ops extensions') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('type-read', 'View types configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('type-write', 'Create, edit or delete type configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('user-read', 'View user configuration') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('user-write', 'Create, edit or delete user configuration') ON CONFLICT (name) DO NOTHING;
+-- auth
+insert into capability (name, description) values ('auth', 'Ability to authenticate') ON CONFLICT (name) DO NOTHING;
+-- api endpoints
+insert into capability (name, description) values ('api-endpoints-read', 'Ability to view api endpoints') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('api-endpoints-write', 'Ability to edit api endpoints') ON CONFLICT (name) DO NOTHING;
+-- asns
+insert into capability (name, description) values ('asns-read', 'Ability to view asns') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('asns-write', 'Ability to edit asns') ON CONFLICT (name) DO NOTHING;
+-- cache config files
+insert into capability (name, description) values ('cache-config-files-read', 'Ability to view cache config files') ON CONFLICT (name) DO NOTHING;
+-- cache groups
+insert into capability (name, description) values ('cache-groups-read', 'Ability to view cache groups') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('cache-groups-write', 'Ability to edit cache groups') ON CONFLICT (name) DO NOTHING;
+-- capabilities
+insert into capability (name, description) values ('capabilities-read', 'Ability to view capabilities') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('capabilities-write', 'Ability to edit capabilities') ON CONFLICT (name) DO NOTHING;
+-- cdns
+insert into capability (name, description) values ('cdns-read', 'Ability to view cdns') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('cdns-write', 'Ability to edit cdns') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('cdns-snapshot', 'Ability to snapshot a cdn') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('cdn-security-keys-read', 'Ability to view cdn security keys') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('cdn-security-keys-write', 'Ability to edit cdn security keys') ON CONFLICT (name) DO NOTHING;
+-- change logs
+insert into capability (name, description) values ('change-logs-read', 'Ability to view change logs') ON CONFLICT (name) DO NOTHING;
+-- coordinates
+insert into capability (name, description) values ('coordinates-read', 'Ability to view coordinates') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('coordinates-write', 'Ability to edit coordinates') ON CONFLICT (name) DO NOTHING;
+-- delivery services
+insert into capability (name, description) values ('delivery-services-read', 'Ability to view delivery services') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('delivery-services-write', 'Ability to view delivery services') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('delivery-service-security-keys-read', 'Ability to view delivery service security keys') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('delivery-service-security-keys-write', 'Ability to edit delivery service security keys') ON CONFLICT (name) DO NOTHING;
+-- delivery service requests
+insert into capability (name, description) values ('delivery-service-requests-read', 'Ability to view delivery service requests') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('delivery-service-requests-write', 'Ability to edit delivery service requests') ON CONFLICT (name) DO NOTHING;
+-- delivery service servers
+insert into capability (name, description) values ('delivery-service-servers-read', 'Ability to view delivery service / server assignments') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('delivery-service-servers-write', 'Ability to edit delivery service / server assignments') ON CONFLICT (name) DO NOTHING;
+-- divisions
+insert into capability (name, description) values ('divisions-read', 'Ability to view divisions') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('divisions-write', 'Ability to edit divisions') ON CONFLICT (name) DO NOTHING;
+-- extensions
+insert into capability (name, description) values ('to-extensions-read', 'Ability to view extensions') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('to-extensions-write', 'Ability to edit extensions') ON CONFLICT (name) DO NOTHING;
+-- federations
+insert into capability (name, description) values ('federations-read', 'Ability to view federations') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('federations-write', 'Ability to edit federations') ON CONFLICT (name) DO NOTHING;
+-- hardware info
+insert into capability (name, description) values ('hwinfo-read', 'Ability to view hardware info') ON CONFLICT (name) DO NOTHING;
+-- iso
+insert into capability (name, description) values ('iso-generate', 'Ability to generate isos') ON CONFLICT (name) DO NOTHING;
+-- jobs
+insert into capability (name, description) values ('jobs-read', 'Ability to view jobs (invalidation requests)') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('jobs-write', 'Ability to edit jobs (invalidation requests)') ON CONFLICT (name) DO NOTHING;
+-- misc
+insert into capability (name, description) values ('db-dump', 'Ability to get a copy of the database') ON CONFLICT (name) DO NOTHING;
+-- origins
+insert into capability (name, description) values ('origins-read', 'Ability to view origins') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('origins-write', 'Ability to edit origins') ON CONFLICT (name) DO NOTHING;
+-- parameters
+insert into capability (name, description) values ('parameters-read', 'Ability to view parameters') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('parameters-write', 'Ability to edit parameters') ON CONFLICT (name) DO NOTHING;
+-- phys locations
+insert into capability (name, description) values ('phys-locations-read', 'Ability to view phys locations') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('phys-locations-write', 'Ability to edit phys locations') ON CONFLICT (name) DO NOTHING;
+-- profiles
+insert into capability (name, description) values ('profiles-read', 'Ability to view profiles') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('profiles-write', 'Ability to edit profiles') ON CONFLICT (name) DO NOTHING;
+-- regions
+insert into capability (name, description) values ('regions-read', 'Ability to view regions') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('regions-write', 'Ability to edit regions') ON CONFLICT (name) DO NOTHING;
+-- riak
+insert into capability (name, description) values ('riak', 'Riak') ON CONFLICT (name) DO NOTHING;
+-- roles
+insert into capability (name, description) values ('roles-read', 'Ability to view roles') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('roles-write', 'ABILITY TO EDIT ROLES.') ON CONFLICT (name) DO NOTHING;
+-- servers
+insert into capability (name, description) values ('servers-read', 'Ability to view servers') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('servers-write', 'Ability to edit servers') ON CONFLICT (name) DO NOTHING;
+-- stats
+insert into capability (name, description) values ('stats-read', 'Ability to view cache stats') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('stats-write', 'Ability to edit cache stats') ON CONFLICT (name) DO NOTHING;
+-- statuses
+insert into capability (name, description) values ('statuses-read', 'Ability to view statuses') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('statuses-write', 'Ability to edit statuses') ON CONFLICT (name) DO NOTHING;
+-- static dns entries
+insert into capability (name, description) values ('static-dns-entries-read', 'Ability to view static dns entries') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('static-dns-entries-write', 'Ability to edit static dns entries') ON CONFLICT (name) DO NOTHING;
+-- steering
+insert into capability (name, description) values ('steering-read', 'Ability to view steering') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('steering-write', 'Ability to edit steering') ON CONFLICT (name) DO NOTHING;
+-- steering targets
+insert into capability (name, description) values ('steering-targets-read', 'Ability to view steering targets') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('steering-targets-write', 'Ability to edit steering targets') ON CONFLICT (name) DO NOTHING;
+-- system info
+insert into capability (name, description) values ('system-info-read', 'Ability to view system info') ON CONFLICT (name) DO NOTHING;
+-- tenants
+insert into capability (name, description) values ('tenants-read', 'Ability to view tenants') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('tenants-write', 'Ability to edit tenants') ON CONFLICT (name) DO NOTHING;
+-- types
+insert into capability (name, description) values ('types-read', 'Ability to view types') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('types-write', 'Ability to edit types') ON CONFLICT (name) DO NOTHING;
+-- users
+insert into capability (name, description) values ('users-register', 'Ability to register new users') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('users-read', 'Ability to view users') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('users-write', 'Ability to edit users') ON CONFLICT (name) DO NOTHING;
 
 -- roles_capabilities
-insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'all-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
-insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'all-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+-- out of the box, the admin role has ALL capabilities
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'auth') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'api-endpoints-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'api-endpoints-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'asns-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'asns-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'cache-config-files-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'cache-groups-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'cache-groups-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'capabilities-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'capabilities-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'cdns-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'cdns-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'cdns-snapshot') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'cdn-security-keys-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'cdn-security-keys-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'change-logs-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'coordinates-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'coordinates-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'delivery-services-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'delivery-services-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'delivery-service-security-keys-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'delivery-service-security-keys-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'delivery-service-requests-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'delivery-service-requests-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'delivery-service-servers-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'delivery-service-servers-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'divisions-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'divisions-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'to-extensions-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'to-extensions-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'federations-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'federations-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'hwinfo-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'jobs-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'jobs-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'iso-generate') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'db-dump') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'origins-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'origins-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'parameters-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'parameters-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'phys-locations-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'phys-locations-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'profiles-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'profiles-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'regions-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'regions-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'riak') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'roles-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'roles-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'servers-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'servers-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'stats-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'stats-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'statuses-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'statuses-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'static-dns-entries-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'static-dns-entries-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'steering-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'steering-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'steering-targets-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'steering-targets-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'system-info-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'tenants-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'tenants-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'types-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'types-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'users-register') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'users-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'users-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+
+-- Using role 'read-only'
+
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'auth' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'api-endpoints-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'asns-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'cache-config-files-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'cache-groups-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'capabilities-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'cdns-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'cdn-security-keys-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'change-logs-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'coordinates-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'delivery-services-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'delivery-service-security-keys-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'delivery-service-requests-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'delivery-service-servers-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'divisions-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'to-extensions-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'federations-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'hwinfo-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'jobs-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'origins-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'parameters-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'phys-locations-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'profiles-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'regions-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'roles-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'servers-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'stats-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'statuses-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'static-dns-entries-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'steering-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'steering-targets-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'system-info-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'tenants-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'types-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'read-only'), 'users-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'read-only') ON CONFLICT DO NOTHING;
+
+-- Using role 'operations'
+
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'auth' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+
+-- Includes 'readonly' endpoints:
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'api-endpoints-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'asns-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'cache-config-files-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'cache-groups-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'capabilities-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'cdns-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'cdn-security-keys-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'change-logs-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'coordinates-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'delivery-services-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'delivery-service-security-keys-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'delivery-service-requests-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'delivery-service-servers-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'divisions-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'to-extensions-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'federations-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'hwinfo-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'jobs-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'origins-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'parameters-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'phys-locations-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'profiles-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'regions-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'roles-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'servers-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'stats-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'statuses-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'static-dns-entries-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'steering-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'steering-targets-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'system-info-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'tenants-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'types-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'users-read' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+
+-- Explicitly require 'operations'
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'api-endpoints-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'asns-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'cache-groups-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'capabilities-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'cdns-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'cdns-snapshot' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'delivery-services-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'delivery-service-security-keys-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'delivery-service-servers-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'divisions-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'iso-generate' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+-- For 'parameters-write': related endpoints will check manually for 'parameters-secure-write', which currently doesn't exist yet.
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'parameters-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'phys-locations-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'profiles-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'regions-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'roles-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'servers-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'stats-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'statuses-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'tenants-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'types-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'users-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+
+-- Inherited endpoint from the 'privilege hierarchy' (really, just federations)
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'federations-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+
+-- Outstanding capabilities that had to be thought about
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'coordinates-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'delivery-service-requests-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'to-extensions-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'jobs-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'steering-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'steering-targets-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'users-register' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT (SELECT id FROM role WHERE name = 'operations'), 'static-dns-entries-write' WHERE EXISTS (SELECT id FROM role WHERE name = 'operations') ON CONFLICT DO NOTHING;
 
 -- api_capabilities
-insert into api_capability (http_method, route, capability) values ('GET', '/', 'all-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('POST', '/', 'all-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('PUT', '/', 'all-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('PATCH', '/', 'all-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('DELETE', '/', 'all-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/asns', 'asn-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 4
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/asns/*', 'asn-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 5
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/asns', 'asn-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 6
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/asns/*', 'asn-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 7
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/asns/*', 'asn-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 8
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cache_stats', 'cache-stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 11
-insert into api_capability (http_method, route, capability) values ('GET', '/internal/api/*/daily_summary', 'cache-stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 12
-insert into api_capability (http_method, route, capability) values ('GET', '/internal/api/*/current_stats', 'cache-stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 13
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cachegroups', 'cache-group-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 16
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cachegroups/list', 'cache-group-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 17
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cachegroups/trimmed', 'cache-group-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 18
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cachegroups/*', 'cache-group-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 19
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/cachegroups', 'cache-group-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 20
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/cachegroups/create', 'cache-group-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 21
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/cachegroups/*', 'cache-group-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 22
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/cachegroups/*/update', 'cache-group-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 23
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/cachegroups/*', 'cache-group-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 24
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/cachegroups/*/delete', 'cache-group-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 25
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/cachegroups/*/queue_update', 'queue-updates-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 26
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/cachegroups/*/queue_update', 'queue-updates-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 27
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cachegroups/*/parameters', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 28
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns', 'cdn-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 31
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/*', 'cdn-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 32
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/name/*', 'cdn-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 33
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/cdns', 'cdn-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 34
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/cdns/*', 'cdn-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 35
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/cdns/*', 'cdn-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 36
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/cdns/*/queue_update', 'queue-updates-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 37
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/cdns/*/queue_update', 'queue-updates-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 38
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/cdns/*/snapshot', 'cdn-config-snapshot-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 40
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/snapshot/*', 'cdn-config-snapshot-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 41
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/snapshot/*', 'cdn-config-snapshot-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 42
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/configs', 'cdn-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 44
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/*/configs/routing', 'cdn-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 45
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/*/configs/monitoring', 'cdn-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 46
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/domains', 'cdn-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 47
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/health', 'cdn-health-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 48
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/*/health', 'cdn-health-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 49
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/capacity', 'cdn-health-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 50
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/routing', 'cdn-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 51
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/name/*/sslkeys', 'cdn-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 52
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/usage/overview', 'cdn-stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 54
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/logs', 'change-log-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 57
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/logs/*/days', 'change-log-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 58
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/logs/newcount', 'change-log-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 60
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 69
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/list', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 70
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 71
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*/get', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 72
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 73
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/*/deliveryservices/create', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 74
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/deliveryservices/*', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 75
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/deliveryservices/*/safe', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 75
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/*/deliveryservices/*/update', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 76
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/deliveryservices/*', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 77
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*/health', 'ds-health-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 78
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*/capacity', 'ds-health-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 79
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*/routing', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 80
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*/state', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 81
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservice_stats', 'ds-stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 82
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices/request', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 83
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/xmlId/*/sslkeys', 'ds-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 84
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/hostname/*/sslkeys', 'ds-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 85
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices/sslkeys/generate', 'ds-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 86
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices/sslkeys/add', 'ds-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 87
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/xmlId/*/sslkeys/delete', 'ds-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 88
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/xmlId/*/urlkeys', 'ds-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 89
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices/xmlId/*/urlkeys/generate', 'ds-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 90
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*/regexes', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 91
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservice_matches', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 92
-insert into api_capability (http_method, route, capability) values ('GET', '/internal/api/*/steering', 'ds-steering-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
-insert into api_capability (http_method, route, capability) values ('GET', '/internal/api/*/steering/*', 'ds-steering-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 97
-insert into api_capability (http_method, route, capability) values ('PUT', '/internal/api/*/steering/*', 'ds-steering-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 99
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/steering/*/targets', 'ds-steering-target-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/steering/*/targets/*', 'ds-steering-target-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/steering/*/targets', 'ds-steering-target-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/steering/*/targets/*', 'ds-steering-target-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/steering/*/targets/*', 'ds-steering-target-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryserviceserver', 'ds-cache-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 103
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices/*/servers', 'ds-cache-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 106
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices_regexes', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 109
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*/regexes', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 110
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*/regexes/*', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 111
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices/*/regexes', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 112
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/deliveryservices/*/regexes/*', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 113
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/deliveryservices/*/regexes/*', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 114
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/divisions', 'division-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 120
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/divisions/*', 'division-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 121
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/divisions', 'division-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 122
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/divisions/*', 'division-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 123
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/divisions/*', 'division-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 124
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/name/*/dnsseckeys', 'cdn-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 127
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/cdns/dnsseckeys/generate', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 128
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cdns/name/*/dnsseckeys/delete', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 129
-insert into api_capability (http_method, route, capability) values ('GET', '/internal/api/*/cdns/dnsseckeys/refresh', 'cdn-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 130
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/to_extensions', 'to-extension-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 134
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/to_extensions', 'to-extension-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 135
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/to_extensions/*/delete', 'to-extension-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 136
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/federations', 'federation-routing-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 139
-insert into api_capability (http_method, route, capability) values ('GET', '/internal/api/*/federations', 'federation-routing-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 140
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/federations', 'federation-routing-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 141
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/federations', 'federation-routing-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 142
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/federations', 'federation-routing-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 143
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/hwinfo', 'all-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 148
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/osversions', 'iso-generate') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 148
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/isos', 'iso-generate') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 148
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/parameters', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 164
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/parameters/*', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 168
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/parameters', 'params-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 169
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/parameters/*', 'params-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 170
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/parameters/*', 'params-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 171
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/parameters/*/validate', 'params-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 172
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/profiles/*/parameters', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 173
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/profiles/name/*/parameters', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 174a
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/parameters/profile', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 174b
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/profiles/name/*/parameters', 'params-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 175
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/profiles/*/parameters', 'params-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 176
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/profileparameters', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 181
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/profileparameters', 'params-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 182
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/profileparameters/*/*', 'params-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 183
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/cachegroupparameters', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 186
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/phys_locations', 'phys-location-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 191
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/phys_locations/trimmed', 'phys-location-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 192
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/phys_locations/*', 'phys-location-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 193
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/phys_locations', 'phys-location-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 194
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/regions/*/phys_locations', 'phys-location-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 195
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/phys_locations/*', 'phys-location-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 196
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/phys_locations/*', 'phys-location-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 197
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/profiles', 'profile-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 200
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/profiles/trimmed', 'profile-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 201
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/profiles/*', 'profile-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 202
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/profiles', 'profile-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 203
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/profiles/*', 'profile-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 204
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/profiles/*', 'profile-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 205
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/profiles/name/*/copy/*', 'profile-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 206
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/regions', 'region-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 213
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/regions/*', 'region-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 214
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/regions', 'region-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 215
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/divisions/*/regions', 'region-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 216
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/regions/*', 'region-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 217
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/regions/*', 'region-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 218
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/riak/ping', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 221
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/keys/ping', 'security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 222
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/riak/bucket/#bucket/key/#key/values', 'security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 223
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/riak/stats', 'security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 224
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/roles', 'role-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 227
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/servers', 'server-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 230
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/servers?dsId=*', 'server-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 231
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/servers?type=*', 'server-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 232
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/servers?status=*', 'server-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 233
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/servers?profileId=*', 'server-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 234
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/servers/*', 'server-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 235
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/servers', 'server-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 237
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/servers/*', 'server-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 238
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/servers/*', 'server-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 239
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/servers/details', 'server-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 247
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/servers/totals', 'server-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 249
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/servers/checks', 'server-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 250a
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/servercheck/aadata', 'server-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 250b
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/servercheck', 'server-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 251
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/servers/*/queue_update', 'queue-updates-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 252
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/servers/*/queue_update', 'queue-updates-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 253
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/*/stats_summary', 'cdn-stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 258
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/*/stats_summary?lastSummaryDate=true', 'cdn-stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 259
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/*/stats_summary/create', 'cdn-stats-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 260
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/statuses', 'status-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 263
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/statuses/*', 'status-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 264
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/staticdnsentries', 'static-dns-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 270
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/system/info', 'basic-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 275
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/types', 'type-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 278
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/types/trimmed', 'type-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 279
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/types/*', 'type-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 280
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/types', 'type-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 281
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/types/*', 'type-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 282
-insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/types/*', 'type-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 283
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/users', 'user-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 289
-insert into api_capability (http_method, route, capability) values ('GET', '/api/*/users/*', 'user-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 290
-insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/users/*', 'user-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 292
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/users', 'user-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 292
-insert into api_capability (http_method, route, capability) values ('POST', '/api/*/users/register', 'user-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 292
+-- auth
+insert into api_capability (http_method,  route, capability) values ('POST', 'user/login', 'auth') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'user/login/token', 'auth') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'user/logout', 'auth') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'user/reset_password', 'auth') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'user/current', 'auth') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'user/current', 'auth') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'user/current/update', 'auth') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- api endpoints
+insert into api_capability (http_method, route, capability) values ('GET', 'api_capabilities', 'api-endpoints-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'api_capabilities/*', 'api-endpoints-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'api_capabilities', 'api-endpoints-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'api_capabilities/*', 'api-endpoints-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'api_capabilities/*', 'api-endpoints-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- asns
+insert into api_capability (http_method, route, capability) values ('GET', 'asns', 'asns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'asns/*', 'asns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'asns', 'asns-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'asns/*', 'asns-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'asns/*', 'asns-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- cache config files
+insert into api_capability (http_method, route, capability) values ('GET', 'servers/*/configfiles/ats', 'cache-config-files-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'profiles/*/configfiles/ats/*', 'cache-config-files-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'servers/*/configfiles/ats/*', 'cache-config-files-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/*/configfiles/ats/*', 'cache-config-files-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- cache groups
+insert into api_capability (http_method, route, capability) values ('GET', 'cachegroups', 'cache-groups-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cachegroups/trimmed', 'cache-groups-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cachegroups/*', 'cache-groups-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'cachegroups', 'cache-groups-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'cachegroups/*', 'cache-groups-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'cachegroups/*', 'cache-groups-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'cachegroups/*/queue_update', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'cachegroups/*/deliveryservices', 'cache-groups-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cachegroups/*/parameters', 'cache-groups-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cachegroups/*/unassigned_parameters', 'cache-groups-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cachegroup/*/parameter', 'cache-groups-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cachegroupparameters', 'cache-groups-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'cachegroupparameters', 'cache-groups-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'cachegroupparameters/*/*', 'cache-groups-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cachegroups/*/parameter/available', 'cache-groups-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cachegroup_fallbacks', 'cache-groups-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'cachegroup_fallbacks', 'cache-groups-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'cachegroup_fallbacks', 'cache-groups-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'cachegroup_fallbacks', 'cache-groups-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- capabilities
+insert into api_capability (http_method, route, capability) values ('GET', 'capabilities', 'capabilities-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'capabilities/*', 'capabilities-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'capabilities', 'capabilities-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'capabilities/*', 'capabilities-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'capabilities/*', 'capabilities-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- cdns
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/*', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/name/*', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'cdns', 'cdns-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'cdns/*', 'cdns-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'cdns/*', 'cdns-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'cdns/name/*', 'cdns-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'cdns/*/queue_update', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/*/snapshot', 'cdns-snapshot') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/*/snapshot/new', 'cdns-snapshot') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'cdns/*/snapshot', 'cdns-snapshot') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'snapshot/*', 'cdns-snapshot') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/configs', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/*/configs/routing', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/*/configs/monitoring', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/domains', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/health', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/*/health', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/capacity', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/routing', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/name/*/sslkeys', 'cdn-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/usage/overview', 'cdns-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/name/*/dnsseckeys', 'cdn-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'cdns/dnsseckeys/generate', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/name/*/dnsseckeys/delete', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- change logs
+insert into api_capability (http_method, route, capability) values ('GET', 'logs', 'change-logs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'logs/*/days', 'change-logs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'logs/newcount', 'change-logs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- coordinates
+insert into api_capability (http_method, route, capability) values ('GET', 'coordinates', 'coordinates-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'coordinates', 'coordinates-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'coordinates', 'coordinates-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'coordinates', 'coordinates-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- delivery services
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservices', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'deliveryservices/*', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'deliveryservices/*/safe', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservices/*', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/health', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/capacity', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/routing', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/state', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservice_stats', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/xmlId/*/sslkeys', 'delivery-service-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/hostname/#hostname/sslkeys', 'delivery-service-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservices/sslkeys/generate', 'delivery-service-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservices/sslkeys/add', 'delivery-service-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/xmlId/*/sslkeys/delete', 'delivery-service-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/urlkeys', 'delivery-service-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/xmlId/*/urlkeys', 'delivery-service-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservices/xmlId/*/urlkeys/generate', 'delivery-service-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservices/xmlId/*/urlkeys/copyFromXmlId/*', 'delivery-service-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/urisignkeys', 'delivery-service-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservices/*/urisignkeys', 'delivery-service-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'deliveryservices/*/urisignkeys', 'delivery-service-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservices/*/urisignkeys', 'delivery-service-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- delivery service regexes
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservice_matches', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices_regexes', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/regexes', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/regexes/*', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservices/*/regexes', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'deliveryservices/*/regexes/*', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservices/*/regexes/*', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- delivery service requests
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservice_requests', 'delivery-service-requests-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservice_requests', 'delivery-service-requests-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'deliveryservice_requests', 'delivery-service-requests-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservice_requests', 'delivery-service-requests-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'deliveryservice_requests/*/assign', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'deliveryservice_requests/*/status', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservices/request', 'delivery-service-requests-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservice_request_comments', 'delivery-service-requests-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservice_request_comments', 'delivery-service-requests-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'deliveryservice_request_comments', 'delivery-service-requests-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservice_request_comments', 'delivery-service-requests-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- delivery service servers
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryserviceserver', 'delivery-service-servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryserviceserver', 'delivery-service-servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservices/*/servers', 'delivery-service-servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservice_server/*/*', 'delivery-service-servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- divisions
+insert into api_capability (http_method, route, capability) values ('GET', 'divisions', 'divisions-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'divisions/*', 'divisions-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'divisions/name/*', 'divisions-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'divisions', 'divisions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'divisions/*', 'divisions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'divisions/*', 'divisions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'divisions/name/*', 'divisions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- extensions
+insert into api_capability (http_method, route, capability) values ('GET', 'to_extensions', 'to-extensions-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'to_extensions', 'to-extensions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'to_extensions/*/delete', 'to-extensions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- federations
+insert into api_capability (http_method, route, capability) values ('GET', 'federations', 'federations-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'federations', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'federations', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'federations', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/*/federations', 'federations-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'cdns/*/federations/*', 'federations-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'cdns/*/federations', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'cdns/*/federations/*', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'cdns/*/federations/*', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'federations/*/users', 'federations-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'federations/*/users', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'federations/*/users/*', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'federations/*/deliveryservices', 'federations-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'federations/*/deliveryservices', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'federations/*/deliveryservices/*', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'federations/*/federation_resolvers', 'federations-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'federations/*/federation_resolvers', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'federation_resolvers', 'federations-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'federation_resolvers', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'federation_resolvers/*', 'federations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- hardware info
+insert into api_capability (http_method, route, capability) values ('GET', 'hwinfo', 'hwinfo-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- iso
+insert into api_capability (http_method, route, capability) values ('GET', 'osversions', 'iso-generate') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'isos', 'iso-generate') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- jobs
+insert into api_capability (http_method, route, capability) values ('GET', 'jobs', 'jobs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'jobs/*', 'jobs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'user/current/jobs', 'jobs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'user/current/jobs', 'jobs-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- misc
+insert into api_capability (http_method, route, capability) values ('GET', 'dbdump', 'db-dump') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- origins
+insert into api_capability (http_method, route, capability) values ('GET', 'origins', 'origins-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'origins', 'origins-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'origins', 'origins-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'origins', 'origins-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- parameters
+insert into api_capability (http_method, route, capability) values ('GET', 'parameters', 'parameters-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'parameters/*', 'parameters-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'parameters', 'parameters-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'parameterprofile', 'parameters-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'parameters/*', 'parameters-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'parameters/*', 'parameters-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'parameters/*/validate', 'parameters-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'parameters/*/profiles', 'parameters-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'parameters/*/unassigned_profiles', 'parameters-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- phys locations
+insert into api_capability (http_method, route, capability) values ('GET', 'phys_locations', 'phys-locations-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'phys_locations/trimmed', 'phys-locations-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'phys_locations/*', 'phys-locations-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'phys_locations', 'phys-locations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'regions/*/phys_locations', 'phys-locations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'phys_locations/*', 'phys-locations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'phys_locations/*', 'phys-locations-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- profiles
+insert into api_capability (http_method, route, capability) values ('GET', 'profiles', 'profiles-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'profiles/trimmed', 'profiles-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'profiles/*', 'profiles-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'profiles', 'profiles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'profiles/*', 'profiles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'profiles/*', 'profiles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'profiles/name/*/copy/*', 'profiles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'profiles/import', 'profiles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'profiles/*/export', 'profiles-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'profiles/*/parameters', 'profiles-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'profiles/*/unassigned_parameters', 'profiles-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'profiles/name/*/parameters', 'profiles-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'parameters/profile/*', 'profiles-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'profiles/name/*/parameters', 'profiles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'profiles/*/parameters', 'profiles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'profileparameters', 'profiles-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'profileparameters', 'profiles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'profileparameter', 'profiles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'profileparameters/*/*', 'profiles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- regions
+insert into api_capability (http_method, route, capability) values ('GET', 'regions', 'regions-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'regions/*', 'regions-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'regions/name/*', 'regions-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'regions', 'regions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'divisions/*/regions', 'regions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'regions/*', 'regions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'regions/*', 'regions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'regions/name/*', 'regions-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- riak
+insert into api_capability (http_method, route, capability) values ('GET', 'riak/ping', 'riak') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'keys/ping', 'riak') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'riak/bucket/*/key/*/values', 'riak') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'riak/stats', 'riak') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- roles
+insert into api_capability (http_method, route, capability) values ('GET', 'roles', 'roles-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'roles', 'roles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'roles', 'roles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'roles', 'roles-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- servers
+insert into api_capability (http_method, route, capability) values ('GET', 'servers', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'servers/*', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'servers', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'servers/*', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'servers/*', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/servers', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/unassigned_servers', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservices/*/servers/eligible', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'servers/details', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'servers/hostname/*/details', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'servers/totals', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'servers/status', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'servers/*/queue_update', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'servers/*/status', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'servers/*/update_status', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'servers/checks', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'servercheck', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- stats
+insert into api_capability (http_method, route, capability) values ('GET', 'caches/stats', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'stats_summary', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'stats_summary/create', 'stats-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'traffic_monitor/stats', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- statuses
+insert into api_capability (http_method, route, capability) values ('GET', 'statuses', 'statuses-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'statuses/*', 'statuses-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'statuses', 'statuses-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'statuses/*', 'statuses-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'statuses/*', 'statuses-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- static dns entries
+insert into api_capability (http_method, route, capability) values ('GET', 'staticdnsentries', 'static-dns-entries-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'staticdnsentries', 'static-dns-entries-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'staticdnsentries', 'static-dns-entries-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'staticdnsentries', 'static-dns-entries-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- steering targets
+insert into api_capability (http_method, route, capability) values ('GET', 'steering/*/targets', 'steering-targets-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'steering/*/targets/*', 'steering-targets-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'steering/*/targets', 'steering-targets-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'steering/*/targets/*', 'steering-targets-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'steering/*/targets/*', 'steering-targets-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- system info
+insert into api_capability (http_method, route, capability) values ('GET', 'system/info', 'system-info-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- tenants
+insert into api_capability (http_method, route, capability) values ('GET', 'tenants', 'tenants-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'tenants/*', 'tenants-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'tenants', 'tenants-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'tenants/*', 'tenants-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'tenants/*', 'tenants-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- types
+insert into api_capability (http_method, route, capability) values ('GET', 'types', 'types-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'types/trimmed', 'types-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'types/*', 'types-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'types', 'types-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'types/*', 'types-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'types/*', 'types-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+-- users
+insert into api_capability (http_method, route, capability) values ('GET', 'users', 'users-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'users/*', 'users-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'users', 'users-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('PUT', 'users/*', 'users-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'users/register', 'users-register') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'users/*/deliveryservices', 'users-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'users/*/deliveryservices/available', 'users-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservice_user', 'users-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservice_user/*/*', 'users-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 
 -- types
+
 -- delivery service types
 insert into type (name, description, use_in_table) values ('HTTP', 'HTTP Content Routing', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
 insert into type (name, description, use_in_table) values ('HTTP_NO_CACHE', 'HTTP Content Routing, no caching', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
@@ -404,7 +756,9 @@ insert into type (name, description, use_in_table) values ('STEERING_GEO_ORDER',
 insert into type (name, description, use_in_table) values ('STEERING_GEO_WEIGHT', 'Geo-weighted steering target', 'steering_target') ON CONFLICT (name) DO NOTHING;
 
 -- users
-insert into tm_user (username, role, full_name, token) values ('extension', (select id from role where name = 'operations'), 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498') ON CONFLICT DO NOTHING;
+insert into tm_user (username, role, full_name, token, tenant_id) values ('extension',
+    (select id from role where name = 'operations'), 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498',
+    (select id from tenant where name = 'root')) ON CONFLICT DO NOTHING;
 
 -- to extensions
 -- some of the old ones do not get a new place, and there will be 'gaps' in the column usage.... New to_extension add will have to take care of that.

@@ -23,9 +23,9 @@ package InstallUtils;
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -127,24 +127,40 @@ sub randomWord {
     return $secret;
 }
 
+# Any checks to user input configurations can be implemented in this functions.
+sub sanitize{
+    my ($promptString, $userInput) = @_;
+    if (index($promptString, "Human-readable CDN Name") != -1){
+        if ($userInput =~ m/[^-a-zA-Z0-9_.]/){
+            print "Invalid characters in user input. Try again.\n\n";
+            return false;
+        }
+    }
+    return true;
+}
+
 sub promptUser {
     my ( $promptString, $defaultValue, $noEcho ) = @_;
-
-    if ($defaultValue) {
-        print $promptString, " [", $defaultValue, "]: ";
-    }
-    else {
-        print $promptString, ": ";
-    }
 
     if ( defined $noEcho && $noEcho ) {
         # Set echo mode to off via ReadMode 2
         ReadMode 2;
     }
 
-    $| = 1;
-    $_ = <STDIN>;
-    chomp;
+    # Check user input for invalid characters
+    my $sanitized = false;
+    while ($sanitized eq false){
+        if ($defaultValue) {
+            print $promptString, " [", $defaultValue, "]: ";
+        }
+        else {
+            print $promptString, ": ";
+        }
+        $| = 1;
+        $_ = <STDIN>;
+        chomp;
+        $sanitized = sanitize($promptString, $_)
+    }
 
     if ( defined $noEcho && $noEcho ) {
         # Set echo mode to on via ReadMode 1

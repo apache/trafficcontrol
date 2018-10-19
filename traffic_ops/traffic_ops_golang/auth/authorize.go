@@ -21,11 +21,16 @@ package auth
 
 import (
 	"context"
+	"crypto/sha1"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -37,6 +42,13 @@ type CurrentUser struct {
 	TenantID     int            `json:"tenantId" db:"tenant_id"`
 	Capabilities pq.StringArray `json:"capabilities" db:"capabilities"`
 }
+
+type PasswordForm struct {
+	Username string `json:"u"`
+	Password string `json:"p"`
+}
+
+const disallowed = "disallowed"
 
 // PrivLevelInvalid - The Default Priv level
 const PrivLevelInvalid = -1
@@ -62,19 +74,40 @@ type key int
 
 const CurrentUserKey key = iota
 
-// GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist.
-func GetCurrentUserFromDB(CurrentUserStmt *sqlx.Stmt, user string) CurrentUser {
+// GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist, along with a user facing error, a system error to log, and an error code to return
+func GetCurrentUserFromDB(DB *sqlx.DB, user string, timeout time.Duration) (CurrentUser, error, error, int) {
+	qry := `
+SELECT
+  r.priv_level,
+  u.id,
+  u.username,
+  COALESCE(u.tenant_id, -1) AS tenant_id,
+  ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=r.id) AS capabilities
+FROM
+  tm_user AS u
+JOIN
+  role AS r ON u.role = r.id
+WHERE
+  u.username = $1
+`
+
 	var currentUserInfo CurrentUser
-	err := CurrentUserStmt.Get(&currentUserInfo, user)
+	if DB == nil {
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
+	}
+	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
+	defer dbClose()
+
+	err := DB.GetContext(dbCtx, &currentUserInfo, qry, user)
 	switch {
 	case err == sql.ErrNoRows:
-		log.Errorf("checking user %v info: user not in database", user)
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, errors.New("user not found"), fmt.Errorf("checking user %v info: user not in database", user), http.StatusUnauthorized
+	case err == context.DeadlineExceeded || err == context.Canceled:
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, nil, fmt.Errorf("db access timed out: %s number of open connections: %d\n", err, DB.Stats().OpenConnections), http.StatusServiceUnavailable
 	case err != nil:
-		log.Errorf("Error checking user %v info: %v", user, err.Error())
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, nil, fmt.Errorf("Error checking user %v info: %v", user, err.Error()), http.StatusInternalServerError
 	default:
-		return currentUserInfo
+		return currentUserInfo, nil, nil, http.StatusOK
 	}
 }
 
@@ -89,4 +122,68 @@ func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
 		}
 	}
 	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, errors.New("No user found in Context")
+}
+
+func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, timeout time.Duration) (bool, error, error) {
+	var roleName string
+	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
+	defer dbClose()
+
+	err := db.GetContext(dbCtx, &roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1", form.Username)
+	if err != nil {
+		if err == context.DeadlineExceeded || err == context.Canceled {
+			return false, nil, err
+		}
+		return false, err, nil
+	}
+	if roleName != "" {
+		if roleName != disallowed { //relies on unchanging role name assumption.
+			return true, nil, nil
+		}
+	}
+	return false, nil, nil
+}
+
+func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, timeout time.Duration) (bool, error, error) {
+	var hashedPassword string
+	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
+	defer dbClose()
+
+	err := db.GetContext(dbCtx, &hashedPassword, "SELECT local_passwd FROM tm_user WHERE username=$1", form.Username)
+	if err != nil {
+		if err == context.DeadlineExceeded || err == context.Canceled {
+			return false, nil, err
+		}
+		return false, err, nil
+	}
+	err = VerifySCRYPTPassword(form.Password, hashedPassword)
+	if err != nil {
+		if hashedPassword == sha1Hex(form.Password) { // for backwards compatibility
+			return true, nil, nil
+		}
+		return false, err, nil
+	}
+	return true, nil, nil
+}
+
+func sha1Hex(s string) string {
+	// SHA1 hash
+	hash := sha1.New()
+	hash.Write([]byte(s))
+	hashBytes := hash.Sum(nil)
+
+	// Hexadecimal conversion
+	hexSha1 := hex.EncodeToString(hashBytes)
+	return hexSha1
+}
+
+func CheckLDAPUser(form PasswordForm, cfg *config.ConfigLDAP) (bool, error) {
+	userDN, valid, err := LookupUserDN(form.Username, cfg)
+	if err != nil {
+		return false, err
+	}
+	if valid {
+		return AuthenticateUserDN(userDN, form.Password, cfg)
+	}
+	return false, errors.New("User not found in LDAP")
 }

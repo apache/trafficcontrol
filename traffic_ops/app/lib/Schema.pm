@@ -50,7 +50,7 @@ sub get_dsn {
 	our $type     = $db_info->{type};
 	# add `ssl: true` to database.conf to require ssl
 	our $reqssl   = $db_info->{ssl} ? 'require' : 'disable';
-	our $dsn      = "DBI:$type:database=$dbname;host=$hostname;port=$port;sslmode=$reqssl";
+	our $dsn      = "DBI:$type:database=$dbname;host=$hostname;port=$port;sslmode=$reqssl;application_name=trafficops-perl";
 }
 
 sub get_dbinfo {

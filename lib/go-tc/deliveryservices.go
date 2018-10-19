@@ -40,13 +40,19 @@ type GetDeliveryServiceResponse struct {
 
 // DeliveryServicesResponse ...
 type DeliveryServicesResponse struct {
-	Response []DeliveryServiceV13 `json:"response"`
+	Response []DeliveryService `json:"response"`
 }
 
 // CreateDeliveryServiceResponse ...
 type CreateDeliveryServiceResponse struct {
 	Response []DeliveryService      `json:"response"`
 	Alerts   []DeliveryServiceAlert `json:"alerts"`
+}
+
+// CreateDeliveryServiceNullableResponse ...
+type CreateDeliveryServiceNullableResponse struct {
+	Response []DeliveryServiceNullable `json:"response"`
+	Alerts   []DeliveryServiceAlert    `json:"alerts"`
 }
 
 // UpdateDeliveryServiceResponse ...
@@ -66,9 +72,23 @@ type DeleteDeliveryServiceResponse struct {
 	Alerts []DeliveryServiceAlert `json:"alerts"`
 }
 
+type DeliveryService struct {
+	DeliveryServiceV12
+	DeepCachingType   DeepCachingType `json:"deepCachingType"`
+	FQPacingRate      int             `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm  string          `json:"signingAlgorithm" db:"signing_algorithm"`
+	Tenant            string          `json:"tenant,omitempty"`
+	TRRequestHeaders  string          `json:"trRequestHeaders,omitempty"`
+	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
+}
+
+type DeliveryServiceV12 struct {
+	DeliveryServiceV11
+}
+
 // DeliveryService ...
 // TODO move contents to DeliveryServiceV12, fix references, and remove
-type DeliveryService struct {
+type DeliveryServiceV11 struct {
 	Active                   bool                   `json:"active"`
 	AnonymousBlockingEnabled bool                   `json:"anonymousBlockingEnabled"`
 	CacheURL                 string                 `json:"cacheurl"`
@@ -117,7 +137,7 @@ type DeliveryService struct {
 	RegionalGeoBlocking      bool                   `json:"regionalGeoBlocking"`
 	RemapText                string                 `json:"remapText"`
 	RoutingName              string                 `json:"routingName"`
-	SigningAlgorithm         string                 `json:"signingAlgorithm" db:"signing_algorithm"`
+	Signed                   bool                   `json:"signed"`
 	TypeID                   int                    `json:"typeId"`
 	Type                     DSType                 `json:"type"`
 	TRResponseHeaders        string                 `json:"trResponseHeaders"`
@@ -125,23 +145,23 @@ type DeliveryService struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceV12 struct {
-	DeliveryService
+type DeliveryServiceNullable struct {
+	DeliveryServiceNullableV12
+	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
+	FQPacingRate      *int             `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
+	Tenant            *string          `json:"tenant,omitempty"`
+	TRResponseHeaders *string          `json:"trResponseHeaders,omitempty"`
+	TRRequestHeaders  *string          `json:"trRequestHeaders,omitempty"`
 }
 
-type DeliveryServiceV13 struct {
-	DeliveryServiceV12
-	DeepCachingType   DeepCachingType `json:"deepCachingType"`
-	FQPacingRate      int             `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm  string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	TenantName        string          `json:"tenantName,omitempty"`
-	TRRequestHeaders  string          `json:"trRequestHeaders,omitempty"`
-	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
+type DeliveryServiceNullableV12 struct {
+	DeliveryServiceNullableV11
 }
 
 // DeliveryServiceNullable - a version of the deliveryservice that allows for all fields to be null
 // TODO move contents to DeliveryServiceNullableV12, fix references, and remove
-type DeliveryServiceNullable struct {
+type DeliveryServiceNullableV11 struct {
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
 	//
 	Active                   *bool                   `json:"active" db:"active"`
@@ -202,23 +222,9 @@ type DeliveryServiceNullable struct {
 	ExampleURLs              []string                `json:"exampleURLs"`
 }
 
-type DeliveryServiceNullableV12 struct {
-	DeliveryServiceNullable
-}
-
-type DeliveryServiceNullableV13 struct {
-	DeliveryServiceNullableV12
-	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
-	FQPacingRate      *int             `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	Tenant            *string          `json:"tenant,omitempty"`
-	TRResponseHeaders *string          `json:"trResponseHeaders,omitempty"`
-	TRRequestHeaders  *string          `json:"trRequestHeaders,omitempty"`
-}
-
-// NewDeliveryServiceNullableV13FromV12 creates a new V13 DS from a V12 DS, filling new fields with appropriate defaults.
-func NewDeliveryServiceNullableV13FromV12(ds DeliveryServiceNullableV12) DeliveryServiceNullableV13 {
-	newDS := DeliveryServiceNullableV13{DeliveryServiceNullableV12: ds}
+// NewDeliveryServiceNullableFromV12 creates a new V13 DS from a V12 DS, filling new fields with appropriate defaults.
+func NewDeliveryServiceNullableFromV12(ds DeliveryServiceNullableV12) DeliveryServiceNullable {
+	newDS := DeliveryServiceNullable{DeliveryServiceNullableV12: ds}
 	newDS.Sanitize()
 	return newDS
 }
@@ -239,23 +245,9 @@ func (ds *DeliveryServiceNullableV12) Sanitize() {
 	if ds.RoutingName == nil || *ds.RoutingName == "" {
 		ds.RoutingName = util.StrPtr(DefaultRoutingName)
 	}
-}
-
-// getTypeData returns the type's name and use_in_table, true/false if the query returned data, and any error
-func getTypeData(tx *sql.Tx, id int) (string, string, bool, error) {
-	name := ""
-	var useInTablePtr *string
-	if err := tx.QueryRow(`SELECT name, use_in_table from type where id=$1`, id).Scan(&name, &useInTablePtr); err != nil {
-		if err == sql.ErrNoRows {
-			return "", "", false, nil
-		}
-		return "", "", false, errors.New("querying type data: " + err.Error())
+	if ds.AnonymousBlockingEnabled == nil {
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
 	}
-	useInTable := ""
-	if useInTablePtr != nil {
-		useInTable = *useInTablePtr
-	}
-	return name, useInTable, true, nil
 }
 
 func requiredIfMatchesTypeName(patterns []string, typeName string) func(interface{}) error {
@@ -293,30 +285,20 @@ func requiredIfMatchesTypeName(patterns []string, typeName string) func(interfac
 	}
 }
 
-// util.JoinErrs(errs).Error()
-
 func (ds *DeliveryServiceNullableV12) validateTypeFields(tx *sql.Tx) error {
 	// Validate the TypeName related fields below
-	typeName := ""
 	err := error(nil)
 	DNSRegexType := "^DNS.*$"
 	HTTPRegexType := "^HTTP.*$"
 	SteeringRegexType := "^STEERING.*$"
 	latitudeErr := "Must be a floating point number within the range +-90"
 	longitudeErr := "Must be a floating point number within the range +-180"
-	if ds.TypeID == nil {
-		return errors.New("missing type")
-	}
-	typeName, useInTable, ok, err := getTypeData(tx, *ds.TypeID)
+
+	typeName, err := ValidateTypeID(tx, ds.TypeID, "deliveryservice")
 	if err != nil {
-		return errors.New("getting type name: " + err.Error())
+		return err
 	}
-	if !ok {
-		return errors.New("type not found")
-	}
-	if useInTable != "deliveryservice" {
-		return errors.New("type is not a valid deliveryservice type")
-	}
+
 	errs := validation.Errors{
 		"initialDispersion": validation.Validate(ds.InitialDispersion,
 			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName)),
@@ -407,7 +389,7 @@ func (ds *DeliveryServiceNullableV12) Validate(tx *sql.Tx) error {
 	return nil
 }
 
-func (ds *DeliveryServiceNullableV13) Sanitize() {
+func (ds *DeliveryServiceNullable) Sanitize() {
 	ds.DeliveryServiceNullableV12.Sanitize()
 	signedAlgorithm := "url_sig"
 	if ds.Signed && (ds.SigningAlgorithm == nil || *ds.SigningAlgorithm == "") {
@@ -423,7 +405,7 @@ func (ds *DeliveryServiceNullableV13) Sanitize() {
 	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
 }
 
-func (ds *DeliveryServiceNullableV13) Validate(tx *sql.Tx) error {
+func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 	ds.Sanitize()
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
@@ -573,20 +555,33 @@ type UserDeliveryServicePostResponse struct {
 	Response DeliveryServiceUserPost `json:"response"`
 }
 
-type UserDeliveryServicesResponseV13 struct {
-	Response []DeliveryServiceV13 `json:"response"`
-}
-
-type UserDeliveryServicesResponseV12 struct {
-	Response []DeliveryServiceV13 `json:"response"`
-}
-
-type UserDeliveryServicesResponse struct {
-	Response []DeliveryServiceNullableV13 `json:"response"`
+type UserDeliveryServicesNullableResponse struct {
+	Response []DeliveryServiceNullable `json:"response"`
 }
 
 type DSServerIDs struct {
-	DeliveryServiceID *int  `json:"dsId", db:"deliveryservice"`
+	DeliveryServiceID *int  `json:"dsId" db:"deliveryservice"`
 	ServerIDs         []int `json:"servers"`
 	Replace           *bool `json:"replace"`
+}
+
+type CachegroupPostDSReq struct {
+	DeliveryServices []int64 `json:"deliveryServices"`
+}
+
+type CacheGroupPostDSResp struct {
+	ID               util.JSONIntStr `json:"id"`
+	ServerNames      []CacheName     `json:"serverNames"`
+	DeliveryServices []int64         `json:"deliveryServices"`
+}
+
+type CacheGroupPostDSRespResponse struct {
+	Alerts
+	Response CacheGroupPostDSResp `json:"response"`
+}
+
+type AssignedDsResponse struct {
+	ServerID int   `json:"serverId"`
+	DSIds    []int `json:"dsIds"`
+	Replace  bool  `json:"replace"`
 }

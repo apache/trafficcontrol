@@ -17,6 +17,7 @@ package util
 // When adding symbols, document the RFC and section they correspond to.
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 )

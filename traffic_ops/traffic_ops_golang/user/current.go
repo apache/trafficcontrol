@@ -32,16 +32,15 @@ import (
 func Current(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	currentUser, err := getUser(inf.Tx.Tx, inf.User.ID)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting current user: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting current user: "+err.Error()))
 		return
 	}
-	*inf.CommitTx = true
 	api.WriteResp(w, r, currentUser)
 }
 

@@ -18,27 +18,26 @@ package tc
 import (
 	"database/sql"
 	"errors"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
+
+const DNSSECKSKType = "ksk"
+const DNSSECZSKType = "zsk"
+const DNSSECKeyStatusNew = "new"
 
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
 	Response DeliveryServiceSSLKeys `json:"response"`
 }
 
-// DeliveryServiceSSLKeysCertificate ...
-type DeliveryServiceSSLKeysCertificate struct {
-	Crt string `json:"crt"`
-	Key string `json:"key"`
-	CSR string `json:"csr"`
-}
-
 // DeliveryServiceSSLKeys ...
 type DeliveryServiceSSLKeys struct {
 	CDN             string                            `json:"cdn,omitempty"`
-	DeliveryService string                            `json:"DeliveryService,omitempty"`
+	DeliveryService string                            `json:"deliveryservice,omitempty"`
 	BusinessUnit    string                            `json:"businessUnit,omitempty"`
 	City            string                            `json:"city,omitempty"`
 	Organization    string                            `json:"organization,omitempty"`
@@ -46,7 +45,7 @@ type DeliveryServiceSSLKeys struct {
 	Country         string                            `json:"country,omitempty"`
 	State           string                            `json:"state,omitempty"`
 	Key             string                            `json:"key"`
-	Version         string                            `json:"version"`
+	Version         util.JSONIntStr                   `json:"version"`
 	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
@@ -61,8 +60,15 @@ type DeliveryServiceSSLKeysReq struct {
 	State           *string `json:"state,omitempty"`
 	// Key is the XMLID of the delivery service
 	Key         *string                            `json:"key"`
-	Version     *string                            `json:"version"`
+	Version     *util.JSONIntStr                   `json:"version"`
 	Certificate *DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
+}
+
+// DeliveryServiceSSLKeysCertificate ...
+type DeliveryServiceSSLKeysCertificate struct {
+	Crt string `json:"crt"`
+	Key string `json:"key"`
+	CSR string `json:"csr"`
 }
 
 func (r *DeliveryServiceSSLKeysReq) Sanitize() {
@@ -74,50 +80,88 @@ func (r *DeliveryServiceSSLKeysReq) Sanitize() {
 		k := *r.DeliveryService // sqlx fails with aliased pointers, so make a new one
 		r.Key = &k
 	}
-	if r.Version == nil {
-		r.Version = util.StrPtr("")
-	}
 }
 
-func (r *DeliveryServiceSSLKeysReq) Validate(tx *sql.Tx) error {
-	r.Sanitize()
+// validateSharedRequiredRequestFields validates the request fields that are shared and required by both 'add' and 'generate' requests
+func (r *DeliveryServiceSSLKeysReq) validateSharedRequiredRequestFields() []string {
 	errs := []string{}
-	if r.CDN == nil {
+	if checkNilOrEmpty(r.CDN) {
 		errs = append(errs, "cdn required")
 	}
-	if r.Key == nil {
+	if r.Version == nil {
+		errs = append(errs, "version required")
+	}
+	if checkNilOrEmpty(r.Key) {
 		errs = append(errs, "key required")
 	}
-	if r.DeliveryService == nil {
+	if checkNilOrEmpty(r.DeliveryService) {
 		errs = append(errs, "deliveryservice required")
 	}
 	if r.Key != nil && r.DeliveryService != nil && *r.Key != *r.DeliveryService {
 		errs = append(errs, "deliveryservice and key must match")
 	}
-	if r.BusinessUnit == nil {
-		errs = append(errs, "businessUnit required")
-	}
-	if r.City == nil {
-		errs = append(errs, "city required")
-	}
-	if r.Organization == nil {
-		errs = append(errs, "organization required")
-	}
-	if r.HostName == nil {
+	if checkNilOrEmpty(r.HostName) {
 		errs = append(errs, "hostname required")
 	}
-	if r.Country == nil {
-		errs = append(errs, "country required")
+	return errs
+}
+
+type DeliveryServiceAddSSLKeysReq struct {
+	DeliveryServiceSSLKeysReq
+}
+
+func (r *DeliveryServiceAddSSLKeysReq) Validate(tx *sql.Tx) error {
+	r.Sanitize()
+	errs := r.validateSharedRequiredRequestFields()
+	if r.Certificate == nil {
+		errs = append(errs, "certificate required")
+	} else {
+		if r.Certificate.Key == "" {
+			errs = append(errs, "certificate.key required")
+		}
+		if r.Certificate.Crt == "" {
+			errs = append(errs, "certificate.crt required")
+		}
+		if r.Certificate.CSR == "" {
+			errs = append(errs, "certificate.csr required")
+		}
 	}
-	if r.State == nil {
-		errs = append(errs, "state required")
-	}
-	// version is optional
-	// certificate is optional
 	if len(errs) > 0 {
 		return errors.New("missing fields: " + strings.Join(errs, "; "))
 	}
 	return nil
+}
+
+type DeliveryServiceGenSSLKeysReq struct {
+	DeliveryServiceSSLKeysReq
+}
+
+func (r *DeliveryServiceGenSSLKeysReq) Validate(tx *sql.Tx) error {
+	r.Sanitize()
+	errs := r.validateSharedRequiredRequestFields()
+	if checkNilOrEmpty(r.BusinessUnit) {
+		errs = append(errs, "businessUnit required")
+	}
+	if checkNilOrEmpty(r.City) {
+		errs = append(errs, "city required")
+	}
+	if checkNilOrEmpty(r.Organization) {
+		errs = append(errs, "organization required")
+	}
+	if checkNilOrEmpty(r.Country) {
+		errs = append(errs, "country required")
+	}
+	if checkNilOrEmpty(r.State) {
+		errs = append(errs, "state required")
+	}
+	if len(errs) > 0 {
+		return errors.New("missing fields: " + strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+func checkNilOrEmpty(s *string) bool {
+	return s == nil || *s == ""
 }
 
 type RiakPingResp struct {
@@ -151,15 +195,48 @@ type DNSSECKeyDSRecord struct {
 	Digest     string `json:"digest"`
 }
 
+// CDNDNSSECGenerateReqDate is the date accepted by CDNDNSSECGenerateReq.
+// This will unmarshal a UNIX epoch integer, a RFC3339 string, the old format string used by Perl '2018-08-21+14:26:06', and the old format string sent by the Portal '2018-08-21 14:14:42'.
+// This exists to fix a critical bug, see https://github.com/apache/trafficcontrol/issues/2723 - it SHOULD NOT be used by any other endpoint.
+type CDNDNSSECGenerateReqDate int64
+
+func (i *CDNDNSSECGenerateReqDate) UnmarshalJSON(d []byte) error {
+	const oldPortalDateFormat = `2006-01-02 15:04:05`
+	const oldPerlUIDateFormat = `2006-01-02+15:04:05`
+	if len(d) == 0 {
+		return errors.New("empty object")
+	}
+	if d[0] == '"' {
+		d = d[1 : len(d)-1] // strip JSON quotes, to accept the UNIX epoch as a string or number
+	}
+	if di, err := strconv.ParseInt(string(d), 10, 64); err == nil {
+		*i = CDNDNSSECGenerateReqDate(di)
+		return nil
+	}
+	if t, err := time.Parse(time.RFC3339, string(d)); err == nil {
+		*i = CDNDNSSECGenerateReqDate(t.Unix())
+		return nil
+	}
+	if t, err := time.Parse(oldPortalDateFormat, string(d)); err == nil {
+		*i = CDNDNSSECGenerateReqDate(t.Unix())
+		return nil
+	}
+	if t, err := time.Parse(oldPerlUIDateFormat, string(d)); err == nil {
+		*i = CDNDNSSECGenerateReqDate(t.Unix())
+		return nil
+	}
+	return errors.New("invalid date")
+}
+
 type CDNDNSSECGenerateReq struct {
 	// Key is the CDN name, as documented in the API documentation.
 	Key *string `json:"key"`
 	// Name is the CDN domain, as documented in the API documentation.
-	Name              *string `json:"name"`
-	TTL               *uint64 `json:"ttl,string"`
-	KSKExpirationDays *uint64 `json:"kskExpirationDays,string"`
-	ZSKExpirationDays *uint64 `json:"zskExpirationDays,string"`
-	EffectiveDateUnix *int64  `json:"effectiveDate"`
+	Name              *string                   `json:"name"`
+	TTL               *util.JSONIntStr          `json:"ttl"`
+	KSKExpirationDays *util.JSONIntStr          `json:"kskExpirationDays"`
+	ZSKExpirationDays *util.JSONIntStr          `json:"zskExpirationDays"`
+	EffectiveDateUnix *CDNDNSSECGenerateReqDate `json:"effectiveDate"`
 }
 
 func (r CDNDNSSECGenerateReq) Validate(tx *sql.Tx) error {

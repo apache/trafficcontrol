@@ -28,14 +28,18 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-func GetTrimmed(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		api.RespWriter(w, r)(getTrimmed(db))
+func GetTrimmed(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	api.RespWriter(w, r, inf.Tx.Tx)(getTrimmed(inf.Tx.Tx))
 }
 
-func getTrimmed(db *sql.DB) ([]tc.PhysLocationTrimmed, error) {
-	rows, err := db.Query(`SELECT name FROM phys_location`)
+func getTrimmed(tx *sql.Tx) ([]tc.PhysLocationTrimmed, error) {
+	rows, err := tx.Query(`SELECT name FROM phys_location`)
 	if err != nil {
 		return nil, errors.New("querying trimmed physical locations: " + err.Error())
 	}

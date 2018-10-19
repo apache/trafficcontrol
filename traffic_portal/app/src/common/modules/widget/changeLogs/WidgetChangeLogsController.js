@@ -17,7 +17,14 @@
  * under the License.
  */
 
-var WidgetChangeLogsController = function(changeLogs, $scope, locationUtils) {
+var WidgetChangeLogsController = function($scope, locationUtils, changeLogService) {
+
+	var getChangeLogs = function() {
+		changeLogService.getChangeLogs({ limit: 5 })
+			.then(function(response) {
+				$scope.changeLogs = response;
+			});
+	};
 
 	$scope.getRelativeTime = function(date) {
 		return moment(date).fromNow();
@@ -26,14 +33,11 @@ var WidgetChangeLogsController = function(changeLogs, $scope, locationUtils) {
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	var init = function() {
-		if (changeLogs) {
-			// only set this if it's passed in
-			$scope.changeLogs = changeLogs;
-		}
+		getChangeLogs();
 	};
 	init();
 
 };
 
-WidgetChangeLogsController.$inject = ['changeLogs', '$scope', 'locationUtils'];
+WidgetChangeLogsController.$inject = ['$scope', 'locationUtils', 'changeLogService'];
 module.exports = WidgetChangeLogsController;

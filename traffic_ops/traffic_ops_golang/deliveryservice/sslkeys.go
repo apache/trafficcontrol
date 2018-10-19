@@ -28,33 +28,40 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
 func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	req := tc.DeliveryServiceSSLKeysReq{}
+	req := tc.DeliveryServiceGenSSLKeysReq{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
 		return
 	}
-
+	if userErr, sysErr, errCode := tenant.Check(inf.User, *req.DeliveryService, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
 	if err := generatePutRiakKeys(req, inf.Tx.Tx, inf.Config); err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("generating and putting SSL keys: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and putting SSL keys: "+err.Error()))
 		return
 	}
-	*inf.CommitTx = true
+	if err := updateSSLKeyVersion(*req.DeliveryService, req.Version.ToInt64(), inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating SSL keys for delivery service '"+*req.DeliveryService+"': "+err.Error()))
+		return
+	}
 	api.WriteResp(w, r, "Successfully created ssl keys for "+*req.DeliveryService)
 }
 
 // generatePutRiakKeys generates a certificate, csr, and key from the given request, and insert it into the Riak key database.
 // The req MUST be validated, ensuring required fields exist.
-func generatePutRiakKeys(req tc.DeliveryServiceSSLKeysReq, tx *sql.Tx, cfg *config.Config) error {
+func generatePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, cfg *config.Config) error {
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
 		CDN:             *req.CDN,
 		DeliveryService: *req.DeliveryService,
@@ -67,16 +74,12 @@ func generatePutRiakKeys(req tc.DeliveryServiceSSLKeysReq, tx *sql.Tx, cfg *conf
 		Key:             *req.Key,
 		Version:         *req.Version,
 	}
-	if req.Certificate != nil {
-		dsSSLKeys.Certificate = *req.Certificate
-	} else {
-		csr, crt, key, err := GenerateCert(*req.HostName, *req.Country, *req.City, *req.State, *req.Organization, *req.BusinessUnit)
-		if err != nil {
-			return errors.New("generating certificate: " + err.Error())
-		}
-		dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(crt), Key: string(key), CSR: string(csr)}
+	csr, crt, key, err := GenerateCert(*req.HostName, *req.Country, *req.City, *req.State, *req.Organization, *req.BusinessUnit)
+	if err != nil {
+		return errors.New("generating certificate: " + err.Error())
 	}
-	if err := riaksvc.PutDeliveryServiceSSLKeysObjTx(dsSSLKeys, tx, cfg.RiakAuthOptions); err != nil {
+	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(crt), Key: string(key), CSR: string(csr)}
+	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx, cfg.RiakAuthOptions); err != nil {
 		return errors.New("putting riak keys: " + err.Error())
 	}
 	return nil

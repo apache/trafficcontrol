@@ -24,6 +24,7 @@ module.exports = angular.module('trafficPortal.utils', [])
     .service('formUtils', require('./FormUtils'))
     .service('locationUtils', require('./LocationUtils'))
     .service('numberUtils', require('./NumberUtils'))
+    .service('permissionUtils', require('./PermissionUtils'))
     .service('serverUtils', require('./ServerUtils'))
     .service('stringUtils', require('./StringUtils'))
     .service('tenantUtils', require('./TenantUtils'));

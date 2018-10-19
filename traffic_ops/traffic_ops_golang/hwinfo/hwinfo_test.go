@@ -20,6 +20,7 @@ package hwinfo
  */
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -62,6 +63,7 @@ func TestGetHWInfo(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
+	mock.ExpectBegin()
 	testHWInfo := getTestHWInfo()
 	cols := test.ColsFromStructByTag("db", tc.HWInfo{})
 	rows := sqlmock.NewRows(cols)
@@ -78,10 +80,18 @@ func TestGetHWInfo(t *testing.T) {
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"ServerId": "1"}
+	mock.ExpectCommit()
 
-	hwinfos, errs, errType := getHWInfo(v, db)
-	if len(errs) > 0 {
-		t.Errorf("getHWInfo expected: no errors, actual: %v with error type: %s", errs, errType.String())
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTxx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	hwinfos, err := getHWInfo(tx, v)
+	if err != nil {
+		t.Errorf("getHWInfo expected: error nil, actual: %v ", err)
 	}
 
 	if len(hwinfos) != 2 {

@@ -1,333 +1,354 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 .. _to-api-v11-cdn-health:
 
-CDN 
-===
+***
+CDN
+***
 
 .. _to-api-v11-cdn-health-route:
 
-/api/1.1/cdns
-+++++++++++++
+``/api/1.1/cdns``
+=================
+Extract information about all CDNs
 
-**GET /api/1.1/cdns**
+``GET``
+-------
+:Auth. Required: Yes
+:Roles Required: None
+:Response Type:  Array
 
-  Authentication Required: Yes
+.. table:: Response Properties
 
-  Role(s) Required: None
+	+-------------------+---------+------------------------------------------------------------+
+	|    Parameter      |  Type   |                         Description                        |
+	+===================+=========+============================================================+
+	| ``id``            | integer | The ID of the CDN                                          |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``name``          | string  | The name of the CDN                                        |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``dnssecEnabled`` | boolean | 'true' if DNSSEC is enabled on this CDN, otherwise 'false' |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``lastUpdated``   | string  | Date and time when the CDN was last modified               |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``domainName``    | string  | Top Level Domain name within which this CDN operates       |
+	+-------------------+---------+------------------------------------------------------------+
 
-  **Response Properties**
+.. code-block:: json
+	:caption: Response Example
 
-  +-------------------+--------+-------------------------------------------------+
-  |    Parameter      |  Type  |                   Description                   |
-  +===================+========+=================================================+
-  | ``id``            | string | CDN id.                                         |
-  +-------------------+--------+-------------------------------------------------+
-  | ``name``          | string | CDN name.                                       |
-  +-------------------+--------+-------------------------------------------------+
-  | ``dnssecEnabled`` |  bool  | DNSSEC enabled.                                 |
-  +-------------------+--------+-------------------------------------------------+
-  | ``lastUpdated``   | string |                                                 |
-  +-------------------+--------+-------------------------------------------------+
+	{
+		"response": [
+			{
+				"id": 1,
+				"name": "over-the-top",
+				"dnssecEnabled": false,
+				"lastUpdated": "2014-10-02 08:22:43",
+				"domainName": "top.comcast.net"
+			},
+			{
+				"id": 2,
+				"name": "cdn2",
+				"dnssecEnabled": true,
+				"lastUpdated": "2014-10-02 08:22:43",
+				"domainName": "2.comcast.net"
+			}
+		]
+	}
 
-  **Response Example** ::
+``/api/1.1/cdns/:id``
+=====================
+Extract information about a specific CDN.
 
-    {
-     "response": [
-           {
-              "id": "1"
-              "name": "over-the-top",
-              "dnssecEnabled": false,
-              "lastUpdated": "2014-10-02 08:22:43"
-           },
-           {
-              "id": "2"
-              "name": "cdn2",
-              "dnssecEnabled": true,
-              "lastUpdated": "2014-10-02 08:22:43"
-           }
-        ]
-    }
+``GET``
+-------
+:Auth. Required: Yes
+:Roles Required: None
+:Response Type:  Array
 
-|
+.. table:: Request Path Parameters
 
-**GET /api/1.1/cdns/:id**
+	+-----------+----------+---------------------------------------------+
+	|   Name    | Required |                Description                  |
+	+===========+==========+=============================================+
+	|   ``id``  |   yes    | ID of the CDN to inspect                    |
+	+-----------+----------+---------------------------------------------+
 
-  Authentication Required: Yes
+.. table:: Response Properties
 
-  Role(s) Required: None
+	+-------------------+---------+------------------------------------------------------------+
+	|    Parameter      |  Type   |                         Description                        |
+	+===================+=========+============================================================+
+	| ``id``            | integer | The ID of the CDN                                          |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``name``          | string  | The name of the CDN                                        |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``dnssecEnabled`` | boolean | 'true' if DNSSEC is enabled on this CDN, otherwise 'false' |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``lastUpdated``   | string  | Date and time when the CDN was last modified               |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``domainName``    | string  | Top Level Domain name within which this CDN operates       |
+	+-------------------+---------+------------------------------------------------------------+
 
-  **Request Route Parameters**
+.. code-block:: json
+	:caption: Response Example
 
-  +-----------+----------+---------------------------------------------+
-  |   Name    | Required |                Description                  |
-  +===========+==========+=============================================+
-  |   ``id``  |   yes    | CDN id.                                     |
-  +-----------+----------+---------------------------------------------+
+	{
+		"response": [
+			{
+				"id": 2,
+				"name": "cdn2",
+				"dnssecEnabled": false,
+				"lastUpdated": "2014-10-02 08:22:43",
+				"domainName": "2.comcast.net"
+			}
+		]
+	}
 
-  **Response Properties**
+``/api/1.1/cdns/name/:name``
+============================
+Extract information about one or more CDNs, identified by name.
 
-  +-------------------+--------+-------------------------------------------------+
-  |    Parameter      |  Type  |                   Description                   |
-  +===================+========+=================================================+
-  | ``id``            | string | CDN id.                                         |
-  +-------------------+--------+-------------------------------------------------+
-  | ``name``          | string | CDN name.                                       |
-  +-------------------+--------+-------------------------------------------------+
-  | ``dnssecEnabled`` |  bool  | DNSSEC enabled.                                 |
-  +-------------------+--------+-------------------------------------------------+
-  | ``lastUpdated``   | string |                                                 |
-  +-------------------+--------+-------------------------------------------------+
+``GET``
+-------
+:Auth. Required: Yes
+:Roles Required: None
+:Response Type:  Array
 
-  **Response Example** ::
+.. table:: Request Path Parameters
 
-    {
-     "response": [
-           {
-              "id": "2"
-              "name": "cdn2",
-              "dnssecEnabled": false,
-              "lastUpdated": "2014-10-02 08:22:43"
-           }
-        ]
-    }
+	+-----------+----------+---------------------------------------------+
+	|   Name    | Required |                Description                  |
+	+===========+==========+=============================================+
+	|  ``name`` |   yes    | The name of the CDN(s) to be inspected      |
+	+-----------+----------+---------------------------------------------+
 
-|
+.. table:: Response Properties
 
-**GET /api/1.1/cdns/name/:name**
+	+-------------------+---------+------------------------------------------------------------+
+	|    Parameter      |  Type   |                         Description                        |
+	+===================+=========+============================================================+
+	| ``id``            | integer | The ID of the CDN                                          |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``name``          | string  | The name of the CDN                                        |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``dnssecEnabled`` | boolean | 'true' if DNSSEC is enabled on this CDN, otherwise 'false' |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``lastUpdated``   | string  | Date and time when the CDN was last modified               |
+	+-------------------+---------+------------------------------------------------------------+
+	| ``domainName``    | string  | Top Level Domain name within which this CDN operates       |
+	+-------------------+---------+------------------------------------------------------------+
 
-  Authentication Required: Yes
+.. code-block:: json
+	:caption: Response Example
 
-  Role(s) Required: None
+	{
+		"response": [
+			{
+				"id": 2,
+				"name": "cdn2",
+				"dnssecEnabled": false,
+				"lastUpdated": "2014-10-02 08:22:43",
+				"domainName": "2.comcast.net"
+			}
+		]
+	}
 
-  **Request Route Parameters**
+``/api/1.1/cdns/health``
+========================
+Extract health information from all Cache Groups across all CDNs
 
-  +-----------+----------+---------------------------------------------+
-  |   Name    | Required |                Description                  |
-  +===========+==========+=============================================+
-  |  ``name`` |   yes    | CDN name.                                   |
-  +-----------+----------+---------------------------------------------+
+.. seealso:: :ref:`health-proto`
 
-  **Response Properties**
+``GET``
+-------
+:Auth. Required: Yes
+:Roles Required: None
+:Response Type:  Object
 
-  +-------------------+--------+-------------------------------------------------+
-  |    Parameter      |  Type  |                   Description                   |
-  +===================+========+=================================================+
-  | ``id``            | string | CDN id.                                         |
-  +-------------------+--------+-------------------------------------------------+
-  | ``name``          | string | CDN name.                                       |
-  +-------------------+--------+-------------------------------------------------+
-  | ``dnssecEnabled`` |  bool  | DNSSEC enabled.                                 |
-  +-------------------+--------+-------------------------------------------------+
-  | ``lastUpdated``   | string |                                                 |
-  +-------------------+--------+-------------------------------------------------+
+.. table:: Response Properties
 
-  **Response Example** ::
+	+------------------+---------------------------------+-------------------------------------------------+
+	|    Parameter     |  Type                           |                   Description                   |
+	+==================+=================================+=================================================+
+	| ``totalOnline``  | integer                         | Total number of ONLINE caches across all CDNs   |
+	+------------------+---------------------------------+-------------------------------------------------+
+	| ``totalOffline`` | integer                         | Total number of OFFLINE caches across all CDNs  |
+	+------------------+---------------------------------+-------------------------------------------------+
+	| ``cachegroups``  | array of ``cachegroup`` objects | A breakdown of health by Cache Group            |
+	+------------------+---------------------------------+-------------------------------------------------+
 
-    {
-     "response": [
-           {
-              "id": "2"
-              "name": "cdn2",
-              "dnssecEnabled": false,
-              "lastUpdated": "2014-10-02 08:22:43"
-           }
-        ]
-    }
+.. table:: ``cachegroup`` Properties
 
-|
+	+------------------+---------+---------------------------------------------------+
+	|     Parameter    | Type    |                  Description                      |
+	+==================+=========+===================================================+
+	| ``online``       | integer | The number of ONLINE caches in the Cache Group    |
+	+------------------+---------+---------------------------------------------------+
+	| ``offline``      | integer | The number of OFFLINE caches in the Cache Group   |
+	+------------------+---------+---------------------------------------------------+
+	| ``name``         | string  | The name of the Cache Group                       |
+	+------------------+---------+---------------------------------------------------+
 
-Health
-++++++
+.. code-block:: json
+	:caption: Response Example
 
-**GET /api/1.1/cdns/health**
-
-  Retrieves the health of all locations (cache groups) for all CDNs.
-
-  Authentication Required: Yes
-
-  Role(s) Required: None
-
-  **Response Properties**
-
-  +------------------+--------+-------------------------------------------------+
-  |    Parameter     |  Type  |                   Description                   |
-  +==================+========+=================================================+
-  | ``totalOnline``  | int    | Total number of online caches across all CDNs.  |
-  +------------------+--------+-------------------------------------------------+
-  | ``totalOffline`` | int    | Total number of offline caches across all CDNs. |
-  +------------------+--------+-------------------------------------------------+
-  | ``cachegroups``  | array  | A collection of cache groups.                   |
-  +------------------+--------+-------------------------------------------------+
-  | ``>online``      | int    | The number of online caches for the cache group |
-  +------------------+--------+-------------------------------------------------+
-  | ``>offline``     | int    | The number of offline caches for the cache      |
-  |                  |        | group.                                          |
-  +------------------+--------+-------------------------------------------------+
-  | ``>name``        | string | Cache group name.                               |
-  +------------------+--------+-------------------------------------------------+
-
-  **Response Example** ::
-
-    {
-     "response": {
-        "totalOnline": 148,
-        "totalOffline": 0,
-        "cachegroups": [
-           {
-              "online": 8,
-              "offline": 0,
-              "name": "us-co-denver"
-           },
-           {
-              "online": 7,
-              "offline": 0,
-              "name": "us-de-newcastle"
-           }
-        ]
-     },
-    }
-
-
-|
+	{
+		"response": {
+			"totalOnline": 148,
+			"totalOffline": 0,
+			"cachegroups": [
+				{
+					"online": 8,
+					"offline": 0,
+					"name": "us-co-denver"
+				},
+				{
+					"online": 7,
+					"offline": 0,
+					"name": "us-de-newcastle"
+				}
+			]
+		},
+	}
 
 **GET /api/1.1/cdns/:name/health**
 
-  Retrieves the health of all locations (cache groups) for a given CDN.
+	Retrieves the health of all locations (cache groups) for a given CDN.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Request Route Parameters**
+	**Request Path Parameters**
 
-  +-----------------+----------+---------------------------------------------------+
-  | Name            | Required | Description                                       |
-  +=================+==========+===================================================+
-  |``name``         | yes      |                                                   |
-  +-----------------+----------+---------------------------------------------------+
+	+-----------------+----------+---------------------------------------------------+
+	| Name            | Required | Description                                       |
+	+=================+==========+===================================================+
+	|``name``         | yes      |                                                   |
+	+-----------------+----------+---------------------------------------------------+
 
-  **Response Properties**
+	**Response Properties**
 
-  +------------------+--------+-------------------------------------------------+
-  |    Parameter     |  Type  |                   Description                   |
-  +==================+========+=================================================+
-  | ``totalOnline``  | int    | Total number of online caches across the        |
-  |                  |        | specified CDN.                                  |
-  +------------------+--------+-------------------------------------------------+
-  | ``totalOffline`` | int    | Total number of offline caches across the       |
-  |                  |        | specified CDN.                                  |
-  +------------------+--------+-------------------------------------------------+
-  | ``cachegroups``  | array  | A collection of cache groups.                   |
-  +------------------+--------+-------------------------------------------------+
-  | ``>online``      | int    | The number of online caches for the cache group |
-  +------------------+--------+-------------------------------------------------+
-  | ``>offline``     | int    | The number of offline caches for the cache      |
-  |                  |        | group.                                          |
-  +------------------+--------+-------------------------------------------------+
-  | ``>name``        | string | Cache group name.                               |
-  +------------------+--------+-------------------------------------------------+
+	+------------------+--------+-------------------------------------------------+
+	|    Parameter     |  Type  |                   Description                   |
+	+==================+========+=================================================+
+	| ``totalOnline``  | int    | Total number of online caches across the        |
+	|                  |        | specified CDN.                                  |
+	+------------------+--------+-------------------------------------------------+
+	| ``totalOffline`` | int    | Total number of offline caches across the       |
+	|                  |        | specified CDN.                                  |
+	+------------------+--------+-------------------------------------------------+
+	| ``cachegroups``  | array  | A collection of cache groups.                   |
+	+------------------+--------+-------------------------------------------------+
+	| ``>online``      | int    | The number of online caches for the cache group |
+	+------------------+--------+-------------------------------------------------+
+	| ``>offline``     | int    | The number of offline caches for the cache      |
+	|                  |        | group.                                          |
+	+------------------+--------+-------------------------------------------------+
+	| ``>name``        | string | Cache group name.                               |
+	+------------------+--------+-------------------------------------------------+
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-     "response": {
-        "totalOnline": 148,
-        "totalOffline": 0,
-        "cachegroups": [
-           {
-              "online": 8,
-              "offline": 0,
-              "name": "us-co-denver"
-           },
-           {
-              "online": 7,
-              "offline": 0,
-              "name": "us-de-newcastle"
-           }
-        ]
-     },
-    }
+		{
+		 "response": {
+				"totalOnline": 148,
+				"totalOffline": 0,
+				"cachegroups": [
+					 {
+							"online": 8,
+							"offline": 0,
+							"name": "us-co-denver"
+					 },
+					 {
+							"online": 7,
+							"offline": 0,
+							"name": "us-de-newcastle"
+					 }
+				]
+		 },
+		}
 
 |
 
 **GET /api/1.1/cdns/usage/overview**
 
-  Retrieves the high-level CDN usage metrics.
+	Retrieves the high-level CDN usage metrics.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Response Properties**
+	**Response Properties**
 
-  +----------------------+--------+------------------------------------------------+
-  | Parameter            | Type   | Description                                    |
-  +======================+========+================================================+
-  |``currentGbps``       | number |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``tps``               | int    |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``maxGbps``           | int    |                                                |
-  +----------------------+--------+------------------------------------------------+
+	+----------------------+--------+------------------------------------------------+
+	| Parameter            | Type   | Description                                    |
+	+======================+========+================================================+
+	|``currentGbps``       | number |                                                |
+	+----------------------+--------+------------------------------------------------+
+	|``tps``               | int    |                                                |
+	+----------------------+--------+------------------------------------------------+
+	|``maxGbps``           | int    |                                                |
+	+----------------------+--------+------------------------------------------------+
 
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-         "response": {
-            "currentGbps": 149.368167,
-            "tps": 36805,
-            "maxGbps": 3961
-         }
-    }
+		{
+				 "response": {
+						"currentGbps": 149.368167,
+						"tps": 36805,
+						"maxGbps": 3961
+				 }
+		}
 
 
 **GET /api/1.1/cdns/capacity**
 
-  Retrieves the aggregate capacity percentages of all locations (cache groups) for a given CDN.
+	Retrieves the aggregate capacity percentages of all locations (cache groups) for a given CDN.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Response Properties**
+	**Response Properties**
 
-  +----------------------+--------+------------------------------------------------+
-  | Parameter            | Type   | Description                                    |
-  +======================+========+================================================+
-  |``availablePercent``  | number |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``unavailablePercent``| number |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``utilizedPercent``   | number |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``maintenancePercent``| number |                                                |
-  +----------------------+--------+------------------------------------------------+
+	+----------------------+--------+------------------------------------------------+
+	| Parameter            | Type   | Description                                    |
+	+======================+========+================================================+
+	|``availablePercent``  | number |                                                |
+	+----------------------+--------+------------------------------------------------+
+	|``unavailablePercent``| number |                                                |
+	+----------------------+--------+------------------------------------------------+
+	|``utilizedPercent``   | number |                                                |
+	+----------------------+--------+------------------------------------------------+
+	|``maintenancePercent``| number |                                                |
+	+----------------------+--------+------------------------------------------------+
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-         "response": {
-            "availablePercent": 89.0939840205533,
-            "unavailablePercent": 0,
-            "utilizedPercent": 10.9060020300395,
-            "maintenancePercent": 0.0000139494071146245
-         }
-    }
+		{
+				 "response": {
+						"availablePercent": 89.0939840205533,
+						"unavailablePercent": 0,
+						"utilizedPercent": 10.9060020300395,
+						"maintenancePercent": 0.0000139494071146245
+				 }
+		}
 
 |
 
@@ -338,42 +359,42 @@ Routing
 
 **GET /api/1.1/cdns/routing**
 
-  Retrieves the aggregate routing percentages of all locations (cache groups) for a given CDN.
+	Retrieves the aggregate routing percentages of all locations (cache groups) for a given CDN.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Response Properties**
+	**Response Properties**
 
-  +-----------------+--------+-----------------------------------------+
-  |    Parameter    |  Type  |               Description               |
-  +=================+========+=========================================+
-  | ``staticRoute`` | number | Used pre-configured DNS entries.        |
-  +-----------------+--------+-----------------------------------------+
-  | ``miss``        | number | No location available for client IP.    |
-  +-----------------+--------+-----------------------------------------+
-  | ``geo``         | number | Used 3rd party geo-IP mapping.          |
-  +-----------------+--------+-----------------------------------------+
-  | ``err``         | number | Error localizing client IP.             |
-  +-----------------+--------+-----------------------------------------+
-  | ``cz``          | number | Used Coverage Zone   geo-IP mapping.    |
-  +-----------------+--------+-----------------------------------------+
-  | ``dsr``         | number | Overflow traffic sent to secondary CDN. |
-  +-----------------+--------+-----------------------------------------+
+	+-----------------+--------+-----------------------------------------+
+	|    Parameter    |  Type  |               Description               |
+	+=================+========+=========================================+
+	| ``staticRoute`` | number | Used pre-configured DNS entries.        |
+	+-----------------+--------+-----------------------------------------+
+	| ``miss``        | number | No location available for client IP.    |
+	+-----------------+--------+-----------------------------------------+
+	| ``geo``         | number | Used 3rd party geo-IP mapping.          |
+	+-----------------+--------+-----------------------------------------+
+	| ``err``         | number | Error localizing client IP.             |
+	+-----------------+--------+-----------------------------------------+
+	| ``cz``          | number | Used Coverage Zone   geo-IP mapping.    |
+	+-----------------+--------+-----------------------------------------+
+	| ``dsr``         | number | Overflow traffic sent to secondary CDN. |
+	+-----------------+--------+-----------------------------------------+
 
-  **Response Example** ::
+	**Response Example** ::
 
-   {
-         "response": {
-            "staticRoute": 0,
-            "miss": 0,
-            "geo": 37.8855391018869,
-            "err": 0,
-            "cz": 62.1144608981131,
-            "dsr": 0
-         }
-    }
+	 {
+				 "response": {
+						"staticRoute": 0,
+						"miss": 0,
+						"geo": 37.8855391018869,
+						"err": 0,
+						"cz": 62.1144608981131,
+						"dsr": 0
+				 }
+		}
 
 |
 
@@ -386,85 +407,85 @@ Metrics
 
 *Note: this route is not currently implemented in Traffic Ops. See https://github.com/apache/trafficcontrol/issues/2309*
 
-  Retrieves edge metrics of one or all locations (cache groups).
+	Retrieves edge metrics of one or all locations (cache groups).
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Request Route Parameters**
+	**Request Path Parameters**
 
-  +-----------------+----------+---------------------------+
-  |       Name      | Required |        Description        |
-  +=================+==========+===========================+
-  | ``metric_type`` | yes      | ooff, origin_tps          |
-  +-----------------+----------+---------------------------+
-  | ``start``       | yes      | UNIX time, yesterday, now |
-  +-----------------+----------+---------------------------+
-  | ``end``         | yes      | UNIX time, yesterday, now |
-  +-----------------+----------+---------------------------+
+	+-----------------+----------+---------------------------+
+	|       Name      | Required |        Description        |
+	+=================+==========+===========================+
+	| ``metric_type`` | yes      | ooff, origin_tps          |
+	+-----------------+----------+---------------------------+
+	| ``start``       | yes      | UNIX time, yesterday, now |
+	+-----------------+----------+---------------------------+
+	| ``end``         | yes      | UNIX time, yesterday, now |
+	+-----------------+----------+---------------------------+
 
-  **Response Properties**
+	**Response Properties**
 
-  +---------------------+--------+-------------+
-  |      Parameter      |  Type  | Description |
-  +=====================+========+=============+
-  | ``stats``           | hash   |             |
-  +---------------------+--------+-------------+
-  | ``>count``          | string |             |
-  +---------------------+--------+-------------+
-  | ``>98thPercentile`` | string |             |
-  +---------------------+--------+-------------+
-  | ``>min``            | string |             |
-  +---------------------+--------+-------------+
-  | ``>max``            | string |             |
-  +---------------------+--------+-------------+
-  | ``>5thPercentile``  | string |             |
-  +---------------------+--------+-------------+
-  | ``>95thPercentile`` | string |             |
-  +---------------------+--------+-------------+
-  | ``>mean``           | string |             |
-  +---------------------+--------+-------------+
-  | ``>sum``            | string |             |
-  +---------------------+--------+-------------+
-  | ``data``            | array  |             |
-  +---------------------+--------+-------------+
-  | ``>time``           | int    |             |
-  +---------------------+--------+-------------+
-  | ``>value``          | number |             |
-  +---------------------+--------+-------------+
-  | ``label``           | string |             |
-  +---------------------+--------+-------------+
+	+---------------------+--------+-------------+
+	|      Parameter      |  Type  | Description |
+	+=====================+========+=============+
+	| ``stats``           | hash   |             |
+	+---------------------+--------+-------------+
+	| ``>count``          | string |             |
+	+---------------------+--------+-------------+
+	| ``>98thPercentile`` | string |             |
+	+---------------------+--------+-------------+
+	| ``>min``            | string |             |
+	+---------------------+--------+-------------+
+	| ``>max``            | string |             |
+	+---------------------+--------+-------------+
+	| ``>5thPercentile``  | string |             |
+	+---------------------+--------+-------------+
+	| ``>95thPercentile`` | string |             |
+	+---------------------+--------+-------------+
+	| ``>mean``           | string |             |
+	+---------------------+--------+-------------+
+	| ``>sum``            | string |             |
+	+---------------------+--------+-------------+
+	| ``data``            | array  |             |
+	+---------------------+--------+-------------+
+	| ``>time``           | int    |             |
+	+---------------------+--------+-------------+
+	| ``>value``          | number |             |
+	+---------------------+--------+-------------+
+	| ``label``           | string |             |
+	+---------------------+--------+-------------+
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-     "response": [
-        {
-           "stats": {
-              "count": 1,
-              "98thPercentile": 1668.03,
-              "min": 1668.03,
-              "max": 1668.03,
-              "5thPercentile": 1668.03,
-              "95thPercentile": 1668.03,
-              "mean": 1668.03,
-              "sum": 1668.03
-           },
-           "data": [
-              [
-                 1425135900000,
-                 1668.03
-              ],
-              [
-                 1425136200000,
-                 null
-              ]
-           ],
-           "label": "Origin TPS"
-        }
-     ],
-    }
+		{
+		 "response": [
+				{
+					 "stats": {
+							"count": 1,
+							"98thPercentile": 1668.03,
+							"min": 1668.03,
+							"max": 1668.03,
+							"5thPercentile": 1668.03,
+							"95thPercentile": 1668.03,
+							"mean": 1668.03,
+							"sum": 1668.03
+					 },
+					 "data": [
+							[
+								 1425135900000,
+								 1668.03
+							],
+							[
+								 1425136200000,
+								 null
+							]
+					 ],
+					 "label": "Origin TPS"
+				}
+		 ],
+		}
 
 |
 
@@ -475,46 +496,46 @@ Domains
 
 **GET /api/1.1/cdns/domains**
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Response Properties**
+	**Response Properties**
 
-  +----------------------+--------+------------------------------------------------+
-  | Parameter            | Type   | Description                                    |
-  +======================+========+================================================+
-  |``profileId``         | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``parameterId``       | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``profileName``       | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``profileDescription``| string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  |``domainName``        | string |                                                |
-  +----------------------+--------+------------------------------------------------+
+	+----------------------+--------+------------------------------------------------+
+	| Parameter            | Type   | Description                                    |
+	+======================+========+================================================+
+	|``profileId``         | string |                                                |
+	+----------------------+--------+------------------------------------------------+
+	|``parameterId``       | string |                                                |
+	+----------------------+--------+------------------------------------------------+
+	|``profileName``       | string |                                                |
+	+----------------------+--------+------------------------------------------------+
+	|``profileDescription``| string |                                                |
+	+----------------------+--------+------------------------------------------------+
+	|``domainName``        | string |                                                |
+	+----------------------+--------+------------------------------------------------+
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-     "response": [
-        {
-           "profileId": "5",
-           "parameterId": "404",
-           "profileName": "CR_FOO",
-           "profileDescription": "Content Router for foo.domain.net",
-           "domainName": "foo.domain.net"
-        },
-        {
-           "profileId": "8",
-           "parameterId": "405",
-           "profileName": "CR_BAR",
-           "profileDescription": "Content Router for bar.domain.net",
-           "domainName": "bar.domain.net"
-        }
-     ],
-    }
+		{
+		 "response": [
+				{
+					 "profileId": "5",
+					 "parameterId": "404",
+					 "profileName": "CR_FOO",
+					 "profileDescription": "Content Router for foo.domain.net",
+					 "domainName": "foo.domain.net"
+				},
+				{
+					 "profileId": "8",
+					 "parameterId": "405",
+					 "profileName": "CR_BAR",
+					 "profileDescription": "Content Router for bar.domain.net",
+					 "domainName": "bar.domain.net"
+				}
+		 ],
+		}
 
 |
 
@@ -525,390 +546,390 @@ Topology
 
 **GET /api/1.1/cdns/:cdn_name/configs**
 
-  Retrieves CDN config information based upon the provided cdn name.
+	Retrieves CDN config information based upon the provided cdn name.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Request Route Parameters**
+	**Request Path Parameters**
 
-  +--------------+----------+-----------------------+
-  |     Name     | Required |      Description      |
-  +==============+==========+=======================+
-  | ``cdn_name`` | yes      | Your cdn name or, all |
-  +--------------+----------+-----------------------+
+	+--------------+----------+-----------------------+
+	|     Name     | Required |      Description      |
+	+==============+==========+=======================+
+	| ``cdn_name`` | yes      | Your cdn name or, all |
+	+--------------+----------+-----------------------+
 
-  **Response Properties**
+	**Response Properties**
 
-  +-----------------------+--------+-----------------------------------------------+
-  | Parameter             | Type   | Description                                   |
-  +=======================+========+===============================================+
-  |``id``                 | string |                                               |
-  +-----------------------+--------+-----------------------------------------------+
-  |``value``              | string |                                               |
-  +-----------------------+--------+-----------------------------------------------+
-  |``name``               | string |                                               |
-  +-----------------------+--------+-----------------------------------------------+
-  |``config_file``        | string |                                               |
-  +-----------------------+--------+-----------------------------------------------+
+	+-----------------------+--------+-----------------------------------------------+
+	| Parameter             | Type   | Description                                   |
+	+=======================+========+===============================================+
+	|``id``                 | string |                                               |
+	+-----------------------+--------+-----------------------------------------------+
+	|``value``              | string |                                               |
+	+-----------------------+--------+-----------------------------------------------+
+	|``name``               | string |                                               |
+	+-----------------------+--------+-----------------------------------------------+
+	|``config_file``        | string |                                               |
+	+-----------------------+--------+-----------------------------------------------+
 
-  **Response Example** ::
+	**Response Example** ::
 
-    TBD
+		TBD
 
 |
 
 **GET /api/1.1/cdns/:name/configs/monitoring**
 
-  Retrieves CDN monitoring information.
+	Retrieves CDN monitoring information.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Request Route Parameters**
+	**Request Path Parameters**
 
-  +----------+----------+-------------+
-  |   Name   | Required | Description |
-  +==========+==========+=============+
-  | ``name`` | yes      |  CDN name   |
-  +----------+----------+-------------+
+	+----------+----------+-------------+
+	|   Name   | Required | Description |
+	+==========+==========+=============+
+	| ``name`` | yes      |  CDN name   |
+	+----------+----------+-------------+
 
-  **Response Properties**
+	**Response Properties**
 
-  +-------------------------------------------------+--------+--------------------+
-  |                    Parameter                    |  Type  |    Description     |
-  +=================================================+========+====================+
-  | ``trafficServers``                              | array  | A collection of    |
-  |                                                 |        | Traffic Servers.   |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>profile``                                    | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>ip``                                         | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>status``                                     | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>cacheGroup``                                 | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>ip6``                                        | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>port``                                       | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>hostName``                                   | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>fqdn``                                       | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>interfaceName``                              | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>type``                                       | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>hashId``                                     | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``cacheGroups``                                 | array  | A collection of    |
-  |                                                 |        | cache groups.      |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>coordinates``                                | hash   |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>>longitude``                                 | number |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>>latitude``                                  | number |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>name``                                       | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``config``                                      | hash   |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>hack.ttl``                                   | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>tm.healthParams.polling.url``                | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>tm.dataServer.polling.url``                  | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>health.timepad``                             | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>tm.polling.interval``                        | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>health.threadPool``                          | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>health.polling.interval``                    | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>health.event-count``                         | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>tm.crConfig.polling.url``                    | number |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>CDN_name``                                   | number |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``trafficMonitors``                             | array  | A collection of    |
-  |                                                 |        | Traffic Monitors.  |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>profile``                                    | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>location``                                   | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>ip``                                         | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>status``                                     | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>ip6``                                        | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>port``                                       | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>hostName``                                   | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>fqdn``                                       | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``deliveryServices``                            | array  | A collection of    |
-  |                                                 |        | delivery services. |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>xmlId``                                      | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>totalTpsThreshold``                          | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>status``                                     | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>totalKbpsThreshold``                         | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``profiles``                                    | array  | A collection of    |
-  |                                                 |        | profiles.          |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>parameters``                                 | hash   |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>>health.connection.timeout``                 | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>>health.polling.url``                        | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>>health.threshold.queryTime``                | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>>history.count``                             | int    |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>>health.threshold.availableBandwidthInKbps`` | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>>health.threshold.loadavg``                  | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>name``                                       | string |                    |
-  +-------------------------------------------------+--------+--------------------+
-  | ``>type``                                       | string |                    |
-  +-------------------------------------------------+--------+--------------------+
+	+-------------------------------------------------+--------+--------------------+
+	|                    Parameter                    |  Type  |    Description     |
+	+=================================================+========+====================+
+	| ``trafficServers``                              | array  | A collection of    |
+	|                                                 |        | Traffic Servers.   |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>profile``                                    | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>ip``                                         | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>status``                                     | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>cacheGroup``                                 | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>ip6``                                        | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>port``                                       | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>hostName``                                   | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>fqdn``                                       | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>interfaceName``                              | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>type``                                       | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>hashId``                                     | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``cacheGroups``                                 | array  | A collection of    |
+	|                                                 |        | cache groups.      |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>coordinates``                                | hash   |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>>longitude``                                 | number |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>>latitude``                                  | number |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>name``                                       | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``config``                                      | hash   |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>hack.ttl``                                   | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>tm.healthParams.polling.url``                | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>tm.dataServer.polling.url``                  | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>health.timepad``                             | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>tm.polling.interval``                        | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>health.threadPool``                          | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>health.polling.interval``                    | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>health.event-count``                         | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>tm.crConfig.polling.url``                    | number |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>CDN_name``                                   | number |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``trafficMonitors``                             | array  | A collection of    |
+	|                                                 |        | Traffic Monitors.  |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>profile``                                    | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>location``                                   | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>ip``                                         | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>status``                                     | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>ip6``                                        | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>port``                                       | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>hostName``                                   | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>fqdn``                                       | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``deliveryServices``                            | array  | A collection of    |
+	|                                                 |        | delivery services. |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>xmlId``                                      | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>totalTpsThreshold``                          | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>status``                                     | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>totalKbpsThreshold``                         | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``profiles``                                    | array  | A collection of    |
+	|                                                 |        | profiles.          |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>parameters``                                 | hash   |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>>health.connection.timeout``                 | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>>health.polling.url``                        | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>>health.threshold.queryTime``                | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>>history.count``                             | int    |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>>health.threshold.availableBandwidthInKbps`` | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>>health.threshold.loadavg``                  | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>name``                                       | string |                    |
+	+-------------------------------------------------+--------+--------------------+
+	| ``>type``                                       | string |                    |
+	+-------------------------------------------------+--------+--------------------+
 
-  **Response Example**
-  ::
+	**Response Example**
+	::
 
-    TBD
+		TBD
 
 |
 
 **GET /api/1.1/cdns/:name/configs/routing**
 
-  Retrieves CDN routing information.
+	Retrieves CDN routing information.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Request Route Parameters**
+	**Request Path Parameters**
 
-  +----------+----------+-------------+
-  |   Name   | Required | Description |
-  +==========+==========+=============+
-  | ``name`` | yes      |             |
-  +----------+----------+-------------+
+	+----------+----------+-------------+
+	|   Name   | Required | Description |
+	+==========+==========+=============+
+	| ``name`` | yes      |             |
+	+----------+----------+-------------+
 
-  **Response Properties**
+	**Response Properties**
 
-  +-------------------------------------+---------+-----------------------------------+
-  |              Parameter              |   Type  |            Description            |
-  +=====================================+=========+===================================+
-  | ``trafficServers``                  | array   | A collection of Traffic Servers.  |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>profile``                        | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>ip``                             | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>status``                         | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>cacheGroup``                     | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>ip6``                            | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>port``                           | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>deliveryServices``               | array   |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>xmlId``                         | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>remaps``                        | array   |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>hostName``                      | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>fqdn``                           | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>interfaceName``                  | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>type``                           | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>hashId``                         | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``stats``                           | hash    |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>trafficOpsPath``                 | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>cdnName``                        | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>trafficOpsVersion``              | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>trafficOpsUser``                 | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>date``                           | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>trafficOpsHost``                 | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``cacheGroups``                     | array   | A collection of cache groups.     |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>coordinates``                    | hash    |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>longitude``                     | number  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>latitude``                      | number  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>name``                           | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``config``                          | hash    |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>tld.soa.admin``                  | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>tcoveragezone.polling.interval`` | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>geolocation.polling.interval``   | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>tld.soa.expire``                 | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>coveragezone.polling.url``       | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>tld.soa.minimum``                | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>geolocation.polling.url``        | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>domain_name``                    | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>tld.ttls.AAAA``                  | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>tld.soa.refresh``                | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>tld.ttls.NS``                    | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>tld.ttls.SOA``                   | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>geolocation6.polling.interval``  | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>tld.ttls.A``                     | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>tld.soa.retry``                  | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>geolocation6.polling.url``       | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``trafficMonitors``                 | array   | A collection of Traffic Monitors. |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>profile``                        | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>location``                       | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>ip``                             | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>status``                         | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>ip6``                            | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>port``                           | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>hostName``                       | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>fqdn``                           | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``deliveryServices``                | array   | A collection of delivery          |
-  |                                     |         | services.                         |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>xmlId``                          | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>ttl``                            | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>geoEnabled``                     | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>coverageZoneOnly``               | boolean |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>matchSets``                      | array   |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>protocol``                      | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>matchList``                     | array   |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>>regex``                        | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>>matchType``                    | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>bypassDestination``              | hash    |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>maxDnsIpsForLocation``          | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>ttl``                           | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>type``                          | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>ttls``                           | hash    |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>A``                             | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>SOA``                           | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>NS``                            | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>AAAA``                          | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>missCoordinates``                | hash    |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>longitude``                     | number  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>latitude``                      | number  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>soa``                            | hash    |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>admin``                         | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>retry``                         | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>minimum``                       | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>refresh``                       | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>>expire``                        | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``trafficRouters``                  | hash    |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>profile``                        | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>location``                       | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>ip``                             | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>status``                         | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>ip6``                            | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>port``                           | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>hostName``                       | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>fqdn``                           | string  |                                   |
-  +-------------------------------------+---------+-----------------------------------+
-  | ``>apiPort``                        | int     |                                   |
-  +-------------------------------------+---------+-----------------------------------+
+	+-------------------------------------+---------+-----------------------------------+
+	|              Parameter              |   Type  |            Description            |
+	+=====================================+=========+===================================+
+	| ``trafficServers``                  | array   | A collection of Traffic Servers.  |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>profile``                        | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>ip``                             | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>status``                         | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>cacheGroup``                     | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>ip6``                            | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>port``                           | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>deliveryServices``               | array   |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>xmlId``                         | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>remaps``                        | array   |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>hostName``                      | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>fqdn``                           | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>interfaceName``                  | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>type``                           | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>hashId``                         | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``stats``                           | hash    |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>trafficOpsPath``                 | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>cdnName``                        | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>trafficOpsVersion``              | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>trafficOpsUser``                 | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>date``                           | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>trafficOpsHost``                 | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``cacheGroups``                     | array   | A collection of cache groups.     |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>coordinates``                    | hash    |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>longitude``                     | number  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>latitude``                      | number  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>name``                           | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``config``                          | hash    |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>tld.soa.admin``                  | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>tcoveragezone.polling.interval`` | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>geolocation.polling.interval``   | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>tld.soa.expire``                 | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>coveragezone.polling.url``       | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>tld.soa.minimum``                | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>geolocation.polling.url``        | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>domain_name``                    | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>tld.ttls.AAAA``                  | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>tld.soa.refresh``                | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>tld.ttls.NS``                    | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>tld.ttls.SOA``                   | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>geolocation6.polling.interval``  | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>tld.ttls.A``                     | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>tld.soa.retry``                  | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>geolocation6.polling.url``       | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``trafficMonitors``                 | array   | A collection of Traffic Monitors. |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>profile``                        | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>location``                       | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>ip``                             | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>status``                         | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>ip6``                            | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>port``                           | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>hostName``                       | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>fqdn``                           | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``deliveryServices``                | array   | A collection of delivery          |
+	|                                     |         | services.                         |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>xmlId``                          | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>ttl``                            | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>geoEnabled``                     | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>coverageZoneOnly``               | boolean |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>matchSets``                      | array   |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>protocol``                      | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>matchList``                     | array   |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>>regex``                        | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>>matchType``                    | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>bypassDestination``              | hash    |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>maxDnsIpsForLocation``          | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>ttl``                           | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>type``                          | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>ttls``                           | hash    |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>A``                             | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>SOA``                           | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>NS``                            | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>AAAA``                          | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>missCoordinates``                | hash    |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>longitude``                     | number  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>latitude``                      | number  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>soa``                            | hash    |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>admin``                         | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>retry``                         | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>minimum``                       | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>refresh``                       | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>>expire``                        | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``trafficRouters``                  | hash    |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>profile``                        | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>location``                       | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>ip``                             | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>status``                         | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>ip6``                            | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>port``                           | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>hostName``                       | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>fqdn``                           | string  |                                   |
+	+-------------------------------------+---------+-----------------------------------+
+	| ``>apiPort``                        | int     |                                   |
+	+-------------------------------------+---------+-----------------------------------+
 
 
 **Response Example**
 
 ::
-  TBD
+	TBD
 
- 
+
 .. _to-api-v11-cdn-dnsseckeys:
 
 DNSSEC Keys
@@ -916,173 +937,173 @@ DNSSEC Keys
 
 **GET /api/1.1/cdns/name/:name/dnsseckeys**
 
-  Gets a list of dnsseckeys for CDN and all associated Delivery Services.
-  Before returning response to user, check to make sure keys aren't expired.  If they are expired, generate new ones.
-  Before returning response to user, make sure dnssec keys for all delivery services exist.  If they don't exist, create them.
+	Gets a list of dnsseckeys for CDN and all associated Delivery Services.
+	Before returning response to user, check to make sure keys aren't expired.  If they are expired, generate new ones.
+	Before returning response to user, make sure dnssec keys for all delivery services exist.  If they don't exist, create them.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: Admin
+	Role(s) Required: Admin
 
-  **Request Route Parameters**
+	**Request Path Parameters**
 
-  +----------+----------+-------------+
-  |   Name   | Required | Description |
-  +==========+==========+=============+
-  | ``name`` | yes      |             |
-  +----------+----------+-------------+
+	+----------+----------+-------------+
+	|   Name   | Required | Description |
+	+==========+==========+=============+
+	| ``name`` | yes      |             |
+	+----------+----------+-------------+
 
-  **Response Properties**
+	**Response Properties**
 
-  +------------------------+--------+---------------------------------------------------------+
-  |       Parameter        |  Type  |                       Description                       |
-  +========================+========+=========================================================+
-  | ``cdn name/ds xml_id`` | string | identifier for ds or cdn                                |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>zsk/ksk``           | array  | collection of zsk/ksk data                              |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>ttl``              | string | time-to-live for dnssec requests                        |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>inceptionDate``    | string | epoch timestamp for when the keys were created          |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>expirationDate``   | string | epoch timestamp representing the expiration of the keys |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>private``          | string | encoded private key                                     |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>public``           | string | encoded public key                                      |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``>>name``             | string | domain name                                             |
-  +------------------------+--------+---------------------------------------------------------+
-  | ``version``            | string | API version                                             |
-  +------------------------+--------+---------------------------------------------------------+
+	+------------------------+--------+---------------------------------------------------------+
+	|       Parameter        |  Type  |                       Description                       |
+	+========================+========+=========================================================+
+	| ``cdn name/ds xml_id`` | string | identifier for ds or cdn                                |
+	+------------------------+--------+---------------------------------------------------------+
+	| ``>zsk/ksk``           | array  | collection of zsk/ksk data                              |
+	+------------------------+--------+---------------------------------------------------------+
+	| ``>>ttl``              | string | time-to-live for dnssec requests                        |
+	+------------------------+--------+---------------------------------------------------------+
+	| ``>>inceptionDate``    | string | epoch timestamp for when the keys were created          |
+	+------------------------+--------+---------------------------------------------------------+
+	| ``>>expirationDate``   | string | epoch timestamp representing the expiration of the keys |
+	+------------------------+--------+---------------------------------------------------------+
+	| ``>>private``          | string | encoded private key                                     |
+	+------------------------+--------+---------------------------------------------------------+
+	| ``>>public``           | string | encoded public key                                      |
+	+------------------------+--------+---------------------------------------------------------+
+	| ``>>name``             | string | domain name                                             |
+	+------------------------+--------+---------------------------------------------------------+
+	| ``version``            | string | API version                                             |
+	+------------------------+--------+---------------------------------------------------------+
 
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-      "response": {
-        "cdn1": {
-          "zsk": {
-            "ttl": "60",
-            "inceptionDate": "1426196750",
-            "private": "zsk private key",
-            "public": "zsk public key",
-            "expirationDate": "1428788750",
-            "name": "foo.kabletown.com."
-          },
-          "ksk": {
-            "name": "foo.kabletown.com.",
-            "expirationDate": "1457732750",
-            "public": "ksk public key",
-            "private": "ksk private key",
-            "inceptionDate": "1426196750",
-            "ttl": "60"
-          }
-        },
-        "ds-01": {
-          "zsk": {
-            "ttl": "60",
-            "inceptionDate": "1426196750",
-            "private": "zsk private key",
-            "public": "zsk public key",
-            "expirationDate": "1428788750",
-            "name": "ds-01.foo.kabletown.com."
-          },
-          "ksk": {
-            "name": "ds-01.foo.kabletown.com.",
-            "expirationDate": "1457732750",
-            "public": "ksk public key",
-            "private": "ksk private key",
-            "inceptionDate": "1426196750"
-          }
-        },
-        ... repeated for each ds in the cdn
-      },
-    }
+		{
+			"response": {
+				"cdn1": {
+					"zsk": {
+						"ttl": "60",
+						"inceptionDate": "1426196750",
+						"private": "zsk private key",
+						"public": "zsk public key",
+						"expirationDate": "1428788750",
+						"name": "foo.kabletown.com."
+					},
+					"ksk": {
+						"name": "foo.kabletown.com.",
+						"expirationDate": "1457732750",
+						"public": "ksk public key",
+						"private": "ksk private key",
+						"inceptionDate": "1426196750",
+						"ttl": "60"
+					}
+				},
+				"ds-01": {
+					"zsk": {
+						"ttl": "60",
+						"inceptionDate": "1426196750",
+						"private": "zsk private key",
+						"public": "zsk public key",
+						"expirationDate": "1428788750",
+						"name": "ds-01.foo.kabletown.com."
+					},
+					"ksk": {
+						"name": "ds-01.foo.kabletown.com.",
+						"expirationDate": "1457732750",
+						"public": "ksk public key",
+						"private": "ksk private key",
+						"inceptionDate": "1426196750"
+					}
+				},
+				... repeated for each ds in the cdn
+			},
+		}
 
 |
 
 **GET /api/1.1/cdns/name/:name/dnsseckeys/delete**
 
-  Delete dnssec keys for a cdn and all associated delivery services.
+	Delete dnssec keys for a cdn and all associated delivery services.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: Admin
+	Role(s) Required: Admin
 
-  **Request Route Parameters**
+	**Request Path Parameters**
 
-  +----------+----------+----------------------------------------------------------+
-  |   Name   | Required |                       Description                        |
-  +==========+==========+==========================================================+
-  | ``name`` | yes      | name of the CDN for which you want to delete dnssec keys |
-  +----------+----------+----------------------------------------------------------+
+	+----------+----------+----------------------------------------------------------+
+	|   Name   | Required |                       Description                        |
+	+==========+==========+==========================================================+
+	| ``name`` | yes      | name of the CDN for which you want to delete dnssec keys |
+	+----------+----------+----------------------------------------------------------+
 
-  **Response Properties**
+	**Response Properties**
 
-  +--------------+--------+------------------+
-  |  Parameter   |  Type  |   Description    |
-  +==============+========+==================+
-  | ``response`` | string | success response |
-  +--------------+--------+------------------+
+	+--------------+--------+------------------+
+	|  Parameter   |  Type  |   Description    |
+	+==============+========+==================+
+	| ``response`` | string | success response |
+	+--------------+--------+------------------+
 
-  **Response Example**
-  ::
+	**Response Example**
+	::
 
-    {  
-      "response": "Successfully deleted dnssec keys for <cdn>"
-    }
+		{
+			"response": "Successfully deleted dnssec keys for <cdn>"
+		}
 
 |
-  
+
 **POST /api/1.1/deliveryservices/dnsseckeys/generate**
 
-  Generates zsk and ksk keypairs for a cdn and all associated delivery services.
+	Generates zsk and ksk keypairs for a cdn and all associated delivery services.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: Admin
+	Role(s) Required: Admin
 
-  **Request Properties**
+	**Request Properties**
 
-  +-----------------------+---------+------------------------------------------------+
-  |       Parameter       |   Type  |                  Description                   |
-  +=======================+=========+================================================+
-  | ``key``               | string  | name of the cdn                                |
-  +-----------------------+---------+------------------------------------------------+
-  | ``name``              | string  | domain name of the cdn                         |
-  +-----------------------+---------+------------------------------------------------+
-  | ``ttl``               | string  | time to live                                   |
-  +-----------------------+---------+------------------------------------------------+
-  | ``kskExpirationDays`` | string  | Expiration (in days) for the key signing keys  |
-  +-----------------------+---------+------------------------------------------------+
-  | ``zskExpirationDays`` | string  | Expiration (in days) for the zone signing keys |
-  +-----------------------+---------+------------------------------------------------+
+	+-----------------------+---------+------------------------------------------------+
+	|       Parameter       |   Type  |                  Description                   |
+	+=======================+=========+================================================+
+	| ``key``               | string  | name of the cdn                                |
+	+-----------------------+---------+------------------------------------------------+
+	| ``name``              | string  | domain name of the cdn                         |
+	+-----------------------+---------+------------------------------------------------+
+	| ``ttl``               | string  | time to live                                   |
+	+-----------------------+---------+------------------------------------------------+
+	| ``kskExpirationDays`` | string  | Expiration (in days) for the key signing keys  |
+	+-----------------------+---------+------------------------------------------------+
+	| ``zskExpirationDays`` | string  | Expiration (in days) for the zone signing keys |
+	+-----------------------+---------+------------------------------------------------+
 
-  **Request Example** ::
+	**Request Example** ::
 
-    {
-      "key": "cdn1",
-      "name" "ott.kabletown.com",
-      "ttl": "60",
-      "kskExpirationDays": "365",
-      "zskExpirationDays": "90"
-    }
+		{
+			"key": "cdn1",
+			"name" "ott.kabletown.com",
+			"ttl": "60",
+			"kskExpirationDays": "365",
+			"zskExpirationDays": "90"
+		}
 
-  **Response Properties**
+	**Response Properties**
 
-  +--------------+--------+-----------------+
-  |  Parameter   |  Type  |   Description   |
-  +==============+========+=================+
-  | ``response`` | string | response string |
-  +--------------+--------+-----------------+
-  | ``version``  | string | API version     |
-  +--------------+--------+-----------------+
+	+--------------+--------+-----------------+
+	|  Parameter   |  Type  |   Description   |
+	+==============+========+=================+
+	| ``response`` | string | response string |
+	+--------------+--------+-----------------+
+	| ``version``  | string | API version     |
+	+--------------+--------+-----------------+
 
-  **Response Example** ::
+	**Response Example** ::
 
 
-    {  
-      "response": "Successfully created dnssec keys for cdn1"
-    }
+		{
+			"response": "Successfully created dnssec keys for cdn1"
+		}
 

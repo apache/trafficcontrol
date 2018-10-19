@@ -80,6 +80,14 @@ func (i *JSONIntStr) UnmarshalJSON(d []byte) error {
 	return nil
 }
 
+func (i JSONIntStr) ToInt64() int64 {
+	return int64(i)
+}
+
+func (i JSONIntStr) String() string {
+	return strconv.FormatInt(int64(i), 10)
+}
+
 // BytesLenSplit splits the given byte array into an n-length arrays. If n > len(s), returns a slice with a single []byte containing all of s. If n <= 0, returns an empty slice.
 func BytesLenSplit(s []byte, n int) [][]byte {
 	ss := [][]byte{}

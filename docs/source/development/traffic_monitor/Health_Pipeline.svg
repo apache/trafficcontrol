@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License. -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="22.321117mm" width="137.69202mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 487.8851 79.090573">
+	<defs>
+		<marker id="d" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="f" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="e" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+		<marker id="a" refY="0" refX="0" orient="auto" overflow="visible">
+			<path stroke-linejoin="round" d="m8.7185878 4.0337352-10.9258773-4.01772194 10.9258779-4.01772106c-1.7454984 2.3720609-1.7354408 5.6174519-6e-7 8.035443z" fill-rule="evenodd" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" stroke="#000" stroke-width=".625"/>
+		</marker>
+	</defs>
+	<g transform="translate(-698.91461,-755.67407)">
+		<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="770.93561" x="699.43066" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="770.93561" x="699.43066">Health Poller</tspan></text>
+		<rect stroke-linejoin="round" height="20.203051" width="80.812202" stroke="#000" y="756.17407" x="699.41461" fill="none"/>
+		<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="770.93561" x="814.31323" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="770.93561" x="814.31323">Health Fetcher</tspan></text>
+		<rect stroke-linejoin="round" height="19.177704" width="93.250603" stroke="#000" y="756.68671" x="814.20587" stroke-width="1.01519358" fill="none"/>
+		<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="770.94843" x="935.14801" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="770.94843" x="935.14801">Health Handler</tspan></text>
+		<g fill="none" stroke="#000" transform="translate(580.45263,191.46985)">
+			<rect stroke-linejoin="round" height="18.672918" width="101.22736" y="565.48206" x="351.83258" stroke-width="1.04042637"/>
+			<path marker-end="url(#e)" d="m199.75767 574.82632h31.33815" stroke-width="1.16775703px"/>
+			<path marker-end="url(#a)" d="m326.63648 574.82438h23.34915" stroke-width="1.00797892px"/>
+		</g>
+		<text font-size="12.5px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="802.93561" x="814.67041" font-family="sans-serif" fill="#000000"><tspan y="802.93561" x="814.67041">Health Fetcher</tspan></text>
+		<rect stroke-linejoin="round" height="19.173944" width="93.961128" stroke="#000" y="788.6886" x="814.20776" stroke-width="1.01895392" fill="none"/>
+		<text font-size="12.5px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="802.92291" x="935.14801" font-family="sans-serif" fill="#000000"><tspan y="802.92291" x="935.14801">Health Handler</tspan></text>
+		<g fill="none" stroke="#000" transform="translate(580.45263,191.46985)">
+			<rect stroke-linejoin="round" height="18.672918" width="101.22736" y="597.45654" x="351.83258" stroke-width="1.04042637"/>
+			<path marker-end="url(#d)" d="m327.52933 606.82438h22.50905" stroke-width=".98967898px"/>
+			<path stroke-linejoin="round" marker-end="url(#f)" d="m209.29773 574.83146v32.19643h23.23275" stroke-width=".98251468px"/>
+			<path d="m209.30647 606.99245v23.61232" stroke-width="1px"/>
+		</g>
+		<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="834.76465" x="783.79901" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="834.76465" x="783.79901">...</tspan></text>
+		<path d="m1033.9299 766.8319h42.3724" stroke="#000" stroke-width="1.30847371px" fill="none"/>
+		<path d="m1047.6932 766.95817v54.67451" stroke="#000" stroke-width="1px" fill="none"/>
+		<text font-size="12.5px" style="word-spacing:0px;letter-spacing:0px" line-height="125%" xml:space="preserve" y="834.76465" x="1041.7332" font-family="sans-serif" fill="#000000"><tspan y="834.76465" x="1041.7332">...</tspan></text>
+		<path d="m1033.6312 798.2756h13.9286" stroke="#000" stroke-width="1px" fill="none"/>
+		<text font-size="12.5px" line-height="125%" style="word-spacing:0px;letter-spacing:0px" y="770.25732" x="1081.9628" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="770.25732" x="1081.9628">Health Manager</tspan></text>
+		<rect stroke-linejoin="round" height="20.172005" width="107.55019" stroke="#000" y="756.72284" x="1078.734" stroke-width="1.03104627" fill="none"/>
+	</g>
+</svg>

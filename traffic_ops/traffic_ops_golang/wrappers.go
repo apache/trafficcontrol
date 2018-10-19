@@ -22,13 +22,12 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
-	"context"
 	"crypto/sha512"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 	"unicode"
@@ -36,9 +35,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
-	"github.com/jmoiron/sqlx"
 )
 
 // ServerName - the server identifier
@@ -46,9 +44,8 @@ var ServerName = "traffic_ops_golang" + "/" + about.About.Version
 
 // AuthBase ...
 type AuthBase struct {
-	secret                 string
-	getCurrentUserInfoStmt *sqlx.Stmt
-	override               Middleware
+	secret   string
+	override Middleware
 }
 
 // GetWrapper ...
@@ -58,55 +55,24 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 	}
 	return func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			// TODO remove, and make username available to wrapLogTime
-			iw := &Interceptor{w: w}
-			w = iw
-			handleErr := func(status int, err error) {
-				errBytes, jsonErr := json.Marshal(tc.CreateErrorAlerts(err))
-				if jsonErr != nil {
-					log.Errorf("failed to marshal error: %s\n", jsonErr)
-					w.WriteHeader(http.StatusInternalServerError)
-					fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
-					return
-				}
-				w.Header().Set(tc.ContentType, tc.ApplicationJson)
-				w.WriteHeader(status)
-				fmt.Fprintf(w, "%s", errBytes)
-			}
-
-			cookie, err := r.Cookie(tocookie.Name)
-			if err != nil {
-				log.Errorf("error getting cookie: %s", err)
-				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
+			user, userErr, sysErr, errCode := api.GetUserFromReq(w, r, a.secret)
+			if userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, nil, errCode, userErr, sysErr)
 				return
 			}
-
-			if cookie == nil {
-				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
-				return
+			if user.PrivLevel < privLevelRequired {
+				api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
 			}
+			r = api.AddUserToReq(r, user)
+			handlerFunc(w, r)
+		}
+	}
+}
 
-			oldCookie, err := tocookie.Parse(a.secret, cookie.Value)
-			if err != nil {
-				log.Errorf("error parsing cookie: %s", err)
-				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
-				return
-			}
-
-			username := oldCookie.AuthData
-			currentUserInfo := auth.GetCurrentUserFromDB(a.getCurrentUserInfoStmt, username)
-			if currentUserInfo.PrivLevel < privLevelRequired {
-				handleErr(http.StatusForbidden, errors.New("Forbidden."))
-				return
-			}
-
-			newCookieVal := tocookie.Refresh(oldCookie, a.secret)
-			http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
-
-			ctx := r.Context()
-			ctx = context.WithValue(ctx, auth.CurrentUserKey, currentUserInfo)
-
-			handlerFunc(w, r.WithContext(ctx))
+func timeOutWrapper(timeout time.Duration) Middleware {
+	return func(h http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			http.TimeoutHandler(h, timeout, "server timed out").ServeHTTP(w, r)
 		}
 	}
 }
@@ -126,6 +92,29 @@ func wrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 
 		gzipResponse(w, r, iw.Body())
 
+	}
+}
+
+func wrapPanicRecover(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, stacktrace())
+			}
+		}()
+		h(w, r)
+	}
+}
+
+func stacktrace() []byte {
+	initialBufSize := 1024
+	buf := make([]byte, initialBufSize)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, len(buf)*2)
 	}
 }
 
@@ -159,7 +148,6 @@ func wrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 
 // gzipResponse takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
 func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
-
 	bytes, err := gzipIfAccepts(r, w, bytes)
 	if err != nil {
 		log.Errorf("gzipping request '%v': %v\n", r.URL.EscapedPath(), err)
@@ -170,6 +158,7 @@ func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 		}
 		return
 	}
+
 	ctx := r.Context()
 	val := ctx.Value(tc.StatusKey)
 	status, ok := val.(int)

@@ -30,7 +30,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
 const PathParamsKey = "pathParams"
@@ -119,43 +118,20 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
 //      marshals the structs returned into the proper response json
 func ReadHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//create error function with ResponseWriter and Request
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
 
-		// Load the PathParams into the query parameters for pass through
-		params, err := GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
 		reader := typeFactory(inf)
-
-		results, errs, errType := reader.Read(params)
-		if len(errs) > 0 {
-			tc.HandleErrorsWithType(errs, errType, handleErrs)
+		results, userErr, sysErr, errCode := reader.Read()
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
-		resp := struct {
-			Response []interface{} `json:"response"`
-		}{results}
-
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBts)
+		WriteResp(w, r, results)
 	}
 }
 
@@ -166,42 +142,20 @@ func ReadHandler(typeFactory CRUDFactory) http.HandlerFunc {
 //      marshals the structs returned into the proper response json
 func ReadOnlyHandler(typeFactory func(reqInfo *APIInfo) Reader) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//create error function with ResponseWriter and Request
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
 
-		// Load the PathParams into the query parameters for pass through
-		params, err := GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-		}
-
 		reader := typeFactory(inf)
-
-		results, errs, errType := reader.Read(params)
-		if len(errs) > 0 {
-			tc.HandleErrorsWithType(errs, errType, handleErrs)
+		results, userErr, sysErr, errCode := reader.Read()
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
-		resp := struct {
-			Response []interface{} `json:"response"`
-		}{results}
-
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBts)
+		WriteResp(w, r, results)
 	}
 }
 
@@ -214,107 +168,74 @@ func ReadOnlyHandler(typeFactory func(reqInfo *APIInfo) Reader) http.HandlerFunc
 //   *forming and writing the body over the wire
 func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//create error function with ResponseWriter and Request
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
 
-		//decode the body and validate the request struct
 		u := typeFactory(inf)
-		//collect path parameters and user from context
-		ctx := r.Context()
-		params, err := GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("received error trying to get path parameters: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			log.Errorf("unable to retrieve current user from context: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		//decode the body and validate the request struct
-		err = decodeAndValidateRequestBody(r, u)
-		if err != nil {
-			handleErrs(http.StatusBadRequest, err)
+		if err := decodeAndValidateRequestBody(r, u); err != nil {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}
 
 		keyFields := u.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
-		keys, ok := u.GetKeys()           // a map of keyField to keyValue where keyValue is an {}interface
-		if !ok {
-			log.Errorf("unable to parse keys from request: %++v", u)
-			handleErrs(http.StatusBadRequest, errors.New("unable to parse required keys from request body"))
-			return // TODO verify?
-		}
-		for _, keyFieldInfo := range keyFields {
-			paramKey := params[keyFieldInfo.Field]
+		// ignoring ok value -- will be checked after param processing
+
+		keys := make(map[string]interface{}) // a map of keyField to keyValue where keyValue is an {}interface
+		for _, kf := range keyFields {
+			paramKey := inf.Params[kf.Field]
 			if paramKey == "" {
-				log.Errorf("missing key: %s", keyFieldInfo.Field)
-				handleErrs(http.StatusBadRequest, errors.New("missing key: "+keyFieldInfo.Field))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
 				return
 			}
 
-			paramValue, err := keyFieldInfo.Func(paramKey)
+			paramValue, err := kf.Func(paramKey)
 			if err != nil {
-				log.Errorf("failed to parse key %s: %s", keyFieldInfo.Field, err)
-				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: "+keyFieldInfo.Field))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
 				return
 			}
 
-			if paramValue != keys[keyFieldInfo.Field] {
-				handleErrs(http.StatusBadRequest, errors.New("key in body does not match key in params"))
-				return
+			if paramValue != "" {
+				// if key's value provided in params,  overwrite it and ignore that provided in JSON
+				keys[kf.Field] = paramValue
 			}
+		}
+
+		// check that all keys were properly filled in
+		u.SetKeys(keys)
+		_, ok := u.GetKeys()
+		if !ok {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to parse required keys from request body"), nil)
+			return // TODO verify?
 		}
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := u.(Tenantable); ok {
-			authorized, err := t.IsTenantAuthorized(user)
+			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
-				handleErrs(http.StatusBadRequest, err)
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 				return
 			}
 			if !authorized {
-				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
 
-		//run the update and handle any error
-		err, errType := u.Update()
-		if err != nil {
-			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
-			return
-		}
-		//auditing here
-		if err := CreateChangeLog(ApiChange, Updated, u, inf.User, inf.Tx); err != nil {
-			HandleErr(w, r, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
-			return
-		}
-		*inf.CommitTx = true
-		//form response to send across the wire
-		resp := struct {
-			Response interface{} `json:"response"`
-			tc.Alerts
-		}{u, tc.CreateAlerts(tc.SuccessLevel, u.GetType()+" was updated.")}
-
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
+		userErr, sysErr, errCode = u.Update()
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		fmt.Fprintf(w, "%s", respBts)
+		if err := CreateChangeLog(ApiChange, Updated, u, inf.User, inf.Tx.Tx); err != nil {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+			return
+		}
+		WriteRespAlertObj(w, r, tc.SuccessLevel, u.GetType()+" was updated.", u)
 	}
 }
 
@@ -326,152 +247,104 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 //   *forming and writing the body over the wire
 func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
 
 		d := typeFactory(inf)
 
-		params, err := GetCombinedParams(r)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
 		keyFields := d.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
 		keys := make(map[string]interface{})
-		for _, keyFieldInfo := range keyFields {
-			paramKey := params[keyFieldInfo.Field]
+		for _, kf := range keyFields {
+			paramKey := inf.Params[kf.Field]
 			if paramKey == "" {
-				log.Errorf("missing key: %s", keyFieldInfo.Field)
-				handleErrs(http.StatusBadRequest, errors.New("missing key: "+keyFieldInfo.Field))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
 				return
 			}
 
-			paramValue, err := keyFieldInfo.Func(paramKey)
+			paramValue, err := kf.Func(paramKey)
 			if err != nil {
-				log.Errorf("failed to parse key %s: %s", keyFieldInfo.Field, err)
-				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: "+keyFieldInfo.Field))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
+				return
 			}
-			keys[keyFieldInfo.Field] = paramValue
+			keys[kf.Field] = paramValue
 		}
 		d.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
 
-		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := d.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
-				handleErrs(http.StatusBadRequest, err)
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 				return
 			}
 			if !authorized {
-				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
 
-		log.Debugf("calling delete on object: %++v", d) //should have id set now
-		err, errType := d.Delete()
-		if err != nil {
-			log.Errorf("error deleting: %++v", err)
-			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
+		userErr, sysErr, errCode = d.Delete()
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
-		//audit here
+
 		log.Debugf("changelog for delete on object")
-		if err = CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx); err != nil {
-			HandleErr(w, r, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+		if err := CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx.Tx); err != nil {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		*inf.CommitTx = true
-		//
-		resp := struct {
-			tc.Alerts
-		}{tc.CreateAlerts(tc.SuccessLevel, d.GetType()+" was deleted.")}
-
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		fmt.Fprintf(w, "%s", respBts)
+		WriteRespAlert(w, r, tc.SuccessLevel, d.GetType()+" was deleted.")
 	}
 }
 
 // CreateHandler creates a handler function from the pointer to a struct implementing the Creator interface
 //   this generic handler encapsulates the logic for handling:
-//   *fetching the id from the path parameter
 //   *current user
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
 func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
 
 		i := typeConstructor(inf)
-		//decode the body and validate the request struct
 		err := decodeAndValidateRequestBody(r, i)
-
 		if err != nil {
-			handleErrs(http.StatusBadRequest, err)
+			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}
 
-		log.Debugf("%++v", i)
-		//now we have a validated local object to insert
-
-		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := i.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
-				handleErrs(http.StatusBadRequest, err)
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 				return
 			}
 			if !authorized {
-				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
 
-		err, errType := i.Create()
-		if err != nil {
-			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
+		userErr, sysErr, errCode = i.Create()
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 
-		if err = CreateChangeLog(ApiChange, Created, i, inf.User, inf.Tx); err != nil {
-			HandleErr(w, r, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+		if err = CreateChangeLog(ApiChange, Created, i, inf.User, inf.Tx.Tx); err != nil {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		*inf.CommitTx = true
-
-		resp := struct {
-			Response interface{} `json:"response"`
-			tc.Alerts
-		}{i, tc.CreateAlerts(tc.SuccessLevel, i.GetType()+" was created.")}
-
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		fmt.Fprintf(w, "%s", respBts)
+		WriteRespAlertObj(w, r, tc.SuccessLevel, i.GetType()+" was created.", i)
 	}
 }

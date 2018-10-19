@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +15,14 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"encoding/json"
+	"fmt"
+	"net"
+	"net/http"
+	"strconv"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Users gets an array of Users.
@@ -28,9 +32,10 @@ func (to *Session) Users() ([]tc.User, error) {
 	return us, err
 }
 
+// GetUsers returns all users accessible from current user
 func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
-	url := "/api/1.2/users.json"
-	resp, remoteAddr, err := to.request("GET", url, nil)
+	route := apiBase + "/users.json"
+	resp, remoteAddr, err := to.request("GET", route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -43,4 +48,82 @@ func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
 	}
 
 	return data.Response, reqInf, nil
+}
+
+func (to *Session) GetUserByID(id int) ([]tc.User, ReqInf, error) {
+	data := tc.UsersResponse{}
+	route := fmt.Sprintf("%s/users/%d", apiBase, id)
+	inf, err := get(to, route, &data)
+	return data.Response, inf, err
+}
+
+func (to *Session) GetUserByUsername(username string) ([]tc.User, ReqInf, error) {
+	data := tc.UsersResponse{}
+	route := fmt.Sprintf("%s/users?username=%s", apiBase, username)
+	inf, err := get(to, route, &data)
+	return data.Response, inf, err
+}
+
+// GetUserCurrent gets information about the current user
+func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
+	route := apiBase + `/user/current`
+	resp := tc.UserCurrentResponse{}
+	reqInf, err := get(to, route, &resp)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	return &resp.Response, reqInf, nil
+}
+
+// CreateUser creates a user
+func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, error) {
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(user)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	route := apiBase + "/users.json"
+	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+	var clientResp tc.CreateUserResponse
+	err = json.NewDecoder(resp.Body).Decode(&clientResp)
+	return &clientResp, reqInf, nil
+}
+
+// UpdateUserByID updates user with the given id
+func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(u)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	route := apiBase + "/users/" + strconv.Itoa(id)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+	var clientResp tc.UpdateUserResponse
+	err = json.NewDecoder(resp.Body).Decode(&clientResp)
+	return &clientResp, reqInf, nil
+}
+
+// DeleteUserByID updates user with the given id
+func (to *Session) DeleteUserByID(id int) (tc.Alerts, ReqInf, error) {
+	route := apiBase + "/users/" + strconv.Itoa(id)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
 }

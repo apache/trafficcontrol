@@ -49,7 +49,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
     $scope.origin = origin[0];
 
-    $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+    $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
     $scope.openCharts = deliveryServiceUtils.openCharts;
 
@@ -197,7 +197,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     ];
 
     $scope.label = function(field, attribute) {
-        return propertiesModel.properties.defaults.deliveryservices.descriptions[field][attribute];
+        return propertiesModel.properties.deliveryServices.defaults.descriptions[field][attribute];
     };
 
     $scope.tenantLabel = function(tenant) {
@@ -236,6 +236,14 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         });
     };
 
+    $scope.changeSigningAlgorithm = function(signingAlgorithm) {
+        if (signingAlgorithm == null) {
+            deliveryService.signed = false;
+        } else {
+            deliveryService.signed = true;
+        }
+    };
+
     $scope.viewTargets = function() {
         $location.path($location.path() + '/targets');
     };
@@ -270,6 +278,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     
     $scope.viewStaticDnsEntries = function() {
         $location.path($location.path() + '/static-dns-entries');
+    };
+
+    $scope.viewCharts = function() {
+        $location.path($location.path() + '/charts');
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;

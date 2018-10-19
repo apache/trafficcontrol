@@ -23,3 +23,4 @@ Traffic Ops API V1.3
 
   coordinate
   origin
+  staticdnsentry

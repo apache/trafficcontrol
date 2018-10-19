@@ -26,7 +26,7 @@ var FormNewServerController = function(server, $scope, $controller, serverServic
         statusService.getStatuses()
             .then(function(result) {
                 $scope.statuses = result;
-                // new servers are set to OFFLINE by default
+                // Issue #2651 - Enabling server status for New Server but still defaulting enabled dropdown to OFFLINE
                 var offlineStatus = _.find(result, function(status){ return status.name == 'OFFLINE' });
                 $scope.server.statusId = offlineStatus.id;
             });

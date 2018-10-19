@@ -1,6 +1,6 @@
 package v13
 
-import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
+import "github.com/apache/trafficcontrol/lib/go-tc"
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,7 +27,7 @@ import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
 type Divisions struct {
 	// Division Response Body
 	// in: body
-	DivisionsResponse v13.DivisionsResponse `json:"response"`
+	DivisionsResponse tc.DivisionsResponse `json:"response"`
 }
 
 // Division -  DivisionResponse to get the "response" top level key
@@ -36,7 +36,7 @@ type Divisions struct {
 type Division struct {
 	// Division Response Body
 	// in: body
-	DivisionResponse v13.DivisionResponse
+	DivisionResponse tc.DivisionResponse
 }
 
 // DivisionQueryParams
@@ -65,7 +65,7 @@ type DivisionPostParam struct {
 	//
 	// in: body
 	// required: true
-	Division v13.Division
+	Division tc.Division
 }
 
 // swagger:parameters GetDivisionById DeleteDivision
@@ -112,7 +112,7 @@ type DivisionPutParam struct {
 	//
 	// in: body
 	// required: true
-	Division v13.Division
+	Division tc.Division
 }
 
 // PutDivision swagger:route PUT /divisions/{id} Division PutDivision

@@ -13,9 +13,9 @@
 .. limitations under the License.
 ..
 
+*******************
 Quick How To Guides
 *******************
-
 Traffic Control is a complicated system, and documenting it is not trivial. Sometimes a picture says more than a thousand words, so here are some screen shot based tutorials on how to use some of the more involved features.
 
 Traffic Ops
@@ -23,21 +23,16 @@ Traffic Ops
 
 .. toctree::
 
-  multi_site.rst
-  dnssec.rst
-  federations.rst
-  regionalgeo.rst
-  anonymous_blocking.rst
-  steering.rst
+	multi_site.rst
+	federations.rst
+	regionalgeo.rst
+	anonymous_blocking.rst
 
 Traffic Portal
 ==============
 
 .. toctree::
 
-  ds_requests.rst
-
-
-
-
-
+	dnssec.rst
+	ds_requests.rst
+	steering.rst

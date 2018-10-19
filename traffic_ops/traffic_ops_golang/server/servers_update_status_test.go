@@ -20,10 +20,13 @@ package server
  */
 
 import (
+	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -38,12 +41,21 @@ func TestGetServerUpdateStatus(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
+	mock.ExpectBegin()
 	serverStatusRow := sqlmock.NewRows([]string{"id", "host_name", "type", "server_reval_pending", "use_reval_pending", "upd_pending", "status", "parent_upd_pending", "parent_reval_pending"})
 	serverStatusRow.AddRow(1, "host_name_1", "EDGE", true, true, true, "ONLINE", true, false)
 
 	mock.ExpectQuery("SELECT").WillReturnRows(serverStatusRow)
+	mock.ExpectCommit()
 
-	result, err := getServerUpdateStatus("host_name_1", db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	result, err := getServerUpdateStatus(tx, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}, "host_name_1")
 	if err != nil {
 		t.Errorf("getServerUpdateStatus: %v", err)
 	}

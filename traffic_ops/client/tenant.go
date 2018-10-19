@@ -17,6 +17,8 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
+	"net/url"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -43,6 +45,24 @@ func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 	return &data.Response[0], reqInf, nil
 }
 
+// TenantByName gets the Tenant for the name it's passed
+func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
+	var data tc.GetTenantsResponse
+	query := tenantsEp() + "?name=" + url.QueryEscape(name)
+	reqInf, err := get(to, query, &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	var ten *tc.Tenant
+	if len(data.Response) > 0 {
+		ten = &data.Response[0]
+	} else {
+		err = errors.New("no tenant found with name " + name)
+	}
+	return ten, reqInf, err
+}
+
 // CreateTenant creates the Tenant it's passed
 func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	var data tc.TenantResponse
@@ -50,7 +70,7 @@ func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = post(to, tenantsEp(), jsonReq, &data)
+	_, err = post(to, tenantsEp(), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +86,7 @@ func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, er
 	if err != nil {
 		return nil, err
 	}
-	err = put(to, tenantEp(id), jsonReq, &data)
+	_, err = put(to, tenantEp(id), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +97,7 @@ func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, er
 // DeleteTenant deletes the Tenant matching the ID it's passed
 func (to *Session) DeleteTenant(id string) (*tc.DeleteTenantResponse, error) {
 	var data tc.DeleteTenantResponse
-	err := del(to, tenantEp(id), &data)
+	_, err := del(to, tenantEp(id), &data)
 	if err != nil {
 		return nil, err
 	}

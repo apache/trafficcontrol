@@ -19,8 +19,6 @@ package tc
  * under the License.
  */
 
-type SystemInfoResponse struct {
-	Response struct {
-		ParametersNullable map[string]string `json:"parameters"`
-	} `json:"response"`
+type SystemInfo struct {
+	ParametersNullable map[string]string `json:"parameters"`
 }
