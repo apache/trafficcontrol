@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Monitor Client Update: Traffic Monitor is updated to use the Traffic Ops v13 client.
 - Removed previously deprecated `traffic_monitor_java`
 - Added `infrastructure/cdn-in-a-box` for Apachecon 2018 demonstration
+- Grove range request handler plugin
 
 ### Changed
 - Issue 2821: Fixed "Traffic Router may choose wrong certificate when SNI names overlap"

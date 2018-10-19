@@ -410,7 +410,7 @@ The bytefmt component is used under the Apache 2.0 license:
 @grove/vendor/code.cloudfoundry.org/bytefmt/*
 ./grove/vendor/code.cloudfoundry.org/bytefmt/LICENSE
 
-The bytefmt component is used under the MIT license:
+The bbolt component is used under the MIT license:
 @grove/vendor/github.com/coreos/bbolt/*
 ./grove/vendor/github.com/coreos/bbolt/LICENSE
 
@@ -429,3 +429,7 @@ The asn1-ber.v1 component is used under the MIT license:
 The ldap.v2 component is used under the MIT license:
 @traffic_ops/vendor/gopkg.in/ldap.v2/*
 ./traffic_ops/vendor/gopkg.in/ldap.v2/LICENSE
+
+The sizedwaitgroup component is used under the MIT license:
+@trafficcontrol/grove/vendor/github.com/remeh/sizedwaitgroup/*
+./grove/vendor/github.com/remeh/sizedwaitgroup/LICENSE

@@ -20,7 +20,7 @@
             "concurrent_rule_requests": 0,
             "connection-close": false,
             "deny": null,
-            "from": "http://disk-test.cdn.kabletown.net",
+            "from": "http://get-full.cdn.kabletown.net",
             "name": "test",
             "parent_selection": "consistent-hash",
             "cache_name": "disk",
@@ -69,11 +69,17 @@
             "concurrent_rule_requests": 0,
             "connection-close": false,
             "deny": null,
-            "from": "http://disk1-test.cdn.kabletown.net",
+            "from": "http://slice.cdn.kabletown.net",
             "name": "test1",
             "parent_selection": "consistent-hash",
-            "cache_name": "disk",
+            "cache_name": "my-disk-cache-two",
             "plugins": {
+                "range_req_handler": {
+                  "mode": "slice",
+                  "slice-size": 4096,
+                  "wg-size": 32,
+                  "cache-key-string":"jjjj"
+                },
                 "modify_parent_request_headers": {
                     "set": [
                         {
@@ -115,7 +121,7 @@
             "concurrent_rule_requests": 0,
             "connection-close": false,
             "deny": null,
-            "from": "http://mem-test.cdn.kabletown.net",
+            "from": "http://store-ranges.cdn.kabletown.net",
             "name": "test2",
             "parent_selection": "consistent-hash",
             "query-string": {
