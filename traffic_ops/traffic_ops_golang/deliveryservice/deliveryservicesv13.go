@@ -204,18 +204,10 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 
 	ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 
-	if err := ensureHeaderRewriteParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, edgeTier, *ds.Type); err != nil {
-		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating edge header rewrite parameters: " + err.Error())
+	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, dsType); err != nil {
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
-	if err := ensureHeaderRewriteParams(tx, *ds.ID, *ds.XMLID, ds.MidHeaderRewrite, midTier, *ds.Type); err != nil {
-		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating mid header rewrite parameters: " + err.Error())
-	}
-	if err := ensureRegexRemapParams(tx, *ds.ID, *ds.XMLID, ds.RegexRemap); err != nil {
-		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating regex remap parameters: " + err.Error())
-	}
-	if err := ensureCacheURLParams(tx, *ds.ID, *ds.XMLID, ds.CacheURL); err != nil {
-		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating cache url parameters: " + err.Error())
-	}
+
 	if dnssecEnabled {
 		if err := PutDNSSecKeys(tx, &cfg, *ds.XMLID, cdnName, ds.ExampleURLs); err != nil {
 			return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys: " + err.Error())
@@ -529,17 +521,8 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 		}
 	}
 
-	if err := ensureHeaderRewriteParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, edgeTier, *ds.Type); err != nil {
-		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating edge header rewrite parameters: " + err.Error())
-	}
-	if err := ensureHeaderRewriteParams(tx, *ds.ID, *ds.XMLID, ds.MidHeaderRewrite, midTier, *ds.Type); err != nil {
-		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating mid header rewrite parameters: " + err.Error())
-	}
-	if err := ensureRegexRemapParams(tx, *ds.ID, *ds.XMLID, ds.RegexRemap); err != nil {
-		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating mid regex remap parameters: " + err.Error())
-	}
-	if err := ensureCacheURLParams(tx, *ds.ID, *ds.XMLID, ds.CacheURL); err != nil {
-		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating mid cacheurl parameters: " + err.Error())
+	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, dsType); err != nil {
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
 	if err := updatePrimaryOrigin(tx, user, *ds); err != nil {
@@ -809,6 +792,24 @@ const (
 	midTier tierType = iota
 	edgeTier
 )
+
+// EnsureParams ensures the given delivery service's necessary parameters exist on profiles of servers assigned to the delivery service.
+// Note the edgeHeaderRewrite, midHeaderRewrite, regexRemap, and cacheURL may be nil, if the delivery service does not have those values.
+func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string, midHeaderRewrite *string, regexRemap *string, cacheURL *string, dsType tc.DSType) error {
+	if err := ensureHeaderRewriteParams(tx, dsID, xmlID, edgeHeaderRewrite, edgeTier, dsType); err != nil {
+		return errors.New("creating edge header rewrite parameters: " + err.Error())
+	}
+	if err := ensureHeaderRewriteParams(tx, dsID, xmlID, midHeaderRewrite, midTier, dsType); err != nil {
+		return errors.New("creating mid header rewrite parameters: " + err.Error())
+	}
+	if err := ensureRegexRemapParams(tx, dsID, xmlID, regexRemap); err != nil {
+		return errors.New("creating mid regex remap parameters: " + err.Error())
+	}
+	if err := ensureCacheURLParams(tx, dsID, xmlID, cacheURL); err != nil {
+		return errors.New("creating mid cacheurl parameters: " + err.Error())
+	}
+	return nil
+}
 
 func ensureHeaderRewriteParams(tx *sql.Tx, dsID int, xmlID string, hdrRW *string, tier tierType, dsType tc.DSType) error {
 	if tier == midTier && dsType.IsLive() && !dsType.IsNational() {
