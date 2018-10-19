@@ -137,6 +137,8 @@ func DSTypeCategoryFromString(s string) DSTypeCategory {
 	}
 }
 
+const SigningAlgorithmURLSig = "url_sig"
+
 // CacheStatus represents the Traffic Server status set in Traffic Ops (online, offline, admin_down, reported). The string values of this type should match the Traffic Ops values.
 type CacheStatus string
 
