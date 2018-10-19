@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -239,7 +240,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	xmlID, ok, err := deliveryservice.GetXMLID(inf.Tx.Tx, *dsId)
+	ds, ok, err := GetDSInfo(inf.Tx.Tx, *dsId)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryserviceserver getting XMLID: "+err.Error()))
 		return
@@ -248,7 +249,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no delivery service with that ID exists"), nil)
 		return
 	}
-	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := tenant.Check(inf.User, ds.Name, inf.Tx.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
@@ -272,6 +273,12 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		respServers = append(respServers, server)
 	}
+
+	if err := deliveryservice.EnsureParams(inf.Tx.Tx, *dsId, ds.Name, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.Type); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_server replace ensuring ds parameters: "+err.Error()))
+		return
+	}
+
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server assignements complete", tc.DSSMapResponse{*dsId, *payload.Replace, respServers})
 }
 
@@ -291,18 +298,19 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	if userErr, sysErr, errCode := tenant.Check(inf.User, inf.Params["xml_id"], inf.Tx.Tx); userErr != nil || sysErr != nil {
+	dsName := inf.Params["xml_id"]
+
+	if userErr, sysErr, errCode := tenant.Check(inf.User, dsName, inf.Tx.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
-	dsID := 0
-	if err := inf.Tx.Tx.QueryRow(selectDeliveryService(), inf.Params["xml_id"]).Scan(&dsID); err != nil {
-		if err == sql.ErrNoRows {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, errors.New("delivery service not found"))
-			return
-		}
+	ds, ok, err := GetDSInfoByName(inf.Tx.Tx, dsName)
+	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("ds servers create scanning: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, errors.New("delivery service not found"))
 		return
 	}
 
@@ -312,10 +320,10 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
 		return
 	}
-	payload.XmlId = inf.Params["xml_id"]
+	payload.XmlId = dsName
 	serverNames := payload.ServerNames
 
-	res, err := inf.Tx.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, dsID, pq.Array(serverNames))
+	res, err := inf.Tx.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, ds.ID, pq.Array(serverNames))
 	if err != nil {
 
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -331,12 +339,13 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("servers not found"), nil)
 		return
 	}
-	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
-}
 
-func selectDeliveryService() string {
-	query := `SELECT id FROM deliveryservice WHERE xml_id = $1`
-	return query
+	if err := deliveryservice.EnsureParams(inf.Tx.Tx, ds.ID, ds.Name, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.Type); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_server replace ensuring ds parameters: "+err.Error()))
+		return
+	}
+
+	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
 }
 
 func insertIdsQuery() string {
@@ -574,4 +583,68 @@ func updateQuery() string {
       parameter = :parameter_id 
       RETURNING last_updated`
 	return query
+}
+
+type DSInfo struct {
+	ID                int
+	Name              string
+	Type              tc.DSType
+	EdgeHeaderRewrite *string
+	MidHeaderRewrite  *string
+	RegexRemap        *string
+	CacheURL          *string
+}
+
+// GetDSInfo loads the DeliveryService fields needed by Delivery Service Servers from the database, from the ID. Returns the data, whether the delivery service was found, and any error.
+func GetDSInfo(tx *sql.Tx, id int) (DSInfo, bool, error) {
+	qry := `
+SELECT
+  ds.xml_id,
+  tp.name as type,
+  ds.edge_header_rewrite,
+  ds.mid_header_rewrite,
+  ds.regex_remap,
+  ds.cacheurl
+FROM
+  deliveryservice ds
+  JOIN type tp ON ds.type = tp.id
+WHERE
+  ds.id = $1
+`
+	di := DSInfo{ID: id}
+	if err := tx.QueryRow(qry, id).Scan(&di.Name, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.CacheURL); err != nil {
+		if err == sql.ErrNoRows {
+			return DSInfo{}, false, nil
+		}
+		return DSInfo{}, false, fmt.Errorf("querying delivery service server ds info '%v': %v", id, err)
+	}
+	di.Type = tc.DSTypeFromString(string(di.Type))
+	return di, true, nil
+}
+
+// GetDSInfoByName loads the DeliveryService fields needed by Delivery Service Servers from the database, from the ID. Returns the data, whether the delivery service was found, and any error.
+func GetDSInfoByName(tx *sql.Tx, dsName string) (DSInfo, bool, error) {
+	qry := `
+SELECT
+  ds.id,
+  tp.name as type,
+  ds.edge_header_rewrite,
+  ds.mid_header_rewrite,
+  ds.regex_remap,
+  ds.cacheurl
+FROM
+  deliveryservice ds
+  JOIN type tp ON ds.type = tp.id
+WHERE
+  ds.xml_id = $1
+`
+	di := DSInfo{Name: dsName}
+	if err := tx.QueryRow(qry, dsName).Scan(&di.ID, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.CacheURL); err != nil {
+		if err == sql.ErrNoRows {
+			return DSInfo{}, false, nil
+		}
+		return DSInfo{}, false, fmt.Errorf("querying delivery service server ds info by name '%v': %v", dsName, err)
+	}
+	di.Type = tc.DSTypeFromString(string(di.Type))
+	return di, true, nil
 }
