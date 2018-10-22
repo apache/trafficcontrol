@@ -110,6 +110,7 @@ API Routes
 	cachegroup_fallbacks
 	cachegroup_parameterID_parameter
 	cachegroupparameters
+	cachegroupparameters_id_parameterID
 	cachegroups
 	cachegroups_id
 	cachegroups_id_deliveryservices
@@ -126,15 +127,18 @@ API Routes
 	cdns_domains
 	cdns_health
 	cdns_id
+	cdns_id_queue_update
 	cdns_metric_types_metric_start_date_start_end_date_end
 	cdns_name_configs_monitoring
-	cdns_name_routing
+	cdns_name_configs_routing
 	cdns_name_health
 	cdns_name_name
 	cdns_name_name_dnsseckeys
 	cdns_name_name_dnsseckeys_delete
+	cdns_name_name_sslkeys
 	cdns_routing
 	cdns_usage_overview
+	deliveryservices_dnsseckeys_generate
 	v11/index
 	v12/index
 	v13/index

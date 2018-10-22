@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-name-health
+.. _to-api-cdns-name-health:
 
 *********************************
 ``/api/1.x/cdns/{{name}}/health``

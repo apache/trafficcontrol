@@ -1,53 +1,61 @@
-|
+..
+..
+.. Licensed under the Apache License, Version 2.0 (the "License");
+.. you may not use this file except in compliance with the License.
+.. You may obtain a copy of the License at
+..
+..     http://www.apache.org/licenses/LICENSE-2.0
+..
+.. Unless required by applicable law or agreed to in writing, software
+.. distributed under the License is distributed on an "AS IS" BASIS,
+.. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.. See the License for the specific language governing permissions and
+.. limitations under the License.
+..
 
-**POST /api/1.1/deliveryservices/dnsseckeys/generate**
+.. _to-api-deliveryservices-dnsseckeys-generate:
 
-	Generates zsk and ksk keypairs for a cdn and all associated delivery services.
+*************************************************
+``/api/1.x/deliveryservices/dnsseckeys/generate``
+*************************************************
 
-	Authentication Required: Yes
+``POST``
+========
+Generates Zone-Signing Key (ZSK) and Key-Signing Key (KSK) keypairs for a CDN and all associated Delivery Services.
 
-	Role(s) Required: Admin
+:Auth. Required: Yes
+:Roles Required: "admin"
+:Response Type:  Object (string)
 
-	**Request Properties**
+Request Structure
+-----------------
+.. table:: Request Properties
 
-	+-----------------------+---------+------------------------------------------------+
-	|       Parameter       |   Type  |                  Description                   |
-	+=======================+=========+================================================+
-	| ``key``               | string  | name of the cdn                                |
-	+-----------------------+---------+------------------------------------------------+
-	| ``name``              | string  | domain name of the cdn                         |
-	+-----------------------+---------+------------------------------------------------+
-	| ``ttl``               | string  | time to live                                   |
-	+-----------------------+---------+------------------------------------------------+
-	| ``kskExpirationDays`` | string  | Expiration (in days) for the key signing keys  |
-	+-----------------------+---------+------------------------------------------------+
-	| ``zskExpirationDays`` | string  | Expiration (in days) for the zone signing keys |
-	+-----------------------+---------+------------------------------------------------+
+	+-----------------------+---------+----------+------------------------------------------------+
+	|       Parameter       |   Type  | Required |                  Description                   |
+	+=======================+=========+==========+================================================+
+	| ``key``               | string  | yes      | Name of the CDN                                |
+	+-----------------------+---------+----------+------------------------------------------------+
+	| ``name``              | string  | yes      | Domain name used by the CDN                    |
+	+-----------------------+---------+----------+------------------------------------------------+
+	| ``ttl``               | string  | yes      | Time for which the keypairs shall remain valid |
+	+-----------------------+---------+----------+------------------------------------------------+
+	| ``kskExpirationDays`` | string  | yes      | Expiration (in days) for the KSKs              |
+	+-----------------------+---------+----------+------------------------------------------------+
+	| ``zskExpirationDays`` | string  | yes      | Expiration (in days) for the ZSKs              |
+	+-----------------------+---------+----------+------------------------------------------------+
+	| ``effectiveDate``     | integer | yes      | UNIX epoch start date for the signing keys     |
+	+-----------------------+---------+----------+------------------------------------------------+
 
-	**Request Example** ::
+.. versionchanged:: 1.2
+	Added required 'effectiveDate' field to request
 
-		{
-			"key": "cdn1",
-			"name" "ott.kabletown.com",
-			"ttl": "60",
-			"kskExpirationDays": "365",
-			"zskExpirationDays": "90"
-		}
+Response Structure
+------------------
+.. code-block:: json
+	:caption: Response Example
 
-	**Response Properties**
-
-	+--------------+--------+-----------------+
-	|  Parameter   |  Type  |   Description   |
-	+==============+========+=================+
-	| ``response`` | string | response string |
-	+--------------+--------+-----------------+
-	| ``version``  | string | API version     |
-	+--------------+--------+-----------------+
-
-	**Response Example** ::
-
-
-		{
-			"response": "Successfully created dnssec keys for cdn1"
-		}
+	{
+		"response": "Successfully created dnssec keys for cdn1"
+	}
 

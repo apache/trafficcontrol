@@ -1,89 +1,116 @@
-DNSSEC Keys
-+++++++++++
+..
+..
+.. Licensed under the Apache License, Version 2.0 (the "License");
+.. you may not use this file except in compliance with the License.
+.. You may obtain a copy of the License at
+..
+..     http://www.apache.org/licenses/LICENSE-2.0
+..
+.. Unless required by applicable law or agreed to in writing, software
+.. distributed under the License is distributed on an "AS IS" BASIS,
+.. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.. See the License for the specific language governing permissions and
+.. limitations under the License.
+..
 
-**GET /api/1.1/cdns/name/:name/dnsseckeys**
+.. _to-api-cdns-name-name-dnsseckeys:
 
-	Gets a list of dnsseckeys for CDN and all associated Delivery Services.
-	Before returning response to user, check to make sure keys aren't expired.  If they are expired, generate new ones.
-	Before returning response to user, make sure dnssec keys for all delivery services exist.  If they don't exist, create them.
+******************************************
+``/api/1.x/cdns/name/{{name}}/dnsseckeys``
+******************************************
 
-	Authentication Required: Yes
+``GET``
+=======
+Gets a list of DNSSEC keys for CDN and all associated Delivery Services. Before returning response to user, this will make sure DNSSEC keys for all delivery services exist and are not expired. If they don't exist or are expired, they will be (re-)generated.
 
-	Role(s) Required: Admin
+:Auth. Required: Yes
+:Roles Required: "admin"
+:Response Type:  Object
 
-	**Request Path Parameters**
+Request Structure
+-----------------
+.. table:: Request Path Parameters
 
-	+----------+----------+-------------+
-	|   Name   | Required | Description |
-	+==========+==========+=============+
-	| ``name`` | yes      |             |
-	+----------+----------+-------------+
+	+----------+----------+----------------------------------------------------+
+	|   Name   | Required | Description                                        |
+	+==========+==========+====================================================+
+	| ``name`` | yes      | The name of the CDN for which keys will be fetched |
+	+----------+----------+----------------------------------------------------+
 
-	**Response Properties**
+Response Structure
+------------------
+:name: The name of the CDN or Delivery Service to which the enclosed keys belong
 
-	+------------------------+--------+---------------------------------------------------------+
-	|       Parameter        |  Type  |                       Description                       |
-	+========================+========+=========================================================+
-	| ``cdn name/ds xml_id`` | string | identifier for ds or cdn                                |
-	+------------------------+--------+---------------------------------------------------------+
-	| ``>zsk/ksk``           | array  | collection of zsk/ksk data                              |
-	+------------------------+--------+---------------------------------------------------------+
-	| ``>>ttl``              | string | time-to-live for dnssec requests                        |
-	+------------------------+--------+---------------------------------------------------------+
-	| ``>>inceptionDate``    | string | epoch timestamp for when the keys were created          |
-	+------------------------+--------+---------------------------------------------------------+
-	| ``>>expirationDate``   | string | epoch timestamp representing the expiration of the keys |
-	+------------------------+--------+---------------------------------------------------------+
-	| ``>>private``          | string | encoded private key                                     |
-	+------------------------+--------+---------------------------------------------------------+
-	| ``>>public``           | string | encoded public key                                      |
-	+------------------------+--------+---------------------------------------------------------+
-	| ``>>name``             | string | domain name                                             |
-	+------------------------+--------+---------------------------------------------------------+
-	| ``version``            | string | API version                                             |
-	+------------------------+--------+---------------------------------------------------------+
+	:zsk: The short-term Zone-Signing Key (ZSK)
 
+		:expirationDate: A Unix epoch timestamp (in seconds) representing the date and time whereupon the key will expire
+		:inceptionDate:  A Unix epoch timestamp (in seconds) representing the date and time when the key was created
+		:name:           The name of the domain for which this key will be used
+		:private:        Encoded private key
+		:public:         Encoded public key
+		:ttl:            The time for which the key should be trusted by the client
 
-	**Response Example** ::
+	:ksk: The long-term Key-Signing Key (KSK)
 
-		{
-			"response": {
-				"cdn1": {
-					"zsk": {
-						"ttl": "60",
-						"inceptionDate": "1426196750",
-						"private": "zsk private key",
-						"public": "zsk public key",
-						"expirationDate": "1428788750",
-						"name": "foo.kabletown.com."
-					},
-					"ksk": {
-						"name": "foo.kabletown.com.",
-						"expirationDate": "1457732750",
-						"public": "ksk public key",
-						"private": "ksk private key",
-						"inceptionDate": "1426196750",
-						"ttl": "60"
-					}
-				},
-				"ds-01": {
-					"zsk": {
-						"ttl": "60",
-						"inceptionDate": "1426196750",
-						"private": "zsk private key",
-						"public": "zsk public key",
-						"expirationDate": "1428788750",
-						"name": "ds-01.foo.kabletown.com."
-					},
-					"ksk": {
-						"name": "ds-01.foo.kabletown.com.",
-						"expirationDate": "1457732750",
-						"public": "ksk public key",
-						"private": "ksk private key",
-						"inceptionDate": "1426196750"
-					}
-				},
-				... repeated for each ds in the cdn
+		:dsRecord: An optionally present object containing information about the algorithm used to generate the key
+
+			:algorithm: The name of the algorithm used to generate the key
+			:digest: A hash of the DNSKEY record
+			:digestType: The type of hash algorithm used to create the value of ``digest``
+
+		:expirationDate: A Unix epoch timestamp (in seconds) representing the date and time whereupon the key will expire
+		:inceptionDate:  A Unix epoch timestamp (in seconds) representing the date and time when the key was created
+		:name:           The name of the domain for which this key will be used
+		:private:        Encoded private key
+		:public:         Encoded public key
+		:ttl:            The time for which the key should be trusted by the client
+
+.. versionchanged:: 1.2
+	Added the ``dsRecord`` field to KSK entries
+
+.. code-block:: json
+	:caption: Response Example
+
+	{ "response": {
+		"cdn1": {
+			"zsk": {
+				"ttl": "60",
+				"inceptionDate": "1426196750",
+				"private": "zsk private key",
+				"public": "zsk public key",
+				"expirationDate": "1428788750",
+				"name": "foo.kabletown.com."
 			},
+			"ksk": {
+				"name": "foo.kabletown.com.",
+				"expirationDate": "1457732750",
+				"public": "ksk public key",
+				"private": "ksk private key",
+				"inceptionDate": "1426196750",
+				"ttl": "60",
+				"dsRecord": {
+					"algorithm": "5",
+					"digestType": "2",
+					"digest": "abc123def456"
+				}
+			}
+		},
+		"ds-01": {
+			"zsk": {
+				"ttl": "60",
+				"inceptionDate": "1426196750",
+				"private": "zsk private key",
+				"public": "zsk public key",
+				"expirationDate": "1428788750",
+				"name": "ds-01.foo.kabletown.com."
+			},
+			"ksk": {
+				"name": "ds-01.foo.kabletown.com.",
+				"expirationDate": "1457732750",
+				"public": "ksk public key",
+				"private": "ksk private key",
+				"inceptionDate": "1426196750"
+			}
 		}
+	}}
 

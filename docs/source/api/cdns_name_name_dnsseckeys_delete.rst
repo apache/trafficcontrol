@@ -1,33 +1,48 @@
-|
+..
+..
+.. Licensed under the Apache License, Version 2.0 (the "License");
+.. you may not use this file except in compliance with the License.
+.. You may obtain a copy of the License at
+..
+..     http://www.apache.org/licenses/LICENSE-2.0
+..
+.. Unless required by applicable law or agreed to in writing, software
+.. distributed under the License is distributed on an "AS IS" BASIS,
+.. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.. See the License for the specific language governing permissions and
+.. limitations under the License.
+..
 
-**GET /api/1.1/cdns/name/:name/dnsseckeys/delete**
+.. _to-api-cdns-name-name-dnsseckeys-delete:
 
-	Delete dnssec keys for a cdn and all associated delivery services.
+*************************************************
+``/api/1.x/cdns/name/{{name}}/dnsseckeys/delete``
+*************************************************
 
-	Authentication Required: Yes
+``GET``
+=======
+Delete DNSSEC keys for a CDN and all associated Delivery Services.
 
-	Role(s) Required: Admin
+:Auth. Required: Yes
+:Roles Required: "admin"
+:Response Type:  Object (string)
 
-	**Request Path Parameters**
+Request Structure
+-----------------
+.. table:: Request Path Parameters
 
-	+----------+----------+----------------------------------------------------------+
-	|   Name   | Required |                       Description                        |
-	+==========+==========+==========================================================+
-	| ``name`` | yes      | name of the CDN for which you want to delete dnssec keys |
-	+----------+----------+----------------------------------------------------------+
+	+----------+----------+-----------------------------------------------------------+
+	|   Name   | Required |                       Description                         |
+	+==========+==========+===========================================================+
+	| ``name`` | yes      | The name of the CDN for which DNSSEC keys will be deleted |
+	+----------+----------+-----------------------------------------------------------+
 
-	**Response Properties**
+Response Structure
+------------------
+.. code-block:: json
+	:caption: Response Example
 
-	+--------------+--------+------------------+
-	|  Parameter   |  Type  |   Description    |
-	+==============+========+==================+
-	| ``response`` | string | success response |
-	+--------------+--------+------------------+
-
-	**Response Example**
-	::
-
-		{
-			"response": "Successfully deleted dnssec keys for <cdn>"
-		}
+	{
+		"response": "Successfully deleted dnssec keys for test"
+	}
 

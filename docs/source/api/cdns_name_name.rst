@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-name-name
+.. _to-api-cdns-name-name:
 
 *******************************
 ``/api/1.x/cdns/name/{{name}}``

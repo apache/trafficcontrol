@@ -19,7 +19,7 @@
 ``/api/1.x/cdns/:name/configs/monitoring``
 ******************************************
 
-.. see-also:: :ref:`health-proto`
+.. seealso:: :ref:`health-proto`
 
 ``GET``
 =======
