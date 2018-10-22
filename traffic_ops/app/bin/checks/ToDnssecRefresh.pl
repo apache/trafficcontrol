@@ -62,11 +62,37 @@ if ($@) {
 TRACE Dumper($jconf);
 my $b_url = $jconf->{base_url};
 
+my $to_user= $jconf->{user};
+my $to_pass= $jconf->{pass};
+
+if ( !defined($to_user) || $to_user eq '' ) {
+	ERROR "Config missing \"user\" key, this script now requires \"user\" and \"pass\" keys, as the endpoint used by this script now requires admin-level authentication.";
+	exit(1);
+}
+
+if ( !defined($to_pass) || $to_pass eq '' ) {
+	ERROR "Config missing \"pass\" key, this script now requires \"user\" and \"pass\" keys, as the endpoint used by this script now requires admin-level authentication.";
+	exit(1);
+}
+
 my $ua = LWP::UserAgent->new;
 $ua->timeout(30);
 $ua->ssl_opts(verify_hostname => 0);
+$ua->cookie_jar( {} );
 
-my $url       = "$b_url/internal/api/1.2/cdns/dnsseckeys/refresh.json";
+my $login_url = "$b_url/api/1.2/user/login";
+TRACE "posting $login_url";
+my $req = HTTP::Request->new( 'POST', $login_url );
+$req->header( 'Content-Type' => 'application/json' );
+
+$req->content( "{\"u\": \"$to_user\",\"p\": \"$to_pass\"}" );
+my $login_response = $ua->request($req);
+if ( ! $login_response->is_success ) {
+	ERROR "Error trying to update keys, login failed, response was " . $login_response->status_line;
+	exit(1);
+}
+
+my $url       = "$b_url/api/1.4/cdns/dnsseckeys/refresh";
 TRACE "getting $url";
 my $response = $ua->get($url);
 if ( $response->is_success ) {
