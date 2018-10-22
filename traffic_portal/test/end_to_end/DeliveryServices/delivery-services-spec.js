@@ -26,7 +26,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		dsType: ["ANY MAP", "DNS", "HTTP", "STEERING"],
 		active: "true",
 		type: "DNS",
-		xmlId: 4343432432424,
+		xmlId: "thisIsOnlyATest",
 		displayName: "dsTest",
 		tenantId: "- root",
 		cdn: "CDN-in-a-Box",
@@ -36,11 +36,13 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	};
 
 	it('should open ds page and click button to create a new one', function() {
+		console.log('Opening delivery services page');
 		browser.get(browser.baseUrl + "/#!/delivery-services");
 		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/delivery-services");
 	});
 
 	it('should create and select type of ds from the dropdown and confirm', function() {
+		console.log('Clicked Create New and selecting a type');
 		browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
 		browser.sleep(1000);
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
@@ -51,6 +53,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	});
 
 	it('should populate and submit the ds form', function() {
+		console.log('Filling out form for ' + mockVals.xmlId);
 		browser.sleep(250);
 		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/delivery-services/new?type=" + mockVals.dsType[1]);
 		expect(pageData.createButton.isEnabled()).toBe(false);
@@ -74,20 +77,21 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	});
 
 	it('should back out to ds page and verify new ds and update it', function() {
+		console.log('Backing out and verifying ' + mockVals.xmlId + ' exists');
 		browser.get(browser.baseUrl + "/#!/delivery-services");
 		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/delivery-services");
+
+	});
+
+	it('should update the ds', function() {
+		console.log('Updating the form for ' + mockVals.xmlId);
 		browser.sleep(250);
-		element(by.repeater('ds in ::deliveryServices').row(0)).click();
-		// Need to get the below code to function. Currently throwing an index out of bounds error
-		// And then remove the single line click above
-		//
-		// element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
-		// 	return row.element(by.name('xmlId')).getText().then(function(val){
-		// 		console.log(val + " this is my val " + row);
-		// 		return val === mockVals.xmlId;
-		// 	});
-		// })
-		// 	.get(0).click();
+		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
+			return row.element(by.name('xmlId')).getText().then(function(val){
+				console.log(val + " this is my val " + mockVals.xmlId);
+				return val.toString() === mockVals.xmlId.toString();
+			});
+		}).get(0).click();
 		browser.sleep(250);
 		expect(pageData.updateButton.isEnabled()).toBe(false);
 		pageData.displayName.sendKeys(mockVals.displayName + "updated");
@@ -98,6 +102,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	});
 
 	it('should delete the ds', function() {
+		console.log('Deleting ' + mockVals.xmlId);
 		pageData.deleteButton.click();
 		pageData.confirmWithNameInput.sendKeys(mockVals.xmlId);
 		pageData.deletePermanentlyButton.click();

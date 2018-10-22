@@ -21,13 +21,13 @@ describe('Traffic Portal Login Test Suite', function() {
 
     beforeEach(function() {
         browser.get(browser.baseUrl);
-	    browser.driver.manage().window().maximize();
-	    browser.wait(function() {
+        browser.wait(function() {
 		    return element(by.name('loginUsername')).isPresent();
 	    }, 5000);
     });
 
     it('should fail login to Traffic Portal with bad user', function() {
+        console.log('Negative login test');
         browser.driver.findElement(by.name('loginUsername')).sendKeys('badUser');
         browser.driver.findElement(by.name('loginPass')).sendKeys('badPassword');
         browser.driver.findElement(by.name('loginSubmit')).click();
@@ -37,6 +37,7 @@ describe('Traffic Portal Login Test Suite', function() {
     });
 
 	it('should successfully login to Traffic Portal', function() {
+		console.log('Logging in to Traffic Portal');
 		browser.driver.findElement(by.name('loginUsername')).sendKeys(browser.params.adminUser);
 		browser.driver.findElement(by.name('loginPass')).sendKeys(browser.params.adminPassword);
 		browser.driver.findElement(by.name('loginSubmit')).click();
