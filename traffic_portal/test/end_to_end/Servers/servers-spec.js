@@ -39,16 +39,19 @@ describe('Traffic Portal Servers Test Suite', function() {
 	};
 
 	it('should go to the Servers page', function() {
+		console.log('Looading Configure/Servers');
 		browser.get(browser.baseUrl + "/#!/servers");
 		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/servers");
 	});
 
     it('should open new Servers form page', function() {
-	    browser.driver.findElement(by.name('createServersButton')).click();
-	    expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/servers/new");
+		console.log('Clicking on Create new server ' + mockVals.hostName);
+		browser.driver.findElement(by.name('createServersButton')).click();
+		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/servers/new");
     });
 
 	it('should fill out form, create button is enabled and submit', function () {
+		console.log('Filling out Server form');
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		pageData.status.click();
 		pageData.status.sendKeys(mockVals.status);
@@ -75,6 +78,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	});
 
 	it('should verify the new Server and then update Server', function() {
+		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);
 		element.all(by.repeater('s in ::servers')).filter(function(row){
 			return row.element(by.name('hostName')).getText().then(function(val){
@@ -92,6 +96,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	});
 
 	it('should delete the new Server', function() {
+		console.log('Deleting the server ' + mockVals.hostName);
 		pageData.deleteButton.click();
 		pageData.confirmWithNameInput.sendKeys(mockVals.hostName);
 		pageData.deletePermanentlyButton.click();

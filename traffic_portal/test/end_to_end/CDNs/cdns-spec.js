@@ -27,19 +27,19 @@ describe('Traffic Portal CDNs Test Suite', function() {
 	var mydnssec = 'true';
 
 	it('should go to the CDNs page', function() {
-		console.log("should go to the CDNs page");
+		console.log("Go to the CDNs page");
 		browser.get(browser.baseUrl + "/#!/cdns");
 		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/cdns");
 	});
 
     it('should open new CDN form page', function() {
-	    console.log("should open new CDN form page");
-	    browser.driver.findElement(by.name('createCdnButton')).click();
-	    expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/cdns/new");
+    	console.log("Open new CDN form page");
+		browser.driver.findElement(by.name('createCdnButton')).click();
+		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/cdns/new");
     });
 
 	it('should fill out form, create button is enabled and submit', function () {
-		console.log("should fill out form, create button is enabled and submit");
+		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		pageData.name.sendKeys(myNewCDN);
 		pageData.domainName.sendKeys(myDomainName);
@@ -51,7 +51,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 	});
 
 	it('should verify the new CDN and then update CDN', function() {
-		console.log("should verify the new CDN and then update CDN");
+		console.log("verifying the new CDN and then updating CDN");
 		browser.sleep(1000);
 		element.all(by.repeater('cdn in ::cdns')).filter(function(row){
 			return row.element(by.name('name')).getText().then(function(val){
@@ -69,7 +69,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 	});
 
 	it('should delete the new CDN', function() {
-		console.log("should delete the new CDN");
+		console.log("Deleting " + myNewCDN);
 		pageData.deleteButton.click();
 		pageData.confirmWithNameInput.sendKeys(myNewCDN);
 		pageData.deletePermanentlyButton.click();

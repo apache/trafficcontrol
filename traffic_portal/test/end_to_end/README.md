@@ -32,3 +32,8 @@
 - Run your tests
   protractor conf.js --params.adminUser 'user' --params.adminPassword 'password'
 
+- NOTE: Errors with webdriver
+  Most errors with webdriver can be remedied by running the following:
+  webdriver-manager clean
+  webdriver-manager update
+
