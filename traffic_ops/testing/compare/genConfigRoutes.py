@@ -267,7 +267,7 @@ if __name__ == '__main__':
 	                    version="%(prog)s v"+__version__)
 	parser.add_argument("-l", "--log_level",
 	                    help="Sets the Python log level, one of 'DEBUG', 'INFO', 'WARN', 'ERROR', "\
-	                         "OR 'CRITICAL'",
+	                         "or 'CRITICAL'",
 	                    type=str,
 	                    default="INFO")
 	parser.add_argument("-q", "--quiet",
