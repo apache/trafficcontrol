@@ -69,6 +69,15 @@ A guide to external RESTful APIs for Traffic Ops
 
    api/index
 
+Tools
+=====
+A living list of tools for testing, interacting with, and developing for the Traffic Control CDN
+
+.. toctree::
+   :maxdepth: 3
+
+   tools/index
+
 FAQ
 ===
 
