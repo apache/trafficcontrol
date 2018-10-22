@@ -35,6 +35,8 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+const __version__ = "1.0.0"
+
 // Environment variables used:
 //   TO_URL      -- URL for reference Traffic Ops
 //   TEST_URL    -- URL for test Traffic Ops
@@ -106,6 +108,11 @@ func testRoute(tos []*Connect, route string) {
 	var res []result
 	ch := make(chan result, len(tos))
 
+	// sanitize routes
+	if route[0] == '/' {
+		route = route[1:]
+	}
+
 	var wg sync.WaitGroup
 	var m sync.Mutex
 
@@ -147,7 +154,9 @@ func testRoute(tos []*Connect, route string) {
 
 func (to *Connect) writeResults(route string, res string) (string, error) {
 	var dst bytes.Buffer
-	json.Indent(&dst, []byte(res), "", "  ")
+	if err := json.Indent(&dst, []byte(res), "", "  "); err != nil {
+		dst.WriteString(res)
+	}
 
 	m := func(r rune) rune {
 		if unicode.IsPunct(r) && r != '.' || unicode.IsSymbol(r) {
@@ -167,7 +176,8 @@ func (to *Connect) writeResults(route string, res string) (string, error) {
 }
 
 func (to *Connect) get(route string) (string, error) {
-	url := to.URL + `/` + route
+	url := to.URL + "/" + route
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
@@ -205,38 +215,112 @@ func (to *Connect) getCDNNames() ([]string, error) {
 }
 
 func main() {
-	var routesFile string
-	var route string
-	var resultsPath string
-	var doSnapshot bool
 
-	flag.StringVar(&routesFile, "file", "./testroutes.txt", "File listing routes to test (ignored if -route is used)")
-	flag.StringVar(&route, "route", "", "Single route to test")
-	flag.StringVar(&resultsPath, "results", "results", "Directory to write results")
-	flag.BoolVar(&doSnapshot, "snapshot", false, "Do snapshot comparison for each CDN")
+	routesFileLong := flag.String("file", "", "File listing routes to test (will read from stdin if not given)")
+	routesFileShort := flag.String("f", "", "File listing routes to test (will read from stdin if not given)")
+	resultsPathLong := flag.String("results_path", "", "Directory where results will be written")
+	resultsPathShort := flag.String("r", "", "Directory where results will be written")
+	doSnapshotLong := flag.Bool("snapshot", false, "Perform comparison of all CDN's snapshotted CRConfigs")
+	doSnapshotShort := flag.Bool("s", false, "Perform comparison of all CDN's snapshotted CRConfigs")
+	refURL := flag.String("ref_url", "", "The URL for the reference Traffic Ops instance (overrides TO_URL environment variable)")
+	testURL := flag.String("test_url", "", "The URL for the testing Traffic Ops instance (overrides TEST_URL environment variable)")
+	refUser := flag.String("ref_user", "", "The username for logging into the reference Traffic Ops instance (overrides TO_USER environment variable)")
+	refPasswd := flag.String("ref_passwd", "", "The password for logging into the reference Traffic Ops instance (overrides TO_PASSWORD environment variable)")
+	testUser := flag.String("test_user", "", "The username for logging into the testing Traffic Ops instance (overrides TEST_USER environment variable)")
+	testPasswd := flag.String("test_passwd", "", "The password for logging into the testing Traffic Ops instance (overrides TEST_PASSWORD environment variable)")
+	versionLong := flag.Bool("version", false, "Print version information and exit")
+	versionShort := flag.Bool("v", false, "Print version information and exit")
+	helpLong := flag.Bool("help", false, "Print usage information and exit")
+	helpShort := flag.Bool("h", false, "Print usage information and exit")
 	flag.Parse()
+
+	// Coalesce long/short form options
+	doSnapshot := *doSnapshotShort || *doSnapshotLong
+
+	version := *versionLong || *versionShort
+	if version {
+		fmt.Printf("Traffic Control 'compare' tool v%s\n", __version__)
+		os.Exit(0)
+	}
+
+	help := *helpLong || *helpShort
+	if help {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	var resultsPath string
+	if *resultsPathLong == "" {
+		if *resultsPathShort == "" {
+			resultsPath = "results"
+		} else {
+			resultsPath = *resultsPathShort
+		}
+	} else if *resultsPathShort == "" || *resultsPathShort == *resultsPathLong {
+		resultsPath = *resultsPathLong
+	} else {
+		log.Fatal("Duplicate specification of results path! (Hint: try '-h'/'--help')")
+	}
+
+	var routesFile *os.File
+	var err error
+	if *routesFileLong == "" {
+		if *routesFileShort == "" {
+			routesFile = os.Stdin
+		} else {
+			if routesFile, err = os.Open(*routesFileShort); err != nil {
+				log.Fatal(err)
+			}
+			defer routesFile.Close()
+		}
+	} else if *routesFileShort == "" || *routesFileLong == *routesFileShort {
+		if routesFile, err = os.Open(*routesFileLong); err != nil {
+			log.Fatal(err)
+		}
+		defer routesFile.Close()
+	} else {
+		log.Fatal("Duplicate specification of input file! (Hint: try '-h'/'--help')")
+	}
 
 	// refTO, testTO are connections to the two Traffic Ops instances
 	var refTO = &Connect{ResultsPath: resultsPath + `/ref`}
 	var testTO = &Connect{ResultsPath: resultsPath + `/test`}
 
-	err := envconfig.Process("TO", &refTO.creds)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	err = envconfig.Process("TEST", &testTO.creds)
-	if err != nil {
-		// if not provided, re-use the same credentials
-		testTO.creds = refTO.creds
+	if *refUser != "" && *refPasswd != "" {
+		refTO.creds = Creds{*refUser, *refPasswd}
+	} else {
+		err := envconfig.Process("TO", &refTO.creds)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 	}
 
-	err = envconfig.Process("TO", refTO)
-	if err != nil {
-		log.Fatal(err.Error())
+	if *testUser != "" && *testPasswd != "" {
+		testTO.creds = Creds{*testUser, *testPasswd}
+	} else {
+		err := envconfig.Process("TEST", &testTO.creds)
+		if err != nil {
+			// if not provided, re-use the same credentials
+			testTO.creds = refTO.creds
+		}
 	}
-	err = envconfig.Process("TEST", testTO)
-	if err != nil {
-		log.Fatal(err.Error())
+
+	if *refURL != "" {
+		refTO.URL = *refURL
+	} else {
+		err := envconfig.Process("TO", refTO)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+	}
+
+	if *testURL != "" {
+		testTO.URL = *testURL
+	} else {
+		err := envconfig.Process("TEST", testTO)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 	}
 
 	tos := []*Connect{refTO, testTO}
@@ -258,25 +342,13 @@ func main() {
 
 	var testRoutes []string
 
-	if route != "" {
-		// -route (specify single route) takes precedence
-		testRoutes = append(testRoutes, route)
-	} else if routesFile != "" {
-		// -file (specify  route) takes precedence
-		file, err := os.Open(routesFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer file.Close()
+	scanner := bufio.NewScanner(routesFile)
+	for scanner.Scan() {
+		testRoutes = append(testRoutes, scanner.Text())
+	}
 
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			testRoutes = append(testRoutes, scanner.Text())
-		}
-
-		if err := scanner.Err(); err != nil {
-			log.Fatal(err)
-		}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
 	}
 
 	wg.Add(len(testRoutes))
