@@ -254,6 +254,11 @@ func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err err
 	}
 
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotImplemented {
+		return nil, remoteAddr, errors.New("Traffic Ops Server returned 'Not Implemented', this client is probably newer than Traffic Ops, and you probably need to either upgrade Traffic Ops, or use a client whose version matches your Traffic Ops version.")
+	}
+
 	body, readErr := ioutil.ReadAll(resp.Body)
 	if readErr != nil {
 		return nil, remoteAddr, readErr

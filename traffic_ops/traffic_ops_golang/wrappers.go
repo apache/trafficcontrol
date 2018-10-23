@@ -275,3 +275,11 @@ func (i *BodyInterceptor) RealWrite(b []byte) (int, error) {
 func (i *BodyInterceptor) Body() []byte {
 	return i.body
 }
+
+func NotImplementedHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.WriteHeader(http.StatusNotImplemented)
+		w.Write([]byte(`{"alerts":[{"level":"error","text":"The requested api version is not implemented by this server. If you are using a newer client with an older server, you will need to use an older client version or upgrade your server."}]}`))
+	})
+}

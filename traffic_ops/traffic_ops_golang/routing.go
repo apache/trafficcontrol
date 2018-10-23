@@ -105,7 +105,8 @@ type PathHandler struct {
 }
 
 // CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
-func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTimeOutSeconds int) map[string][]PathHandler {
+// Returns the map of routes, and a map of API versions served.
+func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTimeOutSeconds int) (map[string][]PathHandler, map[float64]struct{}) {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
 	requestTimeout := time.Second * time.Duration(60)
@@ -132,7 +133,13 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTime
 		m[r.Method] = append(m[r.Method], PathHandler{Path: r.Path, Handler: use(r.Handler, middlewares)})
 		log.Infof("adding raw route %v %v\n", r.Method, r.Path)
 	}
-	return m
+
+	versionSet := map[float64]struct{}{}
+	for _, version := range versions {
+		versionSet[version] = struct{}{}
+	}
+
+	return m, versionSet
 }
 
 func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int, requestTimeout time.Duration) []Middleware {
@@ -174,6 +181,7 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 // Handler - generic handler func used by the Handlers hooking into the routes
 func Handler(
 	routes map[string][]CompiledRoute,
+	versions map[float64]struct{},
 	catchall http.Handler,
 	db *sqlx.DB,
 	cfg *config.Config,
@@ -227,7 +235,37 @@ func Handler(
 		compiledRoute.Handler(w, r)
 		return
 	}
+
+	if IsRequestAPIAndUnknownVersion(r, versions) {
+		h := wrapAccessLog(cfg.Secrets[0], NotImplementedHandler())
+		h.ServeHTTP(w, r)
+		return
+	}
+
 	catchall.ServeHTTP(w, r)
+}
+
+// IsRequestAPIAndUnknownVersion returns true if the request starts with `/api` and is a version not in the list of versions.
+func IsRequestAPIAndUnknownVersion(req *http.Request, versions map[float64]struct{}) bool {
+	pathParts := strings.Split(req.URL.Path, "/")
+	if len(pathParts) < 2 {
+		return false // path doesn't start with `/api`, so it's not an api request
+	}
+	if strings.ToLower(pathParts[1]) != "api" {
+		return false // path doesn't start with `/api`, so it's not an api request
+	}
+	if len(pathParts) < 3 {
+		return true // path starts with `/api` but not `/api/{version}`, so it's an api request, and an unknown/nonexistent version.
+	}
+
+	version, err := strconv.ParseFloat(pathParts[2], 64)
+	if err != nil {
+		return true // path starts with `/api`, and version isn't a number, so it's an unknown/nonexistent version
+	}
+	if _, versionExists := versions[version]; versionExists {
+		return false // path starts with `/api` and version exists, so it's API but a known version
+	}
+	return true // path starts with `/api`, and version is unknown
 }
 
 // RegisterRoutes - parses the routes and registers the handlers with the Go Router
@@ -238,11 +276,11 @@ func RegisterRoutes(d ServerData) error {
 	}
 
 	authBase := AuthBase{secret: d.Config.Secrets[0], override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
-	routes := CreateRouteMap(routeSlice, rawRoutes, authBase, d.RequestTimeout)
+	routes, versions := CreateRouteMap(routeSlice, rawRoutes, authBase, d.RequestTimeout)
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Handler(compiledRoutes, catchall, d.DB, &d.Config, getReqID, d.Plugins, w, r)
+		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, w, r)
 	})
 	return nil
 }
