@@ -26,7 +26,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -123,7 +122,6 @@ func TestReadOrigins(t *testing.T) {
 
 	testUser := auth.CurrentUser{TenantID: 1}
 	origins, errs, errType := getOrigins(v, db.MustBegin(), &testUser)
-	log.Debugln("%v-->", origins)
 	if len(errs) > 0 {
 		t.Errorf("getOrigins expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}

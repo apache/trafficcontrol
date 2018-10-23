@@ -23,13 +23,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func getTestServers() []tc.Server {
@@ -164,7 +163,6 @@ func TestGetServersByCachegroup(t *testing.T) {
 	user := auth.CurrentUser{}
 
 	servers, errs, errType := getServers(v, db.MustBegin(), &user)
-	log.Debugln("%v-->", servers)
 	if len(errs) > 0 {
 		t.Errorf("getServers expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}
