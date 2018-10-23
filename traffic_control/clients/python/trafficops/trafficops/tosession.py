@@ -898,6 +898,27 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
+    @restapi.api_request(u'get', u'origins', (u'1.3',))
+    def get_origins(self, query_params=None):
+        """
+        Get origins associated with the delivery service
+        :param query_params: The optional url query parameters for the call
+        :type query_params: Dict[Text, Any]
+        :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+
+    @restapi.api_request(u'get', u'staticdnsentries', (u'1.3',))
+    def get_staticdnsentries(self, query_params=None):
+        """
+        Get static DNS entries associated with the delivery service
+        :param query_params: The optional url query parameters for the call
+        :type query_params: Dict[Text, Any]
+        :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+
+
 if __name__ == u'__main__':
     # Sample usages
     import sys
