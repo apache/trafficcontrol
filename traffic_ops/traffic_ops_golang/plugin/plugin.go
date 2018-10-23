@@ -175,7 +175,7 @@ func (ps plugins) OnStartup(d StartupData) {
 
 // OnRequest returns a boolean whether to immediately stop processing the request. If a plugin returns true, this is immediately returned with no further plugins processed.
 func (ps plugins) OnRequest(d OnRequestData) bool {
-	log.Debugln("DEBUG plugins.OnRequest calling %+v\n", len(ps.slice))
+	log.Debugf("DEBUG plugins.OnRequest calling %+v plugins\n", len(ps.slice))
 	for _, p := range ps.slice {
 		if p.funcs.onRequest == nil {
 			log.Debugln("plugins.OnRequest plugging " + p.name + " - no onRequest func")
