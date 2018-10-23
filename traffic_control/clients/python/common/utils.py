@@ -31,30 +31,30 @@ logger = logging.getLogger(__name__)
 
 
 def log_with_debug_info(logging_level=logging.INFO, msg=u'', parent=False, separator=u':'):
-    """
-    Uses inspect module(reflection) to gather debugging information for the source file name,
-    function name, and line number of the calling function/method.
+	"""
+	Uses inspect module(reflection) to gather debugging information for the source file name,
+	function name, and line number of the calling function/method.
 
-    :param logging_level: The logging level from the logging module constants
-                          E.g. logging.INFO, logging.DEBUG, etc.
-    :type logging_level: int
-    :param msg: The message to log.
-    :type msg: Text
-    :param parent: If True, use the caller's parent information instead of the caller's information in the
-                   message.
-    :type parent: bool
-    :param separator: The string to use for the component separator
-    :type separator: Text
-    :return: '<file name>:<function name>:<line number>: <msg>'
-             e.g. 'tosession.py:_build_endpoint:199: This is a message to log.'
-    :rtype: Text
-    """
+	:param logging_level: The logging level from the logging module constants
+						  E.g. logging.INFO, logging.DEBUG, etc.
+	:type logging_level: int
+	:param msg: The message to log.
+	:type msg: Text
+	:param parent: If True, use the caller's parent information instead of the caller's information in the
+				   message.
+	:type parent: bool
+	:param separator: The string to use for the component separator
+	:type separator: Text
+	:return: '<file name>:<function name>:<line number>: <msg>'
+			 e.g. 'tosession.py:_build_endpoint:199: This is a message to log.'
+	:rtype: Text
+	"""
 
-    frame, file_path, line_number, function_name, lines, index = inspect.stack()[1 if not parent else 2]
-    file_name = os.path.split(file_path)[-1]
-    calling_module = inspect.getmodule(frame).__name__
-    debug_msg = separator.join(map(str, (file_name, function_name, line_number, u' '))) + str(msg)
+	frame, file_path, line_number, function_name, lines, index = inspect.stack()[1 if not parent else 2]
+	file_name = os.path.split(file_path)[-1]
+	calling_module = inspect.getmodule(frame).__name__
+	debug_msg = separator.join(map(str, (file_name, function_name, line_number, u' '))) + str(msg)
 
-    # Log to the calling module logger.  If calling_module is '__main__', use the root logger.
-    logger = logging.getLogger(calling_module if calling_module != u'__main__' else '')
-    logger.log(logging_level, debug_msg)
+	# Log to the calling module logger.  If calling_module is '__main__', use the root logger.
+	logger = logging.getLogger(calling_module if calling_module != u'__main__' else '')
+	logger.log(logging_level, debug_msg)
