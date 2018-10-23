@@ -182,7 +182,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.TrafficOpsRetryIntervalSec != nil {
 		if *aux.TrafficOpsRetryIntervalSec <= 0 {
-			log.Errorf("The 'traffic_ops_retry_interval_sec: %v' setting is incorrect, needs to be a positive number of seconds, using default of 3 seconds", aux.TrafficOpsRetryIntervalSec)
+			log.Errorf("The 'traffic_ops_retry_interval_sec: %v' setting is incorrect, needs to be a positive number of seconds, using default of 3 seconds", *aux.TrafficOpsRetryIntervalSec)
 			c.TrafficOpsRetryInterval = 3 * time.Second
 		} else {
 			c.TrafficOpsRetryInterval = time.Duration(*aux.TrafficOpsRetryIntervalSec) * time.Second
