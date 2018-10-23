@@ -53,12 +53,6 @@ func RefreshDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// dbCtx, _ := context.WithTimeout(r.Context(), RefreshDNSSECKeysTxTimeout)
-		// tx, err := db.BeginTx(dbCtx, nil)
-		// if err != nil {
-		// 	api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("RefresHDNSSECKeys beginning transaction: "+err.Error()))
-		// }
-
 		tx, err := db.Begin()
 		if err != nil {
 			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("RefresHDNSSECKeys beginning tx: "+err.Error()))
@@ -117,7 +111,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 		dses = append(dses, string(ds))
 	}
 
-	dsMatchlists, err := deliveryservice.GetDeliveryServicesMatchLists(dses, tx) // map[string][]tc.DeliveryServiceMatch
+	dsMatchlists, err := deliveryservice.GetDeliveryServicesMatchLists(dses, tx)
 	if err != nil {
 		log.Errorln("refreshing DNSSEC Keys: getting ds matchlists: " + err.Error())
 		doCommit = false
@@ -246,7 +240,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 					continue
 				}
 				log.Infoln("The ZSK keys for '" + ds.DSName + "' are expired!")
-				effectiveDate := expiration.Add(ttl * time.Duration(effectiveMultiplier) * -1) // -1 to add
+				effectiveDate := expiration.Add(ttl * time.Duration(effectiveMultiplier) * -1) // -1 to subtract
 				isKSK := false
 				newKeys, err := regenExpiredKeys(isKSK, dsKeys, effectiveDate, false, false)
 				if err != nil {
