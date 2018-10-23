@@ -320,6 +320,12 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		{1.4, http.MethodPost, `cdns/{name}/dnsseckeys/ksk/generate$`, cdn.GenerateKSK, auth.PrivLevelAdmin, Authenticated, nil},
 
+		// ATS Config Files
+		{1.1, http.MethodGet, `servers/{id}/configfiles/ats/?(\.json)?$`, ats.GetConfigMetaData, auth.PrivLevelOperations, Authenticated, nil},
+		// {1.1, http.MethodGet, `profiles/{id}/configfiles/ats/{filename}/?(\.json)?$`, ats.GetProfileConfig, auth.PrivLevelOperations, Authenticated, nil},
+		// {1.1, http.MethodGet, `servers/{id}/configfiles/ats/{filename}/?(\.json)?$`, ats.GetServerConfig, auth.PrivLevelOperations, Authenticated, nil},
+		// {1.1, http.MethodGet, `cdns/{id}/configfiles/ats/{filename}/?(\.json)?$`, ats.GetCDNConfig, auth.PrivLevelOperations, Authenticated, nil},
+
 		//Origins
 		{1.3, http.MethodGet, `origins/?(\.json)?$`, api.ReadHandler(&origin.TOOrigin{}), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.3, http.MethodGet, `origins/?$`, api.ReadHandler(&origin.TOOrigin{}), auth.PrivLevelReadOnly, Authenticated, nil},
