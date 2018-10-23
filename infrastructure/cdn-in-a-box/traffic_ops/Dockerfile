@@ -27,8 +27,8 @@ RUN yum install -y epel-release && \
     yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm && \
     yum install -y \
 	    cpanminus \
-      bind-utils \ 
-      net-tools \ 
+      bind-utils \
+      net-tools \
 	    gettext \
 	    nmap-ncat \
 	    openssl \
@@ -36,8 +36,8 @@ RUN yum install -y epel-release && \
 	    perl-Crypt-ScryptKDF \
 	    perl-Test-CPAN-Meta \
       perl-JSON-PP \
-      git \ 
-      golang 
+      git \
+      golang
 
 RUN yum install -y perl-DBIx-Connector
 
