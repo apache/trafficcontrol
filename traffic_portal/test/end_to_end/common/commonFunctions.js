@@ -17,14 +17,14 @@
  * under the License.
  */
 
-module.exports = function(){
-	this.name=element(by.name('name'));
-	this.domainName=element(by.name('domainName'));
-	this.dnssecEnabled=element(by.name('dnssecEnabled'));
-	this.createButton=element(by.buttonText('Create'));
-	this.deleteButton=element(by.buttonText('Delete'));
-	this.updateButton=element(by.buttonText('Update'));
-	this.searchFilter=element(by.id('cdnsTable_filter')).element(by.css('label')).element(by.css('input'));
-	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
-	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+module.exports = function() {
+	// selectDropdownbyNum - pass in the <SELECT> element and a option number, typically 1
+	this.selectDropdownbyNum = function ( element, optionNum ) {
+		if (optionNum){
+			var options = element.all(by.tagName('option'))
+				.then(function(options){
+					options[optionNum].click();
+				});
+		}
+	};
 };

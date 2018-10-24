@@ -18,20 +18,18 @@
  */
 
 var pd = require('./pageData.js');
+var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Delivery Services Suite', function() {
 
 	var pageData = new pd();
+	var commonFunctions = new cfunc();
 	var mockVals = {
 		dsType: ["ANY MAP", "DNS", "HTTP", "STEERING"],
 		active: "true",
-		type: "DNS",
 		xmlId: "thisIsOnlyATest",
 		displayName: "dsTest",
-		tenantId: "- root",
-		cdn: "CDN-in-a-Box",
 		orgServerFqdn: "http://dstest.com",
-		protocol: "0 - HTTP",
 		longDesc: "This is only a test that should be disposed of by Automated UI Testing."
 	};
 
@@ -59,17 +57,13 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		pageData.active.click();
 		pageData.active.sendKeys(mockVals.active);
-		pageData.type.click();
-		pageData.type.sendKeys(mockVals.type);
+		commonFunctions.selectDropdownbyNum(pageData.type, 1);
 		pageData.xmlId.sendKeys(mockVals.xmlId);
 		pageData.displayName.sendKeys(mockVals.displayName);
-		pageData.tenantId.click();
-		pageData.tenantId.sendKeys(mockVals.tenantId);
-		pageData.cdn.click();
-		pageData.cdn.sendKeys(mockVals.cdn);
+		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
+		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
 		pageData.orgServerFqdn.sendKeys(mockVals.orgServerFqdn);
-		pageData.protocol.click();
-		pageData.protocol.sendKeys(mockVals.protocol);
+		commonFunctions.selectDropdownbyNum(pageData.protocol, 1);
 		pageData.longDesc.sendKeys(mockVals.longDesc);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
@@ -86,9 +80,9 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	it('should update the ds', function() {
 		console.log('Updating the form for ' + mockVals.xmlId);
 		browser.sleep(250);
+		pageData.searchFilter.sendKeys(mockVals.xmlId);
 		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
 			return row.element(by.name('xmlId')).getText().then(function(val){
-				console.log(val + " this is my val " + mockVals.xmlId);
 				return val.toString() === mockVals.xmlId.toString();
 			});
 		}).get(0).click();
