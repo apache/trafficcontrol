@@ -18,20 +18,19 @@ API 1.1 Reference
 Traffic Ops v1.1 API Documentation
 
 .. toctree::
-  :maxdepth: 1
+	:maxdepth: 1
 
-  changelog
-  deliveryservice
-  hwinfo
-  parameter
-  phys_location
-  profile
-  region
-  role
-  server
-  static_dns
-  status
-  system
-  to_extension
-  type
-  user
+	deliveryservice
+	hwinfo
+	parameter
+	phys_location
+	profile
+	region
+	role
+	server
+	static_dns
+	status
+	system
+	to_extension
+	type
+	user

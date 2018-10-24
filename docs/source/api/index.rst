@@ -139,6 +139,9 @@ API Routes
 	cdns_routing
 	cdns_usage_overview
 	deliveryservices_dnsseckeys_generate
+	logs
+	logs_days_days
+	logs_newcount
 	v11/index
 	v12/index
 	v13/index

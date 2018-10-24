@@ -14,40 +14,31 @@
 ..
 
 
-API 1.2 Reference
-*****************
-Traffic Ops API V1.2
+.. _to-api-logs-newcount:
 
-.. toctree::
-	:maxdepth: 1
+**************************
+``/api/1.x/logs/newcount``
+**************************
 
-	configfiles_ats
-	deliveryservice
-	deliveryservice_regex
-	deliveryservice_stats
-	division
-	federation
-	federation_deliveryservice
-	federation_federationresolver
-	federation_resolver
-	federation_user
-	hwinfo
-	iso
-	job
-	parameter
-	phys_location
-	profile
-	profile_parameter
-	influxdb
-	region
-	role
-	server
-	static_dns
-	status
-	steering_target
-	system
-	tenant
-	to_extension
-	type
-	user
-	topology
+``GET``
+=======
+Gets the number of new changes made to the Traffic Control system
+
+:Auth. Required: Yes
+:Roles Required: None
+:Response Type:  Object
+
+Request Structure
+-----------------
+No parameters available
+
+Response Structure
+------------------
+:newLogcount: The integer number of new changes
+
+.. code-block:: json
+	:caption: Response Example
+
+	{ "response": {
+		"newLogcount": 0
+	}}
