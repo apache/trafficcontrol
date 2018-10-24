@@ -22,17 +22,12 @@ This is intended to simplify the process of creating a "CDN in a box", easing
 the barrier to entry for newcomers as well as providing a way to spin up a
 minimal CDN for full system testing.
 
-## Implemented Components
-As of the time of this writing, Traffic Ops, Traffic Monitor, Traffic Portal and a
-database server for Traffic Ops are all fully implemented. An edge-tier cache,
-mid-tier cache and simple origin are also all implemented, although with limited
-functionality (caches do not respond to update queues/routing, and origin serves
-static HTTP content - likely subject to change in favor of proper video streaming in
-the future). Other components will follow as well as details on specific parts of the
-implementation.
+> **note**
+>
+> For a more in-depth discussion of the CDN in a Box system, please see [the official documentation](https://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/ciab.html).
 
 ## Setup
-The containers run on docker, and require Docker (tested v17.05.0-ce) and Docker
+The containers run on Docker, and require Docker (tested v17.05.0-ce) and Docker
 Compose (tested v1.9.0) to build and run. On most 'nix systems these can be installed
 via the distribution's package manager under the names `docker-ce` and
 `docker-compose`, respectively (e.g. `sudo yum install docker-ce`).
@@ -73,72 +68,92 @@ show you the default UI for interacting with the CDN - Traffic Portal.
 > warnings may be safely ignored via the e.g. `Add Exception` button (possibly hidden
 > behind e.g. `Advanced Options`).
 
+> <table>
+> <colgroup>
+> <col width="18%" />
+> <col width="34%" />
+> <col width="22%" />
+> <col width="24%" />
+> </colgroup>
+> <thead>
+> <tr class="header">
+> <th align="left">Service</th>
+> <th align="left">Ports exposed and their usage</th>
+> <th align="left">Username</th>
+> <th align="left">Password</th>
+> </tr>
+> </thead>
+> <tbody>
+> <tr class="odd">
+> <td align="left">DNS</td>
+> <td align="left">DNS name resolution on 9353</td>
+> <td align="left">N/A</td>
+> <td align="left">N/A</td>
+> </tr>
+> <tr class="even">
+> <td align="left">Edge Tier Cache</td>
+> <td align="left">Apache Trafficserver HTTP caching reverse proxy on port 9000</td>
+> <td align="left">N/A</td>
+> <td align="left">N/A</td>
+> </tr>
+> <tr class="odd">
+> <td align="left">Mid Tier Cache</td>
+> <td align="left">Apache Trafficserver HTTP caching forward proxy on port 9100</td>
+> <td align="left">N/A</td>
+> <td align="left">N/A</td>
+> </tr>
+> <tr class="even">
+> <td align="left">Mock Origin Server</td>
+> <td align="left">Example web page served on port 9200</td>
+> <td align="left">N/A</td>
+> <td align="left">N/A</td>
+> </tr>
+> <tr class="odd">
+> <td align="left">Traffic Monitor</td>
+> <td align="left">Web interface and API on port 80</td>
+> <td align="left">N/A</td>
+> <td align="left">N/A</td>
+> </tr>
+> <tr class="even">
+> <td align="left">Traffic Ops</td>
+> <td align="left">Main API endpoints on port 6443, with a direct route to the Perl API on port 60443<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></td>
+> <td align="left"><code>TO_ADMIN_USER</code> in variables.env</td>
+> <td align="left"><code>TO_ADMIN_PASSWORD</code> in variables.env</td>
+> </tr>
+> <tr class="odd">
+> <td align="left">Traffic Ops PostgresQL Database</td>
+> <td align="left">PostgresQL connections accepted on port 5432 (database name: <code>DB_NAME</code> in variables.env)</td>
+> <td align="left"><code>DB_USER</code> in variables.env</td>
+> <td align="left"><code>DB_USER_PASS</code> in variables.env</td>
+> </tr>
+> <tr class="even">
+> <td align="left">Traffic Portal</td>
+> <td align="left">Web interface on 443 (Javascript required)</td>
+> <td align="left"><code>TO_ADMIN_USER</code> in variables.env</td>
+> <td align="left"><code>TO_ADMIN_PASSWORD</code> in variables.env</td>
+> </tr>
+> <tr class="odd">
+> <td align="left">Traffic Router</td>
+> <td align="left">Web interfaces on ports 3080 (HTTP) and 3443 (HTTPS), with a DNS service on 53 and an API on 3333</td>
+> <td align="left">N/A</td>
+> <td align="left">N/A</td>
+> </tr>
+> <tr class="even">
+> <td align="left">Traffic Vault</td>
+> <td align="left">Riak key-value store on port 8010</td>
+> <td align="left"><code>TV_ADMIN_USER</code> in variables.env</td>
+> <td align="left"><code>TV_ADMIN_PASSWORD</code> in variables.env</td>
+> </tr>
+> </tbody>
+> </table>
+> <div class="footnotes">
+> <hr />
+> <ol>
+> <li id="fn1"><p>Please do NOT use the Perl endpoints directly. The CDN will only work properly if everything hits the Go API, which will proxy to the Perl endpoints as needed.<a href="#fnref1">↩</a></p></li>
+> </ol>
+> </div>
+>
 
-
-### Traffic Ops
-The API and legacy UI for the CDN
-* URLs:
-	* New Go endpoints: [`https://localhost:6443`](https://localhost:6443)
-	* Limited, Legacy Perl endpoints: [`https://localhost:60443`](https://localhost:60443)
-* Login Credentials:
-	* Username: Defined by `TO_ADMIN_USER` in [`variables.env`](./variables.env)
-	* Password: Defined by `TO_ADMIN_PASSWORD` in [`variables.env`](./variables.env)
-
-Login credentials will work for both sets of endpoints.
-Note that the recommended way to access the Traffic Ops API is through the new Go endpoints.
-Not all endpoints have been implemented in Go, but the Go server will proxy requests it cannot
-service back to the legacy API.
-
-### Traffic Portal
-The modern UI for the CDN
-* URL: [`https://localhost`](https://localhost)
-* Login Credentials:
-	* Username: Defined by `TO_ADMIN_USER` in [`variables.env`](./variables.env)
-	* Password: Defined by `TO_ADMIN_PASSWORD` in [`variables.env`](./variables.env)
-
-### Traffic Ops PostgreSQL Database
-This holds the configuration information for the entire CDN. It is normally accessed
-directly only by Traffic Ops.
-* URL: [`postgres://traffic_ops:twelve@localhost:5432/traffic_ops`](postgres://traffic_ops:twelve@localhost:5432/traffic_ops)
-* Login Credentials:
-	* Username: Defined by `DB_USER` in [`variables.env`](./variables.env)
-	* Password: Defined by `DB_USER_PASS` in [`variables.env`](./variables.env)
-* Port: 5432
-* Database: Defined by `DB_NAME` in [`variables.env`](./variables.env)
-
-### Traffic Vault
-A secure storage server for private keys used by Traffic Ops
-* Port: 8010
-
-### Traffic Monitor
-Traffic Monitor is responsible for monitoring and reporting the "health" of edge- and
-mid-tier caches (See [the documentation](http://traffic-control-cdn.readthedocs.io/en//latest/overview/traffic_monitor.html) for details).
-
-* URL: [`http://localhost`](http://localhost)
-
-### Edge-Tier Cache
-An edge-tier cache sits at the outermost extremity of the CDN, typically serving content
-directly to the user from either its cache, or a parent cache group. The management port
-is not exposed locally - however the main content port is.
-
-* URL: [`http://localhost:8080`](http://localhost:8080)
-
-### Mid-Tier Cache
-A mid-tier cache serves content internally - within the CDN. Typically, requests are
-made from an edge-tier cache and the mid serves content from its own cache, a parent
-mid-tier cache or directly from the origin. The management port is not exposed locally -
-however the main content port is.
-
-* URL: [`http://localhost:9080`](http://localhost:8081)
-
-### Origin Server
-An origin server simply serves HTTP(S) content. The CDN-in-a-box origin server serves up
-a very simple page sporting the Traffic Control logo.
-
-* URL: [`http://localhost:8081`](http://localhost:9080)
-
-The process creates containers for each component with ports exposed on the host.  The
-following should be available once the system is running:
 
 
 ## Common Pitfalls
