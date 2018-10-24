@@ -18,24 +18,21 @@
  */
 
 var pd = require('./pageData.js');
+var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Servers Test Suite', function() {
 
 	var pageData = new pd();
+	var commonFunctions = new cfunc();
 	var mockVals = {
 		status: "OFFLINE",
 		hostName: "testHost",
 		domainName: "servertest.com",
-		cdn: "CDN-in-a-Box",
-		cachegroup: "CDN_in_a_Box_Edge",
-		type: "EDGE",
-		profile: "ATS_EDGE_TIER_CACHE",
 		interfaceName: "testInterfaceName",
 		ipAddress: "10.42.80.118",
 		ipNetmask: "255.255.255.252",
 		ipGateway: "10.42.80.117",
 		interfaceMtu: "9000",
-		physLocation: "CDN-in-a-Box",
 	};
 
 	it('should go to the Servers page', function() {
@@ -57,21 +54,16 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.status.sendKeys(mockVals.status);
 		pageData.hostName.sendKeys(mockVals.hostName);
 		pageData.domainName.sendKeys(mockVals.domainName);
-		pageData.cdn.click();
-		pageData.cdn.sendKeys(mockVals.cdn);
-		pageData.cachegroup.click();
-		pageData.cachegroup.sendKeys(mockVals.cachegroup);
-		pageData.type.click();
-		pageData.type.sendKeys(mockVals.type);
-		pageData.profile.click();
-		pageData.profile.sendKeys(mockVals.profile);
+		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
+		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
+		commonFunctions.selectDropdownbyNum(pageData.type, 1);
+		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
 		pageData.interfaceName.sendKeys(mockVals.interfaceName);
 		pageData.ipAddress.sendKeys(mockVals.ipAddress);
 		pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
 		pageData.ipGateway.sendKeys(mockVals.ipGateway);
 		pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
-		pageData.physLocation.click();
-		pageData.physLocation.sendKeys(mockVals.physLocation);
+		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
 		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/servers");
@@ -80,6 +72,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	it('should verify the new Server and then update Server', function() {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);
+		pageData.searchFilter.sendKeys(mockVals.hostName);
 		element.all(by.repeater('s in ::servers')).filter(function(row){
 			return row.element(by.name('hostName')).getText().then(function(val){
 				return val === mockVals.hostName;
