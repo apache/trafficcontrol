@@ -30,24 +30,23 @@ COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/inf
 # if we end up using a different versioning convention, the compile command will need to change
 WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 RUN go get -u golang.org/x/net/publicsuffix golang.org/x/crypto/scrypt
-RUN go test -c ./v1* -o traffic_ops_integration
+RUN go test -c ./v1* -o traffic_ops_integration_test
 
 FROM debian:stretch
-# Based off enroller. Might be able to remove some things from the install.
 RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools vim && apt-get clean
 
 # MANIFEST
-# run.sh                    (wait on TO, then run bin)
-# to-access.sh              (sourced, get to-ping and env vars)
-# config.sh                 (sourced, and creates config for bin file)
-# tc-fixtures.json          (test data to run tests with)
-# traffic_ops_integration   (main bin, from integration-builder)
+# run.sh                        (wait on TO, then run bin)
+# to-access.sh                  (sourced, get to-ping and env vars)
+# config.sh                     (sourced, and creates config for bin file)
+# tc-fixtures.json              (test data to run tests with)
+# traffic_ops_integration_test  (main bin, from integration-builder)
 COPY ./infrastructure/cdn-in-a-box/to_integration/run.sh    /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/to_integration/config.sh /opt/integration/app/
 COPY ./traffic_ops/testing/api/v14/tc-fixtures.json         /opt/integration/app/
 COPY --from=integration-builder \
-    /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_integration \
+    /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_integration_test \
     /opt/integration/app/
 
 WORKDIR /opt/integration/app
