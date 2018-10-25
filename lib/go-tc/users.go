@@ -79,10 +79,9 @@ type commonUserFields struct {
 
 // User fields in v14 have been updated to be nullable. omitempty is used to protect password data
 type User struct {
-	Username             *string    `json:"username" db:"username"`
-	RegistrationSent     *TimeNoMod `json:"registrationSent" db:"registration_sent"`
-	ConfirmLocalPassword *string    `json:"confirmLocalPasswd,omitempty" db:"confirm_local_passwd"`
-	LocalPassword        *string    `json:"localPasswd,omitempty" db:"local_passwd"`
+	Username         *string    `json:"username" db:"username"`
+	RegistrationSent *TimeNoMod `json:"registrationSent" db:"registration_sent"`
+	LocalPassword    *string    `json:"localPasswd,omitempty" db:"local_passwd"`
 	commonUserFields
 }
 
