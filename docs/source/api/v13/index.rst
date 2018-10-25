@@ -21,6 +21,5 @@ Traffic Ops API V1.3
 .. toctree::
   :maxdepth: 1
 
-  coordinate
   origin
   staticdnsentry

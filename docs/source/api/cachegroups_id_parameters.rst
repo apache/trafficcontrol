@@ -16,7 +16,7 @@
 .. _to-api-cachegroup_id_parameters:
 
 ******************************************
-``/api/1.x/cachegroups/{{id}}/parameters``
+``/api/1.x/cachegroups/{{ID}}/parameters``
 ******************************************
 Gets all the parameters associated with a Cache Group
 
