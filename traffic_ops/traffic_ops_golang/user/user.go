@@ -21,7 +21,6 @@ package user
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -110,13 +109,8 @@ func (user *TOUser) Validate() error {
 		"tenantID": validation.Validate(user.TenantID, validation.Required),
 	}
 
-	// Passwords are not required for update
-	if user.LocalPassword != nil && user.ConfirmLocalPassword != nil {
-
-		if *user.LocalPassword != *user.ConfirmLocalPassword {
-			return errors.New("Passwords should match.")
-		}
-
+	// Password is not required for update
+	if user.LocalPassword != nil {
 		_, err := auth.IsGoodLoginPair(*user.Username, *user.LocalPassword)
 		if err != nil {
 			return err
@@ -128,8 +122,7 @@ func (user *TOUser) Validate() error {
 
 func (user *TOUser) postValidate() error {
 	validateErrs := validation.Errors{
-		"localPasswd":        validation.Validate(user.LocalPassword, validation.Required),
-		"confirmLocalPasswd": validation.Validate(user.ConfirmLocalPassword, validation.Required),
+		"localPasswd": validation.Validate(user.LocalPassword, validation.Required),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
 }
@@ -145,10 +138,6 @@ func (user *TOUser) Create() (error, error, int) {
 
 	// Convert password to SCRYPT
 	*user.LocalPassword, err = auth.DerivePassword(*user.LocalPassword)
-	if err != nil {
-		return err, nil, http.StatusBadRequest
-	}
-	*user.ConfirmLocalPassword, err = auth.DerivePassword(*user.ConfirmLocalPassword)
 	if err != nil {
 		return err, nil, http.StatusBadRequest
 	}
@@ -183,7 +172,6 @@ func (user *TOUser) Create() (error, error, int) {
 	user.Tenant = &tenant
 	user.RoleName = &rolename
 	user.LocalPassword = nil
-	user.ConfirmLocalPassword = nil
 
 	return nil, nil, http.StatusOK
 }
@@ -241,15 +229,9 @@ func (user *TOUser) Update() (error, error, int) {
 		return fmt.Errorf("users cannot update their own role"), nil, http.StatusBadRequest
 	}
 
-	if user.LocalPassword != nil && user.ConfirmLocalPassword != nil {
-
+	if user.LocalPassword != nil {
 		var err error
 		*user.LocalPassword, err = auth.DerivePassword(*user.LocalPassword)
-		if err != nil {
-			return nil, err, http.StatusInternalServerError
-		}
-
-		*user.ConfirmLocalPassword, err = auth.DerivePassword(*user.ConfirmLocalPassword)
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
@@ -276,7 +258,6 @@ func (user *TOUser) Update() (error, error, int) {
 	user.Tenant = &tenant
 	user.RoleName = &rolename
 	user.LocalPassword = nil
-	user.ConfirmLocalPassword = nil
 
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {

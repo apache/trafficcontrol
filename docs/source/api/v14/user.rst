@@ -246,8 +246,6 @@ Users
   +--------------------------+--------+----------+-------------------------------------------------+
   | ``city``                 | string | no       |                                                 |
   +--------------------------+--------+----------+-------------------------------------------------+
-  | ``confirmLocalPasswd``   | string | yes      |                                                 |
-  +--------------------------+--------+----------+-------------------------------------------------+
   | ``company``              | string | no       |                                                 |
   +--------------------------+--------+----------+-------------------------------------------------+
   | ``country``              | string | no       |                                                 |
@@ -278,13 +276,12 @@ Users
   **Request Example** ::
   
     {   
-        "username": "tsimpson"
+        "username": "tsimpson",
         "tenantId": 1,
-        "fullName": "Tom Simpson"
-        "email": "email1@email.com"
-        "role": 6
+        "fullName": "Tom Simpson",
+        "email": "email1@email.com",
+        "role": 6,
         "localPasswd": "pa$$word"
-        "confirmLocalPasswd": "pa$$word"
     }
 
 |
@@ -387,8 +384,6 @@ Users
   +--------------------------+--------+----------+-------------------------------------------------+
   | ``city``                 | string | no       |                                                 |
   +--------------------------+--------+----------+-------------------------------------------------+
-  | ``confirmLocalPasswd``   | string | yes      |                                                 |
-  +--------------------------+--------+----------+-------------------------------------------------+
   | ``company``              | string | no       |                                                 |
   +--------------------------+--------+----------+-------------------------------------------------+
   | ``country``              | string | no       |                                                 |
@@ -419,13 +414,12 @@ Users
   **Request Example** ::
   
     {   
-        "username": "tsimpson"
+        "username": "tsimpson",
         "tenantId": 1,
-        "fullName": "Tom Simpson"
-        "email": "email1@email.com"
-        "role": 6
+        "fullName": "Tom Simpson",
+        "email": "email1@email.com",
+        "role": 6,
         "localPasswd": "pa$$word"
-        "confirmLocalPasswd": "pa$$word"
     }
 
 |
@@ -535,7 +529,7 @@ Users
   **Request Example** ::
 
     {
-        "email": "foo@bar.com"
+        "email": "foo@bar.com",
         "role": 1,
         "tenantId": 1
     }
@@ -956,8 +950,7 @@ Users
             "addressLine1": null,
             "postalCode": null,
             "tenant": "root",
-            "tenantId": 1,
-
+            "tenantId": 1
         }
     }
 
