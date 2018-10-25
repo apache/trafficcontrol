@@ -29,7 +29,7 @@ ifneq ($(PWD),$(makefile_dir))
 $(error This makefile MUST be run from within its directory)
 endif
 
-BUILD_NUMBER := $(shell git rev-list HEAD 2>/dev/null | wc -l).$(shell git rev-parse --short=8 HEAD)
+BUILD_NUMBER := $(shell git rev-list HEAD 2>/dev/null | wc -l | tr -d '[[:space:]]').$(shell git rev-parse --short=8 HEAD)
 TC_VERSION := $(shell cat "../../VERSION")
 TOMCAT_VERSION := $(shell grep 'export TOMCAT_VERSION=' ../../traffic_router/build/build_rpm.sh  | cut -d '=' -f 2)
 TOMCAT_RELEASE := $(shell grep 'export TOMCAT_RELEASE=' ../../traffic_router/build/build_rpm.sh  | cut -d '=' -f 2)
