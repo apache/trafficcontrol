@@ -19,7 +19,7 @@
 ``/api/1.x/logs/{{days}}/days``
 *******************************
 
-.. deprecatedversion:: 1.1
+.. deprecated:: 1.1
 	Use :ref:`to-api-logs` with the 'days' query parameter instead
 
 ``GET``
