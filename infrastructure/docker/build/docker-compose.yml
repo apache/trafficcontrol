@@ -26,17 +26,6 @@ services:
     volumes:
       - ../../..:/trafficcontrol:z
 
-  # NOTE: Disabled java traffic_monitor in favor of golang version.
-  # The java version is to be renamed to traffic_monitor_legacy soon
-  # and eventually removed.
-  # traffic_monitor_legacy_build:
-  #   image: traffic_monitor_legacy_builder
-  #   build:
-  #     dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor_legacy
-  #     context: ../../..
-  #   volumes:
-  #     - ../../..:/trafficcontrol:z
-
   traffic_monitor_build:
     image: traffic_monitor_builder
     build:

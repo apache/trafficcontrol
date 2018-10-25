@@ -50,9 +50,17 @@ function initBuildArea() {
 	echo "The build area has been initialized."
 }
 
+function preBuildChecks() {
+    if [[ -e "$TS_DIR"/traffic_stats ]]; then
+        echo "Found $TS_DIR/traffic_stats, please remove before retrying to build"
+        exit 1
+    fi
+}
+
 # ---------------------------------------
 
 importFunctions
+preBuildChecks
 checkEnvironment go
 initBuildArea
 buildRpm traffic_stats
