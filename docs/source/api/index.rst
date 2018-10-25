@@ -51,8 +51,6 @@ API Routes
 	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
 	| /datalinks/orderby/:field          |   /api/1.1/deliveryserviceserver.json              |   /api/1.2/deliveryserviceserver.json              |   *Not Implemented*                                |
 	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datalogs                          |   :ref:`to-api-v11-change-logs-route`              |   :ref:`to-api-v12-change-logs-route`              |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
 	| /dataparameter                     |   :ref:`to-api-v11-parameters-route`               |   :ref:`to-api-v12-parameters-route`               |   *Not Implemented*                                |
 	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
 	| /dataparameter/:parameter          |   /api/1.1/parameters/profile/:parameter.json      |   /api/1.2/parameters/profile/:parameter.json      |   *Not Implemented*                                |
@@ -89,8 +87,6 @@ API Routes
 	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
 	| /datauser/orderby/:field           |   :ref:`to-api-v11-users-route`                    |   :ref:`to-api-v12-users-route`                    |   *Not Implemented*                                |
 	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| *Not Implemented*                  |   *Not Implemented*                                |   :ref:`to-api-v12-configfiles_ats-route`          |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
 	| *Not Implemented*                  |   *Not Implemented*                                |   *Not Implemented*                                |   :ref:`to-api-v13-static-dns-entry-route`         |
 	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
 	| *Not Implemented*                  |   *Not Implemented*                                |   *Not Implemented*                                |   :ref:`to-api-v13-origin-route`                   |
@@ -123,6 +119,7 @@ API Routes
 	capabilities_name
 	cdns
 	cdns_capacity
+	cdns_cdn_configfiles_ats_filename
 	cdns_configs
 	cdns_domains
 	cdns_health
@@ -142,6 +139,9 @@ API Routes
 	logs
 	logs_days_days
 	logs_newcount
+	profiles_profile_configfiles_ats_filename
+	servers_server_configfiles_ats
+	servers_server_configfiles_ats_filename
 	v11/index
 	v12/index
 	v13/index

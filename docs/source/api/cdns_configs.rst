@@ -18,7 +18,7 @@
 ``/api/1.x/cdns/configs``
 *************************
 .. deprecated:: 1.0
-	Use one of :ref:`to-api-cdns-name-configs-monitoring`, :ref:`to-api-cdns-name-configs-routing`, or :ref:`to-api-v12-configfiles_ats` instead.
+	Use one of :ref:`to-api-cdns-name-configs-monitoring`, :ref:`to-api-cdns-name-configs-routing`, or :ref:`to-api-servers-server-configfiles-ats` instead.
 
 .. caution:: This endpoint doesn't appear to work as of Traffic Control version 3.0.0 - it is strongly advised that its used be avoided.
 
