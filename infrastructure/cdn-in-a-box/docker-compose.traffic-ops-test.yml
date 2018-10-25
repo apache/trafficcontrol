@@ -61,6 +61,6 @@ services:
       - ./dns/container-resolv.conf:/etc/resolv.conf
 
 volumes:
-    shared:
-        external: false
+  shared:
+    external: false
  
