@@ -34,14 +34,7 @@ TC_VERSION := $(shell cat "../../VERSION")
 TOMCAT_VERSION := $(shell grep 'export TOMCAT_VERSION=' ../../traffic_router/build/build_rpm.sh  | cut -d '=' -f 2)
 TOMCAT_RELEASE := $(shell grep 'export TOMCAT_RELEASE=' ../../traffic_router/build/build_rpm.sh  | cut -d '=' -f 2)
 
-RHEL_VERSION :=el7
-ifeq ($(shell uname -s),Linux)
-ifeq ($(shell which rpm 2>/dev/null),)
-$(info Couldn't find 'rpm' binary, building for RHEL version $(RHEL_VERSION))
-else
-RHEL_VERSION :=el$(shell rpm -q --qf "%{VERSION}" $(shell rpm -q --whatprovides redhat-release))
-endif
-endif
+RHEL_VERSION := el7
 
 SPECIAL_SAUCE := $(TC_VERSION)-$(BUILD_NUMBER).$(RHEL_VERSION).x86_64.rpm
 SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-$(BUILD_NUMBER).$(RHEL_VERSION).x86_64.rpm
@@ -85,7 +78,7 @@ traffic_router/tomcat.rpm: ../../dist/tomcat-$(SPECIAL_SEASONING)
 ../../dist/traffic_portal-$(SPECIAL_SAUCE): $(TP_SOURCE)
 	sudo ../../pkg -v traffic_portal_build
 
-../../dist/traffic_router-$(SPECIAL_SAUCE): $(TR_SOURCE)
+../../dist/traffic_router-$(SPECIAL_SAUCE) ../../dist/tomcat-$(SPECIAL_SEASONING): $(TR_SOURCE)
 	sudo ../../pkg -v traffic_router_build
 
 clean:
