@@ -81,6 +81,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		console.log('Updating the form for ' + mockVals.xmlId);
 		browser.sleep(250);
 		pageData.searchFilter.sendKeys(mockVals.xmlId);
+		browser.sleep(250);
 		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
 			return row.element(by.name('xmlId')).getText().then(function(val){
 				return val.toString() === mockVals.xmlId.toString();

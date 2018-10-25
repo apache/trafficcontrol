@@ -73,6 +73,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);
 		pageData.searchFilter.sendKeys(mockVals.hostName);
+		browser.sleep(250);
 		element.all(by.repeater('s in ::servers')).filter(function(row){
 			return row.element(by.name('hostName')).getText().then(function(val){
 				return val === mockVals.hostName;

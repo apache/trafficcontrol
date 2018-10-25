@@ -52,8 +52,9 @@ describe('Traffic Portal CDNs Test Suite', function() {
 
 	it('should verify the new CDN and then update CDN', function() {
 		console.log("verifying the new CDN and then updating CDN");
-		browser.sleep(1000);
+		browser.sleep(250);
 		pageData.searchFilter.sendKeys(myNewCDN);
+		browser.sleep(250);
 		element.all(by.repeater('cdn in ::cdns')).filter(function(row){
 			return row.element(by.name('name')).getText().then(function(val){
 				return val === myNewCDN;
