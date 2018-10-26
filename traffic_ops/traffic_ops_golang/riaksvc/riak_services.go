@@ -26,7 +26,11 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"reflect"
+	"runtime"
+	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -34,14 +38,21 @@ import (
 	"github.com/basho/riak-go-client"
 )
 
-// RiakPort is the port RIAK is listening on.
-const RiakPort = 8087
+const (
+	RiakPort = 8087
+	TimeOut  = time.Second * 5
 
-// 5 second timeout
-const timeOut = time.Second * 5
+	DefaultHealthCheckInterval         = time.Second * 5
+	DefaultMaxCommandExecutionAttempts = 5
+)
 
-// MaxCommandExecutionAttempts ...
-const MaxCommandExecutionAttempts = 5
+var (
+	clusterServers []ServerAddr
+	sharedCluster  *riak.Cluster
+	clusterMutex   sync.Mutex
+
+	healthCheckInterval time.Duration
+)
 
 type AuthOptions riak.AuthOptions
 
@@ -73,17 +84,41 @@ func (ri RiakStorageCluster) Execute(command riak.Command) error {
 }
 
 func GetRiakConfig(riakConfigFile string) (bool, *riak.AuthOptions, error) {
-	riakConfBytes, err := ioutil.ReadFile(riakConfigFile)
+	riakConfString, err := ioutil.ReadFile(riakConfigFile)
 	if err != nil {
 		return false, nil, fmt.Errorf("reading riak conf '%v': %v", riakConfigFile, err)
 	}
 
+	riakConfBytes := []byte(riakConfString)
+
 	rconf := &riak.AuthOptions{}
 	rconf.TlsConfig = &tls.Config{}
-	err = json.Unmarshal([]byte(riakConfBytes), &rconf)
+	err = json.Unmarshal(riakConfBytes, &rconf)
 	if err != nil {
-		return false, nil, fmt.Errorf("Unmarshalling riak conf '%v': %v", riakConfigFile, err)
+		return false, nil, fmt.Errorf("Unmarshaling riak conf '%v': %v", riakConfigFile, err)
 	}
+
+	type config struct {
+		Hci string `json:"HealthCheckInterval"`
+	}
+
+	var checkconfig config
+	err = json.Unmarshal(riakConfBytes, &checkconfig)
+	if err == nil {
+		hci, _ := time.ParseDuration(checkconfig.Hci)
+		if 0 < hci {
+			healthCheckInterval = hci
+		}
+	} else {
+		log.Infoln("Error unmarshalling riak config options: " + err.Error())
+	}
+
+	if healthCheckInterval <= 0 {
+		healthCheckInterval = DefaultHealthCheckInterval
+		log.Infoln("HeathCheckInterval override")
+	}
+
+	log.Infoln("Riak health check interval set to:", healthCheckInterval)
 
 	return true, rconf, nil
 }
@@ -98,19 +133,13 @@ func DeleteObject(key string, bucket string, cluster StorageCluster) error {
 	cmd, err := riak.NewDeleteValueCommandBuilder().
 		WithBucket(bucket).
 		WithKey(key).
-		WithTimeout(timeOut).
+		WithTimeout(TimeOut).
 		Build()
 	if err != nil {
 		return err
 	}
 
-	err = cluster.Execute(cmd)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return cluster.Execute(cmd)
 }
 
 // PingCluster pings the given Riak cluster, and returns nil on success, or any error
@@ -148,7 +177,7 @@ func FetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*ri
 	cmd, err := riak.NewFetchValueCommandBuilder().
 		WithBucket(bucket).
 		WithKey(key).
-		WithTimeout(timeOut).
+		WithTimeout(TimeOut).
 		Build()
 	if err != nil {
 		return nil, err
@@ -178,17 +207,13 @@ func SaveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 	cmd, err := riak.NewStoreValueCommandBuilder().
 		WithBucket(bucket).
 		WithContent(obj).
-		WithTimeout(timeOut).
+		WithTimeout(TimeOut).
 		Build()
 	if err != nil {
 		return err
 	}
-	err = cluster.Execute(cmd)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return cluster.Execute(cmd)
 }
 
 type ServerAddr struct {
@@ -216,18 +241,20 @@ WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
 		}
 		servers = append(servers, s)
 	}
+
 	return servers, nil
 }
 
-func RiakServersToCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (StorageCluster, error) {
+func GetRiakCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (*riak.Cluster, error) {
 	if authOptions == nil {
 		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers")
 	}
 	nodes := []*riak.Node{}
 	for _, srv := range servers {
 		nodeOpts := &riak.NodeOptions{
-			RemoteAddress: srv.FQDN + ":" + srv.Port,
-			AuthOptions:   authOptions,
+			RemoteAddress:       srv.FQDN + ":" + srv.Port,
+			AuthOptions:         authOptions,
+			HealthCheckInterval: healthCheckInterval,
 		}
 		nodeOpts.AuthOptions.TlsConfig.ServerName = srv.FQDN
 		node, err := riak.NewNode(nodeOpts)
@@ -241,60 +268,88 @@ func RiakServersToCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (
 	}
 	opts := &riak.ClusterOptions{
 		Nodes:             nodes,
-		ExecutionAttempts: MaxCommandExecutionAttempts,
+		ExecutionAttempts: DefaultMaxCommandExecutionAttempts,
 	}
 	cluster, err := riak.NewCluster(opts)
 	if err != nil {
 		return nil, errors.New("creating riak cluster: " + err.Error())
 	}
+	return cluster, err
+}
+
+func GetRiakStorageCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (StorageCluster, error) {
+	cluster, err := GetRiakCluster(servers, authOptions)
+	if err != nil {
+		return nil, err
+	}
 	return RiakStorageCluster{Cluster: cluster}, nil
 }
 
-func GetRiakClusterTx(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster, error) {
-	servers, err := GetRiakServers(tx)
-	if err != nil {
-		return nil, errors.New("getting riak servers: " + err.Error())
-	}
-	cluster, err := RiakServersToCluster(servers, authOptions)
-	if err != nil {
-		return nil, errors.New("creating riak cluster from servers: " + err.Error())
-	}
-	return cluster, nil
-}
+func GetPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster, error) {
 
-func WithClusterTx(tx *sql.Tx, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
-	cluster, err := GetRiakClusterTx(tx, authOpts)
-	if err != nil {
-		return errors.New("getting riak cluster: " + err.Error())
-	}
-	if err = cluster.Start(); err != nil {
-		return errors.New("starting riak cluster: " + err.Error())
-	}
-	defer func() {
-		if err := cluster.Stop(); err != nil {
-			log.Errorln("error stopping Riak cluster: " + err.Error())
+	clusterMutex.Lock()
+	defer clusterMutex.Unlock()
+
+	tryLoad := false
+
+	// should we try to reload the cluster?
+	newservers, err := GetRiakServers(tx)
+
+	if err == nil {
+		if 0 < len(newservers) {
+			sort.Slice(newservers, func(ii, jj int) bool {
+				return newservers[ii].FQDN < newservers[jj].FQDN ||
+					(newservers[ii].FQDN == newservers[jj].FQDN && newservers[ii].Port < newservers[jj].Port)
+			})
+			if !reflect.DeepEqual(newservers, clusterServers) {
+				tryLoad = true
+				log.Infoln("Attempting to load a new set of riak servers")
+				log.Infoln("new riak servers")
+				for _, srv := range newservers {
+					log.Infoln(" ", srv.FQDN+":"+srv.Port)
+				}
+			}
 		}
-	}()
-	return f(cluster)
+	} else {
+		log.Errorln("getting riak servers: " + err.Error())
+	}
+
+	if tryLoad {
+		newcluster, err := GetRiakCluster(newservers, authOptions)
+		if err == nil {
+			if err := newcluster.Start(); err == nil {
+				log.Infoln("New cluster started")
+
+				if sharedCluster != nil {
+					runtime.SetFinalizer(sharedCluster, sharedCluster.Stop())
+				}
+
+				sharedCluster = newcluster
+				clusterServers = newservers
+			} else {
+				log.Errorln("starting riak cluster, reverting to previous: " + err.Error())
+			}
+		} else {
+			log.Errorln("creating riak cluster, reverting to previous: " + err.Error())
+		}
+	}
+
+	cluster := sharedCluster
+
+	if cluster == nil {
+		log.Errorln("GetPooledCluster failed, returning nil cluster")
+		return nil, errors.New("GetPooledClusterTX unable to return cluster")
+	}
+
+	return RiakStorageCluster{Cluster: cluster}, nil
 }
 
-// StartCluster gets and starts a riak cluster, returning an error if either getting or starting fails.
-func StartCluster(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster, error) {
-	cluster, err := GetRiakClusterTx(tx, authOptions)
+func WithCluster(tx *sql.Tx, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
+	cluster, err := GetPooledCluster(tx, authOpts)
 	if err != nil {
-		return nil, errors.New("getting cluster: " + err.Error())
+		return errors.New("getting riak pooled cluster: " + err.Error())
 	}
-	if err = cluster.Start(); err != nil {
-		return nil, errors.New("starting cluster: " + err.Error())
-	}
-	return cluster, nil
-}
-
-// StopCluster stops the cluster, logging any error rather than returning it. This is designed to be called in a defer.
-func StopCluster(c StorageCluster) {
-	if err := c.Stop(); err != nil {
-		log.Errorln("stopping riak cluster: " + err.Error())
-	}
+	return f(cluster)
 }
 
 // Search searches Riak for the given query. Returns nil and a nil error if no object was found.

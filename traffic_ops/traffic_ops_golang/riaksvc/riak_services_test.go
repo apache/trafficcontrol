@@ -164,7 +164,7 @@ func TestGetRiakCluster(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	if _, err := GetRiakClusterTx(tx, nil); err == nil {
+	if _, err := GetRiakCluster(tx, nil); err == nil {
 		t.Errorf("expected an error due to nil RiakAuthoptions in the config but, go no error.")
 	}
 
@@ -174,14 +174,22 @@ func TestGetRiakCluster(t *testing.T) {
 		TlsConfig: &tls.Config{},
 	}
 
-	if _, err := GetRiakClusterTx(tx, &authOptions); err != nil {
+	if _, err := GetRiakCluster(tx, &authOptions); err != nil {
+		t.Errorf("expected no errors, actual: %s.", err)
+	}
+
+	if _, err := GetPooledCluster(tx, &authOptions); err != nil {
 		t.Errorf("expected no errors, actual: %s.", err)
 	}
 
 	rows2 := sqlmock.NewRows([]string{"s.host_name", "s.domain_name"})
 	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
 
-	if _, err := GetRiakClusterTx(tx, &authOptions); err == nil {
+	if _, err := GetRiakCluster(tx, &authOptions); err == nil {
+		t.Errorf("expected an error due to no available riak servers.")
+	}
+
+	if _, err := GetPooledCluster(tx, &authOptions); err == nil {
 		t.Errorf("expected an error due to no available riak servers.")
 	}
 }

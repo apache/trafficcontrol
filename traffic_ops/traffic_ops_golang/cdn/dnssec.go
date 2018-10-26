@@ -208,20 +208,15 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	key := inf.Params["name"]
-
-	riakCluster, err := riaksvc.GetRiakClusterTx(inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting riak cluster: "+err.Error()))
 		return
 	}
-	if err := riakCluster.Start(); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
-		return
-	}
-	defer riaksvc.StopCluster(riakCluster)
 
-	if err := riaksvc.DeleteObject(key, CDNDNSSECKeyType, riakCluster); err != nil {
+	key := inf.Params["name"]
+
+	if err := riaksvc.DeleteObject(key, CDNDNSSECKeyType, cluster); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()))
 		return
 	}
