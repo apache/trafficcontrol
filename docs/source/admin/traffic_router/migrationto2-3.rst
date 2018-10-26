@@ -52,8 +52,8 @@ It is preferable that you add it to your Yum repository because then it will be 
 
 Update the traffic_router Package
 ---------------------------------
-If openssl, apr, tomcat-native, jdk and tomcat_tr packages are all in an available repository then you just need to run: ``yum update traffic_router``.
-This will first cause the apr, tomcat-native, jdk and tomcat packages to be installed. When the 'tomcat' package runs, it will cause any older versions of traffic_router or tomcat to be uninstalled. This is because the previous versions of the traffic_router package included an untracked installation of tomcat.
+If openssl, apr, tomcat-native, java-1.8.0-openjdk, java-1.8.0-openjdk-devel and tomcat_tr packages are all in an available repository then you just need to run: ``yum update traffic_router``.
+This will first cause the apr, tomcat-native, java-1.8.0-openjdk, java-1.8.0-openjdk-devel and tomcat packages to be installed. When the 'tomcat' package runs, it will cause any older versions of traffic_router or tomcat to be uninstalled. This is because the previous versions of the traffic_router package included an untracked installation of tomcat.
 
 
 Restore Property Files
