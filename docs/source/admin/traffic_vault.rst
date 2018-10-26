@@ -137,7 +137,7 @@ On Each Riak Server:
 
 1. If Java (JDKv1.8+) is not already installed on your Riak server, install Java
 	* To see if Java is already installed: ``java -version``
-	* To install Java: ``yum install -y jdk`` (CentOS/RedHat/Fedora), ``apt-get install -y java`` (Ubuntu/Debian/Linux Mint), ``pacman -Sy java`` (Arch/Manjaro)
+	* To install Java: ``yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel`` (CentOS/RedHat/Fedora), ``apt-get install -y openjdk-8-jdk`` (Ubuntu/Debian/Linux Mint), ``pacman -Sy jdk8-openjdk`` (Arch/Manjaro)
 
 2. Enable search in riak.conf
 	* ``$EDITOR /etc/riak/riak.conf``
