@@ -65,12 +65,11 @@ func getURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cluster, err := riaksvc.StartCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
 		return
 	}
-	defer riaksvc.StopCluster(cluster)
 
 	ro, err := riaksvc.FetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
 	if err != nil {
@@ -105,12 +104,11 @@ func removeDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	cluster, err := riaksvc.StartCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
 		return
 	}
-	defer riaksvc.StopCluster(cluster)
 
 	ro, err := riaksvc.FetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
 	if err != nil {
@@ -165,12 +163,11 @@ func saveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cluster, err := riaksvc.StartCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
 		return
 	}
-	defer riaksvc.StopCluster(cluster)
 
 	obj := &riak.Object{
 		ContentType:     "text/json",

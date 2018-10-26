@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/deliveryservices/hostname/:hostname/sslkeys `GET`
   - /api/1.1/deliveryservices/sslkeys/add `POST`
   - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys/delete `GET`
+- To support reusing a single riak cluster connection, an optional parameter is added to riak.conf: "HealthCheckInterval". This options takes a 'Duration' value (ie: 10s, 5m) which affects how often the riak cluster is health checked.  Default is currently set to: "HealthCheckInterval": "5s".
   
 ### Changed
 - Issue 2821: Fixed "Traffic Router may choose wrong certificate when SNI names overlap"
