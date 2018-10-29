@@ -39,6 +39,8 @@ const (
 	LogLocationNull = "null"
 	//StaticFileDir is the directory that contains static html and js files.
 	StaticFileDir = "/opt/traffic_monitor/static/"
+	// FixedToRetryInterval is a fallback retry interval to use if the Backoff intervals are misconfigured.
+	FixedRetryInterval = 10000 * time.Millisecond
 )
 
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
@@ -64,7 +66,8 @@ type Config struct {
 	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
 	StaticFileDir                string        `json:"static_file_dir"`
 	CRConfigHistoryCount         uint64        `json:"crconfig_history_count"`
-	TrafficOpsRetryInterval      time.Duration `json:"-"`
+	TrafficOpsMinRetryInterval   time.Duration `json:"-"`
+	TrafficOpsMaxRetryInterval   time.Duration `json:"-"`
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
@@ -96,7 +99,8 @@ var DefaultConfig = Config{
 	HealthToStatRatio:            4,
 	StaticFileDir:                StaticFileDir,
 	CRConfigHistoryCount:         20000,
-	TrafficOpsRetryInterval:      3 * time.Second,
+	TrafficOpsMinRetryInterval:   100 * time.Millisecond,
+	TrafficOpsMaxRetryInterval:   60000 * time.Millisecond,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
@@ -141,7 +145,8 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
 		ServeReadTimeoutMs             *uint64 `json:"serve_read_timeout_ms"`
 		ServeWriteTimeoutMs            *uint64 `json:"serve_write_timeout_ms"`
-		TrafficOpsRetryIntervalSec     *uint64 `json:"traffic_ops_retry_interval_sec"`
+		TrafficOpsMinRetryIntervalMs   *uint64 `json:"traffic_ops_min_retry_interval_ms"`
+		TrafficOpsMaxRetryIntervalMs   *uint64 `json:"traffic_ops_max_retry_interval_ms"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -180,13 +185,11 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if aux.PeerOptimistic != nil {
 		c.PeerOptimistic = *aux.PeerOptimistic
 	}
-	if aux.TrafficOpsRetryIntervalSec != nil {
-		if *aux.TrafficOpsRetryIntervalSec <= 0 {
-			log.Errorf("The 'traffic_ops_retry_interval_sec: %v' setting is incorrect, needs to be a positive number of seconds, using default of 3 seconds", *aux.TrafficOpsRetryIntervalSec)
-			c.TrafficOpsRetryInterval = 3 * time.Second
-		} else {
-			c.TrafficOpsRetryInterval = time.Duration(*aux.TrafficOpsRetryIntervalSec) * time.Second
-		}
+	if aux.TrafficOpsMinRetryIntervalMs != nil {
+		c.TrafficOpsMinRetryInterval = time.Duration(*aux.TrafficOpsMinRetryIntervalMs) * time.Millisecond
+	}
+	if aux.TrafficOpsMaxRetryIntervalMs != nil {
+		c.TrafficOpsMaxRetryInterval = time.Duration(*aux.TrafficOpsMaxRetryIntervalMs) * time.Millisecond
 	}
 	return nil
 }
