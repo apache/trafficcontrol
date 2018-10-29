@@ -33,10 +33,12 @@ func TestTenants(t *testing.T) {
 func CreateTestTenants(t *testing.T) {
 	for _, ten := range testData.Tenants {
 		resp, err := TOSession.CreateTenant(&ten)
-		t.Logf("response: %++v", resp)
 
 		if err != nil {
 			t.Errorf("could not CREATE tenant %s: %v\n", ten.Name, err)
+		}
+		if resp.Response.Name != ten.Name {
+			t.Errorf("expected tenant %+v; got %+v", ten, resp.Response)
 		}
 	}
 }
@@ -52,7 +54,6 @@ func GetTestTenants(t *testing.T) {
 		foundTenants[ten.Name] = ten
 	}
 
-	t.Logf("resp: %++v\n", resp)
 	// expect root and badTenant (defined in todb.go) + all defined in testData.Tenants
 	if len(resp) != 2+len(testData.Tenants) {
 		t.Errorf("expected %d tenants,  got %d", 2+len(testData.Tenants), len(resp))
@@ -79,26 +80,22 @@ func UpdateTestTenants(t *testing.T) {
 		t.Errorf("cannot GET Tenant by name: %s - %v\n", name, err)
 	}
 
-	t.Logf("modTenant is %++v", modTenant)
 	newParent, _, err := TOSession.TenantByName(parentName)
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %s - %v\n", parentName, err)
 	}
-	t.Logf("newParent is %++v", newParent)
 	modTenant.ParentID = newParent.ID
 
-	resp, err := TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant)
+	_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant)
 	if err != nil {
 		t.Errorf("cannot UPDATE Tenant by id: %v\n", err)
 	}
 
-	t.Logf("AFTER UPDATE modTenant is %++v", modTenant)
 	// Retrieve the Tenant to check Tenant parent name got updated
 	respTenant, _, err := TOSession.Tenant(strconv.Itoa(modTenant.ID))
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %v - %v\n", name, err)
 	}
-	t.Logf("modified: %++v", resp)
 	if respTenant.ParentName != parentName {
 		t.Errorf("results do not match actual: %s, expected: %s\n", respTenant.ParentName, parentName)
 	}

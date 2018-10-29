@@ -20,7 +20,7 @@ import (
 	"testing"
 )
 
-func TestUsersDeliveryServices(t *testing.T) {
+func TestUserDeliveryServices(t *testing.T) {
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
 	CreateTestProfiles(t)
