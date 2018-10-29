@@ -15,9 +15,11 @@ package v14
 */
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"testing"
 )
 
 func TestUsers(t *testing.T) {
@@ -38,6 +40,7 @@ func TestUsers(t *testing.T) {
 	GetTestUserCurrent(t)
 	//Delete will be new functionality to 1.4, ignore for now
 	//DeleteTestUsers(t)
+	ForceDeleteTestUsers(t)
 
 	DeleteTestDeliveryServices(t)
 	DeleteTestCacheGroups(t)
@@ -111,6 +114,32 @@ func GetTestUserCurrent(t *testing.T) {
 	}
 	if *user.UserName != SessionUserName {
 		t.Fatalf("current user expected: %v actual: %v\n", SessionUserName, *user.UserName)
+	}
+}
+
+// ForceDeleteTestUsers forcibly deletes the users from the db.
+func ForceDeleteTestUsers(t *testing.T) {
+
+	// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
+	//  Connects directly to the DB to remove users rather than going thru the client.
+	//  This is required here because the DeleteUser action does not really delete users,  but disables them.
+	db, err := OpenConnection()
+	if err != nil {
+		t.Errorf("cannot open db")
+	}
+	defer db.Close()
+
+	var usernames []string
+	for _, user := range testData.Users {
+		usernames = append(usernames, `'`+*user.Username+`'`)
+	}
+
+	q := `DELETE FROM tm_user WHERE username IN (` + strings.Join(usernames, ",") + `)`
+
+	err = execSQL(db, q, "tm_user")
+
+	if err != nil {
+		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
 	}
 }
 
