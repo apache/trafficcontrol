@@ -104,3 +104,29 @@ The genConfigRoutes.py script will output list of unique API routes (relative to
 	./genConfigRoutes.py https://trafficopsA.example.test https://trafficopsB.example.test username:password | ./compare
 
 \... assuming the proper environment variables have been set for ``compare``.
+
+Usage with Docker
+=================
+A Dockerfile is provided to run tests on a pair of instances given the configuration environment variables necessary. This will generate configuration file routes using ``genConfigRoutes.py``, and add them to whatever is already contained in ``traffic_ops/testing/compare/testroutes.txt``, then run the ``compare`` tool on the final API route list. Build artifacts (i.e. anything output files created by the `compare` tool) are placed in the `/artifacts/` directory on the container. To retrieve these results, the use of a volume is recommended. The build context *must* be at the root of the Traffic Control repository, as the tools have dependencies on the Traffic Control clients. In order to use the container, the following environment variables must be defined for the container at runtime:
+
+TO_URL
+	The URL of the reference Traffic Ops instance
+TO_USER
+	The username to authenticate with the reference Traffic Ops instance
+TO_PASSWORD
+	The password to authenticate with the reference Traffic Ops instance
+TEST_URL
+	The URL of the testing Traffic Ops instance
+TEST_USER
+	The username to authenticate with the testing Traffic Ops instance
+TEST_PASSWORD
+	The password to authenticate with the testing Traffic Ops instance
+
+.. code-block:: shell
+	:caption: Sample Script to Build and Run
+	sudo docker build . -f traffic_ops/testing/compare/Dockerfile -t compare:latest
+	sudo docker run -v $PWD/artifacts:/artifacts -e TO_URL="$TO_URL" -e TEST_URL="$TEST_URL" -e TO_USER="admin" -e TO_PASSWORD="twelve" -e TEST_USER="admin" -e TEST_PASSWORD="twelve" compare:latest
+
+.. note:: The above code example assumes that the environment variables ``TO_URL`` and ``TEST_URL`` refer to the URL of the reference Traffic Ops instance and the URL of the test Traffic Ops instance, respectively (including port numbers). It also uses credentials suitable for logging into a stock :ref:`ciab` instance.
+
+.. note:: Unlike using the ``genRoutesConfig.py`` script and/or the ``compare`` on their own, *all* of the variables must be defined, even if they are duplicates.
