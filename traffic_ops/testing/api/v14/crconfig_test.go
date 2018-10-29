@@ -26,6 +26,7 @@ import (
 func TestCRConfig(t *testing.T) {
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
+	CreateTestTenants(t)
 	CreateTestProfiles(t)
 	CreateTestStatuses(t)
 	CreateTestDivisions(t)
@@ -45,6 +46,7 @@ func TestCRConfig(t *testing.T) {
 	DeleteTestDivisions(t)
 	DeleteTestStatuses(t)
 	DeleteTestProfiles(t)
+	DeleteTestTenants(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 }

@@ -61,6 +61,7 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
+	CreateTestTenants(t)
 	dsr := testData.DeliveryServiceRequests[dsrRequired]
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
@@ -70,6 +71,7 @@ func TestDeliveryServiceRequestRequired(t *testing.T) {
 	if len(alerts.Alerts) == 0 {
 		t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
 	}
+	DeleteTestTenants(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 }
@@ -78,6 +80,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
+	CreateTestTenants(t)
 	routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
 	// Test the xmlId length and form
 	XMLID := "X " + strings.Repeat("X", 46)
@@ -95,6 +98,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 	if len(alerts.Alerts) == 0 {
 		t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
 	}
+	DeleteTestTenants(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 
@@ -103,6 +107,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
+	CreateTestTenants(t)
 	CreateTestParameters(t)
 
 	dsr := testData.DeliveryServiceRequests[dsrBadTenant]
@@ -129,6 +134,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	}
 
 	DeleteTestParameters(t)
+	DeleteTestTenants(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 
@@ -137,6 +143,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 func TestDeliveryServiceRequestBad(t *testing.T) {
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
+	CreateTestTenants(t)
 	// try to create non-draft/submitted
 	src := testData.DeliveryServiceRequests[dsrDraft]
 	s, err := tc.RequestStatusFromString("pending")
@@ -153,6 +160,7 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 		`'status' invalid transition from draft to pending`,
 	}
 	utils.Compare(t, expected, alerts.ToStrings())
+	DeleteTestTenants(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 }
@@ -162,6 +170,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
+	CreateTestTenants(t)
 	// test empty request table
 	dsrs, _, err := TOSession.GetDeliveryServiceRequests()
 	if err != nil {
@@ -212,6 +221,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 	if dsr.Status != tc.RequestStatus("submitted") {
 		t.Errorf("expected status=submitted,  got %s", string(dsr.Status))
 	}
+	DeleteTestTenants(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 

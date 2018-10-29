@@ -351,6 +351,8 @@
     "origins": [
         {
             "name": "origin1",
+            "cachegroup": "originCachegroup",
+            "deliveryService": "test-ds1",
             "fqdn": "origin1.example.com",
             "ipAddress": "1.2.3.4",
             "ip6Address": "dead:beef:cafe::42",
@@ -360,6 +362,8 @@
         },
         {
             "name": "origin2",
+            "cachegroup": "originCachegroup",
+            "deliveryService": "test-ds2",
             "fqdn": "origin2.example.com",
             "ipAddress": "5.6.7.8",
             "ip6Address": "cafe::42",
