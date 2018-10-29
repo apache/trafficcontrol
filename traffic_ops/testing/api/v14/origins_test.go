@@ -26,6 +26,8 @@ func TestOrigins(t *testing.T) {
 	defer DeleteTestCDNs(t)
 	CreateTestTypes(t)
 	defer DeleteTestTypes(t)
+	CreateTestTenants(t)
+	defer DeleteTestTenants(t)
 	CreateTestProfiles(t)
 	defer DeleteTestProfiles(t)
 	CreateTestStatuses(t)
@@ -44,7 +46,6 @@ func TestOrigins(t *testing.T) {
 	defer DeleteTestDeliveryServices(t)
 	CreateTestCoordinates(t)
 	defer DeleteTestCoordinates(t)
-	// TODO: add tenants once their API integration tests are implemented
 
 	CreateTestOrigins(t)
 	defer DeleteTestOrigins(t)

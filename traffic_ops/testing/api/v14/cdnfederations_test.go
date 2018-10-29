@@ -27,12 +27,14 @@ var fedIDs []int
 func TestCDNFederations(t *testing.T) {
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
+	CreateTestTenants(t)
 	CreateTestDeliveryServices(t)
 	CreateTestCDNFederations(t)
 	UpdateTestCDNFederations(t)
 	GetTestCDNFederations(t)
 	DeleteTestCDNFederations(t)
 	DeleteTestDeliveryServices(t)
+	DeleteTestTenants(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 }
