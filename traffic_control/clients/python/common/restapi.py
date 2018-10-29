@@ -36,7 +36,11 @@ import common.utils as utils
 # Python 2 to Python 3 Compatibility
 import requests.compat as compat
 from builtins import str
-from future.utils import iteritems
+
+try:
+	from future.utils import iteritems
+except ImportError:
+	iteritems = lambda x: x.items()
 
 
 logger = logging.getLogger(__name__)
