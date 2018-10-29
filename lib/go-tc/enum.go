@@ -52,6 +52,8 @@ type CacheGroupName string
 // DeliveryServiceName is the name of a CDN delivery service.
 type DeliveryServiceName string
 
+const OriginLocationType = "ORG_LOC"
+
 // CacheType is the type (or tier) of a CDN cache.
 type CacheType string
 
@@ -105,6 +107,11 @@ func CacheTypeFromString(s string) CacheType {
 	}
 	return CacheTypeInvalid
 }
+
+const DSProtocolHTTP = 0
+const DSProtocolHTTPS = 1
+const DSProtocolHTTPAndHTTPS = 2
+const DSProtocolHTTPToHTTPS = 3
 
 // DSTypeCategory is the Delivery Service type category: HTTP or DNS
 type DSTypeCategory string

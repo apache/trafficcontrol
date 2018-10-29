@@ -35,6 +35,7 @@ const DNSSECKeysBucket = "dnssec"
 const DSSSLKeyVersionLatest = "latest"
 const DefaultDSSSLKeyVersion = DSSSLKeyVersionLatest
 const URLSigKeysBucket = "url_sig_keys"
+const URISigningKeysBucket = "cdn_uri_sig_keys"
 
 func MakeDSSSLKeyKey(dsName, version string) string {
 	if version == "" {
@@ -219,12 +220,12 @@ func GetURLSigConfigFileName(ds tc.DeliveryServiceName) string {
 	return "url_sig_" + string(ds) + ".config"
 }
 
-func GetURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc.DeliveryServiceName) (tc.URLSigKeys, bool, error) {
+// GetURLSigKeysFromKey gets the URL Sig keys from the raw Riak key, which is the ATS config file name.
+func GetURLSigKeysFromConfigFileKey(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, configFileKey string) (tc.URLSigKeys, bool, error) {
 	val := tc.URLSigKeys{}
 	found := false
-	key := GetURLSigConfigFileName(ds)
 	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
-		ro, err := FetchObjectValues(key, URLSigKeysBucket, cluster)
+		ro, err := FetchObjectValues(configFileKey, URLSigKeysBucket, cluster)
 		if err != nil {
 			return err
 		}
@@ -241,6 +242,11 @@ func GetURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc
 		return val, false, err
 	}
 	return val, found, nil
+}
+
+func GetURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc.DeliveryServiceName) (tc.URLSigKeys, bool, error) {
+	key := GetURLSigConfigFileName(ds)
+	return GetURLSigKeysFromConfigFileKey(tx, authOpts, riakPort, key)
 }
 
 func PutURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc.DeliveryServiceName, keys tc.URLSigKeys) error {
@@ -262,6 +268,28 @@ func PutURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc
 		return nil
 	})
 	return err
+}
+
+// GetURISigningKeysRaw gets the URL Sig keys for the given delivery service, as the raw bytes stored in Riak.
+func GetURISigningKeysRaw(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, key string) ([]byte, bool, error) {
+	val := []byte(nil)
+	found := false
+	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+		ro, err := FetchObjectValues(key, URISigningKeysBucket, cluster)
+		if err != nil {
+			return err
+		}
+		if len(ro) == 0 {
+			return nil // not found
+		}
+		val = ro[0].Value
+		found = true
+		return nil
+	})
+	if err != nil {
+		return nil, false, err
+	}
+	return val, found, nil
 }
 
 const SSLKeysIndex = "sslkeys"
