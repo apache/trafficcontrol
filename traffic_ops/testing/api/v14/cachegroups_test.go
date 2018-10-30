@@ -258,7 +258,7 @@ func CheckCacheGroupsAuthentication(t *testing.T) {
 	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "DeleteCacheGroupByID")})
 
 	for _, err := range errors {
-		if err.Error == nil {
+		if err.Error != nil {
 			t.Error(err.Message)
 			failed = true
 		}
