@@ -22,7 +22,7 @@ func deliveryServicesEp() string {
 }
 
 func deliveryServicesByServerEp(id string) string {
-	return apiBase + "/servers/" + id + dsPath + ".json"
+	return apiBase + "/servers/" + id + dsPath
 }
 
 func deliveryServiceBaseEp(id string) string {

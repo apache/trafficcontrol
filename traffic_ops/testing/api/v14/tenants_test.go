@@ -104,7 +104,6 @@ func UpdateTestTenants(t *testing.T) {
 
 func DeleteTestTenants(t *testing.T) {
 
-	t.Logf("deleting tenants")
 	t1 := "tenant1"
 	tenant1, _, err := TOSession.TenantByName(t1)
 
