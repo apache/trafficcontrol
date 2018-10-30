@@ -53,7 +53,7 @@ func GetTestDeliveryServiceMatches(t *testing.T) {
 	log.Debugln("GetTestDeliveryServiceMatches")
 	dsMatches, _, err := TOSession.GetDeliveryServiceMatches()
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryService matches: %v\n", err)
+		t.Errorf("cannot GET DeliveryService matches: %v\n", err)
 	}
 
 	dsMatchMap := map[tc.DeliveryServiceName][]string{}
@@ -63,7 +63,7 @@ func GetTestDeliveryServiceMatches(t *testing.T) {
 
 	for _, ds := range testData.DeliveryServices {
 		if _, ok := dsMatchMap[tc.DeliveryServiceName(ds.XMLID)]; !ok {
-			t.Fatalf("GET DeliveryService matches missing: %v\n", ds.XMLID)
+			t.Errorf("GET DeliveryService matches missing: %v\n", ds.XMLID)
 		}
 	}
 }

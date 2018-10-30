@@ -100,20 +100,20 @@ func UpdateTestUsers(t *testing.T) {
 func GetTestUsers(t *testing.T) {
 	_, _, err := TOSession.GetUsers()
 	if err != nil {
-		t.Fatalf("cannot GET users: %v\n", err)
+		t.Errorf("cannot GET users: %v\n", err)
 	}
 }
 
 func GetTestUserCurrent(t *testing.T) {
 	user, _, err := TOSession.GetUserCurrent()
 	if err != nil {
-		t.Fatalf("cannot GET current user: %v\n", err)
+		t.Errorf("cannot GET current user: %v\n", err)
 	}
 	if user.UserName == nil {
-		t.Fatalf("current user expected: %v actual: %v\n", SessionUserName, nil)
+		t.Errorf("current user expected: %v actual: %v\n", SessionUserName, nil)
 	}
 	if *user.UserName != SessionUserName {
-		t.Fatalf("current user expected: %v actual: %v\n", SessionUserName, *user.UserName)
+		t.Errorf("current user expected: %v actual: %v\n", SessionUserName, *user.UserName)
 	}
 }
 

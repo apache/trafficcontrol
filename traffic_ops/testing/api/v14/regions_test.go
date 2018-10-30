@@ -95,7 +95,7 @@ func GetTestRegionsByNamePath(t *testing.T) {
 	for _, region := range testData.Regions {
 		_, _, err := TOSession.GetRegionByNamePath(region.Name)
 		if err != nil {
-			t.Fatalf("cannot GET Region by name: %v - %v\n", region.Name, err)
+			t.Errorf("cannot GET Region by name: %v - %v\n", region.Name, err)
 		}
 	}
 }

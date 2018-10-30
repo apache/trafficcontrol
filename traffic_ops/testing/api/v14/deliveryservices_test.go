@@ -61,12 +61,12 @@ func CreateTestDeliveryServices(t *testing.T) {
 	}
 	_, _, err := TOSession.CreateParameter(pl)
 	if err != nil {
-		t.Fatalf("cannot create parameter: %v\n", err)
+		t.Errorf("cannot create parameter: %v\n", err)
 	}
 	for _, ds := range testData.DeliveryServices {
 		_, err = TOSession.CreateDeliveryService(&ds)
 		if err != nil {
-			t.Fatalf("could not CREATE delivery service '%s': %v\n", ds.XMLID, err)
+			t.Errorf("could not CREATE delivery service '%s': %v\n", ds.XMLID, err)
 		}
 	}
 }
@@ -75,7 +75,7 @@ func GetTestDeliveryServices(t *testing.T) {
 	failed := false
 	actualDSes, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v\n", err, actualDSes)
+		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, actualDSes)
 		failed = true
 	}
 	actualDSMap := map[string]tc.DeliveryService{}
@@ -100,7 +100,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
 		failed = true
-		t.Fatalf("cannot GET Delivery Services: %v\n", err)
+		t.Errorf("cannot GET Delivery Services: %v\n", err)
 	}
 
 	remoteDS := tc.DeliveryService{}
@@ -114,7 +114,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	}
 	if !found {
 		failed = true
-		t.Fatalf("GET Delivery Services missing: %v\n", firstDS.XMLID)
+		t.Errorf("GET Delivery Services missing: %v\n", firstDS.XMLID)
 	}
 
 	updatedLongDesc := "something different"
@@ -130,11 +130,11 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	resp, _, err := TOSession.GetDeliveryService(strconv.Itoa(remoteDS.ID))
 	if err != nil {
 		failed = true
-		t.Fatalf("cannot GET Delivery Service by ID: %v - %v\n", remoteDS.XMLID, err)
+		t.Errorf("cannot GET Delivery Service by ID: %v - %v\n", remoteDS.XMLID, err)
 	}
 	if resp == nil {
 		failed = true
-		t.Fatalf("cannot GET Delivery Service by ID: %v - nil\n", remoteDS.XMLID)
+		t.Errorf("cannot GET Delivery Service by ID: %v - nil\n", remoteDS.XMLID)
 	}
 
 	if resp.LongDesc != updatedLongDesc || resp.MaxDNSAnswers != updatedMaxDNSAnswers {
@@ -215,7 +215,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 	failed := false
 	if err != nil {
 		failed = true
-		t.Fatalf("cannot GET Servers: %v\n", err)
+		t.Errorf("cannot GET Servers: %v\n", err)
 	}
 	for _, testDS := range testData.DeliveryServices {
 		ds := tc.DeliveryService{}
@@ -229,7 +229,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		}
 		if !found {
 			failed = true
-			t.Fatalf("DeliveryService not found in Traffic Ops: %v\n", ds.XMLID)
+			t.Errorf("DeliveryService not found in Traffic Ops: %v\n", ds.XMLID)
 		}
 
 		delResp, err := TOSession.DeleteDeliveryService(strconv.Itoa(ds.ID))

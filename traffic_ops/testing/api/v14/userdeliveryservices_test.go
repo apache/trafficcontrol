@@ -55,17 +55,17 @@ func CreateTestUsersDeliveryServices(t *testing.T) {
 
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v\n", err, dses)
+		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, dses)
 	}
 	if len(dses) == 0 {
-		t.Fatalf("no delivery services, must have at least 1 ds to test users_deliveryservices\n")
+		t.Errorf("no delivery services, must have at least 1 ds to test users_deliveryservices\n")
 	}
 	users, _, err := TOSession.GetUsers()
 	if err != nil {
-		t.Fatalf("cannot GET users: %v\n", err)
+		t.Errorf("cannot GET users: %v\n", err)
 	}
 	if len(users) == 0 {
-		t.Fatalf("no users, must have at least 1 user to test users_deliveryservices\n")
+		t.Errorf("no users, must have at least 1 user to test users_deliveryservices\n")
 	}
 
 	dsIDs := []int{}
@@ -83,33 +83,33 @@ func CreateTestUsersDeliveryServices(t *testing.T) {
 		}
 	}
 	if !foundUser {
-		t.Fatalf("get users expected: %v actual: missing\n", TestUsersDeliveryServicesUser)
+		t.Errorf("get users expected: %v actual: missing\n", TestUsersDeliveryServicesUser)
 	}
 
 	_, err = TOSession.SetDeliveryServiceUser(userID, dsIDs, true)
 	if err != nil {
-		t.Fatalf("failed to set delivery service users: " + err.Error())
+		t.Errorf("failed to set delivery service users: " + err.Error())
 	}
 
 	userDSes, _, err := TOSession.GetUserDeliveryServices(userID)
 	if err != nil {
-		t.Fatalf("get user delivery services returned error: " + err.Error())
+		t.Errorf("get user delivery services returned error: " + err.Error())
 	}
 
 	if len(userDSes.Response) != len(dsIDs) {
-		t.Fatalf("get user delivery services expected %v actual %v\n", len(dsIDs), len(userDSes.Response))
+		t.Errorf("get user delivery services expected %v actual %v\n", len(dsIDs), len(userDSes.Response))
 	}
 
 	actualDSIDMap := map[int]struct{}{}
 	for _, userDS := range userDSes.Response {
 		if userDS.ID == nil {
-			t.Fatalf("get user delivery services returned a DS with a nil ID\n")
+			t.Errorf("get user delivery services returned a DS with a nil ID\n")
 		}
 		actualDSIDMap[*userDS.ID] = struct{}{}
 	}
 	for _, dsID := range dsIDs {
 		if _, ok := actualDSIDMap[dsID]; !ok {
-			t.Fatalf("get user delivery services expected %v actual %v\n", dsID, "missing")
+			t.Errorf("get user delivery services expected %v actual %v\n", dsID, "missing")
 		}
 	}
 }
@@ -119,17 +119,17 @@ func GetTestUsersDeliveryServices(t *testing.T) {
 
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v\n", err, dses)
+		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, dses)
 	}
 	if len(dses) == 0 {
-		t.Fatalf("no delivery services, must have at least 1 ds to test users_deliveryservices\n")
+		t.Errorf("no delivery services, must have at least 1 ds to test users_deliveryservices\n")
 	}
 	users, _, err := TOSession.GetUsers()
 	if err != nil {
-		t.Fatalf("cannot GET users: %v\n", err)
+		t.Errorf("cannot GET users: %v\n", err)
 	}
 	if len(users) == 0 {
-		t.Fatalf("no users, must have at least 1 user to test users_deliveryservices\n")
+		t.Errorf("no users, must have at least 1 user to test users_deliveryservices\n")
 	}
 
 	dsIDs := []int64{}
@@ -147,28 +147,28 @@ func GetTestUsersDeliveryServices(t *testing.T) {
 		}
 	}
 	if !foundUser {
-		t.Fatalf("get users expected: %v actual: missing\n", TestUsersDeliveryServicesUser)
+		t.Errorf("get users expected: %v actual: missing\n", TestUsersDeliveryServicesUser)
 	}
 
 	userDSes, _, err := TOSession.GetUserDeliveryServices(userID)
 	if err != nil {
-		t.Fatalf("get user delivery services returned error: " + err.Error() + "\n")
+		t.Errorf("get user delivery services returned error: " + err.Error() + "\n")
 	}
 
 	if len(userDSes.Response) != len(dsIDs) {
-		t.Fatalf("get user delivery services expected %v actual %v\n", len(dsIDs), len(userDSes.Response))
+		t.Errorf("get user delivery services expected %v actual %v\n", len(dsIDs), len(userDSes.Response))
 	}
 
 	actualDSIDMap := map[int]struct{}{}
 	for _, userDS := range userDSes.Response {
 		if userDS.ID == nil {
-			t.Fatalf("get user delivery services returned a DS with a nil ID\n")
+			t.Errorf("get user delivery services returned a DS with a nil ID\n")
 		}
 		actualDSIDMap[*userDS.ID] = struct{}{}
 	}
 	for _, dsID := range dsIDs {
 		if _, ok := actualDSIDMap[int(dsID)]; !ok {
-			t.Fatalf("get user delivery services expected %v actual %v\n", dsID, "missing")
+			t.Errorf("get user delivery services expected %v actual %v\n", dsID, "missing")
 		}
 	}
 }
@@ -178,10 +178,10 @@ func DeleteTestUsersDeliveryServices(t *testing.T) {
 
 	users, _, err := TOSession.GetUsers()
 	if err != nil {
-		t.Fatalf("cannot GET users: %v\n", err)
+		t.Errorf("cannot GET users: %v\n", err)
 	}
 	if len(users) == 0 {
-		t.Fatalf("no users, must have at least 1 user to test users_deliveryservices\n")
+		t.Errorf("no users, must have at least 1 user to test users_deliveryservices\n")
 	}
 	userID := 0
 	foundUser := false
@@ -193,32 +193,32 @@ func DeleteTestUsersDeliveryServices(t *testing.T) {
 		}
 	}
 	if !foundUser {
-		t.Fatalf("get users expected: %v actual: missing\n", TestUsersDeliveryServicesUser)
+		t.Errorf("get users expected: %v actual: missing\n", TestUsersDeliveryServicesUser)
 	}
 
 	dses, _, err := TOSession.GetUserDeliveryServices(userID)
 	if err != nil {
-		t.Fatalf("get user delivery services returned error: " + err.Error())
+		t.Errorf("get user delivery services returned error: " + err.Error())
 	}
 	if len(dses.Response) == 0 {
-		t.Fatalf("get user delivery services expected %v actual %v\n", ">0", "0")
+		t.Errorf("get user delivery services expected %v actual %v\n", ">0", "0")
 	}
 
 	for _, ds := range dses.Response {
 		if ds.ID == nil {
-			t.Fatalf("get user delivery services returned ds with nil ID\n")
+			t.Errorf("get user delivery services returned ds with nil ID\n")
 		}
 		_, err := TOSession.DeleteDeliveryServiceUser(userID, *ds.ID)
 		if err != nil {
-			t.Fatalf("delete user delivery service returned error: " + err.Error())
+			t.Errorf("delete user delivery service returned error: " + err.Error())
 		}
 	}
 
 	dses, _, err = TOSession.GetUserDeliveryServices(userID)
 	if err != nil {
-		t.Fatalf("get user delivery services returned error: " + err.Error())
+		t.Errorf("get user delivery services returned error: " + err.Error())
 	}
 	if len(dses.Response) != 0 {
-		t.Fatalf("get user delivery services after deleting expected %v actual %v\n", "0", len(dses.Response))
+		t.Errorf("get user delivery services after deleting expected %v actual %v\n", "0", len(dses.Response))
 	}
 }

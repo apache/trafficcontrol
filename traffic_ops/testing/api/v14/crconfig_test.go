@@ -55,24 +55,24 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	log.Debugln("UpdateTestCRConfigSnapshot")
 
 	if len(testData.CDNs) < 1 {
-		t.Fatalf("no cdn test data")
+		t.Errorf("no cdn test data")
 	}
 	cdn := testData.CDNs[0].Name
 	_, err := TOSession.SnapshotCRConfig(cdn)
 	if err != nil {
-		t.Fatalf("SnapshotCRConfig err expected nil, actual %+v", err)
+		t.Errorf("SnapshotCRConfig err expected nil, actual %+v", err)
 	}
 	crcBts, _, err := TOSession.GetCRConfig(cdn)
 	if err != nil {
-		t.Fatalf("GetCRConfig err expected nil, actual %+v", err)
+		t.Errorf("GetCRConfig err expected nil, actual %+v", err)
 	}
 	crc := tc.CRConfig{}
 	if err := json.Unmarshal(crcBts, &crc); err != nil {
-		t.Fatalf("GetCRConfig bytes expected: valid tc.CRConfig, actual JSON unmarshal err: %+v", err)
+		t.Errorf("GetCRConfig bytes expected: valid tc.CRConfig, actual JSON unmarshal err: %+v", err)
 	}
 
 	if len(crc.DeliveryServices) == 0 {
-		t.Fatalf("GetCRConfig len(crc.DeliveryServices) expected: >0, actual: 0")
+		t.Errorf("GetCRConfig len(crc.DeliveryServices) expected: >0, actual: 0")
 	}
 
 	log.Debugln("UpdateTestCRConfigSnapshot() PASSED: ")

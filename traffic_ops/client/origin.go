@@ -90,12 +90,10 @@ func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, Req
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
-	fmt.Printf("Origin before: %+v\n", origin)
 	err := originIDs(to, &origin)
 	if err != nil {
 		return nil, reqInf, err
 	}
-	fmt.Printf("Origin after: %+v\n", origin)
 
 	reqBody, err := json.Marshal(origin)
 	if err != nil {
