@@ -30,13 +30,9 @@ func TestProfiles(t *testing.T) {
 	// attempt to create profiles with missing info
 	CreateBadProfiles(t)
 	CreateTestProfiles(t)
-	CreateTestParameters(t)
-	CreateTestProfileParameters(t)
 	UpdateTestProfiles(t)
 	GetTestProfiles(t)
 	GetTestProfilesWithParameters(t)
-	DeleteTestProfileParameters(t)
-	DeleteTestParameters(t)
 	DeleteTestProfiles(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
@@ -125,6 +121,7 @@ func GetTestProfiles(t *testing.T) {
 		}
 	}
 }
+
 func GetTestProfilesWithParameters(t *testing.T) {
 	firstProfile := testData.Profiles[0]
 	resp, _, err := TOSession.GetProfileByName(firstProfile.Name)

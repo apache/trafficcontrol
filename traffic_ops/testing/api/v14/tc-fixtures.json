@@ -352,7 +352,7 @@
         {
             "name": "origin1",
             "cachegroup": "originCachegroup",
-            "deliveryService": "test-ds1",
+            "deliveryService": "ds1",
             "fqdn": "origin1.example.com",
             "ipAddress": "1.2.3.4",
             "ip6Address": "dead:beef:cafe::42",
@@ -363,7 +363,7 @@
         {
             "name": "origin2",
             "cachegroup": "originCachegroup",
-            "deliveryService": "test-ds2",
+            "deliveryService": "ds2",
             "fqdn": "origin2.example.com",
             "ipAddress": "5.6.7.8",
             "ip6Address": "cafe::42",
@@ -393,20 +393,6 @@
             "name": "history.count",
             "secure": false,
             "value": "30"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.431062+00:00",
-            "name": "error_url",
-            "secure": true,
-            "value": "403"
-        },
-        {
-            "configFile": "records.config",
-            "lastUpdated": "2018-01-19T19:01:21.432692+00:00",
-            "name": "CONFIG proxy.config.allocator.debug_filter",
-            "secure": false,
-            "value": "INT 0"
         },
         {
             "configFile": "records.config",
@@ -572,7 +558,23 @@
             "lastUpdated": "2018-03-02T17:27:11.796899+00:00",
             "name": "EDGE1",
             "routing_disabled": true,
-            "type": "ATS_PROFILE"
+            "type": "ATS_PROFILE",
+            "params": [
+                {
+                    "configFile": "url_sig.config",
+                    "lastUpdated": "2018-01-19T19:01:21.431062+00:00",
+                    "name": "error_url",
+                    "secure": true,
+                    "value": "403"
+                },
+                {
+                    "configFile": "records.config",
+                    "lastUpdated": "2018-01-19T19:01:21.432692+00:00",
+                    "name": "CONFIG proxy.config.allocator.debug_filter",
+                    "secure": false,
+                    "value": "INT 0"
+                }
+            ]
         },
         {
             "cdnName": "cdn4",
@@ -621,14 +623,6 @@
             "name": "RASCAL1",
             "routing_disabled": false,
             "type": "TM_PROFILE"
-        }
-    ],
-    "profileParameters": [
-        {
-            "parameterId": 100
-        },
-        {
-            "parameterId": 200
         }
     ],
     "regions": [
