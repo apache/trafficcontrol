@@ -23,13 +23,13 @@ CDN
 /api/1.4/cdns
 ++++++++++++++++++++
 
-**GET api/1.4/cdns/:name/dnsseckeys/ksk/generate**
+**POST api/1.4/cdns/:name/dnsseckeys/ksk/generate**
 
   Authentication Required: Yes
 
-  Role(s) Required: None
+  Role(s) Required: admin
 
-  **Request Query Parameters**
+  **Request Properties**
 
   +--------------------+----------+----------------------------------------------------------------------------------------------------+
   | Name               | Required | Description                                                                                        |
@@ -59,7 +59,7 @@ CDN
   **Response Example** ::
 
     {
-     "response": Successfully generated ksk dnssec keys for my-cdn-name"
+     "response": "Successfully generated ksk dnssec keys for my-cdn-name"
     }
 
 |
