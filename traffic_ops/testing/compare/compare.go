@@ -35,7 +35,9 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-const __version__ = "1.0.0"
+const __version__ = "1.1.0"
+const SHORT_HEADER = "# DO NOT EDIT"
+const LONG_HEADER = "# TRAFFIC OPS NOTE:"
 
 // Environment variables used:
 //   TO_URL      -- URL for reference Traffic Ops
@@ -138,7 +140,59 @@ func testRoute(tos []*Connect, route string) {
 	wg.Wait()
 	close(ch)
 
-	if res[0].Res == res[1].Res {
+	// Check for Traffic Ops headers and remove them before comparison
+	refResult := res[0].Res
+	testResult := res[1].Res
+	if strings.Contains(route, "configfiles") {
+		refLines := strings.Split(refResult, "\n")
+		testLines := strings.Split(testResult, "\n")
+
+		// If the two files have different numbers of lines, they definitely differ
+		if len(refLines) != len(testLines) {
+			log.Print("Diffs from ", route, " written to")
+			p, err := res[0].TO.writeResults(route, refResult)
+			if err != nil {
+				log.Fatal("Error writing results for ", route)
+			}
+			log.Print(" ", p)
+			p, err = res[1].TO.writeResults(route, testResult)
+			if err != nil {
+				log.Fatal("Error writing results for ", route)
+			}
+			log.Print(" and ", p)
+		}
+
+		refResult = ""
+		testResult = ""
+
+		for i, refLine := range refLines {
+			if len(refLine) < len(SHORT_HEADER) {
+				refResult += refLine
+			} else if refLine[:len(SHORT_HEADER)] != SHORT_HEADER {
+				if len(refLine) >= len(LONG_HEADER) {
+					if refLine[:len(LONG_HEADER)] != LONG_HEADER {
+						refResult += refLine
+					}
+				} else {
+					refResult += refLine
+				}
+			}
+
+			if len(testLines[i]) < len(SHORT_HEADER) {
+				testResult += testLines[i]
+			} else if testLines[i][:len(SHORT_HEADER)] != SHORT_HEADER {
+				if len(testLines[i]) >= len(LONG_HEADER) {
+					if testLines[i][:len(LONG_HEADER)] != LONG_HEADER {
+						testResult += testLines[i]
+					}
+				} else {
+					testResult += testLines[i]
+				}
+			}
+		}
+	}
+
+	if refResult == testResult {
 		log.Printf("Identical results (%d bytes) from %s", len(res[0].Res), route)
 	} else {
 		log.Print("Diffs from ", route, " written to")
