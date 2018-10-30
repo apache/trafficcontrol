@@ -77,5 +77,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
-[Unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.2.0...HEAD
+[Unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...HEAD
+[3.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.2.0...RELEASE-3.0.0
 [2.2.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-2.1.0...RELEASE-2.2.0
