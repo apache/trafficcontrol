@@ -25,7 +25,6 @@ func TestFederations(t *testing.T) {
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
 	CreateTestTenants(t)
-	CreateTestTenants(t)
 	CreateTestProfiles(t)
 	CreateTestStatuses(t)
 	CreateTestDivisions(t)
@@ -57,38 +56,38 @@ func GetTestFederations(t *testing.T) {
 	log.Debugln("GetTestFederations")
 
 	if len(testData.Federations) == 0 {
-		t.Fatalf("no federations test data")
+		t.Errorf("no federations test data")
 	}
 
 	feds, _, err := TOSession.AllFederations()
 	if err != nil {
-		t.Fatalf("getting federations: " + err.Error())
+		t.Errorf("getting federations: " + err.Error())
 	}
 
 	if len(feds) != 1 {
-		t.Fatalf("federations expected 1, actual: %+v", len(feds))
+		t.Errorf("federations expected 1, actual: %+v", len(feds))
 	}
 	fed := feds[0]
 
 	if len(fed.Mappings) < 1 {
-		t.Fatalf("federation mappings expected <0, actual: 0")
+		t.Errorf("federation mappings expected <0, actual: 0")
 	}
 
 	mapping := fed.Mappings[0]
 	if mapping.CName == nil {
-		t.Fatalf("federation mapping expected cname, actual: nil")
+		t.Errorf("federation mapping expected cname, actual: nil")
 	}
 	if mapping.TTL == nil {
-		t.Fatalf("federation mapping expected ttl, actual: nil")
+		t.Errorf("federation mapping expected ttl, actual: nil")
 	}
 
 	matched := false
 	for _, testFed := range testData.Federations {
 		if testFed.CName == nil {
-			t.Fatalf("test federation missing cname!")
+			t.Errorf("test federation missing cname!")
 		}
 		if testFed.TTL == nil {
-			t.Fatalf("test federation missing ttl!")
+			t.Errorf("test federation missing ttl!")
 		}
 
 		if *mapping.CName != *testFed.CName {
@@ -97,11 +96,11 @@ func GetTestFederations(t *testing.T) {
 		matched = true
 
 		if *mapping.TTL != *testFed.TTL {
-			t.Fatalf("federation mapping ttl expected: %v, actual: %v", *testFed.TTL, *mapping.TTL)
+			t.Errorf("federation mapping ttl expected: %v, actual: %v", *testFed.TTL, *mapping.TTL)
 		}
 	}
 	if !matched {
-		t.Fatalf("federation mapping expected to match test data, actual: cname %v not in test data", *mapping.CName)
+		t.Errorf("federation mapping expected to match test data, actual: cname %v not in test data", *mapping.CName)
 	}
 
 	log.Debugln("GetTestFederations PASSED")
@@ -111,19 +110,19 @@ func PostTestFederationsDeliveryServices(t *testing.T) {
 	log.Debugln("PostTestFederationsDeliveryServices")
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v\n", err, dses)
+		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, dses)
 	}
 	if len(dses) == 0 {
-		t.Fatalf("no delivery services, must have at least 1 ds to test federations deliveryservices\n")
+		t.Errorf("no delivery services, must have at least 1 ds to test federations deliveryservices\n")
 	}
 	ds := dses[0]
 	if len(fedIDs) == 0 {
-		t.Fatalf("no federations, must have at least 1 federation to test federations deliveryservices\n")
+		t.Errorf("no federations, must have at least 1 federation to test federations deliveryservices\n")
 	}
 	fedID := fedIDs[0]
 
 	if _, err = TOSession.CreateFederationDeliveryServices(fedID, []int{ds.ID}, true); err != nil {
-		t.Fatalf("creating federations delivery services: %v\n", err)
+		t.Errorf("creating federations delivery services: %v\n", err)
 	}
 	log.Debugln("PostTestFederationsDeliveryServices PASSED")
 }
