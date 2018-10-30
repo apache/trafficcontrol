@@ -49,6 +49,7 @@ func (to *Session) DeliveryServicesByServer(id int) ([]tc.DeliveryService, error
 
 func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, ReqInf, error) {
 	var data tc.DeliveryServicesResponse
+
 	reqInf, err := get(to, deliveryServicesByServerEp(strconv.Itoa(id)), &data)
 	if err != nil {
 		return nil, reqInf, err
