@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Traffic Ops Golang Proxy Endpoints
+  - /api/1.4/users `(GET,POST,PUT)`
+  - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys `GET`
+  - /api/1.1/deliveryservices/hostname/:hostname/sslkeys `GET`
+  - /api/1.1/deliveryservices/sslkeys/add `POST`
+  - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys/delete `GET`
+  
+### Changed
+- Issue 2821: Fixed "Traffic Router may choose wrong certificate when SNI names overlap"
+  
+## [3.0] - 2018-10-30
+### Added
+- Removed MySQL-to-Postgres migration tools.  This tool is supported for 1.x to 2.x upgrades only and should not be used with 3.x.
 - Backup Edge Cache group: If the matched group in the CZF is not available, this list of backup edge cache group configured via Traffic Ops API can be used as backup. In the event of all backup edge cache groups not available, GEO location can be optionally used as further backup. APIs detailed [here](http://traffic-control-cdn.readthedocs.io/en/latest/development/traffic_ops_api/v12/cachegroup_fallbacks.html)
 - Traffic Ops Golang Proxy Endpoints
   - /api/1.4/users `(GET,POST,PUT)`
@@ -23,9 +36,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Monitor Client Update: Traffic Monitor is updated to use the Traffic Ops v13 client.
 - Removed previously deprecated `traffic_monitor_java`
 - Added `infrastructure/cdn-in-a-box` for Apachecon 2018 demonstration
-
-### Changed
-- Issue 2821: Fixed "Traffic Router may choose wrong certificate when SNI names overlap"
 
 ## [2.2.0] - 2018-06-07
 ### Added
