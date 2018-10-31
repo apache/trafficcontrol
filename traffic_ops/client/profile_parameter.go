@@ -83,7 +83,7 @@ func (to *Session) GetProfileParameterByQueryParams(queryParams string) ([]tc.Pr
 
 // DELETE a Parameter by Parameter
 func (to *Session) DeleteParameterByProfileParameter(profile int, parameter int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/profile/%d/parameter/%d", API_v13_Profile_Parameters, profile, parameter)
+	URI := fmt.Sprintf("%s/%d/%d", API_v13_Profile_Parameters, profile, parameter)
 	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

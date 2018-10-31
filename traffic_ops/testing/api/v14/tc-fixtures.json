@@ -561,18 +561,14 @@
             "type": "ATS_PROFILE",
             "params": [
                 {
-                    "configFile": "url_sig.config",
-                    "lastUpdated": "2018-01-19T19:01:21.431062+00:00",
-                    "name": "error_url",
-                    "secure": true,
-                    "value": "403"
+                    "name": "param1",
+                    "configFile": "param1.txt",
+                    "value": "value1"
                 },
                 {
-                    "configFile": "records.config",
-                    "lastUpdated": "2018-01-19T19:01:21.432692+00:00",
-                    "name": "CONFIG proxy.config.allocator.debug_filter",
-                    "secure": false,
-                    "value": "INT 0"
+                    "name": "param2",
+                    "configFile": "param2.txt",
+                    "value": "value2"
                 }
             ]
         },
