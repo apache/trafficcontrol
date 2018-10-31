@@ -26,8 +26,8 @@
 Generates a new Key-Signing Key (KSK) for a specific CDN.
 
 :Auth. Required: Yes
-:Roles Required: None
-:Response Type:  ???
+:Roles Required: "admin"
+:Response Type:  Object (string)
 
 Request Structure
 -----------------

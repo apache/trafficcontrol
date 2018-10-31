@@ -83,7 +83,7 @@ Response Structure
 :httpBypassFqdn:     The HTTP destination to use for bypass on an HTTP Delivery Service - bypass starts when the traffic on this Delivery Service exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the Delivery Service
 :id:                 An integral, unique identifier for this Delivery Service
 :infoUrl:            This is a string which is expected to contain at least one URL pointing to more information about the Delivery Service. Historically, this has been used to link relevant JIRA tickets
-:initialDispersion:  |
+:initialDispersion:  The number of caches between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses. For most se-cases, this should be 1
 :ipv6RoutingEnabled: If ``true``, clients that connect to Traffic Router using IPv6 will be given the IPv6 address of a suitable Edge-tier cache; if ``false`` all addresses will be IPv4, regardless of the client connection\ [2]_
 :lastUpdated:        The date and time at which this Delivery Service was last updated, in a ``ctime``-like format
 :logsEnabled:        If ``true``, logging is enabled for this Delivery Service, otherwise it is disabled
@@ -96,17 +96,17 @@ Response Structure
 	:setNumber: The set Number of the matchList
 	:type:      The type of MatchList
 
-:maxDnsAnswers:        The maximum number of IPs to put in a A/AAAA response for a DNS Delivery Service (0 means all available)
-:midHeaderRewrite:     Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
-:missLat:              The latitude to use when the client cannot be found in the CZF or a geographic IP lookup
-:missLong:             The longitude to use when the client cannot be found in the CZF or a geographic IP lookup
-:multiSiteOrigin:      ``true`` if the Multi Site Origin feature is enabled for this Delivery Service, ``false`` otherwise\ [3]_
-:originShield:         An "origin shield" is a forward proxy that sits between Mid-tier caches and the origin and performs further caching beyond what's offered by a standard CDN. This field is a string of FQDNs to use as origin shields, delimited by ``|``
-:orgServerFqdn:        The origin server's Fully Qualified Domain Name (FQDN) - including the protocol (e.g. http:// or https://) - for use in retrieving content from the origin server
-:profileDescription:   The description of the Traffic Router Profile with which this Delivery Service is associated
-:profileId:            The integral, unique identifier for the Traffic Router profile with which this Delivery Service is associated
-:profileName:          The name of the Traffic Router Profile with which this Delivery Service is associated
-:protocol:             The protocol which clients will use to communicate with Edge-tier cache servers\ [2]_ - this is an integer on the interval [0-2] where the values have these meanings:
+:maxDnsAnswers:      The maximum number of IPs to put in a A/AAAA response for a DNS Delivery Service (0 means all available)
+:midHeaderRewrite:   Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
+:missLat:            The latitude to use when the client cannot be found in the CZF or a geographic IP lookup
+:missLong:           The longitude to use when the client cannot be found in the CZF or a geographic IP lookup
+:multiSiteOrigin:    ``true`` if the Multi Site Origin feature is enabled for this Delivery Service, ``false`` otherwise\ [3]_
+:originShield:       An "origin shield" is a forward proxy that sits between Mid-tier caches and the origin and performs further caching beyond what's offered by a standard CDN. This field is a string of FQDNs to use as origin shields, delimited by ``|``
+:orgServerFqdn:      The origin server's Fully Qualified Domain Name (FQDN) - including the protocol (e.g. http:// or https://) - for use in retrieving content from the origin server
+:profileDescription: The description of the Traffic Router Profile with which this Delivery Service is associated
+:profileId:          The integral, unique identifier for the Traffic Router profile with which this Delivery Service is associated
+:profileName:        The name of the Traffic Router Profile with which this Delivery Service is associated
+:protocol:           The protocol which clients will use to communicate with Edge-tier cache servers\ [2]_ - this is an integer on the interval [0-2] where the values have these meanings:
 
 	0
 		HTTP
@@ -133,7 +133,7 @@ Response Structure
 	2
 		Use the `experimental cache_range_requests plugin <https://github.com/apache/trafficserver/tree/master/plugins/experimental/cache_range_requests>`_ to treat unique ranges as unique objects
 
-:regexRemap:          A regular expression remap rule to apply to this Delivery Service at the Edge tier
+:regexRemap: A regular expression remap rule to apply to this Delivery Service at the Edge tier
 
 	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
 
@@ -142,13 +142,18 @@ Response Structure
 
 	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
 
-:signed:              ``true`` if token-based authentication is enabled for this Delivery Service, ``false`` otherwise
-:signingAlgorithm:    Type of URL signing method to sign the URLs:
+:signed:           ``true`` if token-based authentication is enabled for this Delivery Service, ``false`` otherwise
+:signingAlgorithm: Type of URL signing method to sign the URLs, basically comes down to one of two plugins or ``null``:
 
 	``null``
-		Token-based authentication is not enabled for this Delivery Service.
-	“url_sig”: URL Sign token based auth is enabled for this Delivery Service.
-	“uri_signing”: URI Signing token based auth is enabled for this Delivery Service.
+		Token-based authentication is not enabled for this Delivery Service
+	url_sig:
+		URL Signing token-based authentication is enabled for this Delivery Service
+	uri_signing
+		URI Signing token-based authentication is enabled for this Delivery Service
+
+	.. seealso:: `The Apache Trafficserver documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/url_sig.en.html>`_ and `the draft RFC for uri_signing <https://tools.ietf.org/html/draft-ietf-cdni-uri-signing-16>`_
+
 
 :sslKeyVersion:       TODO: wat?
 :tenantId:            The integral, unique identifier of the tenant who owns this Delivery Service
@@ -228,7 +233,7 @@ Response Structure
 		]
 	}]}
 
-.. [1] Users with the roles "admin" and/or "operation" will be able to see *all* Delivery Services, whereas any other user will only see the Delivery Services their Tenant is allowed to see.
+.. [1] Users with the roles "admin" and/or "operations" will be able to see *all* Delivery Services, whereas any other user will only see the Delivery Services their Tenant is allowed to see.
 .. [2] This only applies to HTTP Delivery Services
 .. [3] See :ref:`multi-site-origin`
 
