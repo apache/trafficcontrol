@@ -35,6 +35,7 @@ func TestDeliveryServices(t *testing.T) {
 	CreateTestServers(t)
 	CreateTestDeliveryServices(t)
 	UpdateTestDeliveryServices(t)
+	UpdateNullableTestDeliveryServices(t)
 	GetTestDeliveryServices(t)
 	DeleteTestDeliveryServices(t)
 	DeleteTestServers(t)
@@ -179,6 +180,69 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	}
 	if !failed {
 		log.Debugln("UpdatedTestDeliveryServices() PASSED: ")
+	}
+}
+
+func UpdateNullableTestDeliveryServices(t *testing.T) {
+	failed := false
+	firstDS := testData.DeliveryServices[0]
+
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		failed = true
+		t.Fatalf("cannot GET Delivery Services: %v\n", err)
+	}
+
+	remoteDS := tc.DeliveryServiceNullable{}
+	found := false
+	for _, ds := range dses {
+		if ds.XMLID == nil || ds.ID == nil {
+			continue
+		}
+		if *ds.XMLID == firstDS.XMLID {
+			found = true
+			remoteDS = ds
+			break
+		}
+	}
+	if !found {
+		failed = true
+		t.Fatalf("GET Delivery Services missing: %v\n", firstDS.XMLID)
+	}
+
+	updatedLongDesc := "something else different"
+	updatedMaxDNSAnswers := 164599
+	remoteDS.LongDesc = &updatedLongDesc
+	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
+
+	if updateResp, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID), &remoteDS); err != nil {
+		t.Fatalf("cannot UPDATE DeliveryService by ID: %v - %v\n", err, updateResp)
+	}
+
+	// Retrieve the server to check rack and interfaceName values were updated
+	resp, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*remoteDS.ID))
+	if err != nil {
+		failed = true
+		t.Fatalf("cannot GET Delivery Service by ID: %v - %v\n", remoteDS.XMLID, err)
+	}
+	if resp == nil {
+		failed = true
+		t.Fatalf("cannot GET Delivery Service by ID: %v - nil\n", remoteDS.XMLID)
+	}
+
+	if resp.LongDesc == nil || resp.MaxDNSAnswers == nil {
+		failed = true
+		t.Errorf("results do not match actual: %v, expected: %s\n", resp.LongDesc, updatedLongDesc)
+		t.Fatalf("results do not match actual: %v, expected: %d\n", resp.MaxDNSAnswers, updatedMaxDNSAnswers)
+	}
+
+	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers {
+		failed = true
+		t.Errorf("results do not match actual: %s, expected: %s\n", *resp.LongDesc, updatedLongDesc)
+		t.Fatalf("results do not match actual: %d, expected: %d\n", *resp.MaxDNSAnswers, updatedMaxDNSAnswers)
+	}
+	if !failed {
+		log.Debugln("UpdateNullableTestDeliveryServices() PASSED: ")
 	}
 }
 

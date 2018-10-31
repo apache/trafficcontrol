@@ -85,6 +85,31 @@ func (to *Session) GetDeliveryService(id string) (*tc.DeliveryService, ReqInf, e
 	return &data.Response[0], reqInf, nil
 }
 
+func (to *Session) GetDeliveryServicesNullable() ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	data := struct {
+		Response []tc.DeliveryServiceNullable `json:"response"`
+	}{}
+	reqInf, err := get(to, deliveryServicesEp(), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	return data.Response, reqInf, nil
+}
+
+func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNullable, ReqInf, error) {
+	data := struct {
+		Response []tc.DeliveryServiceNullable `json:"response"`
+	}{}
+	reqInf, err := get(to, deliveryServiceEp(id), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	if len(data.Response) == 0 {
+		return nil, reqInf, nil
+	}
+	return &data.Response[0], reqInf, nil
+}
+
 // CreateDeliveryService creates the DeliveryService it's passed
 func (to *Session) CreateDeliveryService(ds *tc.DeliveryService) (*tc.CreateDeliveryServiceResponse, error) {
 	var data tc.CreateDeliveryServiceResponse
@@ -118,6 +143,20 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 // UpdateDeliveryService updates the DeliveryService matching the ID it's passed with
 // the DeliveryService it is passed
 func (to *Session) UpdateDeliveryService(id string, ds *tc.DeliveryService) (*tc.UpdateDeliveryServiceResponse, error) {
+	var data tc.UpdateDeliveryServiceResponse
+	jsonReq, err := json.Marshal(ds)
+	if err != nil {
+		return nil, err
+	}
+	_, err = put(to, deliveryServiceEp(id), jsonReq, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+func (to *Session) UpdateDeliveryServiceNullable(id string, ds *tc.DeliveryServiceNullable) (*tc.UpdateDeliveryServiceResponse, error) {
 	var data tc.UpdateDeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
