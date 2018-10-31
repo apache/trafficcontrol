@@ -46,6 +46,7 @@ import (
 type TODeliveryServiceServer struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.DeliveryServiceServer
+	TenantIDs pq.Int64Array `json:"-" db:"accessibleTenants"`
 }
 
 func GetRefType(inf *api.APIInfo) *TODeliveryServiceServer {
@@ -142,7 +143,21 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 		orderby = "deliveryService"
 	}
 
-	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset))
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(tx.Tx)
+	if err != nil {
+		return nil, errors.New("checking if tenancy is enabled: " + err.Error())
+	}
+	if tenancyEnabled {
+		tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
+		if err != nil {
+			return nil, errors.New("getting user tenant ID list: " + err.Error())
+		}
+		for _, id := range tenantIDs {
+			dss.TenantIDs = append(dss.TenantIDs, int64(id))
+		}
+	}
+
+	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), tenancyEnabled)
 	if err != nil {
 		return nil, errors.New("creating query for DeliveryserviceServers: " + err.Error())
 	}
@@ -164,7 +179,7 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 	return &tc.DeliveryServiceServerResponse{orderby, servers, page, limit}, nil
 }
 
-func selectQuery(orderBy string, limit string, offset string) (string, error) {
+func selectQuery(orderBy string, limit string, offset string, useTenancy bool) (string, error) {
 	selectStmt := `SELECT
 	s.deliveryService,
 	s.server,
@@ -183,6 +198,14 @@ func selectQuery(orderBy string, limit string, offset string) (string, error) {
 	orderBy, ok := allowedOrderByCols[orderBy]
 	if !ok {
 		return "", errors.New("orderBy '" + orderBy + "' not permitted")
+	}
+
+	// TODO refactor to use dbhelpers.AddTenancyCheck
+	if useTenancy {
+		selectStmt += `
+JOIN deliveryservice d on s.deliveryservice = d.id
+WHERE d.tenant_id = ANY(CAST(:accessibleTenants AS bigint[]))
+`
 	}
 
 	if orderBy != "" {
