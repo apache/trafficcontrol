@@ -40,7 +40,7 @@ sub dbdump {
 	}
 
 	# slurp it in..
-	undef $/;
+	local $/;
 	my $data = <$fh>;
 
 
