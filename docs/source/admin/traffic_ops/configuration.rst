@@ -318,7 +318,7 @@ Create a ks.src file in the root of the selection location. See the example belo
 
 	mkdir newdir
 	cd newdir/
-	cp -r ../centos65/* .
+	cp -r ../centos74/* .
 	vim ks.src
 	vim isolinux/isolinux.cfg
 	cd vim osversions.cfg

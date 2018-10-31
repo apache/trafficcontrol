@@ -16,7 +16,7 @@
 *****************************
 Traffic Portal Administration
 *****************************
-Traffic Portal is only supported on CentOS Linux distributions - version 6.7 or higher (including 7.x). It runs on NodeJS and requires version 6.0 or higher.
+Traffic Portal is only supported on CentOS Linux distributions version 7.x. It runs on NodeJS and requires version 6.0 or higher.
 
 
 Installing Traffic Portal

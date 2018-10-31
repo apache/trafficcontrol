@@ -996,7 +996,7 @@ Tools
 
 Generate ISO
 ------------
-Generate ISO is a tool for building custom ISOs for building caches on remote hosts. Currently it only supports Centos 6, but if you're brave and pure of heart you MIGHT be able to get it to work with other unix-like OS's.
+Generate ISO is a tool for building custom ISOs for building caches on remote hosts. Currently it only supports Centos 7, but if you're brave and pure of heart you MIGHT be able to get it to work with other unix-like OS's.
 
 The interface is *mostly* self-explanatory as it's got hints.
 
