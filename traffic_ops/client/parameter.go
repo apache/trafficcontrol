@@ -178,6 +178,22 @@ func (to *Session) GetParameterByNameAndConfigFile(name string, configFile strin
 	return data.Response, reqInf, nil
 }
 
+// GET a Parameter by the Parameter Name and ConfigFile and Value
+// TODO: API should support all 3,  but does not support filter by value
+// currently.  Until then, loop thru hits until you find one with that value
+func (to *Session) GetParameterByNameAndConfigFileAndValue(name, configFile, value string) ([]tc.Parameter, ReqInf, error) {
+	params, reqInf, err := to.GetParameterByNameAndConfigFile(name, configFile)
+	if err != nil {
+		return params, reqInf, err
+	}
+	for _, p := range params {
+		if p.Value == value {
+			return []tc.Parameter{p}, reqInf, err
+		}
+	}
+	return nil, reqInf, err
+}
+
 // DELETE a Parameter by ID
 func (to *Session) DeleteParameterByID(id int) (tc.Alerts, ReqInf, error) {
 	URI := fmt.Sprintf("%s/%d", API_v13_Parameters, id)
