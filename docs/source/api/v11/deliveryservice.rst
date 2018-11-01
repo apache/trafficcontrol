@@ -83,18 +83,27 @@ Response Structure
 :httpBypassFqdn:     The HTTP destination to use for bypass on an HTTP Delivery Service - bypass starts when the traffic on this Delivery Service exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the Delivery Service
 :id:                 An integral, unique identifier for this Delivery Service
 :infoUrl:            This is a string which is expected to contain at least one URL pointing to more information about the Delivery Service. Historically, this has been used to link relevant JIRA tickets
-:initialDispersion:  The number of caches between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses. For most se-cases, this should be 1
+:initialDispersion:  The number of caches between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses. For most use-cases, this should be 1
 :ipv6RoutingEnabled: If ``true``, clients that connect to Traffic Router using IPv6 will be given the IPv6 address of a suitable Edge-tier cache; if ``false`` all addresses will be IPv4, regardless of the client connection\ [2]_
 :lastUpdated:        The date and time at which this Delivery Service was last updated, in a ``ctime``-like format
 :logsEnabled:        If ``true``, logging is enabled for this Delivery Service, otherwise it is disabled
 :longDesc:           A description of the Delivery Service
 :longDesc1:          A field used when more detailed information that that provided by ``longDesc`` is desired
 :longDesc2:          A field used when even more detailed information that that provided by either ``longDesc`` or ``longDesc1`` is desired
-:matchList:          An array TODO: wat?
+:matchList:          An array of methods used by Traffic Router to determine whether or not a request can be serviced by this Delivery Service
 
-	:pattern:   A regular expression
-	:setNumber: The set Number of the matchList
-	:type:      The type of MatchList
+	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
+	:setNumber: An integral, unique identifier for the set of types to which the ``type`` field belongs
+	:type:      The type of match performed using ``pattern`` to determine whether or not to use this Delivery Service
+
+		HOST_REGEXP
+			Use the Delivery Service if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request\ [2]_
+		HEADER_REGEXP
+			Use the Delivery Service if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [2]_
+		PATH_REGEXP
+			Use the Delivery Service if ``pattern`` matches the request path of this Delivery Service's URL
+		STEERING_REGEXP
+			Use the Delivery Service if ``pattern`` matches the ``xml_id`` of one of this Delivery Service's "Steering" target Delivery Services
 
 :maxDnsAnswers:      The maximum number of IPs to put in a A/AAAA response for a DNS Delivery Service (0 means all available)
 :midHeaderRewrite:   Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
@@ -152,10 +161,13 @@ Response Structure
 	uri_signing
 		URI Signing token-based authentication is enabled for this Delivery Service
 
-	.. seealso:: `The Apache Trafficserver documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/url_sig.en.html>`_ and `the draft RFC for uri_signing <https://tools.ietf.org/html/draft-ietf-cdni-uri-signing-16>`_
+	.. seealso:: `The Apache Trafficserver documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/url_sig.en.html>`_ and `the draft RFC for uri_signing <https://tools.ietf.org/html/draft-ietf-cdni-uri-signing-16>`_ - note, however that the current implementation of uri_signing uses Draft 12 of that RFC document, NOT the latest.
 
 
-:sslKeyVersion:       TODO: wat?
+:sslKeyVersion:       This integer indicates the generation of keys in use by the Delyvery Service - if any - and is incremented by the Traffic Portal client whenever new keys are generated
+
+	.. warning:: This number will not be correct if keys are manually replaced using the API, as the key generation API does not increment it!
+
 :tenantId:            The integral, unique identifier of the tenant who owns this Delivery Service
 :trRequestHeaders:    If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
 :trResponseHeaders:   If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
@@ -236,313 +248,6 @@ Response Structure
 .. [1] Users with the roles "admin" and/or "operations" will be able to see *all* Delivery Services, whereas any other user will only see the Delivery Services their Tenant is allowed to see.
 .. [2] This only applies to HTTP Delivery Services
 .. [3] See :ref:`multi-site-origin`
-
-	Retrieves the health of all locations (cache groups) for a delivery service.
-
-	Authentication Required: Yes
-
-	Role(s) Required: None
-
-	**Response Properties**
-
-	+------------------+--------+-------------------------------------------------+
-	|    Parameter     |  Type  |                   Description                   |
-	+==================+========+=================================================+
-	| ``totalOnline``  | int    | Total number of online caches across all CDNs.  |
-	+------------------+--------+-------------------------------------------------+
-	| ``totalOffline`` | int    | Total number of offline caches across all CDNs. |
-	+------------------+--------+-------------------------------------------------+
-	| ``cachegroups``  | array  | A collection of cache groups.                   |
-	+------------------+--------+-------------------------------------------------+
-	| ``>online``      | int    | The number of online caches for the cache group |
-	+------------------+--------+-------------------------------------------------+
-	| ``>offline``     | int    | The number of offline caches for the cache      |
-	|                  |        | group.                                          |
-	+------------------+--------+-------------------------------------------------+
-	| ``>name``        | string | Cache group name.                               |
-	+------------------+--------+-------------------------------------------------+
-
-	**Response Example** ::
-
-		{
-		 "response": {
-				"totalOnline": 148,
-				"totalOffline": 0,
-				"cachegroups": [
-					 {
-							"online": 8,
-							"offline": 0,
-							"name": "us-co-denver"
-					 },
-					 {
-							"online": 7,
-							"offline": 0,
-							"name": "us-de-newcastle"
-					 }
-				]
-		 }
-		}
-
-
-|
-
-	Retrieves the capacity percentages of a delivery service.
-
-	Authentication Required: Yes
-
-	Role(s) Required: None
-
-	**Request Route Parameters**
-
-	+-----------------+----------+---------------------------------------------------+
-	| Name            | Required | Description                                       |
-	+=================+==========+===================================================+
-	|id               | yes      | delivery service id.                              |
-	+-----------------+----------+---------------------------------------------------+
-
-	**Response Properties**
-
-	+------------------------+--------+---------------------------------------------------+
-	|       Parameter        |  Type  |                    Description                    |
-	+========================+========+===================================================+
-	| ``availablePercent``   | number | The percentage of server capacity assigned to     |
-	|                        |        | the delivery service that is available.           |
-	+------------------------+--------+---------------------------------------------------+
-	| ``unavailablePercent`` | number | The percentage of server capacity assigned to the |
-	|                        |        | delivery service that is unavailable.             |
-	+------------------------+--------+---------------------------------------------------+
-	| ``utilizedPercent``    | number | The percentage of server capacity assigned to the |
-	|                        |        | delivery service being used.                      |
-	+------------------------+--------+---------------------------------------------------+
-	| ``maintenancePercent`` | number | The percentage of server capacity assigned to the |
-	|                        |        | delivery service that is down for maintenance.    |
-	+------------------------+--------+---------------------------------------------------+
-
-	**Response Example** ::
-
-		{
-		 "response": {
-				"availablePercent": 89.0939840205533,
-				"unavailablePercent": 0,
-				"utilizedPercent": 10.9060020300395,
-				"maintenancePercent": 0.0000139494071146245
-		 },
-		}
-
-
-|
-
-	Retrieves the routing method percentages of a delivery service.
-
-	Authentication Required: Yes
-
-	Role(s) Required: None
-
-	**Request Route Parameters**
-
-	+-----------------+----------+---------------------------------------------------+
-	| Name            | Required | Description                                       |
-	+=================+==========+===================================================+
-	|id               | yes      | delivery service id.                              |
-	+-----------------+----------+---------------------------------------------------+
-
-	**Response Properties**
-
-	+-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	|    Parameter    |  Type  |                                                         Description                                                         |
-	+=================+========+=============================================================================================================================+
-	| ``staticRoute`` | number | The percentage of Traffic Router responses for this deliveryservice satisfied with pre-configured DNS entries.              |
-	+-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``miss``        | number | The percentage of Traffic Router responses for this deliveryservice that were a miss (no location available for client IP). |
-	+-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``geo``         | number | The percentage of Traffic Router responses for this deliveryservice satisfied using 3rd party geo-IP mapping.               |
-	+-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``err``         | number | The percentage of Traffic Router requests for this deliveryservice resulting in an error.                                   |
-	+-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``cz``          | number | The percentage of Traffic Router requests for this deliveryservice satisfied by a CZF hit.                                  |
-	+-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``dsr``         | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the                                 |
-	|                 |        | client to the overflow CDN.                                                                                                 |
-	+-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-
-	**Response Example** ::
-
-		{
-		 "response": {
-				"staticRoute": 0,
-				"miss": 0,
-				"geo": 37.8855391018869,
-				"err": 0,
-				"cz": 62.1144608981131,
-				"dsr": 0
-		 },
-		}
-
-|
-
-.. _to-api-v11-ds-metrics:
-
-Metrics
-+++++++
-
-**GET /api/1.1/deliveryservices/:id/server_types/:type/metric_types/start_date/:start/end_date/:end.json**
-
-	Retrieves detailed and summary metrics for MIDs or EDGEs for a delivery service.
-
-	Authentication Required: Yes
-
-	Role(s) Required: None
-
-	**Request Route Parameters**
-
-	+------------------+----------+-----------------------------------------------------------------------------+
-	|       Name       | Required |                                 Description                                 |
-	+==================+==========+=============================================================================+
-	| ``id``           | yes      | The delivery service id.                                                    |
-	+------------------+----------+-----------------------------------------------------------------------------+
-	| ``server_types`` | yes      | EDGE or MID.                                                                |
-	+------------------+----------+-----------------------------------------------------------------------------+
-	| ``metric_types`` | yes      | One of the following: "kbps", "tps", "tps_2xx", "tps_3xx", "tps_4xx",       |
-	|                  |          | "tps_5xx".                                                                  |
-	+------------------+----------+-----------------------------------------------------------------------------+
-	| ``start_date``   | yes      | UNIX time                                                                   |
-	+------------------+----------+-----------------------------------------------------------------------------+
-	| ``end_date``     | yes      | UNIX time                                                                   |
-	+------------------+----------+-----------------------------------------------------------------------------+
-
-	**Request Query Parameters**
-
-	+------------------+----------+-----------------------------------------------------------------------------+
-	|       Name       | Required |                                 Description                                 |
-	+==================+==========+=============================================================================+
-	| ``stats``        | no       | Flag used to return only summary metrics                                    |
-	+------------------+----------+-----------------------------------------------------------------------------+
-
-	**Response Properties**
-
-	+----------------------+--------+-------------+
-	|      Parameter       |  Type  | Description |
-	+======================+========+=============+
-	| ``stats``            | hash   |             |
-	+----------------------+--------+-------------+
-	| ``>>count``          | int    |             |
-	+----------------------+--------+-------------+
-	| ``>>98thPercentile`` | number |             |
-	+----------------------+--------+-------------+
-	| ``>>min``            | number |             |
-	+----------------------+--------+-------------+
-	| ``>>max``            | number |             |
-	+----------------------+--------+-------------+
-	| ``>>5thPercentile``  | number |             |
-	+----------------------+--------+-------------+
-	| ``>>95thPercentile`` | number |             |
-	+----------------------+--------+-------------+
-	| ``>>median``         | number |             |
-	+----------------------+--------+-------------+
-	| ``>>mean``           | number |             |
-	+----------------------+--------+-------------+
-	| ``>>stddev``         | number |             |
-	+----------------------+--------+-------------+
-	| ``>>sum``            | number |             |
-	+----------------------+--------+-------------+
-	| ``data``             | array  |             |
-	+----------------------+--------+-------------+
-	| ``>>item``           | array  |             |
-	+----------------------+--------+-------------+
-	| ``>>time``           | number |             |
-	+----------------------+--------+-------------+
-	| ``>>value``          | number |             |
-	+----------------------+--------+-------------+
-	| ``label``            | string |             |
-	+----------------------+--------+-------------+
-
-	**Response Example** ::
-
-		{
-		 "response": [
-				{
-					 "stats": {
-							"count": 988,
-							"98thPercentile": 16589105.55958,
-							"min": 3185442.975,
-							"max": 17124754.257,
-							"5thPercentile": 3901253.95445,
-							"95thPercentile": 16013210.034,
-							"median": 8816895.576,
-							"mean": 8995846.31741194,
-							"stddev": 3941169.83683573,
-							"sum": 333296106.060112
-					 },
-					 "data": [
-							[
-								 1414303200000,
-								 12923518.466
-							],
-							[
-								 1414303500000,
-								 12625139.65
-							]
-					 ],
-					 "label": "MID Kbps"
-				}
-		 ],
-		}
-
-
-.. _to-api-v11-ds-server:
-
-Server
-++++++
-
-**GET /api/1.1/deliveryserviceserver.json**
-
-	Authentication Required: Yes
-
-	Role(s) Required: Yes
-
-	**Request Query Parameters**
-
-	+-----------+----------+----------------------------------------+
-	|    Name   | Required |              Description               |
-	+===========+==========+========================================+
-	| ``page``  | no       | The page number for use in pagination. |
-	+-----------+----------+----------------------------------------+
-	| ``limit`` | no       | For use in limiting the result set.    |
-	+-----------+----------+----------------------------------------+
-
-	**Response Properties**
-
-	+----------------------+--------+------------------------------------------------+
-	| Parameter            | Type   | Description                                    |
-	+======================+========+================================================+
-	|``lastUpdated``       | array  |                                                |
-	+----------------------+--------+------------------------------------------------+
-	|``server``            | string |                                                |
-	+----------------------+--------+------------------------------------------------+
-	|``deliveryService``   | string |                                                |
-	+----------------------+--------+------------------------------------------------+
-
-	**Response Example** ::
-
-		{
-		 "page": 2,
-		 "orderby": "deliveryservice",
-		 "response": [
-				{
-					 "lastUpdated": "2014-09-26 17:53:43",
-					 "server": "20",
-					 "deliveryService": "1"
-				},
-				{
-					 "lastUpdated": "2014-09-26 17:53:44",
-					 "server": "21",
-					 "deliveryService": "1"
-				},
-		 ],
-		 "limit": 2
-		}
-
-|
 
 .. _to-api-v11-ds-sslkeys:
 

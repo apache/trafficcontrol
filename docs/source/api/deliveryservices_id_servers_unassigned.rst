@@ -170,9 +170,6 @@ Retrieves properties of Edge-tier servers not assigned to a Delivery Service.
 							"typeId": "3",
 							"updPending": false
 					},
-					{
-					... more server data
-					}
 				]
 		}
 

@@ -21,4 +21,4 @@ Traffic Ops API V1.4
 .. toctree::
   :maxdepth: 1
 
-  cdn
+  user

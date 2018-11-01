@@ -38,6 +38,15 @@ Request Structure
 	| ``capability`` |   no     | string | Capability name.                   |
 	+----------------+----------+--------+------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.1/api_capabilities?capability=types-write HTTP/1.1
+	Host: ipcdn-cache-51.cdnlab.comcast.net:6443
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
 :capability:  Capability name
@@ -53,23 +62,44 @@ Response Structure
 :id:          An integer which uniquely identifies this capability
 :lastUpdated: The time at which this capability was last updated, in ISO format
 
-.. code-block::json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 01 Nov 2018 14:45:24 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 01 Nov 2018 18:45:24 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: wptErtIop/AfTTQ+1MZdA2YpPXEOuLFfrPQvvaHqO/uX5fRruOVYW+7p8JTrtH1xg1WN+x6FnjQnSHuWwcpyJg==
+	Content-Length: 393
 
 	{ "response": [
 		{
-			"id": "6",
-			"httpMethod": "GET",
-			"httpRoute": "/api/*/asns",
-			"capability": "asn-read",
-			"lastUpdated": "2017-04-02 08:22:43"
+			"httpMethod": "POST",
+			"lastUpdated": "2018-11-01 14:10:22.794114+00",
+			"httpRoute": "types",
+			"id": 261,
+			"capability": "types-write"
 		},
 		{
-			"id": "7",
-			"httpMethod": "GET",
-			"httpRoute": "/api/*/asns/*",
-			"capability": "asn-read",
-			"lastUpdated": "2017-04-02 08:22:43"
+			"httpMethod": "PUT",
+			"lastUpdated": "2018-11-01 14:10:22.795917+00",
+			"httpRoute": "types/*",
+			"id": 262,
+			"capability": "types-write"
+		},
+		{
+			"httpMethod": "DELETE",
+			"lastUpdated": "2018-11-01 14:10:22.799748+00",
+			"httpRoute": "types/*",
+			"id": 263,
+			"capability": "types-write"
 		}
 	]}
 
@@ -82,17 +112,22 @@ Create an API-capability mapping.
 
 Request Structure
 -----------------
-.. table:: Request Data Parameters
+:capability: Capability name
+:httpMethod: An HTTP request method, one of: 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
+:httpRoute:  The API endpoint for which to create capabilities
 
-	+----------------+----------+--------+--------------------------------------------------+
-	|    Name        | Required | Type   |                Description                       |
-	+================+==========+========+==================================================+
-	| ``httpMethod`` | yes      | string | One of: 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'. |
-	+----------------+----------+--------+--------------------------------------------------+
-	| ``httpRoute``  | yes      | string | API route.                                       |
-	+----------------+----------+--------+--------------------------------------------------+
-	| ``capability`` | yes      | string | Capability name                                  |
-	+----------------+----------+--------+--------------------------------------------------+
+.. code-block:: http
+	:caption: Request Structure
+
+	POST /api/1.1/api_capabilities HTTP/1.1
+	Host: ipcdn-cache-51.cdnlab.comcast.net:6443
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 94
+	Content-Type: application/x-www-form-urlencoded
+
+	capability=types-write&httpMethod=PATCH&httpRoute=/api/1.1/api_capabilities
 
 Response Structure
 ------------------
@@ -109,19 +144,34 @@ Response Structure
 :id:          An integer which uniquely identifies this capability
 :lastUpdated: The time at which this capability was last updated, in ISO format
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
-	{ "response": {
-		"id": "6",
-		"httpMethod": "POST",
-		"httpRoute": "/api/*/cdns",
-		"capability": "cdn-write",
-		"lastUpdated": "2017-04-02 08:22:43"
-	},
-	"alerts":[
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 01 Nov 2018 14:53:58 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 01 Nov 2018 18:53:58 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: CDz5DUJFoL5DgfnCcvitPmnKJAG5VENhNN6wz2YNqqW1n5HQzSci+NsU5SqfhKnTwnKfSy7PYl9hQhrUKO6KCQ==
+	Content-Length: 209
+
+	{ "alerts": [
 		{
 			"level": "success",
-			"text": "API-capability mapping was created."
+			"text": "API-Capability mapping was created."
 		}
-	]}
+	],
+	"response": {
+		"httpMethod": "PATCH",
+		"lastUpdated": null,
+		"httpRoute": "/api/1.1/api_capabilities",
+		"id": 273,
+		"capability": "types-write"
+	}}
+

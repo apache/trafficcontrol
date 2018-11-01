@@ -142,226 +142,7 @@ Response Structure
 .. [2] See `the Wikipedia article on Out-of-Band Management <https://en.wikipedia.org/wiki/Out-of-band_management>`_ for more information.
 
 
-**GET /api/1.2/deliveryservices/:id/capacity**
-
-	Retrieves the capacity percentages of a delivery service. Delivery service must be assigned to user if user is not admin or operations.
-
-	Authentication Required: Yes
-
-	Role(s) Required: None
-
-	**Request Route Parameters**
-
-	+-----------------+----------+---------------------------------------------------+
-	| Name            | Required | Description                                       |
-	+=================+==========+===================================================+
-	|id               | yes      | delivery service id.                              |
-	+-----------------+----------+---------------------------------------------------+
-
-	**Response Properties**
-
-	+------------------------+--------+---------------------------------------------------+
-	|       Parameter        |  Type  |                    Description                    |
-	+========================+========+===================================================+
-	| ``availablePercent``   | number | The percentage of server capacity assigned to     |
-	|                        |        | the delivery service that is available.           |
-	+------------------------+--------+---------------------------------------------------+
-	| ``unavailablePercent`` | number | The percentage of server capacity assigned to the |
-	|                        |        | delivery service that is unavailable.             |
-	+------------------------+--------+---------------------------------------------------+
-	| ``utilizedPercent``    | number | The percentage of server capacity assigned to the |
-	|                        |        | delivery service being used.                      |
-	+------------------------+--------+---------------------------------------------------+
-	| ``maintenancePercent`` | number | The percentage of server capacity assigned to the |
-	|                        |        | delivery service that is down for maintenance.    |
-	+------------------------+--------+---------------------------------------------------+
-
-	**Response Example** ::
-
-		{
-		 "response": {
-				"availablePercent": 89.0939840205533,
-				"unavailablePercent": 0,
-				"utilizedPercent": 10.9060020300395,
-				"maintenancePercent": 0.0000139494071146245
-		 },
-		}
-
-
-|
-
-**GET /api/1.2/deliveryservices/:id/routing**
-
-	Retrieves the routing method percentages of a delivery service. Delivery service must be assigned to user if user is not admin or operations.
-
-	Authentication Required: Yes
-
-	Role(s) Required: None
-
-	**Request Route Parameters**
-
-	+-----------------+----------+---------------------------------------------------+
-	| Name            | Required | Description                                       |
-	+=================+==========+===================================================+
-	|id               | yes      | delivery service id.                              |
-	+-----------------+----------+---------------------------------------------------+
-
-	**Response Properties**
-
-	+--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	|    Parameter             |  Type  |                                                         Description                                                         |
-	+==========================+========+=============================================================================================================================+
-	| ``staticRoute``          | number | The percentage of Traffic Router responses for this deliveryservice satisfied with pre-configured DNS entries.              |
-	+--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``miss``                 | number | The percentage of Traffic Router responses for this deliveryservice that were a miss (no location available for client IP). |
-	+--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``geo``                  | number | The percentage of Traffic Router responses for this deliveryservice satisfied using 3rd party geo-IP mapping.               |
-	+--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``err``                  | number | The percentage of Traffic Router requests for this deliveryservice resulting in an error.                                   |
-	+--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``cz``                   | number | The percentage of Traffic Router requests for this deliveryservice satisfied by a CZF (coverage zone file) hit.             |
-	+--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``dsr``                  | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the                                 |
-	|                          |        | client to the overflow CDN.                                                                                                 |
-	+--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``fed``                  | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the client to a federated CDN.      |
-	+--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``regionalAlternate``    | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the client to the alternate         |
-	|                          |        | regional geoblocking URL.                                                                                                   |
-	+--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-	| ``regionalDenied``       | number | The percent of Traffic Router requests for this deliveryservice denied due to geolocation policy.                           |
-	+--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-
-	**Response Example** ::
-
-		{
-		 "response": {
-				"staticRoute": 0,
-				"miss": 0,
-				"geo": 37.8855391018869,
-				"err": 0,
-				"cz": 62.1144608981131,
-				"dsr": 0,
-				"fed": 0,
-				"regionalAlternate": 0,
-				"regionalDenied": 0
-		 },
-		}
-
-
 .. _to-api-v12-ds-server:
-
-Delivery Service Server
-+++++++++++++++++++++++
-
-**GET /api/1.2/deliveryserviceserver**
-
-	Retrieves delivery service / server assignments.
-
-	Authentication Required: Yes
-
-	Role(s) Required: None
-
-	**Request Query Parameters**
-
-	+-----------+----------+----------------------------------------+
-	|    Name   | Required |              Description               |
-	+===========+==========+========================================+
-	| ``page``  | no       | The page number for use in pagination. |
-	+-----------+----------+----------------------------------------+
-	| ``limit`` | no       | For use in limiting the result set.    |
-	+-----------+----------+----------------------------------------+
-
-	**Response Properties**
-
-	+----------------------+--------+------------------------------------------------+
-	| Parameter            | Type   | Description                                    |
-	+======================+========+================================================+
-	|``lastUpdated``       | array  |                                                |
-	+----------------------+--------+------------------------------------------------+
-	|``server``            | string |                                                |
-	+----------------------+--------+------------------------------------------------+
-	|``deliveryService``   | string |                                                |
-	+----------------------+--------+------------------------------------------------+
-
-
-	**Response Example** ::
-
-		{
-		 "page": 2,
-		 "orderby": "deliveryservice",
-		 "response": [
-				{
-					 "lastUpdated": "2014-09-26 17:53:43",
-					 "server": "20",
-					 "deliveryService": "1"
-				},
-				{
-					 "lastUpdated": "2014-09-26 17:53:44",
-					 "server": "21",
-					 "deliveryService": "1"
-				},
-		 ],
-		 "limit": 2
-		}
-
-**POST /api/1.2/deliveryserviceserver**
-
-	Create one or more delivery service / server assignments.
-
-	Authentication Required: Yes
-
-	Role(s) Required: Admin or Operations or the delivery service is assigned to the user.
-
-	**Request Parameters**
-
-	+---------------------------------+----------+-------------------------------------------------------------------+
-	| Name                            | Required | Description                                                       |
-	+=================================+==========+===================================================================+
-	| ``dsId``                        | yes      | The ID of the delivery service.                                   |
-	+---------------------------------+----------+-------------------------------------------------------------------+
-	| ``servers``                     | yes      | An array of server IDs.                                           |
-	+---------------------------------+----------+-------------------------------------------------------------------+
-	| ``replace``                     | no       | Replace existing ds/server assignments? (true|false)              |
-	+---------------------------------+----------+-------------------------------------------------------------------+
-
-	**Request Example** ::
-
-		{
-				"dsId": 246,
-				"servers": [ 2, 3, 4, 5, 6 ],
-				"replace": true
-		}
-
-	**Response Properties**
-
-	+------------------------------------+--------+-------------------------------------------------------------------+
-	| Parameter                          | Type   | Description                                                       |
-	+====================================+========+===================================================================+
-	| ``dsId``                           | int    | The ID of the delivery service.                                   |
-	+------------------------------------+--------+-------------------------------------------------------------------+
-	| ``servers``                        | array  | An array of server IDs.                                           |
-	+------------------------------------+--------+-------------------------------------------------------------------+
-	| ``replace``                        | array  | Existing ds/server assignments replaced? (true|false).            |
-	+------------------------------------+--------+-------------------------------------------------------------------+
-
-	**Response Example** ::
-
-		{
-				"alerts": [
-									{
-													"level": "success",
-													"text": "Server assignments complete."
-									}
-					],
-				"response": {
-						"dsId" : 246,
-						"servers" : [ 2, 3, 4, 5, 6 ],
-						"replace" : true
-				}
-		}
-
-|
 
 **DELETE /api/1.2/deliveryservice_server/:dsId/:serverId**
 
@@ -381,18 +162,28 @@ Delivery Service Server
 	| ``serverId``    | yes      | Server (cache) ID.                                |
 	+-----------------+----------+---------------------------------------------------+
 
-	 **Response Example** ::
+.. code-block:: http
+	:caption: Response Example
 
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: rGD2sOMHYF0sga1zuTytyLHCUkkc3ZwQRKvZ/HuPzObOP4WztKTOVXB4uhs3iJqBg9zRB2TucMxONHN+3/yShQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 01 Nov 2018 14:24:34 GMT
+	Content-Length: 80
+
+	{ "alerts": [
 		{
-					 "alerts": [
-										 {
-														 "level": "success",
-														 "text": "Server unlinked from delivery service."
-										 }
-						 ],
+			"text": "Server unlinked from delivery service.",
+			"level": "success"
 		}
+	]}
 
-|
 
 .. _to-api-v12-ds-user:
 
