@@ -170,13 +170,24 @@ def main(kwargs:argparse.Namespace) -> int:
 
 	instanceA = kwargs.InstanceA
 	instanceB = kwargs.InstanceB
-	loginA = kwargs.LoginA.split(':')
-	loginA = (loginA[0], ':'.join(loginA[1:]))
-	loginB = loginA
-	if kwargs.LoginB:
-		loginB = kwargs.LoginB.split(':')
-		loginB = (loginB[0], ':'.join(loginB[1:]))
 
+	try:
+		loginA = kwargs.LoginA.split(':')
+		loginA = (loginA[0], ':'.join(loginA[1:]))
+	except (KeyError, IndexError) as e:
+		logging.critical("Bad username/password pair: '%s' (hint: try -h/--help)", kwargs.LoginA)
+		return 1
+
+	loginB = loginA
+
+	try:
+		if kwargs.LoginB:
+			loginB = kwargs.LoginB.split(':')
+			loginB = (loginB[0], ':'.join(loginB[1:]))
+			loginB = (loginB[0] if loginB[0] else loginA[0], loginB[1] if loginB[1] else loginA[1])
+	except (KeyError, IndexError) as e:
+		logging.critical("Bad username/password pair: '%s' (hint: try -h/--help)", kwargs.LoginB)
+		return 1
 
 	verify = not kwargs.insecure
 

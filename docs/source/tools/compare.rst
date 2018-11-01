@@ -82,6 +82,8 @@ usage: genConfigRoutes.py [-h] [-k] [-v] InstanceA InstanceB LoginA [LoginB]
 
 .. note:: If you're using a CDN-in-a-Box environment for testing, it's likely that you'll need the ``-k``/``--insecure`` option if you're outside the Docker network
 
+.. _compare-genConfigRoutes-positional_parameters:
+
 .. table:: Positional Parameters (In Order)
 
 	+-----------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -96,6 +98,8 @@ usage: genConfigRoutes.py [-h] [-k] [-v] InstanceA InstanceB LoginA [LoginB]
 	| LoginB    | A login string containing credentials for logging into the second Traffic Ops instance (InstanceB) in the format 'username:password'. |
 	|           | If not given, LoginA will be re-used for the second connection (default: None)                                                        |
 	+-----------+---------------------------------------------------------------------------------------------------------------------------------------+
+
+.. note:: The full behaviour of the ``LoginB`` parameter described in :ref:`compare-genConfigRoutes-positional_parameters` is such that supports not only a fully missing authentication credentials pair, but also a blank string for each of the pair members. This means that you can, for instance, give it the testing pair 'admin:' to use the testing username 'admin', but default to the password used by the reference user. Or, another example is that passing ``LoginB`` as simple ``:`` will result in the same behaviour as not passing it all.
 
 The genConfigRoutes.py script will output list of unique API routes (relative to the desired Traffic Ops URL) that point to generated configuration files for a sample set of servers common to both  Traffic Ops instances. The results are printed to stdout, making the output perfect for piping directly into ``compare`` like so:
 
