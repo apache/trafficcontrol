@@ -171,7 +171,13 @@ def main(kwargs:argparse.Namespace) -> int:
 	instanceA = kwargs.InstanceA
 	instanceB = kwargs.InstanceB
 	loginA = kwargs.LoginA.split(':')
-	loginB = kwargs.LoginB.split(':') if kwargs.LoginB else loginA
+	loginA = (loginA[0], ':'.join(loginA[1:]))
+	loginB = loginA
+	if kwargs.LoginB:
+		loginB = kwargs.LoginB.split(':')
+		loginB = (loginB[0], ':'.join(loginB[1:]))
+
+
 	verify = not kwargs.insecure
 
 	# Peel off all schemas
