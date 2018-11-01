@@ -39,7 +39,7 @@ func getConnStateCallback(connMap *ConnMap) func(net.Conn, http.ConnState) {
 			fallthrough
 		case http.StateIdle:
 			if iconn, ok := conn.(*InterceptConn); !ok {
-				log.Errorf("ConnState callback: idle conn is not a InterceptConn: '%T'\n", conn)
+				log.Infof("ConnState callback: idle conn is not a InterceptConn: '%T'\n", conn)
 			} else {
 				// MUST be zeroed when the conn moves to Idle, because the Active callback happens _after_ some/all bytes have been read
 				iconn.bytesRead = 0
@@ -48,7 +48,7 @@ func getConnStateCallback(connMap *ConnMap) func(net.Conn, http.ConnState) {
 			connMap.Remove(conn.RemoteAddr().String())
 		case http.StateActive:
 			if iconn, ok := conn.(*InterceptConn); !ok {
-				log.Errorf("ConnState callback: active conn is not a InterceptConn: '%T'\n", conn)
+				log.Infof("ConnState callback: active conn is not a InterceptConn: '%T'\n", conn)
 			} else {
 				connMap.Add(iconn)
 			}

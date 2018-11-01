@@ -175,10 +175,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	conn := (*web.InterceptConn)(nil)
 	if realConn, ok := h.conns.Get(r.RemoteAddr); !ok {
-		log.Errorf("RemoteAddr '%v' not in Conns (reqid %v)\n", r.RemoteAddr, reqID)
+		log.Infof("RemoteAddr '%v' not in Conns (reqid %v)\n", r.RemoteAddr, reqID)
 	} else {
 		if conn, ok = realConn.(*web.InterceptConn); !ok {
-			log.Errorf("Could not get Conn info: Conn is not an InterceptConn: %T (reqid %v)\n", realConn, reqID)
+			log.Infof("Could not get Conn info: Conn is not an InterceptConn: %T (reqid %v)\n", realConn, reqID)
 		}
 	}
 
@@ -186,7 +186,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err == nil { // if we failed to get a remapping, there's no DSCP to set.
 		if err := conn.SetDSCP(remappingProducer.DSCP()); err != nil {
-			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": could not set DSCP: " + err.Error() + " (reqid " + strconv.FormatUint(reqID, 10) + ")")
+			log.Infoln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": could not set DSCP: " + err.Error() + " (reqid " + strconv.FormatUint(reqID, 10) + ")")
 		}
 	}
 
