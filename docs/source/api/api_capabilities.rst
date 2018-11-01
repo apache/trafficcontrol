@@ -35,14 +35,14 @@ Request Structure
 	+----------------+----------+--------+------------------------------------+
 	|    Name        | Required | Type   |         Description                |
 	+================+==========+========+====================================+
-	| ``capability`` |   no     | string | Capability name.                   |
+	|   capability   |   no     | string | Capability name                    |
 	+----------------+----------+--------+------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
 
 	GET /api/1.1/api_capabilities?capability=types-write HTTP/1.1
-	Host: ipcdn-cache-51.cdnlab.comcast.net:6443
+	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...

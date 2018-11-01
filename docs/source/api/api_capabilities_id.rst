@@ -16,7 +16,7 @@
 .. _to-api-api_capabilities_id:
 
 ************************************
-``/api/1.x/api_capabilities/{{id}}``
+``/api/1.x/api_capabilities/{{ID}}``
 ************************************
 Manages a specific API capability.
 
@@ -35,34 +35,58 @@ Request Structure
 	+-------------+----------+---------+-----------------------------------------+
 	|    Name     | Required |  Type   |         Description                     |
 	+=============+==========+=========+=========================================+
-	|   ``id``    |   yes    | integer | A unique identifier for this capability |
+	|     ID      |   yes    | integer | A unique identifier for this capability |
 	+-------------+----------+---------+-----------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.1/api_capabilities/273 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 
 Response Structure
 ------------------
-:capability:  Capability name
-:httpMethod:  An HTTP request method, practically one of:
+:capability: Capability name
+:httpMethod: An HTTP request method, practically one of:
 
-	- ``GET``
-	- ``POST``
-	- ``PUT``
-	- ``PATCH``
-	- ``DELETE``
+	* ``GET``
+	* ``POST``
+	* ``PUT``
+	* ``PATCH``
+	* ``DELETE``
 
 :httpRoute:   The request route for which this capability applies - relative to the Traffic Ops server's URL
 :id:          An integer which uniquely identifies this capability
-:lastUpdated: The time at which this capability was last updated, in ISO format
+:lastUpdated: The time at which this capability was last updated, in an ISO-like format
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 01 Nov 2018 16:14:09 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 01 Nov 2018 20:14:09 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: SMSFHOcD6VvfJKmcHmHBQcN+jkRRCmFzx1jyBWhJeyPg04YHPSvUcjZzslWlJqyjwWeoXeNVwxhRkBwl8TQX/g==
+	Content-Length: 162
 
 	{ "response": [
 		{
-			"capability": "asn-read",
-			"httpMethod": "GET",
-			"httpRoute": "/api/*/asns",
-			"id": "6",
-			"lastUpdated": "2017-04-02 08:22:43"
+			"httpMethod": "PATCH",
+			"lastUpdated": "2018-11-01 14:53:58.853356+00",
+			"httpRoute": "/api/1.1/api_capabilities",
+			"id": 273,
+			"capability": "types-write"
 		}
 	]}
 
@@ -76,6 +100,17 @@ Edit an API-capability mapping.
 
 Request Structure
 -----------------
+:capability: Capability name
+:httpMethod: An HTTP request method, practically one of:
+
+	* ``GET``
+	* ``POST``
+	* ``PUT``
+	* ``PATCH``
+	* ``DELETE``
+
+:httpRoute:   The request route for which this capability applies - relative to the Traffic Ops server's URL
+
 .. table:: Request Path Parameters
 
 	+-------------+----------+---------+-----------------------------------------+
@@ -84,28 +119,16 @@ Request Structure
 	|   ``id``    |   yes    | integer | A unique identifier for this capability |
 	+-------------+----------+---------+-----------------------------------------+
 
-.. table:: Request Data Parameters
-
-	+----------------+----------+--------+--------------------------------------------------+
-	|    Name        | Required | Type   |                Description                       |
-	+================+==========+========+==================================================+
-	| ``httpMethod`` | yes      | string | One of: 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'. |
-	+----------------+----------+--------+--------------------------------------------------+
-	| ``httpRoute``  | yes      | string | API route.                                       |
-	+----------------+----------+--------+--------------------------------------------------+
-	| ``capability`` | yes      | string | Capability name                                  |
-	+----------------+----------+--------+--------------------------------------------------+
-
 Response Structure
 ------------------
 :capability:  Capability name
 :httpMethod:  An HTTP request method, practically one of:
 
-	- ``GET``
-	- ``POST``
-	- ``PUT``
-	- ``PATCH``
-	- ``DELETE``
+	* ``GET``
+	* ``POST``
+	* ``PUT``
+	* ``PATCH``
+	* ``DELETE``
 
 :httpRoute:   The request route for which this capability applies - relative to the Traffic Ops server's URL
 :id:          An integer which uniquely identifies this capability
