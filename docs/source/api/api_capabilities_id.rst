@@ -116,8 +116,21 @@ Request Structure
 	+-------------+----------+---------+-----------------------------------------+
 	|    Name     | Required |  Type   |         Description                     |
 	+=============+==========+=========+=========================================+
-	|   ``id``    |   yes    | integer | A unique identifier for this capability |
+	|     id      |   yes    | integer | A unique identifier for this capability |
 	+-------------+----------+---------+-----------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/1.1/api_capabilities/273 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 98
+	Content-Type: application/x-www-form-urlencoded
+
+	capability=types-write&httpRoute=/api/1.1/api_capabilities/*&httpMethod=PATCH
 
 Response Structure
 ------------------
@@ -134,22 +147,38 @@ Response Structure
 :id:          An integer which uniquely identifies this capability
 :lastUpdated: The time at which this capability was last updated, in ISO format
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
-	{ "response": {
-		"id": "6",
-		"httpMethod": "GET",
-		"httpRoute": "/api/*/cdns",
-		"capability": "cdn-read",
-		"lastUpdated": "2017-04-02 08:22:43"
-	},
-	"alerts":[
-		{
-			"level": "success",
-			"text": "API-capability mapping was updated."
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 01 Nov 2018 18:28:38 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 01 Nov 2018 22:28:38 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: zQuDrqpJt02Fh2fNZ6K7/XmVJ49ZqGTnSbsaR7nOyoxbkmLM17XJV1rtef/SAows2M4j4YjcDbEP4WM/hjCFtw==
+	Content-Length: 241
+
+	{
+		"alerts": [
+			{
+				"level": "success",
+				"text": "API-Capability mapping was updated."
+			}
+		],
+		"response": {
+			"httpMethod": "PATCH",
+			"lastUpdated": "2018-11-01 18:28:10.38317+00",
+			"httpRoute": "/api/1.1/api_capabilities/*",
+			"id": 273,
+			"capability": "types-write"
 		}
-	]}
+	}
 
 DELETE
 ======
@@ -166,7 +195,7 @@ Request Structure
 	+-------------+----------+---------+-----------------------------------------+
 	|    Name     | Required |  Type   |         Description                     |
 	+=============+==========+=========+=========================================+
-	|   ``id``    |   yes    | integer | A unique identifier for this capability |
+	|     id      |   yes    | integer | A unique identifier for this capability |
 	+-------------+----------+---------+-----------------------------------------+
 
 Response Structure

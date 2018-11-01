@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+----------------+---------+---------------------------------------------------------------------------+
-	| Parameter      | Type    |                                 Description                               |
-	+================+=========+===========================================================================+
-	| ``cachegroup`` | integer | The ID of a Cache Group. Only ANSs for this Cache Group will be returned. |
-	+----------------+---------+---------------------------------------------------------------------------+
+	+----------------+----------+-----------------------------------------------------------------------------------------------------+
+	| Parameter      | Required |                                 Description                                                         |
+	+================+==========+=====================================================================================================+
+	|   cachegroup   | no       | An integral, unique identifier for a Cache Group - only ANSs for this Cache Group will be returned. |
+	+----------------+----------+-----------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -45,25 +45,32 @@ Response Structure
 :cachegroup:   Related Cache Group name
 :cachegroupId: Related Cache Group ID
 
-.. code-block:: json
+.. code-block::
 	:caption: Response Example
 
-	{ "response": [
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: 2zeWYI/dGyCzi0ZUWXuuycLFPyL9M5nDJchC7nJMQPW3cwXTaTwf0qI3mP3G1ArZlJTk/ju6/jbUVCNcVIXX1Q==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 01 Nov 2018 18:56:38 GMT
+	Content-Length: 129
+
+	{ "response": {
+	"asns": [
 		{
-			"lastUpdated": "2012-09-17 21:41:22",
-			"id": 27,
-			"asn": 7015,
-			"cachegroup": "us-ma-woburn",
-			"cachegroupId": 2
-		},
-		{
-			"lastUpdated": "2012-09-17 21:41:22",
-			"id": 28,
-			"asn": 7016,
-			"cachegroup": "us-pa-pittsburgh",
-			"cachegroupID": 3
+			"asn": 1,
+			"cachegroup": "TRAFFIC_ANALYTICS",
+			"cachegroupId": 1,
+			"id": 1,
+			"lastUpdated": "2018-11-01 18:55:39+00"
 		}
-	]}
+	]}}
+
 
 .. versionchanged:: 1.2
 	Used to contain the array in the ``response.asns`` object, changed so that ``response`` is an actual array
@@ -98,8 +105,20 @@ Response Structure
 :cachegroup:   Related Cache Group name
 :cachegroupId: Related Cache Group ID
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: DnM8HexH7LFkVNH8UYFe6uBQ445Ic8lRLDlOSDIuo4gjokMafxh5Ebr+CsSixNt//OxP0hoWZ+DKymSC5Hdi9Q==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 01 Nov 2018 18:57:08 GMT
+	Content-Length: 175
 
 	{ "alerts": [
 		{
@@ -108,10 +127,9 @@ Response Structure
 		}
 	],
 	"response": {
-		"asn": 2,
-		"cachegroup": "CDN_in_a_Box_Mid",
-		"cachegroupId": 6,
-		"id": 5,
-		"lastUpdated": "2018-10-15 14:42:28+00"
+		"asn": 1,
+		"cachegroup": "TRAFFIC_ANALYTICS",
+		"cachegroupId": 1,
+		"id": 2,
+		"lastUpdated": "2018-11-01 18:57:08+00"
 	}}
-
