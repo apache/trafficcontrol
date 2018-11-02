@@ -14,7 +14,6 @@
 
 #----------------------------------------
 function importFunctions() {
-	TC_DIR=$(git rev-parse --show-toplevel)
 	[ ! -z "$TC_DIR" ] || { echo "Cannot find repository root." >&2 ; exit 1; }
 	export TC_DIR
 	functions_sh="$TC_DIR/build/functions.sh"
