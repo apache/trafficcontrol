@@ -72,34 +72,32 @@ These can be overridden by command line switches as described above. If a userna
 
 genConfigRoutes.py
 ------------------
-usage: genConfigRoutes.py [-h] [-k] [-v] InstanceA InstanceB LoginA [LoginB]
 
--h, --help                           show this help message and exit
+``usage: genConfigRoutes.py [-h] [--refURL REFURL] [--testURL TESTURL]``
+                          ``[--refUser REFUSER] [--refPasswd REFPASSWD]``
+                          ``[--testUser TESTUSER] [--testPasswd TESTPASSWD] [-k]``
+                          ``[-v] [-l LOG_LEVEL] [-q]``
+
+A simple script to generate API routes to server configuration files for a
+given pair of Traffic Ops instances. This, for the purpose of using the
+'compare' tool
+
+
+-h, --help            show this help message and exit
+--refURL REFURL       The full URL of the reference Traffic Ops instance (default: None)
+--testURL TESTURL     The full URL of the testing Traffic Ops instance (default: None)
+--refUser REFUSER                    A username for logging into the reference Traffic Ops instance. (default: None)
+--refPasswd REFPASSWD                A password for logging into the reference Traffic Ops instance (default: None)
+--testUser TESTUSER                  A username for logging into the testing Traffic Ops instance. If not given, the value for the reference instance will be used. (default: None)
+--testPasswd TESTPASSWD              A password for logging into the testing Traffic Ops instance. If not given, the value for the reference instance will be used. (default: None)
 -k, --insecure                       Do not verify SSL certificate signatures against *either* Traffic Ops instance (default: False)
--l LOG_LEVEL, --log_level LOG_LEVEL  Sets the Python log level, one of 'DEBUG', 'INFO', 'WARN', 'ERROR', or 'CRITICAL'
--q, --quiet                          Suppresses all logging output - even for critical errors
 -v, --version                        Print version information and exit
+-l LOG_LEVEL, --log_level LOG_LEVEL  Sets the Python log level, one of 'DEBUG', 'INFO', 'WARN', 'ERROR', or 'CRITICAL' (default: INFO)
+-q, --quiet                          Suppresses all logging output - even for critical errors (default: False)
 
 .. note:: If you're using a CDN-in-a-Box environment for testing, it's likely that you'll need the ``-k``/``--insecure`` option if you're outside the Docker network
 
-.. _compare-genConfigRoutes-positional_parameters:
-
-.. table:: Positional Parameters (In Order)
-
-	+-----------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| Name      | Description                                                                                                                           |
-	+===========+=======================================================================================================================================+
-	| InstanceA | The full URL of the first Traffic Ops instance                                                                                        |
-	+-----------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| InstanceB | The full URL of the second Traffic Ops instance                                                                                       |
-	+-----------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| LoginA    | A login string containing credentials for logging into the first Traffic Ops instance (InstanceA) in the format 'username:password'.  |
-	+-----------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| LoginB    | A login string containing credentials for logging into the second Traffic Ops instance (InstanceB) in the format 'username:password'. |
-	|           | If not given, LoginA will be re-used for the second connection (default: None)                                                        |
-	+-----------+---------------------------------------------------------------------------------------------------------------------------------------+
-
-.. note:: The full behaviour of the ``LoginB`` parameter described in :ref:`compare-genConfigRoutes-positional_parameters` is such that supports not only a fully missing authentication credentials pair, but also a blank string for each of the pair members. This means that you can, for instance, give it the testing pair 'admin:' to use the testing username 'admin', but default to the password used by the reference user. Or, another example is that passing ``LoginB`` as simple ``:`` will result in the same behaviour as not passing it all.
+.. note:: This script will use the same environment variables as `compare`, which can be overridden by the above  command line parameters
 
 The genConfigRoutes.py script will output list of unique API routes (relative to the desired Traffic Ops URL) that point to generated configuration files for a sample set of servers common to both  Traffic Ops instances. The results are printed to stdout, making the output perfect for piping directly into ``compare`` like so:
 
@@ -128,6 +126,7 @@ TEST_PASSWORD
 
 .. code-block:: shell
 	:caption: Sample Script to Build and Run
+
 	sudo docker build . -f traffic_ops/testing/compare/Dockerfile -t compare:latest
 	sudo docker run -v $PWD/artifacts:/artifacts -e TO_URL="$TO_URL" -e TEST_URL="$TEST_URL" -e TO_USER="admin" -e TO_PASSWORD="twelve" -e TEST_USER="admin" -e TEST_PASSWORD="twelve" compare:latest
 
