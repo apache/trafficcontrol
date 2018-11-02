@@ -39,8 +39,6 @@ import (
 	"github.com/lib/pq"
 )
 
-const RefreshDNSSECKeysTxTimeout = time.Duration(60) * time.Second // TODO: make configurable?
-
 func RefreshDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	if setInDNSSECKeyRefresh() {
 		db, err := api.GetDB(r.Context())
