@@ -223,7 +223,7 @@ func StripParamJSON(params map[string]string) map[string]string {
 func AllParams(req *http.Request, required []string, ints []string) (map[string]string, map[string]int, error, error, int) {
 	params, err := GetCombinedParams(req)
 	if err != nil {
-		return nil, nil, errors.New("getting combined URI parameters: " + err.Error()), nil, http.StatusBadRequest
+		return nil, nil, nil, errors.New("getting combined URI parameters: " + err.Error()), http.StatusInternalServerError
 	}
 	params = StripParamJSON(params)
 	if err := ParamsHaveRequired(params, required); err != nil {
@@ -231,7 +231,7 @@ func AllParams(req *http.Request, required []string, ints []string) (map[string]
 	}
 	intParams, err := IntParams(params, ints)
 	if err != nil {
-		return nil, nil, nil, errors.New("getting integer parameters: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("getting integer parameters: " + err.Error()), nil, http.StatusBadRequest
 	}
 	return params, intParams, nil, nil, 0
 }
