@@ -323,6 +323,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// ATS Config Files
 		{1.1, http.MethodGet, `servers/{id}/configfiles/ats/?(\.json)?$`, ats.GetConfigMetaData, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `profiles/{id}/configfiles/ats/{file}/?(\.json)?$`, ats.GetProfileConfig, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `servers/{id}/configfiles/ats/remap.config/?(\.json)?$`, ats.GetServerConfigRemap, auth.PrivLevelOperations, Authenticated, nil},
 
 		//Origins
 		{1.3, http.MethodGet, `origins/?(\.json)?$`, api.ReadHandler(&origin.TOOrigin{}), auth.PrivLevelReadOnly, Authenticated, nil},

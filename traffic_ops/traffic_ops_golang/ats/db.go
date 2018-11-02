@@ -23,9 +23,16 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
+	"github.com/lib/pq"
 )
+
+// RemapDotConfigIncludeInactiveDeliveryServices is whether delivery services with 'active' false are included in the remap.config.
+const RemapDotConfigIncludeInactiveDeliveryServices = true
 
 type ProfileData struct {
 	ID   int
@@ -84,6 +91,45 @@ WHERE
 		}
 	}
 	return toolName + " (" + url + ")", nil
+}
+
+// GetProfilesParamData returns a map[profileID][paramName]paramVal
+func GetProfilesParamData(tx *sql.Tx, profileIDs []int, configFile string) (map[int]map[string]string, error) {
+	qry := `
+SELECT
+  pr.id,
+  p.name,
+  p.value
+FROM
+  profile pr
+  JOIN profile_parameter pp on pr.id = pp.profile
+  JOIN parameter p on p.id = pp.parameter
+WHERE
+  pr.id = ANY($1)
+  AND p.config_file = $2
+`
+
+	log.Errorf("GetProfilesParamData calling with %+v %v\n", profileIDs, configFile)
+	rows, err := tx.Query(qry, pq.Array(profileIDs), configFile)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	profilesParams := map[int]map[string]string{}
+	for rows.Next() {
+		profileID := 0
+		name := ""
+		val := ""
+		if err := rows.Scan(&profileID, &name, &val); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		if _, ok := profilesParams[profileID]; !ok {
+			profilesParams[profileID] = map[string]string{}
+		}
+		profilesParams[profileID][name] = val
+	}
+	return profilesParams, nil
 }
 
 func GetProfileParamData(tx *sql.Tx, profileID int, configFile string) (map[string]string, error) {
@@ -176,6 +222,7 @@ WHERE
   AND p.config_file = $2
   AND p.name = $3
 `
+	log.Errorf("GetProfileParamValue calling with %v %v %v\n", profileID, configFile, name)
 	val := ""
 	if err := tx.QueryRow(qry, profileID, configFile, name).Scan(&val); err != nil {
 		if err == sql.ErrNoRows {
@@ -356,11 +403,11 @@ type ServerInfo struct {
 	Port                          int
 	SecondaryParentCacheGroupID   int
 	SecondaryParentCacheGroupType string
-	TypeName                      string
+	Type                          string
 }
 
 // getServerInfo returns the necessary info about the server, whether the server exists, and any error.
-func getServerInfo(tx *sql.Tx, id int) (ServerInfo, bool, error) {
+func getServerInfo(tx *sql.Tx, id int) (*ServerInfo, bool, error) {
 	// TODO separate this into only what's requried for each config file, and create interfaces for funcs?
 	qry := `
 SELECT
@@ -390,13 +437,13 @@ WHERE
   s.id = $1
 `
 	s := ServerInfo{ID: id}
-	if err := tx.QueryRow(qry, id).Scan(&s.CDN, &s.CDNID, &s.HostName, &s.DomainName, &s.IP, &s.ProfileID, &s.ProfileName, &s.Port, &s.TypeName, &s.CacheGroupID, &s.ParentCacheGroupID, &s.SecondaryParentCacheGroupID, &s.ParentCacheGroupType, &s.SecondaryParentCacheGroupType); err != nil {
+	if err := tx.QueryRow(qry, id).Scan(&s.CDN, &s.CDNID, &s.HostName, &s.DomainName, &s.IP, &s.ProfileID, &s.ProfileName, &s.Port, &s.Type, &s.CacheGroupID, &s.ParentCacheGroupID, &s.SecondaryParentCacheGroupID, &s.ParentCacheGroupType, &s.SecondaryParentCacheGroupType); err != nil {
 		if err == sql.ErrNoRows {
-			return ServerInfo{}, false, nil
+			return nil, false, nil
 		}
-		return ServerInfo{}, false, errors.New("querying server info: " + err.Error())
+		return nil, false, errors.New("querying server info: " + err.Error())
 	}
-	return s, true, nil
+	return &s, true, nil
 }
 
 // GetFirstScopeParameter returns the value of the arbitrarily-first parameter with the name 'scope' and the given config file, whether a parameter was found, and any error.
@@ -450,6 +497,255 @@ WHERE
 		dses = append(dses, d)
 	}
 	return dses, nil
+}
+
+type RemapConfigDSData struct {
+	ID                       int
+	Type                     tc.DSType
+	OriginFQDN               *string
+	MidHeaderRewrite         *string
+	CacheURL                 *string
+	RangeRequestHandling     *int
+	CacheKeyConfigParams     map[string]string
+	RemapText                *string
+	EdgeHeaderRewrite        *string
+	SigningAlgorithm         *string
+	Name                     string
+	QStringIgnore            *int
+	RegexRemap               *string
+	FQPacingRate             *int
+	DSCP                     int
+	RoutingName              *string
+	MultiSiteOrigin          *string
+	Pattern                  *string
+	RegexType                *string
+	Domain                   *string
+	RegexSetNumber           *string
+	OriginShield             *string
+	ProfileID                *int
+	Protocol                 *int
+	AnonymousBlockingEnabled *bool
+	Active                   bool
+}
+
+func GetRemapDSData(tx *sql.Tx, serverInfo *ServerInfo) ([]RemapConfigDSData, error) {
+	if tc.CacheTypeFromString(serverInfo.Type) == tc.CacheTypeMid {
+		return GetRemapDSDataForMid(tx, serverInfo)
+	} else {
+		return GetRemapDSDataForEdge(tx, serverInfo)
+	}
+}
+
+const RemapDSDataQuerySelectFrom = `
+SELECT
+  ds.xml_id,
+  ds.id AS ds_id,
+  ds.dscp,
+  ds.routing_name,
+  ds.signing_algorithm,
+  ds.qstring_ignore,
+  (SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
+    FROM origin o
+    WHERE o.deliveryservice = ds.id
+    AND o.is_primary) as org_server_fqdn,
+  ds.multi_site_origin,
+  ds.range_request_handling,
+  ds.fq_pacing_rate,
+  ds.origin_shield,
+  r.pattern,
+  retype.name AS re_type,
+  dstype.name AS ds_type,
+  cdn.domain_name AS domain_name,
+  dsr.set_number,
+  ds.edge_header_rewrite,
+  ds.mid_header_rewrite,
+  ds.regex_remap,
+  ds.cacheurl,
+  ds.remap_text,
+  ds.protocol,
+  ds.profile,
+  ds.anonymous_blocking_enabled,
+  ds.active
+FROM
+  deliveryservice ds
+  JOIN deliveryservice_regex dsr ON dsr.deliveryservice = ds.id
+  JOIN regex r ON dsr.regex = r.id
+  JOIN type retype ON r.type = retype.id
+  JOIN type dstype ON ds.type = dstype.id
+  JOIN cdn ON cdn.id = ds.cdn_id
+`
+
+const RemapDSDataQueryWhereForMid = `
+WHERE
+  cdn.name = $1
+  AND ds.id in (SELECT dss.deliveryservice FROM deliveryservice_server dss)
+`
+
+const RemapDSDataQueryWhereForEdge = `
+JOIN deliveryservice_server dss ON dss.deliveryservice = ds.id
+WHERE dss.server = $1
+`
+
+const RemapDSDataQueryOrderBy = `
+ORDER BY
+  ds_id,
+  re_type,
+  set_number
+`
+
+func GetRemapDSDataForMid(tx *sql.Tx, serverInfo *ServerInfo) ([]RemapConfigDSData, error) {
+	qry := RemapDSDataQuerySelectFrom + RemapDSDataQueryWhereForMid + RemapDSDataQueryOrderBy
+
+	rows, err := tx.Query(qry, serverInfo.CDNID)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	dses := []RemapConfigDSData{}
+	for rows.Next() {
+		d := RemapConfigDSData{}
+		if err := rows.Scan(&d.Name, &d.ID, &d.DSCP, &d.RoutingName, &d.SigningAlgorithm, &d.QStringIgnore, &d.OriginFQDN, &d.MultiSiteOrigin, &d.RangeRequestHandling, &d.FQPacingRate, &d.OriginShield, &d.Pattern, &d.RegexType, &d.Type, &d.Domain, &d.RegexSetNumber, &d.EdgeHeaderRewrite, &d.MidHeaderRewrite, &d.RegexRemap, &d.CacheURL, &d.RemapText, &d.Protocol, &d.ProfileID, &d.AnonymousBlockingEnabled, &d.Active); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		if !RemapDotConfigIncludeInactiveDeliveryServices && !d.Active {
+			continue
+		}
+		d.Type = tc.DSTypeFromString(string(d.Type))
+		dses = append(dses, d)
+	}
+	return dses, nil
+}
+
+func GetRemapDSDataForEdge(tx *sql.Tx, server *ServerInfo) ([]RemapConfigDSData, error) {
+	qry := RemapDSDataQuerySelectFrom + RemapDSDataQueryWhereForEdge + RemapDSDataQueryOrderBy
+	rows, err := tx.Query(qry, server.ID)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	dses := []RemapConfigDSData{}
+	for rows.Next() {
+		d := RemapConfigDSData{}
+		if err := rows.Scan(&d.Name, &d.ID, &d.DSCP, &d.RoutingName, &d.SigningAlgorithm, &d.QStringIgnore, &d.OriginFQDN, &d.MultiSiteOrigin, &d.RangeRequestHandling, &d.FQPacingRate, &d.OriginShield, &d.Pattern, &d.RegexType, &d.Type, &d.Domain, &d.RegexSetNumber, &d.EdgeHeaderRewrite, &d.MidHeaderRewrite, &d.RegexRemap, &d.CacheURL, &d.RemapText, &d.Protocol, &d.ProfileID, &d.AnonymousBlockingEnabled, &d.Active); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		if !RemapDotConfigIncludeInactiveDeliveryServices && !d.Active {
+			continue
+		}
+		d.Type = tc.DSTypeFromString(string(d.Type))
+		dses = append(dses, d)
+	}
+	return dses, nil
+}
+
+type RemapLine struct {
+	From string
+	To   string
+}
+
+// MakeEdgeDSDataRemapLines returns the remap lines for the given server and delivery service.
+// Returns nil, if the given server and ds have no remap lines, i.e. the DS match is not a host regex, or has no origin FQDN.
+func MakeEdgeDSDataRemapLines(ds RemapConfigDSData, server *ServerInfo) ([]RemapLine, error) {
+	if ds.RegexType == nil || tc.DSMatchType(*ds.RegexType) != tc.DSMatchTypeHostRegex || ds.OriginFQDN == nil || *ds.OriginFQDN == "" {
+		log.Errorln("DEBUG MakeEdgeDSDataRemapLines returning nil nil")
+		return nil, nil
+	}
+
+	if ds.OriginFQDN == nil {
+		return nil, errors.New("ds missing origin fqdn")
+	}
+	if ds.Pattern == nil {
+		return nil, errors.New("ds missing regex pattern")
+	}
+	if ds.Protocol == nil {
+		return nil, errors.New("ds missing protocol")
+	}
+	if ds.Domain == nil {
+		return nil, errors.New("ds missing domain")
+	}
+
+	log.Errorln("DEBUG checking remap lines")
+
+	remapLines := []RemapLine{}
+	hostRegex := *ds.Pattern
+	mapTo := *ds.OriginFQDN + "/"
+
+	mapFromHTTP := "http://" + hostRegex + "/"
+	mapFromHTTPS := "https://" + hostRegex + "/"
+	if strings.HasSuffix(hostRegex, `.*`) {
+		re := hostRegex
+		re = strings.Replace(re, `\`, ``, -1)
+		re = strings.Replace(re, `.*`, ``, -1)
+
+		hName := "__http__"
+		if ds.Type.IsDNS() {
+			if ds.RoutingName == nil {
+				return nil, errors.New("ds is dns, but missing routing name")
+			}
+			hName = *ds.RoutingName
+		}
+
+		portStr := ""
+		if hName == "__http__" && server.Port > 0 && server.Port != 80 {
+			portStr = ":" + strconv.Itoa(server.Port)
+		}
+
+		mapFromHTTP = "http://" + hName + re + *ds.Domain + portStr + "/"
+		mapFromHTTPS = "https://" + hName + re + *ds.Domain + portStr + "/" // TODO verify Perl missing port string is a bug
+	}
+
+	if *ds.Protocol == tc.DSProtocolHTTP || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS {
+		remapLines = append(remapLines, RemapLine{From: mapFromHTTP, To: mapTo})
+	}
+	if *ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS {
+		remapLines = append(remapLines, RemapLine{From: mapFromHTTPS, To: mapTo})
+	}
+
+	return remapLines, nil
+}
+
+func EdgeHeaderRewriteConfigFileName(dsName string) string {
+	return "hdr_rw_" + dsName + ".config"
+}
+
+func MidHeaderRewriteConfigFileName(dsName string) string {
+	return "hdr_rw_mid_" + dsName + ".config"
+}
+
+func CacheURLConfigFileName(dsName string) string {
+	return "cacheurl_" + dsName + ".config"
+}
+
+const DefaultATSVersion = "5" // emulates Perl
+
+// GetATSMajorVersion returns the major version of the given profile's package trafficserver parameter.
+// If no parameter exists, this does not return an error, but rather logs a warning and uses DefaultATSVersion.
+func GetATSMajorVersion(tx *sql.Tx, serverProfileID int) (int, error) {
+	atsVersion, _, err := GetProfileParamValue(tx, serverProfileID, "package", "trafficserver")
+	if err != nil {
+		return 0, errors.New("getting profile param value: " + err.Error())
+	}
+
+	if len(atsVersion) == 0 {
+		atsVersion = DefaultATSVersion
+		log.Warnln("Parameter package.trafficserver missing for profile " + strconv.Itoa(serverProfileID) + ". Assuming version " + atsVersion)
+	}
+
+	atsMajorVer, err := strconv.Atoi(atsVersion[:1])
+	if err != nil {
+		return 0, errors.New("ats version parameter '" + atsVersion + "' on this profile is not a number (config_file 'package', name 'trafficserver')")
+	}
+	return atsMajorVer, nil
+}
+
+func GetQStringIgnoreRemap(atsMajorVersion int) string {
+	if atsMajorVersion >= 6 {
+		return ` @plugin=cachekey.so @pparam=--separator= @pparam=--remove-all-params=true @pparam=--remove-path=true @pparam=--capture-prefix-uri=/^([^?]*)/$1/`
+	} else {
+		return ` @plugin=cacheurl.so @pparam=cacheurl_qstring.config`
+	}
 }
 
 // type IPAllowAccess struct {

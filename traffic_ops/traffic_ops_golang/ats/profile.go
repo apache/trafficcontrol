@@ -439,7 +439,7 @@ func urlSigDotConfig(tx *sql.Tx, cfg *config.Config, profile ProfileData, fileNa
 		return "", errors.New("getting header comment: " + err.Error())
 	}
 
-	urlSigKeys, hasURLSigKeys, err := riaksvc.GetURLSigKeysFromConfigFileKey(tx, cfg.RiakAuthOptions, fileName)
+	urlSigKeys, hasURLSigKeys, err := riaksvc.GetURLSigKeysFromConfigFileKey(tx, cfg.RiakAuthOptions, cfg.RiakPort, fileName)
 	if err != nil {
 		return "", errors.New("getting url sig keys from Riak: " + err.Error())
 	}
@@ -455,7 +455,7 @@ func urlSigDotConfig(tx *sql.Tx, cfg *config.Config, profile ProfileData, fileNa
 
 func uriSigningDotConfig(tx *sql.Tx, cfg *config.Config, fileName string) (string, error) {
 	riakKey := strings.TrimSuffix(strings.TrimPrefix(fileName, "uri_signing_"), ".config")
-	keys, hasKeys, err := riaksvc.GetURISigningKeysRaw(tx, cfg.RiakAuthOptions, riakKey)
+	keys, hasKeys, err := riaksvc.GetURISigningKeysRaw(tx, cfg.RiakAuthOptions, cfg.RiakPort, riakKey)
 	if err != nil {
 		return "", errors.New("getting uri signing keys from Riak: " + err.Error())
 	}

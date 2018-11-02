@@ -99,7 +99,7 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 			Location:       cfgParams.Location,
 		}
 
-		scope, err := getServerScope(inf.Tx.Tx, cfgFile, server.TypeName)
+		scope, err := getServerScope(inf.Tx.Tx, cfgFile, server.Type)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetConfigMetaData getting scope: "+err.Error()))
 			return

@@ -19,17 +19,287 @@ package ats
  * under the License.
  */
 
-// import (
-// 	"database/sql"
-// 	"errors"
-// 	"net/http"
-// 	"strings"
+import (
+	"database/sql"
+	"errors"
+	"io"
+	"net/http"
+	"sort"
+	"strconv"
+	"strings"
 
-// 	"github.com/apache/trafficcontrol/lib/go-log"
-// 	"github.com/apache/trafficcontrol/lib/go-tc"
-// 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-// 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-// )
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+)
+
+func GetServerConfigRemap(w http.ResponseWriter, r *http.Request) {
+	// TODO accept names or ids
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	serverID := inf.IntParams["id"]
+
+	serverInfo, ok, err := getServerInfo(inf.Tx.Tx, serverID)
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server not found"), nil)
+		return
+	}
+
+	hdr, err := headerComment(inf.Tx.Tx, serverInfo.HostName)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting header comment: "+err.Error()))
+		return
+	}
+
+	remapDSData, err := GetRemapDSData(inf.Tx.Tx, serverInfo)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting remap ds data: "+err.Error()))
+		return
+	}
+
+	text := ""
+	if tc.CacheTypeFromString(serverInfo.Type) == tc.CacheTypeMid {
+		text, err = GetServerConfigRemapDotConfigForMid(inf.Tx.Tx, serverInfo, remapDSData, hdr)
+	} else {
+		text, err = GetServerConfigRemapDotConfigForEdge(inf.Tx.Tx, serverInfo, remapDSData, hdr)
+	}
+
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting server config remap dot config: "+err.Error()))
+		return
+	}
+
+	// TODO figure out why Commit() hangs
+	if err := inf.Tx.Tx.Rollback(); err != nil && err != sql.ErrTxDone {
+		log.Errorln("rolling back transaction: " + err.Error())
+	}
+	w.Header().Set("Content-Type", "text/plain")
+	io.WriteString(w, text)
+}
+
+func DSProfileIDs(dses []RemapConfigDSData) []int {
+	dsProfileIDs := []int{}
+	for _, ds := range dses {
+		if ds.ProfileID != nil {
+			// TODO determine if this is right, if the DS has no profile
+			dsProfileIDs = append(dsProfileIDs, *ds.ProfileID)
+		}
+	}
+	return dsProfileIDs
+}
+
+func GetServerConfigRemapDotConfigForMid(tx *sql.Tx, server *ServerInfo, dses []RemapConfigDSData, header string) (string, error) {
+
+	profilesCacheKeyConfigParams, err := GetProfilesParamData(tx, DSProfileIDs(dses), "cachekey.config") // (map[int]map[string]string, error) {
+	if err != nil {
+		return "", errors.New("getting profiles param data: " + err.Error())
+	}
+
+	midRemaps := map[string]string{}
+	for _, ds := range dses {
+		if ds.Type.IsLive() && ds.Type.IsNational() {
+			continue // Live local delivery services skip mids
+		}
+		if ds.OriginFQDN == nil || *ds.OriginFQDN != "" {
+			log.Warnf("GetServerConfigRemapDotConfigForMid ds '" + ds.Name + "' has no origin fqdn, skipping!") // TODO confirm - Perl uses without checking!
+			continue
+		}
+
+		if midRemaps[*ds.OriginFQDN] != "" {
+			continue // skip remap rules from extra HOST_REGEXP entries
+		}
+
+		midRemap := ""
+		if ds.MidHeaderRewrite != nil && *ds.MidHeaderRewrite != "" {
+			midRemap += ` @plugin=header_rewrite.so @pparam=` + MidHeaderRewriteConfigFileName(ds.Name)
+		}
+		if ds.QStringIgnore != nil && *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
+			atsMajorVersion, err := GetATSMajorVersion(tx, server.ProfileID)
+			if err != nil {
+				return "", errors.New("getting ATS major version: " + err.Error())
+			}
+			midRemap += GetQStringIgnoreRemap(atsMajorVersion)
+		}
+		if ds.CacheURL != nil && *ds.CacheURL != "" {
+			midRemap += ` @plugin=cacheurl.so @pparam=` + CacheURLConfigFileName(ds.Name)
+		}
+
+		if ds.ProfileID != nil && len(profilesCacheKeyConfigParams[*ds.ProfileID]) > 0 {
+			for name, val := range profilesCacheKeyConfigParams[*ds.ProfileID] {
+				midRemap += ` @pparam=--` + name + "=" + val
+			}
+		}
+		if ds.RangeRequestHandling != nil && *ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest {
+			midRemap += ` @plugin=cache_range_requests.so`
+		}
+		midRemaps[*ds.OriginFQDN] = midRemap
+	}
+
+	textLines := []string{}
+	for originFQDN, midRemap := range midRemaps {
+		textLines = append(textLines, "map "+originFQDN+" "+originFQDN+midRemap+"\n")
+	}
+	sort.Sort(sort.StringSlice(textLines))
+
+	text := header
+	for _, line := range textLines {
+		text += line
+	}
+	return text, nil
+}
+
+func GetServerConfigRemapDotConfigForEdge(tx *sql.Tx, server *ServerInfo, dses []RemapConfigDSData, header string) (string, error) {
+	pData, err := serverParamData(tx, server.ProfileID, "package", server.HostName, server.DomainName)
+	if err != nil {
+		return "", errors.New("getting server param data: " + err.Error())
+	}
+
+	profilesCacheKeyConfigParams, err := GetProfilesParamData(tx, DSProfileIDs(dses), "cachekey.config") // (map[int]map[string]string, error) {
+
+	textLines := []string{}
+
+	// DEBUG
+	log.Errorln("DEBUG GetServerConfigRemapDotConfigForEdge dses {{")
+	for _, ds := range dses {
+		log.Errorln(ds.Name)
+	}
+	log.Errorln("}}")
+
+	for _, ds := range dses {
+		remapText := ""
+		if ds.Type == tc.DSTypeAnyMap {
+			if ds.RemapText == nil {
+				log.Errorln("ds '" + ds.Name + "' is ANY_MAP, but has no remap text - skipping")
+				continue
+			}
+			remapText = *ds.RemapText + "\n"
+			textLines = append(textLines, remapText)
+			continue
+		}
+
+		remapLines, err := MakeEdgeDSDataRemapLines(ds, server)
+		if err != nil {
+			return "", errors.New("making remap lines: " + err.Error()) // TODO log and continue?
+		}
+		for _, line := range remapLines {
+			profilecacheKeyConfigParams := (map[string]string)(nil)
+			if ds.ProfileID != nil {
+				profilecacheKeyConfigParams = profilesCacheKeyConfigParams[*ds.ProfileID]
+			}
+			remapText, err = BuildRemapLine(tx, server, pData, remapText, ds, line.From, line.To, profilecacheKeyConfigParams)
+			if err != nil {
+				return "", errors.New("ds '" + ds.Name + "' building remap line: " + err.Error()) // TODO log and continue?
+			}
+		}
+		textLines = append(textLines, remapText)
+	}
+
+	text := header
+	sort.Sort(sort.StringSlice(textLines))
+	for _, line := range textLines {
+		text += line
+	}
+	return text, nil
+}
+
+// BuildRemapLine builds the remap line for the given server and delivery service.
+// The cacheKeyConfigParams map may be nil, if this ds profile had no cache key config params.
+func BuildRemapLine(tx *sql.Tx, server *ServerInfo, pData map[string]string, text string, ds RemapConfigDSData, mapFrom string, mapTo string, cacheKeyConfigParams map[string]string) (string, error) {
+	// ds = 'remap' in perl
+
+	mapFrom = strings.Replace(mapFrom, `__http__`, server.HostName, -1)
+
+	if _, hasDSCPRemap := pData["dscp_remap"]; hasDSCPRemap {
+		text += "map	" + mapFrom + "     " + mapTo + ` @plugin=dscp_remap.so @pparam=` + strconv.Itoa(ds.DSCP)
+	} else {
+		text += "map	" + mapFrom + "     " + mapTo + ` @plugin=header_rewrite.so @pparam=dscp/set_dscp_` + strconv.Itoa(ds.DSCP) + ".config"
+	}
+
+	if ds.EdgeHeaderRewrite != nil && *ds.EdgeHeaderRewrite != "" {
+		text += ` @plugin=header_rewrite.so @pparam=` + EdgeHeaderRewriteConfigFileName(ds.Name)
+	}
+
+	if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm != "" {
+		if *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig {
+			text += ` @plugin=url_sig.so @pparam=url_sig_` + ds.Name + ".config"
+		} else if *ds.SigningAlgorithm == tc.SigningAlgorithmURISigning {
+			text += ` @plugin=uri_signing.so @pparam=uri_signing_` + ds.Name + ".config"
+		}
+	}
+
+	if ds.QStringIgnore != nil {
+		if *ds.QStringIgnore == tc.QueryStringIgnoreDropAtEdge {
+			dqsFile := "drop_qstring.config"
+			text += ` @plugin=regex_remap.so @pparam=` + dqsFile
+		} else if *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
+			_, globalExists, err := GetProfileParamValue(tx, server.ProfileID, "cacheurl.config", "location")
+			if err != nil {
+				return "", errors.New("getting profile param value for cacheurl.config location: " + err.Error())
+			}
+			if globalExists {
+				log.Debugln("qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change") // TODO warn? Perl was a debug
+			} else {
+				atsMajorVersion, err := GetATSMajorVersion(tx, server.ProfileID) // TODO only call once, pass to this func
+				if err != nil {
+					return "", errors.New("getting ATS major version: " + err.Error())
+				}
+				text += GetQStringIgnoreRemap(atsMajorVersion)
+			}
+		}
+	}
+
+	if ds.CacheURL != nil && *ds.CacheURL != "" {
+		text += ` @plugin=cacheurl.so @pparam=` + CacheURLConfigFileName(ds.Name)
+	}
+
+	// DEBUG - sort to diff identical to perl - remove once diff is verified
+	if len(cacheKeyConfigParams) > 0 {
+		text += ` @plugin=cachekey.so`
+
+		keys := []string{}
+		for key, _ := range cacheKeyConfigParams {
+			keys = append(keys, key)
+		}
+		sort.Sort(sort.StringSlice(keys))
+
+		for _, key := range keys {
+			text += ` @pparam=--` + key + "=" + cacheKeyConfigParams[key]
+		}
+	}
+
+	// if len(cacheKeyConfigParams) > 0 {
+	// 	text += ` @plugin=cachekey.so`
+	// 	for key, val := range cacheKeyConfigParams {
+	// 		text += ` @pparam=--` + key + "=" + val
+	// 	}
+	// }
+
+	// Note: should use full path here?
+	if ds.RegexRemap != nil && *ds.RegexRemap != "" {
+		text += ` @plugin=regex_remap.so @pparam=regex_remap_` + ds.Name + ".config"
+	}
+	if ds.RangeRequestHandling != nil {
+		if *ds.RangeRequestHandling == tc.RangeRequestHandlingBackgroundFetch {
+			text += ` @plugin=background_fetch.so @pparam=bg_fetch.config`
+		} else if *ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest {
+			text += ` @plugin=cache_range_requests.so `
+		}
+	}
+	if ds.RemapText != nil && *ds.RemapText != "" {
+		text += " " + *ds.RemapText
+	}
+
+	if ds.FQPacingRate != nil && *ds.FQPacingRate > 0 {
+		text += ` @plugin=fq_pacing.so @pparam=--rate=` + strconv.Itoa(*ds.FQPacingRate)
+	}
+	text += "\n"
+	return text, nil
+}
 
 // func GetServerConfig(w http.ResponseWriter, r *http.Request) {
 // 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id", "file"}, []string{"id"})

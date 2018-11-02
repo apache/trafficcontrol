@@ -23,21 +23,10 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	// "github.com/dspinhirne/netaddr-go"
 )
-
-const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
-
-func headerComment(tx *sql.Tx, profileName string) (string, error) {
-	nameVersionStr, err := GetNameVersionString(tx)
-	if err != nil {
-		return "", errors.New("getting name version string: " + err.Error())
-	}
-	return "# DO NOT EDIT - Generated for " + profileName + " by " + nameVersionStr + " on " + time.Now().Format(HeaderCommentDateFormat) + "\n", nil
-}
 
 func getServerScope(tx *sql.Tx, cfgFile string, serverType string) (tc.ATSConfigMetaDataConfigFileScope, error) {
 	switch {
@@ -64,7 +53,7 @@ func getScope(tx *sql.Tx, cfgFile string) (tc.ATSConfigMetaDataConfigFileScope, 
 	case cfgFile == "remap.config":
 		fallthrough
 	case strings.HasPrefix(cfgFile, "to_ext_") && strings.HasSuffix(cfgFile, ".config"):
-		fallthrough
+		return tc.ATSConfigMetaDataConfigFileScopeServers, nil
 	case cfgFile == "12M_facts":
 		fallthrough
 	case cfgFile == "50-ats.rules":

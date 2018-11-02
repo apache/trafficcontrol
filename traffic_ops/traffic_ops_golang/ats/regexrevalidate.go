@@ -181,3 +181,11 @@ func getMaxDays(tx *sql.Tx) (int64, bool, error) {
 	}
 	return days, true, nil
 }
+
+func headerComment(tx *sql.Tx, name string) (string, error) {
+	nameVersionStr, err := GetNameVersionString(tx)
+	if err != nil {
+		return "", errors.New("getting name version string: " + err.Error())
+	}
+	return "# DO NOT EDIT - Generated for " + name + " by " + nameVersionStr + " on " + time.Now().Format(HeaderCommentDateFormat) + "\n", nil
+}
