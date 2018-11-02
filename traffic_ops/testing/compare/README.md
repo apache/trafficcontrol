@@ -70,17 +70,47 @@ These can be overridden by command line switches as described above. If a userna
 
 ### genConfigRoutes.py
 
-usage: genConfigRoutes.py \[-h\] \[-k\] \[-v\] InstanceA InstanceB LoginA \[LoginB\]
+usage: genConfigRoutes.py [-h] [--refURL REFURL] [--testURL TESTURL]
+                          [--refUser REFUSER] [--refPasswd REFPASSWD]
+                          [--testUser TESTUSER] [--testPasswd TESTPASSWD] [-k]
+                          [-v] [-l LOG_LEVEL] [-q]
 
--h, --help                           show this help message and exit
--k, --insecure                       Do not verify SSL certificate signatures against *either* Traffic Ops instance (default: False)
--l LOG_LEVEL, --log_level LOG_LEVEL  Sets the Python log level, one of 'DEBUG', 'INFO', 'WARN', 'ERROR', or 'CRITICAL' (default: CRITICAL)
--q, --quiet                          Suppresses all logging output - even for critical errors
--v, --version                        Print version information and exit
+A simple script to generate API routes to server configuration files for a
+given pair of Traffic Ops instances. This, for the purpose of using the
+'compare' tool
 
-> **note**
->
-> If you're using a CDN-in-a-Box environment for testing, it's likely that you'll need the `-k`/`--insecure` option if you're outside the Docker network
+optional arguments:
+  -h, --help            show this help message and exit
+  --refURL REFURL       The full URL of the reference Traffic Ops instance
+                        (default: None)
+  --testURL TESTURL     The full URL of the testing Traffic Ops instance
+                        (default: None)
+  --refUser REFUSER     A username for logging into the reference Traffic Ops
+                        instance. (default: None)
+  --refPasswd REFPASSWD
+                        A password for logging into the reference Traffic Ops
+                        instance (default: None)
+  --testUser TESTUSER   A username for logging into the testing Traffic Ops
+                        instance. If not given, the value for the reference
+                        instance will be used. (default: None)
+  --testPasswd TESTPASSWD
+                        A password for logging into the testing Traffic Ops
+                        instance. If not given, the value for the reference
+                        instance will be used. (default: None)
+  -k, --insecure        Do not verify SSL certificate signatures against
+                        *either* Traffic Ops instance (default: False)
+  -v, --version         Print version information and exit
+  -l LOG_LEVEL, --log_level LOG_LEVEL
+                        Sets the Python log level, one of 'DEBUG', 'INFO',
+                        'WARN', 'ERROR', or 'CRITICAL' (default: INFO)
+  -q, --quiet           Suppresses all logging output - even for critical
+                        errors (default: False)
+
+!!! note
+	This script will use the same environment variables as `compare`, which can be overridden by the above  command line parameters
+
+!!! note
+	If you're using a CDN-in-a-Box environment for testing, it's likely that you'll need the `-k`/`--insecure` option if you're outside the Docker network
 
 The genConfigRoutes.py script will output list of unique API routes (relative to the desired Traffic Ops URL) that point to generated configuration files for a sample set of servers common to both Traffic Ops instances. The results are printed to stdout, making the output perfect for piping directly into `compare` like so:
 
