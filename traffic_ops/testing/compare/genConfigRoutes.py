@@ -46,7 +46,7 @@ from common.restapi import LoginError, OperationError, InvalidJSONError
 #: A format specifier for logging output. Propagates to all imported modules.
 LOG_FMT = "%(levelname)s: %(asctime)s line %(lineno)d in %(module)s.%(funcName)s: %(message)s"
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
 def getConfigRoutesForServers(servers:typing.List[dict], inst:TOSession) \
                                                                -> typing.Generator[str, None, None]:
@@ -80,13 +80,83 @@ def getCRConfigs(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
 	if not cdns:
 		logging.error("The two instances have NO CDNs in common! This almost certainly means that "\
 		              "you're not doing what you want to do")
-		yield from []
-	else:
-		yield from ["CRConfig-Snapshots/%s/CRConfig.json" % cdn for cdn in cdns]
+	yield from ["CRConfig-Snapshots/%s/CRConfig.json" % cdn for cdn in cdns]
 
 
+def consolidateVariables(kwargs:argparse.Namespace) -> typing.Tuple[str, str,
+                                                         typing.Tuple[str, str], typing.Tuple[str]]:
+	"""
+	Consolidates the arguments passed on the command line with the ones in the environment
 
-def genRoutes(A:TOSession, B:TOSession) -> typing.List[str]:
+	:param kwargs: The arguments passed on the command line
+	:returns: In order: the reference Traffic Ops URL, the testing Traffic Ops URL, the login
+		information for the reference instance, and the login information for the testing instance
+	:raises ValueError: if a required variable is not defined
+	"""
+	instanceA = kwargs.refURL if kwargs.refURL else os.environ.get("TO_URL", None)
+	if instanceA is None:
+		logging.critical("Must specify the URL of the reference instance!")
+		raise ValueError()
+
+	instanceB = kwargs.testURL if kwargs.testURL else os.environ.get("TEST_URL", None)
+	if instanceB is None:
+		logging.critical("Must specify the URL of the testing instance!")
+		raise ValueError()
+
+	refUser = kwargs.refUser if kwargs.refUser else os.environ.get("TO_USER", None)
+	if refUser is None:
+		logging.critical("Must specify reference instance username!")
+		raise ValueError()
+
+	refPasswd = kwargs.refPasswd if kwargs.refPasswd else os.environ.get("TO_PASSWORD", None)
+	if refPasswd is None:
+		logging.critical("Must specify reference instance password!")
+		raise ValueError()
+
+	testUser = kwargs.testUser if kwargs.testUser else os.environ.get("TEST_USER", refUser)
+	testPasswd = kwargs.testPasswd if kwargs.testPasswd else os.environ.get("TEST_PASSWORD", refPasswd)
+
+	# Peel off all schemas
+	if instanceA.startswith("https://"):
+		instanceA = instanceA[8:]
+	elif instanceA.startswith("http://"):
+		instanceA = instanceA[7:]
+
+	if instanceB.startswith("https://"):
+		instanceB = instanceB[8:]
+	elif instanceB.startswith("http://"):
+		instanceB = instanceB[7:]
+
+	# Parse out port numbers, if specified
+	try:
+		if ':' in instanceA:
+			instanceA = instanceA.split(':')
+			if len(instanceA) != 2:
+				logging.critical("'%s' is not a valid Traffic Ops URL!", kwargs.InstanceA)
+				raise ValueError()
+			instanceA = {"host": instanceA[0], "port": int(instanceA[1])}
+		else:
+			instanceA = {"host": instanceA, "port": 443}
+	except TypeError as e:
+		logging.critical("'%s' is not a valid port number!", instanceA[1])
+		raise ValueError from e
+
+	try:
+		if ':' in instanceB:
+			instanceB = instanceB.split(':')
+			if len(instanceB) != 2:
+				logging.critical("'%s' is not a valid Traffic Ops URL!", kwargs.InstanceB)
+				raise ValueError()
+			instanceB = {"host": instanceB[0], "port": int(instanceB[1])}
+		else:
+			instanceB = {"host": instanceB, "port": 443}
+	except TypeError as e:
+		logging.critical("'%s' is not a valid port number!", instanceB[1])
+		raise ValueError from e
+
+	return (instanceA, instanceB, (refUser, refPasswd), (testUser, testPasswd))
+
+def genRoutes(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
 	"""
 	Generates routes to check for ATS config files from two valid Traffic Ops sessions
 
@@ -168,67 +238,14 @@ def main(kwargs:argparse.Namespace) -> int:
 		print("Unrecognized log level:", kwargs.log_level, file=sys.stderr)
 		return 1
 
-	instanceA = kwargs.InstanceA
-	instanceB = kwargs.InstanceB
-
 	try:
-		loginA = kwargs.LoginA.split(':')
-		loginA = (loginA[0], ':'.join(loginA[1:]))
-	except (KeyError, IndexError) as e:
-		logging.critical("Bad username/password pair: '%s' (hint: try -h/--help)", kwargs.LoginA)
-		return 1
-
-	loginB = loginA
-
-	try:
-		if kwargs.LoginB:
-			loginB = kwargs.LoginB.split(':')
-			loginB = (loginB[0], ':'.join(loginB[1:]))
-			loginB = (loginB[0] if loginB[0] else loginA[0], loginB[1] if loginB[1] else loginA[1])
-	except (KeyError, IndexError) as e:
-		logging.critical("Bad username/password pair: '%s' (hint: try -h/--help)", kwargs.LoginB)
+		instanceA, instanceB, loginA, loginB = consolidateVariables(kwargs)
+	except ValueError as e:
+		logging.debug("%s", e, exc_info=True, stack_info=True)
+		logging.critical("(hint: try '-h'/'--help')")
 		return 1
 
 	verify = not kwargs.insecure
-
-	# Peel off all schemas
-	if instanceA.startswith("https://"):
-		instanceA = instanceA[8:]
-	elif instanceA.startswith("http://"):
-		instanceA = instanceA[7:]
-
-	if instanceB.startswith("https://"):
-		instanceB = instanceB[8:]
-	elif instanceB.startswith("http://"):
-		instanceB = instanceB[7:]
-
-	# Parse out port numbers, if specified
-	try:
-		if ':' in instanceA:
-			instanceA = instanceA.split(':')
-			if len(instanceA) != 2:
-				logging.critical("'%s' is not a valid Traffic Ops URL!", kwargs.InstanceA)
-				return 1
-			instanceA = {"host": instanceA[0], "port": int(instanceA[1])}
-		else:
-			instanceA = {"host": instanceA, "port": 443}
-	except TypeError as e:
-		logging.critical("'%s' is not a valid port number!", instanceA[1])
-		logging.debug("%s", e, exc_info=True, stack_info=True)
-		return 1
-
-	try:
-		if ':' in instanceB:
-			instanceB = instanceB.split(':')
-			if len(instanceB) != 2:
-				logging.critical("'%s' is not a valid Traffic Ops URL!", kwargs.InstanceB)
-			instanceB = {"host": instanceB[0], "port": int(instanceB[1])}
-		else:
-			instanceB = {"host": instanceB, "port": 443}
-	except TypeError as e:
-		logging.critical("'%s' is not a valid port number!", instanceB[1])
-		logging.debug("%s", e, exc_info=True, stack_info=True)
-		return 1
 
 	# Instantiate connections and login
 	with TOSession(host_ip=instanceA["host"], host_port=instanceA["port"], verify_cert=verify) as A,\
@@ -258,22 +275,26 @@ if __name__ == '__main__':
 	                                 "instances. This, for the purpose of using the 'compare' tool",
 	                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-	parser.add_argument("InstanceA",
-	                    help="The full URL of the first Traffic Ops instance",
+	parser.add_argument("--refURL",
+	                    help="The full URL of the reference Traffic Ops instance",
 	                    type=str)
-	parser.add_argument("InstanceB",
-	                    help="The full URL of the second Traffic Ops instance",
+	parser.add_argument("--testURL",
+	                    help="The full URL of the testing Traffic Ops instance",
 	                    type=str)
-	parser.add_argument("LoginA",
-	                    help="A login string containing credentials for logging into the first "\
-	                         "Traffic Ops instance (InstanceA) in the format 'username:password'.",
+	parser.add_argument("--refUser",
+	                    help="A username for logging into the reference Traffic Ops instance.",
 	                    type=str)
-	parser.add_argument("LoginB",
-	                    help="A login string containing credentials for logging into the second "\
-	                         "Traffic Ops instance (InstanceB) in the format 'username:password'. "\
-	                         "If not given, LoginA will be re-used for the second connection",
-	                    type=str,
-	                    nargs='?')
+	parser.add_argument("--refPasswd",
+	                    help="A password for logging into the reference Traffic Ops instance",
+	                    type=str)
+	parser.add_argument("--testUser",
+	                    help="A username for logging into the testing Traffic Ops instance. If "\
+	                         "not given, the value for the reference instance will be used.",
+	                    type=str)
+	parser.add_argument("--testPasswd",
+	                    help="A password for logging into the testing Traffic Ops instance. If "\
+	                         "not given, the value for the reference instance will be used.",
+	                    type=str)
 	parser.add_argument("-k", "--insecure",
 	                    help="Do not verify SSL certificate signatures against *either* Traffic "\
 	                         "Ops instance",
