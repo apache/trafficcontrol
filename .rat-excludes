@@ -77,3 +77,4 @@ angular-chart(?:                     BSD 2-clause. Properly documented in LICENS
 chartjs(?:                           MIT. Properly documented in LICENSE ){0}
 json-iterator/go(?:                  MIT. Properly documented in LICENSE ){0}
 modern-go/concurrent(?:              Apache 2.0. Properly documented in LICENSE ){0}
+modern-go/reflect2(?:                Apache 2.0. Properly documented in LICENSE ){0}
