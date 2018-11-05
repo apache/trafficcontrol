@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -168,7 +169,7 @@ func (to *Session) GetOriginByID(id int) ([]tc.Origin, ReqInf, error) {
 
 // GET an Origin by the Origin name
 func (to *Session) GetOriginByName(name string) ([]tc.Origin, ReqInf, error) {
-	return to.GetOriginsByQueryParams(fmt.Sprintf("?name=%s", name))
+	return to.GetOriginsByQueryParams(fmt.Sprintf("?name=%s", url.QueryEscape(name)))
 }
 
 // GET a list of Origins by Delivery Service ID

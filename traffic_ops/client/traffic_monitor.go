@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 

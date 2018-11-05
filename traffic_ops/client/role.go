@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -106,7 +107,7 @@ func (to *Session) GetRoleByID(id int) ([]tc.Role, ReqInf, int, error) {
 
 // GET a Role by the Role name
 func (to *Session) GetRoleByName(name string) ([]tc.Role, ReqInf, int, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_ROLES, name)
+	url := fmt.Sprintf("%s?name=%s", API_v13_ROLES, url.QueryEscape(name))
 	resp, remoteAddr, errClient := to.rawRequest(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
