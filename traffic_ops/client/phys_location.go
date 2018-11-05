@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -111,7 +112,7 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 
 // GET a PhysLocation by the PhysLocation name
 func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_PhysLocations, name)
+	url := fmt.Sprintf("%s?name=%s", API_v13_PhysLocations, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

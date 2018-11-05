@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -253,7 +254,7 @@ func (to *Session) GetCacheGroupByID(id int) ([]tc.CacheGroup, ReqInf, error) {
 
 // GET a CacheGroup by the CacheGroup name
 func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNullable, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, name)
+	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -272,7 +273,7 @@ func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNull
 // GET a CacheGroup by the CacheGroup name
 // Deprecated: use GetCachegroupNullableByName
 func (to *Session) GetCacheGroupByName(name string) ([]tc.CacheGroup, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, name)
+	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

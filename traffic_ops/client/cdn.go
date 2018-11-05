@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -101,7 +102,7 @@ func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
 
 // GET a CDN by the CDN name
 func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_CDNs, name)
+	url := fmt.Sprintf("%s?name=%s", API_v13_CDNs, url.QueryEscape(name))
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -131,7 +132,7 @@ func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, Re
 
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest XMLID
 func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, XMLID)
+	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, url.QueryEscape(XMLID))
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
