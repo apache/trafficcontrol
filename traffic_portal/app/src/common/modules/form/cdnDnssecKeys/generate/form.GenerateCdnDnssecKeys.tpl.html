@@ -23,12 +23,13 @@ under the License.
             <li><a ng-click="navigateToPath('/cdns')">CDNs</a></li>
             <li><a ng-click="navigateToPath('/cdns/' + cdn.id)">{{cdn.name}}</a></li>
             <li><a ng-click="navigateToPath('/cdns/' + cdn.id + '/dnssec-keys')">DNSSEC Keys</a></li>
-            <li class="active">generate</li>
+            <li class="active">Generate</li>
         </ol>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
         <br>
+        <div class="col-md-2 col-sm-2 col-xs-12"></div><div class="dnssec-info-text col-md-10 col-sm-10 col-xs-12">{{msg}}</div>
         <form name="cdnGenerateDnssecKeysForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
@@ -62,7 +63,7 @@ under the License.
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" ng-disabled="cdnGenerateDnssecKeysForm.$invalid" ng-click="confirmGenerate()">Generate</button>
+                <button type="button" class="btn btn-success" ng-disabled="cdnGenerateDnssecKeysForm.$invalid" ng-click="confirmGenerate()">Regenerate</button>
             </div>
         </form>
     </div>

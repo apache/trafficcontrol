@@ -23,12 +23,13 @@ under the License.
             <li><a ng-click="navigateToPath('/cdns')">CDNs</a></li>
             <li><a ng-click="navigateToPath('/cdns/' + cdn.id)">{{cdn.name}}</a></li>
             <li><a ng-click="navigateToPath('/cdns/' + cdn.id + '/dnssec-keys')">DNSSEC Keys</a></li>
-            <li class="active">regenerateKSK</li>
+            <li class="active">Regenerate KSK</li>
         </ol>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
         <br>
+        <div class="col-md-2 col-sm-2 col-xs-12"></div><div class="dnssec-info-text col-md-10 col-sm-10 col-xs-12">{{msg}}</div>
         <form name="cdnRegenerateKSKForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
