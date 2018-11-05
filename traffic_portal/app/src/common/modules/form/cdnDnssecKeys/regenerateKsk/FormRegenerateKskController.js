@@ -39,10 +39,11 @@ var FormRegenerateKskController = function(cdn, dnssecKeysRequest, $scope, $loca
 		var label = 'Regenerate KSK';
 		return label;
 	};
+	$scope.msg = 'This will regenerate KSK (key signing keys) for the ' + cdn.name + ' CDN.';
 
 	$scope.confirmGenerate = function() {
-		var title = 'Regenerate DNSSEC Keys [ ' + cdn.name + ' ]',
-			msg = 'This action CANNOT be undone. This will regenerate KSK keys for the ' + cdn.name + ' CDN and all associated Delivery Services.<br><br>Please type in the name of the CDN to confirm.';
+		var title = 'Regenerate KSK (key signing keys) [ ' + cdn.name + ' ]',
+			msg = 'This action CANNOT be undone. This will regenerate KSK (key signing keys) for the ' + cdn.name + ' CDN.<br><br>Please type in the name of the CDN to confirm.';
 
 		var params = {
 			title: title,

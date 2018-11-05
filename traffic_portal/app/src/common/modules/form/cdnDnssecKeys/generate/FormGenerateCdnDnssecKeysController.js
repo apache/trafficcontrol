@@ -39,6 +39,12 @@ var FormGenerateCdnDnssecKeysController = function(cdn, dnssecKeysRequest, $scop
 		return label;
 	};
 
+	$scope.msg = 'This will generate DNSSEC keys for the ' + cdn.name + ' CDN and all associated Delivery Services.';
+
+	if ($scope.ksk_new) {
+		$scope.msg = 'This will regenerate DNSSEC keys for the ' + cdn.name + ' CDN and all associated Delivery Services. A new DS Record will be created and needs to be added to the parent zone in order for DNSSEC to work properly.';
+	}
+
 	$scope.confirmGenerate = function() {
 		var title = 'Generate DNSSEC Keys [ ' + cdn.name + ' ]',
 			msg = 'This action CANNOT be undone. This will generate DNSSEC keys for the ' + cdn.name + ' CDN and all associated Delivery Services.<br><br>Please type in the name of the CDN to confirm.';
