@@ -429,3 +429,7 @@ The asn1-ber.v1 component is used under the MIT license:
 The ldap.v2 component is used under the MIT license:
 @traffic_ops/vendor/gopkg.in/ldap.v2/*
 ./traffic_ops/vendor/gopkg.in/ldap.v2/LICENSE
+
+The json-iterator/go component is used under the MIT license:
+@vendor/github.com/json-iterator/go/*
+./vendor/github.com/json-iterator/go/LICENSE

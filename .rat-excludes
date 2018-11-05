@@ -75,3 +75,4 @@ bbolt(?:                             MIT. Properly documented in LICENSE ){0}
 miekg(?:                             BSD 3-clause. Properly documented in LICENSE ){0}
 angular-chart(?:                     BSD 2-clause. Properly documented in LICENSE ){0}
 chartjs(?:                           MIT. Properly documented in LICENSE ){0}
+json-iterator/go(?:                  MIT. Properly documented in LICENSE ){0}
