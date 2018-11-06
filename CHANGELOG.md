@@ -12,8 +12,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/deliveryservices/sslkeys/add `POST`
   - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys/delete `GET`
   - /api/1.4/cdns/dnsseckeys/refresh `GET`
+  - /api/1.1/cdns/name/:name/dnsseckeys `GET`
+  - /api/1.4/cdns/name/:name/dnsseckeys `GET`
 - To support reusing a single riak cluster connection, an optional parameter is added to riak.conf: "HealthCheckInterval". This options takes a 'Duration' value (ie: 10s, 5m) which affects how often the riak cluster is health checked.  Default is currently set to: "HealthCheckInterval": "5s".
 - Added an API 1.4 endpoint, /api/1.4/cdns/dnsseckeys/refresh, to perform necessary behavior previously served outside the API under `/internal`.
+- Adds the DS Record text to the cdn dnsseckeys endpoint in 1.4.
 
 ### Changed
 - Issue 2821: Fixed "Traffic Router may choose wrong certificate when SNI names overlap"

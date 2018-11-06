@@ -62,6 +62,71 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, "Successfully created dnssec keys for "+cdnName)
 }
 
+func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	cdnName := inf.Params["name"]
+
+	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(cdnName, inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
+		return
+	}
+	if !keysExist {
+		// TODO emulates Perl; change to error, 404?
+		api.WriteRespAlert(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ") // emulates Perl
+		return
+	}
+
+	dsTTL, err := GetDSRecordTTL(inf.Tx.Tx, cdnName)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DS Record TTL: "+err.Error()))
+		return
+	}
+
+	keys, err := deliveryservice.MakeDNSSECKeysFromRiakKeys(riakKeys, dsTTL)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys object from Riak keys: "+err.Error()))
+		return
+	}
+	api.WriteResp(w, r, keys)
+}
+
+func GetDNSSECKeysV11(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	cdnName := inf.Params["name"]
+	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(cdnName, inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
+		return
+	}
+	if !keysExist {
+		// TODO emulates Perl; change to error, 404?
+		api.WriteRespAlert(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ") // emulates Perl
+		return
+	}
+	api.WriteResp(w, r, riakKeys)
+}
+
+func GetDSRecordTTL(tx *sql.Tx, cdn string) (time.Duration, error) {
+	ttlSeconds := 0
+	if err := tx.QueryRow(`SELECT JSON_EXTRACT_PATH_TEXT(content, 'config', 'ttls', 'DS') FROM snapshot WHERE cdn = $1`, cdn).Scan(&ttlSeconds); err != nil {
+		return 0, errors.New("getting cdn '" + cdn + "' DS Record TTL from CRConfig: " + err.Error())
+	}
+	return time.Duration(ttlSeconds) * time.Second, nil
+}
+
 func generateStoreDNSSECKeys(
 	tx *sql.Tx,
 	cfg *config.Config,
@@ -92,18 +157,18 @@ func generateStoreDNSSECKeys(
 	}
 
 	inception := time.Now()
-	newCDNZSK, err := deliveryservice.GetDNSSECKeys(tc.DNSSECZSKType, cdnDNSDomain, ttl, inception, inception.Add(zExp), tc.DNSSECKeyStatusNew, time.Unix(effectiveDateUnix, 0), false)
+	newCDNZSK, err := deliveryservice.GetDNSSECKeysV11(tc.DNSSECZSKType, cdnDNSDomain, ttl, inception, inception.Add(zExp), tc.DNSSECKeyStatusNew, time.Unix(effectiveDateUnix, 0), false)
 	if err != nil {
 		return errors.New("creating zsk for cdn: " + err.Error())
 	}
 
-	newCDNKSK, err := deliveryservice.GetDNSSECKeys(tc.DNSSECKSKType, cdnDNSDomain, ttl, inception, inception.Add(kExp), tc.DNSSECKeyStatusNew, time.Unix(effectiveDateUnix, 0), true)
+	newCDNKSK, err := deliveryservice.GetDNSSECKeysV11(tc.DNSSECKSKType, cdnDNSDomain, ttl, inception, inception.Add(kExp), tc.DNSSECKeyStatusNew, time.Unix(effectiveDateUnix, 0), true)
 	if err != nil {
 		return errors.New("creating ksk for cdn: " + err.Error())
 	}
 
-	newCDNZSKs := []tc.DNSSECKey{newCDNZSK}
-	newCDNKSKs := []tc.DNSSECKey{newCDNKSK}
+	newCDNZSKs := []tc.DNSSECKeyV11{newCDNZSK}
+	newCDNKSKs := []tc.DNSSECKeyV11{newCDNKSK}
 
 	if oldKeysExist {
 		oldKeyCDN, oldKeyCDNExists := oldKeys[cdnName]
@@ -123,8 +188,8 @@ func generateStoreDNSSECKeys(
 		}
 	}
 
-	newKeys := tc.DNSSECKeys{}
-	newKeys[cdnName] = tc.DNSSECKeySet{ZSK: newCDNZSKs, KSK: newCDNKSKs}
+	newKeys := tc.DNSSECKeysV11{}
+	newKeys[cdnName] = tc.DNSSECKeySetV11{ZSK: newCDNZSKs, KSK: newCDNKSKs}
 
 	cdnKeys := newKeys[cdnName]
 
@@ -155,7 +220,7 @@ func generateStoreDNSSECKeys(
 		}
 		newKeys[ds.Name] = dsKeys
 	}
-	if err := riaksvc.PutDNSSECKeys(newKeys, cdnName, tx, cfg.RiakAuthOptions); err != nil {
+	if err := riaksvc.PutDNSSECKeys(tc.DNSSECKeysRiak(newKeys), cdnName, tx, cfg.RiakAuthOptions); err != nil {
 		return errors.New("putting Riak DNSSEC CDN keys: " + err.Error())
 	}
 	return nil

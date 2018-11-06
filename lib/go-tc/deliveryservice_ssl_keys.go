@@ -171,27 +171,54 @@ type RiakPingResp struct {
 	Server string `json:"server"`
 }
 
-// DNSSECKeys is the DNSSEC keys object stored in Riak. The map key strings are both DeliveryServiceNames and CDNNames.
+// DNSSECKeys is the DNSSEC keys as stored in Riak, plus the DS record text.
 type DNSSECKeys map[string]DNSSECKeySet
+
+// DNSSECKeysV11 is the DNSSEC keys object stored in Riak. The map key strings are both DeliveryServiceNames and CDNNames.
+
+type DNSSECKeysRiak DNSSECKeysV11
+
+type DNSSECKeysV11 map[string]DNSSECKeySetV11
 
 type DNSSECKeySet struct {
 	ZSK []DNSSECKey `json:"zsk"`
 	KSK []DNSSECKey `json:"ksk"`
 }
 
-type DNSSECKey struct {
-	InceptionDateUnix  int64              `json:"inceptionDate"`
-	ExpirationDateUnix int64              `json:"expirationDate"`
-	Name               string             `json:"name"`
-	TTLSeconds         uint64             `json:"ttl,string"`
-	Status             string             `json:"status"`
-	EffectiveDateUnix  int64              `json:"effectiveDate"`
-	Public             string             `json:"public"`
-	Private            string             `json:"private"`
-	DSRecord           *DNSSECKeyDSRecord `json:"dsRecord,omitempty"`
+// DNSSECKeyDSRecordRiak is a DNSSEC key set (ZSK and KSK), as stored in Riak.
+// This is specifically the key data, without the DS record text (which can be computed), and is also the format used in API 1.1 through 1.3.
+type DNSSECKeySetV11 struct {
+	ZSK []DNSSECKeyV11 `json:"zsk"`
+	KSK []DNSSECKeyV11 `json:"ksk"`
 }
 
+type DNSSECKey struct {
+	DNSSECKeyV11
+	DSRecord *DNSSECKeyDSRecord `json:"dsRecord,omitempty"`
+}
+
+type DNSSECKeyV11 struct {
+	InceptionDateUnix  int64                 `json:"inceptionDate"`
+	ExpirationDateUnix int64                 `json:"expirationDate"`
+	Name               string                `json:"name"`
+	TTLSeconds         uint64                `json:"ttl,string"`
+	Status             string                `json:"status"`
+	EffectiveDateUnix  int64                 `json:"effectiveDate"`
+	Public             string                `json:"public"`
+	Private            string                `json:"private"`
+	DSRecord           *DNSSECKeyDSRecordV11 `json:"dsRecord,omitempty"`
+}
+
+// DNSSECKeyDSRecordRiak is a DNSSEC key DS record, as stored in Riak.
+// This is specifically the key data, without the DS record text (which can be computed), and is also the format used in API 1.1 through 1.3.
+type DNSSECKeyDSRecordRiak DNSSECKeyDSRecordV11
+
 type DNSSECKeyDSRecord struct {
+	DNSSECKeyDSRecordV11
+	Text string `json:"text"`
+}
+
+type DNSSECKeyDSRecordV11 struct {
 	Algorithm  int64  `json:"algorithm,string"`
 	DigestType int64  `json:"digestType,string"`
 	Digest     string `json:"digest"`

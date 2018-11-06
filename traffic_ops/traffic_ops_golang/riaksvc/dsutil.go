@@ -123,8 +123,8 @@ func Ping(tx *sql.Tx, authOpts *riak.AuthOptions) (tc.RiakPingResp, error) {
 	return tc.RiakPingResp{}, errors.New("failed to ping any Riak server")
 }
 
-func GetDNSSECKeys(cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions) (tc.DNSSECKeys, bool, error) {
-	key := tc.DNSSECKeys{}
+func GetDNSSECKeys(cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions) (tc.DNSSECKeysRiak, bool, error) {
+	key := tc.DNSSECKeysRiak{}
 	found := false
 	err := WithCluster(tx, authOpts, func(cluster StorageCluster) error {
 		ro, err := FetchObjectValues(cdnName, DNSSECKeysBucket, cluster)
@@ -146,7 +146,7 @@ func GetDNSSECKeys(cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions) (tc.D
 	return key, found, nil
 }
 
-func PutDNSSECKeys(keys tc.DNSSECKeys, cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions) error {
+func PutDNSSECKeys(keys tc.DNSSECKeysRiak, cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions) error {
 	keyJSON, err := json.Marshal(&keys)
 	if err != nil {
 		return errors.New("marshalling keys: " + err.Error())

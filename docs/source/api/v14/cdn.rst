@@ -92,3 +92,107 @@ CDN
     }
 
 |
+
+.. _to-api-v12-cdn-dnsseckeys:
+
+DNSSEC Keys
++++++++++++
+
+**GET /api/1.2/cdns/name/:name/dnsseckeys**
+
+  Gets a list of dnsseckeys for a CDN and all associated Delivery Services.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin
+
+  **Request Route Parameters**
+
+	  +----------+----------+-------------+
+  |   Name   | Required | Description |
+  +==========+==========+=============+
+  | ``name`` | yes      |             |
+  +----------+----------+-------------+
+
+  **Response Properties**
+
+  +-------------------------------+--------+---------------------------------------------------------------+
+  |           Parameter           |  Type  |                          Description                          |
+  +===============================+========+===============================================================+
+  | ``cdn name/ds xml_id``        | string | identifier for ds or cdn                                      |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>zsk/ksk``                  | array  | collection of zsk/ksk data                                    |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>ttl``                     | string | time-to-live for dnssec requests                              |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>inceptionDate``           | string | epoch timestamp for when the keys were created                |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>expirationDate``          | string | epoch timestamp representing the expiration of the keys       |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>private``                 | string | encoded private key                                           |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>public``                  | string | encoded public key                                            |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``>>name``                    | string | domain name                                                   |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``version``                   | string | API version                                                   |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``ksk>>dsRecord>>algorithm``  | string | The algorithm of the referenced DNSKEY-recor.                 |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``ksk>>dsRecord>>digestType`` | string | Cryptographic hash algorithm used to create the Digest value. |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``ksk>>dsRecord>>digest``     | string | A cryptographic hash value of the referenced DNSKEY-record.   |
+  +-------------------------------+--------+---------------------------------------------------------------+
+  | ``ksk>>dsRecord>>text``       | string | The DS Record text, to be inserted in the parent resolver.    |
+  +-------------------------------+--------+---------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response": {
+        "cdn1": {
+          "zsk": {
+            "ttl": "60",
+            "inceptionDate": "1426196750",
+            "private": "zsk private key",
+            "public": "zsk public key",
+            "expirationDate": "1428788750",
+            "name": "foo.kabletown.com."
+          },
+          "ksk": {
+            "name": "foo.kabletown.com.",
+            "expirationDate": "1457732750",
+            "public": "ksk public key",
+            "private": "ksk private key",
+            "inceptionDate": "1426196750",
+            "ttl": "60",
+            "dsRecord": {
+              "algorithm": "5",
+              "digestType": "2",
+              "digest": "abc123def456",
+              "text": "foo.kabletown.com.\t30\tIN\tDS\t12345 8 2 DEADBEEF123456789"
+            }
+          }
+        },
+        "ds-01": {
+          "zsk": {
+            "ttl": "60",
+            "inceptionDate": "1426196750",
+            "private": "zsk private key",
+            "public": "zsk public key",
+            "expirationDate": "1428788750",
+            "name": "ds-01.foo.kabletown.com."
+          },
+          "ksk": {
+            "name": "ds-01.foo.kabletown.com.",
+            "expirationDate": "1457732750",
+            "public": "ksk public key",
+            "private": "ksk private key",
+            "inceptionDate": "1426196750"
+          }
+        },
+        ... repeated for each ds in the cdn
+      }
+    }
+
+|
