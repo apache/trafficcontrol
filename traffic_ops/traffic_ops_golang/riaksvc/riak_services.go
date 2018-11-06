@@ -338,7 +338,7 @@ func GetPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster
 
 	if cluster == nil {
 		log.Errorln("GetPooledCluster failed, returning nil cluster")
-		return nil, errors.New("GetPooledClusterTX unable to return cluster")
+		return nil, errors.New("GetPooledCluster unable to return cluster")
 	}
 
 	return RiakStorageCluster{Cluster: cluster}, nil
