@@ -103,3 +103,11 @@ func TestBackoffDuration(t *testing.T) {
 		t.Errorf("unexpected duration calculation, val: %v  != : max: %v", val, max)
 	}
 }
+
+func TestNewConstantBackoff(t *testing.T) {
+	bo := NewConstantBackoff(ConstantBackoffDuration)
+
+	if bo.BackoffDuration() != ConstantBackoffDuration {
+		t.Errorf("unexepected duration, return value != %v", ConstantBackoffDuration)
+	}
+}

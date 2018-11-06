@@ -32,6 +32,20 @@ import (
 // DefaultFactor may be used by applications for the factor argument.
 const DefaultFactor = 2.0
 
+// ConstantBackoffDuration is a fallback duration that may be used by
+// an application along with NewConstantBackoff()
+const ConstantBackoffDuration = 30 * time.Second
+
+// Implementation of a Backoff that returns a constant time duration
+// used as a fallback.
+type constantBackoff struct{ d time.Duration }
+
+func NewConstantBackoff(d time.Duration) Backoff {
+	return &constantBackoff{d}
+}
+func (b *constantBackoff) BackoffDuration() time.Duration { return b.d }
+func (b *constantBackoff) Reset()                         {}
+
 type backoff struct {
 	attempt float64
 	Factor  float64
@@ -71,7 +85,7 @@ func NewBackoff(min time.Duration, max time.Duration, factor float64) (Backoff, 
 
 // generate random jitter
 func (b *backoff) jitter(durFloat float64, minFloat float64) float64 {
-	return b.rgen.Float64()*(durFloat-minFloat)
+	return b.rgen.Float64() * (durFloat - minFloat)
 }
 
 func (b *backoff) Reset() {
