@@ -85,7 +85,7 @@ func TestBackoffDuration(t *testing.T) {
 	dur := min
 
 	val := bo.BackoffDuration()
-	if val <= min {
+	if val < min {
 		t.Errorf("unexpected duration calculation, val: %v is less than min: %v", val, min)
 	}
 
