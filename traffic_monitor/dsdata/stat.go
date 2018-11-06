@@ -63,11 +63,11 @@ type StatsReadonly interface {
 
 // StatReadonly is a read-only interface for a delivery service Stat, designed to be passed to multiple goroutine readers.
 type StatReadonly interface {
-	Copy() Stat
+	Copy() *Stat
 	Common() StatCommonReadonly
-	CacheGroup(name tc.CacheGroupName) (StatCacheStats, bool)
-	Type(name tc.CacheType) (StatCacheStats, bool)
-	Total() StatCacheStats
+	CacheGroup(name tc.CacheGroupName) (*StatCacheStats, bool)
+	Type(name tc.CacheType) (*StatCacheStats, bool)
+	Total() *StatCacheStats
 }
 
 // StatCommonReadonly is a read-only interface for a delivery service's common Stat data, designed to be passed to multiple goroutine readers.
@@ -224,9 +224,9 @@ func (a StatCacheStats) Sum(b StatCacheStats) StatCacheStats {
 // Stat represents a complete delivery service stat, for a given poll, or at the time requested.
 type Stat struct {
 	CommonStats StatCommon
-	CacheGroups map[tc.CacheGroupName]StatCacheStats
-	Types       map[tc.CacheType]StatCacheStats
-	Caches      map[tc.CacheName]StatCacheStats
+	CacheGroups map[tc.CacheGroupName]*StatCacheStats
+	Types       map[tc.CacheType]*StatCacheStats
+	Caches      map[tc.CacheName]*StatCacheStats
 	TotalStats  StatCacheStats
 }
 
@@ -236,21 +236,22 @@ var ErrNotProcessedStat = errors.New("This stat is not used.")
 // NewStat returns a new delivery service Stat, initializing pointer members.
 func NewStat() *Stat {
 	return &Stat{
-		CacheGroups: map[tc.CacheGroupName]StatCacheStats{},
-		Types:       map[tc.CacheType]StatCacheStats{},
+		CacheGroups: map[tc.CacheGroupName]*StatCacheStats{},
+		Types:       map[tc.CacheType]*StatCacheStats{},
 		CommonStats: StatCommon{CachesReporting: map[tc.CacheName]bool{}},
-		Caches:      map[tc.CacheName]StatCacheStats{},
+		Caches:      map[tc.CacheName]*StatCacheStats{},
 	}
 }
 
 // Copy performs a deep copy of this Stat. It does not modify, and is thus safe for multiple goroutines.
-func (a Stat) Copy() Stat {
-	b := Stat{
+func (a Stat) Copy() *Stat {
+	// TODO sync.Pool. Better yet, remove copy usage
+	b := &Stat{
 		CommonStats: a.CommonStats.Copy(),
 		TotalStats:  a.TotalStats,
-		CacheGroups: map[tc.CacheGroupName]StatCacheStats{},
-		Types:       map[tc.CacheType]StatCacheStats{},
-		Caches:      map[tc.CacheName]StatCacheStats{},
+		CacheGroups: map[tc.CacheGroupName]*StatCacheStats{},
+		Types:       map[tc.CacheType]*StatCacheStats{},
+		Caches:      map[tc.CacheName]*StatCacheStats{},
 	}
 	for k, v := range a.CacheGroups {
 		b.CacheGroups[k] = v
@@ -265,36 +266,36 @@ func (a Stat) Copy() Stat {
 }
 
 // Common returns the common stat data for this stat. It is part of the StatCommonReadonly interface.
-func (a Stat) Common() StatCommonReadonly {
+func (a *Stat) Common() StatCommonReadonly {
 	return a.CommonStats
 }
 
 // CacheGroup returns the data for the given cachegroup in this stat. It is part of the StatCommonReadonly interface.
-func (a Stat) CacheGroup(name tc.CacheGroupName) (StatCacheStats, bool) {
+func (a *Stat) CacheGroup(name tc.CacheGroupName) (*StatCacheStats, bool) {
 	c, ok := a.CacheGroups[name]
 	return c, ok
 }
 
 // Type returns the aggregated data for the given cache type in this stat. It is part of the StatCommonReadonly interface.
-func (a Stat) Type(name tc.CacheType) (StatCacheStats, bool) {
+func (a *Stat) Type(name tc.CacheType) (*StatCacheStats, bool) {
 	t, ok := a.Types[name]
 	return t, ok
 }
 
 // Total returns the aggregated total data in this stat. It is part of the StatCommonReadonly interface.
-func (a Stat) Total() StatCacheStats {
-	return a.TotalStats
+func (a *Stat) Total() *StatCacheStats {
+	return &a.TotalStats
 }
 
 // Stats is the JSON-serialisable representation of delivery service Stats. It maps delivery service names to individual stat objects.
 type Stats struct {
-	DeliveryService map[tc.DeliveryServiceName]Stat `json:"deliveryService"`
-	Time            time.Time                       `json:"-"`
+	DeliveryService map[tc.DeliveryServiceName]*Stat `json:"deliveryService"`
+	Time            time.Time                        `json:"-"`
 }
 
 // Copy performs a deep copy of this Stats object.
-func (s Stats) Copy() Stats {
-	b := NewStats()
+func (s *Stats) Copy() *Stats {
+	b := NewStats(len(s.DeliveryService))
 	for k, v := range s.DeliveryService {
 		b.DeliveryService[k] = v.Copy()
 	}
@@ -329,31 +330,32 @@ func (s Stats) JSON(filter Filter, params url.Values) StatsOld {
 		for cacheType, typeStats := range stat.Types {
 			jsonObj = addStatCacheStats(jsonObj, typeStats, deliveryService, "type."+cacheType.String()+".", now, filter)
 		}
-		jsonObj = addStatCacheStats(jsonObj, stat.TotalStats, deliveryService, "total.", now, filter)
+		jsonObj = addStatCacheStats(jsonObj, &stat.TotalStats, deliveryService, "total.", now, filter)
 	}
 	return *jsonObj
 }
 
 // NewStats creates a new Stats object, initializing any pointer members.
 // TODO rename to just 'New'?
-func NewStats() Stats {
-	return Stats{DeliveryService: map[tc.DeliveryServiceName]Stat{}}
+func NewStats(size int) *Stats {
+	return &Stats{DeliveryService: make(map[tc.DeliveryServiceName]*Stat, size)}
 }
 
 // LastStats includes the previously recieved stats for DeliveryServices and Caches, the stat itself, when it was received, and the stat value per second.
 type LastStats struct {
-	DeliveryServices map[tc.DeliveryServiceName]LastDSStat
-	Caches           map[tc.CacheName]LastStatsData
+	DeliveryServices map[tc.DeliveryServiceName]*LastDSStat
+	Caches           map[tc.CacheName]*LastStatsData
 }
 
 // NewLastStats returns a new LastStats object, initializing internal pointer values.
-func NewLastStats() LastStats {
-	return LastStats{DeliveryServices: map[tc.DeliveryServiceName]LastDSStat{}, Caches: map[tc.CacheName]LastStatsData{}}
+func NewLastStats(dsLen, cacheLen int) *LastStats {
+	// TODO add map size params?
+	return &LastStats{DeliveryServices: map[tc.DeliveryServiceName]*LastDSStat{}, Caches: map[tc.CacheName]*LastStatsData{}}
 }
 
 // Copy performs a deep copy of this LastStats object.
-func (a LastStats) Copy() LastStats {
-	b := NewLastStats()
+func (a *LastStats) Copy() *LastStats {
+	b := NewLastStats(len(a.DeliveryServices), len(a.Caches))
 	for k, v := range a.DeliveryServices {
 		b.DeliveryServices[k] = v.Copy()
 	}
@@ -366,19 +368,19 @@ func (a LastStats) Copy() LastStats {
 // LastDSStat maps and aggregates the last stats received for the given delivery service to caches, cache groups, types, and total.
 // TODO figure a way to associate this type with StatHTTP, with which its members correspond.
 type LastDSStat struct {
-	Caches      map[tc.CacheName]LastStatsData
-	CacheGroups map[tc.CacheGroupName]LastStatsData
-	Type        map[tc.CacheType]LastStatsData
+	Caches      map[tc.CacheName]*LastStatsData
+	CacheGroups map[tc.CacheGroupName]*LastStatsData
+	Type        map[tc.CacheType]*LastStatsData
 	Total       LastStatsData
 	Available   bool
 }
 
 // Copy performs a deep copy of this LastDSStat object.
-func (a LastDSStat) Copy() LastDSStat {
-	b := LastDSStat{
-		CacheGroups: map[tc.CacheGroupName]LastStatsData{},
-		Type:        map[tc.CacheType]LastStatsData{},
-		Caches:      map[tc.CacheName]LastStatsData{},
+func (a LastDSStat) Copy() *LastDSStat {
+	b := &LastDSStat{
+		CacheGroups: map[tc.CacheGroupName]*LastStatsData{},
+		Type:        map[tc.CacheType]*LastStatsData{},
+		Caches:      map[tc.CacheName]*LastStatsData{},
 		Total:       a.Total,
 		Available:   a.Available,
 	}
@@ -394,15 +396,8 @@ func (a LastDSStat) Copy() LastDSStat {
 	return b
 }
 
-func newLastDSStat() LastDSStat {
-	return LastDSStat{
-		CacheGroups: map[tc.CacheGroupName]LastStatsData{},
-		Type:        map[tc.CacheType]LastStatsData{},
-		Caches:      map[tc.CacheName]LastStatsData{},
-	}
-}
-
 // LastStatsData contains the last stats and per-second calculations for bytes and status codes received from a cache.
+// TODO sync.Pool?
 type LastStatsData struct {
 	Bytes     LastStatData
 	Status2xx LastStatData
@@ -412,14 +407,17 @@ type LastStatsData struct {
 }
 
 // Sum returns the Sum() of each member data with the given LastStatsData corresponding members
-func (a LastStatsData) Sum(b LastStatsData) LastStatsData {
-	return LastStatsData{
-		Bytes:     a.Bytes.Sum(b.Bytes),
-		Status2xx: a.Status2xx.Sum(b.Status2xx),
-		Status3xx: a.Status3xx.Sum(b.Status3xx),
-		Status4xx: a.Status4xx.Sum(b.Status4xx),
-		Status5xx: a.Status5xx.Sum(b.Status5xx),
-	}
+func (a *LastStatsData) Sum(b *LastStatsData) {
+	a.Bytes.PerSec += b.Bytes.PerSec
+	a.Bytes.Stat += b.Bytes.Stat
+	a.Status2xx.PerSec += b.Status2xx.PerSec
+	a.Status2xx.Stat += b.Status2xx.Stat
+	a.Status3xx.PerSec += b.Status3xx.PerSec
+	a.Status3xx.Stat += b.Status3xx.Stat
+	a.Status4xx.PerSec += b.Status4xx.PerSec
+	a.Status4xx.Stat += b.Status4xx.Stat
+	a.Status5xx.PerSec += b.Status5xx.PerSec
+	a.Status5xx.Stat += b.Status5xx.Stat
 }
 
 // LastStatData contains the value, time it was received, and per-second calculation since the previous stat, for a stat from a cache.
@@ -427,14 +425,6 @@ type LastStatData struct {
 	PerSec float64
 	Stat   int64
 	Time   time.Time
-}
-
-// Sum adds the PerSec and Stat of the given data to this object. Time is meaningless for the summed object, and is thus set to 0.
-func (a LastStatData) Sum(b LastStatData) LastStatData {
-	return LastStatData{
-		PerSec: a.PerSec + b.PerSec,
-		Stat:   a.Stat + b.Stat,
-	}
 }
 
 func addCommonData(s *StatsOld, c *StatCommon, deliveryService tc.DeliveryServiceName, t int64, filter Filter) *StatsOld {
@@ -454,7 +444,7 @@ func addCommonData(s *StatsOld, c *StatCommon, deliveryService tc.DeliveryServic
 	return s
 }
 
-func addStatCacheStats(s *StatsOld, c StatCacheStats, deliveryService tc.DeliveryServiceName, prefix string, t int64, filter Filter) *StatsOld {
+func addStatCacheStats(s *StatsOld, c *StatCacheStats, deliveryService tc.DeliveryServiceName, prefix string, t int64, filter Filter) *StatsOld {
 	add := func(name, val string) {
 		if filter.UseStat(name) {
 			// This is for compatibility with the Traffic Monitor 1.0 API.

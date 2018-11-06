@@ -20,6 +20,8 @@ package manager
  */
 
 import (
+	"os"
+	"runtime"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -100,6 +102,16 @@ func StartStatHistoryManager(
 	}
 
 	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Errorf("StatHistoryManager panic: %v\n", err)
+			} else {
+				log.Errorln("StatHistoryManager failed without panic")
+			}
+			log.Errorf("%s\n", stacktrace())
+			os.Exit(1) // The monitor can't run without a stat processor
+		}()
+
 		flushTimer := time.NewTimer(cfg.StatFlushInterval)
 		// Note! bufferTimer MAY be uninitialized! If there is no cfg.StatBufferInterval, the timer WILL NOT be created with time.NewTimer(), and thus is NOT initialized, and MUST NOT have functions called, such as timer.Stop()! Those functions WILL panic.
 		bufferTimer := &time.Timer{}
@@ -208,6 +220,18 @@ func StartStatHistoryManager(
 	return statInfoHistory, statResultHistory, statMaxKbpses, lastStatDurations, lastStats, &dsStats, unpolledCaches, localCacheStatus
 }
 
+func stacktrace() []byte {
+	initialBufSize := 1024
+	buf := make([]byte, initialBufSize)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, len(buf)*2)
+	}
+}
+
 // processStatResults processes the given results, creating and setting DSStats, LastStats, and other stats. Note this is NOT threadsafe, and MUST NOT be called from multiple threads.
 func processStatResults(
 	results []cache.Result,
@@ -282,13 +306,16 @@ func processStatResults(
 	statInfoHistoryThreadsafe.Set(statInfoHistory)
 	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
 
-	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc, events, localStates)
+	lastStatsVal := lastStats.Get()
+	lastStatsCopy := lastStatsVal.Copy()
+	newDsStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStatsCopy, time.Now(), mc, events, localStates)
+
 	if err != nil {
 		errorCount.Inc()
 		log.Errorf("getting deliveryservice: %v\n", err)
 	} else {
-		dsStats.Set(newDsStats)
-		lastStats.Set(newLastStats)
+		dsStats.Set(*newDsStats)
+		lastStats.Set(*lastStatsCopy)
 	}
 
 	health.CalcAvailabilityWithStats(results, "stat", statResultHistoryThreadsafe, mc, toData, localCacheStatusThreadsafe, localStates, events)
