@@ -15,9 +15,9 @@
 
 .. _to-api-cdns:
 
-*****************
-``/api/1.x/cdns``
-*****************
+****
+cdns
+****
 Extract information about all CDNs
 
 ``GET``

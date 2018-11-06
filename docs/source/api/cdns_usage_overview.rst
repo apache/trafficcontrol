@@ -15,9 +15,9 @@
 
 .. _to-api-cdns-usage-overview:
 
-********************************
-``/api/1.x/cdns/usage/overview``
-********************************
+*******************
+cdns/usage/overview
+*******************
 
 .. versionadded:: 1.2
 

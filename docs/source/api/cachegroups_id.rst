@@ -15,9 +15,9 @@
 
 .. _to-api-cachegroups_id:
 
-*******************************
-``/api/1.x/cachegroups/{{ID}}``
-*******************************
+******************
+cachegroups/{{ID}}
+******************
 Extracts information about a single Cache Group
 
 ``GET``

@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryservices-id:
 
-************************************
-``/api/1.x/deliveryservices/{{ID}}``
-************************************
+***********************
+deliveryservices/{{ID}}
+***********************
 .. deprecated:: 1.1
 	Use the ``id`` query parameter of :ref:`to-api-deliveryservices` instead
 

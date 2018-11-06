@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryservices-id-servers-eligible:
 
-*******************************************
-``/api/1.x/deliveryservices/{{ID}}/health``
-*******************************************
+******************************
+deliveryservices/{{ID}}/health
+******************************
 
 .. seealso:: :ref:`health-proto`
 

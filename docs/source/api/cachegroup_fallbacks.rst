@@ -15,9 +15,9 @@
 
 .. _to-api-v12-cachegroupfallbacks-route:
 
-*********************************
-``/api/1.x/cachegroup_fallbacks``
-*********************************
+********************
+cachegroup_fallbacks
+********************
 
 ``GET``
 =======

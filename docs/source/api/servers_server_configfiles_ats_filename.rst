@@ -15,9 +15,10 @@
 
 .. _to-api-servers-server-configfiles-ats-filename:
 
-************************************************************
-``/api/1.x/servers/{{server}}/configfiles/ats/{{filename}}``
-************************************************************
+***********************************************
+servers/{{server}}/configfiles/ats/{{filename}}
+***********************************************
+
 .. seealso:: The :ref:`to-api-servers-server-configfiles-ats` endpoint
 
 ``GET``

@@ -15,9 +15,9 @@
 
 .. _to-api-cdns-cdn-configfiles-ats-filename:
 
-******************************************************
-``/api/1.x/cdns/{{cdn}}/configfiles/ats/{{filename}}``
-******************************************************
+*****************************************
+cdns/{{cdn}}/configfiles/ats/{{filename}}
+*****************************************
 .. seealso:: The :ref:`to-api-servers-server-configfiles-ats` endpoint
 
 ``GET``

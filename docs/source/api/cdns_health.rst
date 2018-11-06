@@ -15,9 +15,9 @@
 
 .. _to-api-cdns-health:
 
-************************
-``/api/1.x/cdns/health``
-************************
+***********
+cdns/health
+***********
 Extract health information from all Cache Groups across all CDNs
 
 .. seealso:: :ref:`health-proto`

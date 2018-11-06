@@ -15,9 +15,9 @@
 
 .. _to-api-cachegroups_trimmed:
 
-********************************
-``/api/1.x/cachegroups/trimmed``
-********************************
+*******************
+cachegroups/trimmed
+*******************
 Extract just the names of all Cache Groups.
 
 ``GET``

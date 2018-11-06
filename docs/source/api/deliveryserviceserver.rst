@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryserviceserver:
 
-**********************************
-``/api/1.x/deliveryserviceserver``
-**********************************
+*********************
+deliveryserviceserver
+*********************
 
 ``GET``
 =======

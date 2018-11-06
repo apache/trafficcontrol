@@ -15,9 +15,9 @@
 
 .. _to-api-api_capabilities_id:
 
-************************************
-``/api/1.x/api_capabilities/{{ID}}``
-************************************
+***********************
+api_capabilities/{{ID}}
+***********************
 Manages a specific API capability.
 
 ``GET``

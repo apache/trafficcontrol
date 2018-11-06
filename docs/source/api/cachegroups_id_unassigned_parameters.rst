@@ -15,9 +15,9 @@
 
 .. _to-api-cachegroup_id_unassigned_parameters:
 
-*****************************************************
-``/api/1.x/cachegroups/{{id}}/unassigned_parameters``
-*****************************************************
+****************************************
+cachegroups/{{id}}/unassigned_parameters
+****************************************
 Gets all the parameters NOT associated with a specific Cache Group
 
 .. seealso:: :ref:`param-prof`

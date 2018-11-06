@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryservices-id-unassigned_servers:
 
-*******************************************************
-``/api/1.x/deliveryservices/{{ID}}/unassigned_servers``
-*******************************************************
+******************************************
+deliveryservices/{{ID}}/unassigned_servers
+******************************************
 
 .. caution:: This route does not appear to work properly, and its use is strongly discouraged! Also note that the documentation here is not being updated as a result of this, and may contain out-of-date and/or erroneous information.
 

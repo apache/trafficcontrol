@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryservices-dnsseckeys-generate:
 
-*************************************************
-``/api/1.x/deliveryservices/dnsseckeys/generate``
-*************************************************
+************************************
+deliveryservices/dnsseckeys/generate
+************************************
 
 ``POST``
 ========
