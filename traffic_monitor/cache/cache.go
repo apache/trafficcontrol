@@ -28,7 +28,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
@@ -60,7 +59,7 @@ func (handler Handler) Precompute() bool {
 
 // PrecomputedData represents data parsed and pre-computed from the Result.
 type PrecomputedData struct {
-	DeliveryServiceStats map[tc.DeliveryServiceName]dsdata.Stat
+	DeliveryServiceStats map[tc.DeliveryServiceName]*AStat
 	OutBytes             int64
 	MaxKbps              int64
 	Errors               []error

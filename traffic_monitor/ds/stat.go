@@ -375,16 +375,16 @@ func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData toda
 			}
 
 			if _, ok := dsStats.DeliveryService[ds]; !ok {
-				dsStats.DeliveryService[ds] = resultStat
-				continue
+				// TODO use sync pool?
+				dsStats.DeliveryService[ds] = *(dsdata.NewStat())
 			}
 			httpDsStat := dsStats.DeliveryService[ds]
-			httpDsStat.TotalStats = httpDsStat.TotalStats.Sum(resultStat.TotalStats)
-			httpDsStat.CacheGroups[cachegroup] = httpDsStat.CacheGroups[cachegroup].Sum(resultStat.CacheGroups[cachegroup])
-			httpDsStat.Types[serverType] = httpDsStat.Types[serverType].Sum(resultStat.Types[serverType])
-			httpDsStat.Caches[server] = httpDsStat.Caches[server].Sum(resultStat.Caches[server])
+			httpDsStat.TotalStats = SumDSAstats(httpDsStat.TotalStats, resultStat)
+			httpDsStat.CacheGroups[cachegroup] = SumDSAstats(httpDsStat.CacheGroups[cachegroup], resultStat)
+			httpDsStat.Types[serverType] = SumDSAstats(httpDsStat.Types[serverType], resultStat)
+			httpDsStat.Caches[server] = SumDSAstats(httpDsStat.Caches[server], resultStat)
 			httpDsStat.CommonStats = dsStats.DeliveryService[ds].CommonStats
-			dsStats.DeliveryService[ds] = httpDsStat // TODO determine if necessary
+			dsStats.DeliveryService[ds] = httpDsStat // TODO determine if necessary? Change to pointers, so it isn't?
 		}
 	}
 
@@ -402,4 +402,15 @@ func getDSErr(dsName tc.DeliveryServiceName, dsStats dsdata.StatCacheStats, moni
 		return fmt.Errorf("total.kbps too high (%.2f > %v)", dsStats.Kbps.Value, kbpsThreshold)
 	}
 	return nil
+}
+
+func SumDSAstats(ds dsdata.StatCacheStats, cacheStat *cache.AStat) dsdata.StatCacheStats {
+	// TODO change to pointer? Change everything in dsdata to pointers?
+	ds.OutBytes.Value += int64(cacheStat.OutBytes)
+	ds.InBytes.Value += float64(cacheStat.InBytes)
+	ds.Status2xx.Value += int64(cacheStat.Status2xx)
+	ds.Status3xx.Value += int64(cacheStat.Status3xx)
+	ds.Status4xx.Value += int64(cacheStat.Status4xx)
+	ds.Status5xx.Value += int64(cacheStat.Status5xx)
+	return ds
 }

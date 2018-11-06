@@ -49,3 +49,12 @@ func Unmarshal(body []byte) (Astats, error) {
 	err := json.Unmarshal(body, &aStats)
 	return aStats, err
 }
+
+type AStat struct {
+	InBytes   uint64
+	OutBytes  uint64
+	Status2xx uint64
+	Status3xx uint64
+	Status4xx uint64
+	Status5xx uint64
+}
