@@ -38,7 +38,7 @@ func init() {
 }
 
 func astatsdsnamesPrecompute(cache tc.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
-	stats := map[tc.DeliveryServiceName]dsdata.Stat{}
+	stats := map[tc.DeliveryServiceName]*AStat{}
 	precomputed := PrecomputedData{}
 	var err error
 	if precomputed.OutBytes, err = astatsdsnamesOutBytes(system.ProcNetDev, system.InfName); err != nil {
@@ -62,7 +62,7 @@ func astatsdsnamesPrecompute(cache tc.CacheName, toData todata.TOData, rawStats 
 }
 
 // astatsdsnamesProcessStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-func astatsdsnamesProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}) (map[tc.DeliveryServiceName]dsdata.Stat, error) {
+func astatsdsnamesProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return stats, fmt.Errorf("stat has no initial part")
@@ -80,7 +80,7 @@ func astatsdsnamesProcessStat(server tc.CacheName, stats map[tc.DeliveryServiceN
 	}
 }
 
-func astatsdsnamesProcessStatPlugin(server tc.CacheName, stats map[tc.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]dsdata.Stat, error) {
+func astatsdsnamesProcessStatPlugin(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
 	if len(statParts) < 1 {
 		return stats, fmt.Errorf("stat has no plugin part")
 	}
@@ -92,7 +92,7 @@ func astatsdsnamesProcessStatPlugin(server tc.CacheName, stats map[tc.DeliverySe
 	}
 }
 
-func astatsdsnamesProcessStatPluginRemapStats(server tc.CacheName, stats map[tc.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]dsdata.Stat, error) {
+func astatsdsnamesProcessStatPluginRemapStats(server tc.CacheName, stats map[tc.DeliveryServiceName]*AStat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[tc.DeliveryServiceName]*AStat, error) {
 	if len(statParts) < 3 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
@@ -106,27 +106,13 @@ func astatsdsnamesProcessStatPluginRemapStats(server tc.CacheName, stats map[tc.
 
 	dsStat, ok := stats[ds]
 	if !ok {
-		newStat := dsdata.NewStat()
-		dsStat = *newStat
+		dsStat = &AStat{}
+		stats[ds] = dsStat
 	}
 
-	if err := astatsdstypesAddCacheStat(&dsStat.TotalStats, statName, value); err != nil {
+	if err := astatsdstypesAddCacheStat(dsStat, statName, value); err != nil {
 		return stats, err
 	}
-
-	cachegroup, ok := toData.ServerCachegroups[server]
-	if !ok {
-		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups")
-	}
-	dsStat.CacheGroups[cachegroup] = dsStat.TotalStats
-
-	cacheType, ok := toData.ServerTypes[server]
-	if !ok {
-		return stats, fmt.Errorf("server missing from TOData.ServerTypes")
-	}
-	dsStat.Types[cacheType] = dsStat.TotalStats
-
-	dsStat.Caches[server] = dsStat.TotalStats
 
 	stats[ds] = dsStat
 	return stats, nil
@@ -157,7 +143,7 @@ func astatsdsnamesOutBytes(procNetDev, iface string) (int64, error) {
 }
 
 // astatsdstypesAddCacheStat adds the given stat to the existing stat. Note this adds, it doesn't overwrite. Numbers are summed, strings are concatenated.
-func astatsdstypesAddCacheStat(stat *dsdata.StatCacheStats, name string, val interface{}) error {
+func astatsdstypesAddCacheStat(stat *AStat, name string, val interface{}) error {
 	// TODO make this less duplicate code somehow.
 	// NOTE this is superficially duplicated from astatsAddCacheStat, but they are conceptually different, because the `astats` format changing should not necessarily affect the `astats-dstypes` format. The MUST be kept separate, and code between them MUST NOT be de-duplicated.
 	switch name {
@@ -166,81 +152,37 @@ func astatsdstypesAddCacheStat(stat *dsdata.StatCacheStats, name string, val int
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
-		stat.Status2xx.Value += int64(v)
+		stat.Status2xx += uint64(v)
 	case "status_3xx":
 		v, ok := val.(float64)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
-		stat.Status3xx.Value += int64(v)
+		stat.Status3xx += uint64(v)
 	case "status_4xx":
 		v, ok := val.(float64)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
-		stat.Status4xx.Value += int64(v)
+		stat.Status4xx += uint64(v)
 	case "status_5xx":
 		v, ok := val.(float64)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
-		stat.Status5xx.Value += int64(v)
+		stat.Status5xx += uint64(v)
 	case "out_bytes":
 		v, ok := val.(float64)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
-		stat.OutBytes.Value += int64(v)
-	case "is_available":
-		v, ok := val.(bool)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected bool actual '%v' type %T", name, val, val)
-		}
-		if v {
-			stat.IsAvailable.Value = true
-		}
+		stat.OutBytes += uint64(v)
 	case "in_bytes":
 		v, ok := val.(float64)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
-		stat.InBytes.Value += v
-	case "tps_2xx":
-		v, ok := val.(int64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps2xx.Value += float64(v)
-	case "tps_3xx":
-		v, ok := val.(int64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps3xx.Value += float64(v)
-	case "tps_4xx":
-		v, ok := val.(int64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps4xx.Value += float64(v)
-	case "tps_5xx":
-		v, ok := val.(int64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps5xx.Value += float64(v)
-	case "error_string":
-		v, ok := val.(string)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected string actual '%v' type %T", name, val, val)
-		}
-		stat.ErrorString.Value += v + ", "
-	case "tps_total":
-		v, ok := val.(float64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.TpsTotal.Value += v
+		stat.InBytes += uint64(v)
 	case "status_unknown":
 		return dsdata.ErrNotProcessedStat
 	default:

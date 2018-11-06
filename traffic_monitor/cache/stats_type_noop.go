@@ -25,7 +25,6 @@ import (
 	"io"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
@@ -46,5 +45,5 @@ func noopParse(cache tc.CacheName, r io.Reader) (error, map[string]interface{}, 
 }
 
 func noopPrecompute(cache tc.CacheName, toData todata.TOData, rawStats map[string]interface{}, system AstatsSystem) PrecomputedData {
-	return PrecomputedData{DeliveryServiceStats: map[tc.DeliveryServiceName]dsdata.Stat{}}
+	return PrecomputedData{DeliveryServiceStats: map[tc.DeliveryServiceName]*AStat{}}
 }
