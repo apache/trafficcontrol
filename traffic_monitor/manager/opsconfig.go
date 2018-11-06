@@ -138,6 +138,7 @@ func StartOpsConfigManager(
 		trafficOpsRequestTimeout := time.Second * time.Duration(10)
 		var realToSession *to.Session
 		var toAddr net.Addr
+		var conTest uint64
 
 		// fixed an issue here where traffic_monitor loops forever, doing nothing useful if traffic_ops is down,
 		// and would never logging in again.  since traffic_monitor  is just starting up here, keep retrying until traffic_ops is reachable and a session can be established.
@@ -150,25 +151,42 @@ func StartOpsConfigManager(
 		for {
 			realToSession, toAddr, err = to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
 			if err != nil {
+				conTest++
 				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops (%v): %s\n", toAddr, err))
 				duration := backoff.BackoffDuration()
 				log.Errorf("retrying in %v\n", duration)
 				time.Sleep(duration)
-				continue
+				if conTest >= cfg.TrafficOpsFileFallbackRetries {
+					if toSession.FileSessionExists() {
+						log.Errorf("retry limit hit, using file")
+						realToSession = to.NewNoAuthSession(newOpsConfig.Url, true, staticAppData.UserAgent, false, -1)
+						toSession.Set(realToSession)
+						toSession.FileSessionSet(true)
+						conTest = 0
+						break
+					}
+				}
 			} else {
 				toSession.Set(realToSession)
+				toSession.FileSessionSet(false)
 				break
 			}
 		}
 
-		if cdn, err := getMonitorCDN(realToSession, staticAppData.Hostname); err != nil {
-			handleErr(fmt.Errorf("getting CDN name from Traffic Ops, using config CDN '%s': %s\n", newOpsConfig.CdnName, err))
-		} else {
-			if newOpsConfig.CdnName != "" && newOpsConfig.CdnName != cdn {
-				log.Warnf("%s Traffic Ops CDN '%s' doesn't match config CDN '%s' - using Traffic Ops CDN\n", staticAppData.Hostname, cdn, newOpsConfig.CdnName)
+		go startOpsConfigSessionPoller(realToSession, toSession, newOpsConfig, staticAppData, useCache, trafficOpsRequestTimeout, opsConfigChangeSubscribers, toChangeSubscribers, cfg.FileRetryTime)
+
+		if realToSession != nil {
+			if cdn, err := getMonitorCDN(realToSession, staticAppData.Hostname); err != nil {
+				handleErr(fmt.Errorf("getting CDN name from Traffic Ops, using config CDN '%s': %s\n", newOpsConfig.CdnName, err))
+			} else {
+				if newOpsConfig.CdnName != "" && newOpsConfig.CdnName != cdn {
+					log.Warnf("%s Traffic Ops CDN '%s' doesn't match config CDN '%s' - using Traffic Ops CDN\n", staticAppData.Hostname, cdn, newOpsConfig.CdnName)
+				}
+				newOpsConfig.CdnName = cdn
 			}
-			newOpsConfig.CdnName = cdn
 		}
+
+		//TODO Move all this to its own function so it can be called during polls?
 
 		// fixed an issue when traffic_monitor receives corrupt data, CRConfig, from traffic_ops.
 		// Will loop and retry until a good CRConfig is received from traffic_ops
@@ -190,7 +208,9 @@ func StartOpsConfigManager(
 			go func(s chan<- handler.OpsConfig) { s <- newOpsConfig }(subscriber)
 		}
 		for _, subscriber := range toChangeSubscribers {
-			go func(s chan<- towrap.ITrafficOpsSession) { s <- toSession }(subscriber)
+			if toSession != nil {
+				go func(s chan<- towrap.ITrafficOpsSession) { s <- toSession }(subscriber)
+			}
 		}
 	}
 
@@ -203,6 +223,64 @@ func StartOpsConfigManager(
 	startSignalFileReloader(opsConfigFile, unix.SIGHUP, onChange)
 
 	return opsConfig, nil
+}
+
+// startOpsConfigSession Poller monitors the to session to switch between file and live based
+func startOpsConfigSessionPoller(realtoSession *to.Session, toSession towrap.ITrafficOpsSession, newOpsConfig handler.OpsConfig, staticAppData config.StaticAppData, useCache bool, trafficOpsRequestTimeout time.Duration, opsConfigChangeSubscribers []chan<- handler.OpsConfig,
+	toChangeSubscribers []chan<- towrap.ITrafficOpsSession, interval time.Duration) {
+
+	tick := time.NewTicker(interval)
+	defer tick.Stop()
+	lastTime := time.Now()
+	for {
+		select {
+		case <-tick.C:
+			realInterval := time.Now().Sub(lastTime)
+			if realInterval > interval+(time.Millisecond*100) {
+				log.Debugf("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
+			}
+			if toSession.FileSessionGet() {
+				realSession, _, err := to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, time.Second*time.Duration(10))
+				if err == nil {
+					realtoSession = realSession
+					toSession.Set(realSession)
+					toSession.FileSessionSet(false)
+
+					log.Errorf("TO login accepted and currently using disk, switching to URL")
+
+					for _, subscriber := range opsConfigChangeSubscribers {
+						go func(s chan<- handler.OpsConfig) { s <- newOpsConfig }(subscriber)
+					}
+					for _, subscriber := range toChangeSubscribers {
+						if toSession != nil {
+							go func(s chan<- towrap.ITrafficOpsSession) { s <- toSession }(subscriber)
+						}
+					}
+
+				}
+			} else {
+				//ping to and switch to disk if down?
+				realSession, _, err := to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, time.Second*time.Duration(10))
+				if err != nil && toSession.FileSessionExists() {
+					realSession = to.NewNoAuthSession(newOpsConfig.Url, true, staticAppData.UserAgent, false, -1)
+					realtoSession = realSession
+					toSession.FileSessionSet(true)
+					toSession.Set(realtoSession)
+
+					log.Errorf("TO login failed, disk backup exists, switching to disk")
+
+					for _, subscriber := range opsConfigChangeSubscribers {
+						go func(s chan<- handler.OpsConfig) { s <- newOpsConfig }(subscriber)
+					}
+					for _, subscriber := range toChangeSubscribers {
+						if toSession != nil {
+							go func(s chan<- towrap.ITrafficOpsSession) { s <- toSession }(subscriber)
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 // getMonitorCDN returns the CDN of a given Traffic Monitor.

@@ -22,12 +22,15 @@ package towrap
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_ops/client"
 
 	"github.com/json-iterator/go"
@@ -47,9 +50,14 @@ type ITrafficOpsSession interface {
 	DeliveryServices() ([]tc.DeliveryService, error)
 	CacheGroups() ([]tc.CacheGroupNullable, error)
 	CRConfigHistory() []CRConfigStat
+	FileSessionSet(bool)
+	FileSessionGet() bool
+	FileSessionExists() bool
 }
 
 var ErrNilSession = fmt.Errorf("nil session")
+
+var fileSession bool = false
 
 // TODO rename CRConfigCacheObj
 type ByteTime struct {
@@ -61,6 +69,26 @@ type ByteTime struct {
 type ByteMapCache struct {
 	cache *map[string]ByteTime
 	m     *sync.RWMutex
+}
+
+// FileSessionSet Sets file usage stat
+func (s TrafficOpsSessionThreadsafe) FileSessionSet(set bool) {
+	fileSession = set
+}
+
+// FileSessionGet Gets current file usage stat
+func (s TrafficOpsSessionThreadsafe) FileSessionGet() bool {
+	return fileSession
+}
+
+// FileSessionExists Returns state of backup files
+func (s TrafficOpsSessionThreadsafe) FileSessionExists() bool {
+	if _, err := os.Stat(config.CrConfigBackupFile); !os.IsNotExist(err) {
+		if _, err = os.Stat(config.TmConfigBackupFile); !os.IsNotExist(err) {
+			return true
+		}
+	}
+	return false
 }
 
 func NewByteMapCache() ByteMapCache {
@@ -230,12 +258,28 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 // CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	ss := s.get()
-	if ss == nil {
-		return nil, ErrNilSession
-	}
-	b, reqInf, err := ss.GetCRConfig(cdn)
 
-	hist := &CRConfigStat{time.Now(), reqInf.RemoteAddr.String(), tc.CRConfigStats{}, err}
+	var b []byte
+	var err error
+	var remoteAddr string
+	var reqInf client.ReqInf
+
+	if ss == nil || fileSession {
+		if s.FileSessionExists() {
+			b, _ = ioutil.ReadFile(config.CrConfigBackupFile)
+			remoteAddr = "127.0.0.1"
+		} else {
+			return nil, ErrNilSession
+		}
+	} else {
+		b, reqInf, err = ss.GetCRConfig(cdn)
+		if err == nil {
+			remoteAddr = reqInf.RemoteAddr.String()
+			ioutil.WriteFile(config.CrConfigBackupFile, b, 0644)
+		}
+	}
+
+	hist := &CRConfigStat{time.Now(), remoteAddr, tc.CRConfigStats{}, err}
 	defer s.crConfigHist.Add(hist)
 
 	if err != nil {
@@ -256,7 +300,6 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 		hist.Err = err
 		return b, err
 	}
-
 	s.lastCRConfig.Set(cdn, b, &crc.Stats)
 	return b, nil
 }
@@ -277,8 +320,27 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	if ss == nil {
 		return nil, ErrNilSession
 	}
-	configMap, _, error := ss.GetTrafficMonitorConfigMap(cdn)
-	return configMap, error
+
+	var configMap *tc.TrafficMonitorConfigMap
+
+	var err error
+
+	if fileSession {
+		data, _ := ioutil.ReadFile(config.TmConfigBackupFile)
+		err := json.Unmarshal(data, &configMap)
+		if err != nil {
+			log.Errorf("Error unmarshaling TmConfigBackupFile, ", err)
+		}
+	} else {
+		configMap, _, err = ss.GetTrafficMonitorConfigMap(cdn)
+		if configMap != nil {
+			data, err := json.Marshal(*configMap)
+			if err == nil {
+				ioutil.WriteFile(config.TmConfigBackupFile, data, 0644)
+			}
+		}
+	}
+	return configMap, err
 }
 
 // TrafficMonitorConfigMap returns the Traffic Monitor config map from the Traffic Ops. This is safe for multiple goroutines.
@@ -303,13 +365,14 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 	if err != nil {
 		return nil, fmt.Errorf("creating Traffic Monitor Config: %v", err)
 	}
-
 	return mc, nil
 }
 
 func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (*tc.TrafficMonitorConfigMap, error) {
 	// Dump the "live" monitoring.json servers, and populate with the "snapshotted" CRConfig
-	mc.TrafficServer = map[string]tc.TrafficServer{}
+	if mc != nil {
+		mc.TrafficServer = map[string]tc.TrafficServer{}
+	}
 	for name, srv := range crConfig.ContentServers {
 		s := tc.TrafficServer{}
 		if srv.Profile != nil {
@@ -363,11 +426,14 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing HashId field\n", name)
 		}
-		mc.TrafficServer[name] = s
+		if mc != nil {
+			mc.TrafficServer[name] = s
+		}
 	}
-
 	// Dump the "live" monitoring.json monitors, and populate with the "snapshotted" CRConfig
-	mc.TrafficMonitor = map[string]tc.TrafficMonitor{}
+	if mc != nil {
+		mc.TrafficMonitor = map[string]tc.TrafficMonitor{}
+	}
 	for name, mon := range crConfig.Monitors {
 		// monitorProfile = *mon.Profile
 		m := tc.TrafficMonitor{}
@@ -407,23 +473,26 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		} else {
 			log.Warnf("Creating monitor config: CRConfig monitor %s missing ServerStatus field\n", name)
 		}
-		mc.TrafficMonitor[name] = m
+		if mc != nil {
+			mc.TrafficMonitor[name] = m
+		}
 	}
-
 	// Dump the "live" monitoring.json DeliveryServices, and populate with the "snapshotted" CRConfig
 	// But keep using the monitoring.json thresholds, because they're not in the CRConfig.
-	rawDeliveryServices := mc.DeliveryService
-	mc.DeliveryService = map[string]tc.TMDeliveryService{}
-	for name, _ := range crConfig.DeliveryServices {
-		if rawDS, ok := rawDeliveryServices[name]; ok {
-			// use the raw DS if it exists, because the CRConfig doesn't have thresholds or statuses
-			mc.DeliveryService[name] = rawDS
-		} else {
-			mc.DeliveryService[name] = tc.TMDeliveryService{
-				XMLID:              name,
-				TotalTPSThreshold:  0,
-				ServerStatus:       "REPORTED",
-				TotalKbpsThreshold: 0,
+	if mc != nil {
+		rawDeliveryServices := mc.DeliveryService
+		mc.DeliveryService = map[string]tc.TMDeliveryService{}
+		for name, _ := range crConfig.DeliveryServices {
+			if rawDS, ok := rawDeliveryServices[name]; ok {
+				// use the raw DS if it exists, because the CRConfig doesn't have thresholds or statuses
+				mc.DeliveryService[name] = rawDS
+			} else {
+				mc.DeliveryService[name] = tc.TMDeliveryService{
+					XMLID:              name,
+					TotalTPSThreshold:  0,
+					ServerStatus:       "REPORTED",
+					TotalKbpsThreshold: 0,
+				}
 			}
 		}
 	}

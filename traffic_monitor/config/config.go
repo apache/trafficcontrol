@@ -40,33 +40,41 @@ const (
 	LogLocationNull = "null"
 	//StaticFileDir is the directory that contains static html and js files.
 	StaticFileDir = "/opt/traffic_monitor/static/"
+	//CrConfigBackupFile is the default file name to store the last crconfig
+	CrConfigBackupFile = "crconfig.backup"
+	//TmConfigBackupFile is the default file name to store the last tmconfig
+	TmConfigBackupFile = "tmconfig.backup"
 )
 
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
 type Config struct {
-	CacheHealthPollingInterval   time.Duration `json:"-"`
-	CacheStatPollingInterval     time.Duration `json:"-"`
-	MonitorConfigPollingInterval time.Duration `json:"-"`
-	HTTPTimeout                  time.Duration `json:"-"`
-	PeerPollingInterval          time.Duration `json:"-"`
-	PeerOptimistic               bool          `json:"peer_optimistic"`
-	MaxEvents                    uint64        `json:"max_events"`
-	MaxStatHistory               uint64        `json:"max_stat_history"`
-	MaxHealthHistory             uint64        `json:"max_health_history"`
-	HealthFlushInterval          time.Duration `json:"-"`
-	StatFlushInterval            time.Duration `json:"-"`
-	LogLocationError             string        `json:"log_location_error"`
-	LogLocationWarning           string        `json:"log_location_warning"`
-	LogLocationInfo              string        `json:"log_location_info"`
-	LogLocationDebug             string        `json:"log_location_debug"`
-	LogLocationEvent             string        `json:"log_location_event"`
-	ServeReadTimeout             time.Duration `json:"-"`
-	ServeWriteTimeout            time.Duration `json:"-"`
-	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
-	StaticFileDir                string        `json:"static_file_dir"`
-	CRConfigHistoryCount         uint64        `json:"crconfig_history_count"`
-	TrafficOpsMinRetryInterval   time.Duration `json:"-"`
-	TrafficOpsMaxRetryInterval   time.Duration `json:"-"`
+	CacheHealthPollingInterval    time.Duration `json:"-"`
+	CacheStatPollingInterval      time.Duration `json:"-"`
+	MonitorConfigPollingInterval  time.Duration `json:"-"`
+	HTTPTimeout                   time.Duration `json:"-"`
+	PeerPollingInterval           time.Duration `json:"-"`
+	PeerOptimistic                bool          `json:"peer_optimistic"`
+	MaxEvents                     uint64        `json:"max_events"`
+	MaxStatHistory                uint64        `json:"max_stat_history"`
+	MaxHealthHistory              uint64        `json:"max_health_history"`
+	HealthFlushInterval           time.Duration `json:"-"`
+	StatFlushInterval             time.Duration `json:"-"`
+	LogLocationError              string        `json:"log_location_error"`
+	LogLocationWarning            string        `json:"log_location_warning"`
+	LogLocationInfo               string        `json:"log_location_info"`
+	LogLocationDebug              string        `json:"log_location_debug"`
+	LogLocationEvent              string        `json:"log_location_event"`
+	ServeReadTimeout              time.Duration `json:"-"`
+	ServeWriteTimeout             time.Duration `json:"-"`
+	HealthToStatRatio             uint64        `json:"health_to_stat_ratio"`
+	StaticFileDir                 string        `json:"static_file_dir"`
+	CRConfigHistoryCount          uint64        `json:"crconfig_history_count"`
+	TrafficOpsMinRetryInterval    time.Duration `json:"-"`
+	TrafficOpsMaxRetryInterval    time.Duration `json:"-"`
+	CrConfigBackupFile            string        `json:"crconfig_backup_file"`
+	TmConfigBackupFile            string        `json:"tmconfig_backup_file"`
+	TrafficOpsFileFallbackRetries uint64        `json:"-"`
+	FileRetryTime                 time.Duration `json:"-"`
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
@@ -77,29 +85,33 @@ func (c Config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocat
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
 var DefaultConfig = Config{
-	CacheHealthPollingInterval:   6 * time.Second,
-	CacheStatPollingInterval:     6 * time.Second,
-	MonitorConfigPollingInterval: 5 * time.Second,
-	HTTPTimeout:                  2 * time.Second,
-	PeerPollingInterval:          5 * time.Second,
-	PeerOptimistic:               true,
-	MaxEvents:                    200,
-	MaxStatHistory:               5,
-	MaxHealthHistory:             5,
-	HealthFlushInterval:          200 * time.Millisecond,
-	StatFlushInterval:            200 * time.Millisecond,
-	LogLocationError:             LogLocationStderr,
-	LogLocationWarning:           LogLocationStdout,
-	LogLocationInfo:              LogLocationNull,
-	LogLocationDebug:             LogLocationNull,
-	LogLocationEvent:             LogLocationStdout,
-	ServeReadTimeout:             10 * time.Second,
-	ServeWriteTimeout:            10 * time.Second,
-	HealthToStatRatio:            4,
-	StaticFileDir:                StaticFileDir,
-	CRConfigHistoryCount:         20000,
-	TrafficOpsMinRetryInterval:   100 * time.Millisecond,
-	TrafficOpsMaxRetryInterval:   60000 * time.Millisecond,
+	CacheHealthPollingInterval:    6 * time.Second,
+	CacheStatPollingInterval:      6 * time.Second,
+	MonitorConfigPollingInterval:  5 * time.Second,
+	HTTPTimeout:                   2 * time.Second,
+	PeerPollingInterval:           5 * time.Second,
+	PeerOptimistic:                true,
+	MaxEvents:                     200,
+	MaxStatHistory:                5,
+	MaxHealthHistory:              5,
+	HealthFlushInterval:           200 * time.Millisecond,
+	StatFlushInterval:             200 * time.Millisecond,
+	LogLocationError:              LogLocationStderr,
+	LogLocationWarning:            LogLocationStdout,
+	LogLocationInfo:               LogLocationNull,
+	LogLocationDebug:              LogLocationNull,
+	LogLocationEvent:              LogLocationStdout,
+	ServeReadTimeout:              10 * time.Second,
+	ServeWriteTimeout:             10 * time.Second,
+	HealthToStatRatio:             4,
+	StaticFileDir:                 StaticFileDir,
+	CRConfigHistoryCount:          20000,
+	TrafficOpsMinRetryInterval:    100 * time.Millisecond,
+	TrafficOpsMaxRetryInterval:    60000 * time.Millisecond,
+	CrConfigBackupFile:            CrConfigBackupFile,
+	TmConfigBackupFile:            TmConfigBackupFile,
+	TrafficOpsFileFallbackRetries: 7,
+	FileRetryTime:                 1 * time.Second,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
@@ -117,6 +129,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		StatFlushIntervalMs            uint64 `json:"stat_flush_interval_ms"`
 		ServeReadTimeoutMs             uint64 `json:"serve_read_timeout_ms"`
 		ServeWriteTimeoutMs            uint64 `json:"serve_write_timeout_ms"`
+		FileRetryTimeMs                uint64 `json:"file_retry_timeout_ms"`
 		*Alias
 	}{
 		CacheHealthPollingIntervalMs:   uint64(c.CacheHealthPollingInterval / time.Millisecond),
@@ -127,6 +140,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		PeerOptimistic:                 bool(true),
 		HealthFlushIntervalMs:          uint64(c.HealthFlushInterval / time.Millisecond),
 		StatFlushIntervalMs:            uint64(c.StatFlushInterval / time.Millisecond),
+		FileRetryTimeMs:                uint64(c.FileRetryTime / time.Millisecond),
 		Alias:                          (*Alias)(c),
 	})
 }
@@ -147,6 +161,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		ServeWriteTimeoutMs            *uint64 `json:"serve_write_timeout_ms"`
 		TrafficOpsMinRetryIntervalMs   *uint64 `json:"traffic_ops_min_retry_interval_ms"`
 		TrafficOpsMaxRetryIntervalMs   *uint64 `json:"traffic_ops_max_retry_interval_ms"`
+		FileRetryTimeMs                *uint64 `json:"file_retry_timeout_ms"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -191,6 +206,9 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.TrafficOpsMaxRetryIntervalMs != nil {
 		c.TrafficOpsMaxRetryInterval = time.Duration(*aux.TrafficOpsMaxRetryIntervalMs) * time.Millisecond
+	}
+	if aux.FileRetryTimeMs != nil {
+		c.FileRetryTime = time.Duration(*aux.FileRetryTimeMs) * time.Millisecond
 	}
 	return nil
 }
