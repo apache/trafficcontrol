@@ -20,9 +20,9 @@
 package datareq
 
 import (
-	"encoding/json"
-
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
+
+	"github.com/json-iterator/go"
 )
 
 func srvConfigDoc(opsConfig threadsafe.OpsConfig) ([]byte, error) {
@@ -31,5 +31,6 @@ func srvConfigDoc(opsConfig threadsafe.OpsConfig) ([]byte, error) {
 	if opsConfigCopy.Password != "" {
 		opsConfigCopy.Password = "*****"
 	}
+	json := jsoniter.ConfigFastest
 	return json.Marshal(opsConfigCopy)
 }

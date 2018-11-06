@@ -20,7 +20,6 @@ package todata
  */
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -29,6 +28,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
+
+	"github.com/json-iterator/go"
 )
 
 // Regexes maps Delivery Service Regular Expressions to delivery services.
@@ -150,6 +151,7 @@ func (d TODataThreadsafe) Update(to towrap.ITrafficOpsSession, cdn string) error
 	newTOData := TOData{}
 
 	var crConfig CRConfig
+	json := jsoniter.ConfigFastest
 	err = json.Unmarshal(crConfigBytes, &crConfig)
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling CRconfig: %v", err)

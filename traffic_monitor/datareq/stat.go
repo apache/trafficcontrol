@@ -20,7 +20,6 @@
 package datareq
 
 import (
-	"encoding/json"
 	"math"
 	"runtime"
 	"sort"
@@ -31,6 +30,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
+
+	"github.com/json-iterator/go"
 )
 
 type JSONStats struct {
@@ -107,6 +108,7 @@ func getStats(staticAppData config.StaticAppData, pollingInterval time.Duration,
 
 	s.QueryInterval95thPercentile = getCacheTimePercentile(lastHealthTimes, 0.95).Nanoseconds() / util.MSPerNS
 
+	json := jsoniter.ConfigDefault
 	return json.Marshal(JSONStats{Stats: s})
 }
 

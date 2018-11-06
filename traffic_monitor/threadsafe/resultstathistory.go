@@ -21,7 +21,6 @@ package threadsafe
  */
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -32,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
+	"github.com/json-iterator/go"
 )
 
 // ResultStatHistory provides safe access for multiple goroutines readers and a single writer to a stored HistoryHistory object.
@@ -247,6 +247,7 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo cache.ResultInf
 		}
 	}
 
+	json := jsoniter.ConfigFastest // TODO make configurable
 	return json.Marshal(stats)
 }
 

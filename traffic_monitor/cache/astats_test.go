@@ -28,6 +28,8 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+
+	"github.com/json-iterator/go"
 )
 
 func TestAstats(t *testing.T) {
@@ -37,7 +39,9 @@ func TestAstats(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
-	aStats, err := Unmarshal(text)
+	aStats := Astats{}
+	json := jsoniter.ConfigFastest
+	err = json.Unmarshal(text, &aStats)
 	fmt.Printf("aStats ---> %v\n", aStats)
 	if err != nil {
 		t.Log(err)

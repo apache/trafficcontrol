@@ -20,11 +20,12 @@ package cache
  */
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
+	"github.com/json-iterator/go"
 )
 
 // AvailableStatusReported is the status string returned by caches set to "reported" in Traffic Ops.
@@ -91,6 +92,7 @@ func (t *ResultStatVal) MarshalJSON() ([]byte, error) {
 		Time: t.Time.UnixNano() / 1000000, // ms since the epoch
 		Span: t.Span,
 	}
+	json := jsoniter.ConfigFastest // TODO make configurable
 	return json.Marshal(&v)
 }
 

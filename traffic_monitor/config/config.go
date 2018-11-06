@@ -20,11 +20,12 @@ package config
  */
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+
+	"github.com/json-iterator/go"
 )
 
 // LogLocation is a location to log to. This may be stdout, stderr, null (/dev/null), or a valid file path.
@@ -104,6 +105,7 @@ var DefaultConfig = Config{
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
 func (c *Config) MarshalJSON() ([]byte, error) {
 	type Alias Config
+	json := jsoniter.ConfigFastest // TODO make configurable?
 	return json.Marshal(&struct {
 		CacheHealthPollingIntervalMs   uint64 `json:"cache_health_polling_interval_ms"`
 		CacheStatPollingIntervalMs     uint64 `json:"cache_stat_polling_interval_ms"`
@@ -149,6 +151,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}{
 		Alias: (*Alias)(c),
 	}
+	json := jsoniter.ConfigFastest // TODO make configurable?
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
@@ -208,6 +211,7 @@ func Load(fileName string) (Config, error) {
 // LoadBytes loads the given file bytes.
 func LoadBytes(bytes []byte) (Config, error) {
 	cfg := DefaultConfig
+	json := jsoniter.ConfigFastest // TODO make configurable?
 	err := json.Unmarshal(bytes, &cfg)
 	return cfg, err
 }

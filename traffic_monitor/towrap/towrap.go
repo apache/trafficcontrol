@@ -20,7 +20,6 @@ package towrap
  */
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -30,6 +29,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/client"
+
+	"github.com/json-iterator/go"
 )
 
 // ITrafficOpsSession provides an interface to the Traffic Ops client, so it may be wrapped or mocked.
@@ -242,6 +243,7 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	}
 
 	crc := &tc.CRConfig{}
+	json := jsoniter.ConfigFastest
 	if err = json.Unmarshal(b, crc); err != nil {
 		err = errors.New("invalid JSON: " + err.Error())
 		hist.Err = err
@@ -292,6 +294,7 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 	}
 
 	crConfig := tc.CRConfig{}
+	json := jsoniter.ConfigFastest
 	if err := json.Unmarshal(crcData, &crConfig); err != nil {
 		return nil, fmt.Errorf("unmarshalling CRConfig JSON : %v", err)
 	}

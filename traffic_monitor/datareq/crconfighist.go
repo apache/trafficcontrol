@@ -20,11 +20,12 @@
 package datareq
 
 import (
-	"encoding/json"
-
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
+
+	"github.com/json-iterator/go"
 )
 
 func srvAPICRConfigHist(toc towrap.ITrafficOpsSession) ([]byte, error) {
+	json := jsoniter.ConfigFastest
 	return json.Marshal(toc.CRConfigHistory())
 }

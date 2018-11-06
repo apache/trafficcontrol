@@ -20,12 +20,13 @@
 package datareq
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+
+	"github.com/json-iterator/go"
 )
 
 func srvDSStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, dsStats threadsafe.DSStatsReader) ([]byte, int) {
@@ -34,6 +35,7 @@ func srvDSStats(params url.Values, errorCount threadsafe.Uint, path string, toDa
 		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
+	json := jsoniter.ConfigFastest
 	bytes, err := json.Marshal(dsStats.Get().JSON(filter, params))
 	return WrapErrCode(errorCount, path, bytes, err)
 }

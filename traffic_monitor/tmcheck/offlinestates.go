@@ -20,12 +20,13 @@
 package tmcheck
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	to "github.com/apache/trafficcontrol/traffic_ops/client"
+
+	"github.com/json-iterator/go"
 )
 
 // ValidateOfflineStates validates that no OFFLINE or ADMIN_DOWN caches in the given Traffic Ops' CRConfig are marked Available in the given Traffic Monitor's CRStates.
@@ -45,6 +46,7 @@ func ValidateOfflineStatesWithCDN(tmURI string, tmCDN string, toClient *to.Sessi
 	}
 
 	crConfig := tc.CRConfig{}
+	json := jsoniter.ConfigFastest
 	if err := json.Unmarshal(crConfigBytes, &crConfig); err != nil {
 		return fmt.Errorf("unmarshalling CRConfig JSON: %v", err)
 	}
