@@ -38,8 +38,7 @@ type DSStatsReader interface {
 
 // NewDSStats returns a deliveryservice.Stats object wrapped to be safe for multiple readers and a single writer.
 func NewDSStats() DSStats {
-	s := dsdata.NewStats()
-	return DSStats{m: &sync.RWMutex{}, dsStats: &s}
+	return DSStats{m: &sync.RWMutex{}, dsStats: dsdata.NewStats(0)}
 }
 
 // Get returns a Stats object safe for reading by multiple goroutines

@@ -151,27 +151,6 @@ func randStatCommon() dsdata.StatCommon {
 	}
 }
 
-func randDsStat() dsdata.Stat {
-	num := 5
-	cacheGroups := map[tc.CacheGroupName]dsdata.StatCacheStats{}
-	types := map[tc.CacheType]dsdata.StatCacheStats{}
-	caches := map[tc.CacheName]dsdata.StatCacheStats{}
-	cachesTime := map[tc.CacheName]time.Time{}
-	for i := 0; i < num; i++ {
-		cacheGroups[tc.CacheGroupName(randStr())] = randStatCacheStats()
-		types[tc.CacheType(randStr())] = randStatCacheStats()
-		cachesTime[tc.CacheName(randStr())] = time.Now()
-	}
-
-	return dsdata.Stat{
-		CommonStats: randStatCommon(),
-		CacheGroups: cacheGroups,
-		Types:       types,
-		Caches:      caches,
-		TotalStats:  randStatCacheStats(),
-	}
-}
-
 func randAStat() *AStat {
 	return &AStat{
 		InBytes:   rand.Uint64(),

@@ -33,19 +33,18 @@ type LastStats struct {
 
 // NewLastStats returns a wrapped a deliveryservice.LastStats object safe for multiple readers and one writer.
 func NewLastStats() LastStats {
-	s := dsdata.NewLastStats()
-	return LastStats{m: &sync.RWMutex{}, stats: &s}
+	return LastStats{m: &sync.RWMutex{}, stats: dsdata.NewLastStats(0, 0)}
 }
 
 // Get returns the last KBPS stats object. Callers MUST NOT modify the object. It is not threadsafe for writing. If the object must be modified, callers must call LastStats.Copy() and modify the copy.
-func (o *LastStats) Get() dsdata.LastStats {
+func (o LastStats) Get() dsdata.LastStats {
 	o.m.RLock()
 	defer o.m.RUnlock()
 	return *o.stats
 }
 
 // Set sets the internal LastStats object. This MUST NOT be called by multiple goroutines.
-func (o *LastStats) Set(s dsdata.LastStats) {
+func (o LastStats) Set(s dsdata.LastStats) {
 	o.m.Lock()
 	*o.stats = s
 	o.m.Unlock()

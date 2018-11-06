@@ -64,11 +64,15 @@ func TestCreateStats(t *testing.T) {
 
 	monitorConfig := getMockMonitorConfig(dses)
 
-	dsStats, lastStats, err := CreateStats(precomputeds, toData, combinedCRStates.Get(), lastStatsThs.Get().Copy(), now, monitorConfig, events, localCRStates)
+	lastStatsVal := lastStatsThs.Get()
+	lastStatsCopy := lastStatsVal.Copy()
+	dsStats, err := CreateStats(precomputeds, toData, combinedCRStates.Get(), lastStatsCopy, now, monitorConfig, events, localCRStates)
 
 	if err != nil {
 		t.Fatalf("CreateStats err expected: nil, actual: " + err.Error())
 	}
+
+	lastStatsThs.Set(*lastStatsCopy)
 
 	cgMap := map[tc.CacheGroupName]struct{}{}
 	for _, cg := range toData.ServerCachegroups {
@@ -107,7 +111,7 @@ func TestCreateStats(t *testing.T) {
 				}
 			}
 
-			if errStr := compareAStatToStatCacheStats(&cgExpected, &cgStat); errStr != "" {
+			if errStr := compareAStatToStatCacheStats(&cgExpected, cgStat); errStr != "" {
 				t.Fatalf("CreateStats cachegroup " + string(cgName) + ": " + errStr)
 			}
 
@@ -134,7 +138,7 @@ func TestCreateStats(t *testing.T) {
 				}
 			}
 
-			if errStr := compareAStatToStatCacheStats(&tpExpected, &tpStat); errStr != "" {
+			if errStr := compareAStatToStatCacheStats(&tpExpected, tpStat); errStr != "" {
 				t.Fatalf("CreateStats type " + string(tpName) + ": " + errStr)
 			}
 		}
@@ -160,7 +164,7 @@ func TestCreateStats(t *testing.T) {
 				}
 			}
 
-			if errStr := compareAStatToStatCacheStats(&caExpected, &caStat); errStr != "" {
+			if errStr := compareAStatToStatCacheStats(&caExpected, caStat); errStr != "" {
 				t.Fatalf("CreateStats cache " + string(caName) + ": " + errStr)
 			}
 		}
@@ -191,12 +195,12 @@ func TestCreateStats(t *testing.T) {
 		}
 	}
 
-	if len(lastStats.DeliveryServices) != len(toData.DeliveryServiceServers) {
-		t.Fatalf("CreateStats len(LastStats.DeliveryServices) expected: %+v actual: %+v", len(toData.DeliveryServiceServers), len(lastStats.DeliveryServices))
+	if len(lastStatsCopy.DeliveryServices) != len(toData.DeliveryServiceServers) {
+		t.Fatalf("CreateStats len(LastStats.DeliveryServices) expected: %+v actual: %+v", len(toData.DeliveryServiceServers), len(lastStatsCopy.DeliveryServices))
 	}
 
-	if len(lastStats.Caches) != len(toData.ServerDeliveryServices) {
-		t.Fatalf("CreateStats len(LastStats.Caches) expected: %+v actual: %+v", len(toData.ServerDeliveryServices), len(lastStats.Caches))
+	if len(lastStatsCopy.Caches) != len(toData.ServerDeliveryServices) {
+		t.Fatalf("CreateStats len(LastStats.Caches) expected: %+v actual: %+v", len(toData.ServerDeliveryServices), len(lastStatsCopy.Caches))
 	}
 
 }
