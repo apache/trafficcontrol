@@ -22,7 +22,7 @@ COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
 COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
-COPY ./infrastructure/cdn-in-a-box/to_integration/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/to_integration/
+COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops_integration_test/
 COPY ./traffic_ops/testing/api /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 COPY ./traffic_ops/traffic_ops_golang /go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
@@ -41,9 +41,9 @@ RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools vim && a
 # config.sh                     (sourced, and creates config for bin file)
 # tc-fixtures.json              (test data to run tests with)
 # traffic_ops_integration_test  (main bin, from integration-builder)
-COPY ./infrastructure/cdn-in-a-box/to_integration/run.sh    /opt/integration/app/
+COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/run.sh    /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/integration/app/
-COPY ./infrastructure/cdn-in-a-box/to_integration/config.sh /opt/integration/app/
+COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/config.sh /opt/integration/app/
 COPY ./traffic_ops/testing/api/v14/tc-fixtures.json         /opt/integration/app/
 COPY --from=integration-builder \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_integration_test \
