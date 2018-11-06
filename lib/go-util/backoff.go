@@ -71,7 +71,7 @@ func NewBackoff(min time.Duration, max time.Duration, factor float64) (Backoff, 
 
 // generate random jitter
 func (b *backoff) jitter(durFloat float64, minFloat float64) float64 {
-	return b.rgen.Float64()*(durFloat-minFloat) + minFloat
+	return b.rgen.Float64()*(durFloat-minFloat)
 }
 
 func (b *backoff) Reset() {
