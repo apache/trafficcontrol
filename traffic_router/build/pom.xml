@@ -224,9 +224,6 @@
 								<require>apr &gt;= 1.4.8</require>
 								<require>tomcat-native &gt;= 1.2.16</require>
 							</requires>
-							<obsoletes>
-								<obsolete>traffic_router &lt; 3.0.0</obsolete>
-							</obsoletes>
 
 							<preinstallScriptlet>
 								<scriptFile>../core/src/main/scripts/preinstall.sh</scriptFile>
