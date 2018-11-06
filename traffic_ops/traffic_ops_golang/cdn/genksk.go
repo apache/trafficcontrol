@@ -143,16 +143,16 @@ WHERE
 }
 
 // regenExpiredKeys regenerates expired keys. The key is the map key into the keys object, which may be a CDN name or a delivery service name.
-func regenExpiredKeys(typeKSK bool, existingKeys tc.DNSSECKeySet, effectiveDate time.Time, tld bool, resetExp bool) (tc.DNSSECKeySet, error) {
+func regenExpiredKeys(typeKSK bool, existingKeys tc.DNSSECKeySetV11, effectiveDate time.Time, tld bool, resetExp bool) (tc.DNSSECKeySetV11, error) {
 
-	existingKey := ([]tc.DNSSECKey)(nil)
+	existingKey := ([]tc.DNSSECKeyV11)(nil)
 	if typeKSK {
 		existingKey = existingKeys.KSK
 	} else {
 		existingKey = existingKeys.ZSK
 	}
 
-	oldKey := tc.DNSSECKey{}
+	oldKey := tc.DNSSECKeyV11{}
 	oldKeyFound := false
 	for _, key := range existingKey {
 		if key.Status == tc.DNSSECKeyStatusNew {
@@ -180,9 +180,9 @@ func regenExpiredKeys(typeKSK bool, existingKeys tc.DNSSECKeySet, effectiveDate 
 	if !typeKSK {
 		keyType = tc.DNSSECZSKType
 	}
-	newKey, err := deliveryservice.GetDNSSECKeys(keyType, name, ttl, newInception, newExpiration, tc.DNSSECKeyStatusNew, effectiveDate, tld)
+	newKey, err := deliveryservice.GetDNSSECKeysV11(keyType, name, ttl, newInception, newExpiration, tc.DNSSECKeyStatusNew, effectiveDate, tld)
 	if err != nil {
-		return tc.DNSSECKeySet{}, errors.New("getting and generating DNSSEC keys: " + err.Error())
+		return tc.DNSSECKeySetV11{}, errors.New("getting and generating DNSSEC keys: " + err.Error())
 	}
 
 	oldKey.Status = tc.DNSSECKeyStatusExpired
@@ -190,11 +190,11 @@ func regenExpiredKeys(typeKSK bool, existingKeys tc.DNSSECKeySet, effectiveDate 
 		oldKey.ExpirationDateUnix = effectiveDate.Unix()
 	}
 
-	regenKeys := tc.DNSSECKeySet{}
+	regenKeys := tc.DNSSECKeySetV11{}
 	if typeKSK {
-		regenKeys = tc.DNSSECKeySet{ZSK: existingKeys.ZSK, KSK: []tc.DNSSECKey{newKey, oldKey}}
+		regenKeys = tc.DNSSECKeySetV11{ZSK: existingKeys.ZSK, KSK: []tc.DNSSECKeyV11{newKey, oldKey}}
 	} else {
-		regenKeys = tc.DNSSECKeySet{ZSK: []tc.DNSSECKey{newKey, oldKey}, KSK: existingKeys.KSK}
+		regenKeys = tc.DNSSECKeySetV11{ZSK: []tc.DNSSECKeyV11{newKey, oldKey}, KSK: existingKeys.KSK}
 	}
 	return regenKeys, nil
 }
