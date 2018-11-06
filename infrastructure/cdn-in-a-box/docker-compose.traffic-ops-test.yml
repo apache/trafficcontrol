@@ -15,20 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# To use this compose you should first build Traffic Ops and then copy the RPM to :
-#
-# trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
-#
-#      cd trafficcontrol/infrastructure/cdn-in-a-box
-#
-# Adjust the settings in `variables.env` to suit your needs.
-#
-#      docker-compose up -d
-#
-# The Traffic Ops Go API will then be available on https://localhost:6443,
-# the Perl API on https://localhost:60443, and the postgres database on localhost 5432.
-#
-# Note that this setup is intended for testing and not for production use.
+# This compose file runs the traffic ops integration tests assuming
+# there is already a trafficops docker instance. When using docker,
+# make sure any container rpms you need are updated. Below is an
+# example of how to run the main compose with this file:
+# 
+# docker-compose up --build db trafficops-perl trafficops
+# docker-compose -f docker-compose.traffic-ops-test.yml up --build integration
 
 ---
 version: '2.1'
@@ -47,7 +40,7 @@ services:
   integration:
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/to_integration/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/traffic_ops_integration_test/Dockerfile
     env_file: 
       - variables.env
     hostname: integration

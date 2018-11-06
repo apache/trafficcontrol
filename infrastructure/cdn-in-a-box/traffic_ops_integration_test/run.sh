@@ -35,6 +35,6 @@ done
 # if [[ -x ]]; then;./config.sh; done          traffic_ops/run-go.sh
 source config.sh
 
-./traffic_ops_integration -cfg=traffic-ops-test.conf
+./traffic_ops_integration_test -cfg=traffic-ops-test.conf
 exit $?
 
