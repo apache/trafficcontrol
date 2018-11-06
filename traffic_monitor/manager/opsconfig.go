@@ -141,20 +141,17 @@ func StartOpsConfigManager(
 		// and would never logging in again.  since traffic_monitor  is just starting up here, keep retrying until traffic_ops is reachable and a session can be established.
 		backoff, err := util.NewBackoff(cfg.TrafficOpsMinRetryInterval, cfg.TrafficOpsMaxRetryInterval, util.DefaultFactor)
 		if err != nil {
-			log.Errorf("possible invalid backoff arguments, will use a fixed sleep interval: %v", err)
+			log.Errorf("possible invalid backoff arguments, will use a fixed sleep interval: %v, will use a fallback duration: %v", err, util.ConstantBackoffDuration)
+			// use a fallback constant duration.
+			backoff = util.NewConstantBackoff(util.ConstantBackoffDuration)
 		}
 		for {
 			realToSession, toAddr, err = to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
 			if err != nil {
 				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops (%v): %s\n", toAddr, err))
-				if backoff != nil {
-					duration := backoff.BackoffDuration()
-					log.Errorf("retrying in %v\n", duration)
-					time.Sleep(duration)
-				} else {
-					log.Errorf("retrying in %v\n", config.FixedRetryInterval)
-					time.Sleep(config.FixedRetryInterval)
-				}
+				duration := backoff.BackoffDuration()
+				log.Errorf("retrying in %v\n", duration)
+				time.Sleep(duration)
 				continue
 			} else {
 				toSession.Set(realToSession)
@@ -173,20 +170,13 @@ func StartOpsConfigManager(
 
 		// fixed an issue when traffic_monitor receives corrupt data, CRConfig, from traffic_ops.
 		// Will loop and retry until a good CRConfig is received from traffic_ops
-		if backoff != nil {
-			backoff.Reset()
-		}
+		backoff.Reset()
 		for {
 			if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
 				handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))
-				if backoff != nil {
-					duration := backoff.BackoffDuration()
-					log.Errorf("retrying in %v\n", duration)
-					time.Sleep(duration)
-				} else {
-					log.Errorf("retrying in %v\n", config.FixedRetryInterval)
-					time.Sleep(config.FixedRetryInterval)
-				}
+				duration := backoff.BackoffDuration()
+				log.Errorf("retrying in %v\n", duration)
+				time.Sleep(duration)
 				continue
 			}
 			break

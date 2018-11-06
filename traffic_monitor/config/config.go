@@ -39,8 +39,6 @@ const (
 	LogLocationNull = "null"
 	//StaticFileDir is the directory that contains static html and js files.
 	StaticFileDir = "/opt/traffic_monitor/static/"
-	// FixedToRetryInterval is a fallback retry interval to use if the Backoff intervals are misconfigured.
-	FixedRetryInterval = 10000 * time.Millisecond
 )
 
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
