@@ -162,10 +162,11 @@ func testRoute(tos []*Connect, route string) {
 			log.Print(" and ", p)
 		}
 
+
 		refResult = ""
 		testResult = ""
 
-		for i, refLine := range refLines {
+		for _, refLine := range refLines {
 			if len(refLine) < len(SHORT_HEADER) {
 				refResult += refLine
 			} else if refLine[:len(SHORT_HEADER)] != SHORT_HEADER {
@@ -177,16 +178,18 @@ func testRoute(tos []*Connect, route string) {
 					refResult += refLine
 				}
 			}
+		}
 
-			if len(testLines[i]) < len(SHORT_HEADER) {
-				testResult += testLines[i]
-			} else if testLines[i][:len(SHORT_HEADER)] != SHORT_HEADER {
-				if len(testLines[i]) >= len(LONG_HEADER) {
-					if testLines[i][:len(LONG_HEADER)] != LONG_HEADER {
-						testResult += testLines[i]
+		for _, testLine := range testLines {
+			if len(testLine) < len(SHORT_HEADER) {
+				testResult += testLine
+			} else if testLine[:len(SHORT_HEADER)] != SHORT_HEADER {
+				if len(testLine) >= len(LONG_HEADER) {
+					if testLine[:len(LONG_HEADER)] != LONG_HEADER {
+						testResult += testLine
 					}
 				} else {
-					testResult += testLines[i]
+					testResult += testLine
 				}
 			}
 		}
