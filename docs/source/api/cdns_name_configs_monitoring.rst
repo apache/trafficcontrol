@@ -15,9 +15,9 @@
 
 .. _to-api-cdns-name-configs-monitoring:
 
-*****************************
-cdns/:name/configs/monitoring
-*****************************
+*********************************
+``cdns/:name/configs/monitoring``
+*********************************
 
 .. seealso:: :ref:`health-proto`
 

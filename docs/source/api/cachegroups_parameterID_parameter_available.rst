@@ -15,9 +15,9 @@
 
 .. _to-api-cachegroups-parameterID-parameter-available:
 
-************************************************
-cachegroups/{{parameter ID}}/parameter/available
-************************************************
+****************************************************
+``cachegroups/{{parameter ID}}/parameter/available``
+****************************************************
 
 ``GET``
 =======

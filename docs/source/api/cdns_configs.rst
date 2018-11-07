@@ -14,9 +14,9 @@
 ..
 .. _to-api-cdns-config:
 
-************
-cdns/configs
-************
+****************
+``cdns/configs``
+****************
 .. deprecated:: 1.0
 	Use one of :ref:`to-api-cdns-name-configs-monitoring`, :ref:`to-api-cdns-name-configs-routing`, or :ref:`to-api-servers-server-configfiles-ats` instead.
 

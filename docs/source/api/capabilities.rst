@@ -15,9 +15,9 @@
 
 .. _to-api-capabilities:
 
-************
-capabilities
-************
+****************
+``capabilities``
+****************
 
 ``GET``
 =======

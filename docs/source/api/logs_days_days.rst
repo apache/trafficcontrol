@@ -15,9 +15,9 @@
 
 .. _to-api-logs-days-days:
 
-******************
-logs/{{days}}/days
-******************
+**********************
+``logs/{{days}}/days``
+**********************
 
 .. deprecated:: 1.1
 	Use :ref:`to-api-logs` with the 'days' query parameter instead

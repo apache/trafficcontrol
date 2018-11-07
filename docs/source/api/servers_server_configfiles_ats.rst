@@ -15,9 +15,9 @@
 
 .. _to-api-servers-server-configfiles-ats:
 
-**********************************
-servers/{{server}}/configfiles/ats
-**********************************
+**************************************
+``servers/{{server}}/configfiles/ats``
+**************************************
 
 .. seealso:: The :ref:`to-api-servers-server-configfiles-ats-filename`, :ref:`to-api-cdns-cdn-configfiles-ats-filename`, and :ref:`to-api-profiles-profile-configfiles-ats-filename` endpoints.
 

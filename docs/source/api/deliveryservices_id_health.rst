@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryservices-id-health:
 
-******************************
-deliveryservices/{{ID}}/health
-******************************
+**********************************
+``deliveryservices/{{ID}}/health``
+**********************************
 
 .. seealso:: :ref:`health-proto`
 

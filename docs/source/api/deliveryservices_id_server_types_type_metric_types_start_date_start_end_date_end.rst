@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryservices-id-server_types-type-metric_types-start_date-start-end_date-end:
 
-************************************************************************************************
-deliveryservices/{{id}}/server_types/{{type}}/metric_types/start_date/{{start}}/end_date/{{end}}
-************************************************************************************************
+****************************************************************************************************
+``deliveryservices/{{id}}/server_types/{{type}}/metric_types/start_date/{{start}}/end_date/{{end}}``
+****************************************************************************************************
 
 .. danger:: This endpoint doesn't appear to work, and so its use is strongly discouraged! The below documentation cannot be verified, therefore it may be inaccurate and/or incomplete!
 

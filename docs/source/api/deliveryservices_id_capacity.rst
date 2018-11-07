@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryservices-id-capacity:
 
-********************************
-deliveryservices/{{ID}}/capacity
-********************************
+************************************
+``deliveryservices/{{ID}}/capacity``
+************************************
 
 .. seealso:: :ref:`health-proto`
 

@@ -15,9 +15,9 @@
 
 .. _to-api-cachegroupparameters-id-parameterID:
 
-********************************************
-cachegroupparameters/{{ID}}/{{parameter ID}}
-********************************************
+************************************************
+``cachegroupparameters/{{ID}}/{{parameter ID}}``
+************************************************
 
 ``DELETE``
 ==========

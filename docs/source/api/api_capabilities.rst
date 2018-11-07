@@ -15,9 +15,9 @@
 
 .. _to-api-api_capability:
 
-****************
-api_capabilities
-****************
+********************
+``api_capabilities``
+********************
 Deals with the capabilities that may be associated with API endpoints and methods. These capabilities are assigned to "roles", of which a user may have one or more. Capabilities support "wildcarding" or "globbing" using asterisks to group multiple routes into a single capability
 
 ``GET``
@@ -109,6 +109,7 @@ Create an API-capability mapping.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Response Type:  Object
 
 Request Structure
 -----------------

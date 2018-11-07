@@ -16,9 +16,9 @@
 
 .. _to-api-asns-id:
 
-***********
-asns/{{id}}
-***********
+***************
+``asns/{{id}}``
+***************
 Deal with a specific ASN
 
 ``GET``

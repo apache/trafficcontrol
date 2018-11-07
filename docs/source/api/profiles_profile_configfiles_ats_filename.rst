@@ -15,9 +15,9 @@
 
 .. _to-api-profiles-profile-configfiles-ats-filename:
 
-*************************************************
-profiles/{{profile}}/configfiles/ats/{{filename}}
-*************************************************
+*****************************************************
+``profiles/{{profile}}/configfiles/ats/{{filename}}``
+*****************************************************
 
 .. seealso:: The :ref:`to-api-servers-server-configfiles-ats` endpoint
 

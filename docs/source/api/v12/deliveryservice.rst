@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryservices-id-servers:
 
-*******************************
-deliveryservices/{{ID}}/servers
-*******************************
+***********************************
+``deliveryservices/{{ID}}/servers``
+***********************************
 
 ``GET``
 =======

@@ -15,9 +15,9 @@
 
 .. _to-api-cachegroupparameters:
 
-********************
-cachegroupparameters
-********************
+************************
+``cachegroupparameters``
+************************
 Extract information about parameters associated with Cache Groups
 
 ``GET``

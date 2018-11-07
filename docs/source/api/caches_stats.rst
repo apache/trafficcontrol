@@ -16,9 +16,9 @@
 
 .. _to-api-caches_stats:
 
-************
-caches/stats
-************
+****************
+``caches/stats``
+****************
 An API endpoint that returns cache statistics using the :ref:`tm-api`.
 
 .. seealso:: This gives a set of basic statistics for *all caches* at the current time. For statistics from time ranges and/or aggregated over a specific CDN, use :ref:`to-api-cache_stats`.

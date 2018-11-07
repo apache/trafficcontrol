@@ -15,9 +15,9 @@
 
 .. _to-api-cachegroups:
 
-***********
-cachegroups
-***********
+***************
+``cachegroups``
+***************
 
 ``GET``
 =======

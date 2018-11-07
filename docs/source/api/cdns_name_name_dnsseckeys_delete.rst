@@ -15,9 +15,9 @@
 
 .. _to-api-cdns-name-name-dnsseckeys-delete:
 
-************************************
-cdns/name/{{name}}/dnsseckeys/delete
-************************************
+****************************************
+``cdns/name/{{name}}/dnsseckeys/delete``
+****************************************
 
 ``GET``
 =======

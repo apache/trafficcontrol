@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryservices-id-servers-eligible:
 
-****************************************
-deliveryservices/{{ID}}/servers/eligible
-****************************************
+********************************************
+``deliveryservices/{{ID}}/servers/eligible``
+********************************************
 
 .. caution:: This endpoint may not work as advertised, and its use is therefore discouraged!
 

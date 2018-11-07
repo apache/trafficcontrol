@@ -15,9 +15,9 @@
 
 .. _to-api-coordinates:
 
-***********
-coordinates
-***********
+***************
+``coordinates``
+***************
 .. versionadded:: 1.3
 
 ``GET``

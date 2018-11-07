@@ -15,9 +15,9 @@
 
 .. _to-api-cachegroups-id-deliveryservices:
 
-***********************************
-cachegroups/{{ID}}/deliveryservices
-***********************************
+***************************************
+``cachegroups/{{ID}}/deliveryservices``
+***************************************
 
 ``POST``
 ========

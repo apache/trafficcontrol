@@ -15,9 +15,9 @@
 
 .. _to-api-cachegroup-parameterID-parameter:
 
-*************************************
-cachegroup/{{parameter ID}}/parameter
-*************************************
+*****************************************
+``cachegroup/{{parameter ID}}/parameter``
+*****************************************
 Extract identifying information about all cachegroups with a specific parameter
 
 .. caution:: This page is a stub!  Much of it may be missing or just downright wrong - it needs a lot of love from people with the domain knowledge required to update it.

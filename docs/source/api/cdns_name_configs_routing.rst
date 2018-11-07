@@ -15,9 +15,9 @@
 
 .. _to-api-cdns-name-configs-routing:
 
-*****************************
-cdns/{{name}}/configs/routing
-*****************************
+*********************************
+``cdns/{{name}}/configs/routing``
+*********************************
 .. caution:: This API route is currently broken, see `GitHub issue #2941 <https://github.com/apache/trafficcontrol/issues/2941>`_ for more information.
 
 ``GET``
