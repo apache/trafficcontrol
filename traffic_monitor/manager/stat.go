@@ -76,46 +76,131 @@ func StartStatHistoryManager(
 	lastStats := threadsafe.NewLastStats()
 	dsStats := threadsafe.NewDSStats()
 	unpolledCaches := threadsafe.NewUnpolledCaches()
-	tickInterval := cfg.StatFlushInterval
 	localCacheStatus := threadsafe.NewCacheAvailableStatus()
 
 	precomputedData := map[tc.CacheName]cache.PrecomputedData{}
+
 	lastResults := map[tc.CacheName]cache.Result{}
 	overrideMap := map[tc.CacheName]bool{}
 
+	haveCachesChanged := func() bool {
+		select {
+		case <-cachesChanged:
+			return true
+		default:
+			return false
+		}
+	}
+
 	process := func(results []cache.Result) {
+		if haveCachesChanged() {
+			unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
+		}
 		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, overrideMap, combineState)
 	}
 
 	go func() {
-		var ticker *time.Ticker
-		<-cachesChanged // wait for the signal that localStates have been set
-		unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
+		flushTimer := time.NewTimer(cfg.StatFlushInterval)
+		// Note! bufferTimer MAY be uninitialized! If there is no cfg.StatBufferInterval, the timer WILL NOT be created with time.NewTimer(), and thus is NOT initialized, and MUST NOT have functions called, such as timer.Stop()! Those functions WILL panic.
+		bufferTimer := &time.Timer{}
+		bufferFakeChan := make(chan time.Time, 1) // fake chan, if there is no stat buffer interval. Unused, if cfg.StatBufferInterval != nil. Buffer 1, so don't need a separate goroutine to write.
+		if cfg.StatBufferInterval == 0 {
+			// if there is no stat buffer interval, make a timer which has already expired.
+			bufferFakeChan <- time.Now()
+			bufferTimer.C = bufferFakeChan
+		} else {
+			bufferTimer = time.NewTimer(cfg.StatBufferInterval)
+		}
 
-		for {
-			var results []cache.Result
-			results = append(results, <-cacheStatChan)
-			if ticker != nil {
-				ticker.Stop()
+		// resetBufferTimer resets the Buffer timer. It MUST have expired and been read.
+		// If the buffer loop is changed to allow finishing without being expired and read, this MUST be changed to stop and drain the channel (with a select/default, if it's possible to expire but not be read (like flush is now). Otherwise, it will deadlock and/or leak resources.
+		resetBufferTimer := func() {
+			if cfg.StatBufferInterval == 0 {
+				bufferFakeChan <- time.Now()
+			} else {
+				bufferTimer.Reset(cfg.StatBufferInterval)
 			}
-			ticker = time.NewTicker(tickInterval)
-		innerLoop:
+		}
+
+		// resetFlushTimer resets the Flush timer. It may or may not have been read or expired.
+		resetFlushTimer := func() {
+			if !flushTimer.Stop() {
+				select { // need to select/default because we don't know whether the flush timer was read
+				case <-flushTimer.C:
+				default:
+				}
+			}
+			flushTimer.Reset(cfg.StatFlushInterval)
+		}
+
+		// There are 2 timers: the Buffer, and the Flush.
+		// The Buffer says "never process until this much time has elapsed"
+		// The Flush says "if we're continuously getting new stats, with no break, and this much time has elasped, go ahead and process anyway to prevent starvation"
+		//
+		// So, we continuously read from the stat channel, until Buffer has elasped. Even if the channel is empty, wait and keep trying to read.
+		// Then, we move to State 2: continuously read from the stat channel, while there are things to read. If at any point there's nothing more to read, then process. Otherwise, if there are always thing to read, then after Flush time has elapsed, then go ahead and read anyway, and go to State 1.
+		//
+		// Note that either the Buffer or Flush may be configured to be 0.
+		// If the Buffer is 0, we immediately move to phase 2: process as fast as we can, only flush to prevent starvation. This optimizes the Monitor for getting health as quickly as possible, at the cost of CPU. (Having a buffer itself puts CPU above getting health results quickly, and the buffer interval is a factor of that)
+		// If the Flush is 0, then the Monitor will process every Buffer interval, regardless whether results are still coming in. This attempts to optimize for stability, attempting to ensure a poll every (Buffer + Poll Time) interval. Note this attempt may fail, and in particular, if the Monitor is unable to keep up with the given poll time and buffer, it will continuously back up. For this reason, setting a Flush of 0 is not recommended.
+		//
+		// Note the Flush and Buffer times are cumulative. That is, the total "maximum time a cache can be unhealthy before we know" is the Poll+Flush+Buffer. So, the buffer time elapses, then we start a new flush interval. They don't run concurrently.
+
+		results := []cache.Result{}
+
+		// flush loop - breaks after processing - processes when there are no pending results, or the flush time elapses.
+		flushLoop := func() {
+			log.Infof("StatHistoryManager starting flushLoop with %+v results\n", len(results))
+			resetFlushTimer()
 			for {
 				select {
-				case <-cachesChanged:
-					unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
-				case <-ticker.C:
-					log.Infof("StatHistoryManager flushing queued results\n")
+				case <-flushTimer.C: // first, make sure the flushTimer hasn't expired, by itself (because GO selects aren't ordered, so it could starve if we were reading <-cacheStatChan at the same level
+					log.Infof("StatHistoryManager flushLoop: flush timer fired, processing %+v results\n", len(results))
 					process(results)
-					break innerLoop
-				default:
+					return
+				default: // flushTimer hadn't expired: read cacheStatChan at the same level now.
+					// This extra level is necessary, because Go selects aren't ordered, so even after the Flush timer expires, the "case" could still never get hit,
+					// if there were continuously results from <-cacheStatChan at the same level.
 					select {
 					case r := <-cacheStatChan:
 						results = append(results, r)
+						// we're still processing as much as possible, and flushing, don't break to the outer Buffer loop, until we process.
 					default:
+						log.Infof("StatHistoryManager flushLoop: stat chan is empty, processing %+v results\n", len(results))
+						// Buffer expired (above), and the cacheStatChan is empty, so process
 						process(results)
-						break innerLoop
+						return
 					}
+				}
+			}
+		}
+
+		results = []cache.Result{}
+		results = append(results, <-cacheStatChan) // no point doing anything, until we read at least one stat.
+
+		// buffer loop - never breaks - calls flushLoop to actually process, when the buffer time elapses.
+		for {
+			// select only the bufferTimer first, to make sure it doesn't starve.
+			select {
+			case <-bufferTimer.C:
+				// buffer expired, move to State 2 (Flush)
+				flushLoop()
+				log.Infof("StatHistoryManager bufferLoop exiting flush loop, resetting buffer timer\n")
+				resetBufferTimer()
+				results = []cache.Result{}
+				results = append(results, <-cacheStatChan) // no point doing anything, until we read at least one stat.
+			default:
+				// buffer time hadn't elapsed, so we know we aren't starving. Go ahead and read the stat chan + buffer now.
+				select {
+				case r := <-cacheStatChan:
+					results = append(results, r)
+				case <-bufferTimer.C: // TODO protect against bufferTimer starvation
+					// buffer expired, move to State 2 (Flush): process until there's nothing to process, or the Flush elapses.
+					flushLoop()
+					log.Infof("StatHistoryManager bufferLoop (within stat select) exiting flush loop, resetting buffer timer\n")
+					resetBufferTimer()
+					results = []cache.Result{}
+					results = append(results, <-cacheStatChan) // no point doing anything, until we read at least one stat.
 				}
 			}
 		}

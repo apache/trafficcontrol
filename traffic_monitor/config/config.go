@@ -55,6 +55,7 @@ type Config struct {
 	MaxHealthHistory             uint64        `json:"max_health_history"`
 	HealthFlushInterval          time.Duration `json:"-"`
 	StatFlushInterval            time.Duration `json:"-"`
+	StatBufferInterval           time.Duration `json:"-"`
 	LogLocationError             string        `json:"log_location_error"`
 	LogLocationWarning           string        `json:"log_location_warning"`
 	LogLocationInfo              string        `json:"log_location_info"`
@@ -88,6 +89,7 @@ var DefaultConfig = Config{
 	MaxHealthHistory:             5,
 	HealthFlushInterval:          200 * time.Millisecond,
 	StatFlushInterval:            200 * time.Millisecond,
+	StatBufferInterval:           0,
 	LogLocationError:             LogLocationStderr,
 	LogLocationWarning:           LogLocationStdout,
 	LogLocationInfo:              LogLocationNull,
@@ -115,6 +117,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		PeerOptimistic                 bool   `json:"peer_optimistic"`
 		HealthFlushIntervalMs          uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            uint64 `json:"stat_flush_interval_ms"`
+		StatBufferIntervalMs           uint64 `json:"stat_buffer_interval_ms"`
 		ServeReadTimeoutMs             uint64 `json:"serve_read_timeout_ms"`
 		ServeWriteTimeoutMs            uint64 `json:"serve_write_timeout_ms"`
 		*Alias
@@ -127,6 +130,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		PeerOptimistic:                 bool(true),
 		HealthFlushIntervalMs:          uint64(c.HealthFlushInterval / time.Millisecond),
 		StatFlushIntervalMs:            uint64(c.StatFlushInterval / time.Millisecond),
+		StatBufferIntervalMs:           uint64(c.StatBufferInterval / time.Millisecond),
 		Alias:                          (*Alias)(c),
 	})
 }
@@ -143,6 +147,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		PeerOptimistic                 *bool   `json:"peer_optimistic"`
 		HealthFlushIntervalMs          *uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
+		StatBufferIntervalMs           *uint64 `json:"stat_buffer_interval_ms"`
 		ServeReadTimeoutMs             *uint64 `json:"serve_read_timeout_ms"`
 		ServeWriteTimeoutMs            *uint64 `json:"serve_write_timeout_ms"`
 		TrafficOpsMinRetryIntervalMs   *uint64 `json:"traffic_ops_min_retry_interval_ms"`
@@ -176,6 +181,9 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.StatFlushIntervalMs != nil {
 		c.StatFlushInterval = time.Duration(*aux.StatFlushIntervalMs) * time.Millisecond
+	}
+	if aux.StatBufferIntervalMs != nil {
+		c.StatBufferInterval = time.Duration(*aux.StatBufferIntervalMs) * time.Millisecond
 	}
 	if aux.ServeReadTimeoutMs != nil {
 		c.ServeReadTimeout = time.Duration(*aux.ServeReadTimeoutMs) * time.Millisecond
