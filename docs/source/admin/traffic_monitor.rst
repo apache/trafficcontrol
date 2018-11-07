@@ -55,6 +55,23 @@ Configuration Overview
 
 Traffic Monitor is configured via two JSON configuration files, ``traffic_ops.cfg`` and ``traffic_monitor.cfg``, by default located in the ``conf`` directory in the install location. ``traffic_ops.cfg`` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. ``traffic_monitor.cfg`` contains log file locations, as well as detailed application configuration variables such as processing flush times and initial poll intervals. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling caches. Once every cache has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints.
 
+Stat and Health Flush Configuration
+-----------------------------------
+
+The Monitor has a health flush interval, a stat flush interval, and a stat buffer interval. Recall that the monitor polls both stats and health. The health poll is so small and fast, a buffer is largely unnecessary. However, on a large CDN, the stat poll may involve thousands of caches with thousands of stats each, or more, and CPU may be a bottleneck.
+
+The flush intervals, ``health_flush_interval_ms`` and ``stat_flush_interval_ms``, indicate how often to flush stats or health, if results are continuously coming in with no break. This prevents starvation. Ideally, if there is enough CPU, the flushes should never occur.
+
+The default flush times are 200 milliseconds, which is suggested as a reasonable starting point, from which operators may adjust them higher or lower, depending on the need to get health data and stop serving to unhealthy caches as quickly as possible, balanced by the need to reduce CPU usage.
+
+The stat buffer interval, ``stat_buffer_interval_ms``, also provides a temporal buffer for stat processing. Stats will not be processed except after this interval, whereupon all pending stats will be processed, unless the flush interval occurs as a starvation safety. The stat buffer and flush intervals may be thought of as a state machine with two states: the "buffer state" accepts results until the buffer interval has elapsed, whereupon the "flush state" is entered, and results are accepted while outstanding, and processed either when no results are outstanding or the flush interval has elapsed.
+
+Note that this means the stat buffer interval acts as "bufferbloat," increasing the average and maximum time a cache may be down before it is processed and marked as unhealthy. If the stat buffer interval is non-zero, the average time a cache may be down before being marked unavailable is half the poll time plus half the stat buffer interval, and the maximum time is the poll time plus the stat buffer interval. For example, if the stat poll time is 6 seconds, and the stat buffer interval is 4 seconds, the average time a cache may be unhealthy before being marked is 6/2 + 4/2 = 6 seconds, and the maximum time is 6+4=10 seconds. For this reason, if operators feel the need to add a stat buffer interval, it is recommended to start with a very low number, such as 5 milliseconds, and increase as necessary.
+
+The default stat buffer interval is 0, which results in all stats being processed as quickly as possible. This is recommended, if a CDN operator is okay with the CPU usage and processing time, to minimize the time a cache may be unhealthy before being marked unavailable. If operators feel the need to set the stat buffer interval to a nonzero value, a recommended starting point is 5 milliseconds.
+
+It is not recommended to set either flush interval to 0, irrespective of the stat buffer interval. This will cause new results to be immediately processed, with little to no processing of multiple results concurrently. Result processing does not scale linearly, for example, it is not significantly more CPU or time to process 100 results than 10 at once. Thus, a flush interval which is too low will cause increased CPU usage, and potentially increased overall poll times, with little or no benefit. The default value of 200 milliseconds is recommended as a starting point for configuration tuning.
+
 
 Troubleshooting and Log Files
 =============================
