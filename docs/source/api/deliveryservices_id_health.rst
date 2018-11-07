@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id-servers-eligible:
+.. _to-api-deliveryservices-id-health:
 
 ******************************
 deliveryservices/{{ID}}/health
