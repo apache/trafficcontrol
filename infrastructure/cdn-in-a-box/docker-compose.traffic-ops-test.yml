@@ -47,8 +47,6 @@ services:
     domainname: infra.ciab.test
     networks:
       tcnet:
-        ipv4_address: 172.16.239.250
-        ipv6_address: "fc01:9400:1000:8::250"
     volumes:
       - shared:/shared
       - ./dns/container-resolv.conf:/etc/resolv.conf
