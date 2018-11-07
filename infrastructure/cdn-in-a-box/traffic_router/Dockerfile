@@ -37,7 +37,7 @@ RUN yum -y install epel-release git rpm-build net-tools iproute nc wget tar unzi
 ADD $TRAFFIC_ROUTER_RPM /traffic_router.rpm
 ADD $TOMCAT_RPM /tomcat.rpm
 
-RUN yum install /traffic_router.rpm /tomcat.rpm
+RUN yum -y install /traffic_router.rpm /tomcat.rpm
 
 ADD enroller/server_template.json \
     traffic_router/run.sh \
