@@ -45,7 +45,7 @@ Response Structure
 :cachegroup:   Related Cache Group name
 :cachegroupId: Related Cache Group ID
 
-.. code-block::
+.. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
