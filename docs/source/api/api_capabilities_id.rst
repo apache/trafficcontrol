@@ -198,10 +198,34 @@ Request Structure
 	|     id      |   yes    | integer | A unique identifier for this capability |
 	+-------------+----------+---------+-----------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.1/api_capabilities/273 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
+
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 07 Nov 2018 15:44:14 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Wed, 07 Nov 2018 19:44:14 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: eTFJkB2Bh8SCT2A29e21e8qoEdNzFGfuT5a3tDG7u8vwz/JHntQRRR8554a1i65733uWojlWKM65bLSDNmmNqQ==
+	Content-Length: 73
 
 	{ "alerts": [
 		{
