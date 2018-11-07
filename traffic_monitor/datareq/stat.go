@@ -39,31 +39,32 @@ type JSONStats struct {
 
 // Stats contains statistics data about this running app. Designed to be returned via an API endpoint.
 type Stats struct {
-	MaxMemoryMB                 uint64 `json:"Max Memory (MB),string"`
-	GitRevision                 string `json:"git-revision"`
-	ErrorCount                  uint64 `json:"Error Count,string"`
-	Uptime                      uint64 `json:"uptime,string"`
-	FreeMemoryMB                uint64 `json:"Free Memory (MB),string"`
-	TotalMemoryMB               uint64 `json:"Total Memory (MB),string"`
-	Version                     string `json:"version"`
-	DeployDir                   string `json:"deploy-dir"`
-	FetchCount                  uint64 `json:"Fetch Count,string"`
-	QueryIntervalDelta          int    `json:"Query Interval Delta,string"`
-	IterationCount              uint64 `json:"Iteration Count,string"`
-	Name                        string `json:"name"`
-	BuildTimestamp              string `json:"buildTimestamp"`
-	QueryIntervalTarget         int    `json:"Query Interval Target,string"`
-	QueryIntervalActual         int    `json:"Query Interval Actual,string"`
-	SlowestCache                string `json:"Slowest Cache"`
-	LastQueryInterval           int    `json:"Last Query Interval,string"`
-	Microthreads                int    `json:"Goroutines"`
-	LastGC                      string `json:"Last Garbage Collection"`
-	MemAllocBytes               uint64 `json:"Memory Bytes Allocated"`
-	MemTotalBytes               uint64 `json:"Total Bytes Allocated"`
-	MemSysBytes                 uint64 `json:"System Bytes Allocated"`
-	OldestPolledPeer            string `json:"Oldest Polled Peer"`
-	OldestPolledPeerMs          int64  `json:"Oldest Polled Peer Time (ms)"`
-	QueryInterval95thPercentile int64  `json:"Query Interval 95th Percentile (ms)"`
+	MaxMemoryMB                 uint64  `json:"Max Memory (MB),string"`
+	GitRevision                 string  `json:"git-revision"`
+	ErrorCount                  uint64  `json:"Error Count,string"`
+	Uptime                      uint64  `json:"uptime,string"`
+	FreeMemoryMB                uint64  `json:"Free Memory (MB),string"`
+	TotalMemoryMB               uint64  `json:"Total Memory (MB),string"`
+	Version                     string  `json:"version"`
+	DeployDir                   string  `json:"deploy-dir"`
+	FetchCount                  uint64  `json:"Fetch Count,string"`
+	QueryIntervalDelta          int     `json:"Query Interval Delta,string"`
+	IterationCount              uint64  `json:"Iteration Count,string"`
+	Name                        string  `json:"name"`
+	BuildTimestamp              string  `json:"buildTimestamp"`
+	QueryIntervalTarget         int     `json:"Query Interval Target,string"`
+	QueryIntervalActual         int     `json:"Query Interval Actual,string"`
+	SlowestCache                string  `json:"Slowest Cache"`
+	LastQueryInterval           int     `json:"Last Query Interval,string"`
+	Microthreads                int     `json:"Goroutines"`
+	LastGC                      string  `json:"Last Garbage Collection"`
+	MemAllocBytes               uint64  `json:"Memory Bytes Allocated"`
+	MemTotalBytes               uint64  `json:"Total Bytes Allocated"`
+	MemSysBytes                 uint64  `json:"System Bytes Allocated"`
+	OldestPolledPeer            string  `json:"Oldest Polled Peer"`
+	OldestPolledPeerMs          int64   `json:"Oldest Polled Peer Time (ms)"`
+	QueryInterval95thPercentile int64   `json:"Query Interval 95th Percentile (ms)"`
+	GCCPUFraction               float64 `json:"gc-cpu-fraction"`
 }
 
 func srvStats(staticAppData config.StaticAppData, healthPollInterval time.Duration, lastHealthDurations threadsafe.DurationMap, fetchCount threadsafe.Uint, healthIteration threadsafe.Uint, errorCount threadsafe.Uint, peerStates peer.CRStatesPeersThreadsafe) ([]byte, error) {
@@ -98,6 +99,7 @@ func getStats(staticAppData config.StaticAppData, pollingInterval time.Duration,
 	s.MemAllocBytes = memStats.Alloc
 	s.MemTotalBytes = memStats.TotalAlloc
 	s.MemSysBytes = memStats.Sys
+	s.GCCPUFraction = memStats.GCCPUFraction
 
 	oldestPolledPeer, oldestPolledPeerTime := oldestPeerPollTime(peerStates.GetQueryTimes(), peerStates.GetPeersOnline())
 	s.OldestPolledPeer = string(oldestPolledPeer)
