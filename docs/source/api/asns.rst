@@ -19,10 +19,11 @@
 ********
 ``asns``
 ********
-List all ASNS
+.. seealso:: `The Autonomous System Wikipedia page <https://en.wikipedia.org/wiki/Autonomous_system_%28Internet%29>` for an explanation of what an ASN actually is.
 
 ``GET``
 =======
+List all Autonomous System Numbers (ASNs).
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
@@ -60,8 +61,7 @@ Response Structure
 	Date: Thu, 01 Nov 2018 18:56:38 GMT
 	Content-Length: 129
 
-	{ "response": {
-	"asns": [
+	{ "response": [
 		{
 			"asn": 1,
 			"cachegroup": "TRAFFIC_ANALYTICS",
@@ -69,7 +69,7 @@ Response Structure
 			"id": 1,
 			"lastUpdated": "2018-11-01 18:55:39+00"
 		}
-	]}}
+	]}
 
 
 .. versionchanged:: 1.2
@@ -77,7 +77,7 @@ Response Structure
 
 ``POST``
 ========
-Creates a new ASN
+Creates a new Autonomous System Number (ASN).
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -85,17 +85,24 @@ Creates a new ASN
 
 Request Structure
 -----------------
-.. table:: Request Data Parameters
+:asn:          The value of the new ASN
+:cachegroupId: The integral, unique identifier of a Cache Group to which this ASN will be assigned
+:cachegroup:   An optional field which, if present, specifies the name of a Cache Group to which this ASN will be assigned
 
-	+-------------------+---------+----------+--------------------------------------------------------------+
-	|    Parameter      |  Type   | Required |                   Description                                |
-	+===================+=========+==========+==============================================================+
-	| ``asn``           | integer | yes      | ASN                                                          |
-	+-------------------+---------+----------+--------------------------------------------------------------+
-	| ``cachegroupId``  | integer | yes      | The ID of a Cache Group to which this ASN will be assigned   |
-	+-------------------+---------+----------+--------------------------------------------------------------+
-	| ``cachegroup``    | string  | no       | The name of a Cache Group to which this ASN will be assigned |
-	+-------------------+---------+----------+--------------------------------------------------------------+
+.. note:: While this endpoint accepts the ``cachegroup`` field, sending this in the request payload has no effect except that the response will (erroneously) name the Cache Group to which the ASN was assigned. Any subsequent requests will reveal that, in fact, the Cache Group name is set by the ``cachegroupId`` field.
+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/1.1/asns HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 60
+	Content-Type: application/x-www-form-urlencoded
+
+	{"asn": 1, "cachegroupId": 1}
 
 Response Structure
 ------------------

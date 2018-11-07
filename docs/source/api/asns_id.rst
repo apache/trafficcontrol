@@ -19,10 +19,11 @@
 ***************
 ``asns/{{id}}``
 ***************
-Deal with a specific ASN
+.. seealso:: `The Autonomous System Wikipedia page <https://en.wikipedia.org/wiki/Autonomous_system_%28Internet%29>` for an explanation of what an ASN actually is.
 
 ``GET``
 =======
+Deal with a specific Autonomous System Number (ASN).
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type: Array
@@ -31,12 +32,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+----------+---------------------------------------------+
-	|   Name    | Required |                Description                  |
-	+===========+==========+=============================================+
-	|   ``id``  |   yes    | The ID of the desired ASN                   |
-	+-----------+----------+---------------------------------------------+
-
+	+-------------------+----------+----------------------------------------------------+
+	| Name              | Required |                 Description                        |
+	+===================+==========+====================================================+
+	| id                | yes      | The integral, unique identifier of the desired ASN |
+	+-------------------+----------+----------------------------------------------------+
 
 Response Structure
 ------------------
@@ -44,10 +44,22 @@ Response Structure
 :cachegroup:   Related Cache Group name
 :cachegroupId: Related Cache Group ID
 :id:           An integer which uniquely identifies the ASN
-:lastUpdated:  The Time / Date this server entry was last updated in ISO format
+:lastUpdated:  The time and date at which this server entry was last updated in an ISO-like format
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: oeifOX6ImU1KVyCmyswh4uddhbNPZqxliMuNw+lNea1q/SJOYKXpaKnYqVjRm9QqJ7gH3vqeBxCftMLtb3sAWg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 07 Nov 2018 18:44:31 GMT
+	Content-Length: 120
 
 	{ "response": [
 		{
@@ -61,7 +73,7 @@ Response Structure
 
 ``PUT``
 =======
-Allows user to edit an ASN.
+Allows user to edit an existing Autonomous System Number (ASN).
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -69,25 +81,19 @@ Allows user to edit an ASN.
 
 Request Structure
 -----------------
+:asn:          The value of the new ASN
+:cachegroupId: The integral, unique identifier of a Cache Group to which this ASN will be assigned
+:cachegroup:   An optional field which, if present, specifies the name of a Cache Group to which this ASN will be assigned
+
+.. note:: While this endpoint accepts the ``cachegroup`` field, sending this in the request payload has no effect except that the response will (erroneously) name the Cache Group to which the ASN was assigned. Any subsequent requests will reveal that, in fact, the Cache Group name is set by the ``cachegroupId`` field.
+
 .. table:: Request Path Parameters
 
-	+-------------------+----------+------------------------------------------------+
-	| Name              | Required |                 Description                    |
-	+===================+==========+================================================+
-	| ``id``            | yes      | The ID of the desired ASN                      |
-	+-------------------+----------+------------------------------------------------+
-
-.. table:: Request Data Parameters
-
-	+-------------------+---------+----------+--------------------------------------------------------------+
-	|    Parameter      |  Type   | Required |                   Description                                |
-	+===================+=========+==========+==============================================================+
-	| ``asn``           | integer | yes      | ASN                                                          |
-	+-------------------+---------+----------+--------------------------------------------------------------+
-	| ``cachegroupId``  | integer | yes      | The ID of a Cache Group to which this ASN will be assigned   |
-	+-------------------+---------+----------+--------------------------------------------------------------+
-	| ``cachegroup``    | string  | no       | The name of a Cache Group to which this ASN will be assigned |
-	+-------------------+---------+----------+--------------------------------------------------------------+
+	+-------------------+----------+----------------------------------------------------+
+	| Name              | Required |                 Description                        |
+	+===================+==========+====================================================+
+	| id                | yes      | The integral, unique identifier of the desired ASN |
+	+-------------------+----------+----------------------------------------------------+
 
 Response Structure
 ------------------
@@ -113,3 +119,45 @@ Response Structure
 		"id": 5,
 		"lastUpdated": "2018-10-15 14:53:10+00"
 	}}
+
+``DELETE``
+==========
+Deletes an Autonomous System Number (ASN).
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  ``undefined``
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+-------------------+----------+----------------------------------------------------+
+	| Name              | Required |                 Description                        |
+	+===================+==========+====================================================+
+	| id                | yes      | The integral, unique identifier of the desired ASN |
+	+-------------------+----------+----------------------------------------------------+
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: 6t3WA+DOcfPJB5UnvDpzEVx5ySfmJgEV9wgkO71U5k32L1VXpxcaTdDVLNGgDDl9sdNftmYnKXf5jpfWUuFYJQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 07 Nov 2018 19:14:08 GMT
+	Content-Length: 58
+
+	{ "alerts": [
+		{
+			"text": "asn was deleted.",
+			"level": "success"
+		}
+	]}

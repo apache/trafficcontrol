@@ -130,7 +130,11 @@ Request Structure
 	Content-Length: 98
 	Content-Type: application/x-www-form-urlencoded
 
-	capability=types-write&httpRoute=/api/1.1/api_capabilities/*&httpMethod=PATCH
+	{
+		"capability": "types-write",
+		"httpRoute": "/api/1.1/api_capabilities/*",
+		"httpMethod": "PATCH"
+	}
 
 Response Structure
 ------------------

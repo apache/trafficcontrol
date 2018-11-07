@@ -118,7 +118,7 @@ Request Structure
 :httpRoute:  The API endpoint for which to create capabilities
 
 .. code-block:: http
-	:caption: Request Structure
+	:caption: Request Example
 
 	POST /api/1.1/api_capabilities HTTP/1.1
 	Host: ipcdn-cache-51.cdnlab.comcast.net:6443
@@ -128,7 +128,11 @@ Request Structure
 	Content-Length: 94
 	Content-Type: application/x-www-form-urlencoded
 
-	capability=types-write&httpMethod=PATCH&httpRoute=/api/1.1/api_capabilities
+	{
+		"capability": "types-write",
+		"httpRoute": "/api/1.1/api_capabilities",
+		"httpMethod": "PATCH"
+	}
 
 Response Structure
 ------------------

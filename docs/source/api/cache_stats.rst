@@ -19,10 +19,11 @@
 ***************
 ``cache_stats``
 ***************
-
 .. caution:: This page is a stub! Much of it may be missing or just downright wrong - it needs a lot of love from people with the domain knowledge required to update it.
 
 Retrieves detailed, aggregated statistics for caches configured in Traffic Ops.
+
+.. versionadded:: 1.2
 
 .. seealso:: This gives an aggregate of statistics for *all caches* within a particular CDN and time range. For statistics basic statistics from all caches regardless of CDN and at the current time, use :ref:`to-api-caches_stats`.
 
@@ -38,17 +39,17 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+--------------------------+----------+----------------------------------------------------------------------------------------------------------------------------------------------+
-	|    Name                  | Required |              Description                                                                                                                     |
-	+==========================+==========+==============================================================================================================================================+
-	| ``cdnName``              | yes      | The name of a CDN. Results will represent caches within this CDN                                                                             |
-	+--------------------------+----------+----------------------------------------------------------------------------------------------------------------------------------------------+
-	| ``metricType``           | yes      | The metric type (valid metric types: 'ats.proxy.process.http.current_client_connections', 'bandwidth', 'maxKbps')                            |
-	+--------------------------+----------+----------------------------------------------------------------------------------------------------------------------------------------------+
-	| ``startDate``            | yes      | The begin date for data aggregation in ISO format, e.g. '2015-08-11T12:30:00-06:00'                                                          |
-	+--------------------------+----------+----------------------------------------------------------------------------------------------------------------------------------------------+
-	| ``endDate``              | yes      | The end date for data aggregation in ISO format, e.g. '2015-08-12T12:30:00-06:00'                                                            |
-	+--------------------------+----------+----------------------------------------------------------------------------------------------------------------------------------------------+
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	|    Name    | Required |              Description                                                                                          |
+	+============+==========+===================================================================================================================+
+	| cdnName    | yes      | The name of a CDN. Results will represent caches within this CDN                                                  |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| metricType | yes      | The metric type (valid metric types: 'ats.proxy.process.http.current_client_connections', 'bandwidth', 'maxKbps') |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| startDate  | yes      | The begin date for data aggregation in ISO format, e.g. '2015-08-11T12:30:00-06:00'                               |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| endDate    | yes      | The end date for data aggregation in ISO format, e.g. '2015-08-12T12:30:00-06:00'                                 |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------

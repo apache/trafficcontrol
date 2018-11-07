@@ -31,11 +31,21 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-----------------+----------+---------------------------------------------------+
-	| Name            | Required | Description                                       |
-	+=================+==========+===================================================+
-	| ``type``        | no       | Filter cache groups by Type ID.                   |
-	+-----------------+----------+---------------------------------------------------+
+	+------+----------+------------------------------------------------+
+	| Name | Required | Description                                    |
+	+======+==========+================================================+
+	| type | no       | Return only Cache Groups that are of the type identified by this integral, unique identifier |
+	+------+----------+------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.3/cachegroups?type=23 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 
 Response Structure
 ------------------
@@ -55,106 +65,22 @@ Response Structure
 
 .. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: oV6ifEgoFy+v049tVjSsRdWQf4bxjrUvIYfDdgpUtlxiC7gzCv31m5bXQ8EUBW4eg2hfYM+BsGvJpnNDZB7pUg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 07 Nov 2018 19:46:36 GMT
+	Content-Length: 379
+
 	{ "response": [
-		{
-			"id": 1,
-			"name": "TRAFFIC_ANALYTICS",
-			"shortName": "TRAFFIC_ANALYTICS",
-			"latitude": 38.897663,
-			"longitude": -77.036574,
-			"parentCachegroupName": null,
-			"parentCachegroupId": null,
-			"secondaryParentCachegroupName": null,
-			"secondaryParentCachegroupId": null,
-			"fallbackToClosest": null,
-			"localizationMethods": null,
-			"typeName": "TC_LOC",
-			"typeId": 47,
-			"lastUpdated": "2018-10-15 13:35:35+00"
-		},
-		{
-			"id": 2,
-			"name": "TRAFFIC_OPS",
-			"shortName": "TRAFFIC_OPS",
-			"latitude": 38.897663,
-			"longitude": -77.036574,
-			"parentCachegroupName": null,
-			"parentCachegroupId": null,
-			"secondaryParentCachegroupName": null,
-			"secondaryParentCachegroupId": null,
-			"fallbackToClosest": null,
-			"localizationMethods": null,
-			"typeName": "TC_LOC",
-			"typeId": 47,
-			"lastUpdated": "2018-10-15 13:35:35+00"
-		},
-		{
-			"id": 3,
-			"name": "TRAFFIC_OPS_DB",
-			"shortName": "TRAFFIC_OPS_DB",
-			"latitude": 38.897663,
-			"longitude": -77.036574,
-			"parentCachegroupName": null,
-			"parentCachegroupId": null,
-			"secondaryParentCachegroupName": null,
-			"secondaryParentCachegroupId": null,
-			"fallbackToClosest": null,
-			"localizationMethods": null,
-			"typeName": "TC_LOC",
-			"typeId": 47,
-			"lastUpdated": "2018-10-15 13:35:36+00"
-		},
-		{
-			"id": 4,
-			"name": "TRAFFIC_PORTAL",
-			"shortName": "TRAFFIC_PORTAL",
-			"latitude": 38.897663,
-			"longitude": -77.036574,
-			"parentCachegroupName": null,
-			"parentCachegroupId": null,
-			"secondaryParentCachegroupName": null,
-			"secondaryParentCachegroupId": null,
-			"fallbackToClosest": null,
-			"localizationMethods": null,
-			"typeName": "TC_LOC",
-			"typeId": 47,
-			"lastUpdated": "2018-10-15 13:35:36+00"
-		},
-		{
-			"id": 5,
-			"name": "TRAFFIC_STATS",
-			"shortName": "TRAFFIC_STATS",
-			"latitude": 38.897663,
-			"longitude": -77.036574,
-			"parentCachegroupName": null,
-			"parentCachegroupId": null,
-			"secondaryParentCachegroupName": null,
-			"secondaryParentCachegroupId": null,
-			"fallbackToClosest": null,
-			"localizationMethods": null,
-			"typeName": "TC_LOC",
-			"typeId": 47,
-			"lastUpdated": "2018-10-15 13:35:36+00"
-		},
-		{
-			"id": 6,
-			"name": "CDN_in_a_Box_Mid",
-			"shortName": "ciabMid",
-			"latitude": 38.897663,
-			"longitude": -77.036574,
-			"parentCachegroupName": null,
-			"parentCachegroupId": null,
-			"secondaryParentCachegroupName": null,
-			"secondaryParentCachegroupId": null,
-			"fallbackToClosest": null,
-			"localizationMethods": null,
-			"typeName": "MID_LOC",
-			"typeId": 24,
-			"lastUpdated": "2018-10-15 13:35:36+00"
-		},
 		{
 			"id": 7,
 			"name": "CDN_in_a_Box_Edge",
@@ -169,9 +95,10 @@ Response Structure
 			"localizationMethods": null,
 			"typeName": "EDGE_LOC",
 			"typeId": 23,
-			"lastUpdated": "2018-10-15 13:35:36+00"
+			"lastUpdated": "2018-11-07 14:45:43+00"
 		}
 	]}
+
 
 ``POST``
 ========
@@ -183,29 +110,49 @@ Creates a cache group
 
 Request Structure
 -----------------
-.. table:: Request Data Parameters
+:fallbackToClosest: If ``true``, the Traffic Router will fall back on the 'closest' Cache Group to this one, when this one fails
 
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| Name                            | Required | Type    |  Description                                                      |
-	+=================================+==========+=========+===================================================================+
-	| ``name``                        | yes      | string  | The name of the Cache Group entry                                 |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``shortName``                   | yes      | string  | Abbreviation of the Cache Group Name                              |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``latitude``                    | no       | float   | Latitude for the Cache Group                                      |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``longitude``                   | no       | float   | Longitude for the Cache Group                                     |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``parentCachegroup``            | no       | string  | Name of Parent Cache Group entry.                                 |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``secondaryParentCachegroup``   | no       | string  | Name of Secondary Parent Cache Group entry.                       |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``localizationMethods``         | no       | array   | Array of enabled localization methods (as strings)                |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``typeId``                      | yes      | integer | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``fallbackToClosest``           | no       | boolean | Behaviour on configured fallbacks failure                         |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	.. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
+
+:latitude:                    An optional field which, if present, will define the latitude for the Cache Group to ISO-standard double specification
+:localizationMethods:         Array of enabled localization methods (as strings)
+:longitude:                   An optional field which, if present, will define the longitude for the Cache Group to ISO-standard double specification
+:name:                        The name of the Cache Group
+:parentCachegroupId:          An optional field which, if present, should be an integral, unique identifier for this Cache Group's primary parent
+:secondaryParentCachegroupId: An optional field which, if present, should be an integral, unique identifier for this Cache Group's secondary parent
+:shortName:                   An abbreviation of the ``name``
+:typeId:                      An integral, unique identifier for the type of Cache Group; one of:
+
+	EDGE_LOC
+		Indicates a group of Edge-tier caches
+	MID_LOC
+		Indicates a group of Mid-tier caches
+	ORG_LOC
+		Indicates a group of origin servers (though only one server will typically be in any given ORG_LOC)
+
+	.. note:: The actual, integral, unique identifiers for these types must first be obtained, generally via :ref:`to-api-types`.
+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/1.1/cachegroups HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 252
+	Content-Type: application/x-www-form-urlencoded
+
+	{
+		"fallbackToClosest": false,
+		"latitude": 0,
+		"longitude": 0,
+		"localizationMethods": [],
+		"name": "test",
+		"parentCachegroupId": 7,
+		"shortName": "test",
+		"typeId": 23
+	}
 
 Response Structure
 ------------------
@@ -223,34 +170,43 @@ Response Structure
 :typeId:                        Unique identifier for the 'Type' of Cache Group entry
 :typeName:                      The name of the type of Cache Group entry
 
-.. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: YvZlh3rpfl3nBq6SbNVhbkt3IvckbB9amqGW2JhLxWK9K3cxjBq5J2sIHBUhrLKUhE9afpxtvaYrLRxjt1/YMQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 07 Nov 2018 22:11:50 GMT
+	Content-Length: 379
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "Cachegroup successfully created: cache_group_edge"
+			"text": "cg was created.",
+			"level": "success"
 		}
 	],
 	"response": {
-		"longitude" : 45,
-		"lastUpdated" : "2016-01-25 13:55:30",
-		"shortName" : "cg_edge",
-		"name" : "cache_group_edge",
-		"parentCachegroup" : "cache_group_mid",
-		"secondaryParentCachegroup" : null,
-		"latitude" : 12,
-		"localizationMethods": [
-			"CZ",
-			"GEO"
-		],
-		"typeName" : "EDGE_LOC",
-		"id" : 104,
-		"parentCachegroupId" : 103,
-		"secondaryParentCachegroupId" : null,
-		"fallbackToClosest":true
+		"id": 10,
+		"name": "test",
+		"shortName": "test",
+		"latitude": 0,
+		"longitude": 0,
+		"parentCachegroupName": null,
+		"parentCachegroupId": 7,
+		"secondaryParentCachegroupName": null,
+		"secondaryParentCachegroupId": null,
+		"fallbackToClosest": false,
+		"localizationMethods": [],
+		"typeName": null,
+		"typeId": 23,
+		"lastUpdated": "2018-11-07 22:11:50+00"
 	}}
 
 
