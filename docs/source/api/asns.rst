@@ -46,6 +46,9 @@ Response Structure
 :cachegroup:   Related Cache Group name
 :cachegroupId: Related Cache Group ID
 
+.. versionchanged:: 1.2
+	Used to contain the array in the ``response.asns`` object, changed so that ``response`` is an actual array
+
 .. code-block:: http
 	:caption: Response Example
 
@@ -71,9 +74,6 @@ Response Structure
 		}
 	]}
 
-
-.. versionchanged:: 1.2
-	Used to contain the array in the ``response.asns`` object, changed so that ``response`` is an actual array
 
 ``POST``
 ========

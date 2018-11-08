@@ -18,12 +18,13 @@
 *****************************************
 ``cachegroup/{{parameter ID}}/parameter``
 *****************************************
-Extract identifying information about all cachegroups with a specific parameter
 
 .. caution:: This page is a stub!  Much of it may be missing or just downright wrong - it needs a lot of love from people with the domain knowledge required to update it.
 
 ``GET``
 =======
+Extract identifying information about all cachegroups with a specific parameter
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Object
@@ -32,11 +33,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------------------+----------+-----------------------+
-	|       Name       | Required | Description           |
-	+==================+==========+=======================+
-	| ``parameter_id`` | yes      | the ID of a parameter |
-	+------------------+----------+-----------------------+
+	+------------------+----------+------------------------------------------------+
+	|       Name       | Required | Description                                    |
+	+==================+==========+================================================+
+	| parameter_ID     | yes      | An integral, unique identifier for a parameter |
+	+------------------+----------+------------------------------------------------+
 
 Response Structure
 ------------------

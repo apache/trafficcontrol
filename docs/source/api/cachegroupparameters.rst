@@ -18,10 +18,11 @@
 ************************
 ``cachegroupparameters``
 ************************
-Extract information about parameters associated with Cache Groups
 
 ``GET``
 =======
+Extract information about parameters associated with Cache Groups
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Object

@@ -29,7 +29,7 @@ Retrieve fallback-related configurations for a Cache Group.
 
 Request Structure
 -----------------
-.. table:: Request Query Parameters**
+.. table:: Request Query Parameters
 
 	+--------------+----------+---------------------------------------------------------------------------------------------------+
 	| Name         | Required | Description                                                                                       |
@@ -39,7 +39,6 @@ Request Structure
 	| fallbackId   |yes\ [1]_ | The integral, unique identifier of a fallback Cache Group                                         |
 	+--------------+----------+---------------------------------------------------------------------------------------------------+
 
-.. [1] At least one of these must be provided, not necessarily both (though both is perfectly valid)
 
 Response Structure
 ------------------
@@ -62,6 +61,8 @@ Response Structure
 		}
 	]}
 
+.. [1] At least one of these must be provided, not necessarily both (though both is perfectly valid).
+
 ``POST``
 ========
 Creates fallback configuration for a Cache Group.
@@ -72,30 +73,24 @@ Creates fallback configuration for a Cache Group.
 
 Request Structure
 -----------------
-.. table:: Request Data Parameters
+The request payload for this endpoint **must** be an array, even if only one fallback relationship is being created.
 
-	+----------------------------------+---------+----------+---------------------------------------------------------------------------------------------------------------------+
-	| Parameter                        | Type    | Required | Description                                                                                                         |
-	+==================================+=========+==========+=====================================================================================================================+
-	| ``cacheGroupId``                 | integer | yes      | Integral, unique identifier of a Cache Group to which to assign a fallback                                          |
-	+----------------------------------+---------+----------+---------------------------------------------------------------------------------------------------------------------+
-	| ``fallbackId``                   | integer | yes      | Integral, unique identifier of a Cache Group on which the Cache Group identified by ``cacheGroupId`` will fall back |
-	+----------------------------------+---------+----------+---------------------------------------------------------------------------------------------------------------------+
-	| ``fallbackOrder``                | integer | yes      | The order of this fallback for the Cache Group identified by ``cacheGroupId``                                       |
-	+----------------------------------+---------+----------+---------------------------------------------------------------------------------------------------------------------+
+:cacheGroupId:  Integral, unique identifier of a Cache Group to which to assign a fallback
+:fallbackId:    Integral, unique identifier of a Cache Group on which the Cache Group identified by ``cacheGroupId`` will fall back
+:fallbackOrder: The order of this fallback for the Cache Group identified by ``cacheGroupId``
 
-.. note:: The request data should be an array of these objects (and any number can be submitted per request), see the example
-
-.. code-block:: json
+.. code-block:: http
 	:caption: Request Example
 
-	[
-		{
-			"cacheGroupId": 1,
-			"fallbackId": 3,
-			"fallbackOrder": 10
-		 }
-	]
+	POST /api/1.3/cachegroup_fallbacks HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 59
+	Content-Type: application/x-www-form-urlencoded
+
+	[{"cacheGroupId": 11, "fallbackId": 7, "fallbackOrder": 1}]
 
 Response Structure
 ------------------
@@ -106,24 +101,39 @@ Response Structure
 :fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the Cache Group described by this entry
 
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 08 Nov 2018 14:59:46 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 08 Nov 2018 18:59:46 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: 0twD50R5e7V2DtVrALQxzr2DmeHPPu8rTY8aGU4dFkx4XnOzjeRK5z+SYCrZEZ9Mh8QnWha3yZ2PtlxVTZt1YA==
+	Content-Length: 225
 
 	{ "alerts": [
 		{
-			"level":"success",
-			"text":"Backup configuration CREATE for cache group 1 successful."
+			"level": "success",
+			"text": "Backup configuration CREATE for cache group 11 successful."
 		}
 	],
 	"response": [
 		{
-			"cacheGroupId":1,
-			"cacheGroupName":"GROUP1",
-			"fallbackId":3,
-			"fallbackName":"GROUP2",
-			"fallbackorder":10,
+			"cacheGroupId": 11,
+			"fallbackName": "CDN_in_a_Box_Edge",
+			"fallbackOrder": 1,
+			"fallbackId": 7,
+			"cacheGroupName": "test"
 		}
 	]}
+
 
 ``PUT``
 =======
@@ -135,30 +145,25 @@ Updates an existing fallback configuration for one or more Cache Groups.
 
 Request Structure
 -----------------
-.. table:: Request Data Parameters
-
-	+----------------------------------+---------+----------+---------------------------------------------------------------------------------------------------------------------+
-	| Parameter                        | Type    | Required | Description                                                                                                         |
-	+==================================+=========+==========+=====================================================================================================================+
-	| ``cacheGroupId``                 | integer | yes      | Integral, unique identifier of a Cache Group to which to assign a fallback                                          |
-	+----------------------------------+---------+----------+---------------------------------------------------------------------------------------------------------------------+
-	| ``fallbackId``                   | integer | yes      | Integral, unique identifier of a Cache Group on which the Cache Group identified by ``cacheGroupId`` will fall back |
-	+----------------------------------+---------+----------+---------------------------------------------------------------------------------------------------------------------+
-	| ``fallbackOrder``                | integer | yes      | The order of this fallback for the Cache Group identified by ``cacheGroupId``                                       |
-	+----------------------------------+---------+----------+---------------------------------------------------------------------------------------------------------------------+
+The request payload for this endpoint **must** be an array, even if only one fallback relationship is being updated.
+:cacheGroupId:  Integral, unique identifier of a Cache Group to which to assign a fallback
+:fallbackId:    Integral, unique identifier of a Cache Group on which the Cache Group identified by ``cacheGroupId`` will fall back
+:fallbackOrder: The order of this fallback for the Cache Group identified by ``cacheGroupId``
 
 .. note:: The request data should be an array of these objects (and any number can be submitted per request), see the example
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Request Example
 
-		[
-			 {
-					"cacheGroupId": 1,
-					"fallbackId": 3,
-					"fallbackOrder": 10
-			 }
-		]
+	PUT /api/1.1/cachegroup_fallbacks HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 59
+	Content-Type: application/x-www-form-urlencoded
+
+	[{"cacheGroupId": 11, "fallbackId": 7, "fallbackOrder": 2}]
 
 Response Structure
 ------------------
@@ -168,22 +173,36 @@ Response Structure
 :fallbackName:   The name of the Cache Group on which this entries Cache Group will fall back
 :fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the Cache Group described by this entry
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 08 Nov 2018 15:07:06 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 08 Nov 2018 19:07:06 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: 7QQpwDEmSpSPn6E3FAjxNw3E7xKP3TOBdnvZiBHQwOLmOH6Eiaq58f3eMPYAuK4qMSAKBj9Y2R//Fpa59YCMRw==
+	Content-Length: 225
 
 	{ "alerts": [
 		{
-			"level":"success",
-			"text":"Backup configuration UPDATE for cache group 1 successful."
+			"level": "success",
+			"text": "Backup configuration UPDATE for cache group 11 successful."
 		}
 	],
 	"response": [
 		{
-			"cacheGroupId":1,
-			"cacheGroupName":"GROUP1",
-			"fallbackId":3,
-			"fallbackName":"GROUP2",
-			"fallbackorder":10,
+			"cacheGroupId": 11,
+			"fallbackName": "CDN_in_a_Box_Edge",
+			"fallbackOrder": 2,
+			"fallbackId": 7,
+			"cacheGroupName": "test"
 		}
 	]}
 
@@ -193,11 +212,11 @@ Delete fallback list assigned to a Cache Group
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Response Type:  ``undefined``
+:Response Type:  Object (string)
 
 Request Structure
 -----------------
-.. table:: Request Query Parameters**
+.. table:: Request Query Parameters
 
 	+--------------+----------+---------------------------------------------------------------------------------------------------+
 	| Name         | Required | Description                                                                                       |
@@ -207,17 +226,38 @@ Request Structure
 	| fallbackId   |yes\ [2]_ | The integral, unique identifier of a fallback Cache Group                                         |
 	+--------------+----------+---------------------------------------------------------------------------------------------------+
 
-.. [2] At least one of "cacheGroupId" or "fallbackId" must be sent with the request. If both are sent, a single fallback relationship is deleted, whereas using only "cacheGroupId" will result in all fallbacks being removed from the Cache Group identified by that integral, unique identifier, and using only "fallbackId" will remove the Cache Group identified by *that* integral, unique identifier from all other Cache Groups' fallback lists.
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.2/cachegroup_fallbacks?cacheGroupId=11&fallbackId=7 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
-	{ "alerts": [
-		{
-			"level": "success",
-			"text": "Backup configuration DELETED"
-		}
-	]}
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 08 Nov 2018 15:48:56 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 08 Nov 2018 19:48:56 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: MG2FNZ18EyAvy/IgdUPX4XRjJXYclXtp0e/kCMfimx9C427LNwjvL1seXkvu9crT2o68i0H2q1efshDJHO81IQ==
+	Content-Length: 76
 
+	{
+		"response": "Backup Cachegroup 7  DELETED from cachegroup 11 fallback list"
+	}
+
+
+.. [2] At least one of "cacheGroupId" or "fallbackId" must be sent with the request. If both are sent, a single fallback relationship is deleted, whereas using only "cacheGroupId" will result in all fallbacks being removed from the Cache Group identified by that integral, unique identifier, and using only "fallbackId" will remove the Cache Group identified by *that* integral, unique identifier from all other Cache Groups' fallback lists.

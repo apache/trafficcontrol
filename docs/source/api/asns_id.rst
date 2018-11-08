@@ -95,16 +95,41 @@ Request Structure
 	| id                | yes      | The integral, unique identifier of the desired ASN |
 	+-------------------+----------+----------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/1.1/asns/1 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 29
+	Content-Type: application/x-www-form-urlencoded
+
+	{"asn": 2, "cachegroupId": 1}
+
 Response Structure
 ------------------
 :asn:          Autonomous System Numbers per APNIC for identifying a service provider
 :cachegroup:   Related Cache Group name
 :cachegroupId: Related Cache Group ID
 :id:           An integer which uniquely identifies the ASN
-:lastUpdated:  The Time / Date this server entry was last updated in ISO format
+:lastUpdated:  The date and time at which this server entry was last updated in an ISO-like format
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: /83P4LJVsrQx9BKHFxo5pbhQMlB4o3a9v3PpkspyOJcpNx1S/GJhCPpiANBki547sbY+0vTq76IriHZ4GYp8bA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 08 Nov 2018 14:37:39 GMT
+	Content-Length: 160
 
 	{ "alerts": [
 		{
@@ -114,10 +139,10 @@ Response Structure
 	],
 	"response": {
 		"asn": 2,
-		"cachegroup": "CDN_in_a_Box_Edge",
-		"cachegroupId": 6,
-		"id": 5,
-		"lastUpdated": "2018-10-15 14:53:10+00"
+		"cachegroup": null,
+		"cachegroupId": 1,
+		"id": 1,
+		"lastUpdated": "2018-11-08 14:37:39+00"
 	}}
 
 ``DELETE``
@@ -132,11 +157,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-------------------+----------+----------------------------------------------------+
-	| Name              | Required |                 Description                        |
-	+===================+==========+====================================================+
-	| id                | yes      | The integral, unique identifier of the desired ASN |
-	+-------------------+----------+----------------------------------------------------+
+	+------+----------+----------------------------------------------------+
+	| Name | Required |                 Description                        |
+	+======+==========+====================================================+
+	| id   | yes      | The integral, unique identifier of the desired ASN |
+	+------+----------+----------------------------------------------------+
 
 Response Structure
 ------------------

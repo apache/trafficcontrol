@@ -34,17 +34,17 @@ Request Structure
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------------+
 	| Name            | Required | Description                                                                                                                |
 	+=================+==========+============================================================================================================================+
-	| ``cdn``         | no       | Show only the Delivery Services belonging to the CDN identified by this integral, unique identifier                        |
+	| cdn             | no       | Show only the Delivery Services belonging to the CDN identified by this integral, unique identifier                        |
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------------+
-	| ``id``          | no       | Show only the Delivery Service that has this integral, unique identifier                                                   |
+	| id              | no       | Show only the Delivery Service that has this integral, unique identifier                                                   |
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------------+
-	| ``logsEnabled`` | no       | If true, return only Delivery Services with logging enabled, otherwise return only Delivery Services with logging disabled |
+	| logsEnabled     | no       | If true, return only Delivery Services with logging enabled, otherwise return only Delivery Services with logging disabled |
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------------+
-	| ``profile``     | no       | Return only Delivery Services using the profile identified by this integral, unique identifier                             |
+	| profile         | no       | Return only Delivery Services using the profile identified by this integral, unique identifier                             |
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------------+
-	| ``tenant``      | no       | Show only the Delivery Services belonging to the tenant identified by this integral, unique identifier                     |
+	| tenant          | no       | Show only the Delivery Services belonging to the tenant identified by this integral, unique identifier                     |
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------------+
-	| ``type``        | no       | Return only Delivery Services of the Delivery Service type identified by this integral, unique identifier                  |
+	| type            | no       | Return only Delivery Services of the Delivery Service type identified by this integral, unique identifier                  |
 	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
