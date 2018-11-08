@@ -434,7 +434,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{http.MethodDelete, `api/?`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
 		{http.MethodConnect, `api/?`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
 		{http.MethodTrace, `api/?`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
-		{http.MethodOptions, `api/?`, api.AvailableRoutesHandler, 0, false, nil}
+		{http.MethodOptions, `api/?`, api.AvailableRoutesHandler, 0, false, nil},
 	}
 
 	return routes, rawRoutes, proxyHandler, nil

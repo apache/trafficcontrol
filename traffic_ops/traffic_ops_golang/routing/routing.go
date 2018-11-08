@@ -283,7 +283,7 @@ func RegisterRoutes(d ServerData) error {
 		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, w, r)
 	})
 
-	api.AllRoutes = compiledRoutes;
+	api.AllRoutes = &compiledRoutes;
 	return nil
 }
 
