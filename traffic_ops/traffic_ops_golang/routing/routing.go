@@ -282,6 +282,8 @@ func RegisterRoutes(d ServerData) error {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, w, r)
 	})
+
+	api.AllRoutes = compiledRoutes;
 	return nil
 }
 
