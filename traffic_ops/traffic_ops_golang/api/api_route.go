@@ -57,6 +57,7 @@ func AvailableRoutesHandler(writer http.ResponseWriter, request *http.Request) {
 	// if for some reason the variable didn't get set properly, return nothing
 	if AllRoutes == nil {
 		writer.Header().Set("Content-Length", "0");
+		writer.Header().Set("Allow", "OPTIONS");
 		writer.WriteHeader(http.StatusNoContent);
 		log.Warnln("API routes were requested, but weren't set!");
 		return;
@@ -87,4 +88,8 @@ func AvailableRoutesHandler(writer http.ResponseWriter, request *http.Request) {
 			contentLength += n +1;
 		}
 	}
+	writer.Header().Set("Allow", "OPTIONS");
+	writer.Header().Set("Content-Length", strconv.Itoa(contentLength));
+	writer.WriteHeader(http.StatusOK);
+	writer.Write(body.Bytes());
 }
