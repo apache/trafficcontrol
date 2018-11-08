@@ -13,14 +13,14 @@ const errorString = "Check the Traffic Ops log file(s) for details\n";
 
 
 // CompiledRoute ...
-type compiledRoute struct {
+type CompiledRoute struct {
 	Handler http.HandlerFunc
 	Regex   *regexp.Regexp
 	Params  []string
 }
 
 
-var AllRoutes *map[string][]compiledRoute;
+var AllRoutes *map[string][]CompiledRoute;
 // Writes a message indicating an internal server error back to the client (in plain text)
 func errorResponse(writer http.ResponseWriter) {
 	err := []byte(errorString);

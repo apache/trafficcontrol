@@ -154,8 +154,8 @@ func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticat
 }
 
 // CompileRoutes - takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes
-func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
-	compiledRoutes := map[string][]CompiledRoute{}
+func CompileRoutes(routes map[string][]PathHandler) map[string][]api.CompiledRoute {
+	compiledRoutes := map[string][]api.CompiledRoute{}
 	for method, mRoutes := range routes {
 		for _, pathHandler := range mRoutes {
 			route := pathHandler.Path
@@ -172,7 +172,7 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 				route = route[:open] + `([^/]+)` + route[close+1:]
 			}
 			regex := regexp.MustCompile(route)
-			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{Handler: handler, Regex: regex, Params: params})
+			compiledRoutes[method] = append(compiledRoutes[method], api.CompiledRoute{Handler: handler, Regex: regex, Params: params})
 		}
 	}
 	return compiledRoutes
@@ -180,7 +180,7 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 
 // Handler - generic handler func used by the Handlers hooking into the routes
 func Handler(
-	routes map[string][]CompiledRoute,
+	routes map[string][]api.CompiledRoute,
 	versions map[float64]struct{},
 	catchall http.Handler,
 	db *sqlx.DB,
