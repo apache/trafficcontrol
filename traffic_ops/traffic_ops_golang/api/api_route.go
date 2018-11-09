@@ -11,6 +11,8 @@ import log "github.com/apache/trafficcontrol/lib/go-log"
 const ServerString = "Traffic Operations/3.0.0";
 const errorString = "Check the Traffic Ops log file(s) for details\n";
 
+var APIVersions []float64;
+
 
 // CompiledRoute ...
 type CompiledRoute struct {
@@ -34,6 +36,17 @@ func AvailableRoutesBadMethodHandler(writer http.ResponseWriter, request *http.R
 	writer.Header().Set("Allow", "OPTIONS");
 	writer.Header().Set("Server", ServerString);
 	writer.WriteHeader(http.StatusMethodNotAllowed);
+}
+
+func AvailableVersionsHandler(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Server", ServerString);
+
+	// check that this has been set
+	if APIVersions == nil {
+		writer.Header().Set("Content-Length", "0");
+	}
+
+	var body bytes.Buffer;
 }
 
 // Writes a list of all available API routes in a response to the client in plaintext

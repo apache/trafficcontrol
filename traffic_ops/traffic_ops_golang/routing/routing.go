@@ -109,6 +109,7 @@ type PathHandler struct {
 func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTimeOutSeconds int) (map[string][]PathHandler, map[float64]struct{}) {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
+	api.APIVersions = versions
 	requestTimeout := time.Second * time.Duration(60)
 	if reqTimeOutSeconds > 0 {
 		requestTimeout = time.Second * time.Duration(reqTimeOutSeconds)
