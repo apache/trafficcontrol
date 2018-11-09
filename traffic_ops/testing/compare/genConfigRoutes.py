@@ -61,13 +61,14 @@ def getConfigRoutesForServers(servers:typing.List[dict], inst:TOSession) \
 	"""
 	for server in servers:
 		try:
+			yield "/api/1.3/servers/%s/configfiles/ats" % server.hostName
 			for file in inst.getServerConfigFiles(servername=server.hostName)[0].configFiles:
 				if "apiUri" in file:
 					yield file.apiUri
 				else:
 					logging.info("config file %s for server %s has non-API URI - skipping",
 				                       file.location, server.hostName)
-		except (UnicodeError, IndexError, KeyError, InvalidJSONError, OperationError) as e:
+		except (AttributeError, UnicodeError, IndexError, KeyError, InvalidJSONError, OperationError) as e:
 			logging.debug("%r", e, exc_info=True, stack_info=True)
 			logging.error("Invalid API response for server %s config files: %s", server.hostName, e)
 
