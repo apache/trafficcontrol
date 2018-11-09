@@ -30,12 +30,11 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/kelseyhightower/envconfig"
 	"golang.org/x/net/publicsuffix"
 )
 
-const __version__ = "1.1.0"
+const __version__ = "2.0.0"
 const SHORT_HEADER = "# DO NOT EDIT"
 const LONG_HEADER = "# TRAFFIC OPS NOTE:"
 
@@ -251,25 +250,6 @@ func (to *Connect) get(route string) (string, error) {
 	return string(data), err
 }
 
-func (to *Connect) getCDNNames() ([]string, error) {
-	res, err := to.get(`api/1.3/cdns`)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println(res)
-
-	var cdnResp tc.CDNsResponse
-
-	err = json.Unmarshal([]byte(res), &cdnResp)
-	if err != nil {
-		return nil, err
-	}
-	var cdnNames []string
-	for _, c := range cdnResp.Response {
-		cdnNames = append(cdnNames, c.Name)
-	}
-	return cdnNames, nil
-}
 
 func main() {
 
@@ -277,8 +257,6 @@ func main() {
 	routesFileShort := flag.String("f", "", "File listing routes to test (will read from stdin if not given)")
 	resultsPathLong := flag.String("results_path", "", "Directory where results will be written")
 	resultsPathShort := flag.String("r", "", "Directory where results will be written")
-	doSnapshotLong := flag.Bool("snapshot", false, "Perform comparison of all CDN's snapshotted CRConfigs")
-	doSnapshotShort := flag.Bool("s", false, "Perform comparison of all CDN's snapshotted CRConfigs")
 	refURL := flag.String("ref_url", "", "The URL for the reference Traffic Ops instance (overrides TO_URL environment variable)")
 	testURL := flag.String("test_url", "", "The URL for the testing Traffic Ops instance (overrides TEST_URL environment variable)")
 	refUser := flag.String("ref_user", "", "The username for logging into the reference Traffic Ops instance (overrides TO_USER environment variable)")
@@ -292,8 +270,6 @@ func main() {
 	flag.Parse()
 
 	// Coalesce long/short form options
-	doSnapshot := *doSnapshotShort || *doSnapshotLong
-
 	version := *versionLong || *versionShort
 	if version {
 		fmt.Printf("Traffic Control 'compare' tool v%s\n", __version__)
@@ -416,26 +392,4 @@ func main() {
 		}(route)
 	}
 	wg.Wait()
-
-	if doSnapshot {
-		cdnNames, err := refTO.getCDNNames()
-		if err != nil {
-			panic(err)
-		}
-		log.Printf("CDNNames are %+v", cdnNames)
-
-		wg.Add(2 * len(cdnNames))
-		for _, cdnName := range cdnNames {
-			log.Print("CDN ", cdnName)
-			go func(c string) {
-				testRoute(tos, `api/1.3/cdns/`+c+`/snapshot`)
-				wg.Done()
-			}(cdnName)
-			go func(c string) {
-				testRoute(tos, `api/1.3/cdns/`+c+`/snapshot/new`)
-				wg.Done()
-			}(cdnName)
-		}
-		wg.Wait()
-	}
 }
