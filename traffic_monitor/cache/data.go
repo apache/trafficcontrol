@@ -21,14 +21,13 @@ package cache
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// CacheAvailableStatusReported is the status string returned by caches set to "reported" in Traffic Ops.
+// AvailableStatusReported is the status string returned by caches set to "reported" in Traffic Ops.
 // TODO put somewhere more generic
 const AvailableStatusReported = "REPORTED"
 
@@ -73,11 +72,6 @@ func (a ResultHistory) Copy() ResultHistory {
 	return b
 }
 
-// ResultStatHistory is a map[cache][statName]val
-type ResultStatHistory map[tc.CacheName]ResultStatValHistory
-
-type ResultStatValHistory map[string][]ResultStatVal
-
 // ResultStatVal is the value of an individual stat returned from a poll. Time is the time this stat was returned.
 // Span is the number of polls this stat has been the same. For example, if History is set to 100, and the last 50 polls had the same value for this stat (but none of the previous 50 were the same), this stat's map value slice will actually contain 51 entries, and the first entry will have the value, the time of the last poll, and a Span of 50. Assuming the poll time is every 8 seconds, users will then know, looking at the Span, that the value was unchanged for the last 50*8=400 seconds.
 // JSON values are all strings, for the TM1.0 /publish/CacheStats API.
@@ -100,85 +94,11 @@ func (t *ResultStatVal) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&v)
 }
 
-func copyResultStatVals(a []ResultStatVal) []ResultStatVal {
-	b := make([]ResultStatVal, len(a), len(a))
-	copy(b, a)
-	return b
-}
-
-func copyResultStatValHistory(a ResultStatValHistory) ResultStatValHistory {
-	b := ResultStatValHistory{}
-	for k, v := range a {
-		b[k] = copyResultStatVals(v) // TODO determine if necessary
-	}
-	return b
-}
-
-func (a ResultStatHistory) Copy() ResultStatHistory {
-	b := ResultStatHistory{}
-	for k, v := range a {
-		b[k] = copyResultStatValHistory(v)
-	}
-	return b
-}
-
 func pruneStats(history []ResultStatVal, limit uint64) []ResultStatVal {
 	if uint64(len(history)) > limit {
 		history = history[:limit-1]
 	}
 	return history
-}
-
-// newStatEqual Returns whether the given stat is equal to the latest stat in history. If len(history)==0, this returns false without error. If the given stat is not a JSON primitive (string, number, bool), this returns an error. We explicitly refuse to compare arrays and objects, for performance.
-func newStatEqual(history []ResultStatVal, stat interface{}) (bool, error) {
-	if len(history) == 0 {
-		return false, nil // if there's no history, it's "not equal", i.e. store this new history
-	}
-	switch stat.(type) {
-	case string:
-	case float64:
-	case bool:
-	default:
-		return false, fmt.Errorf("incomparable stat type %T", stat)
-	}
-	switch history[0].Val.(type) {
-	case string:
-	case float64:
-	case bool:
-	default:
-		return false, fmt.Errorf("incomparable history stat type %T", stat)
-	}
-	return stat == history[0].Val, nil
-}
-
-func (a ResultStatHistory) Add(r Result, limit uint64) error {
-	errStrs := ""
-	for statName, statVal := range r.Astats.Ats {
-		statHistory := a[r.ID][statName]
-		// If the new stat value is the same as the last, update the time and increment the span. Span is the number of polls the latest value has been the same, and hence the length of time it's been the same is span*pollInterval.
-		if ok, err := newStatEqual(statHistory, statVal); err != nil {
-			errStrs += "cannot add stat " + statName + ": " + err.Error() + "; "
-		} else if ok {
-			statHistory[0].Time = r.Time
-			statHistory[0].Span++
-		} else {
-			resultVal := ResultStatVal{
-				Val:  statVal,
-				Time: r.Time,
-				Span: 1,
-			}
-			statHistory = pruneStats(append([]ResultStatVal{resultVal}, statHistory...), limit)
-		}
-		if _, ok := a[r.ID]; !ok {
-			a[r.ID] = ResultStatValHistory{}
-		}
-		a[r.ID][statName] = statHistory // TODO determine if necessary for the first conditional
-	}
-
-	if errStrs != "" {
-		return errors.New("some stats could not be added: " + errStrs[:len(errStrs)-2])
-	}
-	return nil
 }
 
 // TODO determine if anything ever needs more than the latest, and if not, change ResultInfo to not be a slice.

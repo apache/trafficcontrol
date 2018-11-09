@@ -56,27 +56,28 @@ func srvStatSummary(params url.Values, errorCount threadsafe.Uint, path string, 
 		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
-	bytes, err := json.Marshal(createStatSummary(statResultHistory.Get(), filter, params))
+	bytes, err := json.Marshal(createStatSummary(statResultHistory, filter, params))
 	return WrapErrCode(errorCount, path, bytes, err)
 }
 
-func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.Filter, params url.Values) StatSummary {
+func createStatSummary(statResultHistory threadsafe.ResultStatHistory, filter cache.Filter, params url.Values) StatSummary {
 	statPrefix := "ats."
 	ss := StatSummary{
 		Caches:        map[tc.CacheName]map[string]StatSummaryStat{},
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 	}
-	for cache, stats := range statResultHistory {
-		if !filter.UseCache(cache) {
-			continue
+
+	statResultHistory.Range(func(cacheName tc.CacheName, stats threadsafe.ResultStatValHistory) bool {
+		if !filter.UseCache(cacheName) {
+			return true
 		}
 		ssStats := map[string]StatSummaryStat{}
-		for statName, statHistory := range stats {
+		stats.Range(func(statName string, statHistory []cache.ResultStatVal) bool {
 			if !filter.UseStat(statName) {
-				continue
+				return true
 			}
 			if len(statHistory) == 0 {
-				continue
+				return true
 			}
 			ssStat := StatSummaryStat{}
 			msPerNs := int64(1000000)
@@ -85,7 +86,7 @@ func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.F
 			oldestVal, isOldestValNumeric := util.ToNumeric(statHistory[len(statHistory)-1].Val)
 			newestVal, isNewestValNumeric := util.ToNumeric(statHistory[0].Val)
 			if !isOldestValNumeric || !isNewestValNumeric {
-				continue // skip non-numeric stats
+				return true // skip non-numeric stats
 			}
 			ssStat.Start = oldestVal
 			ssStat.End = newestVal
@@ -95,7 +96,7 @@ func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.F
 				fVal, ok := util.ToNumeric(val.Val)
 				if !ok {
 					log.Warnf("threshold stat %v value %v is not a number, cannot use.", statName, val.Val)
-					continue
+					return true
 				}
 				for i := uint64(0); i < val.Span; i++ {
 					ssStat.DataPointCount++
@@ -110,8 +111,10 @@ func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.F
 				}
 			}
 			ssStats[statPrefix+statName] = ssStat
-		}
-		ss.Caches[cache] = ssStats
-	}
+			return true
+		})
+		ss.Caches[cacheName] = ssStats
+		return true
+	})
 	return ss
 }

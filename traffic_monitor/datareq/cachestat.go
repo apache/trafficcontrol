@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
@@ -35,6 +34,6 @@ func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, t
 		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
-	bytes, err := cache.StatsMarshall(statResultHistory.Get(), statInfoHistory.Get(), combinedStates.Get(), monitorConfig.Get(), statMaxKbpses.Get(), filter, params)
+	bytes, err := threadsafe.StatsMarshall(statResultHistory, statInfoHistory.Get(), combinedStates.Get(), monitorConfig.Get(), statMaxKbpses.Get(), filter, params)
 	return WrapErrCode(errorCount, path, bytes, err)
 }
