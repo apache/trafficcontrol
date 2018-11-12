@@ -14,15 +14,17 @@
 #
 
 # figure out which version of traffic_router is currently running
-# and then shut it down
+# and then shut it down. Running both test just in case.
 set +e
-chkconfig --list tomcat >/dev/null
 
-if [ $? -eq 0 ]; then
+if [[ -e "/etc/init.d/tomcat" ]]; then
+  echo "Stopping tomcat service..."
   /sbin/service tomcat stop
-else
-  /usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
+  chkconfig tomcat off
+fi
 
+if
+  /usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
   [ $? -eq 0 ] && /usr/bin/systemctl stop traffic_router
 fi
 
