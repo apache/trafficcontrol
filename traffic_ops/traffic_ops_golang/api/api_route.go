@@ -72,14 +72,20 @@ func AvailableVersionsHandler(writer http.ResponseWriter, request *http.Request)
 	var body bytes.Buffer;
 	contentLength := 0;
 	for _, version := range APIVersions {
-		body.WriteString(strconv.FormatFloat(version, 'f', 2, 64));
+		if n, err := body.WriteString(strconv.FormatFloat(version, 'f', 2, 64)); err != nil {
+			log.Errorf("Unable to append API version to buffer: %s", err.Error());
+			errorResponse(writer);
+			return;
+		}
+		contentLength += n;
 		body.WriteRune('\n');
-		contentLength += 3;
+		contentLength += 1;
 	}
 
 	writer.Header().Set("Content-Length", strconv.Itoa(contentLength));
 	writer.WriteHeader(http.StatusOK);
 	writer.Write(body.Bytes());
+	log.Infof("API versions: '%s'", body.String())
 }
 
 // Writes a list of all available API routes in a response to the client in plaintext
