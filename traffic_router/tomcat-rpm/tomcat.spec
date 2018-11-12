@@ -50,8 +50,8 @@ rm -rf ${RPM_BUILD_ROOT}/%{tomcat_home}/webapps/*
 rm -f ${RPM_BUILD_ROOT}/%{tomcat_home}/bin/*.bat
 
 # install sysd script
-install -d -m 755 ${RPM_BUILD_ROOT}%{_sysconfdir}/systemd/system
-install    -m 755 %_sourcedir/tomcat.service ${RPM_BUILD_ROOT}%{startup_script}
+install -d -m 644 ${RPM_BUILD_ROOT}%{_sysconfdir}/systemd/system
+install    -m 644 %_sourcedir/tomcat.service ${RPM_BUILD_ROOT}%{startup_script}
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
