@@ -67,12 +67,13 @@ func AvailableVersionsHandler(writer http.ResponseWriter, request *http.Request)
 		return;
 	}
 
-	writer.Header().Set("Content-Type" "text/plain; charset=utf-8");
+	writer.Header().Set("Content-Type", "text/plain; charset=utf-8");
 
 	var body bytes.Buffer;
 	contentLength := 0;
 	for _, version := range APIVersions {
-		if n, err := body.WriteString(strconv.FormatFloat(version, 'f', 2, 64)); err != nil {
+		n, err := body.WriteString(strconv.FormatFloat(version, 'f', 2, 64));
+		if err != nil {
 			log.Errorf("Unable to append API version to buffer: %s", err.Error());
 			errorResponse(writer);
 			return;
