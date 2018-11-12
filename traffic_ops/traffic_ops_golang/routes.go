@@ -426,15 +426,15 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		// The '/api' endpoint, that tells clients what routes are available under /api/1.x
-		{http.MethodGet, `api/?`, api.AvailableRoutesHandler, 0, false, nil},
-		{http.MethodHead, `api/?`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
-		{http.MethodPost, `api/?`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
-		{http.MethodPut, `api/?`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
-		{http.MethodPatch, `api/?`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
-		{http.MethodDelete, `api/?`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
-		{http.MethodConnect, `api/?`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
-		{http.MethodTrace, `api/?`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
-		{http.MethodOptions, `api/?`, api.AvailableVersionsHandler, 0, false, nil},
+		{http.MethodGet, `api/?$`, api.AvailableRoutesHandler, 0, false, nil},
+		{http.MethodHead, `api/?$`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
+		{http.MethodPost, `api/?$`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
+		{http.MethodPut, `api/?$`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
+		{http.MethodPatch, `api/?$`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
+		{http.MethodDelete, `api/?$`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
+		{http.MethodConnect, `api/?$`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
+		{http.MethodTrace, `api/?$`, api.AvailableRoutesBadMethodHandler, 0, false, nil},
+		{http.MethodOptions, `api/?$`, api.AvailableVersionsHandler, 0, false, nil},
 	}
 
 	return routes, rawRoutes, proxyHandler, nil
