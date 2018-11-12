@@ -194,10 +194,9 @@
 								<mapping>
 									<directory>${env.STARTUP_SCRIPT_DIR}</directory>
 									<directoryIncluded>false</directoryIncluded>
-									<filemode>755</filemode>
+									<filemode>644</filemode>
 									<username>root</username>
 									<groupname>root</groupname>
-									<configuration>noreplace</configuration>
 									<sources>
 										<source>
 											<location>${env.STARTUP_SCRIPT_LOC}</location>
