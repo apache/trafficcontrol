@@ -19,9 +19,9 @@ Summary:    Apache Tomcat Servlet/JSP Engine 8.5+, RI for Servlet 3.1/JSP 2.3 AP
 License:    Apache Software License
 URL:        https://github.com/apache/incubator-trafficcontrol/
 Source:     %{_sourcedir}/apache-tomcat-%{version}.tar.gz
-Requires:   java-1.8.0-openjdk >= 1.8, java-1.8.0-openjdk-devel >= 1.8
+Requires:   java >= 1.8
 
-%define startup_script %{_sysconfdir}/systemd/system/tomcat.service
+%define startup_script /lib/systemd/system/tomcat.service
 %define tomcat_home /opt/tomcat
 
 %description
@@ -50,8 +50,8 @@ rm -rf ${RPM_BUILD_ROOT}/%{tomcat_home}/webapps/*
 rm -f ${RPM_BUILD_ROOT}/%{tomcat_home}/bin/*.bat
 
 # install sysd script
-install -d -m 755 ${RPM_BUILD_ROOT}%{_sysconfdir}/systemd/system
-install    -m 755 %_sourcedir/tomcat.service ${RPM_BUILD_ROOT}%{startup_script}
+install -d -m 644 ${RPM_BUILD_ROOT}/lib/systemd/system
+install    -m 644 %_sourcedir/tomcat.service ${RPM_BUILD_ROOT}%{startup_script}
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
@@ -75,10 +75,6 @@ fi
 
 %post
 systemctl daemon-reload
-
-echo "Tomcat for Traffic Router installed successfully."
-echo ""
-echo "Start with 'systemctl start traffic_router'"
 
 %preun
 
