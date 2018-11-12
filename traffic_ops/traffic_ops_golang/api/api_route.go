@@ -67,6 +67,8 @@ func AvailableVersionsHandler(writer http.ResponseWriter, request *http.Request)
 		return;
 	}
 
+	writer.Header().Set("Content-Type" "text/plain; charset=utf-8");
+
 	var body bytes.Buffer;
 	contentLength := 0;
 	for _, version := range APIVersions {
@@ -90,7 +92,7 @@ func AvailableRoutesHandler(writer http.ResponseWriter, request *http.Request) {
 	   request.Header.Get("Access-Control-Request-Method") != "" &&
 	   request.Header.Get("Access-Control-Request-Headers") != "" {
 
-		writer.Header().Set("Access-Control-Allow-Methods", "OPTIONS");
+		writer.Header().Set("Access-Control-Allow-Methods", "OPTIONS,GET");
 		writer.Header().Set("Access-Control-Allow-Headers", "*");
 		writer.WriteHeader(http.StatusNoContent);
 		return;
@@ -101,7 +103,7 @@ func AvailableRoutesHandler(writer http.ResponseWriter, request *http.Request) {
 	// if for some reason the variable didn't get set properly, return nothing
 	if AllRoutes == nil {
 		writer.Header().Set("Content-Length", "0");
-		writer.Header().Set("Allow", "OPTIONS");
+		writer.Header().Set("Allow", "OPTIONS,GET");
 		writer.WriteHeader(http.StatusNoContent);
 		log.Warnln("API routes were requested, but weren't set!");
 		return;
