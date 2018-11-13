@@ -21,7 +21,6 @@ URL:        https://github.com/apache/incubator-trafficcontrol/
 Source:     %{_sourcedir}/apache-tomcat-%{version}.tar.gz
 Requires:   java >= 1.8
 
-%define startup_script %{_sysconfdir}/systemd/system/tomcat.service
 %define tomcat_home /opt/tomcat
 
 %description
@@ -49,39 +48,37 @@ rm -rf ${RPM_BUILD_ROOT}/%{tomcat_home}/webapps/*
 # Remove *.bat
 rm -f ${RPM_BUILD_ROOT}/%{tomcat_home}/bin/*.bat
 
-# install sysd script
-install -d -m 755 ${RPM_BUILD_ROOT}%{_sysconfdir}/systemd/system
-install    -m 755 %_sourcedir/tomcat.service ${RPM_BUILD_ROOT}%{startup_script}
-
 %clean
 rm -rf ${RPM_BUILD_ROOT}
 
-%pre
+# This here takes care of stopping and removing tomcat before installing new files
+%pretrans
 if [[ -e "/etc/init.d/tomcat" ]]; then
-  echo "Disabling tomcat service..."
+  echo "Disabling and stopping SysV tomcat service..."
   chkconfig tomcat off
+  service stop tomcat
 fi
 
 if [ -d /opt/apache-tomcat-* ]; then
   echo "Deleting unmanaged Tomcat install from < 2.3 version of Traffic Router"
   rm -rf /opt/apache-tomcat-*
-  rm -rf /opt/tomcat
+  rm -r /opt/tomcat
 fi
+
+%pre
 
 %files
 %defattr(-,root,root)
 %{tomcat_home}
-%{startup_script}
 
 %post
-systemctl daemon-reload
-
-echo "Tomcat for Traffic Router installed successfully."
-echo ""
-echo "Start with 'systemctl start traffic_router'"
 
 %preun
 
 %postun
 
 %changelog
+* Tue Nov 13 2018 Steve Malenfant <smalenfant@apache.org>
+- Remove old installation of tomcat
+- Removed systemd service for tomcat
+- Requires now leaves java choice to operator
