@@ -17,11 +17,14 @@
 # and then shut it down. Running both test just in case.
 set +e
 
-# delete the expanded war files from the previous version
-if [[ -e /opt/traffic_router/webapps/core ]]; then
-  echo "Deleting previous version of Traffic Router webapp"
-  rm -rf /opt/traffic_router/webapps/core
+if [[ -e "/etc/init.d/tomcat" ]]; then
+  echo "Stopping tomcat service..."
+  /sbin/service tomcat stop
+  chkconfig tomcat off
 fi
 
-rm -rf /opt/traffic_router/webapps/*
+echo "Stopping traffic_router services"
+/usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
+[ $? -eq 0 ] && /usr/bin/systemctl stop traffic_router
+echo "Done stopping traffic_router services"
 
