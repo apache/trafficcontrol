@@ -282,14 +282,15 @@ def main(kwargs:argparse.Namespace) -> int:
 		try:
 			A.login(loginA[0], loginA[1])
 			B.login(loginB[0], loginB[1])
-		except OSError as e:
+		except (OSError, LoginError) as e:
 			logging.debug("%s", e, exc_info=True, stack_info=True)
 			logging.critical("Failed to connect to Traffic Ops")
 			return 2
-		except (OperationError, LoginError, InvalidJSONError) as e:
+		except (OperationError, InvalidJSONError) as e:
 			logging.debug("%s", e, exc_info=True, stack_info=True)
 			logging.critical("Failed to log in to Traffic Ops")
 			logging.error("Error was '%s' - are you sure your URLs and credentials are correct?", e)
+			return 2
 		for route in genRoutes(A, B):
 			print(route)
 
