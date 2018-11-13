@@ -23,10 +23,8 @@ if [[ -e "/etc/init.d/tomcat" ]]; then
   chkconfig tomcat off
 fi
 
-if
-  /usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
-  [ $? -eq 0 ] && /usr/bin/systemctl stop traffic_router
-fi
+/usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
+[ $? -eq 0 ] && /usr/bin/systemctl stop traffic_router
 
 # delete the expanded war files from the previous version
 if [[ -e /opt/traffic_router/webapps/core ]]; then
