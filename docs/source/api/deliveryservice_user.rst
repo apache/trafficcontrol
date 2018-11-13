@@ -34,40 +34,40 @@ Request Structure
 :deliveryServices: An array of integral, unique identifiers for the Delivery Service(s) being assigned to the user identified by ``userId``
 :replace:          An optional field which, when present and ``true`` will replace existing user/ds assignments? (true|false)
 
-	**Request Example** ::
+.. code-block:: http
+	:caption: Request Example
 
+	POST /api/1.3/deliveryservice_user HTTP/1.1
+	Content-Type: application/json
+	Content-Length: 81
+	Accept: application/json
+
+	{
+		"userId": 50,
+		"deliveryServices": [ 23, 34, 45, 56, 67 ],
+		"replace": true
+	}
+
+Response Structure
+------------------
+:userId:           The integral, unique identifier of the user to whom the Delivery Service(s) identified in ``deliveryServices`` are assigned
+:deliveryServices: An array of integral, unique identifiers of Delivery Services assigned to the user identified by ``userId``
+:replace:          If ``true``, any and all existing, conflicting Delivery Service assignments were overwritten by this assignment operation
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Content-Type: application/json
+
+	{ "alerts": [
 		{
-				"userId": 50,
-				"deliveryServices": [ 23, 34, 45, 56, 67 ],
-				"replace": true
+			"level": "success",
+			"text": "Delivery service assignments complete."
 		}
-
-	**Response Properties**
-
-	+------------------------------------+--------+-------------------------------------------------------------------+
-	| Parameter                          | Type   | Description                                                       |
-	+====================================+========+===================================================================+
-	| ``userId``                         | int    | The ID of the user.                                               |
-	+------------------------------------+--------+-------------------------------------------------------------------+
-	| ``deliveryServices``               | array  | An array of delivery service IDs.                                 |
-	+------------------------------------+--------+-------------------------------------------------------------------+
-	| ``replace``                        | array  | Existing user/ds assignments replaced? (true|false).              |
-	+------------------------------------+--------+-------------------------------------------------------------------+
-
-	**Response Example** ::
-
-		{
-				"alerts": [
-									{
-													"level": "success",
-													"text": "Delivery service assignments complete."
-									}
-					],
-				"response": {
-						"userId" : 50,
-						"deliveryServices": [ 23, 34, 45, 56, 67 ],
-						"replace": true
-				}
-		}
-
-|
+	],
+	"response": {
+			"userId" : 50,
+			"deliveryServices": [ 23, 34, 45, 56, 67 ],
+			"replace": true
+	}}
