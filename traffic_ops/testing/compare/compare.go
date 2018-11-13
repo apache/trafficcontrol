@@ -96,7 +96,7 @@ func (to *Connect) login(creds Creds) error {
 		return err
 	}
 
-	log.Printf("Logged in to %s: %s", to.URL, string(data))
+	log.Printf("Logged in to %s: %s\n", to.URL, string(data))
 	return nil
 }
 
@@ -105,6 +105,7 @@ func testRoute(tos []*Connect, route string) {
 	type result struct {
 		TO  *Connect
 		Res string
+		Error error
 	}
 	var res []result
 	ch := make(chan result, len(tos))
@@ -121,10 +122,7 @@ func testRoute(tos []*Connect, route string) {
 		wg.Add(1)
 		go func(to *Connect) {
 			s, err := to.get(route)
-			if err != nil {
-				s = err.Error()
-			}
-			ch <- result{to, s}
+			ch <- result{to, s, err}
 			wg.Done()
 		}(to)
 
@@ -139,6 +137,19 @@ func testRoute(tos []*Connect, route string) {
 	wg.Wait()
 	close(ch)
 
+	// preliminary error handling
+	if len(res) != 2 {
+		log.Fatalf("Something wicked happened - expected exactly 2 responses, but got %d!\n", len(res))
+	}
+
+	if res[0].Error != nil {
+		log.Fatalf("Error occurred `GET`ting %s from %s: %s\n", route, res[0].TO.URL, res[0].Error.Error())
+	}
+
+	if res[1].Error != nil {
+		log.Fatalf("Error occurred `GET`ting %s from %s: %s\n", route, res[1].TO.URL, res[1].Error.Error())
+	}
+
 	// Check for Traffic Ops headers and remove them before comparison
 	refResult := res[0].Res
 	testResult := res[1].Res
@@ -151,14 +162,15 @@ func testRoute(tos []*Connect, route string) {
 			log.Print("Diffs from ", route, " written to")
 			p, err := res[0].TO.writeResults(route, refResult)
 			if err != nil {
-				log.Fatal("Error writing results for ", route)
+				log.Fatalf("Error writing results for %s: %s\n", route, err.Error())
 			}
 			log.Print(" ", p)
 			p, err = res[1].TO.writeResults(route, testResult)
 			if err != nil {
-				log.Fatal("Error writing results for ", route)
+				log.Fatalf("Error writing results for %s: %s\n", route, err.Error())
 			}
 			log.Print(" and ", p)
+			return
 		}
 
 
@@ -201,7 +213,7 @@ func testRoute(tos []*Connect, route string) {
 		for _, r := range res {
 			p, err := r.TO.writeResults(route, r.Res)
 			if err != nil {
-				log.Fatal("Error writing results for ", route)
+				log.Fatalf("Error writing results for %s: %s", route, err.Error())
 			}
 			log.Print("  ", p)
 		}
@@ -238,7 +250,7 @@ func (to *Connect) get(route string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 
 	resp, err := to.Client.Do(req)
 	if err != nil {
