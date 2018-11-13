@@ -62,7 +62,7 @@ fi
 if [ -d /opt/apache-tomcat-* ]; then
   echo "Deleting unmanaged Tomcat install from < 2.3 version of Traffic Router"
   rm -rf /opt/apache-tomcat-*
-  rm -r /opt/tomcat
+  rm -rf /opt/tomcat
 fi
 
 %pre
