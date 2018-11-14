@@ -28,10 +28,8 @@ import log "github.com/apache/trafficcontrol/lib/go-log"
 
 // todo - make the version string modular and accessible everywhere
 const ServerString = "Traffic Operations/3.0.0";
-const errorString = "Check the Traffic Ops log file(s) for details\n";
 
 var APIVersions []float64;
-
 
 // CompiledRoute ...
 type CompiledRoute struct {
@@ -43,65 +41,57 @@ type CompiledRoute struct {
 
 var AllRoutes *map[string][]CompiledRoute;
 // Writes a message indicating an internal server error back to the client (in plain text)
-func errorResponse(writer http.ResponseWriter) {
-	err := []byte(errorString);
-	writer.Header().Set("Content-Length", strconv.Itoa(len(err)));
-	writer.WriteHeader(http.StatusInternalServerError);
-	writer.Write(err);
+func errorResponse(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusInternalServerError);
 }
 
 // Handles the disallowed request methods for this endpoint
-func AvailableRoutesBadMethodHandler(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Allow", "OPTIONS");
-	writer.Header().Set("Server", ServerString);
-	writer.WriteHeader(http.StatusMethodNotAllowed);
+func AvailableRoutesBadMethodHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Allow", "OPTIONS,GET");
+	w.Header().Set("Server", ServerString);
+	w.WriteHeader(http.StatusMethodNotAllowed);
 }
 
-func AvailableVersionsHandler(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Server", ServerString);
+func AvailableVersionsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Server", ServerString);
 
 	// check that this has been set
 	if APIVersions == nil {
-		writer.Header().Set("Content-Length", "0");
-		writer.WriteHeader(http.StatusNoContent);
+		w.WriteHeader(http.StatusNoContent);
+		log.Warnln("API versions were requested, but weren't set!");
 		return;
 	}
 
-	writer.Header().Set("Content-Type", "text/plain; charset=utf-8");
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8");
 
 	var body bytes.Buffer;
-	contentLength := 0;
 	for _, version := range APIVersions {
-		n, err := body.WriteString(strconv.FormatFloat(version, 'f', 1, 64));
+		_, err := body.WriteString(strconv.FormatFloat(version, 'f', 1, 64));
 		if err != nil {
 			log.Errorf("Unable to append API version to buffer: %s", err.Error());
-			errorResponse(writer);
+			errorResponse(w);
 			return;
 		}
-		contentLength += n;
 		body.WriteRune('\n');
-		contentLength += 1;
 	}
 
-	writer.Header().Set("Content-Length", strconv.Itoa(contentLength));
-	writer.WriteHeader(http.StatusOK);
-	writer.Write(body.Bytes());
+	w.Write(body.Bytes());
 	log.Infof("API versions: '%s'", body.String())
 }
 
 // Writes a list of all available API routes in a response to the client in plaintext
 // (or writes an error message via errorResponse if something wicked happens)
-func AvailableRoutesHandler(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Server", ServerString);
+func AvailableRoutesHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Server", ServerString);
 
 	// Check for a CORS preflight request (all headers accepted, so immediate response given)
-	if request.Header.Get("Origin") != "" &&
-	   request.Header.Get("Access-Control-Request-Method") != "" &&
-	   request.Header.Get("Access-Control-Request-Headers") != "" {
+	if r.Header.Get("Origin") != "" &&
+	   r.Header.Get("Access-Control-Request-Method") != "" &&
+	   r.Header.Get("Access-Control-Request-Headers") != "" {
 
-		writer.Header().Set("Access-Control-Allow-Methods", "OPTIONS,GET");
-		writer.Header().Set("Access-Control-Allow-Headers", "*");
-		writer.WriteHeader(http.StatusNoContent);
+		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS,GET");
+		w.Header().Set("Access-Control-Allow-Headers", "*");
+		w.WriteHeader(http.StatusNoContent);
 		return;
 	}
 
@@ -109,40 +99,34 @@ func AvailableRoutesHandler(writer http.ResponseWriter, request *http.Request) {
 
 	// if for some reason the variable didn't get set properly, return nothing
 	if AllRoutes == nil {
-		writer.Header().Set("Content-Length", "0");
-		writer.Header().Set("Allow", "OPTIONS,GET");
-		writer.WriteHeader(http.StatusNoContent);
+		w.Header().Set("Allow", "OPTIONS,GET");
+		w.WriteHeader(http.StatusNoContent);
 		log.Warnln("API routes were requested, but weren't set!");
 		return;
 	}
 
-	writer.Header().Set("Content-Type", "text/plain; charset=utf-8");
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8");
 
 	var body bytes.Buffer;
-	contentLength := 0;
 	for method, routes := range *AllRoutes {
 		for _, route := range routes {
-			n, err := body.WriteString(method);
+			_, err := body.WriteString(method);
 			if err != nil {
 				log.Errorf("Unable to append method to routes buffer: %s", err.Error());
-				errorResponse(writer);
+				errorResponse(w);
 				return;
 			}
 			body.WriteRune(' ');
-			contentLength += n + 1;
 
-			n, err = body.WriteString(route.Regex.String());
+			_, err = body.WriteString(route.Regex.String());
 			if err != nil {
 				log.Errorf("Unable to append route to routes buffer: %s", err.Error());
-				errorResponse(writer);
+				errorResponse(w);
 				return;
 			}
 			body.WriteRune('\n');
-			contentLength += n +1;
 		}
 	}
-	writer.Header().Set("Allow", "OPTIONS");
-	writer.Header().Set("Content-Length", strconv.Itoa(contentLength));
-	writer.WriteHeader(http.StatusOK);
-	writer.Write(body.Bytes());
+	w.Header().Set("Allow", "OPTIONS,GET");
+	w.Write(body.Bytes());
 }
