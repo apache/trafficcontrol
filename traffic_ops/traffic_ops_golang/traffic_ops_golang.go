@@ -38,6 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -122,8 +123,8 @@ func main() {
 	pprofMux := http.DefaultServeMux
 	http.DefaultServeMux = http.NewServeMux() // this is so we don't serve pprof over 443.
 
-	pprofMux.Handle("/db-stats", dbStatsHandler(db))
-	pprofMux.Handle("/memory-stats", memoryStatsHandler())
+	pprofMux.Handle("/db-stats", routing.DBStatsHandler(db))
+	pprofMux.Handle("/memory-stats", routing.MemoryStatsHandler())
 	go func() {
 		debugServer := http.Server{
 			Addr:    "localhost:6060",
@@ -132,7 +133,7 @@ func main() {
 		log.Errorln(debugServer.ListenAndServe())
 	}()
 
-	if err := RegisterRoutes(ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins}); err != nil {
+	if err := routing.RegisterRoutes(routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins}); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		return
 	}
