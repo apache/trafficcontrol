@@ -49,8 +49,22 @@ Response Structure
 :profile:     The name of the profile in use by this cache
 :status:      The status of the cache
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 20:25:01 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 00:25:01 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: DqbLgitanS8q81/qKC1i+ImMiEMF+SW4G9rb79FWdeWcgwFjL810tlTRp1nNNfHV+tajgjyK+wMHobqVyaNEfA==
+	Content-Length: 133
 
 	{ "response": [
 		{

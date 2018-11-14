@@ -15,13 +15,13 @@
 
 .. _to-api-cachegroupparameters-id-parameterID:
 
-************************************************
-``cachegroupparameters/{{ID}}/{{parameter ID}}``
-************************************************
+***********************************************
+``cachegroupparameters/{{ID}}/{{parameterID}}``
+***********************************************
 
 ``DELETE``
 ==========
-Delete a Cache Group parameter association.
+De-associate a parameter with a Cache Group
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,22 +31,45 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------------------+----------+-----------------------------------------------------------------------------------------+
-	| Name             | Required | Description                                                                             |
-	+==================+==========+=========================================================================================+
-	| ``cachegroup_id``| yes      | Unique identifier for the Cache Group which will have the parameter association deleted |
-	+------------------+----------+-----------------------------------------------------------------------------------------+
-	| ``parameter_id`` | yes      | Unique identifier for the parameter which will be removed from a Cache Group            |
-	+------------------+----------+-----------------------------------------------------------------------------------------+
+	+-------------+-----------------------------------------------------------------------------------------+
+	| Name        | Description                                                                             |
+	+=============+=========================================================================================+
+	| ID          | Unique identifier for the Cache Group which will have the parameter association deleted |
+	+-------------+-----------------------------------------------------------------------------------------+
+	| parameterID | Unique identifier for the parameter which will be removed from a Cache Group            |
+	+-------------+-----------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.1/cachegroupparameters/8/124 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
-	{ "alerts":[
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 18:26:40 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Wed, 14 Nov 2018 22:26:40 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: Cuj+ZPAKsDLp4FpbJDcwsWY0yVQAi1Um1CWraeTIQEMlyJSBEm17oKQWDjzTrvqqV8Prhu3gzlcHoVPzEpbQ1Q==
+	Content-Length: 84
+
+	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Cache group parameter association was deleted."
+			"text": "Profile parameter association was deleted."
 		}
 	]}

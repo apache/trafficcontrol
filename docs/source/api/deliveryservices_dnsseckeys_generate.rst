@@ -29,23 +29,12 @@ Generates Zone-Signing Key (ZSK) and Key-Signing Key (KSK) keypairs for a CDN an
 
 Request Structure
 -----------------
-.. table:: Request Properties
-
-	+-----------------------+---------+----------+------------------------------------------------+
-	|       Parameter       |   Type  | Required |                  Description                   |
-	+=======================+=========+==========+================================================+
-	| ``key``               | string  | yes      | Name of the CDN                                |
-	+-----------------------+---------+----------+------------------------------------------------+
-	| ``name``              | string  | yes      | Domain name used by the CDN                    |
-	+-----------------------+---------+----------+------------------------------------------------+
-	| ``ttl``               | string  | yes      | Time for which the keypairs shall remain valid |
-	+-----------------------+---------+----------+------------------------------------------------+
-	| ``kskExpirationDays`` | string  | yes      | Expiration (in days) for the KSKs              |
-	+-----------------------+---------+----------+------------------------------------------------+
-	| ``zskExpirationDays`` | string  | yes      | Expiration (in days) for the ZSKs              |
-	+-----------------------+---------+----------+------------------------------------------------+
-	| ``effectiveDate``     | integer | yes      | UNIX epoch start date for the signing keys     |
-	+-----------------------+---------+----------+------------------------------------------------+
+:key:               Name of the CDN
+:name:              Domain name used by the CDN
+:ttl:               Time for which the keypairs shall remain valid
+:kskExpirationDays: Expiration (in days) for the KSKs
+:zskExpirationDays: Expiration (in days) for the ZSKs
+:effectiveDate:     UNIX epoch start date for the signing keys
 
 .. versionchanged:: 1.2
 	Added required 'effectiveDate' field to request

@@ -32,80 +32,46 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------------------+----------+-----------------------+
-	|       Name       | Required | Description           |
-	+==================+==========+=======================+
-	| ``id``           | yes      | Cache Group ID        |
-	+------------------+----------+-----------------------+
+	+-----------+--------------------------------------------------+
+	| Parameter | Description                                      |
+	+===========+==================================================+
+	| ID        | The integral, unique identifier of a Cache Group |
+	+-----------+--------------------------------------------------+
 
 
 Response Structure
 ------------------
 :configFile:  Configuration file associated with the parameter
 :id:          A numeric, unique identifier for this parameter
-:lastUpdated: The Time / Date this entry was last updated
+:lastUpdated: The date and time at which this parameter was last updated, in an ISO-like format
 :name:        Name of the parameter
-:secure:      Is the parameter value only visible to admin users
+:secure:      If ``true``, the parameter value is only visible to "admin"-role users
 :value:       Value of the parameter
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 19:56:23 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Wed, 14 Nov 2018 23:56:23 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: DfqPtySzVMpnBYqVt/45sSRG/1pRTlQdIcYuQZ0CQt79QSHLzU5e4TbDqht6ntvNP041LimKsj5RzPlPX1n6tg==
+	Content-Length: 135
 
 	{ "response": [
 		{
-			"lastUpdated": "2015-08-27 21:11:49+00",
-			"value": "http://localhost:8088/teakCatalog/GOID_15101A.csv",
+			"lastUpdated": "2018-11-14 18:22:43.754786+00",
+			"value": "foobar",
 			"secure": false,
-			"name": "teakcluster.TeakCatalogUrl",
-			"id": 1409,
-			"configFile": "to_ext_teak.config"
-		},
-		{
-			"lastUpdated": "2015-09-29 18:59:47+00",
-			"value": "http://localhost:8088/teakCatalog/GOID_15101A.csv",
-			"secure": false,
-			"name": "teakcluster.TeakCatalogUrl",
-			"id": 2351,
-			"configFile": "teak.config"
-		},
-		{
-			"lastUpdated": "2018-09-18 20:33:34.182367+00",
-			"value": "172.24.74.70",
-			"secure": false,
-			"name": "teakcluster.LBVIP",
-			"id": 6571,
-			"configFile": "to_ext_teak.config"
-		},
-		{
-			"lastUpdated": "2018-09-18 20:36:13.227886+00",
-			"value": "172.24.74.70",
-			"secure": false,
-			"name": "teakcluster.LBVIP",
-			"id": 6572,
-			"configFile": "teak.config"
-		},
-		{
-			"lastUpdated": "2018-09-27 21:09:10.036367+00",
-			"value": "ccdn-ats-tk-15101-01:ccdn-ats-tk-15101-02:ccdn-ats-tk-15101-03:ccdn-ats-tk-15101-04:ccdn-ats-tk-15101-05:ccdn-ats-tk-15101-06:ccdn-ats-tk-15101-07",
-			"secure": false,
-			"name": "node_order",
-			"id": 6574,
-			"configFile": "to_ext_teak.config"
-		},
-		{
-			"lastUpdated": "2015-08-27 21:11:49+00",
-			"value": "10.42.18.196",
-			"secure": false,
-			"name": "cgw.cgwServer",
-			"id": 1148,
-			"configFile": "to_ext_teak.config"
-		},
-		{
-			"lastUpdated": "2015-08-27 21:11:49+00",
-			"value": "80",
-			"secure": false,
-			"name": "cgw.cgwPort",
-			"id": 1101,
-			"configFile": "to_ext_teak.config"
+			"name": "foo",
+			"id": 124,
+			"configFile": "bar"
 		}
 	]}

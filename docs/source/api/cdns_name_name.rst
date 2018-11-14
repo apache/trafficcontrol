@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+----------+---------------------------------------------+
-	|   Name    | Required |                Description                  |
-	+===========+==========+=============================================+
-	|  ``name`` |   yes    | The name of the CDN to be inspected         |
-	+-----------+----------+---------------------------------------------+
+	+------+---------------------------------------------+
+	| Name |                Description                  |
+	+======+=============================================+
+	| name | The name of the CDN to be inspected         |
+	+------+---------------------------------------------+
 
 Response Structure
 ------------------
@@ -45,19 +45,30 @@ Response Structure
 :lastUpdated:   Date and time when the CDN was last modified in ISO format
 :name:          The name of the CDN
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: bTz86xdnGfbKhxnneb4geXohaw3lhG+h5wc21/ncHFATwp1h80h+txxySCIVfa0hgBrJHEdpGZQsH5w5IknsrQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 21:22:16 GMT
+	Content-Length: 137
 
 	{ "response": [
 		{
 			"dnssecEnabled": false,
 			"domainName": "mycdn.ciab.test",
 			"id": 2,
-			"lastUpdated": "2018-10-16 20:10:49+00",
+			"lastUpdated": "2018-11-14 18:21:14+00",
 			"name": "CDN-in-a-Box"
 		}
 	]}
-
 
 ``DELETE``
 ==========
@@ -71,16 +82,28 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+----------+---------------------------------------------+
-	|   Name    | Required |                Description                  |
-	+===========+==========+=============================================+
-	|  ``name`` |   yes    | The name of the CDN to be inspected         |
-	+-----------+----------+---------------------------------------------+
+	+------+---------------------------------------------+
+	| Name |                Description                  |
+	+======+=============================================+
+	| name | The name of the CDN to be deleted           |
+	+------+---------------------------------------------+
 
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: Zy4cJN6BEct4ltFLN4e296mM8XnzOs0EQ3/jp4TA3L+g8qtkI0WrL+ThcFq4xbJPU+KHVDSi+b0JBav3xsYPqQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 20:59:22 GMT
+	Content-Length: 58
 
 	{ "alerts": [
 		{
@@ -88,3 +111,4 @@ Response Structure
 			"level": "success"
 		}
 	]}
+

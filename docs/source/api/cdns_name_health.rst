@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------------+----------+-------------------------------------------------------+
-	| Name            | Required | Description                                           |
-	+=================+==========+=======================================================+
-	|``name``         | yes      | The name of the CDN for which health will be reported |
-	+-----------------+----------+-------------------------------------------------------+
+	+------+-------------------------------------------------------+
+	| Name | Description                                           |
+	+======+=======================================================+
+	| name | The name of the CDN for which health will be reported |
+	+------+-------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -48,8 +48,22 @@ Response Structure
 :totalOffline: Total number of OFFLINE caches across all Cache Groups which are assigned to the CDN defined by the ``name`` request path parameter
 :totalOnline:  Total number of ONLINE caches across all Cache Groups which are assigned to the CDN defined by the ``name`` request path parameter
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 21:14:05 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 01:14:05 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: KpXViXeAgch58ueQqdyU8NuINBw1EUedE6Rv2ewcLUajJp6kowdbVynpwW7XiSvAyHdtClIOuT3OkhIimghzSA==
+	Content-Length: 115
 
 	{ "response": {
 		"totalOffline": 0,

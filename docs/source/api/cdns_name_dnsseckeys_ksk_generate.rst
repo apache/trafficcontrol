@@ -15,9 +15,9 @@
 
 .. _to-api-cdns-name-dnsseckeys-ksk-generate:
 
-*************************************************
-``api/1.x/cdns/{{name}}/dnsseckeys/ksk/generate``
-*************************************************
+*****************************************
+``cdns/{{name}}/dnsseckeys/ksk/generate``
+*****************************************
 
 .. versionadded:: 1.4
 

@@ -38,25 +38,38 @@ Response Structure
 :lastUpdated:   Date and time when the CDN was last modified in ISO format
 :name:          The name of the CDN
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: z9P1NkxGebPncUhaChDHtYKYI+XVZfhE6Y84TuwoASZFIMfISELwADLpvpPTN+wwnzBfREksLYn+0313QoBWhA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 20:46:57 GMT
+	Content-Length: 237
 
 	{ "response": [
 		{
-			"id": 1,
-			"name": "over-the-top",
 			"dnssecEnabled": false,
-			"lastUpdated": "2014-10-02 08:22:43",
-			"domainName": "top.comcast.net"
+			"domainName": "-",
+			"id": 1,
+			"lastUpdated": "2018-11-14 18:21:06+00",
+			"name": "ALL"
 		},
 		{
+			"dnssecEnabled": false,
+			"domainName": "mycdn.ciab.test",
 			"id": 2,
-			"name": "cdn2",
-			"dnssecEnabled": true,
-			"lastUpdated": "2014-10-02 08:22:43",
-			"domainName": "2.comcast.net"
+			"lastUpdated": "2018-11-14 18:21:14+00",
+			"name": "CDN-in-a-Box"
 		}
 	]}
+
 
 ``POST``
 ========
@@ -68,17 +81,22 @@ Allows user to create a CDN
 
 Request Structure
 -----------------
-.. table:: Request Data Parameters
+:dnssecEnabled: If ``true``, this CDN will use DNSSEC, if ``false`` it will not
+:domainName:    The top-level domain (TLD) belonging to the new CDN
+:name:          Name of the new CDN
 
-	+-------------------+---------+----------+-----------------------------------------------------------+
-	|    Parameter      |  Type   | Required |        Description                                        |
-	+===================+=========+==========+===========================================================+
-	| ``name``          | string  | yes      | Name of the new CDN                                       |
-	+-------------------+---------+----------+-----------------------------------------------------------+
-	| ``domainName``    | string  | yes      | The top-level domain (TLD) belonging to the new CDN       |
-	+-------------------+---------+----------+-----------------------------------------------------------+
-	| ``dnssecEnabled`` | boolean | yes      | ``true`` if this CDN will use DNSSEC, ``false`` otherwise |
-	+-------------------+---------+----------+-----------------------------------------------------------+
+.. code-block:: http
+	:caption: Request Structure
+
+	POST /api/1.4/cdns HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 63
+	Content-Type: application/json
+
+	{"name": "test", "domainName": "quest", "dnssecEnabled": false}
 
 Response Structure
 ------------------
@@ -88,8 +106,20 @@ Response Structure
 :name:          The newly created CDN's name
 
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: 1rZRlOfQioGRrEb4nCfjGGx7y3Ub2h7BZ4z6NbhcY4acPslKSUNM8QLjWTVwLU4WpkfJNxcoyy8NlKULFrY9Bg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 20:49:28 GMT
+	Content-Length: 174
 
 	{ "alerts": [
 		{
@@ -99,9 +129,8 @@ Response Structure
 	],
 	"response": {
 		"dnssecEnabled": false,
-		"domainName": "test.ciab.test",
-		"id": 4,
-		"lastUpdated": "2018-10-17 15:54:52+00",
+		"domainName": "quest",
+		"id": 3,
+		"lastUpdated": "2018-11-14 20:49:28+00",
 		"name": "test"
 	}}
-

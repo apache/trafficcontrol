@@ -184,75 +184,92 @@ Response Structure
 :typeId:              The integral, unique identifier of the routing type of this Delivery Service
 :xmlId:               A unique string that describes this Delivery Service - exists for legacy reasons
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
-	{ "response": [{
-		"active": true,
-		"anonymousBlockingEnabled": false,
-		"cacheurl": null,
-		"ccrDnsTtl": null,
-		"cdnId": 2,
-		"cdnName": "CDN-in-a-Box",
-		"checkPath": null,
-		"displayName": "Demo 1",
-		"dnsBypassCname": null,
-		"dnsBypassIp": null,
-		"dnsBypassIp6": null,
-		"dnsBypassTtl": null,
-		"dscp": 0,
-		"edgeHeaderRewrite": null,
-		"fqPacingRate": null,
-		"geoLimit": 0,
-		"geoLimitCountries": null,
-		"geoLimitRedirectURL": null,
-		"geoProvider": 0,
-		"globalMaxMbps": null,
-		"globalMaxTps": null,
-		"httpBypassFqdn": null,
-		"id": 1,
-		"infoUrl": null,
-		"initialDispersion": 1,
-		"ipv6RoutingEnabled": true,
-		"lastUpdated": "2018-10-24 16:07:05+00",
-		"logsEnabled": true,
-		"longDesc": "Apachecon North America 2018",
-		"longDesc1": null,
-		"longDesc2": null,
-		"matchList": [
-			{
-				"type": "HOST_REGEXP",
-				"setNumber": 0,
-				"pattern": ".*\\.demo1\\..*"
-			}
-		],
-		"maxDnsAnswers": null,
-		"midHeaderRewrite": null,
-		"missLat": 42,
-		"missLong": -88,
-		"multiSiteOrigin": false,
-		"originShield": null,
-		"orgServerFqdn": "http://origin.infra.ciab.test",
-		"profileDescription": null,
-		"profileId": null,
-		"profileName": null,
-		"protocol": 0,
-		"qstringIgnore": 0,
-		"rangeRequestHandling": 0,
-		"regexRemap": null,
-		"regionalGeoBlocking": false,
-		"remapText": null,
-		"routingName": "video",
-		"signed": false,
-		"sslKeyVersion": null,
-		"tenantId": 1,
-		"type": "HTTP",
-		"typeId": 1,
-		"xmlId": "demo1",
-		"exampleURLs": [
-			"http://video.demo1.mycdn.ciab.test"
-		]
-	}]}
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: Mw4ZsiNKfnxZvN+LsfAzxIZjgGTzcBLcZK24mMdhN1XMRBtwEj9VI3ExNvWKv3dp0f3HRRCUTx6C+ST8bRL9jA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 21:43:36 GMT
+	Content-Length: 1290
+
+	{ "response": [
+		{
+			"active": true,
+			"anonymousBlockingEnabled": false,
+			"cacheurl": null,
+			"ccrDnsTtl": null,
+			"cdnId": 2,
+			"cdnName": "CDN-in-a-Box",
+			"checkPath": null,
+			"displayName": "Demo 1",
+			"dnsBypassCname": null,
+			"dnsBypassIp": null,
+			"dnsBypassIp6": null,
+			"dnsBypassTtl": null,
+			"dscp": 0,
+			"edgeHeaderRewrite": null,
+			"geoLimit": 0,
+			"geoLimitCountries": null,
+			"geoLimitRedirectURL": null,
+			"geoProvider": 0,
+			"globalMaxMbps": null,
+			"globalMaxTps": null,
+			"httpBypassFqdn": null,
+			"id": 1,
+			"infoUrl": null,
+			"initialDispersion": 1,
+			"ipv6RoutingEnabled": true,
+			"lastUpdated": "2018-11-14 18:21:17+00",
+			"logsEnabled": true,
+			"longDesc": "Apachecon North America 2018",
+			"longDesc1": null,
+			"longDesc2": null,
+			"matchList": [
+				{
+					"type": "HOST_REGEXP",
+					"setNumber": 0,
+					"pattern": ".*\\.demo1\\..*"
+				}
+			],
+			"maxDnsAnswers": null,
+			"midHeaderRewrite": null,
+			"missLat": 42,
+			"missLong": -88,
+			"multiSiteOrigin": false,
+			"originShield": null,
+			"orgServerFqdn": "http://origin.infra.ciab.test",
+			"profileDescription": null,
+			"profileId": null,
+			"profileName": null,
+			"protocol": 0,
+			"qstringIgnore": 0,
+			"rangeRequestHandling": 0,
+			"regexRemap": null,
+			"regionalGeoBlocking": false,
+			"remapText": null,
+			"routingName": "video",
+			"signed": false,
+			"sslKeyVersion": null,
+			"tenantId": 1,
+			"type": "HTTP",
+			"typeId": 1,
+			"xmlId": "demo1",
+			"exampleURLs": [
+				"http://video.demo1.mycdn.ciab.test"
+			],
+			"deepCachingType": "NEVER",
+			"signingAlgorithm": null,
+			"tenant": "root"
+		}
+	]}
+
 
 .. [1] Users with the roles "admin" and/or "operation" will be able to see *all* Delivery Services, whereas any other user will only see the Delivery Services their Tenant is allowed to see.
 .. [2] This only applies to HTTP Delivery Services

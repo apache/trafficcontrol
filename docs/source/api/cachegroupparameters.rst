@@ -39,25 +39,29 @@ Response Structure
 	:last_updated: Date and time of last modification in ISO format
 	:cachegroup:   Name of the Cache Group
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 18:24:12 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Wed, 14 Nov 2018 22:24:12 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: PZyh09NeYYy4sXSv+Bfov0v32EuEk/1y7/B+4fyvhbcPxWQ650NXBDpAe8IsmYZQYVRB03xlBtc33bo3Ixunbg==
+	Content-Length: 124
 
 	{ "response": {
 		"cachegroupParameters": [
 			{
-				"parameter": "379",
-				"last_updated": "2013-08-05 18:49:37",
-				"cachegroup": "us-ca-sanjose"
-			},
-			{
-				"parameter": "380",
-				"last_updated": "2013-08-05 18:49:37",
-				"cachegroup": "us-ca-sanjose"
-			},
-			{
-				"parameter": "379",
-				"last_updated": "2013-08-05 18:49:37",
-				"cachegroup": "us-ma-woburn"
+				"parameter": 124,
+				"last_updated": "2018-11-14 18:23:40.488853+00",
+				"cachegroup": "test"
 			}
 		]
 	}}

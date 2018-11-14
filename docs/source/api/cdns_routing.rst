@@ -40,8 +40,22 @@ Response Structure
 :miss:        No location available for client IP
 :staticRoute: Used pre-configured DNS entries
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 21:29:32 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 01:29:32 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: 7LjytwKyRzSKM4cRIol4OMIJxApFpTWJaSK73rbtUIQdASZjI64XxLVzZP0OGRU7XeJ22YKUyQ30qbKHDRv7FQ==
+	Content-Length: 130
 
 	{ "response": {
 		"staticRoute": 0,

@@ -31,23 +31,28 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------------+----------+-------------------------------------------------------------------------------------------------+
-	| Name            | Required | Description                                                                                     |
-	+=================+==========+=================================================================================================+
-	| ID              | yes      | The integral, unique identifier for the Cache Group for which updates are being queued/dequeued |
-	+-----------------+----------+-------------------------------------------------------------------------------------------------+
+	+------+-------------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                     |
+	+======+=================================================================================================+
+	| ID   | The integral, unique identifier for the Cache Group for which updates are being queued/dequeued |
+	+------+-------------------------------------------------------------------------------------------------+
 
-.. table:: Request Data Parameters
+:action: The action to perform; one of "queue" or "dequeue"
+:cdn:    The full name of the CDN in need of update queue/dequeue\ [1]_
+:cdnId:  The integral, unique identifier for the CDN in need of update queue/dequeue\ [1]_
 
-	+--------------+---------+----------+-----------------------------------------------------------------------------+
-	| Name         | Type    | Required | Description                                                                 |
-	+==============+=========+==========+=============================================================================+
-	| action       | string  | yes      | The action to perform; one of "queue" or "dequeue"                          |
-	+--------------+---------+----------+-----------------------------------------------------------------------------+
-	| cdn          | string  | no\ [1]_ | The full name of the CDN in need of update queue/dequeue                    |
-	+--------------+---------+----------+-----------------------------------------------------------------------------+
-	| cdnId        | string  | no\ [1]_ | The integral, unique identifier for the CDN in need of update queue/dequeue |
-	+--------------+---------+----------+-----------------------------------------------------------------------------+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/1.3/cachegroups/8/queue_update HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 42
+	Content-Type: application/json
+
+	{"action": "queue", "cdn": "CDN-in-a-Box"}
 
 .. [1] Either 'cdn' or 'cdnID' *must* be in the request data (but not both).
 
@@ -59,18 +64,27 @@ Response Structure
 :cdn:            The name of the CDN to which the queue/dequeue operation was restricted
 :serverNames:    An array of the (short) hostnames of the servers within the Cache Group which are also assigned to the CDN specified in the ``"cdn"`` field
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: UAcP7LrflU1RnfR4UqbQrJczlk5rkrcLOtTXJTFvIUXxK1EklZkHkE4vewjDaVIhJJ6YQg8jmPGQpr+x1RHabw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 20:19:46 GMT
+	Content-Length: 115
+
 	{ "response": {
-		"cachegroupName": "CDN_in_a_Box_Edge",
-		"action": "dequeue",
+		"cachegroupName": "test",
+		"action": "queue",
 		"serverNames": [
-			"edge",
-			"trafficmonitor",
-			"trafficrouter"
+			"foo"
 		],
 		"cdn": "CDN-in-a-Box",
-		"cachegroupID": 7
+		"cachegroupID": 8
 	}}
-

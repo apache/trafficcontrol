@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+----------+---------------------------------------------+
-	|   Name    | Required |                Description                  |
-	+===========+==========+=============================================+
-	|   ``id``  |   yes    | ID of the CDN to inspect                    |
-	+-----------+----------+---------------------------------------------+
+	+------+----------------------------------------------------+
+	| Name |                Description                         |
+	+======+====================================================+
+	|  ID  | Integral, unique identifier for the CDN to inspect |
+	+------+----------------------------------------------------+
 
 Response Structure
 ------------------
@@ -45,18 +45,31 @@ Response Structure
 :lastUpdated:   Date and time when the CDN was last modified in ISO format
 :name:          The name of the CDN
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: bTz86xdnGfbKhxnneb4geXohaw3lhG+h5wc21/ncHFATwp1h80h+txxySCIVfa0hgBrJHEdpGZQsH5w5IknsrQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 20:59:34 GMT
+	Content-Length: 137
 
 	{ "response": [
 		{
 			"dnssecEnabled": false,
 			"domainName": "mycdn.ciab.test",
 			"id": 2,
-			"lastUpdated": "2018-10-16 20:10:49+00",
+			"lastUpdated": "2018-11-14 18:21:14+00",
 			"name": "CDN-in-a-Box"
 		}
 	]}
+
 
 ``PUT``
 =======
@@ -70,23 +83,28 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+----------+---------------------------------------------+
-	|   Name    | Required |                Description                  |
-	+===========+==========+=============================================+
-	|   ``id``  |   yes    | ID of the CDN to inspect                    |
-	+-----------+----------+---------------------------------------------+
+	+------+---------------------------------------------------+
+	| Name |                Description                        |
+	+======+===================================================+
+	|  ID  | Integral, unique identifier for the CDN to update |
+	+------+---------------------------------------------------+
 
-.. table:: Request Data Parameters
+:dnssecEnabled: If ``true``, this CDN will use DNSSEC, if ``false`` it will not
+:domainName:    The top-level domain (TLD) belonging to the CDN
+:name:          Name of the new CDN
 
-	+-------------------+---------+----------+-----------------------------------------------------------+
-	|    Parameter      |  Type   | Required |        Description                                        |
-	+===================+=========+==========+===========================================================+
-	| ``name``          | string  | yes      | Name of the new CDN                                       |
-	+-------------------+---------+----------+-----------------------------------------------------------+
-	| ``domainName``    | string  | yes      | The top-level domain (TLD) belonging to the new CDN       |
-	+-------------------+---------+----------+-----------------------------------------------------------+
-	| ``dnssecEnabled`` | boolean | yes      | ``true`` if this CDN will use DNSSEC, ``false`` otherwise |
-	+-------------------+---------+----------+-----------------------------------------------------------+
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/1.4/cdns/3 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 63
+	Content-Type: application/json
+
+	{"name": "quest", "domainName": "test", "dnssecEnabled": false}
 
 Response Structure
 ------------------
@@ -96,8 +114,20 @@ Response Structure
 :name:          The newly created CDN's name
 
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: sI1hzBwG+/VAzoFY20kqGFA2RgrUOThtMeeJqk0ZxH3TRxTWuA8BetACct/XICC3n7hPDLlRVpwckEyBdyJkXg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 20:54:33 GMT
+	Content-Length: 174
 
 	{ "alerts": [
 		{
@@ -107,10 +137,10 @@ Response Structure
 	],
 	"response": {
 		"dnssecEnabled": false,
-		"domainName": "foo.ciab.test",
-		"id": 7,
-		"lastUpdated": "2018-10-17 17:37:34+00",
-		"name": "Foo"
+		"domainName": "test",
+		"id": 4,
+		"lastUpdated": "2018-11-14 20:54:33+00",
+		"name": "quest"
 	}}
 
 ``DELETE``
@@ -125,16 +155,28 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+----------+---------------------------------------------+
-	|   Name    | Required |                Description                  |
-	+===========+==========+=============================================+
-	|   ``id``  |   yes    | ID of the CDN to inspect                    |
-	+-----------+----------+---------------------------------------------+
+	+------+------------------------------------------------------+
+	| Name |                Description                           |
+	+======+======================================================+
+	|  ID  | The integral, unique identifier of the CDN to delete |
+	+------+------------------------------------------------------+
 
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: Zy4cJN6BEct4ltFLN4e296mM8XnzOs0EQ3/jp4TA3L+g8qtkI0WrL+ThcFq4xbJPU+KHVDSi+b0JBav3xsYPqQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 20:51:23 GMT
+	Content-Length: 58
 
 	{ "alerts": [
 		{
@@ -142,3 +184,4 @@ Response Structure
 			"level": "success"
 		}
 	]}
+

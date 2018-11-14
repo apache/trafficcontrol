@@ -34,8 +34,20 @@ Response Structure
 ------------------
 :name: The name of the Cache Group                    |
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: OyOKqpB24AMlrENIEoA4la/3rclnuKMayvzskmPNPXrDMQksGt0UjVwORYmMdmIS5dQHuIlglBlksvLtqjziHQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 20:23:23 GMT
+	Content-Length: 216
 
 	{ "response": [
 		{
@@ -58,5 +70,9 @@ Response Structure
 		},
 		{
 			"name": "CDN_in_a_Box_Edge"
+		},
+		{
+			"name": "test"
 		}
 	]}
+

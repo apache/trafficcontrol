@@ -31,19 +31,26 @@ Request Structure
 -----------------
 .. table::Request Path Parameters
 
-	+------------------+----------+------------------------------------------------------------------------------+
-	|      Name        | Required |           Description                                                        |
-	+==================+==========+==============================================================================+
-	|      id          |   yes    | The integral, unique identifier of the Cache Group being assigned            |
-	+------------------+----------+------------------------------------------------------------------------------+
+	+------+-------------------------------------------------------------------+
+	| Name |           Description                                             |
+	+======+===================================================================+
+	|  ID  | The integral, unique identifier of the Cache Group being assigned |
+	+------+-------------------------------------------------------------------+
 
-.. table:: Request Data Parameters
+:deliveryServices:  The integral, unique identifiers of the Delivery Services to which the Cache Group is being assigned
 
-	+------------------+----------+--------------------------------------------------------------------------------------+
-	|    Parameter     |   Type   |           Description                                                                |
-	+==================+==========+======================================================================================+
-	| deliveryServices |  array   | The integral IDs of the Delivery Services to which the Cache Group is being assigned |
-	+------------------+----------+--------------------------------------------------------------------------------------+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/1.3/cachegroups/8/deliveryservices HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 25
+	Content-Type: application/x-www-form-urlencoded
+
+	{"deliveryServices": [2]}
 
 Response Structure
 ------------------
@@ -51,17 +58,34 @@ Response Structure
 :id:               The Cache Group's ID
 :serverNames:      An array of the (short) hostnames of all servers in the Cache Group
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: j/yH0gvJoaGjiLZU/0MA8o5He20O4aJ5wh1eF9ex6F6IBO1liM9Wk9RkWCw7sdiUHoy13/mf7gDntisZwzP7yw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 19:54:17 GMT
+	Content-Length: 183
 
 	{ "alerts": [
 		{
-			"text": "Delivery services successfully assigned to all the servers of cache group 7.",
+			"text": "Delivery services successfully assigned to all the servers of cache group 8.",
 			"level": "success"
 		}
 	],
 	"response": {
-		"id": 7,
-		"serverNames": [ "edge" ],
-		"deliveryServices": [ 1 ]
+		"id": 8,
+		"serverNames": [
+			"foo"
+		],
+		"deliveryServices": [
+			2
+		]
 	}}
+

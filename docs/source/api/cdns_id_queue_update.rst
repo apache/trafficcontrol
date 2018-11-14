@@ -16,7 +16,7 @@
 .. _to-cdns-id-queue_update:
 
 ****************************
-``cdns/{{id}}/queue_update``
+``cdns/{{ID}}/queue_update``
 ****************************
 
 ``POST``
@@ -31,30 +31,48 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------------+----------+---------------------------------------------------------------------------+
-	| Name            | Required | Description                                                               |
-	+=================+==========+===========================================================================+
-	| id              | yes      | The integral, unique identifier for the CDN on which to (de)queue updates |
-	+-----------------+----------+---------------------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------+
+	| Name | Description                                                               |
+	+======+===========================================================================+
+	| ID   | The integral, unique identifier for the CDN on which to (de)queue updates |
+	+------+---------------------------------------------------------------------------+
 
-.. table:: Request Data Parameters
+:action: One of "queue" or "dequeue" as appropriate
 
-	+--------------+---------+----------+-----------------------------------------------+
-	| Name         | Type    | Required | Description                                   |
-	+==============+=========+==========+===============================================+
-	| action       | string  | yes      | One of "queue" or "dequeue" as appropriate    |
-	+--------------+---------+----------+-----------------------------------------------+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/1.4/cdns/2/queue_update HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 19
+	Content-Type: application/json
+
+	{"action": "queue"}
 
 Response Structure
 ------------------
 :action: The action processed, either ``"queue"`` or ``"dequeue"``
 :cdnId:  The integral, unique identifier for the CDN on which updates were (de)queued
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: rBpFfrrP+9IFkwsRloEM+v+I8MuBZDXqFu+WUTGtRGypnAn2gHooPoNQRyVvJGjyIQrLXLvqjEtve+lH2Tj4uw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 21:02:07 GMT
+	Content-Length: 41
+
 	{ "response": {
-			"action": "queue",
-			"cdn": 1
-		}
-	}
+		"action": "queue",
+		"cdnId": 2
+	}}

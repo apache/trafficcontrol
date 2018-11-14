@@ -31,28 +31,43 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-------------+----------+--------+------------------------------------+
-	|    Name     | Required | Type   |          Description               |
-	+=============+==========+========+====================================+
-	|   ``name``  |   yes    | string | Capability name.                   |
-	+-------------+----------+--------+------------------------------------+
+	+------+----------------------------------------+
+	| Name |          Description                   |
+	+======+========================================+
+	| name | The name of the capability of interest |
+	+------+----------------------------------------+
 
 Response Structure
 ------------------
-:description: Describes the APIs covered by the capability.
+:description: Describes the APIs covered by the capability
 :lastUpdated: Date and time of the last update made to this capability, in ISO format
 :name:        Name of the capability
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 20:37:17 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 00:37:17 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: 0YBTC5TEAOJ6B8gsaKgOD1ni2hnZ8Kh9u2JhcmExoGIPaMEKpp4Omr4FglkOQZuh/IB90eJjBMNMeCEvZCxWRg==
+	Content-Length: 167
 
 	{ "response": [
 		{
-			"name": "cdn-read",
-			"description": "View CDN configuration",
-			"lastUpdated": "2017-04-02 08:22:43"
+			"lastUpdated": "2018-11-14 20:33:00.275376+00",
+			"name": "test",
+			"description": "This is only a test. If this were a real capability, it might do something"
 		}
 	]}
+
 
 ``PUT``
 =======
@@ -66,38 +81,62 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-------------+----------+--------+------------------------------------+
-	|    Name     | Required | Type   |          Description               |
-	+=============+==========+========+====================================+
-	|   ``name``  |   yes    | string | Capability name.                   |
-	+-------------+----------+--------+------------------------------------+
+	+------+-------------------------------------------+
+	| Name |          Description                      |
+	+======+===========================================+
+	| name | The name of the capability to be modified |
+	+------+-------------------------------------------+
 
-.. table:: Request Data Parameters
+:description: Describes the APIs covered by the capability
 
-	+-------------------+--------+----------+------------------------------------------------+
-	|    Parameter      |  Type  | Required |                  Description                   |
-	+===================+========+==========+================================================+
-	| ``description``   | string | yes      | Describing the APIs covered by the capability  |
-	+-------------------+--------+----------+------------------------------------------------+
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/1.4/capabilities/test HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 45
+	Content-Type: application/json
+
+	{"description": "A much shorter description"}
 
 Response Structure
 ------------------
 :description: Describes the APIs covered by the capability.
 :lastUpdated: Date and time of the last update made to this capability, in ISO format
+:name:        The name of the capability
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
-	{ "response":{
-		"name": "cdn-read",
-		"description": "View CDN configuration"
-	},
-	"alerts":[
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 20:40:33 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 00:40:33 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: +5mLZ/CJnDkJMbnFviXtVdjwt4bu7ykiMIs73zsnuKV/k4q/d025b2pjYDQkSgtfWPJ73FcusAuBM9TCVT3KsA==
+	Content-Length: 181
+
+	{ "alerts": [
 		{
 			"level": "success",
 			"text": "Capability was updated."
 		}
-	]}
+	],
+	"response": {
+		"lastUpdated": "2018-11-14 20:33:00.275376+00",
+		"name": "test",
+		"description": "A much shorter description"
+	}}
+
 
 ``DELETE``
 ==========
@@ -119,8 +158,22 @@ Request Structure
 
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 20:45:37 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 00:45:37 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: IlAiV4ebwTpMIgeYlR5RuwOhwmHsFs8Ekt7AaEDb3v+lXjvjkqU98xFsfNWvpvPbT/iJnotENhtVq8TVdvoPLg==
+	Content-Length: 61
 
 	{ "alerts": [
 		{
@@ -128,3 +181,4 @@ Response Structure
 			"text": "Capability deleted."
 		}
 	]}
+

@@ -37,16 +37,15 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.3/deliveryservice_user HTTP/1.1
+	POST /api/1.4/deliveryservice_user HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 38
 	Content-Type: application/json
-	Content-Length: 81
-	Accept: application/json
 
-	{
-		"userId": 50,
-		"deliveryServices": [ 23, 34, 45, 56, 67 ],
-		"replace": true
-	}
+	{"userId": 5, "deliveryServices": [1]}
 
 Response Structure
 ------------------
@@ -58,7 +57,18 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 21:37:30 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 01:37:30 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: Uwl+924m6Ye3NraFP+RBpldkhcNTTDyXHZbzRaYV95p9tP56Z61gckeKSr1oQIkNXjXcCsDN5Dmum7Zk1AR6Hw==
+	Content-Length: 127
 
 	{ "alerts": [
 		{
@@ -67,7 +77,8 @@ Response Structure
 		}
 	],
 	"response": {
-			"userId" : 50,
-			"deliveryServices": [ 23, 34, 45, 56, 67 ],
-			"replace": true
+		"userId": 5,
+		"deliveryServices": [
+			1
+		]
 	}}

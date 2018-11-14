@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+--------+----------+---------------------------------------------------------------------------------------------------------------------------------+
-	| Name   | Required | Description                                                                                                                     |
-	+========+==========+=================================================================================================================================+
-	| dsId   | yes      | An integral, unique identifier for the Delivery Service which should no longer be assigned to the user identified by ``userID`` |
-	+--------+----------+---------------------------------------------------------------------------------------------------------------------------------+
-	| userId | yes      | An integral, unique identifier for the user to whom the Delivery Service identified by ``dsID`` should no longer be assigned    |
-	+--------+----------+---------------------------------------------------------------------------------------------------------------------------------+
+	+--------+---------------------------------------------------------------------------------------------------------------------------------+
+	| Name   | Description                                                                                                                     |
+	+========+=================================================================================================================================+
+	| dsId   | An integral, unique identifier for the Delivery Service which should no longer be assigned to the user identified by ``userID`` |
+	+--------+---------------------------------------------------------------------------------------------------------------------------------+
+	| userId | An integral, unique identifier for the user to whom the Delivery Service identified by ``dsID`` should no longer be assigned    |
+	+--------+---------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -45,11 +45,22 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 21:40:06 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 01:40:06 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: /eNE3LhFABGukcczjxJOYiwmfVTUUKII9RRuZi14AbF65BLhHdXZ5lAVEi4Hc65+ojNaijBgI9jTmgO4XCcP/A==
+	Content-Length: 100
 
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "User and delivery service were unlinked."
+			"text": "User [ test ] unlinked from deliveryservice [ 1 | demo1 ]."
 		}
 	]}

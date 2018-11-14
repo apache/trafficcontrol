@@ -15,9 +15,9 @@
 
 .. _to-api-cdns-name-configs-monitoring:
 
-*********************************
-``cdns/:name/configs/monitoring``
-*********************************
+************************************
+``cdns/{{name}}/configs/monitoring``
+************************************
 
 .. seealso:: :ref:`health-proto`
 
@@ -33,11 +33,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+----------+----------+-------------+
-	|   Name   | Required | Description |
-	+==========+==========+=============+
-	| ``name`` | yes      |  CDN name   |
-	+----------+----------+-------------+
+	+------+------------------------------------------------------------------------+
+	| Name | Description                                                            |
+	+======+========================================================================+
+	| name | The name of the CDN for which monitoring configuration will be fetched |
+	+------+------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -107,24 +107,23 @@ Response Structure
 	:status:        The status of the Cache
 	:type:          The type of the cache - should be either ``EDGE`` or ``MID``
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: uLR+tRoqR8SYO38j3DV9wQ+IkJ7Kf+MCoFkcWZtsgbpLJ+0S6f+IiI8laNVeDgrM/P23MAQ6BSepm+EJRl1AXQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 21:09:31 GMT
+	Transfer-Encoding: chunked
 
 	{ "response": {
 		"trafficServers": [
-			{
-				"profile": "ATS_MID_TIER_CACHE",
-				"status": "REPORTED",
-				"ip": "172.16.239.120",
-				"ip6": "fc01:9400:1000:8::120",
-				"port": 80,
-				"cachegroup": "CDN_in_a_Box_Mid",
-				"hostname": "mid",
-				"fqdn": "mid.infra.ciab.test",
-				"interfacename": "eth0",
-				"type": "MID",
-				"hashid": "mid"
-			},
 			{
 				"profile": "ATS_EDGE_TIER_CACHE",
 				"status": "REPORTED",
@@ -137,6 +136,19 @@ Response Structure
 				"interfacename": "eth0",
 				"type": "EDGE",
 				"hashid": "edge"
+			},
+			{
+				"profile": "ATS_MID_TIER_CACHE",
+				"status": "REPORTED",
+				"ip": "172.16.239.120",
+				"ip6": "fc01:9400:1000:8::120",
+				"port": 80,
+				"cachegroup": "CDN_in_a_Box_Mid",
+				"hostname": "mid",
+				"fqdn": "mid.infra.ciab.test",
+				"interfacename": "eth0",
+				"type": "MID",
+				"hashid": "mid"
 			}
 		],
 		"trafficMonitors": [
@@ -174,8 +186,8 @@ Response Structure
 				"parameters": null
 			},
 			{
-				"name": "ATS_MID_TIER_CACHE",
-				"type": "MID",
+				"name": "ATS_EDGE_TIER_CACHE",
+				"type": "EDGE",
 				"parameters": {
 					"health.connection.timeout": 2000,
 					"health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",
@@ -186,8 +198,8 @@ Response Structure
 				}
 			},
 			{
-				"name": "ATS_EDGE_TIER_CACHE",
-				"type": "EDGE",
+				"name": "ATS_MID_TIER_CACHE",
+				"type": "MID",
 				"parameters": {
 					"health.connection.timeout": 2000,
 					"health.polling.url": "http://${hostname}/_astats?application=&inf.name=${interface_name}",

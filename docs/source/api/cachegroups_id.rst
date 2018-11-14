@@ -30,51 +30,76 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------------------+---------+---------------------------------------------------------------+
-	| Parameter        | Type    | Description                                                   |
-	+==================+=========+===============================================================+
-	| ``id``           | integer | The ID of a Cache Group                                       |
-	+------------------+---------+---------------------------------------------------------------+
+	+--------------+---------------------------------------------------------------+
+	| Parameter    | Description                                                   |
+	+==============+===============================================================+
+	| ID           | The integral, unique identifier of a Cache Group              |
+	+--------------+---------------------------------------------------------------+
 
 Response Structure
 ------------------
-:fallbackToClosest:             If 'true', Traffic Router will direct clients to peers of this Cache Group in the event that it becomes unavailable.
-:id:                            Local unique identifier for the Cache Group
-:lastUpdated:                   The Time / Date this entry was last updated
-:latitude:                      Latitude for the Cache Group
-:longitude:                     Longitude for the Cache Group
-:name:                          The name of the Cache Group entry
-:parentCachegroupId:            Parent Cache Group ID
-:parentCachegroupName:          Parent Cache Group name
-:secondaryParentCachegroupId:   Secondary parent Cache Group ID
-:secondaryParentCachegroupName: Secondary parent Cache Group name
+:fallbackToClosest:   If ``true``, Traffic Router will direct clients to peers of this Cache Group in the event that it becomes unavailable
+:id:                  Integral, unique identifier for the Cache Group
+:lastUpdated:         The date and time at which this Cache Group was last updated, in an ISO-like format
+:latitude:            Latitude of the Cache Group
+:localizationMethods: An array of strings that name the localization methods enabled for this Cache Group. Each of the three available localization methods may be present, with the following meanings:
+
+	CZ
+		Lookup in the Traffic Router's "Coverage Zone" file is enabled
+	DEEP_CZ
+		Lookup in the Traffic Router's "Deep Coverage Zone" file is enabled
+	GEO
+		Use of a geographical location-to-IP mapping database is enabled
+
+:longitude:                     Longitude of the Cache Group
+:name:                          The name of the Cache Group
+:parentCachegroupId:            Integral, unique identifier of the Cache Group that is this Cache Group's parent
+:parentCachegroupName:          The name of the Cache Group that is this Cache Group's parent
+:secondaryParentCachegroupId:   Integral, unique identifier of the Cache Group that is this Cache Group's secondary parent
+:secondaryParentCachegroupName: The name of the Cache Group that is this Cache Group's secondary parent
 :shortName:                     Abbreviation of the Cache Group Name
-:typeId:                        Unique identifier for the 'Type' of Cache Group entry
-:typeName:                      The name of the type of Cache Group entry
+:typeId:                        The integral, unique identifier for the 'Type' of Cache Group
+:typeName:                      The name of the type of this Cache Group
 
 .. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: EXO+TK1CIwQ5lzTXQGqlLDzU641pLLCQbyqz5Z8QUYSPAjjn5cqC9W3c0ioDiCdK9bUWvHP3E4/ERBzkBTi06g==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 18:35:53 GMT
+	Content-Length: 357
 
 	{ "response": [
 		{
-			"id": 1,
-			"name": "TRAFFIC_ANALYTICS",
-			"shortName": "TRAFFIC_ANALYTICS",
-			"latitude": 38.897663,
-			"longitude": -77.036574,
-			"parentCachegroupName": null,
-			"parentCachegroupId": null,
+			"id": 8,
+			"name": "test",
+			"shortName": "test",
+			"latitude": 0,
+			"longitude": 0,
+			"parentCachegroupName": "CDN_in_a_Box_Mid",
+			"parentCachegroupId": 6,
 			"secondaryParentCachegroupName": null,
 			"secondaryParentCachegroupId": null,
 			"fallbackToClosest": null,
-			"localizationMethods": null,
-			"typeName": "TC_LOC",
-			"typeId": 47,
-			"lastUpdated": "2018-10-15 13:35:35+00"
+			"localizationMethods": [
+				"DEEP_CZ",
+				"CZ"
+			],
+			"typeName": "EDGE_LOC",
+			"typeId": 23,
+			"lastUpdated": "2018-11-14 18:23:33+00"
 		}
 	]}
+
 
 ``PUT``
 =======
@@ -88,82 +113,114 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+----------+------------------------------------+
-	| Name | Required | Description                        |
-	+======+==========+====================================+
-	| id   | yes      | The id of the cache group to edit. |
-	+------+----------+------------------------------------+
+	+--------------+---------------------------------------------------------------+
+	| Parameter    | Description                                                   |
+	+==============+===============================================================+
+	| ID           | The integral, unique identifier of a Cache Group              |
+	+--------------+---------------------------------------------------------------+
 
-.. table:: Request Data Parameters
+:fallbackToClosest: An optional field which, if present and ``true``, will cause Traffic Router to direct clients to peers of this Cache Group in the event that it becomes unavailable
 
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| Name                            | Required | Type    |  Description                                                      |
-	+=================================+==========+=========+===================================================================+
-	| ``name``                        | yes      | string  | The name of the Cache Group entry                                 |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``shortName``                   | yes      | string  | Abbreviation of the Cache Group Name                              |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``latitude``                    | no       | float   | Latitude for the Cache Group                                      |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``longitude``                   | no       | float   | Longitude for the Cache Group                                     |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``parentCachegroup``            | no       | string  | Name of Parent Cache Group entry.                                 |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``secondaryParentCachegroup``   | no       | string  | Name of Secondary Parent Cache Group entry.                       |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``localizationMethods``         | no       | array   | Array of enabled localization methods (as strings)                |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``typeId``                      | yes      | integer | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
-	| ``fallbackToClosest``           | no       | boolean | Behaviour on configured fallbacks failure                         |
-	+---------------------------------+----------+---------+-------------------------------------------------------------------+
+	.. note:: The default value of ``fallbackToClosest`` is ``true``, and if it is ``null`` or ``undefined`` Traffic Control components will still interpret it as ``true``.
+
+:latitude:            An optional field which, if specified, will set the latitude of the new Cache Group\ [1]_
+:localizationMethods: An optional array of strings that name the localization methods enabled for this Cache Group. Each of the three available localization methods may be present, with the following meanings:
+
+	CZ
+		Lookup in the Traffic Router's "Coverage Zone" file will be enabled
+	DEEP_CZ
+		Lookup in the Traffic Router's "Deep Coverage Zone" file will be enabled
+	GEO
+		Use of a geographical location-to-IP mapping database will be enabled
+
+:longitude:                 An optional field which, if specified, will set the longitude of the new Cache Group\ [1]_
+:name:                      The desired name of the Cache Group entry
+:parentCachegroup:          An optional field which, if specified, should be the integral, unique identifier of Cache Group to use as the new Cache Group's parent
+:secondaryParentCachegroup: An optional field which, if specified, should be the integral, unique identifier of Cache Group to use as the new Cache Group's parent
+:shortName:                 A more human-friendly abbreviation of the Cache Group's name
+:typeId:                    The integral, unique identifier of the desired type of the new Cache Group - by default the valid options are: "EDGE_LOC", "MID_LOC" or "ORG_LOC"
+
+	.. note:: Rather than the actual name of the type, be sure to use the "database ID" of the desired type. Typically this will require looking up the types via the API first, as the IDs of even these default types is not deterministic.
+
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/1.3/cachegroups/8 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 118
+	Content-Type: application/json
+
+	{"latitude": 0.0, "longitude": 0.0, "name": "test", "shortName": "test", "typeId": 23, "localizationMethods": ["GEO"]}
 
 Response Structure
 ------------------
-:fallbackToClosest:             If 'true', Traffic Router will direct clients to peers of this Cache Group in the event that it becomes unavailable.
-:id:                            Local unique identifier for the Cache Group
-:lastUpdated:                   The Time / Date this entry was last updated
-:latitude:                      Latitude for the Cache Group
-:longitude:                     Longitude for the Cache Group
-:name:                          The name of the Cache Group entry
-:parentCachegroupId:            Parent Cache Group ID
-:parentCachegroupName:          Parent Cache Group name
-:secondaryParentCachegroupId:   Secondary parent Cache Group ID
-:secondaryParentCachegroupName: Secondary parent Cache Group name
+:fallbackToClosest:   If ``true``, Traffic Router will direct clients to peers of this Cache Group in the event that it becomes unavailable
+:id:                  Integral, unique identifier for the Cache Group
+:lastUpdated:         The date and time at which this Cache Group was last updated, in an ISO-like format
+:latitude:            Latitude of the Cache Group
+:localizationMethods: An array of strings that name the localization methods enabled for this Cache Group. Each of the three available localization methods may be present, with the following meanings:
+
+	CZ
+		Lookup in the Traffic Router's "Coverage Zone" file is enabled
+	DEEP_CZ
+		Lookup in the Traffic Router's "Deep Coverage Zone" file is enabled
+	GEO
+		Use of a geographical location-to-IP mapping database is enabled
+
+:longitude:                     Longitude of the Cache Group
+:name:                          The name of the Cache Group
+:parentCachegroupId:            Integral, unique identifier of the Cache Group that is this Cache Group's parent
+:parentCachegroupName:          The name of the Cache Group that is this Cache Group's parent
+:secondaryParentCachegroupId:   Integral, unique identifier of the Cache Group that is this Cache Group's secondary parent
+:secondaryParentCachegroupName: The name of the Cache Group that is this Cache Group's secondary parent
 :shortName:                     Abbreviation of the Cache Group Name
-:typeId:                        Unique identifier for the 'Type' of Cache Group entry
-:typeName:                      The name of the type of Cache Group entry
+:typeId:                        The integral, unique identifier for the 'Type' of Cache Group
+:typeName:                      The name of the type of this Cache Group
 
-.. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
-
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: t1W65/2kj25QyHt0Ib0xpBaAR2sXu2kOsRZ49WjKZp/AK5S1YWhX7VNWCuUGiN1VNM4QRNqODC/7ewhYDFUncA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 19:14:28 GMT
+	Content-Length: 385
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "cg was updated."
+			"text": "cg was updated.",
+			"level": "success"
 		}
 	],
 	"response": {
-		"longitude" : "45",
-		"lastUpdated" : "2016-01-25 13:55:30",
-		"shortName" : "cg_edge",
-		"name" : "cache_group_edge",
-		"parentCachegroup" : "cache_group_mid",
-		"secondaryParentCachegroup" : null,
+		"id": 8,
+		"name": "test",
+		"shortName": "test",
+		"latitude": 0,
+		"longitude": 0,
+		"parentCachegroupName": null,
+		"parentCachegroupId": null,
+		"secondaryParentCachegroupName": null,
+		"secondaryParentCachegroupId": null,
+		"fallbackToClosest": null,
 		"localizationMethods": [
-			"DEEP_CZ",
-			"CZ",
 			"GEO"
 		],
-		"latitude" : "12",
-		"typeName" : "EDGE_LOC",
-		"id" : "104",
-		"parentCachegroupId" : "103",
-		"secondaryParentCachegroupId" : null,
-		"fallbackToClosest":true
+		"typeName": null,
+		"typeId": 23,
+		"lastUpdated": "2018-11-14 19:14:28+00"
 	}}
+
+.. [1] While these fields are technically optional, note that if they are not specified many things may break. For this reason, Traffic Portal requires them when creating or editing Cache Groups.
 
 ``DELETE``
 ==========
@@ -177,20 +234,33 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+----------+--------------------------------------+
-	| Name | Required | Description                          |
-	+======+==========+======================================+
-	| id   | yes      | The id of the cache group to delete. |
-	+------+----------+--------------------------------------+
+	+--------------+----------------------------------------------------------------+
+	| Parameter    | Description                                                    |
+	+==============+================================================================+
+	| ID           | The integral, unique identifier of a Cache Group to be deleted |
+	+--------------+----------------------------------------------------------------+
 
 Response Structure
 ------------------
-.. code block:: json
+.. code block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: 5jZBgO7h1eNF70J/cmlbi3Hf9KJPx+WLMblH/pSKF3FWb/10GUHIN35ZOB+lN5LZYCkmk3izGbTFkiruG8I41Q==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 20:31:04 GMT
+	Content-Length: 57
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "cg was deleted."
+			"text": "cg was deleted.",
+			"level": "success"
 		}
 	]}
+

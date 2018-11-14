@@ -18,8 +18,10 @@
 *****************************************
 ``cachegroup/{{parameter ID}}/parameter``
 *****************************************
+.. deprecated:: 1.1
+	Use :ref:`to-api-cachegroupparameters` instead
 
-.. caution:: This page is a stub!  Much of it may be missing or just downright wrong - it needs a lot of love from people with the domain knowledge required to update it.
+.. caution:: This endpoint does not appear to work, and thus its use is strongly discouraged!
 
 ``GET``
 =======

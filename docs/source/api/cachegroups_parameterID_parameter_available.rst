@@ -18,6 +18,10 @@
 ****************************************************
 ``cachegroups/{{parameter ID}}/parameter/available``
 ****************************************************
+.. deprecated:: 1.1
+	Use :ref:`to-api-cachegroupparameters` instead
+
+.. caution:: This endpoint does not appear to work, and thus its use is strongly discouraged!
 
 ``GET``
 =======

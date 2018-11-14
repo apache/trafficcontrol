@@ -32,13 +32,13 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-----------------+----------+---------------------------------------------------------------------+
-	| Name            | Required | Description                                                         |
-	+=================+==========+=====================================================================+
-	| ``id``          | no       | Return only coordinates that have this integral, unique identifier  |
-	+-----------------+----------+---------------------------------------------------------------------+
-	| ``name``        | no       | Return only coordinates with this name                              |
-	+-----------------+----------+---------------------------------------------------------------------+
+	+------+----------+---------------------------------------------------------------------+
+	| Name | Required | Description                                                         |
+	+======+==========+=====================================================================+
+	| id   | no       | Return only coordinates that have this integral, unique identifier  |
+	+------+----------+---------------------------------------------------------------------+
+	| name | no       | Return only coordinates with this name                              |
+	+------+----------+---------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -48,8 +48,20 @@ Response Structure
 :longitude:   Longitude of the coordinate
 :name:        The name of the coordinate - typically this just reflects the name of the Cache Group for which the coordinate was created
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: Y2vxC3hpxIg6aRNBBT7i2hbAViIJp+dJoqHIzu3acFM+vGay/I5E+eZYOC9RY8hcJPrKNXysZOD8DOb9KsFgaw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 21:32:28 GMT
+	Content-Length: 942
 
 	{ "response": [
 		{

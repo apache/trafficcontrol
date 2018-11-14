@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------------+----------+---------------------------------------------------------------------------------------------+
-	| Name            | Required | Description                                                                                 |
-	+=================+==========+=============================================================================================+
-	| ``ID``          | yes      | The integral, unique identifier of the Delivery service for which servers will be displayed |
-	+-----------------+----------+---------------------------------------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                 |
+	+======+=============================================================================================+
+	| ID   | The integral, unique identifier of the Delivery service for which servers will be displayed |
+	+------+---------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -89,8 +89,20 @@ Response Structure
 :typeId:         An integral, unique identifier for the type of this server
 :updPending:     ``true`` if the server has updates pending, ``false`` otherwise
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: MaIvaO8OSjysr4bCkuXFEMf3o6mOqga1aM4IHN/tcP2aa1iXEmA5IrHB7DaqNX/2vGHLXvN+01FEAR/lRNqr1w==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 14 Nov 2018 21:28:23 GMT
+	Content-Length: 891
 
 	{ "response": [
 		{
@@ -115,7 +127,7 @@ Response Structure
 			"ipAddress": "172.16.239.100",
 			"ipGateway": "172.16.239.1",
 			"ipNetmask": "255.255.255.0",
-			"lastUpdated": "2018-10-30 16:01:12+00",
+			"lastUpdated": "2018-11-14 21:08:44+00",
 			"mgmtIpAddress": "",
 			"mgmtIpGateway": "",
 			"mgmtIpNetmask": "",

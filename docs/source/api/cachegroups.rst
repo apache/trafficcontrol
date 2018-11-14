@@ -114,9 +114,9 @@ Request Structure
 
 	.. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
-:latitude:                    An optional field which, if present, will define the latitude for the Cache Group to ISO-standard double specification
+:latitude:                    An optional field which, if present, will define the latitude for the Cache Group to ISO-standard double specification\ [1]_
 :localizationMethods:         Array of enabled localization methods (as strings)
-:longitude:                   An optional field which, if present, will define the longitude for the Cache Group to ISO-standard double specification
+:longitude:                   An optional field which, if present, will define the longitude for the Cache Group to ISO-standard double specification\ [1]_
 :name:                        The name of the Cache Group
 :parentCachegroupId:          An optional field which, if present, should be an integral, unique identifier for this Cache Group's primary parent
 :secondaryParentCachegroupId: An optional field which, if present, should be an integral, unique identifier for this Cache Group's secondary parent
@@ -209,6 +209,7 @@ Response Structure
 		"lastUpdated": "2018-11-07 22:11:50+00"
 	}}
 
+.. [1] While these fields are technically optional, note that if they are not specified many things may break. For this reason, Traffic Portal requires them when creating or editing Cache Groups.
 
 .. This doesn't appear to exist anymore - can't reproduce in CIAB nor production
 .. ``/api/1.1/cachegroups/:parameter_id/parameter/available``
