@@ -39,6 +39,14 @@ Request Structure
 	| fallbackId   |yes\ [1]_ | The integral, unique identifier of a fallback Cache Group                                         |
 	+--------------+----------+---------------------------------------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.3/cachegroup_fallbacks?cacheGroupId=11&fallbackId=7 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
@@ -48,18 +56,33 @@ Response Structure
 :fallbackName:   The name of the Cache Group on which the Cache Group described by this entry will fall back
 :fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the Cache Group described by this entry
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 15:40:34 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Wed, 14 Nov 2018 19:40:34 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: 9kauJ9tA4Ca5ElMHZk0fIJpQr+Wcx6NHiqWrnZJvyupRIOBQiUec3UW/fI9HdtE98xkrthz1daXKmdUkDhon8Q==
+	Content-Length: 125
 
 	{ "response": [
 		{
-			"cacheGroupId":1,
-			"cacheGroupName":"GROUP1",
-			"fallbackId":2,
-			"fallbackOrder":10,
-			"fallbackName":"GROUP2"
+			"cacheGroupId": 11,
+			"fallbackOrder": 1,
+			"fallbackName": "CDN_in_a_Box_Edge",
+			"fallbackId": 7,
+			"cacheGroupName": "test"
 		}
 	]}
+
 
 .. [1] At least one of these must be provided, not necessarily both (though both is perfectly valid).
 

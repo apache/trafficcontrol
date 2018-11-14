@@ -74,16 +74,24 @@ Request Structure
 -----------------
 The request data can take the form of either a single object or an array of one or more objects.
 
-.. table:: Request Data Parameters
+:cacheGroupId: Integral, unique identifier for the Cache Group to which a parameter is being assigned
+:parameterId:  Integral, unique identifier for the Parameter being assigned
 
-	+------------------+----------+---------+------------------------------------------------------------------------------+
-	| Parameter        | Required | Type    | Description                                                                  |
-	+==================+==========+=========+==============================================================================+
-	| ``cacheGroupId`` | yes      | integer | Unique identifier for the Cache Group to which a parameter is being assigned |
-	+------------------+----------+---------+------------------------------------------------------------------------------+
-	| ``parameterId``  | yes      | integer | Unique identifier for the Parameter being assigned                           |
-	+------------------+----------+---------+------------------------------------------------------------------------------+
+.. code-block:: http
+	:caption: Request Example
 
+	POST /api/1.1/cachegroupparameters HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 39
+	Content-Type: application/json
+
+	{
+		"cachegroupId": 8,
+		"parameterId": 124
+	}
 
 Response Structure
 ------------------
@@ -91,26 +99,33 @@ Response Structure
 :last_updated: Date and time of last modification in ISO format
 :cachegroup:   Name of the Cache Group
 
-.. code-block:: json
+.. code-block:: http
  	:caption: Response Example
 
-	{ "response":[
-		{
-			"cacheGroupId": "2",
-			"parameterId": "6"
-		},
-		{
-			"cacheGroupId": "2",
-			"parameterId": "7"
-		},
-		{
-			"cacheGroupId": "3",
-			"parameterId": "6"
-		}
-	]
-	"alerts":[
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Wed, 14 Nov 2018 15:47:49 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Wed, 14 Nov 2018 19:47:49 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: wCv388wFaSjgFLCnI9dchlcyGxaVr8IhBAG25F+rpI2/azCswEYTcVBSlYOg6NxTQRzGkluMvn67jI6rV+vNsQ==
+	Content-Length: 136
+
+	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Cache group parameter associations were created."
+			"text": "Profile parameter associations were created."
+		}
+	],
+	"response": [
+		{
+			"cacheGroupId": 8,
+			"parameterId": 124
 		}
 	]}
+
