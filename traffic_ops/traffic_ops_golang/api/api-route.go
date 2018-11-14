@@ -55,6 +55,17 @@ func AvailableRoutesBadMethodHandler(w http.ResponseWriter, r *http.Request) {
 func AvailableVersionsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", ServerString);
 
+	// Check for a CORS preflight request (all headers accepted, so immediate response given)
+	if r.Header.Get("Origin") != "" &&
+	   r.Header.Get("Access-Control-Request-Method") != "" &&
+	   r.Header.Get("Access-Control-Request-Headers") != "" {
+
+		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS,GET");
+		w.Header().Set("Access-Control-Allow-Headers", "*");
+		w.WriteHeader(http.StatusNoContent);
+		return;
+	}
+
 	// check that this has been set
 	if APIVersions == nil {
 		w.WriteHeader(http.StatusNoContent);
@@ -83,19 +94,6 @@ func AvailableVersionsHandler(w http.ResponseWriter, r *http.Request) {
 // (or writes an error message via errorResponse if something wicked happens)
 func AvailableRoutesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", ServerString);
-
-	// Check for a CORS preflight request (all headers accepted, so immediate response given)
-	if r.Header.Get("Origin") != "" &&
-	   r.Header.Get("Access-Control-Request-Method") != "" &&
-	   r.Header.Get("Access-Control-Request-Headers") != "" {
-
-		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS,GET");
-		w.Header().Set("Access-Control-Allow-Headers", "*");
-		w.WriteHeader(http.StatusNoContent);
-		return;
-	}
-
-	// ... otherwise, return a list of all supported methods/routes
 
 	// if for some reason the variable didn't get set properly, return nothing
 	if AllRoutes == nil {
