@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -34,9 +35,10 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-const __version__ = "2.0.0"
+const __version__ = "2.1.0"
 const SHORT_HEADER = "# DO NOT EDIT"
 const LONG_HEADER = "# TRAFFIC OPS NOTE:"
+const MAX_RETRIES = 5
 
 // Environment variables used:
 //   TO_URL      -- URL for reference Traffic Ops
@@ -55,6 +57,7 @@ type Connect struct {
 	Client      *http.Client `ignore:"true"`
 	ResultsPath string       `ignore:"true"`
 	creds       Creds        `ignore:"true"`
+	mutex       *sync.Mutex  `ignore:"true"`
 }
 
 func (to *Connect) login(creds Creds) error {
@@ -94,6 +97,10 @@ func (to *Connect) login(creds Creds) error {
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return errors.New("Failed to login to Traffic Ops at " + to.URL + " : " + string(data))
 	}
 
 	log.Printf("Logged in to %s: %s\n", to.URL, string(data))
@@ -252,10 +259,33 @@ func (to *Connect) get(route string) (string, error) {
 	}
 	req.Header.Set("Accept", "application/json")
 
+	// Should wait for any retries to complete before sending a request
+	to.mutex.Lock()
+
 	resp, err := to.Client.Do(req)
 	if err != nil {
-		return "", err
+		log.Println("Connection to " + to.URL + "has been dropped - attempting to reconnect")
+		retries := 1
+		for ; retries <= MAX_RETRIES; retries++ {
+			log.Printf("Retrying connection (#%d)...\n", retries)
+			if err := to.login(to.creds); err == nil {
+				break
+			}
+		}
+
+		if retries > MAX_RETRIES {
+			to.mutex.Unlock() // prevent zombie threads
+			log.Fatalln("Cannot establish connection to " + to.URL + "!")
+		}
+
+		// if it fails this time, then I guess we're just done.
+		resp, err = to.Client.Do(req)
+		if err != nil {
+			to.mutex.Unlock()
+			return "", err
+		}
 	}
+	to.mutex.Unlock()
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
@@ -380,6 +410,7 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
+			to.mutex = &sync.Mutex{}
 			wg.Done()
 		}(t)
 	}
