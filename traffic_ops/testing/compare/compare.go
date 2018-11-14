@@ -258,13 +258,10 @@ func (to *Connect) get(route string) (string, error) {
 		return "", err
 	}
 	req.Header.Set("Accept", "application/json")
-<<<<<<< HEAD
 
 	// Should wait for any retries to complete before sending a request
 	to.mutex.Lock()
 	defer to.mutex.Unlock()
-=======
->>>>>>> 4126d2f... Fixed 'compare' tool hiding errors as endpoint output - better error logging
 
 	resp, err := to.Client.Do(req)
 	if err != nil {
@@ -288,7 +285,6 @@ func (to *Connect) get(route string) (string, error) {
 			return "", err
 		}
 	}
-	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	return string(data), err
