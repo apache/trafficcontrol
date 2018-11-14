@@ -1,4 +1,4 @@
-package main
+package routing
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -69,6 +69,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/steeringtargets"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/systeminfo"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/types"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/urisigning"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/user"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/origin"
@@ -304,10 +305,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodDelete, `deliveryservice_request_comments/?$`, api.DeleteHandler(&comment.TODeliveryServiceRequestComment{}), auth.PrivLevelPortal, Authenticated, nil},
 
 		//Delivery service uri signing keys: CRUD
-		{1.3, http.MethodGet, `deliveryservices/{xmlID}/urisignkeys$`, getURIsignkeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
-		{1.3, http.MethodPost, `deliveryservices/{xmlID}/urisignkeys$`, saveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
-		{1.3, http.MethodPut, `deliveryservices/{xmlID}/urisignkeys$`, saveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
-		{1.3, http.MethodDelete, `deliveryservices/{xmlID}/urisignkeys$`, removeDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodGet, `deliveryservices/{xmlID}/urisignkeys$`, urisigning.GetURIsignkeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodPost, `deliveryservices/{xmlID}/urisignkeys$`, urisigning.SaveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodPut, `deliveryservices/{xmlID}/urisignkeys$`, urisigning.SaveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodDelete, `deliveryservices/{xmlID}/urisignkeys$`, urisigning.RemoveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
 
 		// Federations by CDN (the actual table for federation)
 		{1.1, http.MethodGet, `cdns/{name}/federations/?(\.json)?$`, api.ReadHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -427,7 +428,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 	return routes, rawRoutes, proxyHandler, nil
 }
 
-func memoryStatsHandler() http.HandlerFunc {
+func MemoryStatsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		stats := runtime.MemStats{}
@@ -444,7 +445,7 @@ func memoryStatsHandler() http.HandlerFunc {
 	}
 }
 
-func dbStatsHandler(db *sqlx.DB) http.HandlerFunc {
+func DBStatsHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		stats := db.DB.Stats()

@@ -1,4 +1,4 @@
-package main
+package urisigning
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -45,7 +45,7 @@ type URISignerKeyset struct {
 }
 
 // endpoint handler for fetching uri signing keys from riak
-func getURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
+func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -85,7 +85,7 @@ func getURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // removeDeliveryServiceURIKeysHandler is the HTTP DELETE handler used to remove urisigning keys assigned to a delivery service.
-func removeDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
+func RemoveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -129,7 +129,7 @@ func removeDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request)
 }
 
 // saveDeliveryServiceURIKeysHandler is the HTTP POST or PUT handler used to store urisigning keys to a delivery service.
-func saveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
+func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
