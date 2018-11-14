@@ -52,8 +52,6 @@ func printJSON(label string, b interface{}) {
 	fmt.Println(label, buf.String())
 }
 
-// TODO: Some GetxxxByxxx() methods escape the string passed in; others don't
-//  Here we escape the name if not escaped in the Getxxx method being called
 func (s session) getTypeIDByName(n string) (int, error) {
 	types, _, err := s.GetTypeByName(url.QueryEscape(n))
 	if err != nil {
@@ -63,17 +61,6 @@ func (s session) getTypeIDByName(n string) (int, error) {
 		return -1, errors.New("no type with name " + n)
 	}
 	return types[0].ID, err
-}
-
-func (s session) getCoordinateIDByName(n string) (int, error) {
-	coordinates, _, err := s.GetCoordinateByName(url.QueryEscape(n))
-	if err != nil {
-		return -1, err
-	}
-	if len(coordinates) == 0 {
-		return -1, errors.New("no coordinate with name " + n)
-	}
-	return coordinates[0].ID, err
 }
 
 func (s session) getCDNIDByName(n string) (int, error) {
@@ -132,7 +119,7 @@ func (s session) getCachegroupIDByName(n string) (int, error) {
 }
 
 func (s session) getProfileIDByName(n string) (int, error) {
-	profiles, _, err := s.GetProfileByName(n)
+	profiles, _, err := s.GetProfileByName(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
@@ -140,21 +127,6 @@ func (s session) getProfileIDByName(n string) (int, error) {
 		return -1, errors.New("no profile with name " + n)
 	}
 	return profiles[0].ID, err
-}
-
-func (s session) getParameterIDMatching(m tc.Parameter) (int, error) {
-	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
-	// doing this the hard way for now
-	parameters, _, err := s.GetParameters()
-	if err != nil {
-		return -1, err
-	}
-	for _, p := range parameters {
-		if p.Name == m.Name && p.Value == m.Value && p.ConfigFile == m.ConfigFile {
-			return p.ID, nil
-		}
-	}
-	return -1, fmt.Errorf("no parameter matching name %s, configFile %s, value %s", m.Name, m.ConfigFile, m.Value)
 }
 
 func (s session) getStatusIDByName(n string) (int, error) {
@@ -166,39 +138,6 @@ func (s session) getStatusIDByName(n string) (int, error) {
 		return -1, errors.New("no status with name " + n)
 	}
 	return statuses[0].ID, err
-}
-
-func (s session) getRoleIDByName(n string) (int, error) {
-	roles, _, _, err := s.GetRoleByName(url.QueryEscape(n))
-	if err != nil {
-		return -1, err
-	}
-	if len(roles) == 0 || roles[0].ID == nil {
-		return -1, errors.New("no role with name " + n)
-	}
-	return *roles[0].ID, err
-}
-
-func (s session) getServerIDByHostName(n string) (int, error) {
-	servers, _, err := s.GetServerByHostName(url.QueryEscape(n))
-	if err != nil {
-		return -1, err
-	}
-	if len(servers) == 0 {
-		return -1, errors.New("no server with hostName " + n)
-	}
-	return servers[0].ID, err
-}
-
-func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
-	dses, _, err := s.GetDeliveryServiceByXMLID(url.QueryEscape(n))
-	if err != nil {
-		return -1, err
-	}
-	if len(dses) == 0 {
-		return -1, errors.New("no deliveryservice with name " + n)
-	}
-	return dses[0].ID, err
 }
 
 func (s session) getTenantIDByName(n string) (int, error) {
@@ -238,10 +177,6 @@ func enrollType(toSession *session, fn string) error {
 
 	alerts, _, err := toSession.CreateType(s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("type %s already exists\n", s.Name)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -273,10 +208,6 @@ func enrollCDN(toSession *session, fn string) error {
 
 	alerts, _, err := toSession.CreateCDN(s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("cdn %s already exists\n", s.Name)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -307,10 +238,6 @@ func enrollASN(toSession *session, fn string) error {
 
 	alerts, _, err := toSession.CreateASN(s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("asn %d already exists\n", s.ASN)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -366,10 +293,6 @@ func enrollCachegroup(toSession *session, fn string) error {
 
 	alerts, _, err := toSession.CreateCacheGroupNullable(s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("cachegroup %s already exists\n", *s.Name)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -391,51 +314,23 @@ func enrollDeliveryService(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s tc.DeliveryServiceNullable
+	var s tc.DeliveryService
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
-	if s.Type != nil && *s.Type != "" {
+	if s.Type != "" {
 		id, err := toSession.getTypeIDByName(s.Type.String())
 		if err != nil {
 			return err
 		}
-		s.TypeID = &id
+		s.TypeID = id
 	}
 
-	if s.CDNName != nil && *s.CDNName != "" {
-		id, err := toSession.getCDNIDByName(*s.CDNName)
-		if err != nil {
-			return err
-		}
-		s.CDNID = &id
-	}
-
-	if s.ProfileName != nil && *s.ProfileName != "" {
-		id, err := toSession.getProfileIDByName(*s.ProfileName)
-		if err != nil {
-			return err
-		}
-		s.ProfileID = &id
-	}
-
-	if s.Tenant != nil && *s.Tenant != "" {
-		id, err := toSession.getTenantIDByName(*s.Tenant)
-		if err != nil {
-			return err
-		}
-		s.TenantID = &id
-	}
-
-	alerts, err := toSession.CreateDeliveryServiceNullable(&s)
+	alerts, err := toSession.CreateDeliveryService(&s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("deliveryservice %s already exists\n", s.XMLID)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -443,47 +338,6 @@ func enrollDeliveryService(toSession *session, fn string) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	err = enc.Encode(&alerts)
-
-	return err
-}
-
-func enrollDeliveryServiceServer(toSession *session, fn string) error {
-	fh, err := os.Open(fn)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		fh.Close()
-	}()
-
-	dec := json.NewDecoder(fh)
-
-	// DeliveryServiceServers lists ds xmlid and array of server names.  Use that to create multiple DeliveryServiceServer objects
-	var dss tc.DeliveryServiceServers
-	err = dec.Decode(&dss)
-	if err != nil && err != io.EOF {
-		log.Printf("error decoding %s: %s\n", fn, err)
-		return err
-	}
-
-	dsID, err := toSession.getDeliveryServiceIDByXMLID(dss.XmlId)
-	if err != nil {
-		return err
-	}
-
-	var serverIDs []int
-	for _, sn := range dss.ServerNames {
-		id, err := toSession.getServerIDByHostName(sn)
-		if err != nil {
-			log.Println("error finding " + sn + ": " + err.Error())
-			continue
-		}
-		serverIDs = append(serverIDs, id)
-	}
-	_, err = toSession.CreateDeliveryServiceServers(dsID, serverIDs, true)
-	if err != nil {
-		log.Printf("error creating from %s: %s\n", fn, err)
-	}
 
 	return err
 }
@@ -507,10 +361,6 @@ func enrollDivision(toSession *session, fn string) error {
 
 	alerts, _, err := toSession.CreateDivision(s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("division %s already exists\n", s.Name)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -539,52 +389,8 @@ func enrollOrigin(toSession *session, fn string) error {
 		return err
 	}
 
-	if s.Cachegroup != nil && *s.Cachegroup != "" {
-		id, err := toSession.getCachegroupIDByName(*s.Cachegroup)
-		if err != nil {
-			return err
-		}
-		s.CachegroupID = &id
-	}
-
-	if s.DeliveryService != nil && *s.DeliveryService != "" {
-		id, err := toSession.getDeliveryServiceIDByXMLID(*s.DeliveryService)
-		if err != nil {
-			return err
-		}
-		s.DeliveryServiceID = &id
-	}
-
-	if s.Profile != nil && *s.Profile != "" {
-		id, err := toSession.getProfileIDByName(*s.Profile)
-		if err != nil {
-			return err
-		}
-		s.ProfileID = &id
-	}
-
-	if s.Coordinate != nil && *s.Coordinate != "" {
-		id, err := toSession.getCoordinateIDByName(*s.Coordinate)
-		if err != nil {
-			return err
-		}
-		s.CoordinateID = &id
-	}
-
-	if s.Tenant != nil && *s.Tenant != "" {
-		id, err := toSession.getTenantIDByName(*s.Tenant)
-		if err != nil {
-			return err
-		}
-		s.TenantID = &id
-	}
-
 	alerts, _, err := toSession.CreateOrigin(s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("origin %s already exists\n", *s.Name)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -612,55 +418,13 @@ func enrollParameter(toSession *session, fn string) error {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
-	paramID, err := toSession.getParameterIDMatching(s)
-	var alerts tc.Alerts
-	if err == nil {
-		// existing param -- update
-		alerts, _, err = toSession.UpdateParameterByID(paramID, s)
-		if err != nil {
-			log.Printf("error updating parameter %d: %s with %+v ", paramID, err.Error(), s)
-		}
-	} else {
-		alerts, _, err = toSession.CreateParameter(s)
-		if err != nil {
-			if strings.Contains(err.Error(), "already exists") {
-				log.Printf("parameter %s already exists\n", s.Name)
-				return nil
-			}
-			log.Printf("error creating from %s: %s\n", fn, err)
-			return err
-		}
-	}
-	// link parameter with profiles
-	if len(s.Profiles) > 0 {
-		paramID, err := toSession.getParameterIDMatching(s)
-		if err != nil {
-			return err
-		}
 
-		var profiles []string
-		err = json.Unmarshal(s.Profiles, &profiles)
-		if err != nil {
-			log.Printf("%v", err)
-		}
-
-		for _, n := range profiles {
-			pid, err := toSession.getProfileIDByName(n)
-			if err != nil {
-				log.Printf("%v", err)
-				continue
-			}
-			pp := tc.ProfileParameter{ParameterID: paramID, ProfileID: pid}
-			_, _, err = toSession.CreateProfileParameter(pp)
-			if err != nil {
-				if strings.Contains(err.Error(), "already exists") {
-					continue
-				}
-				log.Printf("%v", err)
-				continue
-			}
-		}
+	alerts, _, err := toSession.CreateParameter(s)
+	if err != nil {
+		log.Printf("error creating from %s: %s\n", fn, err)
+		return err
 	}
+
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	err = enc.Encode(&alerts)
@@ -694,10 +458,6 @@ func enrollPhysLocation(toSession *session, fn string) error {
 	}
 	alerts, _, err := toSession.CreatePhysLocation(s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("physLocation %s already exists\n", s.Name)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -736,10 +496,6 @@ func enrollRegion(toSession *session, fn string) error {
 
 	alerts, _, err := toSession.CreateRegion(s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("region %s already exists\n", s.Name)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -770,10 +526,6 @@ func enrollStatus(toSession *session, fn string) error {
 
 	alerts, _, err := toSession.CreateStatus(s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("status %s already exists\n", s.Name)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -812,10 +564,6 @@ func enrollTenant(toSession *session, fn string) error {
 
 	alerts, err := toSession.CreateTenant(&s)
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("tenant %s already exists\n", s.Name)
-			return nil
-		}
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
@@ -825,63 +573,6 @@ func enrollTenant(toSession *session, fn string) error {
 	err = enc.Encode(&alerts)
 
 	return err
-}
-
-func enrollUser(toSession *session, fn string) error {
-	fh, err := os.Open(fn)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		fh.Close()
-	}()
-
-	dec := json.NewDecoder(fh)
-	var s tc.User
-	err = dec.Decode(&s)
-	log.Printf("User is %++v\n", s)
-	if err != nil && err != io.EOF {
-		log.Printf("error decoding %s: %s\n", fn, err)
-		return err
-	}
-
-	if s.Tenant != nil && *s.Tenant != "" {
-		id, err := toSession.getTenantIDByName(*s.Tenant)
-		if err != nil {
-			return err
-		}
-		s.TenantID = &id
-	}
-
-	if s.RoleName != nil && *s.RoleName != "" {
-		id, err := toSession.getRoleIDByName(*s.RoleName)
-		if err != nil {
-			return err
-		}
-		s.Role = &id
-	}
-
-	alerts, _, err := toSession.CreateUser(&s)
-	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("user %s already exists\n", *s.Username)
-			return nil
-		}
-		log.Printf("error creating from %s: %s\n", fn, err)
-		return err
-	}
-
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	err = enc.Encode(&alerts)
-
-	return err
-}
-
-// using documented import form for profiles
-type profileImport struct {
-	Profile    tc.Profile             `json:"profile"`
-	Parameters []tc.ParameterNullable `json:"parameters"`
 }
 
 // enrollProfile takes a json file and creates a Profile object using the TO API
@@ -895,121 +586,28 @@ func enrollProfile(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var profile tc.Profile
-
-	err = dec.Decode(&profile)
+	var s tc.Profile
+	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("  ", "")
-	enc.Encode(profile)
-
-	if len(profile.Name) == 0 {
-		log.Println("missing name on profile from " + fn)
-		return errors.New("missing name on profile from " + fn)
-	}
-
-	profiles, _, err := toSession.GetProfileByName(profile.Name)
-
-	createProfile := false
-	if err != nil || len(profiles) == 0 {
-		// no profile by that name -- need to create it
-		createProfile = true
-	} else {
-		// updating - ID needs to match
-		profile.ID = profiles[0].ID
-	}
-
-	// these need to be done whether creating or updating
-	if profile.CDNName != "" {
-		id, err := toSession.getCDNIDByName(profile.CDNName)
+	if s.CDNName != "" {
+		id, err := toSession.getCDNIDByName(s.CDNName)
 		if err != nil {
 			return err
 		}
-		profile.CDNID = id
+		s.CDNID = id
 	}
 
-	var alerts tc.Alerts
-	var action string
-	if createProfile {
-		alerts, _, err = toSession.CreateProfile(profile)
-		if err != nil {
-			if strings.Contains(err.Error(), "already exists") {
-				log.Printf("profile %s already exists\n", profile.Name)
-			} else {
-				log.Printf("error creating profile from %+v: %s\n", profile, err.Error())
-			}
-		}
-		profile.ID, err = toSession.getProfileIDByName(profile.Name)
-		if err != nil {
-			log.Printf("error getting profile ID from %+v: %s\n", profile, err.Error())
-		}
-		action = "creating"
-	} else {
-		alerts, _, err = toSession.UpdateProfileByID(profile.ID, profile)
-		action = "updating"
-	}
-
+	alerts, _, err := toSession.CreateProfile(s)
 	if err != nil {
-		log.Printf("error "+action+" from %s: %s\n", fn, err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
-	//log.Printf("total profile is  %+v\n", profile)
-	for _, p := range profile.Parameters {
-		var name, configFile, value string
-		var secure bool
-		if p.ConfigFile != nil {
-			configFile = *p.ConfigFile
-		}
-		if p.Name != nil {
-			name = *p.Name
-		}
-		if p.Value != nil {
-			value = *p.Value
-		}
-		param := tc.Parameter{ConfigFile: configFile, Name: name, Value: value, Secure: secure}
-		log.Printf("creating param %+v\n", param)
-		id, err := toSession.getParameterIDMatching(param)
-		if err != nil {
-			// create it
-			_, _, err = toSession.CreateParameter(param)
-			if err != nil {
-				if !strings.Contains(err.Error(), "already exists") {
-					log.Printf("can't create parameter %+v: %s\n", param, err.Error())
-				}
-				continue
-			}
-			param.ID, err = toSession.getParameterIDMatching(param)
-			if err != nil {
-				log.Printf("error getting new parameter %+v\n", param)
-				param.ID, err = toSession.getParameterIDMatching(param)
-				log.Printf(err.Error())
-
-			}
-		} else {
-			param.ID = id
-			toSession.UpdateParameterByID(param.ID, param)
-		}
-
-		if param.ID < 1 {
-			panic(fmt.Sprintf("param ID not found for %v", param))
-
-		}
-		pp := tc.ProfileParameter{ProfileID: profile.ID, ParameterID: param.ID}
-		_, _, err = toSession.CreateProfileParameter(pp)
-		if err != nil {
-			if !strings.Contains(err.Error(), "already exists") {
-				log.Printf("error creating profileparameter %+v: %s\n", pp, err.Error())
-			}
-			continue
-		}
-	}
-
-	//enc := json.NewEncoder(os.Stdout)
+	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	err = enc.Encode(&alerts)
 
@@ -1049,7 +647,6 @@ func enrollServer(toSession *session, fn string) error {
 		}
 		s.ProfileID = id
 	}
-
 	if s.Status != "" {
 		id, err := toSession.getStatusIDByName(s.Status)
 		if err != nil {
@@ -1072,7 +669,7 @@ func enrollServer(toSession *session, fn string) error {
 		s.CachegroupID = id
 	}
 	if s.PhysLocation != "" {
-		id, err := toSession.getPhysLocationIDByName(s.PhysLocation)
+		id, err := toSession.getPhysLocationIDByName(s.Cachegroup)
 		if err != nil {
 			return err
 		}
@@ -1125,8 +722,7 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 					if strings.HasSuffix(event.Name, processed) || strings.HasSuffix(event.Name, rejected) {
 						continue
 					}
-					i, err := os.Stat(event.Name)
-					if err != nil || i.IsDir() {
+					if i, err := os.Stat(event.Name); err != nil || i.IsDir() {
 						log.Println("skipping " + event.Name)
 						continue
 					}
@@ -1136,10 +732,10 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 						continue
 					}
 					dir := event.Name[:p]
+					log.Printf("dir is %s\n", dir)
 					suffix := rejected
 					if f, ok := dw.watched[dir]; ok {
 						log.Printf("creating from %s\n", event.Name)
-						// TODO: ensure file content is there before attempting to read
 						time.Sleep(100 * time.Millisecond)
 
 						err := f(toSession, event.Name)
@@ -1172,7 +768,7 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 func (dw *dirWatcher) watch(dir string, f func(*session, string) error) {
 	if stat, err := os.Stat(dir); err != nil || !stat.IsDir() {
 		// attempt to create dir
-		if err = os.Mkdir(dir, os.ModeDir|0700); err != nil {
+		if err = os.Mkdir(dir, os.ModeDir); err != nil {
 			log.Println("cannot watch " + dir + ": not a directory")
 			return
 		}
@@ -1221,14 +817,12 @@ func main() {
 	dw.watch("servers", enrollServer)
 	dw.watch("asns", enrollASN)
 	dw.watch("deliveryservices", enrollDeliveryService)
-	dw.watch("deliveryservice_servers", enrollDeliveryServiceServer)
 	dw.watch("divisions", enrollDivision)
 	dw.watch("origins", enrollOrigin)
 	dw.watch("phys_locations", enrollPhysLocation)
 	dw.watch("regions", enrollRegion)
 	dw.watch("statuses", enrollStatus)
 	dw.watch("tenants", enrollTenant)
-	dw.watch("users", enrollUser)
 
 	// create this file to indicate the enroller is ready
 	f, err := os.Create(startedFile)
