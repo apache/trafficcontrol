@@ -64,3 +64,31 @@ CDN
 
 |
 
+**GET /api/1.4/cdns/dnsseckeys/refresh**
+
+  Refresh the DNSSEC keys for all CDNs. This call initiates a background process to refresh outdated keys, and immediately returns a response that the process has started.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin
+
+  **Request Route Parameters**
+
+  None.
+
+  **Response Properties**
+
+  +--------------+--------+------------------+
+  |  Parameter   |  Type  |   Description    |
+  +==============+========+==================+
+  | ``response`` | string | success response |
+  +--------------+--------+------------------+
+
+  **Response Example**
+  ::
+
+    {
+      "response": "Checking DNSSEC keys for refresh in the background"
+    }
+
+|
