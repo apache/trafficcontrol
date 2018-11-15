@@ -125,17 +125,22 @@ Creates a new coordinate pair
 
 Request Structure
 -----------------
-.. table:: Request Data Parameters
+:name:      The name of the new coordinate
+:latitude:  The desired latitude of the new coordinate (must be on the interval [-180, 180])
+:longitude: The desired longitude of the new coordinate (must be on the interval [-90, 90])
 
-	+---------------+-----------------------+----------+-------------------------------------------------------------------+
-	| Name          | Type                  | Required | Description                                                       |
-	+===============+=======================+==========+===================================================================+
-	| ``name``      | string                | yes      | The name of the new coordinate                                    |
-	+---------------+-----------------------+----------+-------------------------------------------------------------------+
-	| ``latitude``  | float (<=180, >=-180) | no       | The latitude of the new coordinate                                |
-	+---------------+-----------------------+----------+-------------------------------------------------------------------+
-	| ``longitude`` | float (<=90, >=-90)   | no       | The longitude of the new coordinate                               |
-	+---------------+-----------------------+----------+-------------------------------------------------------------------+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/1.4/coordinates HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 47
+	Content-Type: application/json
+
+	{"name": "test", "latitude": 0, "longitude": 0}
 
 Response Structure
 ------------------
@@ -145,8 +150,20 @@ Response Structure
 :longitude:   Longitude of the newly created coordinate
 :name:        The name of the coordinate
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: 7pWdeZyIIXE1P7o/JVon+5eSCbDw+FGamAzdXzWHXJ8IhF+Vh+/tWFCkzHYw3rP2kBVwZu+gqLffjQpBCMjt7A==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 15 Nov 2018 17:48:55 GMT
+	Content-Length: 165
 
 	{ "alerts": [
 		{
@@ -155,12 +172,13 @@ Response Structure
 		}
 	],
 	"response": {
-		"id": 10,
-		"name": "testquest",
+		"id": 9,
+		"name": "test",
 		"latitude": 0,
 		"longitude": 0,
-		"lastUpdated": "2018-10-25 16:40:33+00"
+		"lastUpdated": "2018-11-15 17:48:55+00"
 	}}
+
 
 ``PUT``
 =======
@@ -180,17 +198,22 @@ Request Structure
 	| id   | yes      | The integral, unique identifier of the coordinate to edit  |
 	+------+----------+------------------------------------------------------------+
 
-.. table:: Request Data Parameters
+:name:      The name of the new coordinate
+:latitude:  The desired new latitude of the coordinate (must be on the interval [-180, 180])
+:longitude: The desired new longitude of the coordinate (must be on the interval [-90, 90])
 
-	+---------------+-----------------------+----------+-------------------------------------------------------------------+
-	| Name          | Type                  | Required | Description                                                       |
-	+===============+=======================+==========+===================================================================+
-	| ``name``      | string                | yes      | The new name of the coordinate entry                              |
-	+---------------+-----------------------+----------+-------------------------------------------------------------------+
-	| ``latitude``  | float (<=180, >=-180) | no       | The new latitude of the coordinate                                |
-	+---------------+-----------------------+----------+-------------------------------------------------------------------+
-	| ``longitude`` | float (<=90, >=-90)   | no       | The new longitude of the coordinate                               |
-	+---------------+-----------------------+----------+-------------------------------------------------------------------+
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/1.4/coordinates?id=9 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 48
+	Content-Type: application/json
+
+	{"name": "quest", "latitude": 0, "longitude": 0}
 
 Response Structure
 ------------------
@@ -200,8 +223,20 @@ Response Structure
 :longitude:   Longitude of the coordinate
 :name:        The name of the coordinate
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: zd03Uvbnv8EbSZZ75Xp5tnnYStZsZTdyPxXnoqK4QZ5WhELLPL8iHlRfOaiLTbrUWUeJ8ue2HRz6aBS/iXCCGA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 15 Nov 2018 17:54:30 GMT
+	Content-Length: 166
 
 	{ "alerts": [
 		{
@@ -210,11 +245,11 @@ Response Structure
 		}
 	],
 	"response": {
-		"id": 10,
-		"name": "testquest",
-		"latitude": -90,
-		"longitude": 180,
-		"lastUpdated": "2018-10-25 17:08:55+00"
+		"id": 9,
+		"name": "quest",
+		"latitude": 0,
+		"longitude": 0,
+		"lastUpdated": "2018-11-15 17:54:30+00"
 	}}
 
 ``DELETE``
@@ -237,8 +272,20 @@ Request Structure
 
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: 82x/Wdckqgk4LN5LIlZfBJ26xkDrUVUGDjs5QFa/Lzap7dU3OZkjv8XW41xeFYj8PDmxHIpb7hiVObvLaxnEDA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 15 Nov 2018 17:57:42 GMT
+	Content-Length: 65
 
 	{ "alerts": [
 		{
@@ -246,4 +293,3 @@ Response Structure
 			"level": "success"
 		}
 	]}
-
