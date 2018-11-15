@@ -249,64 +249,6 @@ Response Structure
 .. [2] This only applies to HTTP Delivery Services
 .. [3] See :ref:`multi-site-origin`
 
-
-**POST /api/1.1/deliveryservices/sslkeys/add**
-
-	Allows user to add SSL crt, csr, and private key for a delivery service.
-
-	Authentication Required: Yes
-
-	Role(s) Required: Operations
-
-	**Request Properties**
-
-	+-------------+--------+-------------------------------------+
-	|  Parameter  |  Type  |             Description             |
-	+=============+========+=====================================+
-	| ``key``     | string | xml_id of the delivery service      |
-	+-------------+--------+-------------------------------------+
-	| ``version`` | string | version of the keys being generated |
-	+-------------+--------+-------------------------------------+
-	| ``csr``     | string |                                     |
-	+-------------+--------+-------------------------------------+
-	| ``crt``     | string |                                     |
-	+-------------+--------+-------------------------------------+
-	| ``key``     | string |                                     |
-	+-------------+--------+-------------------------------------+
-
-	**Request Example** ::
-
-		{
-			"key": "ds-01",
-			"version": "1",
-			"certificate": {
-				"key": "some_key",
-				"csr": "some_csr",
-				"crt": "some_crt"
-			}
-		}
-
-|
-
-	**Response Properties**
-
-	+--------------+--------+-----------------+
-	|  Parameter   |  Type  |   Description   |
-	+==============+========+=================+
-	| ``response`` | string | response string |
-	+--------------+--------+-----------------+
-	| ``version``  | string | API version     |
-	+--------------+--------+-----------------+
-
-	**Response Example** ::
-
-		{
-			"response": "Successfully added ssl keys for ds-01"
-		}
-
-
-|
-
 **POST /api/1.1/deliveryservices/request**
 
 	Allows a user to send delivery service request details to a specified email address.

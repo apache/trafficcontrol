@@ -22,122 +22,13 @@ The Traffic Ops API provides programmatic access to read and write Traffic Contr
 
 API Routes
 ==========
-.. table:: All Implemented API routes
-
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| 1.0                                |   1.1                                              |   1.2                                              |   1.3                                              |
-	+====================================+====================================================+====================================================+====================================================+
-	| /asns                              |   :ref:`to-api-asns`                               |   :ref:`to-api-asns`                               |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datacrans                         |   /api/1.1/crans.json                              |   /api/1.2/crans.json                              |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datacrans/orderby/:field          |   /api/1.1/crans.json                              |   /api/1.2/crans.json                              |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datadeliveryserviceserver         |   /api/1.1/deliveryserviceserver.json              |   /api/1.2/deliveryserviceserver.json              |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datadomains                       |   /api/1.1/cdns/domains.json                       |   /api/1.2/cdns/domains.json                       |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| *Not Implemented*                  |  *Not Implemented*                                 |   :ref:`to-api-v12-ds-stats-route`                 |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datahwinfo                        |   :ref:`to-api-v11-hwinfo-route`                   |   :ref:`to-api-v12-hwinfo-route`                   |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datalinks                         |   /api/1.1/deliveryserviceserver.json              |   /api/1.2/deliveryserviceserver.json              |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datalinks/orderby/:field          |   /api/1.1/deliveryserviceserver.json              |   /api/1.2/deliveryserviceserver.json              |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /dataparameter                     |   :ref:`to-api-v11-parameters-route`               |   :ref:`to-api-v12-parameters-route`               |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /dataparameter/:parameter          |   /api/1.1/parameters/profile/:parameter.json      |   /api/1.2/parameters/profile/:parameter.json      |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /dataphys_location                 |   :ref:`to-api-v11-phys-loc-route`                 |   :ref:`to-api-v12-phys-loc-route`                 |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /dataprofile                       |   :ref:`to-api-v11-profiles-route`                 |   :ref:`to-api-v12-profiles-route`                 |   *Not Implemented*                                |
-	|                                    |                                                    |                                                    |                                                    |
-	| /dataprofile/orderby/name          |                                                    |                                                    |                                                    |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /dataregion                        |   :ref:`to-api-v11-regions-route`                  |   :ref:`to-api-v12-regions-route`                  |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datarole                          |   :ref:`to-api-v11-roles-route`                    |   :ref:`to-api-v12-roles-route`                    |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datarole/orderby/:field           |   :ref:`to-api-v11-roles-route`                    |   :ref:`to-api-v12-roles-route`                    |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /dataserver                        |   :ref:`to-api-v11-servers-route`                  |   :ref:`to-api-v12-servers-route`                  |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /dataserver/orderby/:field         |   :ref:`to-api-v11-servers-route`                  |   :ref:`to-api-v12-servers-route`                  |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /dataserverdetail/select/:hostname |   /api/1.1/servers/hostname/:hostname/details.json |   /api/1.2/servers/hostname/:hostname/details.json |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datastaticdnsentry                |   :ref:`to-api-v11-static-dns-route`               |   :ref:`to-api-v12-static-dns-route`               |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datastatus                        |   :ref:`to-api-v11-statuses-route`                 |   :ref:`to-api-v12-statuses-route`                 |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datastatus/orderby/name           |   :ref:`to-api-v11-statuses-route`                 |   :ref:`to-api-v12-statuses-route`                 |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datatype                          |   :ref:`to-api-v11-types-route`                    |   :ref:`to-api-v12-types-route`                    |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datatype/orderby/:field           |   :ref:`to-api-v11-types-route`                    |   :ref:`to-api-v12-types-route`                    |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datauser                          |   :ref:`to-api-v11-users-route`                    |   :ref:`to-api-v12-users-route`                    |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| /datauser/orderby/:field           |   :ref:`to-api-v11-users-route`                    |   :ref:`to-api-v12-users-route`                    |   *Not Implemented*                                |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| *Not Implemented*                  |   *Not Implemented*                                |   *Not Implemented*                                |   :ref:`to-api-v13-static-dns-entry-route`         |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-	| *Not Implemented*                  |   *Not Implemented*                                |   *Not Implemented*                                |   :ref:`to-api-v13-origin-route`                   |
-	+------------------------------------+----------------------------------------------------+----------------------------------------------------+----------------------------------------------------+
-
 
 .. toctree::
 	:maxdepth: 4
 	:hidden:
+	:glob:
 
-	api_capabilities
-	api_capabilities_id
-	asns
-	asns_id
-	cache_stats
-	caches_stats
-	cachegroup_fallbacks
-	cachegroup_parameterID_parameter
-	cachegroupparameters
-	cachegroupparameters_id_parameterID
-	cachegroups
-	cachegroups_id
-	cachegroups_id_deliveryservices
-	cachegroups_id_parameters
-	cachegroups_id_queue_updates
-	cachegroups_id_unassigned_parameters
-	cachegroups_parameterID_parameter_available
-	cachegroups_trimmed
-	capabilities
-	capabilities_name
-	cdns
-	cdns_capacity
-	cdns_cdn_configfiles_ats_filename
-	cdns_configs
-	cdns_domains
-	cdns_health
-	cdns_id
-	cdns_id_queue_update
-	cdns_metric_types_metric_start_date_start_end_date_end
-	cdns_name_configs_monitoring
-	cdns_name_configs_routing
-	cdns_name_health
-	cdns_name_name
-	cdns_name_name_dnsseckeys
-	cdns_name_name_dnsseckeys_delete
-	cdns_name_name_sslkeys
-	cdns_routing
-	cdns_usage_overview
-	coordinates
-	deliveryservices_dnsseckeys_generate
-	deliveryserviceserver
-	logs
-	logs_days_days
-	logs_newcount
-	profiles_profile_configfiles_ats_filename
-	servers_server_configfiles_ats
-	servers_server_configfiles_ats_filename
+	*
 	v11/index
 	v12/index
 	v13/index
