@@ -261,6 +261,7 @@ func (to *Connect) get(route string) (string, error) {
 
 	// Should wait for any retries to complete before sending a request
 	to.mutex.Lock()
+	defer to.mutex.Unlock()
 
 	resp, err := to.Client.Do(req)
 	if err != nil {
@@ -281,11 +282,9 @@ func (to *Connect) get(route string) (string, error) {
 		// if it fails this time, then I guess we're just done.
 		resp, err = to.Client.Do(req)
 		if err != nil {
-			to.mutex.Unlock()
 			return "", err
 		}
 	}
-	to.mutex.Unlock()
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
