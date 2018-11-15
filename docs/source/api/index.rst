@@ -15,9 +15,9 @@
 
 .. _to-api:
 
-*******************
-``Traffic Ops API``
-*******************
+***************
+Traffic Ops API
+***************
 The Traffic Ops API provides programmatic access to read and write Traffic Control data which allows for the monitoring of CDN performance and configuration of Traffic Control settings and parameters.
 
 API Routes
