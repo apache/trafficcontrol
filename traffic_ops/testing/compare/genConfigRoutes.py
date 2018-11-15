@@ -60,12 +60,17 @@ def getConfigRoutesForServers(servers:typing.List[dict], inst:TOSession) \
 		url of the ``inst``
 	"""
 	for server in servers:
-		for file in inst.getServerConfigFiles(servername=server.hostName)[0].configFiles:
-			if "apiUri" in file:
-				yield file.apiUri
-			else:
-				logging.info("config file %s for server %s has non-API URI - skipping",
-				                    file.location, server.hostName)
+		try:
+			yield "/api/1.3/servers/%s/configfiles/ats" % server.hostName
+			for file in inst.getServerConfigFiles(servername=server.hostName)[0].configFiles:
+				if "apiUri" in file:
+					yield file.apiUri
+				else:
+					logging.info("config file %s for server %s has non-API URI - skipping",
+				                       file.location, server.hostName)
+		except (AttributeError, UnicodeError, IndexError, KeyError, InvalidJSONError, OperationError) as e:
+			logging.debug("%r", e, exc_info=True, stack_info=True)
+			logging.error("Invalid API response for server %s config files: %s", server.hostName, e)
 
 def getCRConfigs(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
 	"""
@@ -75,12 +80,25 @@ def getCRConfigs(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
 	:param B: The second Traffic Ops instance
 	:returns: A list of routes to CRConfig files
 	"""
-	cdns = {c.name for c in A.get_cdns()[0]}.intersection({c.name for c in B.get_cdns()[0]})
+	try:
+		Acdns = A.get_cdns()[0]
+		Bcdns = B.get_cdns()[0]
+	except (UnicodeError, IndexError, KeyError, InvalidJSONError, OperationError) as e:
+		logging.debug("%r", e, exc_info=True, stack_info=True)
+		logging.critical("Unable to get CDN lists: %s", e)
+		return
+
+	cdns = {c.name for c in Acdns}.intersection({c.name for c in Bcdns})
 
 	if not cdns:
 		logging.error("The two instances have NO CDNs in common! This almost certainly means that "\
 		              "you're not doing what you want to do")
-	yield from ["CRConfig-Snapshots/%s/CRConfig.json" % cdn for cdn in cdns]
+		return
+
+	for cdn in cdns:
+		yield "CRConfig-Snapshots/%s/CRConfig.json" % cdn
+		yield "/api/1.3/cdns/%s/snapshot" % cdn
+		yield "/api/1.3/cdns/%s/snapshot/new" % cdn
 
 
 def consolidateVariables(kwargs:argparse.Namespace) -> typing.Tuple[str, str,
@@ -164,7 +182,13 @@ def genRoutes(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
 	:param B: The second Traffic Ops instance
 	:returns: A list of routes representative of the configuration files for a bunch of servers
 	"""
-	profiles = ({p.id: p for p in A.get_profiles()[0]}, {p.id: p for p in B.get_profiles()[0]})
+	try:
+		profiles = ({p.id: p for p in A.get_profiles()[0]}, {p.id: p for p in B.get_profiles()[0]})
+	except (UnicodeError, InvalidJSONError, OperationError) as e:
+		logging.critical("Could not fetch server profiles: %s", e)
+		logging.debug("%r", e, exc_info=True, stack_info=True)
+		return
+
 	profileIds = (set(profiles[0].keys()), set(profiles[1].keys()))
 
 	# Differences and intersections:
@@ -187,8 +211,8 @@ def genRoutes(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
 	sampleServers = []
 	for profile in commonProfiles:
 		if profile[2] == "ATS_PROFILE":
-			servers = A.get_servers(query_params={"profileId": profile[0]})[0]
 			try:
+				servers = A.get_servers(query_params={"profileId": profile[0]})[0]
 				serverIndex = random.randint(0, len(servers)-1)
 				sampleServer = servers[serverIndex]
 				del servers[serverIndex]
@@ -201,6 +225,9 @@ def genRoutes(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
 			except (IndexError, ValueError):
 				logging.error("Server list for profile %s exhausted without finding a sample!",
 				                                  profile[1])
+			except (UnicodeError, InvalidJSONError, OperationError) as e:
+				logging.error("Invalid JSON response fetching server list for %s: %s", profile[2],e)
+				logging.debug("%r", e, exc_info=True, stack_info=True)
 			else:
 				sampleServers.append(sampleServer)
 
@@ -255,14 +282,15 @@ def main(kwargs:argparse.Namespace) -> int:
 		try:
 			A.login(loginA[0], loginA[1])
 			B.login(loginB[0], loginB[1])
-		except OSError as e:
+		except (OSError, LoginError) as e:
 			logging.debug("%s", e, exc_info=True, stack_info=True)
 			logging.critical("Failed to connect to Traffic Ops")
 			return 2
-		except (OperationError, LoginError) as e:
+		except (OperationError, InvalidJSONError) as e:
 			logging.debug("%s", e, exc_info=True, stack_info=True)
 			logging.critical("Failed to log in to Traffic Ops")
 			logging.error("Error was '%s' - are you sure your URLs and credentials are correct?", e)
+			return 2
 		for route in genRoutes(A, B):
 			print(route)
 

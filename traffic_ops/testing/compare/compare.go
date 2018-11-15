@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -30,14 +31,14 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/kelseyhightower/envconfig"
 	"golang.org/x/net/publicsuffix"
 )
 
-const __version__ = "1.1.0"
+const __version__ = "2.1.0"
 const SHORT_HEADER = "# DO NOT EDIT"
 const LONG_HEADER = "# TRAFFIC OPS NOTE:"
+const MAX_RETRIES = 5
 
 // Environment variables used:
 //   TO_URL      -- URL for reference Traffic Ops
@@ -56,6 +57,7 @@ type Connect struct {
 	Client      *http.Client `ignore:"true"`
 	ResultsPath string       `ignore:"true"`
 	creds       Creds        `ignore:"true"`
+	mutex       *sync.Mutex  `ignore:"true"`
 }
 
 func (to *Connect) login(creds Creds) error {
@@ -97,7 +99,11 @@ func (to *Connect) login(creds Creds) error {
 		return err
 	}
 
-	log.Printf("Logged in to %s: %s", to.URL, string(data))
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return errors.New("Failed to login to Traffic Ops at " + to.URL + " : " + string(data))
+	}
+
+	log.Printf("Logged in to %s: %s\n", to.URL, string(data))
 	return nil
 }
 
@@ -106,6 +112,7 @@ func testRoute(tos []*Connect, route string) {
 	type result struct {
 		TO  *Connect
 		Res string
+		Error error
 	}
 	var res []result
 	ch := make(chan result, len(tos))
@@ -122,10 +129,7 @@ func testRoute(tos []*Connect, route string) {
 		wg.Add(1)
 		go func(to *Connect) {
 			s, err := to.get(route)
-			if err != nil {
-				s = err.Error()
-			}
-			ch <- result{to, s}
+			ch <- result{to, s, err}
 			wg.Done()
 		}(to)
 
@@ -140,6 +144,19 @@ func testRoute(tos []*Connect, route string) {
 	wg.Wait()
 	close(ch)
 
+	// preliminary error handling
+	if len(res) != 2 {
+		log.Fatalf("Something wicked happened - expected exactly 2 responses, but got %d!\n", len(res))
+	}
+
+	if res[0].Error != nil {
+		log.Fatalf("Error occurred `GET`ting %s from %s: %s\n", route, res[0].TO.URL, res[0].Error.Error())
+	}
+
+	if res[1].Error != nil {
+		log.Fatalf("Error occurred `GET`ting %s from %s: %s\n", route, res[1].TO.URL, res[1].Error.Error())
+	}
+
 	// Check for Traffic Ops headers and remove them before comparison
 	refResult := res[0].Res
 	testResult := res[1].Res
@@ -152,14 +169,15 @@ func testRoute(tos []*Connect, route string) {
 			log.Print("Diffs from ", route, " written to")
 			p, err := res[0].TO.writeResults(route, refResult)
 			if err != nil {
-				log.Fatal("Error writing results for ", route)
+				log.Fatalf("Error writing results for %s: %s\n", route, err.Error())
 			}
 			log.Print(" ", p)
 			p, err = res[1].TO.writeResults(route, testResult)
 			if err != nil {
-				log.Fatal("Error writing results for ", route)
+				log.Fatalf("Error writing results for %s: %s\n", route, err.Error())
 			}
 			log.Print(" and ", p)
+			return
 		}
 
 
@@ -202,7 +220,7 @@ func testRoute(tos []*Connect, route string) {
 		for _, r := range res {
 			p, err := r.TO.writeResults(route, r.Res)
 			if err != nil {
-				log.Fatal("Error writing results for ", route)
+				log.Fatalf("Error writing results for %s: %s", route, err.Error())
 			}
 			log.Print("  ", p)
 		}
@@ -239,11 +257,33 @@ func (to *Connect) get(route string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	// Should wait for any retries to complete before sending a request
+	to.mutex.Lock()
+	defer to.mutex.Unlock()
 
 	resp, err := to.Client.Do(req)
 	if err != nil {
-		return "", err
+		log.Println("Connection to " + to.URL + "has been dropped - attempting to reconnect")
+		retries := 1
+		for ; retries <= MAX_RETRIES; retries++ {
+			log.Printf("Retrying connection (#%d)...\n", retries)
+			if err := to.login(to.creds); err == nil {
+				break
+			}
+		}
+
+		if retries > MAX_RETRIES {
+			to.mutex.Unlock() // prevent zombie threads
+			log.Fatalln("Cannot establish connection to " + to.URL + "!")
+		}
+
+		// if it fails this time, then I guess we're just done.
+		resp, err = to.Client.Do(req)
+		if err != nil {
+			return "", err
+		}
 	}
 	defer resp.Body.Close()
 
@@ -251,25 +291,6 @@ func (to *Connect) get(route string) (string, error) {
 	return string(data), err
 }
 
-func (to *Connect) getCDNNames() ([]string, error) {
-	res, err := to.get(`api/1.3/cdns`)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println(res)
-
-	var cdnResp tc.CDNsResponse
-
-	err = json.Unmarshal([]byte(res), &cdnResp)
-	if err != nil {
-		return nil, err
-	}
-	var cdnNames []string
-	for _, c := range cdnResp.Response {
-		cdnNames = append(cdnNames, c.Name)
-	}
-	return cdnNames, nil
-}
 
 func main() {
 
@@ -277,8 +298,6 @@ func main() {
 	routesFileShort := flag.String("f", "", "File listing routes to test (will read from stdin if not given)")
 	resultsPathLong := flag.String("results_path", "", "Directory where results will be written")
 	resultsPathShort := flag.String("r", "", "Directory where results will be written")
-	doSnapshotLong := flag.Bool("snapshot", false, "Perform comparison of all CDN's snapshotted CRConfigs")
-	doSnapshotShort := flag.Bool("s", false, "Perform comparison of all CDN's snapshotted CRConfigs")
 	refURL := flag.String("ref_url", "", "The URL for the reference Traffic Ops instance (overrides TO_URL environment variable)")
 	testURL := flag.String("test_url", "", "The URL for the testing Traffic Ops instance (overrides TEST_URL environment variable)")
 	refUser := flag.String("ref_user", "", "The username for logging into the reference Traffic Ops instance (overrides TO_USER environment variable)")
@@ -292,8 +311,6 @@ func main() {
 	flag.Parse()
 
 	// Coalesce long/short form options
-	doSnapshot := *doSnapshotShort || *doSnapshotLong
-
 	version := *versionLong || *versionShort
 	if version {
 		fmt.Printf("Traffic Control 'compare' tool v%s\n", __version__)
@@ -392,6 +409,7 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
+			to.mutex = &sync.Mutex{}
 			wg.Done()
 		}(t)
 	}
@@ -416,26 +434,4 @@ func main() {
 		}(route)
 	}
 	wg.Wait()
-
-	if doSnapshot {
-		cdnNames, err := refTO.getCDNNames()
-		if err != nil {
-			panic(err)
-		}
-		log.Printf("CDNNames are %+v", cdnNames)
-
-		wg.Add(2 * len(cdnNames))
-		for _, cdnName := range cdnNames {
-			log.Print("CDN ", cdnName)
-			go func(c string) {
-				testRoute(tos, `api/1.3/cdns/`+c+`/snapshot`)
-				wg.Done()
-			}(cdnName)
-			go func(c string) {
-				testRoute(tos, `api/1.3/cdns/`+c+`/snapshot/new`)
-				wg.Done()
-			}(cdnName)
-		}
-		wg.Wait()
-	}
 }
