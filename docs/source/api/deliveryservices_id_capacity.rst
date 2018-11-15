@@ -33,11 +33,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+----------+----------------------------------------------------------------------+
-	| Name | Required | Description                                                          |
-	+======+==========+======================================================================+
-	| id   | yes      | The integral, unique identifier for the Delivery Service of interest |
-	+------+----------+----------------------------------------------------------------------+
+	+------+----------------------------------------------------------------------+
+	| Name | Description                                                          |
+	+======+======================================================================+
+	| ID   | The integral, unique identifier for the Delivery Service of interest |
+	+------+----------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -46,15 +46,28 @@ Response Structure
 :utilizedPercent:    The percent of servers assigned to this Delivery Service that is currently in use - the allowed traffic level in terms of data per time period that is currently devoted to servicing requests
 :maintenancePercent: The percent of servers assigned to this Delivery Service that is unavailable due to server maintenance - the allowed traffic level in terms of data per time period that is unavailable because servers have intentionally been marked offline by administrators
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 15 Nov 2018 14:41:27 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 18:41:27 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: ++dFR9V1c60CHGNwMjX6JSFEjHreXcL4QnhTO3hiv04ByY379aLpL4OrOzX2bPgJgpR94+f6jZ0+iDIyTMwtFQ==
+	Content-Length: 134
+
 	{ "response": {
-		"availablePercent": 99.9990303030303,
+		"availablePercent": 99.9993696969697,
 		"unavailablePercent": 0,
-		"utilizedPercent": 0.00096969696969697,
+		"utilizedPercent": 0.00063030303030303,
 		"maintenancePercent": 0
 	}}
-
 
 .. [1] Users with the roles "admin" and/or "operations" will be able to see details for *all* Delivery Services, whereas any other user will only see details for the Delivery Services their Tenant is allowed to see.

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v12-cachegroupfallbacks-route:
+.. _to-api-cachegroup_fallbacks:
 
 ************************
 ``cachegroup_fallbacks``

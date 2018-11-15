@@ -34,19 +34,28 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------------+---------+----------+---------------------------------------------------+
-	| Name            | Type    | Required | Description                                       |
-	+=================+=========+==========+===================================================+
-	| ``days``        | integer | yes      | The number of days of change logs to return       |
-	+-----------------+---------+----------+---------------------------------------------------+
+	+------+-----------------------------------------------------+
+	| Name | Description                                         |
+	+======+=====================================================+
+	| days | An integral number of days of change logs to return |
+	+------+-----------------------------------------------------+
 
 .. table:: Request Query Parameters
 
-	+-----------------+---------+----------+---------------------------------------------------+
-	| Name            | Type    | Required | Description                                       |
-	+=================+=========+==========+===================================================+
-	| ``limit``       | integer | no       | The number of rows to which to limit the response |
-	+-----------------+---------+----------+---------------------------------------------------+
+	+-------+----------+---------------------------------------------------+
+	| Name  | Required | Description                                       |
+	+=======+==========+===================================================+
+	| limit | no       | The number of rows to which to limit the response |
+	+-------+----------+---------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/logs/1/days?limit=2 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: last_seen_log="2018-11-15% 15:11:38"; mojolicious=...
 
 Response Structure
 ------------------
@@ -57,24 +66,39 @@ Response Structure
 :ticketNum:   Optional field to cross reference with any bug tracking systems
 :user:        Name of the user who made the change
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 15 Nov 2018 15:19:10 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: last_seen_log="2018-11-15% 15:19:10"; path=/; Max-Age=604800
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 19:19:10 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: 40dV+azaZ3b6F30y6YHVbV3H2a3ekZrdoxICupwaxQnj62pwYfb7YCM7Qhe3OAItmB77Tbg9INy27ymaz3hr9A==
+	Content-Length: 357
 
 	{ "response": [
 		{
 			"ticketNum": null,
 			"level": "APICHANGE",
-			"lastUpdated": "2018-10-24 16:07:17.45204+00",
+			"lastUpdated": "2018-11-14 21:40:06.493975+00",
 			"user": "admin",
-			"id": 430,
-			"message": "Server updates queued for cdn 2"
+			"id": 444,
+			"message": "User [ test ] unlinked from deliveryservice [ 1 | demo1 ]."
 		},
 		{
 			"ticketNum": null,
 			"level": "APICHANGE",
-			"lastUpdated": "2018-10-24 16:07:16.130401+00",
+			"lastUpdated": "2018-11-14 21:37:30.707571+00",
 			"user": "admin",
-			"id": 429,
-			"message": "Snapshot of CRConfig performed for CDN-in-a-Box"
+			"id": 443,
+			"message": "1 delivery services were assigned to test"
 		}
 	]}

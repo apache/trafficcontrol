@@ -33,11 +33,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+-------------------+----------+--------------------------------------------------------------+
-	| Parameter | Type              | Required | Description                                                  |
-	+===========+===================+==========+==============================================================+
-	| server    | string or integer | yes      | Either the name or integral, unique, identifier of a server  |
-	+-----------+-------------------+----------+--------------------------------------------------------------+
+	+-----------+-------------------+--------------------------------------------------------------+
+	| Parameter | Type              | Description                                                  |
+	+===========+===================+==============================================================+
+	| server    | string or integer | Either the name or integral, unique, identifier of a server  |
+	+-----------+-------------------+--------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -72,12 +72,26 @@ Response Structure
 .. versionchanged:: Traffic Control 2.0
 	Elements of the ``"configFile"`` array may no longer have the ``"contents"`` key - all file contents are now retrieved via a network request
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: text/plain;charset=UTF-8
+	Date: Thu, 15 Nov 2018 15:28:10 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 19:28:10 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: K6pRI4MkN8O9+wKW8MG3w6nTnmLHtCZKqzXCjw4JfoMYIVJC6fVTN9ysGML71VF2T7ZAIP1TveWhjaH/fNr7sQ==
+	Transfer-Encoding: chunked
 
 	{ "info": {
 		"profileId": 9,
-		"toUrl": "https://trafficops.infra.ciab.test:443/",
+		"toUrl": null,
 		"serverIpv4": "172.16.239.100",
 		"serverTcpPort": 80,
 		"serverName": "edge",
@@ -98,6 +112,18 @@ Response Structure
 			"location": "/etc/trafficserver/",
 			"apiUri": "/api/1.2/profiles/ATS_EDGE_TIER_CACHE/configfiles/ats/cache.config",
 			"scope": "profiles"
+		},
+		{
+			"fnameOnDisk": "cacheurl_foo.config",
+			"location": "/etc/trafficserver",
+			"apiUri": "/api/1.2/cdns/CDN-in-a-Box/configfiles/ats/cacheurl_foo.config",
+			"scope": "cdns"
+		},
+		{
+			"fnameOnDisk": "hdr_rw_foo.config",
+			"location": "/etc/trafficserver",
+			"apiUri": "/api/1.2/cdns/CDN-in-a-Box/configfiles/ats/hdr_rw_foo.config",
+			"scope": "cdns"
 		},
 		{
 			"fnameOnDisk": "hosting.config",
@@ -130,6 +156,12 @@ Response Structure
 			"scope": "profiles"
 		},
 		{
+			"fnameOnDisk": "regex_remap_foo.config",
+			"location": "/etc/trafficserver",
+			"apiUri": "/api/1.2/cdns/CDN-in-a-Box/configfiles/ats/regex_remap_foo.config",
+			"scope": "cdns"
+		},
+		{
 			"fnameOnDisk": "regex_revalidate.config",
 			"location": "/etc/trafficserver",
 			"apiUri": "/api/1.2/cdns/CDN-in-a-Box/configfiles/ats/regex_revalidate.config",
@@ -154,5 +186,7 @@ Response Structure
 			"scope": "profiles"
 		}
 	]}
+
+.. note:: Some DSCP-related files like e.g. ``set_dscp_0.config`` have been removed from this response, which otherwise reflects a stock CDN-in-a-Box configuration. This was done both for brevity's sake, and due to the expectation that these will disappear from the default configuration in the (hopefully near) future.
 
 .. [1] Exactly one of these fields is guaranteed to exist for any given configuration file - although "apiUrl" is far more common.

@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-------+----------+----------------------------------------------+
-	|  Name | Required |              Description                     |
-	+=======+==========+==============================================+
-	| XMLID | yes      | The 'xml_id' of the desired Delivery Service |
-	+-------+----------+----------------------------------------------+
+	+-------+----------------------------------------------+
+	|  Name |              Description                     |
+	+=======+==============================================+
+	| XMLID | The 'xml_id' of the desired Delivery Service |
+	+-------+----------------------------------------------+
 
 
 .. table:: Request Query Parameters

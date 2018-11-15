@@ -38,8 +38,22 @@ Response Structure
 ------------------
 :newLogcount: The integer number of new changes
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 15 Nov 2018 15:17:35 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 19:17:35 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: Ugdqe8GXKSOExphwbDX/Gli+2vBpubttbpfYMbJaCP7adox3MzmVRi2RxTDL5kwPewrcL1CO88zGITskhOsc9g==
+	Content-Length: 30
 
 	{ "response": {
 		"newLogcount": 4

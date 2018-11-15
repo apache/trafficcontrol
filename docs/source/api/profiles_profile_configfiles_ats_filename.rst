@@ -33,20 +33,44 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+-------------------+----------+--------------------------------------------------------------+
-	| Parameter | Type              | Required | Description                                                  |
-	+===========+===================+==========+==============================================================+
-	| profile   | string or integer | yes      | Either the name or integral, unique, identifier of a profile |
-	+-----------+-------------------+----------+--------------------------------------------------------------+
-	| filename  | string            | yes      | The name of a configuration file used by ``profile``         |
-	+-----------+-------------------+----------+--------------------------------------------------------------+
+	+-----------+-------------------+--------------------------------------------------------------+
+	| Parameter | Type              | Description                                                  |
+	+===========+===================+==============================================================+
+	| profile   | string or integer | Either the name or integral, unique, identifier of a profile |
+	+-----------+-------------------+--------------------------------------------------------------+
+	| filename  | string            | The name of a configuration file used by ``profile``         |
+	+-----------+-------------------+--------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/profiles/ATS_MID_TIER_CACHE/configfiles/ats/volume.config HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
-.. note:: If the file identified by ``filename`` does exist, but is not used by every server using the profile ``profile``, a JSON response will be returned and the ``alerts`` array will contain a ``"level": "error"`` node which identifies the correct scope of the configuration file.
+.. note:: If the file identified by ``filename`` doesn't exist at the profile, a JSON response will be returned and the ``alerts`` array will contain a ``"level": "error"`` node which suggests other scopes to check for the configuration file.
 
-.. code-block:: squid
+.. code-block:: http
 	:caption: Response Example
 
-	# DO NOT EDIT - Generated for ATS_EDGE_TIER_CACHE by Traffic Ops (https://trafficops.infra.ciab.test:443/) on Thu Oct 25 13:30:33 UTC 2018
-	/var/trafficserver/cache volume=1
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: text/plain;charset=UTF-8
+	Date: Thu, 15 Nov 2018 15:23:44 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 19:23:44 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: C1Hrs4y3qSThOeZJo5aDJu1QjD/r/7vO6c7E7TaFXx67kWat91uk9BSvieXN5yrOE4HkGsiGBkNZjjZ3hb5mYw==
+	Content-Length: 211
+
+	# DO NOT EDIT - Generated for ATS_MID_TIER_CACHE by Traffic Ops (trafficops.infra.ciab.test:443) on Thu Nov 15 15:23:44 UTC 2018
+	# TRAFFIC OPS NOTE: This is running with forced volumes - the size is irrelevant
+	volume=1 scheme=http size=100%

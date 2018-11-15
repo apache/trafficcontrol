@@ -33,11 +33,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+----------+--------------------------------------------------------------------------------------------------+
-	| Name | Required | Description                                                                                      |
-	+======+==========+==================================================================================================+
-	| ID   | yes      | The integral, unique identifier of the Delivery service for which Cache Groups will be displayed |
-	+------+----------+--------------------------------------------------------------------------------------------------+
+	+------+--------------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                      |
+	+======+==================================================================================================+
+	| ID   | The integral, unique identifier of the Delivery service for which Cache Groups will be displayed |
+	+------+--------------------------------------------------------------------------------------------------+
 
 
 Response Structure
@@ -51,8 +51,22 @@ Response Structure
 :totalOffline: Total number of offline cache servers assigned to this Delivery Service
 :totalOnline:  Total number of online cache servers assigned to this Delivery Service
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 15 Nov 2018 14:43:43 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 18:43:43 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: KpXViXeAgch58ueQqdyU8NuINBw1EUedE6Rv2ewcLUajJp6kowdbVynpwW7XiSvAyHdtClIOuT3OkhIimghzSA==
+	Content-Length: 115
 
 	{ "response": {
 		"totalOffline": 0,
