@@ -54,32 +54,32 @@ Response Structure
 	:enabled:   ``true`` if failover has been enabled for this Delivery Service, ``false`` otherwise
 	:locations: An array of integral, unique identifiers for Cache Groups to use for failover
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
-HTTP/1.1 200 OK
-Access-Control-Allow-Credentials: true
-Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
-Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-Access-Control-Allow-Origin: *
-Cache-Control: no-cache, no-store, max-age=0, must-revalidate
-Content-Type: application/json
-Date: Thu, 15 Nov 2018 14:54:17 GMT
-Server: Mojolicious (Perl)
-Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 18:54:17 GMT; path=/; HttpOnly
-Vary: Accept-Encoding
-Whole-Content-Sha512: 6dswLNVRAYBxXAQjXu8MfnLpQ94b9HyrL7ROzhF2pw+tBotgU98zhQRQoQrPEwrTVranTxTUyxP2icFfv5vh7g==
-Content-Length: 112
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Thu, 15 Nov 2018 14:54:17 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 18:54:17 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: 6dswLNVRAYBxXAQjXu8MfnLpQ94b9HyrL7ROzhF2pw+tBotgU98zhQRQoQrPEwrTVranTxTUyxP2icFfv5vh7g==
+	Content-Length: 112
 
-	{ "response": {
-		"failover": {
-			"locations": [],
-			"destination": null,
-			"configured": false,
+		{ "response": {
+			"failover": {
+				"locations": [],
+				"destination": null,
+				"configured": false,
+				"enabled": false
+			},
 			"enabled": false
-		},
-		"enabled": false
-	}}
+		}}
 
 
 
