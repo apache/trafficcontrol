@@ -43,8 +43,6 @@ RUN mkdir -p /opt/traffic_monitor/conf
 ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/
 
 ADD enroller/server_template.json \
-    traffic_monitor/parameters.json \
-    traffic_monitor/profile.json \
     traffic_ops/to-access.sh \
     /
 
