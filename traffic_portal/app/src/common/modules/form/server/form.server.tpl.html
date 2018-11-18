@@ -221,6 +221,14 @@ under the License.
                     <span ng-show="hasError(serverForm.rack)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.description), 'has-feedback': hasError(serverForm.description)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Description</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="description" type="text" class="form-control" ng-model="server.description" ng-maxlength="64" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.description, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.description)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.mgmtIpAddress), 'has-feedback': hasError(serverForm.mgmtIpAddress)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Address</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
