@@ -172,11 +172,22 @@ func randDsStat() dsdata.Stat {
 	}
 }
 
-func randDsStats() map[tc.DeliveryServiceName]dsdata.Stat {
+func randAStat() *AStat {
+	return &AStat{
+		InBytes:   rand.Uint64(),
+		OutBytes:  rand.Uint64(),
+		Status2xx: rand.Uint64(),
+		Status3xx: rand.Uint64(),
+		Status4xx: rand.Uint64(),
+		Status5xx: rand.Uint64(),
+	}
+}
+
+func randDsStats() map[tc.DeliveryServiceName]*AStat {
 	num := 5
-	a := map[tc.DeliveryServiceName]dsdata.Stat{}
+	a := map[tc.DeliveryServiceName]*AStat{}
 	for i := 0; i < num; i++ {
-		a[tc.DeliveryServiceName(randStr())] = randDsStat()
+		a[tc.DeliveryServiceName(randStr())] = randAStat()
 	}
 	return a
 }
