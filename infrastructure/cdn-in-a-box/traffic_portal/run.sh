@@ -30,7 +30,7 @@ SPIN_SLEEP_TIME="2000"
 source /to-access.sh
 
 # Wait on SSL certificate generation
-until [ -f "$X509_CA_DONE_FILE" ] 
+until [[ -f "$X509_CA_DONE_FILE" && -f "$x509_CA_ENV_FILE" ]]
 do
   echo "Waiting on Shared SSL certificate generation"
   sleep 3

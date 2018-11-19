@@ -47,11 +47,11 @@ LOGFILE="$CATALINA_BASE/var/log/traffic_router.log"
 ACCESSLOG="$CATALINA_BASE/var/log/access.log"
 
 export JAVA_HOME JAVA_OPTS
-export TO_PROPERTIES TM_PROPERTIES 
+export TO_PROPERTIES TM_PROPERTIES
 export CATALINA_HOME CATALINA_BASE CATALINA_OPTS CATALINA_OUT CATALINA_PID
 
 # Wait on SSL certificate generation
-until [ -f "$X509_CA_DONE_FILE" ] 
+until [[ -f "$X509_CA_DONE_FILE" && -f "$x509_CA_ENV_FILE" ]]
 do
   echo "Waiting on Shared SSL certificate generation"
   sleep 3
@@ -68,19 +68,19 @@ update-ca-trust extract
 # Enroll Traffic Router
 to-enroll tr || (while true; do echo "enroll failed."; sleep 3 ; done)
 
-# Add traffic 
-for crtfile in $(find $CATALINA_BASE/conf -name \*.crt -type f) 
-do 
-  alias=$(echo $crtfile |sed -e 's/.crt//g' |tr [:upper:] [:lower:]); 
-  cacerts=$(find $JAVA_HOME -follow -name cacerts); echo $cacerts; 
-  keytool=$JAVA_HOME/bin/keytool;  
-   
-  $keytool -list -alias $alias -keystore $cacerts -storepass changeit -noprompt > /dev/null;    
+# Add traffic
+for crtfile in $(find $CATALINA_BASE/conf -name \*.crt -type f)
+do
+  alias=$(echo $crtfile |sed -e 's/.crt//g' |tr [:upper:] [:lower:]);
+  cacerts=$(find $JAVA_HOME -follow -name cacerts); echo $cacerts;
+  keytool=$JAVA_HOME/bin/keytool;
 
-  if [ $? -ne 0 ]; then     
-     echo "Installing certificate ${crtfile}..";     
-     $keytool -import -trustcacerts -file $crtfile -alias $alias -keystore $cacerts -storepass changeit -noprompt;   
-  fi; 
+  $keytool -list -alias $alias -keystore $cacerts -storepass changeit -noprompt > /dev/null;
+
+  if [ $? -ne 0 ]; then
+     echo "Installing certificate ${crtfile}..";
+     $keytool -import -trustcacerts -file $crtfile -alias $alias -keystore $cacerts -storepass changeit -noprompt;
+  fi;
 done
 
 # Configure TO properties
@@ -101,6 +101,6 @@ until nc $TM_FQDN $TM_PORT </dev/null >/dev/null 2>&1; do
 done
 
 touch $LOGFILE $ACCESSLOG
-tail -F $CATALINA_OUT $CATALINA_LOG $LOGFILE $ACCESSLOG &  
+tail -F $CATALINA_OUT $CATALINA_LOG $LOGFILE $ACCESSLOG &
 
-exec /opt/tomcat/bin/catalina.sh run 
+exec /opt/tomcat/bin/catalina.sh run

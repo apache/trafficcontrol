@@ -41,7 +41,7 @@ done
 source /to-access.sh
 
 # Wait on SSL certificate generation
-until [ -f "$X509_CA_DONE_FILE" ] 
+until [[ -f "$X509_CA_DONE_FILE" && -f "$x509_CA_ENV_FILE" ]]
 do
   echo "Waiting on Shared SSL certificate generation"
   sleep 3
@@ -97,9 +97,9 @@ export TO_PASSWORD=$TO_ADMIN_PASSWORD
 touch /opt/traffic_monitor/var/log/traffic_monitor.log
 
 # Do not start until there is a valid CRConfig available
-until [ $(to-get '/CRConfig-Snapshots/CDN-in-a-Box/CRConfig.json' 2>/dev/null | jq -c -e '.config|length') -gt 0 ] ; do 
-	echo "Waiting on valid CRConfig..."; 
-  	sleep 3; 
+until [ $(to-get '/CRConfig-Snapshots/CDN-in-a-Box/CRConfig.json' 2>/dev/null | jq -c -e '.config|length') -gt 0 ] ; do
+	echo "Waiting on valid CRConfig...";
+  	sleep 3;
 done
 
 cd /opt/traffic_monitor
