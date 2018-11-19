@@ -50,8 +50,10 @@ Usage: compare [-hsV] [-f value] [--ref_passwd value] [--ref_url value] [--ref_u
 -f, --file=value          File listing routes to test (will read from stdin if not given)
 -h, --help                Print usage information and exit
 -r, --results_path=value  Directory where results will be written
--s, --snapshot            Perform comparison of all CDN's snapshotted CRConfigs
 -V, --version             Print version information and exit
+
+.. versionchanged:: 3.0.0
+	Removed the ``-s`` command line switch to compare CDN snapshots - this is now the responsibility of the genConfigRoutes.py script.
 
 The typical way to use ``compare`` is to first specify some environment variables:
 

@@ -22,6 +22,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -35,7 +36,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-const __version__ = "2.1.0"
+const __version__ = "3.0.0"
 const SHORT_HEADER = "# DO NOT EDIT"
 const LONG_HEADER = "# TRAFFIC OPS NOTE:"
 const MAX_RETRIES = 5
@@ -58,6 +59,13 @@ type Connect struct {
 	ResultsPath string       `ignore:"true"`
 	creds       Creds        `ignore:"true"`
 	mutex       *sync.Mutex  `ignore:"true"`
+}
+
+// keeps result along with instance -- no guarantee on order collected
+type result struct {
+	TO    *Connect
+	Res   *http.Response
+	Error error
 }
 
 func (to *Connect) login(creds Creds) error {
@@ -108,12 +116,6 @@ func (to *Connect) login(creds Creds) error {
 }
 
 func testRoute(tos []*Connect, route string) {
-	// keeps result along with instance -- no guarantee on order collected
-	type result struct {
-		TO  *Connect
-		Res string
-		Error error
-	}
 	var res []result
 	ch := make(chan result, len(tos))
 
@@ -128,8 +130,8 @@ func testRoute(tos []*Connect, route string) {
 	for _, to := range tos {
 		wg.Add(1)
 		go func(to *Connect) {
-			s, err := to.get(route)
-			ch <- result{to, s, err}
+			resp, err := to.get(route)
+			ch <- result{to, resp, err}
 			wg.Done()
 		}(to)
 
@@ -157,74 +159,234 @@ func testRoute(tos []*Connect, route string) {
 		log.Fatalf("Error occurred `GET`ting %s from %s: %s\n", route, res[1].TO.URL, res[1].Error.Error())
 	}
 
+	ctypeA, ctypeB := res[0].Res.Header.Get("Content-Type"), res[1].Res.Header.Get("Content-Type")
+	if ctypeA != ctypeB {
+		log.Printf("ERROR: Differing content types for route %s - %s reports %s but %s reports %s !\n",
+			route, res[0].TO.URL, ctypeA, res[1].TO.URL, ctypeB)
+		return
+	}
+
+	// Handle JSON data - note that this WILL NOT be used for endpoints that report the wrong content-type
+	// (ignores charset encoding)
+	if strings.Contains(ctypeA, "application/json") {
+		handleJSONResponse(&res, route)
+
+		// WARNING: treats ALL non-JSON responses as plaintext - should usually operate as expected, but
+		// optimizations could be made for other structures
+	} else {
+		handlePlainTextResponse(&res, route)
+	}
+}
+
+// Reads in the bodies of responses, closing them as soon as possible
+func readRespBodies(a *io.ReadCloser, b *io.ReadCloser) ([]byte, []byte, error) {
+	defer (*a).Close()
+	defer (*b).Close()
+
+	aBody, err := ioutil.ReadAll(*a)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	bBody, err := ioutil.ReadAll(*b)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return aBody, bBody, nil
+}
+
+// Given a slice of (exactly two) result objects, compares the plain text content of their responses
+// and write them to files if they differ. Ignores Traffic Ops headers in the response (to the
+// degree possible)
+func handlePlainTextResponse(responses *[]result, route string) {
+
+	// I avoid using `defer` to close the bodies because I want to do it as quickly as possible
+	result0, result1, err := readRespBodies(&(*responses)[0].Res.Body, &(*responses)[1].Res.Body)
+	if err != nil {
+		log.Fatalf("Failed to read response body from %s: %s\n", route, err.Error())
+	}
+
 	// Check for Traffic Ops headers and remove them before comparison
-	refResult := res[0].Res
-	testResult := res[1].Res
+	result0Str, result1Str := string(result0), string(result1)
+	scrubbedResult0, scrubbedResult1 := "", ""
 	if strings.Contains(route, "configfiles") {
-		refLines := strings.Split(refResult, "\n")
-		testLines := strings.Split(testResult, "\n")
+		lines0 := strings.Split(result0Str, "\n")
+		lines1 := strings.Split(result1Str, "\n")
 
 		// If the two files have different numbers of lines, they definitely differ
-		if len(refLines) != len(testLines) {
-			log.Print("Diffs from ", route, " written to")
-			p, err := res[0].TO.writeResults(route, refResult)
-			if err != nil {
-				log.Fatalf("Error writing results for %s: %s\n", route, err.Error())
-			}
-			log.Print(" ", p)
-			p, err = res[1].TO.writeResults(route, testResult)
-			if err != nil {
-				log.Fatalf("Error writing results for %s: %s\n", route, err.Error())
-			}
-			log.Print(" and ", p)
+		if len(lines0) != len(lines1) {
+			writeAllResults(route, result0Str, (*responses)[0].TO, result1Str, (*responses)[1].TO)
 			return
 		}
 
-
-		refResult = ""
-		testResult = ""
-
-		for _, refLine := range refLines {
-			if len(refLine) < len(SHORT_HEADER) {
-				refResult += refLine
-			} else if refLine[:len(SHORT_HEADER)] != SHORT_HEADER {
-				if len(refLine) >= len(LONG_HEADER) {
-					if refLine[:len(LONG_HEADER)] != LONG_HEADER {
-						refResult += refLine
+		for _, line := range lines0 {
+			if len(line) < len(SHORT_HEADER) {
+				scrubbedResult0 += line
+			} else if line[:len(SHORT_HEADER)] != SHORT_HEADER {
+				if len(line) >= len(LONG_HEADER) {
+					if line[:len(LONG_HEADER)] != LONG_HEADER {
+						scrubbedResult0 += line
 					}
 				} else {
-					refResult += refLine
+					scrubbedResult0 += line
 				}
 			}
 		}
 
-		for _, testLine := range testLines {
-			if len(testLine) < len(SHORT_HEADER) {
-				testResult += testLine
-			} else if testLine[:len(SHORT_HEADER)] != SHORT_HEADER {
-				if len(testLine) >= len(LONG_HEADER) {
-					if testLine[:len(LONG_HEADER)] != LONG_HEADER {
-						testResult += testLine
+		for _, line := range lines1 {
+			if len(line) < len(SHORT_HEADER) {
+				scrubbedResult1 += line
+			} else if line[:len(SHORT_HEADER)] != SHORT_HEADER {
+				if len(line) >= len(LONG_HEADER) {
+					if line[:len(LONG_HEADER)] != LONG_HEADER {
+						scrubbedResult1 += line
 					}
 				} else {
-					testResult += testLine
+					scrubbedResult1 += line
 				}
 			}
 		}
-	}
-
-	if refResult == testResult {
-		log.Printf("Identical results (%d bytes) from %s", len(res[0].Res), route)
 	} else {
-		log.Print("Diffs from ", route, " written to")
-		for _, r := range res {
-			p, err := r.TO.writeResults(route, r.Res)
-			if err != nil {
-				log.Fatalf("Error writing results for %s: %s", route, err.Error())
+		scrubbedResult0 = result0Str
+		scrubbedResult1 = result1Str
+	}
+
+	if scrubbedResult0 == scrubbedResult1 {
+		log.Printf("Identical results (%d bytes) from %s\n", len(result0), route)
+	} else {
+		writeAllResults(route, result0Str, (*responses)[0].TO, result1Str, (*responses)[1].TO)
+	}
+}
+
+// Removes keys that generate false positives in comparisons from the passed JSON object
+func sanitizeJSON(m map[string]interface{}) map[string]interface{} {
+	// Need to make a full copy so we don't modify while iterating
+	object := m
+
+	// ... Now we have to iterate over every key in each map to determine if it should be removed...
+	for key, value := range m {
+
+		// handles timestamp/hostname/version/user differences in snapshot and snapshot/new
+		if key == "response" {
+			switch value.(type) {
+			case map[string]interface{}:
+				response := value.(map[string]interface{})
+
+				if k, in := response["stats"]; in {
+					switch k.(type) {
+					case map[string]interface{}:
+						stats := k.(map[string]interface{})
+
+						if v, ok := stats["date"]; ok {
+							switch v.(type) {
+							case float64:
+								delete(object["response"].(map[string]interface{})["stats"].(map[string]interface{}), "date")
+							}
+						}
+
+						if v, ok := stats["tm_host"]; ok {
+							switch v.(type) {
+							case string:
+								delete(object["response"].(map[string]interface{})["stats"].(map[string]interface{}), "tm_host")
+							}
+						}
+
+						if v, ok := stats["tm_version"]; ok {
+							switch v.(type) {
+							case string:
+								delete(object["response"].(map[string]interface{})["stats"].(map[string]interface{}), "tm_version")
+							}
+						}
+
+						if v, ok := stats["tm_user"]; ok {
+							switch v.(type) {
+							case string:
+								delete(object["response"].(map[string]interface{})["stats"].(map[string]interface{}), "tm_user")
+							}
+						}
+					}
+				}
 			}
-			log.Print("  ", p)
+
+			// Handles hostname differences in api/1.x/servers/{{server}}/configfiles/ats endpoints
+		} else if key == "info" {
+			switch value.(type) {
+			case map[string]interface{}:
+				info := value.(map[string]interface{})
+
+				if v, ok := info["toUrl"]; ok {
+					switch v.(type) {
+					case string:
+						delete(object["info"].(map[string]interface{}), "toUrl")
+					}
+				}
+
+				if v, ok := info["toRevProxyUrl"]; ok {
+					switch v.(type) {
+					case string:
+						delete(object["info"].(map[string]interface{}), "toRevProxyUrl")
+					}
+				}
+			}
 		}
 	}
+
+	return object
+}
+
+// Given a slice of (exactly two) result objects, compares the JSON content of their responses
+// and write them to files if they differ. Ignores timestamps and Traffic Ops hostnames (to the
+// degree possible)
+func handleJSONResponse(responses *[]result, route string) {
+
+	// I avoid using `defer` to close the bodies because I want to do it as quickly as possible
+
+	result0Orig, result1Orig, err := readRespBodies(&(*responses)[0].Res.Body, &(*responses)[1].Res.Body)
+	if err != nil {
+		log.Fatalf("Failed to read response body from %s: %s\n", route, err.Error())
+	}
+
+	var result0, result1 map[string]interface{}
+	if err = json.Unmarshal(result0Orig, &result0); err != nil {
+		log.Fatalf("Failed to parse response body from %s/%s as JSON: %s\n", (*responses)[0].TO.URL, route, err.Error())
+	}
+
+	if err = json.Unmarshal(result1Orig, &result1); err != nil {
+		log.Fatalf("Failed to parse response body from %s/%s as JSON: %s\n", (*responses)[1].TO.URL, route, err.Error())
+	}
+
+	result0Bytes, err := json.Marshal(sanitizeJSON(result0))
+	if err != nil {
+		log.Fatalf("Error re-encoding JSON response from %s/%s: %s\n", (*responses)[0].TO.URL, route, err.Error())
+	}
+
+	result1Bytes, err := json.Marshal(sanitizeJSON(result1))
+	if err != nil {
+		log.Fatalf("Error re-encoding JSON response from %s/%s: %s\n", (*responses)[1].TO.URL, route, err.Error())
+	}
+
+	if string(result0Bytes) == string(result1Bytes) {
+		log.Printf("Identical results (%d bytes) from %s\n", len(result0Bytes), route)
+	} else {
+		writeAllResults(route, string(result0Orig), (*responses)[0].TO, string(result1Orig), (*responses)[1].TO)
+	}
+}
+
+// Writes out a set of results for a given route, and logs to stderr information about what was
+// written
+func writeAllResults(route string, result0 string, connect0 *Connect, result1 string, connect1 *Connect) {
+	p0, err := connect0.writeResults(route, result0)
+	if err != nil {
+		log.Fatalf("Error writing results for %s: %s", route, err.Error())
+	}
+
+	p1, err := connect1.writeResults(route, result1)
+	if err != nil {
+		log.Fatalf("Error writing results for %s: %s", route, err.Error())
+	}
+
+	log.Println("Diffs from ", route, " written to ", p0, " and ", p1)
 }
 
 func (to *Connect) writeResults(route string, res string) (string, error) {
@@ -250,12 +412,12 @@ func (to *Connect) writeResults(route string, res string) (string, error) {
 	return p, err
 }
 
-func (to *Connect) get(route string) (string, error) {
+func (to *Connect) get(route string) (*http.Response, error) {
 	url := to.URL + "/" + route
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
 
@@ -282,15 +444,17 @@ func (to *Connect) get(route string) (string, error) {
 		// if it fails this time, then I guess we're just done.
 		resp, err = to.Client.Do(req)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
-	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
-	return string(data), err
+	// check for protocol-level errors
+	if err == nil && (resp.StatusCode < 200 || resp.StatusCode >= 300) {
+		log.Fatalf("Got status %s from %s\n", resp.Status, url)
+	}
+
+	return resp, err
 }
-
 
 func main() {
 
