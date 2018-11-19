@@ -31,30 +31,8 @@ function importFunctions() {
 }
 
 #----------------------------------------
-function installDnsSec {
-	# download and integrate dnssec library
-	local dnssecversion=0.12
-	local dnssectools=jdnssec-tools
-	local dnssec="$dnssectools-$dnssecversion"
-	local dnssecurl=http://www.verisignlabs.com/dnssec-tools/packages/old-releases
-
-	echo "Downloading $dnssec library..."
-	curl -fo "$dnssec".tar.gz "$dnssecurl/$dnssec".tar.gz || \
-		{ echo "Could not download required $dnssec library: $?"; exit 1; }
-	tar xzvf "$dnssec".tar.gz ||  \
-		{ echo "Could not extract required $dnssec library: $?"; exit 1; }
-
-	(cd "$dnssec" && \
-	 mvn install::install-file -Dfile=./lib/jdnssec-tools.jar -DgroupId=jdnssec -Dpackaging=jar \
-		-DartifactId=jdnssec-tools -Dversion="$dnssecversion" \
-	)  || { echo "Could not install required $dnssec library: $?"; exit 1; } \
-}
-
-#----------------------------------------
 function buildRpmTrafficRouter () {
 	echo "Building the rpm."
-
-	installDnsSec
 
 	export STARTUP_SCRIPT_DIR="/lib/systemd/system"
 	export STARTUP_SCRIPT_LOC="../core/src/main/lib/systemd/system"

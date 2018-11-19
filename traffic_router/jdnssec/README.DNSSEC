@@ -1,7 +1,0 @@
-This release includes test tools for DNSSEC using David Blacka's jdnssec-tools package. Download the binary distribution and install the jar into your local Maven repository.
-
-	http://www.verisignlabs.com/jdnssec-tools/
-
-	mvn install:install-file -Dfile=jdnssec-tools.jar -DgroupId=jdnssec -DartifactId=jdnssec-tools -Dversion={VERSION} -Dpackaging=jar
-
-To build the optional jdnssec module, use: mvn <goals> -DuseJdnssec=true
