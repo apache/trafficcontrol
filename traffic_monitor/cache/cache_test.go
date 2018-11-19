@@ -20,13 +20,9 @@ package cache
  */
 
 import (
-	"encoding/json"
-	"net/url"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
@@ -52,40 +48,4 @@ func (f DummyFilterNever) UseCache(name tc.CacheName) bool {
 
 func (f DummyFilterNever) WithinStatHistoryMax(i int) bool {
 	return false
-}
-
-func TestStatsMarshall(t *testing.T) {
-	statHist := randResultStatHistory()
-	infHist := randResultInfoHistory()
-	filter := DummyFilterNever{}
-	params := url.Values{}
-	beforeStatsMarshall := time.Now()
-	bytes, err := StatsMarshall(statHist, infHist, tc.CRStates{}, tc.TrafficMonitorConfigMap{}, Kbpses{}, filter, params)
-	afterStatsMarshall := time.Now()
-	if err != nil {
-		t.Fatalf("StatsMarshall return expected nil err, actual err: %v", err)
-	}
-	// if len(bytes) > 0 {
-	// 	t.Errorf("expected empty bytes, actual: %v", string(bytes))
-	// }
-
-	stats := Stats{}
-	if err := json.Unmarshal(bytes, &stats); err != nil {
-		t.Fatalf("unmarshalling expected nil err, actual err: %v", err)
-	}
-
-	if stats.CommonAPIData.QueryParams != "" {
-		t.Errorf(`unmarshalling stats.CommonAPIData.QueryParams expected "", actual %v`, stats.CommonAPIData.QueryParams)
-	}
-
-	statsDate, err := time.Parse(srvhttp.CommonAPIDataDateFormat, stats.CommonAPIData.DateStr)
-	if err != nil {
-		t.Errorf(`stats.CommonAPIData.DateStr expected format %v, actual %v`, srvhttp.CommonAPIDataDateFormat, stats.CommonAPIData.DateStr)
-	}
-	if beforeStatsMarshall.Truncate(time.Second).After(statsDate) || statsDate.Truncate(time.Second).After(afterStatsMarshall.Truncate(time.Second)) { // round to second, because CommonAPIDataDateFormat is second-precision
-		t.Errorf(`unmarshalling stats.CommonAPIData.DateStr expected between %v and %v, actual %v`, beforeStatsMarshall, afterStatsMarshall, stats.CommonAPIData.DateStr)
-	}
-	if len(stats.Caches) > 0 {
-		t.Errorf(`unmarshalling stats.Caches expected empty, actual %+v`, stats.Caches)
-	}
 }

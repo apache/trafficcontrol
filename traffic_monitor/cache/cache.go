@@ -20,10 +20,8 @@ package cache
  */
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
-	"net/url"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -202,72 +200,6 @@ func ComputedStats() map[string]StatComputeFunc {
 			return info.System.ProcNetDev
 		},
 	}
-}
-
-// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
-func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHistory, combinedStates tc.CRStates, monitorConfig tc.TrafficMonitorConfigMap, statMaxKbpses Kbpses, filter Filter, params url.Values) ([]byte, error) {
-	stats := Stats{
-		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Caches:        map[tc.CacheName]map[string][]ResultStatVal{},
-	}
-
-	computedStats := ComputedStats()
-
-	// TODO in 1.0, stats are divided into 'location', 'cache', and 'type'. 'cache' are hidden by default.
-
-	for id, combinedStatesCache := range combinedStates.Caches {
-		if !filter.UseCache(id) {
-			continue
-		}
-
-		for stat, vals := range statResultHistory[id] {
-			stat = "ats." + stat // TM1 prefixes ATS stats with 'ats.'
-			if !filter.UseStat(stat) {
-				continue
-			}
-			historyCount := 1
-			for _, val := range vals {
-				if !filter.WithinStatHistoryMax(historyCount) {
-					break
-				}
-				if _, ok := stats.Caches[id]; !ok {
-					stats.Caches[id] = map[string][]ResultStatVal{}
-				}
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], val)
-				historyCount += int(val.Span)
-			}
-		}
-
-		serverInfo, ok := monitorConfig.TrafficServer[string(id)]
-		if !ok {
-			log.Warnf("cache.StatsMarshall server %s missing from monitorConfig\n", id)
-		}
-
-		serverProfile, ok := monitorConfig.Profile[serverInfo.Profile]
-		if !ok {
-			log.Warnf("cache.StatsMarshall server %s missing profile in monitorConfig\n", id)
-		}
-
-		for i, resultInfo := range statInfo[id] {
-			if !filter.WithinStatHistoryMax(i + 1) {
-				break
-			}
-			if _, ok := stats.Caches[id]; !ok {
-				stats.Caches[id] = map[string][]ResultStatVal{}
-			}
-
-			t := resultInfo.Time
-
-			for stat, statValF := range computedStats {
-				if !filter.UseStat(stat) {
-					continue
-				}
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache), Time: t, Span: 1}) // combinedState will default to unavailable
-			}
-		}
-	}
-
-	return json.Marshal(stats)
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.

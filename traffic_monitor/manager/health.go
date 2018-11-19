@@ -13,7 +13,7 @@ package manager
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR nCONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
@@ -184,7 +184,7 @@ func processHealthResult(
 		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
 	}
 
-	health.CalcAvailability(results, "health", nil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
+	health.CalcAvailability(results, "health", monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
 
 	healthHistory.Set(healthHistoryCopy)
 	// TODO determine if we should combineCrStates() here

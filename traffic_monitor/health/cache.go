@@ -95,28 +95,21 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 // EvalCache returns whether the given cache should be marked available, a string describing why, and which stat exceeded a threshold. The `stats` may be nil, for pollers which don't poll stats.
 // The availability of EvalCache MAY NOT be used to directly set the cache's local availability, because the threshold stats may not be part of the poller which produced the result. Rather, if the cache was previously unavailable from a threshold, it must be verified that threshold stat is in the results before setting the cache to available.
 // TODO change to return a `cache.AvailableStatus`
-func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, mc *tc.TrafficMonitorConfigMap) (bool, string, string) {
+func EvalCache(result cache.ResultInfo, mc *tc.TrafficMonitorConfigMap) (bool, string, string) {
 	serverInfo, ok := mc.TrafficServer[string(result.ID)]
 	if !ok {
 		log.Errorf("Cache %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID)
 		return false, "ERROR - server missing in Traffic Ops monitor config", ""
 	}
-	serverProfile, ok := mc.Profile[serverInfo.Profile]
-	if !ok {
-		log.Errorf("Cache %v profile %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID, serverInfo.Profile)
-		return false, "ERROR - server profile missing in Traffic Ops monitor config", ""
-	}
+	serverStatus := tc.CacheStatusFromString(serverInfo.ServerStatus)
+	return EvalCacheWithStatusInfo(result, mc, serverStatus, serverInfo)
+}
 
-	status := tc.CacheStatusFromString(serverInfo.ServerStatus)
-	if status == tc.CacheStatusInvalid {
-		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as Reported\n", result.ID, serverInfo.ServerStatus)
-	}
-
-	availability := "available"
+func EvalCacheWithStatusInfo(result cache.ResultInfo, mc *tc.TrafficMonitorConfigMap, status tc.CacheStatus, serverInfo tc.TrafficServer) (bool, string, string) {
+	availability := AvailableStr
 	if !result.Available {
-		availability = "unavailable"
+		availability = UnavailableStr
 	}
-
 	switch {
 	case status == tc.CacheStatusInvalid:
 		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as OFFLINE\n", result.ID, serverInfo.ServerStatus)
@@ -133,6 +126,37 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 	case result.System.NotAvailable == true:
 		return false, eventDesc(status, fmt.Sprintf("system.notAvailable == %v", result.System.NotAvailable)), ""
 	}
+	return result.Available, eventDesc(status, availability), ""
+}
+
+const AvailableStr = "available"
+const UnavailableStr = "unavailable"
+
+// EvalCache returns whether the given cache should be marked available, a string describing why, and which stat exceeded a threshold. The `stats` may be nil, for pollers which don't poll stats.
+// The availability of EvalCache MAY NOT be used to directly set the cache's local availability, because the threshold stats may not be part of the poller which produced the result. Rather, if the cache was previously unavailable from a threshold, it must be verified that threshold stat is in the results before setting the cache to available.
+// TODO change to return a `cache.AvailableStatus`
+func EvalCacheWithStats(result cache.ResultInfo, resultStats threadsafe.ResultStatValHistory, mc *tc.TrafficMonitorConfigMap) (bool, string, string) {
+	serverInfo, ok := mc.TrafficServer[string(result.ID)]
+	if !ok {
+		log.Errorf("Cache %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID)
+		return false, "ERROR - server missing in Traffic Ops monitor config", ""
+	}
+	status := tc.CacheStatusFromString(serverInfo.ServerStatus)
+	if status == tc.CacheStatusOnline {
+		// return here first, even though EvalCacheWithStatus checks online, because we later assume that if EvalCacheWithStatus returns true, to return false if thresholds are exceeded; but, if the cache is ONLINE, we don't want to check thresholds.
+		return true, eventDesc(status, AvailableStr), ""
+	}
+
+	serverProfile, ok := mc.Profile[serverInfo.Profile]
+	if !ok {
+		log.Errorf("Cache %v profile %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID, serverInfo.Profile)
+		return false, "ERROR - server profile missing in Traffic Ops monitor config", ""
+	}
+
+	avail, eventDescVal, eventMsg := EvalCacheWithStatusInfo(result, mc, status, serverInfo)
+	if !avail {
+		return avail, eventDescVal, eventMsg
+	}
 
 	computedStats := cache.ComputedStats()
 
@@ -142,14 +166,8 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 			dummyCombinedstate := tc.IsAvailable{} // the only stats which use combinedState are things like isAvailable, which don't make sense to ever be thresholds.
 			resultStat = computedStatF(result, serverInfo, serverProfile, dummyCombinedstate)
 		} else {
-			if resultStats == nil {
-				continue
-			}
-			resultStatHistory, ok := resultStats[stat]
-			if !ok {
-				continue
-			}
-			if len(resultStatHistory) < 1 {
+			resultStatHistory := resultStats.Load(stat)
+			if len(resultStatHistory) == 0 {
 				continue
 			}
 			resultStat = resultStatHistory[0].Val
@@ -166,20 +184,46 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 		}
 	}
 
-	return result.Available, eventDesc(status, availability), ""
+	return avail, eventDescVal, eventMsg
+}
+
+func CalcAvailabilityWithStats(results []cache.Result, pollerName string, statResultHistory threadsafe.ResultStatHistory, mc tc.TrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents) {
+	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
+	for _, result := range results {
+		statResults := statResultHistory.LoadOrStore(result.ID)
+		isAvailable, whyAvailable, unavailableStat := EvalCacheWithStats(cache.ToInfo(result), statResults, &mc)
+
+		// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
+		if previousStatus, hasPreviousStatus := localCacheStatuses[result.ID]; isAvailable && hasPreviousStatus && !previousStatus.Available && previousStatus.UnavailableStat != "" {
+			if !result.HasStat(previousStatus.UnavailableStat) {
+				return
+			}
+		}
+		localCacheStatuses[result.ID] = cache.AvailableStatus{
+			Available:       isAvailable,
+			Status:          mc.TrafficServer[string(result.ID)].ServerStatus,
+			Why:             whyAvailable,
+			UnavailableStat: unavailableStat,
+			Poller:          pollerName,
+		} // TODO move within localStates?
+
+		if available, ok := localStates.GetCache(result.ID); !ok || available.IsAvailable != isAvailable {
+			log.Infof("Changing state for %s was: %t now: %t because %s poller: %v error: %v", result.ID, available.IsAvailable, isAvailable, whyAvailable, pollerName, result.Error)
+			events.Add(Event{Time: Time(time.Now()), Description: whyAvailable + " (" + pollerName + ")", Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[result.ID].String(), Available: isAvailable})
+		}
+
+		localStates.SetCache(result.ID, tc.IsAvailable{IsAvailable: isAvailable})
+	}
+	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates, toData)
+	localCacheStatusThreadsafe.Set(localCacheStatuses)
 }
 
 // CalcAvailability calculates the availability of the cache, from the given result. Availability is stored in `localCacheStatus` and `localStates`, and if the status changed an event is added to `events`. statResultHistory may be nil, for pollers which don't poll stats.
 // TODO add tc for poller names?
-func CalcAvailability(results []cache.Result, pollerName string, statResultHistory cache.ResultStatHistory, mc tc.TrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents) {
+func CalcAvailability(results []cache.Result, pollerName string, mc tc.TrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents) {
 	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
 	for _, result := range results {
-		statResults := cache.ResultStatValHistory(nil)
-		if statResultHistory != nil {
-			statResults = statResultHistory[result.ID]
-		}
-
-		isAvailable, whyAvailable, unavailableStat := EvalCache(cache.ToInfo(result), statResults, &mc)
+		isAvailable, whyAvailable, unavailableStat := EvalCache(cache.ToInfo(result), &mc)
 
 		// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
 		if previousStatus, hasPreviousStatus := localCacheStatuses[result.ID]; isAvailable && hasPreviousStatus && !previousStatus.Available && previousStatus.UnavailableStat != "" {

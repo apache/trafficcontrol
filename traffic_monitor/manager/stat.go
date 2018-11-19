@@ -159,7 +159,6 @@ func processStatResults(
 
 	// setting the statHistory could be put in a goroutine concurrent with `ds.CreateStats`, if it were slow
 	statInfoHistory := statInfoHistoryThreadsafe.Get().Copy()
-	statResultHistory := statResultHistoryThreadsafe.Get().Copy()
 	statMaxKbpses := statMaxKbpsesThreadsafe.Get().Copy()
 
 	for i, result := range results {
@@ -179,7 +178,7 @@ func processStatResults(
 			}
 		}
 		statInfoHistory.Add(result, maxStats)
-		if err := statResultHistory.Add(result, maxStats); err != nil {
+		if err := statResultHistoryThreadsafe.Add(result, maxStats); err != nil {
 			log.Errorf("Adding result from %v: %v\n", result.ID, err)
 		}
 		// Don't add errored maxes or precomputed DSStats
@@ -196,7 +195,6 @@ func processStatResults(
 		lastResults[result.ID] = result
 	}
 	statInfoHistoryThreadsafe.Set(statInfoHistory)
-	statResultHistoryThreadsafe.Set(statResultHistory)
 	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
 
 	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc, events, localStates)
@@ -208,7 +206,7 @@ func processStatResults(
 		lastStats.Set(newLastStats)
 	}
 
-	health.CalcAvailability(results, "stat", statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events)
+	health.CalcAvailabilityWithStats(results, "stat", statResultHistoryThreadsafe, mc, toData, localCacheStatusThreadsafe, localStates, events)
 	combineState()
 
 	endTime := time.Now()

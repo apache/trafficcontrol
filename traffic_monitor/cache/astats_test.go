@@ -52,7 +52,6 @@ func getMockTODataDSNameDirectMatches() map[tc.DeliveryServiceName]string {
 	}
 }
 
-// ds, ok := toData.DeliveryServiceRegexes.DeliveryService(domain, subdomain, subsubdomain)
 func getMockTOData(dsNameFQDNs map[tc.DeliveryServiceName]string) todata.TOData {
 	tod := todata.New()
 	for dsName, dsDirectMatch := range dsNameFQDNs {
