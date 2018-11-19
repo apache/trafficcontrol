@@ -16,6 +16,8 @@ traffic_ops/app/public/CRConfig-Snapshots/*
 traffic_ops/app/public/Trafficserver-Snapshots/*
 docs/.todo_cache
 docs/_build/
+traffic_ops_db/test/docker/traffic_ops.rpm
+traffic_ops_db/test/docker/initdb.d/*dump
 traffic_ops/app/conf/ldap.conf
 traffic_ops/app/db/admin
 traffic_ops/app/public/css/images/
