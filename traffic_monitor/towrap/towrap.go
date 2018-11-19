@@ -327,6 +327,7 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 
 	if fileSession {
 		data, _ := ioutil.ReadFile(config.TmConfigBackupFile)
+		json := jsoniter.ConfigFastest
 		err := json.Unmarshal(data, &configMap)
 		if err != nil {
 			log.Errorf("Error unmarshaling TmConfigBackupFile, ", err)
@@ -334,6 +335,7 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	} else {
 		configMap, _, err = ss.GetTrafficMonitorConfigMap(cdn)
 		if configMap != nil {
+			json := jsoniter.ConfigFastest
 			data, err := json.Marshal(*configMap)
 			if err == nil {
 				ioutil.WriteFile(config.TmConfigBackupFile, data, 0644)
