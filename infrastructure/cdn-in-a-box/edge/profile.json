@@ -1,7 +1,0 @@
-{
-	"cdn": CDN_ID,
-	"name": "ATS_EDGE_TIER_CACHE",
-	"type": "ATS_PROFILE",
-	"description": "Edge Cache - Apache Traffic Server",
-	"routingDisabled": false
-}

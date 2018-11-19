@@ -1,7 +1,0 @@
-{
-	"cdn": CDN_ID,
-	"name": "ATS_MID_TIER_CACHE",
-	"type": "ATS_PROFILE",
-	"description": "Mid Cache - Apache Traffic Server",
-	"routingDisabled": false
-}
