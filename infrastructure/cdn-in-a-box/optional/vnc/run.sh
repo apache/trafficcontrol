@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -34,5 +34,18 @@ update-ca-trust extract
 
 VNC_DEPTH=${VNC_DEPTH:-32}
 VNC_RESOLUTION=${VNC_RESOLUTION:-1440x900}
+VNC_INSTANCE_NUM=9
 
-su -c "vncserver :0 -depth $VNC_DEPTH -geometry $VNC_RESOLUTION" - "$VNC_USER" && tail -F /home/dev/.vnc/vnc:0.log
+if [[ -z $VNC_PASSWD ]] ; then 
+   echo "WARNING: no \$VNC_PASSWD environment has been set."
+   sleep 10
+else 
+   echo "Changing vnc console password to: $VNC_PASSWD" 
+   echo -en "$VNC_PASSWD" | vncpasswd -f > /home/$VNC_USER/.vnc/passwd
+   sync 
+   sleep 1
+fi
+
+su -c "vncserver :$VNC_INSTANCE_NUM -depth $VNC_DEPTH -geometry $VNC_RESOLUTION" - "$VNC_USER" 
+
+tail -F '/home/ciabuser/.vnc/vnc.infra.ciab.test:9.log'

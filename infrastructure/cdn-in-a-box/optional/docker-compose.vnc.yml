@@ -47,36 +47,38 @@ services:
   # TestClient is a VNC/Proxy container for development/testing CDN-In-A-Box 
   # This container should not be merged to the Apache TrafficServer REPO due to 
   # possible licence issues with video playback software and codecs
-  testclient:
+  vnc:
     build:
       context: .
-      dockerfile: testclient/Dockerfile
+      dockerfile: optional/vnc/Dockerfile
       args:
-        VNC_USER: "demo"
-        VNC_PASSWD: "demo"
+        VNC_BUILD_USER: "ciabuser"
+    depends_on:
+      - dns
     environment:
-      VNC_RESOLUTION: "1400x900"
+      VNC_USER: "ciabuser"
       VNC_DEPTH: 32
-      VNC_WM: "fluxbox"
+      VNC_RESOLUTION: "1400x900"
     env_file: 
       - variables.env
-    hostname: client
+    hostname: vnc
     domainname: infra.ciab.test
     networks:
       tcnet:
-        ipv4_address: 172.16.239.250
-        ipv6_address: "fc01:9400:1000:8::250"
+        ipv4_address: 172.16.239.251
+        ipv6_address: "fc01:9400:1000:8::251"
     ports:
-      - "50022:22"
-      - "55900:5900"
-      - "59090:9090"
+      - "5909:5909"
     volumes:
-      - shared:/shared
       - ./dns/container-resolv.conf:/etc/resolv.conf
-      - ~/Library/Containers/com.docker.docker/Data/docker.sock:/var/run/docker.sock
+      - shared:/shared
       
 volumes:
   schemas:
     external: false
-  enroller:
+  shared:
     external: false
+  content:  
+    external: false
+  ca:
+    external: false 

@@ -16,22 +16,14 @@
 # under the License.
 FROM docker.io/centos:7
 
-ARG BUILD_VNC_USER=demo
-ARG BUILD_VNC_PASSWD=demo
-
-ENV VNC_USER=$BUILD_VNC_USER
-ENV VNC_PASSWD=$BUILD_VNC_PASSWD
+ARG VNC_BUILD_USER
+ENV VNC_USER=$VNC_BUILD_USER
 
 RUN yum -y install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm epel-release && \
     yum -y install xterm firefox git tigervnc-server sudo bind-utils net-tools which passwd which \
-                   fluxbox webcore-fonts terminus-fonts vnc mplayer wget openssl curl supervisor \
-                   tinyproxy openssh-clients openssh-server 
+                   fluxbox webcore-fonts terminus-fonts vnc mplayer wget openssl curl nc && \
+    yum -y clean all && rm -rf /var/cache/yum
 
-# Disabled Xfce (too large)
-#RUN yum -y groupinstall Xfce
-RUN yum clean all
-
-# Create testclient/vnc/proxy user(s)
 RUN useradd -m $VNC_USER && \
     echo "$VNC_USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
@@ -43,31 +35,18 @@ RUN rm -rf /home/$VNC_USER/.vnc && \
     mkdir /home/$VNC_USER/.fluxbox && \
     fluxbox-generate_menu -k -g -B -su -t xterm -b firefox && \
     sed 's/{xterm}/{xterm -bg black -fg white +sb}/g' -i /home/$VNC_USER/.fluxbox/menu && \
-    echo "$VNC_USER" | vncpasswd -f > /home/$VNC_USER/.vnc/passwd && \
+    dd if=/dev/urandom of=/dev/stdout count=12 bs=1 | vncpasswd -f > /home/$VNC_USER/.vnc/passwd && \
     chmod 600 /home/$VNC_USER/.vnc/passwd
 
-ADD testclient/vnc_startup.sh /home/$VNC_USER/.vnc/xstartup 
+ADD optional/vnc/vnc_startup.sh /home/$VNC_USER/.vnc/xstartup 
 
 USER root
 
-ADD testclient/run.sh \
-    traffic_ops/to-access.sh \
-    /
+RUN systemd-machine-id-setup && \
+    chmod +x /home/$VNC_USER/.vnc/xstartup
 
-RUN chmod +x /home/$VNC_USER/.vnc/xstartup
+ADD optional/vnc/run.sh /
 
-VOLUME /ssl
-
-##########################
-# Ports 
-##########################
-# - 2200 - SSH 
-# - 5900 - VNC Port
-# - 7070 - Tinyproxy HTTP 
-# - 9090 - Socks5 Proxy
-##########################
-EXPOSE 2200/tcp 5900/tcp 7070/tcp 9090/tcp
-
-RUN yum --enablerepo=extras install -y docker-client-latest
+EXPOSE 5909/tcp
 
 CMD /run.sh
