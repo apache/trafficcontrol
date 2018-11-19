@@ -60,8 +60,8 @@ mid/traffic_ops_ort.rpm edge/traffic_ops_ort.rpm: ../../dist/traffic_ops_ort-$(S
 	cp -f $? $@
 traffic_portal/traffic_portal.rpm: ../../dist/traffic_portal-$(SPECIAL_SAUCE)
 	cp -f $? $@
-traffic_router/traffic_router.rpm: ../../dist/traffic_router-$(SPECIAL_SAUCE)
-	cp -f $? $@
+traffic_router/traffic_router.rpm: traffic_router/tomcat.rpm ../../dist/traffic_router-$(SPECIAL_SAUCE)
+	cp -f ../../dist/traffic_router-$(SPECIAL_SEASONING) $@
 traffic_router/tomcat.rpm: ../../dist/tomcat-$(SPECIAL_SEASONING)
 	cp -f $? $@
 
