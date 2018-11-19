@@ -43,7 +43,6 @@ Usage: compare \[-hsV\] \[-f value\] \[--ref\_passwd value\] \[--ref\_url value\
 -f, --file=value           File listing routes to test (will read from stdin if not given)
 -h, --help                 Print usage information and exit
 -r, --results\_path=value  Directory where results will be written
--s, --snapshot             Perform comparison of all CDN's snapshotted CRConfigs
 -V, --version              Print version information and exit
 
 The typical way to use `compare` is to first specify some environment variables:
