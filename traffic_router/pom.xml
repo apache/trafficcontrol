@@ -124,17 +124,5 @@
 				<module>neustar</module>
 			</modules>
 		</profile>
-		<profile>
-			<id>jdnssec</id>
-			<modules>
-				<module>jdnssec</module>
-			</modules>
-			<activation>
-				<property>
-					<name>useJdnssec</name>
-					<value>true</value>
-				</property>
-			</activation>
-		</profile>
 	</profiles>
 </project>
