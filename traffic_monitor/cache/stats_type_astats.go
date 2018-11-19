@@ -29,7 +29,6 @@ package cache
 //   `in_bytes`, `out_bytes`, `status_2xx`, `status_3xx`, `status_4xx`, `status_5xx`
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -40,6 +39,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/json-iterator/go"
 )
 
 func init() {
@@ -52,6 +52,8 @@ func astatsParse(cache tc.CacheName, rdr io.Reader) (error, map[string]interface
 		return errors.New("handler got nil reader"), nil, AstatsSystem{}
 	}
 	astats := Astats{}
+
+	json := jsoniter.ConfigFastest // TODo make configurable?
 	err := json.NewDecoder(rdr).Decode(&astats)
 	return err, astats.Ats, astats.System
 }

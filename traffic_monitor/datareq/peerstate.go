@@ -20,7 +20,6 @@
 package datareq
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -30,6 +29,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+
+	"github.com/json-iterator/go"
 )
 
 // APIPeerStates contains the data to be returned for an API call to get the peer states of a Traffic Monitor. This contains common API data returned by most endpoints, and a map of peers, to caches' states.
@@ -49,6 +50,7 @@ func srvPeerStates(params url.Values, errorCount threadsafe.Uint, path string, t
 		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
+	json := jsoniter.ConfigFastest
 	bytes, err := json.Marshal(createAPIPeerStates(peerStates.GetCrstates(), peerStates.GetPeersOnline(), filter, params))
 	return WrapErrCode(errorCount, path, bytes, err)
 }

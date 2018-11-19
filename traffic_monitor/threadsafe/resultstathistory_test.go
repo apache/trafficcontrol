@@ -20,7 +20,6 @@ package threadsafe
  */
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -30,6 +29,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
+
+	"github.com/json-iterator/go"
 )
 
 func randResultStatHistory() ResultStatHistory {
@@ -147,6 +148,7 @@ func TestStatsMarshall(t *testing.T) {
 	// }
 
 	stats := cache.Stats{}
+	json := jsoniter.ConfigFastest // TODO make configurable
 	if err := json.Unmarshal(bytes, &stats); err != nil {
 		t.Fatalf("unmarshalling expected nil err, actual err: %v", err)
 	}

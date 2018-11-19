@@ -22,7 +22,6 @@ package tmcheck
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -32,6 +31,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	to "github.com/apache/trafficcontrol/traffic_ops/client"
+
+	"github.com/json-iterator/go"
 )
 
 const RequestTimeout = time.Second * time.Duration(30)
@@ -66,6 +67,7 @@ func GetCDN(uri string) (string, error) {
 	}
 
 	configDoc := TrafficMonitorConfigDoc{}
+	json := jsoniter.ConfigFastest
 	if err := json.Unmarshal(respBytes, &configDoc); err != nil {
 		return "", fmt.Errorf("unmarshalling: %v", err)
 	}
@@ -85,6 +87,7 @@ func GetCRStates(uri string) (*tc.CRStates, error) {
 	}
 
 	states := tc.CRStates{}
+	json := jsoniter.ConfigFastest
 	if err := json.Unmarshal(respBytes, &states); err != nil {
 		return nil, fmt.Errorf("unmarshalling: %v", err)
 	}
@@ -104,6 +107,7 @@ func GetDSStats(uri string) (*dsdata.StatsOld, error) {
 	}
 
 	dsStats := dsdata.StatsOld{}
+	json := jsoniter.ConfigFastest
 	if err := json.Unmarshal(respBytes, &dsStats); err != nil {
 		return nil, fmt.Errorf("unmarshalling: %v", err)
 	}
@@ -123,6 +127,7 @@ func GetStats(uri string) (*datareq.Stats, error) {
 	}
 
 	stats := datareq.JSONStats{}
+	json := jsoniter.ConfigFastest
 	if err := json.Unmarshal(respBytes, &stats); err != nil {
 		return nil, fmt.Errorf("unmarshalling: %v", err)
 	}
@@ -290,6 +295,7 @@ func GetCRConfigs(cdns map[tc.CDNName]struct{}, toClient *to.Session) map[tc.CDN
 		}
 
 		crConfig := tc.CRConfig{}
+		json := jsoniter.ConfigFastest
 		if err := json.Unmarshal(crConfigBytes, &crConfig); err != nil {
 			crConfigs[cdn] = CRConfigOrError{Err: fmt.Errorf("unmarshalling CRConfig JSON: %v", err)}
 		}

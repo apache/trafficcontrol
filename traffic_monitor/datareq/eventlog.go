@@ -20,9 +20,9 @@
 package datareq
 
 import (
-	"encoding/json"
-
 	"github.com/apache/trafficcontrol/traffic_monitor/health"
+
+	"github.com/json-iterator/go"
 )
 
 // JSONEvents represents the structure we wish to serialize to JSON, for Events.
@@ -31,5 +31,6 @@ type JSONEvents struct {
 }
 
 func srvEventLog(events health.ThreadsafeEvents) ([]byte, error) {
+	json := jsoniter.ConfigFastest
 	return json.Marshal(JSONEvents{Events: events.Get()})
 }

@@ -20,7 +20,6 @@ package manager
  */
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -40,6 +39,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 	to "github.com/apache/trafficcontrol/traffic_ops/client"
+
+	"github.com/json-iterator/go"
 )
 
 // StartOpsConfigManager starts the ops config manager goroutine, returning the (threadsafe) variables which it sets.
@@ -88,6 +89,7 @@ func StartOpsConfigManager(
 		}
 
 		newOpsConfig := handler.OpsConfig{}
+		json := jsoniter.ConfigFastest // TODO make configurable?
 		if err = json.Unmarshal(bytes, &newOpsConfig); err != nil {
 			handleErr(fmt.Errorf("Could not unmarshal Ops Config JSON: %s\n", err))
 			return

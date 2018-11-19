@@ -19,10 +19,6 @@ package cache
  * under the License.
  */
 
-import (
-	"encoding/json"
-)
-
 // Astats contains ATS data returned from the Astats ATS plugin. This includes generic stats, as well as fixed system stats.
 type Astats struct {
 	Ats    map[string]interface{} `json:"ats"`
@@ -41,13 +37,6 @@ type AstatsSystem struct {
 	LastReload        int    `json:"lastReload"`
 	AstatsLoad        int    `json:"astatsLoad"`
 	NotAvailable      bool   `json:"notAvailable,omitempty"`
-}
-
-// Unmarshal unmarshalls the given bytes, which must be JSON Astats data, into an Astats object.
-func Unmarshal(body []byte) (Astats, error) {
-	var aStats Astats
-	err := json.Unmarshal(body, &aStats)
-	return aStats, err
 }
 
 type AStat struct {

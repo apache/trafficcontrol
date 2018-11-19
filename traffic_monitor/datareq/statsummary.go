@@ -20,7 +20,6 @@
 package datareq
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
@@ -32,6 +31,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+
+	"github.com/json-iterator/go"
 )
 
 type StatSummary struct {
@@ -56,6 +57,8 @@ func srvStatSummary(params url.Values, errorCount threadsafe.Uint, path string, 
 		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
+
+	json := jsoniter.ConfigFastest
 	bytes, err := json.Marshal(createStatSummary(statResultHistory, filter, params))
 	return WrapErrCode(errorCount, path, bytes, err)
 }

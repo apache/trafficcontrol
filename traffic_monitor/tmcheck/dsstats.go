@@ -20,13 +20,14 @@
 package tmcheck
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	to "github.com/apache/trafficcontrol/traffic_ops/client"
+
+	"github.com/json-iterator/go"
 )
 
 // ValidateDSStates validates that all Delivery Services in the CRConfig exist in given Traffic Monitor's DSStats.
@@ -47,6 +48,7 @@ func ValidateDSStatsWithCDN(tmURI string, tmCDN string, toClient *to.Session) er
 	}
 
 	crConfig := tc.CRConfig{}
+	json := jsoniter.ConfigFastest
 	if err := json.Unmarshal(crConfigBytes, &crConfig); err != nil {
 		return fmt.Errorf("unmarshalling CRConfig JSON: %v", err)
 	}

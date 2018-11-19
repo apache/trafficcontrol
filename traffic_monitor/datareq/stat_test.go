@@ -20,7 +20,6 @@ package datareq
  */
 
 import (
-	"encoding/json"
 	"errors"
 	"math"
 	"math/rand"
@@ -31,6 +30,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
+
+	"github.com/json-iterator/go"
 )
 
 func getMockStaticAppData() config.StaticAppData {
@@ -149,6 +150,7 @@ func TestGetStats(t *testing.T) {
 	}
 
 	jsonStats := JSONStats{}
+	json := jsoniter.ConfigFastest // TODO make configurable
 	if err := json.Unmarshal(statsBts, &jsonStats); err != nil {
 		t.Fatalf("expected getStats bytes: Stats JSON, actual: error decoding: %+v\n", err)
 	}

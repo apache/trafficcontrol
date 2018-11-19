@@ -20,7 +20,6 @@
 package datareq
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -32,6 +31,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+
+	"github.com/json-iterator/go"
 )
 
 // CacheStatus contains summary stat data about the given cache.
@@ -68,6 +69,7 @@ func srvAPICacheStates(
 	statMaxKbpses threadsafe.CacheKbpses,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
 ) ([]byte, error) {
+	json := jsoniter.ConfigFastest
 	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statInfoHistory.Get(), statResultHistory, healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus, statMaxKbpses, monitorConfig.Get().TrafficServer))
 }
 

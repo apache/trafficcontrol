@@ -20,11 +20,12 @@
 package datareq
 
 import (
-	"encoding/json"
-
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
+
+	"github.com/json-iterator/go"
 )
 
 func srvMonitorConfig(mcThs threadsafe.TrafficMonitorConfigMap) ([]byte, error) {
+	json := jsoniter.ConfigFastest
 	return json.Marshal(mcThs.Get())
 }

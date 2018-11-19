@@ -20,11 +20,12 @@ package peer
  */
 
 import (
-	"encoding/json"
 	"io"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
+	"github.com/json-iterator/go"
 )
 
 // Handler handles peer Traffic Monitor data, taking a raw reader, parsing the data, and passing a result object to the ResultChannel. This fulfills the common `Handler` interface.
@@ -64,9 +65,8 @@ func (handler Handler) Handle(id string, r io.Reader, format string, reqTime tim
 	}
 
 	if r != nil {
-		dec := json.NewDecoder(r)
-		err = dec.Decode(&result.PeerStates)
-
+		json := jsoniter.ConfigFastest // TODo make configurable?
+		err = json.NewDecoder(r).Decode(&result.PeerStates)
 		if err == nil {
 			result.Available = true
 		} else {
