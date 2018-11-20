@@ -1459,8 +1459,8 @@ sub logging_dot_config {
 		my $log_filter_name = $data->{$log_filter_field . ".Name"} || "";
 		if ( length($log_filter_name) > 0) {
 			my $filter = $data->{$log_filter_field . ".Filter"};
-			$filter =~ s/"/\\\"/g;
-			$text .= $log_filter_name . " = filter." . $filter . "\n";
+			my $log_filter_type = $data->{$log_filter_field . ".Type"} || "accept";
+			$text .= $log_filter_name . " = filter." . $log_filter_type . "('" . $filter . "')\n";
 		}
 	}
 
@@ -1472,13 +1472,13 @@ sub logging_dot_config {
 
 		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
 		if ( length($log_object_filename) > 0 ) {
-			my $log_object_type					= $data->{$log_object_field . ".Type"} || "ascii";
+			my $log_object_type                 = $data->{$log_object_field . ".Type"}               || "ascii";
 			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
 			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
 			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
 			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
 			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
-			my $log_object_filters				= $data->{$log_object_field . ".Filters"} || "";
+			my $log_object_filters              = $data->{$log_object_field . ".Filters"}            || "";
 
 			$text .= "\nlog." . $log_object_type . " {\n";
 			$text .= "  Format = " . $log_object_format . ",\n";
