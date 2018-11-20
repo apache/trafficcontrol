@@ -1459,6 +1459,8 @@ sub logging_dot_config {
 		my $log_filter_name = $data->{$log_filter_field . ".Name"} || "";
 		if ( length($log_filter_name) > 0) {
 			my $filter = $data->{$log_filter_field . ".Filter"};
+			$filter =~ s/'/\\'/g;
+			$filter =~ s/\\/\\\\/g;
 			my $log_filter_type = $data->{$log_filter_field . ".Type"} || "accept";
 			$text .= $log_filter_name . " = filter." . $log_filter_type . "('" . $filter . "')\n";
 		}
