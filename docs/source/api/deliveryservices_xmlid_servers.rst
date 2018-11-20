@@ -79,6 +79,6 @@ Response Structure
 			"edge"
 		],
 		"xmlId": "test"
-	} }
+	}}
 
-.. [10] Users with the roles "admin" and/or "operation" will be able to edit the server assignments of *all* Delivery Services, whereas any other user will only be able to edit the server assignments of the Delivery Services their Tenant is allowed to edit.
+.. [1] Users with the roles "admin" and/or "operation" will be able to edit the server assignments of *all* Delivery Services, whereas any other user will only be able to edit the server assignments of the Delivery Services their Tenant is allowed to edit.
