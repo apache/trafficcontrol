@@ -67,6 +67,9 @@ Request Structure
 
 Response Structure
 ------------------
+.. versionchanged:: 1.3
+	Removed ``fqPacingRate`` field, added fields: ``deepCachingType``, ``signingAlgorithm``, and ``tenant``.
+
 :active:                   ``true`` if the Delivery Service is active, ``false`` otherwise
 :anonymousBlockingEnabled: ``true`` if :ref:`Anonymous Blocking <anonymous_blocking-qht>` has been configured for the Delivery Service, ``false`` otherwise
 :cacheurl:                 A setting for a deprecated feature of now-unsupported Trafficserver versions
@@ -74,6 +77,15 @@ Response Structure
 :cdnId:                    The integral, unique identifier of the CDN to which the Delivery Service belongs
 :cdnName:                  Name of the CDN to which the Delivery Service belongs
 :checkPath:                The path portion of the URL to check connections to this Delivery Service's origin server
+:deepCachingType:          A string that describes when "Deep Caching" will be used by this Delivery Service - one of:
+
+	ALWAYS
+		"Deep Caching" will always be used with this Delivery Service
+	NEVER
+		"Deep Caching" will never be used with this Delivery Service
+
+	.. versionadded:: 1.3
+
 :displayName:              The display name of the Delivery Service
 :dnsBypassCname:           Domain name to overflow requests for HTTP Delivery Services - bypass starts when the traffic on this Delivery Service exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the Delivery Service\ [4]_
 :dnsBypassIp:              The IPv4 IP to use for bypass on a DNS Delivery Service - bypass starts when the traffic on this Delivery Service exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the Delivery Service\ [4]_
@@ -82,7 +94,13 @@ Response Structure
 :dscp:                     The Differentiated Services Code Point (DSCP) with which to mark traffic as it leaves the CDN and reaches clients
 :edgeHeaderRewrite:        Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
 :fqPacingRate:             The Fair-Queuing Pacing Rate in Bytes per second set on the all TCP connection sockets in the Delivery Service (see ``man tc-fc_codel`` for more information) - Linux only
+
+	.. deprecated:: 1.3
+		This field is only present/available in API versions 1.2 and lower - it has been removed in API version 1.3
+
 :geoLimit:                 The setting that determines how content is geographically limited - this is an integer on the interval [0-2] where the values have these meanings:
+:geoLimitCountries:        A string containing a comma-separated list of country codes (e.g. "US,AU") which are allowed to request content through this Delivery Service
+:geoLimitRedirectUrl:      A URL to which clients blocked by :ref:`Regional Geographic Blocking <regionalgeo-qht>` or the ``geoLimit`` settings will be re-directed
 
 	0
 		None - no limitations
@@ -93,21 +111,13 @@ Response Structure
 
 	.. warning:: This does not prevent access to content or make content secure; it merely prevents routing to the content through Traffic Router
 
-:geoLimitCountries:   A string containing a comma-separated list of country codes (e.g. "US,AU") which are allowed to request content through this Delivery Service
-:geoLimitRedirectUrl: A URL to which clients blocked by :ref:`Regional Geographic Blocking <regionalgeo-qht>` or the ``geoLimit`` settings will be re-directed
-:geoProvider:         An integer that represents the provider of a database for mapping IPs to geographic locations; currently only the following values are supported:
-
-	0
-		The "Maxmind" GeoIP2 database (default)
-	1
-		Neustar
-
-:globalMaxMbps:       The maximum global bandwidth allowed on this Delivery Service. If exceeded, traffic will be routed to ``dnsBypassIp`` (or ``dnsBypassIp6`` for IPv6 traffic) for DNS Delivery Services and to ``httpBypassFqdn`` for HTTP Delivery Services
-:globalMaxTps:        The maximum global transactions per second allowed on this Delivery Service. When this is exceeded traffic will be sent to the ``dnsBypassIp`` (and/or ``dnsBypassIp6``) for DNS Delivery Services and to the httpBypassFqdn for HTTP Delivery Services
-:httpBypassFqdn:      The HTTP destination to use for bypass on an HTTP Delivery Service - bypass starts when the traffic on this Delivery Service exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the Delivery Service
-:id:                  An integral, unique identifier for this Delivery Service
-:infoUrl:             This is a string which is expected to contain at least one URL pointing to more information about the Delivery Service. Historically, this has been used to link relevant JIRA tickets
-:initialDispersion:  The number of caches between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses. For most use-cases, this should be 1\ [2]_
+:geoProvider:        An integer that represents the provider of a database for mapping IPs to geographic locations; currently only ``0``  - which represents MaxMind - is supported
+:globalMaxMbps:      The maximum global bandwidth allowed on this Delivery Service. If exceeded, traffic will be routed to ``dnsBypassIp`` (or ``dnsBypassIp6`` for IPv6 traffic) for DNS Delivery Services and to ``httpBypassFqdn`` for HTTP Delivery Services
+:globalMaxTps:       The maximum global transactions per second allowed on this Delivery Service. When this is exceeded traffic will be sent to the dnsByPassIp* for DNS Delivery Services and to the httpBypassFqdn for HTTP Delivery Services
+:httpBypassFqdn:     The HTTP destination to use for bypass on an HTTP Delivery Service - bypass starts when the traffic on this Delivery Service exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the Delivery Service
+:id:                 An integral, unique identifier for this Delivery Service
+:infoUrl:            This is a string which is expected to contain at least one URL pointing to more information about the Delivery Service. Historically, this has been used to link relevant JIRA tickets
+:initialDispersion:  The number of caches between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses. For most use-cases, this should be 1
 :ipv6RoutingEnabled: If ``true``, clients that connect to Traffic Router using IPv6 will be given the IPv6 address of a suitable Edge-tier cache; if ``false`` all addresses will be IPv4, regardless of the client connection\ [2]_
 :lastUpdated:        The date and time at which this Delivery Service was last updated, in a ``ctime``-like format
 :logsEnabled:        If ``true``, logging is enabled for this Delivery Service, otherwise it is disabled
@@ -129,16 +139,13 @@ Response Structure
 		STEERING_REGEXP
 			Use the Delivery Service if ``pattern`` matches the ``xml_id`` of one of this Delivery Service's "Steering" target Delivery Services
 
-:maxDnsAnswers:    The maximum number of IPs to put in responses to A/AAAA DNS record requests (0 means all available)\ [4]_
-:midHeaderRewrite: Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
-:missLat:          The latitude to use when the client cannot be found in the CZF or a geographic IP lookup
-:missLong:         The longitude to use when the client cannot be found in the CZF or a geographic IP lookup
-:multiSiteOrigin:  ``true`` if the Multi Site Origin feature is enabled for this Delivery Service, ``false`` otherwise\ [3]_
-:orgServerFqdn:    The URL of the Delivery Service's origin server for use in retrieving content from the origin server
-
-	.. note:: Despite the field name, this must truly be a full URL - including the protocol (e.g. ``http://`` or ``https://``) - **NOT** merely the server's Fully Qualified Domain Name (FQDN)
-
+:maxDnsAnswers:      The maximum number of IPs to put in a A/AAAA response for a DNS Delivery Service (0 means all available)\ [4]_
+:midHeaderRewrite:   Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
+:missLat:            The latitude to use when the client cannot be found in the CZF or a geographic IP lookup
+:missLong:           The longitude to use when the client cannot be found in the CZF or a geographic IP lookup
+:multiSiteOrigin:    ``true`` if the Multi Site Origin feature is enabled for this Delivery Service, ``false`` otherwise\ [3]_
 :originShield:       An "origin shield" is a forward proxy that sits between Mid-tier caches and the origin and performs further caching beyond what's offered by a standard CDN. This field is a string of FQDNs to use as origin shields, delimited by ``|``
+:orgServerFqdn:      The origin server's Fully Qualified Domain Name (FQDN) - including the protocol (e.g. http:// or https://) - for use in retrieving content from the origin server
 :profileDescription: The description of the Traffic Router Profile with which this Delivery Service is associated
 :profileId:          The integral, unique identifier for the Traffic Router profile with which this Delivery Service is associated
 :profileName:        The name of the Traffic Router Profile with which this Delivery Service is associated
@@ -160,7 +167,7 @@ Response Structure
 	2
 		Query strings are stripped out by Edge-tier caches, and thus are neither taken into consideration for caching purposes, nor passed upstream in requests to the origin
 
-:rangeRequestHandling: Tells caches how to handle range requests\ [5]_ - this is an integer on the interval [0,2] where the values have these meanings:
+:rangeRequestHandling: Tells caches how to handle range requests\ [5]_ - this is an integer on the interval [0-2] where the values have these meanings:
 
 	0
 		Range requests will not be cached, but range requests that request ranges of content already cached will be served from the cache
@@ -178,8 +185,8 @@ Response Structure
 
 	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
 
-:signed:           ``true`` if token-based authentication\ [6]_ is enabled for this Delivery Service, ``false`` otherwise
-:signingAlgorithm: Type of URL signing method to sign the URLs\ [6]_, basically comes down to one of two plugins or ``null``:
+:signed:           ``true`` if token-based authentication is enabled for this Delivery Service, ``false`` otherwise
+:signingAlgorithm: Type of URL signing method to sign the URLs, basically comes down to one of two plugins or ``null``:
 
 	``null``
 		Token-based authentication is not enabled for this Delivery Service
@@ -188,18 +195,24 @@ Response Structure
 	uri_signing
 		URI Signing token-based authentication is enabled for this Delivery Service
 
-	.. seealso:: `The Apache Trafficserver documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/url_sig.en.html>`_ and `the draft RFC for uri_signing <https://tools.ietf.org/html/draft-ietf-cdni-uri-signing-16>`_ - note, however that the current implementation of uri_signing uses Draft 12 of that RFC document, **NOT** the latest
+	.. seealso:: `The Apache Trafficserver documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/url_sig.en.html>`_ and `the draft RFC for uri_signing <https://tools.ietf.org/html/draft-ietf-cdni-uri-signing-16>`_ - note, however that the current implementation of uri_signing uses Draft 12 of that RFC document, NOT the latest.
+
+	.. versionadded:: 1.3
 
 :sslKeyVersion:       This integer indicates the generation of keys in use by the Delivery Service - if any - and is incremented by the Traffic Portal client whenever new keys are generated
 
 	.. warning:: This number will not be correct if keys are manually replaced using the API, as the key generation API does not increment it!
 
-:tenantId:            The integral, unique identifier of the tenant who owns this Delivery Service
-:trRequestHeaders:    If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:trResponseHeaders:   If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:type:                The name of the routing type of this Delivery Service e.g. "HTTP"
-:typeId:              The integral, unique identifier of the routing type of this Delivery Service
-:xmlId:               A unique string that describes this Delivery Service - exists for legacy reasons
+:tenant:            The name of the tenant who owns this Delivery Service
+
+	.. versionadded:: 1.3
+
+:tenantId:          The integral, unique identifier of the tenant who owns this Delivery Service
+:trRequestHeaders:  If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
+:trResponseHeaders: If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
+:type:              The name of the routing type of this Delivery Service e.g. "HTTP"
+:typeId:            The integral, unique identifier of the routing type of this Delivery Service
+:xmlId:             A unique string that describes this Delivery Service - exists for legacy reasons
 
 .. code-block:: http
 	:caption: Response Example
@@ -302,4 +315,3 @@ Response Structure
 .. [3] See :ref:`multi-site-origin`
 .. [4] This only applies to DNS-routed Delivery Services
 .. [5] These fields are required for HTTP-routed and DNS-routed Delivery Services, but are optional for (and in fact may have no effect on) STEERING and ANY_MAP Delivery Services
-.. [6] See :ref:`token-based-auth` for more information
