@@ -44,5 +44,8 @@ RUN go get -v ./...
 RUN go build .
 RUN cp testroutes.txt /artifacts/
 
-CMD ./genConfigRoutes.py -k --refURL=$TO_URL --testURL=$TEST_URL --refUser=$TO_USER --refPasswd=$TO_PASSWORD --testUser=$TEST_USER --testPasswd=$TEST_PASSWORD -l INFO 2>&1 >>/artifacts/testroutes.txt | tee /artifacts/genRoutesConfig.log &&\
+ARG MODE="-s"
+ENV mode=$MODE
+
+CMD ./genConfigRoutes.py $mode -k --refURL=$TO_URL --testURL=$TEST_URL --refUser=$TO_USER --refPasswd=$TO_PASSWORD --testUser=$TEST_USER --testPasswd=$TEST_PASSWORD -l INFO 2>&1 >>/artifacts/testroutes.txt | tee /artifacts/genRoutesConfig.log &&\
 	./compare --ref_url=$TO_URL --test_url=$TEST_URL --ref_user=$TO_USER --ref_passwd=$TO_PASSWORD --test_user=$TEST_USER --test_passwd=$TEST_PASSWORD -r /artifacts </artifacts/testroutes.txt
