@@ -593,79 +593,94 @@ Response Structure
 :typeId:              The integral, unique identifier of the routing type of this Delivery Service
 :xmlId:               A unique string that describes this Delivery Service - exists for legacy reasons
 
-	**Response Example** ::
+.. code-block:: http
+	:caption: Response Example
 
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: SVveQ5hGwfPv8N5APUskwLOzwrTUVA+z8wuFLsSLCr1/vVnFJJ0VQOGMUctg1NbqhAuQ795MJmuuAaAwR8dSOQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Mon, 19 Nov 2018 19:45:49 GMT
+	Content-Length: 1404
+
+	{ "alerts": [
 		{
-			"response": [
-				{
-						"active": true,
-						"anonymousBlockingEnabled": false,
-						"cacheurl": null,
-						"ccrDnsTtl": "3600",
-						"cdnId": "2",
-						"cdnName": "over-the-top",
-						"checkPath": "",
-						"deepCachingType": "NEVER",
-						"displayName": "My Cool Delivery Service",
-						"dnsBypassCname": "",
-						"dnsBypassIp": "",
-						"dnsBypassIp6": "",
-						"dnsBypassTtl": "30",
-						"dscp": "40",
-						"edgeHeaderRewrite": null,
-						"exampleURLs": [
-								"http://foo.foo-ds.foo.bar.net"
-						],
-						"geoLimit": "0",
-						"geoLimitCountries": null,
-						"geoLimitRedirectURL": null,
-						"geoProvider": "0",
-						"globalMaxMbps": null,
-						"globalMaxTps": "0",
-			"fqPacingRate": "0",
-						"httpBypassFqdn": "",
-						"id": "442",
-						"infoUrl": "",
-						"initialDispersion": "1",
-						"ipv6RoutingEnabled": true,
-						"lastUpdated": "2016-01-26 08:49:35",
-						"logsEnabled": false,
-						"longDesc": "",
-						"longDesc1": "",
-						"longDesc2": "",
-						"matchList": [
-								{
-										"pattern": ".*\\.foo-ds\\..*",
-										"setNumber": "0",
-										"type": "HOST_REGEXP"
-								}
-						],
-						"maxDnsAnswers": "0",
-						"midHeaderRewrite": null,
-						"missLat": "39.7391500",
-						"missLong": "-104.9847000",
-						"multiSiteOrigin": false,
-						"orgServerFqdn": "http://baz.boo.net",
-						"originShield": null,
-						"profileDescription": "Content Router for over-the-top",
-						"profileId": "5",
-						"profileName": "ROUTER_TOP",
-						"protocol": "0",
-						"qstringIgnore": "1",
-						"rangeRequestHandling": "0",
-						"regexRemap": null,
-						"regionalGeoBlocking": false,
-						"remapText": null,
-						"routingName": "foo",
-						"signed": false,
-						"signingAlgorithm": null,
-						"sslKeyVersion": "0",
-						"tenantId": 1,
-						"trRequestHeaders": null,
-						"trResponseHeaders": "Access-Control-Allow-Origin: *",
-						"type": "HTTP",
-						"typeId": "8",
-						"xmlId": "foo-ds"
-				}
-			]
+			"text": "Deliveryservice creation was successful.",
+			"level": "success"
 		}
+	],
+	"response": [
+		{
+			"active": false,
+			"anonymousBlockingEnabled": false,
+			"cacheurl": null,
+			"ccrDnsTtl": null,
+			"cdnId": 2,
+			"cdnName": "CDN-in-a-Box",
+			"checkPath": null,
+			"displayName": "test",
+			"dnsBypassCname": null,
+			"dnsBypassIp": null,
+			"dnsBypassIp6": null,
+			"dnsBypassTtl": null,
+			"dscp": 0,
+			"edgeHeaderRewrite": null,
+			"geoLimit": 0,
+			"geoLimitCountries": null,
+			"geoLimitRedirectURL": null,
+			"geoProvider": 0,
+			"globalMaxMbps": null,
+			"globalMaxTps": null,
+			"httpBypassFqdn": null,
+			"id": 2,
+			"infoUrl": null,
+			"initialDispersion": 1,
+			"ipv6RoutingEnabled": false,
+			"lastUpdated": "2018-11-19 19:45:49+00",
+			"logsEnabled": true,
+			"longDesc": "A Delivery Service created expressly for API documentation examples",
+			"longDesc1": null,
+			"longDesc2": null,
+			"matchList": [
+				{
+					"type": "HOST_REGEXP",
+					"setNumber": 0,
+					"pattern": ".*\\.test\\..*"
+				}
+			],
+			"maxDnsAnswers": null,
+			"midHeaderRewrite": null,
+			"missLat": -1,
+			"missLong": -1,
+			"multiSiteOrigin": false,
+			"originShield": null,
+			"orgServerFqdn": "http://origin.infra.ciab.test",
+			"profileDescription": null,
+			"profileId": null,
+			"profileName": null,
+			"protocol": 0,
+			"qstringIgnore": 0,
+			"rangeRequestHandling": 0,
+			"regexRemap": null,
+			"regionalGeoBlocking": false,
+			"remapText": null,
+			"routingName": "test",
+			"signed": false,
+			"sslKeyVersion": null,
+			"tenantId": 1,
+			"type": "HTTP",
+			"typeId": 1,
+			"xmlId": "test",
+			"exampleURLs": [
+				"http://test.test.mycdn.ciab.test"
+			],
+			"deepCachingType": "NEVER",
+			"signingAlgorithm": null,
+			"tenant": "root"
+		}
+	]}
