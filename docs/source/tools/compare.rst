@@ -85,9 +85,9 @@ given pair of Traffic Ops instances. This, for the purpose of using the
 'compare' tool
 
 
--h, --help            show this help message and exit
---refURL REFURL       The full URL of the reference Traffic Ops instance (default: None)
---testURL TESTURL     The full URL of the testing Traffic Ops instance (default: None)
+-h, --help                           show this help message and exit
+--refURL REFURL                      The full URL of the reference Traffic Ops instance (default: None)
+--testURL TESTURL                    The full URL of the testing Traffic Ops instance (default: None)
 --refUser REFUSER                    A username for logging into the reference Traffic Ops instance. (default: None)
 --refPasswd REFPASSWD                A password for logging into the reference Traffic Ops instance (default: None)
 --testUser TESTUSER                  A username for logging into the testing Traffic Ops instance. If not given, the value for the reference instance will be used. (default: None)
@@ -96,6 +96,9 @@ given pair of Traffic Ops instances. This, for the purpose of using the
 -v, --version                        Print version information and exit
 -l LOG_LEVEL, --log_level LOG_LEVEL  Sets the Python log level, one of 'DEBUG', 'INFO', 'WARN', 'ERROR', or 'CRITICAL' (default: INFO)
 -q, --quiet                          Suppresses all logging output - even for critical errors (default: False)
+-s, --snapshot                       Produce snapshot routes in the output (CRConfig.json, snapshot/new etc.) (default: False)
+-C, --no-server-configs              Do not generate routes for server config files (default: False)
+
 
 .. note:: If you're using a CDN-in-a-Box environment for testing, it's likely that you'll need the ``-k``/``--insecure`` option if you're outside the Docker network
 
@@ -111,7 +114,11 @@ The genConfigRoutes.py script will output list of unique API routes (relative to
 
 Usage with Docker
 =================
-A Dockerfile is provided to run tests on a pair of instances given the configuration environment variables necessary. This will generate configuration file routes using ``genConfigRoutes.py``, and add them to whatever is already contained in ``traffic_ops/testing/compare/testroutes.txt``, then run the ``compare`` tool on the final API route list. Build artifacts (i.e. anything output files created by the `compare` tool) are placed in the `/artifacts/` directory on the container. To retrieve these results, the use of a volume is recommended. The build context *must* be at the root of the Traffic Control repository, as the tools have dependencies on the Traffic Control clients. In order to use the container, the following environment variables must be defined for the container at runtime:
+A Dockerfile is provided to run tests on a pair of instances given the configuration environment variables necessary. This will generate configuration file routes using ``genConfigRoutes.py``, and add them to whatever is already contained in ``traffic_ops/testing/compare/testroutes.txt``, then run the ``compare`` tool on the final API route list. Build artifacts (i.e. anything output files created by the `compare` tool) are placed in the `/artifacts/` directory on the container. To retrieve these results, the use of a volume is recommended. The build context *must* be at the root of the Traffic Control repository, as the tools have dependencies on the Traffic Control clients.
+
+Arguments can be passed to the genConfigRoutes.py script by defining the build-time argument ``MODE``. By default it expands to ``-s`` to allow the generation of CDN snapshot routes. It is not necessary to pass ``-k``/``--insecure``, as the Dockerfile will do that implicitly.
+
+In order to use the container, the following environment variables must be defined for the container at runtime:
 
 TO_URL
 	The URL of the reference Traffic Ops instance

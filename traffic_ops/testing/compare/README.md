@@ -104,6 +104,12 @@ optional arguments:
                         'WARN', 'ERROR', or 'CRITICAL' (default: INFO)
   -q, --quiet           Suppresses all logging output - even for critical
                         errors (default: False)
+  -s, --snapshot        Produce snapshot routes in the output (CRConfig.json,
+                        snapshot/new etc.) (default: False)
+  -C, --no-server-configs
+                        Do not generate routes for server config files
+                        (default: False)
+
 
 !!! note
 	This script will use the same environment variables as `compare`, which can be overridden by the above  command line parameters
@@ -113,7 +119,7 @@ optional arguments:
 
 The genConfigRoutes.py script will output list of unique API routes (relative to the desired Traffic Ops URL) that point to generated configuration files for a sample set of servers common to both Traffic Ops instances. The results are printed to stdout, making the output perfect for piping directly into `compare` like so:
 
-``` sourceCode
+```bash
 ./genConfigRoutes.py https://trafficopsA.example.test https://trafficopsB.example.test username:password | ./compare
 ```
 

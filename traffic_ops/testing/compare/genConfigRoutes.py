@@ -96,7 +96,7 @@ def getCRConfigs(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
 		return
 
 	for cdn in cdns:
-		yield "CRConfig-Snapshots/%s/CRConfig.json" % cdn
+		yield "/CRConfig-Snapshots/%s/CRConfig.json" % cdn
 		yield "/api/1.3/cdns/%s/snapshot" % cdn
 		yield "/api/1.3/cdns/%s/snapshot/new" % cdn
 
@@ -174,73 +174,78 @@ def consolidateVariables(kwargs:argparse.Namespace) -> typing.Tuple[str, str,
 
 	return (instanceA, instanceB, (refUser, refPasswd), (testUser, testPasswd))
 
-def genRoutes(A:TOSession, B:TOSession) -> typing.Generator[str, None, None]:
+def genRoutes(A:TOSession, B:TOSession, snapshots:bool, skip_servers:bool) ->\
+                                                                  typing.Generator[str, None, None]:
 	"""
 	Generates routes to check for ATS config files from two valid Traffic Ops sessions
 
 	:param A: The first Traffic Ops instance
 	:param B: The second Traffic Ops instance
+	:param snapshots: If ``true``, generate CDN snapshot routes, otherwise don't
+	:param skip_servers: If ``true``, generation of server config files will be skipped
 	:returns: A list of routes representative of the configuration files for a bunch of servers
 	"""
-	try:
-		profiles = ({p.id: p for p in A.get_profiles()[0]}, {p.id: p for p in B.get_profiles()[0]})
-	except (UnicodeError, InvalidJSONError, OperationError) as e:
-		logging.critical("Could not fetch server profiles: %s", e)
-		logging.debug("%r", e, exc_info=True, stack_info=True)
-		return
+	generatedRoutes = set()
+	if not skip_servers:
+		try:
+			profiles = ({p.id: p for p in A.get_profiles()[0]}, {p.id: p for p in B.get_profiles()[0]})
+		except (UnicodeError, InvalidJSONError, OperationError) as e:
+			logging.critical("Could not fetch server profiles: %s", e)
+			logging.debug("%r", e, exc_info=True, stack_info=True)
+			return
 
-	profileIds = (set(profiles[0].keys()), set(profiles[1].keys()))
+		profileIds = (set(profiles[0].keys()), set(profiles[1].keys()))
 
-	# Differences and intersections:
-	for key in profileIds[0].difference(profileIds[1]):
-		del profiles[0][key]
-		logging.warning("profile %s found in %s but not in %s!", key, A.to_url, B.to_url)
-	for key in profileIds[1].difference(profileIds[0]):
-		del profiles[1][key]
-		logging.warning("profile %s found in %s but not in %s!", key, B.to_url, A.to_url)
+		# Differences and intersections:
+		for key in profileIds[0].difference(profileIds[1]):
+			del profiles[0][key]
+			logging.warning("profile %s found in %s but not in %s!", key, A.to_url, B.to_url)
+		for key in profileIds[1].difference(profileIds[0]):
+			del profiles[1][key]
+			logging.warning("profile %s found in %s but not in %s!", key, B.to_url, A.to_url)
 
-	# Now only check for identical profiles - we wouldn't expect the config files generated from
-	# different profiles to be the same.
-	commonProfiles = set()
-	for profileId, profile in profiles[0].items():
-		if profiles[1][profileId].name == profile.name:
-			commonProfiles.add((profileId, profile.name, profile.type))
-		else:
-			logging.error("profile %s is not the same profile in both instances!", profileId)
+		# Now only check for identical profiles - we wouldn't expect the config files generated from
+		# different profiles to be the same.
+		commonProfiles = set()
+		for profileId, profile in profiles[0].items():
+			if profiles[1][profileId].name == profile.name:
+				commonProfiles.add((profileId, profile.name, profile.type))
+			else:
+				logging.error("profile %s is not the same profile in both instances!", profileId)
 
-	sampleServers = []
-	for profile in commonProfiles:
-		if profile[2] == "ATS_PROFILE":
-			try:
-				servers = A.get_servers(query_params={"profileId": profile[0]})[0]
-				serverIndex = random.randint(0, len(servers)-1)
-				sampleServer = servers[serverIndex]
-				del servers[serverIndex]
-				while not B.get_servers(query_params={"id": sampleServer.id})[0]:
-					logging.warning("Server %s found in %s but not in %s!", sampleServer.id,
-					                                  A.to_url, B.to_url)
+		sampleServers = []
+		for profile in commonProfiles:
+			if profile[2] == "ATS_PROFILE":
+				try:
+					servers = A.get_servers(query_params={"profileId": profile[0]})[0]
 					serverIndex = random.randint(0, len(servers)-1)
 					sampleServer = servers[serverIndex]
 					del servers[serverIndex]
-			except (IndexError, ValueError):
-				logging.error("Server list for profile %s exhausted without finding a sample!",
-				                                  profile[1])
-			except (UnicodeError, InvalidJSONError, OperationError) as e:
-				logging.error("Invalid JSON response fetching server list for %s: %s", profile[2],e)
-				logging.debug("%r", e, exc_info=True, stack_info=True)
-			else:
-				sampleServers.append(sampleServer)
+					while not B.get_servers(query_params={"id": sampleServer.id})[0]:
+						logging.warning("Server %s found in %s but not in %s!", sampleServer.id,
+						                                  A.to_url, B.to_url)
+						serverIndex = random.randint(0, len(servers)-1)
+						sampleServer = servers[serverIndex]
+						del servers[serverIndex]
+				except (IndexError, ValueError):
+					logging.error("Server list for profile %s exhausted without finding a sample!",
+					                                  profile[1])
+				except (UnicodeError, InvalidJSONError, OperationError) as e:
+					logging.error("Invalid JSON response fetching server list for %s: %s", profile[2],e)
+					logging.debug("%r", e, exc_info=True, stack_info=True)
+				else:
+					sampleServers.append(sampleServer)
 
-	generatedRoutes = set()
-	for route in getConfigRoutesForServers(sampleServers, A):
-		if route not in generatedRoutes:
-			yield route
-			generatedRoutes.add(route)
+		for route in getConfigRoutesForServers(sampleServers, A):
+			if route not in generatedRoutes:
+				yield route
+				generatedRoutes.add(route)
 
-	for route in getCRConfigs(A, B):
-		if route not in generatedRoutes:
-			yield route
-			generatedRoutes.add(route)
+	if snapshots:
+		for route in getCRConfigs(A, B):
+			if route not in generatedRoutes:
+				yield route
+				generatedRoutes.add(route)
 
 def main(kwargs:argparse.Namespace) -> int:
 	"""
@@ -291,7 +296,7 @@ def main(kwargs:argparse.Namespace) -> int:
 			logging.critical("Failed to log in to Traffic Ops")
 			logging.error("Error was '%s' - are you sure your URLs and credentials are correct?", e)
 			return 2
-		for route in genRoutes(A, B):
+		for route in genRoutes(A, B, kwargs.snapshot, kwargs.no_server_configs):
 			print(route)
 
 	return 0
@@ -338,6 +343,13 @@ if __name__ == '__main__':
 	                    default="INFO")
 	parser.add_argument("-q", "--quiet",
 	                    help="Suppresses all logging output - even for critical errors",
+	                    action="store_true")
+	parser.add_argument("-s", "--snapshot",
+	                    help="Produce snapshot routes in the output (CRConfig.json, snapshot/new "\
+	                         "etc.)",
+	                    action="store_true")
+	parser.add_argument("-C", "--no-server-configs",
+	                    help="Do not generate routes for server config files",
 	                    action="store_true")
 	args = parser.parse_args()
 	exit(main(args))
