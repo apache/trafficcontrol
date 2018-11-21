@@ -192,6 +192,14 @@ Shared Data
 -----------
 Processed and aggregated data must be shared between the end of the stat and health processing pipelines, and HTTP requests. The CSP paradigm of idiomatic Go does not work efficiently with storing and sharing state. While not idiomatic Go, shared mutexed data structures are faster and simpler than CSP manager microthreads for each data object. Traffic Monitor has many thread-safe shared data types and objects. All shared data objects can be seen in ``manager/manager.go:Start()``, where they are created and passed to the various pipeline stage microthreads that need them. Their respective types all include the word ``Threadsafe``, and can be found in ``traffic_monitor/threadsafe/`` as well as, for dependency reasons, various appropriate directories. Currently, all thread-safe shared data types use mutexes. In the future, these could be changed to lock-free or wait-free structures, if the performance needs outweighed the readability and correctness costs. They could also easily be changed to internally be manager microthreads and channels, if being idiomatic were deemed more important than readability or performance.
 
+Disk Backup
+------------
+The traffic monitor config and CR config are both stored as backup files (tmconfig.backup and crconfig.backup or what ever you set the values to in the config file). This allows the monitor to come up and continue serving even if traffic ops 
+is down.  These files are updated any time a valid config is received from traffic ops, so if traffic ops goes down and the monitor is restarted it can still serve the previous data.  These files can also be manually edited and the changes 
+will be reloaded in to traffic monitor so that if traffic ops is down or unreachable for an extended period of time manual updates can be done. If on initial startup trafficops is unavailable then traffic monitor will continue through it's 
+exponential backoff until it hits the max retry interval, at that point it will create an un-authenticated trafficops session and use the data from disk. It will still poll trafficops for updates though and if it successfully gets through 
+then it will login at that point.
+
 Formatting Conventions
 ======================
 Go code should be formatted with ``gofmt``. See also ``CONTRIBUTING.md``.
