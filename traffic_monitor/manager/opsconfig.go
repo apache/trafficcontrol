@@ -20,9 +20,12 @@ package manager
  */
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
+	"net/http/cookiejar"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -138,6 +141,7 @@ func StartOpsConfigManager(
 		trafficOpsRequestTimeout := time.Second * time.Duration(10)
 		var realToSession *to.Session
 		var toAddr net.Addr
+		var toLoginCount uint64
 
 		// fixed an issue here where traffic_monitor loops forever, doing nothing useful if traffic_ops is down,
 		// and would never logging in again.  since traffic_monitor  is just starting up here, keep retrying until traffic_ops is reachable and a session can be established.
@@ -154,6 +158,28 @@ func StartOpsConfigManager(
 				duration := backoff.BackoffDuration()
 				log.Errorf("retrying in %v\n", duration)
 				time.Sleep(duration)
+
+				if toSession.BackupFileExists() && (toLoginCount >= cfg.TrafficOpsDiskRetryMax) {
+					jar, err := cookiejar.New(nil)
+					if err != nil {
+						log.Errorf("Err getting cookiejar")
+						continue
+					}
+
+					realToSession = to.NewSession(newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Url, staticAppData.UserAgent, &http.Client{
+						Timeout: trafficOpsRequestTimeout,
+						Transport: &http.Transport{
+							TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+						},
+						Jar: jar,
+					}, useCache)
+					toSession.Set(realToSession)
+					// At this point we have a valid 'dummy' session. This will allow us to pull from disk but will also retry when TO comes up
+					log.Errorf("error instantiating Session with traffic_ops, backup disk files exist, creating empty traffic_ops session to read")
+					break
+				}
+
+				toLoginCount++
 				continue
 			} else {
 				toSession.Set(realToSession)
