@@ -27,7 +27,7 @@
 		  </div>
 
 			<div style="margin-top:20px;clear:both;">
-					If you are looking for a web page, the old Traffic Ops user interface was removed in Traffic Ops 4.0. Please use the <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_portal/usingtrafficportal.html#usingtrafficportal">Traffic Portal</a> instead.
+					If you are looking for a web page, the old Traffic Ops user interface was removed in Traffic Ops 4.0. Please use the <a href="<%= $config->{'portal'}{'docs_url'} %>"> Traffic Portal</a> instead.
 		  </div>
 	  </div>
 	</div>
