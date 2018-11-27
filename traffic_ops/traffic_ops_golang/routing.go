@@ -148,7 +148,7 @@ func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticat
 	}
 	if authenticated { // a privLevel of zero is an unauthenticated endpoint.
 		authWrapper := authBase.GetWrapper(privLevel)
-		middlewares = append([]Middleware{authWrapper}, middlewares...)
+		middlewares = append(middlewares, authWrapper)
 	}
 	return middlewares
 }
