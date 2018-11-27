@@ -76,3 +76,17 @@ The test main provides global variables which may be used by your test:
 To run, you will need a complete CDN, including all services in the request path, as well as delivery services with valid origins.
 
 With a complete CDN, you should be able to set the Traffic Ops config fields, and run `go test -v -cfg mycfg.json` from the `trafficcontrol/infrastructure/test/e2e` directory.
+
+# Docker
+
+The e2e framework comes with a simple Dockerfile.
+
+Example build:
+```bash
+docker build --tag tc-e2e:`cat ../../../VERSION`.`git rev-parse --short head` .
+```
+
+Example run (with a config file at `./cfg/cfg.json`):
+```bash
+docker run -it --name tc-e2e --hostname tc-e2e --volume cfg:/lang/go/src/e2e/cfg --network="host" --rm -- tc-e2e:`cat ../../../VERSION`.`git rev-parse --short head`
+```
