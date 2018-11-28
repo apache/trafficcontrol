@@ -50,6 +50,7 @@ Response Structure
 
 	HTTP/1.1 200 OK
 	Content-Type: application/json
+	Transfer-Encoding: chunked
 
 	{ "response": {
 		key9":"ZvVQNYpPVQWQV8tjQnUl6osm4y7xK4zD",

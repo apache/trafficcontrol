@@ -42,7 +42,7 @@ Request Structure
 :serverNames: An array of hostname of cache servers to assign to this Delivery Service
 
 .. code-block:: htpp
-	:caption :Request Example
+	:caption: Request Example
 
 	POST /api/1.4/deliveryservices/test/servers HTTP/1.1
 	Host: trafficops.infra.ciab.test

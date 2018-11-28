@@ -14,361 +14,59 @@
 ..
 
 
-.. _to-api-v12-ds-regexes:
-
-Delivery Service Regexes
-========================
-
-.. _to-api-v12-ds-regexes-route:
-
-
-**GET /api/1.2/deliveryservices_regexes**
-
-  Retrieves regexes for all delivery services.
-
-  Authentication Required: Yes
-
-  Role(s) Required: Admin or Oper
-
-  **Response Properties**
-
-  +------------------+--------+-------------------------------------------------------------------------+
-  |    Parameter     |  Type  |                               Description                               |
-  +==================+========+=========================================================================+
-  | ``dsName``       | array  | Delivery service name.                                                  |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``regexes``      | array  | An array of regexes for the delivery service.                           |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``>type``        | string | The regex type.                                                         |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``>pattern``     | string | The regex pattern.                                                      |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``>setNumber``   | string | The order in which the regex is evaluated.                              |
-  +------------------+--------+-------------------------------------------------------------------------+
-
-  **Response Example** ::
-
-    {
-     "response": [
-        {
-          "dsName": "foo-bar",
-          "regexes": [
-            {
-              "type": "HOST_REGEXP",
-              "pattern": ".*\\.foo-bar\\..*",
-              "setNumber": 0
-            },
-            {
-              "type": "HOST_REGEXP",
-              "pattern": "foo.bar.com",
-              "setNumber": 1
-            }
-			    ]
-		    },
-		    { ... }
-      ]
-    }
-
-|
-
-**GET /api/1.2/deliveryservices/{:dsId}/regexes**
-
-  Retrieves regexes for a specific delivery service.
-
-  Authentication Required: Yes
-
-  Role(s) Required: None
-
-  **Request Route Parameters**
-
-  +-----------+----------+---------------------------------------------+
-  |   Name    | Required |                Description                  |
-  +===========+==========+=============================================+
-  |  ``dsId`` |   yes    | Delivery service id.                        |
-  +-----------+----------+---------------------------------------------+
-
-  **Response Properties**
-
-  +------------------+--------+-------------------------------------------------------------------------+
-  |    Parameter     |  Type  |                               Description                               |
-  +==================+========+=========================================================================+
-  | ``id``           | string | Delivery service regex ID.                                              |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``type``         | string | Delivery service regex type ID.                                         |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``typeName``     | string | Delivery service regex type name.                                       |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``pattern``      | string | Delivery service regex pattern.                                         |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``setNumber``    | string | The order in which the regex is evaluated for the delivery service.     |
-  +------------------+--------+-------------------------------------------------------------------------+
-
-  **Response Example** ::
-
-    {
-      "response": [
-        {
-          "id": 852,
-          "type": 18,
-          "typeName": "HOST_REGEXP",
-          "pattern": ".*\\.foo-bar\\..*",
-          "setNumber": 0
-        },
-        {
-          "id": 853,
-          "type": 18,
-          "typeName": "HOST_REGEXP",
-          "pattern": "foo.bar.com",
-          "setNumber": 1
-        }
-      ]
-    }
-
-|
-
-**GET /api/1.2/deliveryservices/{:dsId}/regexes/{:id}**
-
-  Retrieves a regex for a specific delivery service.
-
-  Authentication Required: Yes
-
-  Role(s) Required: None
-
-  **Request Route Parameters**
-
-  +-----------+----------+---------------------------------------------+
-  |   Name    | Required |                Description                  |
-  +===========+==========+=============================================+
-  | ``dsId``  |   yes    | Delivery service id.                        |
-  +-----------+----------+---------------------------------------------+
-  | ``id``    |   yes    | Delivery service regex id.                  |
-  +-----------+----------+---------------------------------------------+
-
-  **Response Properties**
-
-  +------------------+--------+-------------------------------------------------------------------------+
-  |    Parameter     |  Type  |                               Description                               |
-  +==================+========+=========================================================================+
-  | ``id``           | string | Delivery service regex ID.                                              |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``type``         | string | Delivery service regex type ID.                                         |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``typeName``     | string | Delivery service regex type name.                                       |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``pattern``      | string | Delivery service regex pattern.                                         |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``setNumber``    | string | The order in which the regex is evaluated for the delivery service.     |
-  +------------------+--------+-------------------------------------------------------------------------+
-
-  **Response Example** ::
-
-    {
-     "response": [
-        {
-          "id": 852,
-          "type": 18,
-          "typeName": "HOST_REGEXP",
-          "pattern": ".*\\.foo-bar\\..*",
-          "setNumber": 0
-        }
-      ]
-    }
-
-|
-
-**POST /api/1.2/deliveryservices/{:dsId}/regexes**
-
-  Create a regex for a delivery service.
-
-  Authentication Required: Yes
-
-  Role(s) Required: Admin or Oper
-
-  **Request Route Parameters**
-
-  +-----------+----------+---------------------------------------------+
-  |   Name    | Required |                Description                  |
-  +===========+==========+=============================================+
-  | ``dsId``  |   yes    | Delivery service id.                        |
-  +-----------+----------+---------------------------------------------+
-
-  **Request Properties**
-
-  +---------------+----------+---------------------------------------------+
-  |  Parameter    | Required |                Description                  |
-  +===============+==========+=============================================+
-  | ``pattern``   |   yes    | Regex pattern.                              |
-  +---------------+----------+---------------------------------------------+
-  | ``type``      |   yes    | Regex type ID.                              |
-  +---------------+----------+---------------------------------------------+
-  | ``setNumber`` |   yes    | Regex type ID.                              |
-  +---------------+----------+---------------------------------------------+
-
-  **Request Example** ::
-
-    {
-        "pattern": ".*\\.foo-bar\\..*",
-        "type": 18,
-        "setNumber": 0
-    }
-
-|
-
-  **Response Properties**
-
-  +------------------+--------+-------------------------------------------------------------------------+
-  |    Parameter     |  Type  |                               Description                               |
-  +==================+========+=========================================================================+
-  | ``id``           | string | Delivery service regex ID.                                              |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``type``         | string | Delivery service regex type ID.                                         |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``typeName``     | string | Delivery service regex type name.                                       |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``pattern``      | string | Delivery service regex pattern.                                         |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``setNumber``    | string | The order in which the regex is evaluated for the delivery service.     |
-  +------------------+--------+-------------------------------------------------------------------------+
-
-  **Response Example** ::
-
-    {
-      "response":{
-        "id": 852,
-        "type": 18,
-        "typeName": "HOST_REGEXP",
-        "pattern": ".*\\.foo-bar\\..*",
-        "setNumber": 0
-      },
-      "alerts":[
-        {
-          "level": "success",
-          "text": "Delivery service regex creation was successful."
-        }
-      ]
-    }
-
-|
-
-**PUT /api/1.2/deliveryservices/{:dsId}/regexes/{:id}**
-
-  Update a regex for a delivery service.
-
-  Authentication Required: Yes
-
-  Role(s) Required: Admin or Oper
-
-  **Request Route Parameters**
-
-  +-----------+----------+---------------------------------------------+
-  |   Name    | Required |                Description                  |
-  +===========+==========+=============================================+
-  | ``dsId``  |   yes    | Delivery service id.                        |
-  +-----------+----------+---------------------------------------------+
-  | ``id``    |   yes    | Delivery service regex id.                  |
-  +-----------+----------+---------------------------------------------+
-
-  **Request Properties**
-
-  +---------------+----------+---------------------------------------------+
-  |  Parameter    | Required |                Description                  |
-  +===============+==========+=============================================+
-  | ``pattern``   |   yes    | Regex pattern.                              |
-  +---------------+----------+---------------------------------------------+
-  | ``type``      |   yes    | Regex type ID.                              |
-  +---------------+----------+---------------------------------------------+
-  | ``setNumber`` |   yes    | Regex type ID.                              |
-  +---------------+----------+---------------------------------------------+
-
-  **Request Example** ::
-
-    {
-        "pattern": ".*\\.foo-bar\\..*",
-        "type": 18,
-        "setNumber": 0
-    }
-
-|
-
-  **Response Properties**
-
-  +------------------+--------+-------------------------------------------------------------------------+
-  |    Parameter     |  Type  |                               Description                               |
-  +==================+========+=========================================================================+
-  | ``id``           | string | Delivery service regex ID.                                              |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``type``         | string | Delivery service regex type ID.                                         |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``typeName``     | string | Delivery service regex type name.                                       |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``pattern``      | string | Delivery service regex pattern.                                         |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``setNumber``    | string | The order in which the regex is evaluated for the delivery service.     |
-  +------------------+--------+-------------------------------------------------------------------------+
-
-  **Response Example** ::
-
-    {
-      "response":{
-        "id": 852,
-        "type": 18,
-        "typeName": "HOST_REGEXP",
-        "pattern": ".*\\.foo-bar\\..*",
-        "setNumber": 0
-      },
-      "alerts":[
-        {
-          "level": "success",
-          "text": "Delivery service regex update was successful."
-        }
-      ]
-    }
-
-|
-
-**DELETE /api/1.2/deliveryservices/{:dsId}/regexes/{:id}**
-
-  Delete delivery service regex.
-
-  Authentication Required: Yes
-
-  Role(s) Required: Admin or Oper
-
-  **Request Route Parameters**
-
-  +-----------+----------+---------------------------------------------+
-  |   Name    | Required |                Description                  |
-  +===========+==========+=============================================+
-  | ``dsId``  |   yes    | Delivery service id.                        |
-  +-----------+----------+---------------------------------------------+
-  | ``id``    |   yes    | Delivery service regex id.                  |
-  +-----------+----------+---------------------------------------------+
-
-  **Response Properties**
-
-  +-------------+--------+----------------------------------+
-  |  Parameter  |  Type  |           Description            |
-  +=============+========+==================================+
-  | ``alerts``  | array  | A collection of alert messages.  |
-  +-------------+--------+----------------------------------+
-  | ``>level``  | string | Success, info, warning or error. |
-  +-------------+--------+----------------------------------+
-  | ``>text``   | string | Alert message.                   |
-  +-------------+--------+----------------------------------+
-
-  **Response Example** ::
-
-    {
-          "alerts": [
-                    {
-                            "level": "success",
-                            "text": "Delivery service regex delete was successful."
-                    }
-            ],
-    }
-
-|
-
-
-
-
+.. _to-api-deliveryservices_regexes:
+
+****************************
+``deliveryservices_regexes``
+****************************
+
+``GET``
+=======
+Retrieves routing regular expressions for all Delivery Services.
+
+:Auth. Required: Yes
+:Roles Required: None\ [1]_
+:Response Type:  Array
+
+Request Structure
+-----------------
+No parameters available
+
+Response Structure
+------------------
+:dsName:  The name of the Delivery Service represented by this object
+:regexes: An array of objects that represent various routing regular expressions used by ``dsName``
+
+	:pattern:   The actual regular expression - ``\``\ s are escaped
+	:setNumber: The order in which the regular expression is evaluated against requests
+	:type:      The type of regular expression - determines that against which it will be evaluated
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: +2MI+Q/NJqTizlMR/MhPAL+yu6/z/Yqvo5fDO8F593RMOmK6dX/Al4wARbEG+HQaJNgSCRPsiLVATusrmnnCMA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Tue, 27 Nov 2018 19:22:59 GMT
+	Content-Length: 110
+
+	{ "response": [
+		{
+			"regexes": [
+				{
+					"type": "HOST_REGEXP",
+					"setNumber": 0,
+					"pattern": ".*\\.demo1\\..*"
+				}
+			],
+			"dsName": "demo1"
+		}
+	]}
+
+.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by Delivery Services their tenant has permissions to see.
