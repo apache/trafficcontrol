@@ -194,10 +194,9 @@
 								<mapping>
 									<directory>${env.STARTUP_SCRIPT_DIR}</directory>
 									<directoryIncluded>false</directoryIncluded>
-									<filemode>755</filemode>
+									<filemode>644</filemode>
 									<username>root</username>
 									<groupname>root</groupname>
-									<configuration>noreplace</configuration>
 									<sources>
 										<source>
 											<location>${env.STARTUP_SCRIPT_LOC}</location>
@@ -219,7 +218,7 @@
 								</mapping>
 							</mappings>
 							<requires>
-								<require>jdk &gt;= 1.8</require>
+								<require>java &gt;= 1.8</require>
 								<require>tomcat = ${env.TOMCAT_VERSION}.${env.TOMCAT_RELEASE}-${env.BUILD_LOCK}</require>
 								<require>apr &gt;= 1.4.8</require>
 								<require>tomcat-native &gt;= 1.2.16</require>
@@ -228,9 +227,12 @@
 								<obsolete>traffic_router &lt; 3.0.0</obsolete>
 							</obsoletes>
 
-							<preinstallScriptlet>
-								<scriptFile>../core/src/main/scripts/preinstall.sh</scriptFile>
-							</preinstallScriptlet>
+							<pretransScriptlet>
+								 <scriptFile>../core/src/main/scripts/pretrans.sh</scriptFile>
+							</pretransScriptlet>
+							<preScriptlet>
+								 <scriptFile>../core/src/main/scripts/preinstall.sh</scriptFile>
+							</preScriptlet>
 							<postinstallScriptlet>
 								<scriptFile>../core/src/main/scripts/postinstall.sh</scriptFile>
 							</postinstallScriptlet>
