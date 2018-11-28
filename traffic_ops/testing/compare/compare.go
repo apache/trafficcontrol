@@ -36,9 +36,10 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-const __version__ = "3.0.0"
+const __version__ = "3.1.0"
 const SHORT_HEADER = "# DO NOT EDIT"
 const LONG_HEADER = "# TRAFFIC OPS NOTE:"
+const LUA_HEADER = "-- DO NOT EDIT"
 const MAX_RETRIES = 5
 
 // Environment variables used:
@@ -196,6 +197,29 @@ func readRespBodies(a *io.ReadCloser, b *io.ReadCloser) ([]byte, []byte, error) 
 	return aBody, bBody, nil
 }
 
+// Scrubs out the traffic ops headers from the passed lines
+// Note that this assumes UNIX line endings
+func scrubPlainText(lines []string) string {
+	r := ""
+	for _, l := range lines {
+		if len(l) >= len(SHORT_HEADER) && l[:len(SHORT_HEADER)] == SHORT_HEADER {
+			continue
+		}
+
+		if len(l) >= len(LUA_HEADER) && l[:len(LUA_HEADER)] == LUA_HEADER {
+			continue
+		}
+
+		if len(l) >= len(LONG_HEADER) && l[:len(LONG_HEADER)] == LONG_HEADER {
+			continue
+		}
+
+		r += l
+	}
+
+	return r
+}
+
 // Given a slice of (exactly two) result objects, compares the plain text content of their responses
 // and write them to files if they differ. Ignores Traffic Ops headers in the response (to the
 // degree possible)
@@ -220,33 +244,9 @@ func handlePlainTextResponse(responses *[]result, route string) {
 			return
 		}
 
-		for _, line := range lines0 {
-			if len(line) < len(SHORT_HEADER) {
-				scrubbedResult0 += line
-			} else if line[:len(SHORT_HEADER)] != SHORT_HEADER {
-				if len(line) >= len(LONG_HEADER) {
-					if line[:len(LONG_HEADER)] != LONG_HEADER {
-						scrubbedResult0 += line
-					}
-				} else {
-					scrubbedResult0 += line
-				}
-			}
-		}
+		scrubbedResult0 = scrubPlainText(lines0)
+		scrubbedResult1 = scrubPlainText(lines1)
 
-		for _, line := range lines1 {
-			if len(line) < len(SHORT_HEADER) {
-				scrubbedResult1 += line
-			} else if line[:len(SHORT_HEADER)] != SHORT_HEADER {
-				if len(line) >= len(LONG_HEADER) {
-					if line[:len(LONG_HEADER)] != LONG_HEADER {
-						scrubbedResult1 += line
-					}
-				} else {
-					scrubbedResult1 += line
-				}
-			}
-		}
 	} else {
 		scrubbedResult0 = result0Str
 		scrubbedResult1 = result1Str
