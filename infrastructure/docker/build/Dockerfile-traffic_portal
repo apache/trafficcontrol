@@ -40,6 +40,7 @@ RUN	rpm -ivh https://kojipkgs.fedoraproject.org//packages/http-parser/2.7.1/3.el
 		ruby-devel \
 		rubygems
 
+RUN	gem update --system
 RUN	gem install compass
 RUN	npm -g install bower grunt-cli
 
