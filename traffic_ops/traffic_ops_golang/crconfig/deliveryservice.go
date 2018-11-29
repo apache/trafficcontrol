@@ -54,7 +54,8 @@ func getServerDSesModifieds(serverDSNames map[tc.CacheName][]ServerDS) map[tc.De
 	return dsModifieds
 }
 
-func makeDSes(cdn string, domain string, serverDSNames map[tc.CacheName][]ServerDS, tx *sql.Tx) (map[string]tc.CRConfigDeliveryService, error) {
+// makeDSes returns the CRConfig DeliveryServices object, the last updated time of any member not including the deliveryservice-server mappings, and any error.
+func makeDSes(cdn string, domain string, serverDSNames map[tc.CacheName][]ServerDS, tx *sql.Tx) (map[string]tc.CRConfigDeliveryService, time.Time, error) {
 	dses := map[string]tc.CRConfigDeliveryService{}
 	admin := CDNSOAAdmin
 	expireSecondsStr := strconv.Itoa(int(CDNSOAExpire / time.Second))
@@ -81,65 +82,70 @@ func makeDSes(cdn string, domain string, serverDSNames map[tc.CacheName][]Server
 	geoProvider1 := GeoProviderNeustarStr
 	geoProviderDefault := geoProvider0
 
-	q := `
+	qry := `
 SELECT
-d.xml_id,
-d.miss_lat,
-d.miss_long,
-d.protocol,
-d.ccr_dns_ttl as ttl,
-d.routing_name,
-d.geo_provider,
-t.name as type,
-d.geo_limit,
-d.geo_limit_countries,
-d.geolimit_redirect_url,
-d.initial_dispersion,
-d.regional_geo_blocking,
-d.tr_response_headers,
-d.max_dns_answers,
-p.name as profile,
-d.dns_bypass_ip,
-d.dns_bypass_ip6,
-d.dns_bypass_ttl,
-d.dns_bypass_cname,
-d.http_bypass_fqdn,
-d.ipv6_routing_enabled,
-d.deep_caching_type,
-d.tr_request_headers,
-d.tr_response_headers,
-d.anonymous_blocking_enabled,
-d.last_updated
-FROM deliveryservice as d
-JOIN type as t ON t.id = d.type
-LEFT OUTER JOIN profile as p ON p.id = d.profile
-WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
-AND d.active = true
-AND t.name != '` + string(tc.DSTypeAnyMap) + `'
+  d.xml_id,
+  d.miss_lat,
+  d.miss_long,
+  d.protocol,
+  d.ccr_dns_ttl as ttl,
+  d.routing_name,
+  d.geo_provider,
+  t.name as type,
+  d.geo_limit,
+  d.geo_limit_countries,
+  d.geolimit_redirect_url,
+  d.initial_dispersion,
+  d.regional_geo_blocking,
+  d.tr_response_headers,
+  d.max_dns_answers,
+  p.name as profile,
+  d.dns_bypass_ip,
+  d.dns_bypass_ip6,
+  d.dns_bypass_ttl,
+  d.dns_bypass_cname,
+  d.http_bypass_fqdn,
+  d.ipv6_routing_enabled,
+  d.deep_caching_type,
+  d.tr_request_headers,
+  d.tr_response_headers,
+  d.anonymous_blocking_enabled,
+  GREATEST(d.last_updated, t.last_updated, p.last_updated, cdn.last_updated)
+FROM
+  deliveryservice as d
+  JOIN type as t ON t.id = d.type
+  LEFT OUTER JOIN profile as p ON p.id = d.profile
+  JOIN cdn ON cdn.id = d.cdn_id
+WHERE
+  cdn.name = $1
+  AND d.active = true
+  AND t.name != '` + string(tc.DSTypeAnyMap) + `'
 `
 
 	serverParams, err := getServerProfileParams(cdn, tx)
 	if err != nil {
-		return nil, errors.New("getting deliveryservice parameters: " + err.Error())
+		return nil, time.Time{}, errors.New("getting deliveryservice parameters: " + err.Error())
 	}
 	dsParams, err := getDSParams(serverParams)
 	if err != nil {
-		return nil, errors.New("getting deliveryservice server parameters: " + err.Error())
+		return nil, time.Time{}, errors.New("getting deliveryservice server parameters: " + err.Error())
 	}
 	dsmatchsets, dsdomains, dsMatchsetsNewestModifieds, err := getDSRegexesDomains(cdn, domain, tx)
 	if err != nil {
-		return nil, errors.New("getting regex matchsets: " + err.Error())
+		return nil, time.Time{}, errors.New("getting regex matchsets: " + err.Error())
 	}
 	staticDNSEntries, staticDNSEntriesNewestModifieds, err := getStaticDNSEntries(cdn, tx)
 	if err != nil {
-		return nil, errors.New("getting static DNS entries: " + err.Error())
+		return nil, time.Time{}, errors.New("getting static DNS entries: " + err.Error())
 	}
+
+	lastUpdated := time.Time{}
 
 	dsServerModifieds := getServerDSesModifieds(serverDSNames)
 
-	rows, err := tx.Query(q, cdn)
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
-		return nil, errors.New("querying deliveryservices: " + err.Error())
+		return nil, time.Time{}, errors.New("querying deliveryservices: " + err.Error())
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -178,7 +184,11 @@ AND t.name != '` + string(tc.DSTypeAnyMap) + `'
 		trResponseHeaders := sql.NullString{}
 		anonymousBlocking := false
 		if err := rows.Scan(&xmlID, &missLat, &missLon, &protocol, &ds.TTL, &ds.RoutingName, &geoProvider, &ttype, &geoLimit, &geoLimitCountries, &geoLimitRedirectURL, &dispersion, &geoBlocking, &trRespHdrsStr, &maxDNSAnswers, &profile, &dnsBypassIP, &dnsBypassIP6, &dnsBypassTTL, &dnsBypassCName, &httpBypassFQDN, &ip6RoutingEnabled, &deepCachingType, &trRequestHeaders, &trResponseHeaders, &anonymousBlocking, &ds.Modified); err != nil {
-			return nil, errors.New("scanning deliveryservice: " + err.Error())
+			return nil, time.Time{}, errors.New("scanning deliveryservice: " + err.Error())
+		}
+
+		if ds.Modified.After(lastUpdated) {
+			lastUpdated = ds.Modified
 		}
 
 		ds.AnyModified = ds.Modified
@@ -242,6 +252,9 @@ AND t.name != '` + string(tc.DSTypeAnyMap) + `'
 			if matchsetModified, ok := dsMatchsetsNewestModifieds[xmlID]; ok && matchsetModified.After(ds.AnyModified) {
 				ds.AnyModified = matchsetModified
 			}
+			if matchsetModified, ok := dsMatchsetsNewestModifieds[xmlID]; ok && matchsetModified.After(lastUpdated) {
+				lastUpdated = matchsetModified
+			}
 		} else {
 			log.Warnln("no regex matchsets for delivery service: " + xmlID)
 		}
@@ -281,6 +294,9 @@ AND t.name != '` + string(tc.DSTypeAnyMap) + `'
 					if sval.Modified.After(ds.AnyModified) {
 						ds.AnyModified = sval.Modified
 					}
+					if sval.Modified.After(lastUpdated) {
+						lastUpdated = sval.Modified
+					}
 				} else {
 					log.Errorln("delivery service " + xmlID + " profile " + profile.String + " param tld.ttls.SOA '" + sval.Val + "' not a number - skipping")
 				}
@@ -290,6 +306,9 @@ AND t.name != '` + string(tc.DSTypeAnyMap) + `'
 					nsSeconds = time.Duration(val) * time.Second
 					if sval.Modified.After(ds.AnyModified) {
 						ds.AnyModified = sval.Modified
+					}
+					if sval.Modified.After(lastUpdated) {
+						lastUpdated = sval.Modified
 					}
 				} else {
 					log.Errorln("delivery service " + xmlID + " profile " + profile.String + " param tld.ttls.NS '" + sval.Val + "' not a number - skipping")
@@ -390,15 +409,18 @@ AND t.name != '` + string(tc.DSTypeAnyMap) + `'
 		if sdeModified, ok := staticDNSEntriesNewestModifieds[tc.DeliveryServiceName(xmlID)]; ok && sdeModified.After(ds.AnyModified) {
 			ds.AnyModified = sdeModified
 		}
+		if sdeModified, ok := staticDNSEntriesNewestModifieds[tc.DeliveryServiceName(xmlID)]; ok && sdeModified.After(lastUpdated) {
+			lastUpdated = sdeModified
+		}
 
 		dses[xmlID] = ds
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, errors.New("iterating deliveryservice rows: " + err.Error())
+		return nil, time.Time{}, errors.New("iterating deliveryservice rows: " + err.Error())
 	}
 
-	return dses, nil
+	return dses, lastUpdated, nil
 }
 
 func getStaticDNSEntries(cdn string, tx *sql.Tx) (map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, map[tc.DeliveryServiceName]time.Time, error) {

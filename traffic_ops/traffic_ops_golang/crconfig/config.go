@@ -24,12 +24,14 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 )
 
-func makeCRConfigConfig(cdn string, tx *sql.Tx, dnssecEnabled bool, domain string) (map[string]interface{}, error) {
-	configParams, err := getConfigParams(cdn, tx)
+// makeCRConfigConfig returns the CRConfig Config object, the last updated time of any parameter, and any error.
+func makeCRConfigConfig(cdn string, tx *sql.Tx, dnssecEnabled bool, domain string) (map[string]interface{}, time.Time, error) {
+	configParams, lastUpdated, err := getConfigParams(cdn, tx)
 	if err != nil {
-		return nil, errors.New("Error getting router params: " + err.Error())
+		return nil, time.Time{}, errors.New("Error getting router params: " + err.Error())
 	}
 	soa := map[string]string{}
 	ttl := map[string]string{}
@@ -56,7 +58,7 @@ func makeCRConfigConfig(cdn string, tx *sql.Tx, dnssecEnabled bool, domain strin
 		} else if k == maxmindDefaultOverrideParameterName {
 			overrideObj, err := createMaxmindDefaultOverrideObj(v)
 			if err != nil {
-				return nil, errors.New("Error parsing " + maxmindDefaultOverrideParameterName + " parameter: " + err.Error())
+				return nil, time.Time{}, errors.New("Error parsing " + maxmindDefaultOverrideParameterName + " parameter: " + err.Error())
 			}
 			maxmindDefaultOverrides = append(maxmindDefaultOverrides, overrideObj)
 		} else {
@@ -79,7 +81,7 @@ func makeCRConfigConfig(cdn string, tx *sql.Tx, dnssecEnabled bool, domain strin
 	}
 	crConfigConfig["dnssec.enabled"] = dnssecStr
 
-	return crConfigConfig, nil
+	return crConfigConfig, lastUpdated, nil
 }
 
 type CRConfigConfigParameter struct {
@@ -87,37 +89,50 @@ type CRConfigConfigParameter struct {
 	Value string
 }
 
-func getConfigParams(cdn string, tx *sql.Tx) ([]CRConfigConfigParameter, error) {
+// getConfigParams returns the list of parameters, the last updated time of any parameter, and any error
+func getConfigParams(cdn string, tx *sql.Tx) ([]CRConfigConfigParameter, time.Time, error) {
 	// TODO change to []struct{string,string} ? Speed might matter.
-	q := `
-select name, value from parameter where id in (
-  select parameter from profile_parameter where profile in (
-  	select distinct profile from server where cdn_id = (
-	    select id from cdn where name = $1
-    )
-  )
-)
-and config_file = 'CRConfig.json'
+	// TODO verify MAX(GREATEST(last_updated) shouldn't include profile, server, or cdn
+	qry := `
+SELECT
+  pa.name,
+  pa.value,
+  MAX(GREATEST(pa.last_updated, pp.last_updated)) as last_updated
+FROM
+  parameter pa
+  JOIN profile_parameter pp ON pp.parameter = pa.id
+  JOIN server s ON s.profile = pp.profile
+  JOIN cdn ON cdn.id = s.cdn_id
+WHERE
+  cdn.name = $1
+  AND pa.config_file = 'CRConfig.json'
+GROUP BY pa.name, pa.value
 `
-	rows, err := tx.Query(q, cdn)
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
-		return nil, errors.New("Error querying router params: " + err.Error())
+		return nil, time.Time{}, errors.New("Error querying router params: " + err.Error())
 	}
 	defer rows.Close()
+
+	lastUpdated := time.Time{}
 
 	params := []CRConfigConfigParameter{}
 	for rows.Next() {
 		name := ""
 		val := ""
-		if err := rows.Scan(&name, &val); err != nil {
-			return nil, errors.New("Error scanning router param: " + err.Error())
+		paLastUpdated := time.Time{}
+		if err := rows.Scan(&name, &val, &paLastUpdated); err != nil {
+			return nil, time.Time{}, errors.New("Error scanning router param: " + err.Error())
 		}
 		params = append(params, CRConfigConfigParameter{Name: name, Value: val})
+		if paLastUpdated.After(lastUpdated) {
+			lastUpdated = paLastUpdated
+		}
 	}
 	if err := rows.Err(); err != nil {
-		return nil, errors.New("Error iterating router param rows: " + err.Error())
+		return nil, time.Time{}, errors.New("Error iterating router param rows: " + err.Error())
 	}
-	return params, nil
+	return params, lastUpdated, nil
 }
 
 type CRConfigConfigMaxmindDefaultOverride struct {

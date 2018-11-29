@@ -22,37 +22,65 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
+
+const ConfigModifiedExceptDSS = "modified-excluding-delivery-service-servers"
 
 func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfig, error) {
 	crc := tc.CRConfig{APIVersion: 1.4}
 	err := error(nil)
 
-	cdnDomain, dnssecEnabled, err := getCDNInfo(cdn, tx)
+	cdnDomain, dnssecEnabled, lastUpdated, err := getCDNInfo(cdn, tx) // TODO get last updated
 	if err != nil {
 		return nil, errors.New("Error getting CDN info: " + err.Error())
 	}
-	if crc.Config, err = makeCRConfigConfig(cdn, tx, dnssecEnabled, cdnDomain); err != nil {
+
+	configLastUpdated := time.Time{}
+	crc.Config, configLastUpdated, err = makeCRConfigConfig(cdn, tx, dnssecEnabled, cdnDomain)
+	if err != nil {
 		return nil, errors.New("Error getting Config: " + err.Error())
 	}
+	if configLastUpdated.After(lastUpdated) {
+		lastUpdated = configLastUpdated
+	}
+
 	serverDSNames, err := getServerDSNames(cdn, tx)
 	if err != nil {
 		return nil, errors.New("Error getting server delivery services: " + err.Error())
 	}
-	if crc.ContentServers, crc.ContentRouters, crc.Monitors, err = makeCRConfigServers(cdn, tx, cdnDomain, serverDSNames); err != nil {
+
+	serversLastUpdated := time.Time{}
+	if crc.ContentServers, crc.ContentRouters, crc.Monitors, serversLastUpdated, err = makeCRConfigServers(cdn, tx, cdnDomain, serverDSNames); err != nil {
 		return nil, errors.New("Error getting Servers: " + err.Error())
 	}
-	if crc.EdgeLocations, crc.RouterLocations, err = makeLocations(cdn, tx); err != nil {
+	if serversLastUpdated.After(lastUpdated) {
+		lastUpdated = serversLastUpdated
+	}
+
+	loLastUpdated := time.Time{}
+	if crc.EdgeLocations, crc.RouterLocations, loLastUpdated, err = makeLocations(cdn, tx); err != nil {
 		return nil, errors.New("Error getting Edge Locations: " + err.Error())
 	}
-	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, serverDSNames, tx); err != nil {
+	if loLastUpdated.After(lastUpdated) {
+		lastUpdated = loLastUpdated
+	}
+
+	dsLastUpdated := time.Time{}
+	if crc.DeliveryServices, dsLastUpdated, err = makeDSes(cdn, cdnDomain, serverDSNames, tx); err != nil {
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
+	}
+	if dsLastUpdated.After(lastUpdated) {
+		lastUpdated = dsLastUpdated
 	}
 
 	// TODO change to real reqPath, and verify everything works. Currently emulates the existing TO, in case anything relies on it
 	emulateOldPath := "/tools/write_crconfig/" + cdn
 	crc.Stats = makeStats(cdn, user, toHost, emulateOldPath, toVersion)
+
+	crc.Config[ConfigModifiedExceptDSS] = dsLastUpdated.Format(time.RFC3339Nano)
+
 	return &crc, nil
 }
