@@ -25,7 +25,30 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+
+	"github.com/jmoiron/sqlx"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
+
+func TestGetDeliveryServicesMatchLists(t *testing.T) {
+	// test to make sure that the DS matchlists query orders by set_number
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT .+ ORDER BY dsr.set_number")
+
+	GetDeliveryServicesMatchLists([]string{"foo"}, db.MustBegin().Tx)
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met: %s", err)
+	}
+}
 
 func TestMakeExampleURLs(t *testing.T) {
 	expected := []string{
