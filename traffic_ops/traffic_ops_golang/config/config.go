@@ -86,6 +86,14 @@ type ConfigTrafficOpsGolang struct {
 	PluginSharedConfig       map[string]interface{}     `json:"plugin_shared_config"`
 	ProfilingEnabled         bool                       `json:"profiling_enabled"`
 	ProfilingLocation        string                     `json:"profiling_location"`
+	// CRConfigUseRequestHost is whether to use the client request host header in the CRConfig. If false, uses the tm.url parameter.
+	// This defaults to false. Traffic Ops used to always use the host header, setting this true will resume that legacy behavior.
+	// See https://github.com/apache/trafficcontrol/issues/2224
+	// Deprecated: will be removed in the next major version.
+	CRConfigUseRequestHost bool `json:"crconfig_snapshot_use_client_request_host"`
+	// CRConfigEmulateOldPath is whether to emulate the legacy CRConfig request path when generating a new CRConfig. This primarily exists in the event a tool relies on the legacy path '/tools/write_crconfig'.
+	// Deprecated: will be removed in the next major version.
+	CRConfigEmulateOldPath bool `json:"crconfig_emulate_old_path"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file

@@ -23,10 +23,12 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfig, error) {
+// Make creates and returns the CRConfig from the database.
+func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReqHost bool, emulateOldPath bool) (*tc.CRConfig, error) {
 	crc := tc.CRConfig{}
 	err := error(nil)
 
@@ -49,8 +51,21 @@ func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfi
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
 	}
 
-	// TODO change to real reqPath, and verify everything works. Currently emulates the existing TO, in case anything relies on it
-	emulateOldPath := "/tools/write_crconfig/" + cdn
-	crc.Stats = makeStats(cdn, user, toHost, emulateOldPath, toVersion)
+	if !useClientReqHost {
+		paramHost, ok, err := getGlobalParam(tx, "tm.url")
+		if err != nil {
+			return nil, errors.New("getting global 'tm.url' parameter: " + err.Error())
+		}
+		if !ok {
+			log.Warnln("Making CRConfig: no global tm.url parameter found! Using request host header instead!")
+		}
+		toHost = paramHost
+	}
+
+	if emulateOldPath {
+		reqPath = "/tools/write_crconfig/" + cdn
+	}
+
+	crc.Stats = makeStats(cdn, user, toHost, reqPath, toVersion)
 	return &crc, nil
 }

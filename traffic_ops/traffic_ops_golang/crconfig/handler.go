@@ -42,7 +42,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	start := time.Now()
-	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version)
+	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -123,7 +123,7 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		cdn = name
 	}
 
-	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version)
+	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -146,7 +146,7 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version)
+	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
 	if err != nil {
 		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
 		return

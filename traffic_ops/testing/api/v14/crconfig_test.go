@@ -17,6 +17,7 @@ package v14
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -58,7 +59,18 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Errorf("no cdn test data")
 	}
 	cdn := testData.CDNs[0].Name
-	_, err := TOSession.SnapshotCRConfig(cdn)
+
+	tmURLParamName := "tm.url"
+	tmURLExpected := "https://crconfig.tm.url.test.invalid"
+	_, _, err := TOSession.CreateParameter(tc.Parameter{
+		ConfigFile: "global",
+		Name:       tmURLParamName,
+		Value:      "https://crconfig.tm.url.test.invalid",
+	})
+	if err != nil {
+		t.Fatalf("GetCRConfig CreateParameter error expected: nil, actual: " + err.Error())
+	}
+	_, err = TOSession.SnapshotCRConfig(cdn)
 	if err != nil {
 		t.Errorf("SnapshotCRConfig err expected nil, actual %+v", err)
 	}
@@ -73,6 +85,32 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 
 	if len(crc.DeliveryServices) == 0 {
 		t.Errorf("GetCRConfig len(crc.DeliveryServices) expected: >0, actual: 0")
+	}
+
+	if crc.Stats.TMPath == nil {
+		t.Errorf("GetCRConfig crc.Stats.Path expected: 'snapshot/"+cdn+"', actual: %+v", crc.Stats.TMPath)
+	} else if !strings.HasSuffix(*crc.Stats.TMPath, "snapshot/"+cdn) {
+		t.Errorf("GetCRConfig crc.Stats.Path expected: '/snapshot"+cdn+"', actual: %+v", *crc.Stats.TMPath)
+	}
+
+	if crc.Stats.TMHost == nil {
+		t.Errorf("GetCRConfig crc.Stats.Path expected: '"+tmURLExpected+"', actual: %+v", crc.Stats.TMHost)
+	} else if *crc.Stats.TMHost != tmURLExpected {
+		t.Errorf("GetCRConfig crc.Stats.Path expected: '"+tmURLExpected+"', actual: %+v", *crc.Stats.TMHost)
+	}
+
+	paramResp, _, err := TOSession.GetParameterByName(tmURLParamName)
+	if err != nil {
+		t.Fatalf("cannot GET Parameter by name: %v - %v\n", tmURLParamName, err)
+	}
+	if len(paramResp) == 0 {
+		t.Fatalf("CRConfig create tm.url parameter was successful, but GET returned no parameters")
+	}
+	tmURLParam := paramResp[0]
+
+	delResp, _, err := TOSession.DeleteParameterByID(tmURLParam.ID)
+	if err != nil {
+		t.Fatalf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
 	}
 
 	log.Debugln("UpdateTestCRConfigSnapshot() PASSED: ")
