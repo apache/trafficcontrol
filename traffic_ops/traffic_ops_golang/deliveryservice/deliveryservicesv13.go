@@ -761,6 +761,7 @@ JOIN deliveryservice_regex as dsr ON dsr.regex = r.id
 JOIN deliveryservice as ds on ds.id = dsr.deliveryservice
 JOIN type as t ON r.type = t.id
 WHERE ds.xml_id = ANY($1)
+ORDER BY dsr.set_number
 `
 	rows, err := tx.Query(q, pq.Array(dses))
 	if err != nil {
