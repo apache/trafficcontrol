@@ -21,8 +21,6 @@ Traffic Ops API V1.2
 .. toctree::
 	:maxdepth: 1
 
-	deliveryservice_regex
-	deliveryservice_stats
 	division
 	federation
 	federation_deliveryservice
