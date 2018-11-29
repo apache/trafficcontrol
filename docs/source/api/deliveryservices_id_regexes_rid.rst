@@ -90,6 +90,7 @@ Updates a routing regular expression.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [2]_
+:Response Type:  Object
 
 Request Structure
 -----------------
@@ -110,13 +111,21 @@ Request Structure
 :setNumber: The order in which this regular expression should be checked
 :type:      The integral, unique identifier of a routing regular expression type
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Request Example
+
+	PUT /api/1.4/deliveryservices/1/regexes/2 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 55
+	Content-Type: application/json
 
 	{
 		"pattern": ".*\\.foo-bar\\..*",
-		"type": 18,
-		"setNumber": 0
+		"type": 33,
+		"setNumber": 1
 	}
 
 Response Structure
@@ -130,19 +139,32 @@ Response Structure
 .. code-block:: http
 	:caption: Response Example
 
-	{ "response":{
-		"id": 852,
-		"type": 18,
-		"typeName": "HOST_REGEXP",
-		"pattern": ".*\\.foo-bar\\..*",
-		"setNumber": 0
-	},
-	"alerts":[
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: kS5dRzAhFKE7vfzHK7XVIwpMOjztksk9MU+qtj5YU/1oxVHmqNbJ12FeOOIJsZJCXbYlnBS04sCI95Sz5wed1Q==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 29 Nov 2018 17:54:58 GMT
+	Content-Length: 188
+
+	{ "alerts": [
 		{
-			"level": "success",
-			"text": "Delivery service regex update was successful."
+			"text": "Delivery service regex creation was successful.",
+			"level": "success"
 		}
-	]}
+	],
+	"response": {
+		"id": 2,
+		"type": 33,
+		"typeName": "PATH_REGEXP",
+		"setNumber": 1,
+		"pattern": ".*\\.foo-bar\\..*"
+	}}
+
 
 .. [2] If tenancy is used, then users (regardless of role) will only be able to edit the routing regular expressions used by Delivery Services their tenant has permissions to edit. Assuming tenancy is satisfied, a routing regular expression can only be edited by a user with the "admin" or "operations" role.
 
@@ -152,6 +174,7 @@ Deletes a routing regular expression.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [3]_
+:Response Type:  ``undefined``
 
 Request Structure
 -----------------
@@ -165,15 +188,36 @@ Request Structure
 	| rID  | The integral, unique identifier of the routing regular expression being inspected |
 	+------+-----------------------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.4/deliveryservices/1/regexes/2 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
 .. code-block:: http
 	:caption: Response Example
 
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: 8oEa78x7f/o39LIS98W6G+UqE6cX/Iw4v3mMHvbAs1iWHALuDYRz3VOtA6jzfGQKpB04Om8qaVG+zWRrBVoCmQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 29 Nov 2018 18:44:00 GMT
+	Content-Length: 76
+
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "Delivery service regex delete was successful."
+			"text": "deliveryservice_regex was deleted.",
+			"level": "success"
 		}
 	]}
 
