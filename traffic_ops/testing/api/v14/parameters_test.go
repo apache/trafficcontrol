@@ -124,7 +124,7 @@ func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 		}
 
 		// Retrieve the Parameter to see if it got deleted
-		pls, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
+		pls, _, err := TOSession.GetParameterByID(pl.ID)
 		if err != nil {
 			t.Errorf("error deleting Parameter name: %s\n", err.Error())
 		}

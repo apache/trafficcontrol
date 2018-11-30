@@ -207,10 +207,11 @@ func DeleteTestProfiles(t *testing.T) {
 			t.Errorf("cannot GET Profile by id: %v - %v\n", err, resp)
 		}
 		// delete any profile_parameter associations first
+		// the parameter is what's being deleted, but the delete is cascaded to profile_parameter
 		for _, param := range resp[0].Parameters {
-			_, _, err := TOSession.DeleteParameterByProfileParameter(profileID, *param.ID)
+			_, _, err := TOSession.DeleteParameterByID(*param.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE profile_parameter with profileID %d, parameterID %d: %s\n", profileID, *param.ID, err.Error())
+				t.Errorf("cannot DELETE parameter with parameterID %d: %s\n", *param.ID, err.Error())
 			}
 		}
 		delResp, _, err := TOSession.DeleteProfileByID(profileID)
