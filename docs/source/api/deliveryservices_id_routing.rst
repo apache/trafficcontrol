@@ -15,9 +15,9 @@
 
 .. _to-api-deliveryservices-id-routing:
 
-*****************************************
-``/api/1.2/deliveryservices/:id/routing``
-*****************************************
+***********************************
+``deliveryservices/{{ID}}/routing``
+***********************************
 
 ``GET``
 =======
@@ -31,11 +31,20 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------------+----------+----------------------------------------------------------------------+
-	| Name            | Required | Description                                                          |
-	+=================+==========+======================================================================+
-	| id              | yes      | The integral, unique identifier for the Delivery Service of interest |
-	+-----------------+----------+----------------------------------------------------------------------+
+	+------+----------------------------------------------------------------------+
+	| Name | Description                                                          |
+	+======+======================================================================+
+	|  ID  | The integral, unique identifier for the Delivery Service of interest |
+	+------+----------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/deliveryservices/1/routing HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
@@ -49,8 +58,22 @@ Response Structure
 :regionalDenied:    The percent of Traffic Router requests for this Delivery Service that were denied due to geographic location policy
 :staticRoute:       The percent of requests to the Traffic Router for this Delivery Service that were satisfied with pre-configured DNS entries
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Fri, 30 Nov 2018 15:08:07 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Fri, 30 Nov 2018 19:08:07 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: UgPziRC/5u4+CfkZ9xm0EkEzjjJVu6cwBrFd/n3xH/ZmlkaXkQaa1y4+B7DyE46vxFLYE0ODOcQchyn7JkoQOg==
+	Content-Length: 132
 
 	{ "response": {
 		"staticRoute": 0,
