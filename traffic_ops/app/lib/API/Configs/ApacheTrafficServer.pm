@@ -2601,16 +2601,14 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 
 		my $default_dest_text;
 		my $parent_select_alg = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'algorithm', undef );
+		$default_dest_text .= "dest_domain=. ";
 		if ( defined($parent_select_alg) && $parent_select_alg eq 'consistent_hash' ) {
-			$default_dest_text .= "dest_domain=. ";
 			$default_dest_text .= $parents . $secparents;
-			$default_dest_text .= " round_robin=consistent_hash go_direct=false";
 		}
 		else {    # default to old situation.
-			$default_dest_text .= "dest_domain=. ";
 			$default_dest_text .= $parents;
-			$default_dest_text .= " round_robin=urlhash go_direct=false";
 		}
+		$default_dest_text .= " round_robin=consistent_hash go_direct=false";
 
 		my $qstring = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'qstring', undef );
 		if ( defined($qstring) ) {
