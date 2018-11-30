@@ -103,6 +103,13 @@ Advanced Usage
 ==============
 This section will be amended as functionality is added to the CDN in a Box project.
 
+The Enroller
+------------
+The "enroller" provides an efficient way for Traffic Ops to be populated with data as CDN in a Box starts up.  It connects to Traffic Ops as the admin user and processes files places in the docker volume shared between the containers.  The enroller watches each directory within the ``/shared/enroller`` directory for new ``.json`` files to be created there.  These files must follow the format outlined in the API guide for the ``POST`` method for each data type,  (e.g. for a ``tenant``, follow the guidelines for ``POST api/1.4/regions``).  Of note,  the ``enroller`` does not require fields that reference database ids for other objects within the database.
+
+The enroller runs within CDN in a Box using the ``-dir <dir>`` switch which provides the above behavior.  It can also be run using the ``-http :<port>`` switch to instead have it listen on the indicated port.  In this case, it accepts only POST requests with the JSON provided using the POST JSON method, e.g. ``curl -X POST https://enroller/api/1.4/regions -d @newregion.json``.   CDN in a Box does not currently use this method, but may be modified in the future to avoid using the shared volume approach.
+
+
 The Test Client
 ---------------
 The "testclient" service is an optional extension to CDN in a Box which provides several more user-friendly interfaces to the CDN network. Specifically it contains:

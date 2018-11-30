@@ -22,21 +22,22 @@ COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
 COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
-COPY ./infrastructure/cdn-in-a-box/enroller/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/
+COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
 
 WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller
-RUN go get -v && go build
+RUN go clean && go get -v && go build
 
-COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
-COPY ./infrastructure/cdn-in-a-box/enroller/server_template.json /
 
 
 FROM debian:stretch
 
-RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools vim && apt-get clean
+RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools && apt-get clean
 COPY --from=enroller-builder \
-   /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box \
-   /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box
+   /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/enroller \
+   /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/run.sh \
+   /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller/server_template.json \
+   /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
+   /
 
-WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller
-CMD ./run.sh
+WORKDIR /shared/enroller
+CMD /run.sh

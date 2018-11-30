@@ -18,7 +18,8 @@
 # under the License.
 ############################################################
 
-. ../traffic_ops/to-access.sh
+set -x
+. /to-access.sh
 
 export TO_URL=https://$TO_FQDN:$TO_PORT
 export TO_USER=$TO_ADMIN_USER
@@ -53,4 +54,4 @@ fi
 # clear out the enroller dir first so no files left from previous run
 rm -rf ${ENROLLER_DIR}/*
 
-./enroller "$ENROLLER_DIR" || tail -f /dev/null
+/enroller -dir "$ENROLLER_DIR" || tail -f /dev/null
