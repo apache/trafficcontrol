@@ -36,7 +36,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-const __version__ = "3.1.0"
+const __version__ = "3.1.1"
 const SHORT_HEADER = "# DO NOT EDIT"
 const LONG_HEADER = "# TRAFFIC OPS NOTE:"
 const LUA_HEADER = "-- DO NOT EDIT"
@@ -579,23 +579,18 @@ func main() {
 	}
 	wg.Wait()
 
-	var testRoutes []string
-
 	scanner := bufio.NewScanner(routesFile)
 	for scanner.Scan() {
-		testRoutes = append(testRoutes, scanner.Text())
+		wg.Add(1)
+		go func(r string) {
+			testRoute(tos, r)
+			wg.Done()
+		}(scanner.Text())
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	wg.Add(len(testRoutes))
-	for _, route := range testRoutes {
-		go func(r string) {
-			testRoute(tos, r)
-			wg.Done()
-		}(route)
-	}
 	wg.Wait()
 }
