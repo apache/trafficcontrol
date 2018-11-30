@@ -26,7 +26,6 @@ Traffic Ops API V1.2
 	federation_federationresolver
 	federation_resolver
 	federation_user
-	hwinfo
 	iso
 	job
 	parameter
