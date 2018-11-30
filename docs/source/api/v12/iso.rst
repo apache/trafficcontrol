@@ -13,122 +13,102 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v12-iso:
+.. _to-api-iso:
 
-ISO
-===
+********
+``isos``
+********
 
-.. _to-api-v12-iso-route:
+``POST``
+========
+Generates an ISO from the requested ISO source.
 
-**GET /api/1.2/osversions**
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Object - unless the ``stream`` key is present in the request payload, in which case the actual ISO content will be returned instead of a JSON response string
 
-  Get all OS versions for ISO generation and the directory where the kickstarter files are found. The values are retrieved from osversions.cfg found in either /var/www/files or in the location defined by the kickstart.files.location parameter (if defined).
+Request Structure
+-----------------
+:dhcp: A string that specifies whether the generated system image will use DHCP IP address leasing; one of:
 
-  Authentication Required: Yes
+	yes
+		DHCP will be used, and other network configuration keys need not be present in the request (and are ignored if they are)
+	no
+		DHCP will not be used, and the desired network configuration **must** be specified manually in the request body
 
-  Role(s) Required: None
+:disk:          An optional string that names the block device (under ``/dev/``) used for the boot media, e.g. "sda"
+:domainName:    The domain part of the system image's Fully Qualified Domain Name (FQDN)
+:hostName:      The host name part of the system image's FQDN
+:interfaceMtu:  A number that specifies the Maximum Transmission Unit (MTU) for the system image's network interface card - the only valid values of which I'm aware are 1500 or 9000, and this should almost always just be 1500
+:interfaceName: no       | Typical values are bond0, eth4, etc. If you enter bond0, a LACP bonding config will be written
+:ip6Address:    no       | /64 is assumed if prefix is omitted
+:ip6Gateway:    no       | Ignored if an IPV4 gateway is specified
+:ipAddress:     yes|no   | Required if dhcp=no
+:ipGateway:     yes|no   | Required if dhcp=no
+:ipNetmask:     yes|no   | Required if dhcp=no
+:osversionDir:  yes      | The directory name where the kickstarter ISO files are found
+:rootPass:      yes      |
+:stream:        no       | Valid values are 'yes' or 'no'. If yes, ISO will be streamed
 
-  **Response Properties**
+.. code-block:: http
+	:caption: Request Example
 
-  +----------------------+--------------------------------------------------------------------------+
-  | Parameter            | Description                                                              |
-  +======================+==========================================================================+
-  |``OS version name``   | OS version name. For example, "CentOS 7.2 vda".                          |
-  +----------------------+--------------------------------------------------------------------------+
-  |``OS version dir``    | The directory where the kickstarter ISO files are found. For example,    |
-  |                      | centos72-netinstall.                                                     |
-  +----------------------+--------------------------------------------------------------------------+
-
-  **Response Example** ::
-
-    {
-     "response":
-        {
-           "CentOS 7.2": "centos72-netinstall"
-           "CentOS 7.2 vda": "centos72-netinstall-vda"
-        }
-    }
-
-|
-
-**POST /api/1.2/isos**
-
-  Generate an ISO.
-
-  Authentication Required: Yes
-
-  Role(s) Required: Operations
-
-  **Request Properties**
-
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | Parameter                     | Required | Description                                                                                     |
-  +===============================+==========+=================================================================================================+
-  | ``osversionDir``              | yes      | The directory name where the kickstarter ISO files are found.                                   |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``hostName``                  | yes      |                                                                                                 |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``domainName``                | yes      |                                                                                                 |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``rootPass``                  | yes      |                                                                                                 |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``dhcp``                      | yes      | Valid values are 'yes' or 'no'. If yes, other IP settings will be ignored.                      |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``interfaceMtu``              | yes      | 1500 or 9000                                                                                    |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``ipAddress``                 | yes|no   | Required if dhcp=no                                                                             |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``ipNetmask``                 | yes|no   | Required if dhcp=no                                                                             |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``ipGateway``                 | yes|no   | Required if dhcp=no                                                                             |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``ip6Address``                | no       | /64 is assumed if prefix is omitted.                                                            |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``ip6Gateway``                | no       | Ignored if an IPV4 gateway is specified.                                                        |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``interfaceName``             | no       | Typical values are bond0, eth4, etc. If you enter bond0, a LACP bonding config will be written. |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``disk``                      | no       | Typical values are "sda"                                                                        |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-  | ``stream``                    | no       | Valid values are 'yes' or 'no'. If yes, ISO will be streamed.                                   |
-  +-------------------------------+----------+-------------------------------------------------------------------------------------------------+
-
-  **Request Example** ::
-
-    {
-        "osversionDir": "centos72-netinstall-vda",
-        "hostName": "foo-bar",
-        "domainName": "baz.com",
-        "rootPass": "password",
-        "dhcp": "no",
-        "interfaceMtu": 1500,
-        "ipAddress": "10.10.10.10",
-        "ipNetmask": "255.255.255.252",
-        "ipGateway": "10.10.10.10"
-    }
-
-|
-
-  **Response Properties**
-
-  +-----------------+--------+-------------------------------------------------------------------------------+
-  | Parameter       | Type   | Description                                                                   |
-  +=================+========+===============================================================================+
-  |``isoURL``       | string | The URL location of the ISO. ISO locations can be found in cnd.conf file.     |
-  +-----------------+--------+-------------------------------------------------------------------------------+
-
-  **Response Example** ::
+	POST /api/1.3/isos HTTP/1.1
+	Host: some.trafficops.host
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 334
+	Content-Type: application/json
 
 	{
-		"response": {
-			"isoURL": "https://traffic_ops.domain.net/iso/fqdn-centos72-netinstall.iso"
-		},
-		"alerts": [
-			{
-				"level": "success",
-				"text": "Generate ISO was successful."
-			}
-		]
+		"osversionDir": "centos72-netinstall-dev-uefi",
+		"hostName": "test",
+		"domainName": "quest",
+		"rootPass": "twelve",
+		"dhcp": "no",
+		"interfaceMtu": 1500,
+		"ipAddress": "1.3.3.7",
+		"ipNetmask": "255.255.255.255",
+		"ipGateway": "8.0.0.8",
+		"ip6Address": "1::3:3:7",
+		"ip6Gateway": "8::8",
+		"interfaceName": "eth0",
+		"disk": "hda",
+		"stream": "no"
 	}
 
-|
+Response Structure
+------------------
+Assuming the ``stream`` key isn't defined in the request payload JSON object (or it's ``"no"``), then the following keys will be present in the ``response`` object:
+
+:isoName: The name of the generated ``.iso`` file
+:isoURL:  The URL location of the ISO
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Fri, 30 Nov 2018 20:27:10 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=e...; expires=Sat, 01 Dec 2018 00:27:10 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: pdlIVEfbcEiz6+JPWpD1+RVw6j66yzM3l9Bp/4Yl9bh0Mh+aXel06WWq05XnU1szM/APWRwEYUvUHtEdobGSAQ==
+	Content-Length: 243
+
+	{ "alerts": [
+		{
+			"level": "success",
+			"text": "Generate ISO was successful."
+		}
+	],
+	"response": {
+		"isoURL": "https://some-weird-url.biz.co.uk/iso/test.quest-centos72-netinstall-dev-uefi.iso",
+		"isoName": "test.quest-centos72-netinstall-dev-uefi.iso"
+	}}
