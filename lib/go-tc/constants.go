@@ -42,7 +42,7 @@ const (
 	ErrorLevel
 )
 
-var alertLevels = [4]string{"success", "info", "warn", "error"}
+var alertLevels = [4]string{"success", "info", "warning", "error"}
 
 func (a AlertLevel) String() string {
 	return alertLevels[a]
