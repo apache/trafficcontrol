@@ -1,446 +1,439 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
-.. _to-api-v12-federation:
+.. _to-api-federations:
 
-Federation 
-==========
+***************
+``federations``
+***************
 
-.. _to-api-v12-federation-route:
+``GET``
+=======
+Retrieves a list of federation mappings (aka federation resolvers) for the current user.
 
-/api/1.2/federations
-++++++++++++++++++++
+:Auth. Required: Yes
+:Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Response Type:  Array
 
-**GET /api/1.2/federations.json**
+Request Structure
+-----------------
+No parameters available.
 
-  Retrieves a list of federation mappings (aka federation resolvers) for a the current user.
+Response Structure
+------------------
+:cname:
+:ttl:             Time to live for the cname
+:deliveryService: The ``xml_id`` that uniquely identifies the Delivery Service that uses the federation mappings in ``mappings``
 
-  Authentication Required: Yes
+.. code-block:: json
+	:caption: Response Example
 
-  Role(s) Required: Federation
+	{ "response": [{
+		"mappings": [
+			"cname": "cname-01.",
+			"ttl": 8865,
+		],
+		"deliveryService": "ds-01",
+	}]}
 
-  **Response Properties**
+``POST``
+========
+Allows a user to add federations for their Delivery Service(s).
 
-  +---------------------+--------+----------------------------------------------------+
-  |    Parameter        |  Type  |                   Description                      |
-  +=====================+========+====================================================+
-  | ``cname``           | string |                                                    |
-  +---------------------+--------+----------------------------------------------------+
-  | ``ttl``             |  int   | Time to live for the cname.                        |
-  +---------------------+--------+----------------------------------------------------+
-  | ``deliveryService`` | string | Unique string that describes the deliveryservice.  |
-  +---------------------+--------+----------------------------------------------------+
+:Auth. Required: Yes
+:Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Response Type:
 
-  **Response Example** ::
+	**Request Properties**
 
-    {
-     "response": [
-        {
-          "mappings": [
-            "cname": "cname-01.",
-            "ttl": 8865,
-          ]
-          "deliveryService": "ds-01",
-        }
-      ]
-    }
+	+---------------------+--------+----------------------------------------------------+
+	|    Parameter        |  Type  |                   Description                      |
+	+=====================+========+====================================================+
+	| ``deliveryService`` | string | Unique string that describes the deliveryservice.  |
+	+---------------------+--------+----------------------------------------------------+
+	| ``resolve4``        | array  | Array of IPv4 Addresses.                           |
+	+---------------------+--------+----------------------------------------------------+
+	| ``resolve6``        | array  | Array of IPv6 Addresses.                           |
+	+---------------------+--------+----------------------------------------------------+
 
-|
+.. code-block::http
+	:caption: Request Example
 
-**POST /api/1.2/federations.json**
+	POST /api/1.1/federations HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 75
+	Content-Type: application/json
 
-  Allows a user to add federations for their delivery service(s).
+	{
+		"deliveryService": "demo1",
+		"resolve4": ["0.0.0.0."],
+		"resolve6": ["::"]
+	}
 
-  Authentication Required: Yes
 
-  Role(s) Required: Federation
+.. code-block:: http
+	:caption: Response Example
 
-  **Request Properties**
+	HTTP/1.1 404 NOT FOUND
 
-  +---------------------+--------+----------------------------------------------------+
-  |    Parameter        |  Type  |                   Description                      |
-  +=====================+========+====================================================+
-  | ``deliveryService`` | string | Unique string that describes the deliveryservice.  |
-  +---------------------+--------+----------------------------------------------------+
-  | ``resolve4``        | array  | Array of IPv4 Addresses.                           |
-  +---------------------+--------+----------------------------------------------------+
-  | ``resolve6``        | array  | Array of IPv6 Addresses.                           |
-  +---------------------+--------+----------------------------------------------------+
-
-  **Request Example** ::
-
-    {
-      "federations": [
-        {
-          "deliveryService": "ccp-omg-01",
-          "mappings": {
-            "resolve4": [
-              "255.255.255.255"
-            ],
-            "resolve6": [
-              "FE80::0202:B3FF:FE1E:8329",
-            ]
-          }
-        }
-      ]
-    }
-
-|
 
 **DELETE /api/1.2/federations.json**
 
-  Deletes **all** federations associated with a user's delivery service(s).
+	Deletes **all** federations associated with a user's delivery service(s).
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: Federation
+	Role(s) Required: Federation
 
 |
 
 
 **PUT /api/1.2/federations.json**
 
-  Deletes **all** federations associated with a user's delivery service(s) then adds the new federations.
+	Deletes **all** federations associated with a user's delivery service(s) then adds the new federations.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: Federation
+	Role(s) Required: Federation
 
-  **Request Properties**
+	**Request Properties**
 
-  +---------------------+--------+----------------------------------------------------+
-  |    Parameter        |  Type  |                   Description                      |
-  +=====================+========+====================================================+
-  | ``deliveryService`` | string | Unique string that describes the deliveryservice.  |
-  +---------------------+--------+----------------------------------------------------+
-  | ``resolve4``        | array  | Array of IPv4 Addresses.                           |
-  +---------------------+--------+----------------------------------------------------+
-  | ``resolve6``        | array  | Array of IPv6 Addresses.                           |
-  +---------------------+--------+----------------------------------------------------+
+	+---------------------+--------+----------------------------------------------------+
+	|    Parameter        |  Type  |                   Description                      |
+	+=====================+========+====================================================+
+	| ``deliveryService`` | string | Unique string that describes the deliveryservice.  |
+	+---------------------+--------+----------------------------------------------------+
+	| ``resolve4``        | array  | Array of IPv4 Addresses.                           |
+	+---------------------+--------+----------------------------------------------------+
+	| ``resolve6``        | array  | Array of IPv6 Addresses.                           |
+	+---------------------+--------+----------------------------------------------------+
 
-  **Request Example** ::
+	**Request Example** ::
 
-    {
-      "federations": [
-        {
-          "deliveryService": "ccp-omg-01",
-          "mappings": {
-            "resolve4": [
-              "255.255.255.255"
-            ],
-            "resolve6": [
-              "FE80::0202:B3FF:FE1E:8329",
-            ]
-          }
-        }
-      ]
-    }
+		{
+			"federations": [
+				{
+					"deliveryService": "ccp-omg-01",
+					"mappings": {
+						"resolve4": [
+							"255.255.255.255"
+						],
+						"resolve6": [
+							"FE80::0202:B3FF:FE1E:8329",
+						]
+					}
+				}
+			]
+		}
 
 |
 
 **GET /api/1.2/cdns/:name/federations**
 
-  Retrieves a list of federations for a cdn.
+	Retrieves a list of federations for a cdn.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Response Properties**
+	**Response Properties**
 
-  +---------------------+--------+----------------------------------------------------+
-  |    Parameter        |  Type  |                   Description                      |
-  +=====================+========+====================================================+
-  | ``cname``           | string |                                                    |
-  +---------------------+--------+----------------------------------------------------+
-  | ``ttl``             |  int   | Time to live for the cname.                        |
-  +---------------------+--------+----------------------------------------------------+
-  | ``deliveryService`` |  hash  |                                                    |
-  +---------------------+--------+----------------------------------------------------+
-  | ``>>id``            |  int   | Delivery service ID                                |
-  +---------------------+--------+----------------------------------------------------+
-  | ``>>xmlId``         | string | Delivery service xml id                            |
-  +---------------------+--------+----------------------------------------------------+
-  | ``lastUpdated``     | string |                                                    | 
-  +---------------------+--------+----------------------------------------------------+
+	+---------------------+--------+----------------------------------------------------+
+	|    Parameter        |  Type  |                   Description                      |
+	+=====================+========+====================================================+
+	| ``cname``           | string |                                                    |
+	+---------------------+--------+----------------------------------------------------+
+	| ``ttl``             |  int   | Time to live for the cname.                        |
+	+---------------------+--------+----------------------------------------------------+
+	| ``deliveryService`` |  hash  |                                                    |
+	+---------------------+--------+----------------------------------------------------+
+	| ``>>id``            |  int   | Delivery service ID                                |
+	+---------------------+--------+----------------------------------------------------+
+	| ``>>xmlId``         | string | Delivery service xml id                            |
+	+---------------------+--------+----------------------------------------------------+
+	| ``lastUpdated``     | string |                                                    |
+	+---------------------+--------+----------------------------------------------------+
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-     "response": [
-        {
-            "id": 41
-            "cname": "booya.com.",
-            "ttl": 34,
-            "description": "fooya",
-            "deliveryService": {
-                "id": 61,
-                "xmlId": "the-xml-id"
-            },
-            "lastUpdated": "2018-08-01 14:41:48+00"
-        }
-      ]
-    }
+		{
+		 "response": [
+				{
+						"id": 41
+						"cname": "booya.com.",
+						"ttl": 34,
+						"description": "fooya",
+						"deliveryService": {
+								"id": 61,
+								"xmlId": "the-xml-id"
+						},
+						"lastUpdated": "2018-08-01 14:41:48+00"
+				}
+			]
+		}
 
 |
 
 **GET /api/1.2/cdns/:name/federations/:id**
 
-  Retrieves a federation for a cdn.
+	Retrieves a federation for a cdn.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: None
+	Role(s) Required: None
 
-  **Request Route Parameters**
+	**Request Route Parameters**
 
-  +-------------------+----------+------------------------------------------------+
-  | Name              |   Type   |                 Description                    |
-  +===================+==========+================================================+
-  | ``cdn``           | string   | CDN name.                                      |
-  +-------------------+----------+------------------------------------------------+
-  | ``federation``    | string   | Federation ID.                                 |
-  +-------------------+----------+------------------------------------------------+
+	+-------------------+----------+------------------------------------------------+
+	| Name              |   Type   |                 Description                    |
+	+===================+==========+================================================+
+	| ``cdn``           | string   | CDN name.                                      |
+	+-------------------+----------+------------------------------------------------+
+	| ``federation``    | string   | Federation ID.                                 |
+	+-------------------+----------+------------------------------------------------+
 
-  **Response Properties**
+	**Response Properties**
 
-  +---------------------+--------+----------------------------------------------------+
-  |    Parameter        |  Type  |                   Description                      |
-  +=====================+========+====================================================+
-  | ``cname``           | string |                                                    |
-  +---------------------+--------+----------------------------------------------------+
-  | ``ttl``             |  int   | Time to live for the cname.                        |
-  +---------------------+--------+----------------------------------------------------+
-  | ``deliveryService`` |  hash  |                                                    |
-  +---------------------+--------+----------------------------------------------------+
-  | ``>>id``            |  int   | Delivery service ID                                |
-  +---------------------+--------+----------------------------------------------------+
-  | ``>>xmlId``         | string | Delivery service xml id                            |
-  +---------------------+--------+----------------------------------------------------+
-  | ``lastUpdated``     | string |                                                    | 
-  +---------------------+--------+----------------------------------------------------+
+	+---------------------+--------+----------------------------------------------------+
+	|    Parameter        |  Type  |                   Description                      |
+	+=====================+========+====================================================+
+	| ``cname``           | string |                                                    |
+	+---------------------+--------+----------------------------------------------------+
+	| ``ttl``             |  int   | Time to live for the cname.                        |
+	+---------------------+--------+----------------------------------------------------+
+	| ``deliveryService`` |  hash  |                                                    |
+	+---------------------+--------+----------------------------------------------------+
+	| ``>>id``            |  int   | Delivery service ID                                |
+	+---------------------+--------+----------------------------------------------------+
+	| ``>>xmlId``         | string | Delivery service xml id                            |
+	+---------------------+--------+----------------------------------------------------+
+	| ``lastUpdated``     | string |                                                    |
+	+---------------------+--------+----------------------------------------------------+
 
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-     "response": [
-        {
-            "id": 41
-            "cname": "booya.com.",
-            "ttl": 34,
-            "description": "fooya",
-            "deliveryService": {
-                "id": 61,
-                "xmlId": "the-xml-id"
-            },
-            "lastUpdated": "2018-08-01 14:41:48+00"
-        }
-      ]
-    }
+		{
+		 "response": [
+				{
+						"id": 41
+						"cname": "booya.com.",
+						"ttl": 34,
+						"description": "fooya",
+						"deliveryService": {
+								"id": 61,
+								"xmlId": "the-xml-id"
+						},
+						"lastUpdated": "2018-08-01 14:41:48+00"
+				}
+			]
+		}
 
 |
 
 **POST /api/1.2/cdns/:name/federations**
-  Create a federation
+	Create a federation
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: Admin
+	Role(s) Required: Admin
 
-  **Request Route Parameters**
+	**Request Route Parameters**
 
-  +-------------------+----------+------------------------------------------------+
-  | Name              |   Type   |                 Description                    |
-  +===================+==========+================================================+
-  | ``cdn``           | string   | CDN name.                                      |
-  +-------------------+----------+------------------------------------------------+
+	+-------------------+----------+------------------------------------------------+
+	| Name              |   Type   |                 Description                    |
+	+===================+==========+================================================+
+	| ``cdn``           | string   | CDN name.                                      |
+	+-------------------+----------+------------------------------------------------+
 
-  **Request Properties**
+	**Request Properties**
 
-  +----------------------+----------+--------------------------+
-  | Parameter            | Required | Description              |
-  +======================+==========+==========================+
-  | ``cname``            | yes      | CNAME ending with a dot  |
-  +----------------------+----------+--------------------------+
-  | ``ttl``              | yes      | TTL                      |
-  +----------------------+----------+--------------------------+
-  | ``description``      | no       | Description              |
-  +----------------------+----------+--------------------------+
+	+----------------------+----------+--------------------------+
+	| Parameter            | Required | Description              |
+	+======================+==========+==========================+
+	| ``cname``            | yes      | CNAME ending with a dot  |
+	+----------------------+----------+--------------------------+
+	| ``ttl``              | yes      | TTL                      |
+	+----------------------+----------+--------------------------+
+	| ``description``      | no       | Description              |
+	+----------------------+----------+--------------------------+
 
-  **Request Example** ::
+	**Request Example** ::
 
-    {
-        "cname": "the.cname.com.",
-        "ttl": 48,
-        "description": "the description"
-    }
+		{
+				"cname": "the.cname.com.",
+				"ttl": 48,
+				"description": "the description"
+		}
 
 |
 
-  **Response Properties**
+	**Response Properties**
 
-  +----------------------+--------+------------------------------------------------+
-  | Parameter            | Type   | Description                                    |
-  +======================+========+================================================+
-  | ``cname``            | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  | ``ttl``              | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  | ``description``      | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  | ``lastUpdated``      | string |                                                |
-  +----------------------+--------+------------------------------------------------+
+	+----------------------+--------+------------------------------------------------+
+	| Parameter            | Type   | Description                                    |
+	+======================+========+================================================+
+	| ``cname``            | string |                                                |
+	+----------------------+--------+------------------------------------------------+
+	| ``ttl``              | string |                                                |
+	+----------------------+--------+------------------------------------------------+
+	| ``description``      | string |                                                |
+	+----------------------+--------+------------------------------------------------+
+	| ``lastUpdated``      | string |                                                |
+	+----------------------+--------+------------------------------------------------+
 
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-        "alerts": [
-            {
-                "level": "success",
-                "text": "Federation created [ cname = the.cname. ] with id: 26."
-            }
-        ],
-        "response": {
-            "id": 26,
-            "cname": "the.cname.com.",
-            "ttl": 48,
-            "description": "the description",
-            "lastUpdated": "2018-08-01 14:41:48+00"
-        }
-    }
+		{
+				"alerts": [
+						{
+								"level": "success",
+								"text": "Federation created [ cname = the.cname. ] with id: 26."
+						}
+				],
+				"response": {
+						"id": 26,
+						"cname": "the.cname.com.",
+						"ttl": 48,
+						"description": "the description",
+						"lastUpdated": "2018-08-01 14:41:48+00"
+				}
+		}
 
 |
 
 **PUT /api/1.2/cdns/:name/federations/:id**
-  Update a federation
+	Update a federation
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: Admin
+	Role(s) Required: Admin
 
-  **Request Route Parameters**
+	**Request Route Parameters**
 
-  +-------------------+----------+------------------------------------------------+
-  | Name              |   Type   |                 Description                    |
-  +===================+==========+================================================+
-  | ``cdn``           | string   | CDN name.                                      |
-  +-------------------+----------+------------------------------------------------+
-  | ``federation``    | string   | Federation ID.                                 |
-  +-------------------+----------+------------------------------------------------+
+	+-------------------+----------+------------------------------------------------+
+	| Name              |   Type   |                 Description                    |
+	+===================+==========+================================================+
+	| ``cdn``           | string   | CDN name.                                      |
+	+-------------------+----------+------------------------------------------------+
+	| ``federation``    | string   | Federation ID.                                 |
+	+-------------------+----------+------------------------------------------------+
 
-  **Request Properties**
+	**Request Properties**
 
-  +----------------------+----------+--------------------------+
-  | Parameter            | Required | Description              |
-  +======================+==========+==========================+
-  | ``cname``            | yes      | CNAME ending with a dot  |
-  +----------------------+----------+--------------------------+
-  | ``ttl``              | yes      | TTL                      |
-  +----------------------+----------+--------------------------+
-  | ``description``      | no       | Description              |
-  +----------------------+----------+--------------------------+
+	+----------------------+----------+--------------------------+
+	| Parameter            | Required | Description              |
+	+======================+==========+==========================+
+	| ``cname``            | yes      | CNAME ending with a dot  |
+	+----------------------+----------+--------------------------+
+	| ``ttl``              | yes      | TTL                      |
+	+----------------------+----------+--------------------------+
+	| ``description``      | no       | Description              |
+	+----------------------+----------+--------------------------+
 
-  **Request Example** ::
+	**Request Example** ::
 
-    {
-        "cname": "the.cname.com.",
-        "ttl": 48,
-        "description": "the description"
-    }
+		{
+				"cname": "the.cname.com.",
+				"ttl": 48,
+				"description": "the description"
+		}
 
 |
 
-  **Response Properties**
+	**Response Properties**
 
-  +----------------------+--------+------------------------------------------------+
-  | Parameter            | Type   | Description                                    |
-  +======================+========+================================================+
-  | ``cname``            | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  | ``ttl``              | string |                                                |
-  +----------------------+--------+------------------------------------------------+
-  | ``description``      | string |                                                |
-  +----------------------+--------+------------------------------------------------+ 
-  | ``lastUpdated``      | string |                                                |
-  +----------------------+--------+------------------------------------------------+
+	+----------------------+--------+------------------------------------------------+
+	| Parameter            | Type   | Description                                    |
+	+======================+========+================================================+
+	| ``cname``            | string |                                                |
+	+----------------------+--------+------------------------------------------------+
+	| ``ttl``              | string |                                                |
+	+----------------------+--------+------------------------------------------------+
+	| ``description``      | string |                                                |
+	+----------------------+--------+------------------------------------------------+
+	| ``lastUpdated``      | string |                                                |
+	+----------------------+--------+------------------------------------------------+
 
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-        "alerts": [
-            {
-                "level": "success",
-                "text": "Federation updated [ cname = the.cname. ] with id: 26."
-            }
-        ],
-        "response": {
-            "id": 26,
-            "cname": "the.cname.com.",
-            "ttl": 48,
-            "description": "the description",
-            "lastUpdated": "2018-08-01 14:41:48+00"
-        }
-    }
+		{
+				"alerts": [
+						{
+								"level": "success",
+								"text": "Federation updated [ cname = the.cname. ] with id: 26."
+						}
+				],
+				"response": {
+						"id": 26,
+						"cname": "the.cname.com.",
+						"ttl": 48,
+						"description": "the description",
+						"lastUpdated": "2018-08-01 14:41:48+00"
+				}
+		}
 
 |
 
 **DELETE /api/1.2/cdns/:name/federations/{:id}**
 
-  Allow user to delete a federation.
+	Allow user to delete a federation.
 
-  Authentication Required: Yes
+	Authentication Required: Yes
 
-  Role(s) Required: Admin
+	Role(s) Required: Admin
 
-  **Request Route Parameters**
+	**Request Route Parameters**
 
-  +-------------------+----------+------------------------------------------------+
-  | Name              |   Type   |                 Description                    |
-  +===================+==========+================================================+
-  | ``cdn``           | string   | CDN name.                                      |
-  +-------------------+----------+------------------------------------------------+
-  | ``federation``    | string   | Federation ID.                                 |
-  +-------------------+----------+------------------------------------------------+
+	+-------------------+----------+------------------------------------------------+
+	| Name              |   Type   |                 Description                    |
+	+===================+==========+================================================+
+	| ``cdn``           | string   | CDN name.                                      |
+	+-------------------+----------+------------------------------------------------+
+	| ``federation``    | string   | Federation ID.                                 |
+	+-------------------+----------+------------------------------------------------+
 
-  **Response Properties**
+	**Response Properties**
 
-  +-------------+--------+----------------------------------+
-  |  Parameter  |  Type  |           Description            |
-  +=============+========+==================================+
-  | ``alerts``  | array  | A collection of alert messages.  |
-  +-------------+--------+----------------------------------+
-  | ``>level``  | string | Success, info, warning or error. |
-  +-------------+--------+----------------------------------+
-  | ``>text``   | string | Alert message.                   |
-  +-------------+--------+----------------------------------+
-  | ``version`` | string |                                  |
-  +-------------+--------+----------------------------------+
+	+-------------+--------+----------------------------------+
+	|  Parameter  |  Type  |           Description            |
+	+=============+========+==================================+
+	| ``alerts``  | array  | A collection of alert messages.  |
+	+-------------+--------+----------------------------------+
+	| ``>level``  | string | Success, info, warning or error. |
+	+-------------+--------+----------------------------------+
+	| ``>text``   | string | Alert message.                   |
+	+-------------+--------+----------------------------------+
+	| ``version`` | string |                                  |
+	+-------------+--------+----------------------------------+
 
-  **Response Example** ::
+	**Response Example** ::
 
-    {
-          "alerts": [
-                    {
-                            "level": "success",
-                            "text": "Federation deleted [ cname = the.cname. ] with id: 26."
-                    }
-            ],
-    }
+		{
+					"alerts": [
+										{
+														"level": "success",
+														"text": "Federation deleted [ cname = the.cname. ] with id: 26."
+										}
+						],
+		}
 
 |
 
