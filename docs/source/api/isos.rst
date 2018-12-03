@@ -40,15 +40,23 @@ Request Structure
 :domainName:    The domain part of the system image's Fully Qualified Domain Name (FQDN)
 :hostName:      The host name part of the system image's FQDN
 :interfaceMtu:  A number that specifies the Maximum Transmission Unit (MTU) for the system image's network interface card - the only valid values of which I'm aware are 1500 or 9000, and this should almost always just be 1500
-:interfaceName: no       | Typical values are bond0, eth4, etc. If you enter bond0, a LACP bonding config will be written
-:ip6Address:    no       | /64 is assumed if prefix is omitted
-:ip6Gateway:    no       | Ignored if an IPV4 gateway is specified
-:ipAddress:     yes|no   | Required if dhcp=no
-:ipGateway:     yes|no   | Required if dhcp=no
-:ipNetmask:     yes|no   | Required if dhcp=no
-:osversionDir:  yes      | The directory name where the kickstarter ISO files are found
-:rootPass:      yes      |
-:stream:        no       | Valid values are 'yes' or 'no'. If yes, ISO will be streamed
+:interfaceName: An optional string naming the network interface to be used by the generated system image e.g. "bond0", "eth0", etc. If the special name "bond0" is used, a Link Aggregation Control Protocol (LACP) binding configuration will be created and included in the system image
+
+	.. seealso:: `The Link Aggregation Wikipedia page <https://en.wikipedia.org/wiki/Link_aggregation>`_\ .
+
+:ip6Address:   An optional string containing the IPv6 address of the generated system image
+:ip6Gateway:   An optional string specifying the IPv6 address of the generated system image's network gateway - this will be ignored if ``ipGateway`` is specified
+:ipAddress:    An optional\ [1]_ string containing the IP address of the generated system image
+:ipGateway:    An optional\ [1]_ string specifying the IP address of the generated system image's network gateway
+:ipNetmask:    An optional\ [1]_ string specifying the subnet mask of the generated system image
+:osversionDir: The name of the directory containing the ISO source
+
+	.. seealso:: :ref:`to-api-osversions`
+
+:rootPass: The password used by the generated system image's ``root`` user
+:stream:   An optional string that must be 'yes' or 'no' (Default: no) - if it is given and is 'yes', the response payload will be the content of the ISO rather than the normal JSON response
+
+	.. note:: This is called 'stream' because it is implemented by writing the results of the ISO compression process directly into the TCP streaming socket after sending the necessary HTTP headers. As a result, this is much faster and more space-efficient than `"stream": "no"` (which will first write the entire ISO to disk, then return a URL that can be used to download it) and so it is recommended in most cases that this be "yes".
 
 .. code-block:: http
 	:caption: Request Example
@@ -62,7 +70,7 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"osversionDir": "centos72-netinstall-dev-uefi",
+		"osversionDir": "centos72",
 		"hostName": "test",
 		"domainName": "quest",
 		"rootPass": "twelve",
@@ -77,6 +85,8 @@ Request Structure
 		"disk": "hda",
 		"stream": "no"
 	}
+
+.. [1] This optional key is required if and only if ``dhcp`` is "no".
 
 Response Structure
 ------------------
@@ -109,6 +119,6 @@ Assuming the ``stream`` key isn't defined in the request payload JSON object (or
 		}
 	],
 	"response": {
-		"isoURL": "https://some-weird-url.biz.co.uk/iso/test.quest-centos72-netinstall-dev-uefi.iso",
-		"isoName": "test.quest-centos72-netinstall-dev-uefi.iso"
+		"isoURL": "https://some-weird-url.biz.co.uk/iso/test.quest-centos72.iso",
+		"isoName": "test.quest-centos72.iso"
 	}}

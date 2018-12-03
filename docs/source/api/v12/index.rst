@@ -26,7 +26,6 @@ Traffic Ops API V1.2
 	federation_federationresolver
 	federation_resolver
 	federation_user
-	iso
 	job
 	parameter
 	phys_location
