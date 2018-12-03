@@ -13,124 +13,129 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v12-job:
+.. _to-api-jobs:
 
-Jobs
-====
+********
+``jobs``
+********
 
-.. _to-api-v12-job-route:
+``GET``
+=======
+Get all jobs (currently limited to invalidate content (PURGE) jobs) sorted by start time (descending).
 
-/api/1.2/jobs
-++++++++++++++++++
+:Auth. Required: Yes
+:Roles Required: "operations" or "admin"\ [1]_
 
-**GET /api/1.2/jobs**
+Request Structure
+-----------------
+.. table:: Request Query Parameters
 
-  Get all jobs (currently limited to invalidate content (PURGE) jobs) sorted by start time (descending).
+	+--------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name   | Required | Description                                                                                                  |
+	+========+==========+==============================================================================================================+
+	| dsId   | no       | Return only invalidation jobs pending on the Delivery Service identified by this integral, unique identifier |
+	+--------+----------+--------------------------------------------------------------------------------------------------------------+
+	| userId | no       | Return only invalidation jobs created by the user identified by this integral, unique identifier             |
+	+--------+----------+--------------------------------------------------------------------------------------------------------------+
 
-  Authentication Required: Yes
+.. note:: If the ``dsId`` parameter is given, an error will be returned if the thereby identified Delivery Service is not visible to the logged-in user's Tenant
 
-  Role(s) Required: Operations or Admin
+Response Structure
+------------------
++----------------------+--------+-------------------------------------------------+
+| Parameter            | Type   | Description                                     |
++======================+========+=================================================+
+|``id``                |  int   | Job id                                          |
++----------------------+--------+-------------------------------------------------+
+|``assetUrl``          | string | URL of the asset to invalidate.                 |
++----------------------+--------+-------------------------------------------------+
+|``deliveryService``   | string | Unique identifier of the job's DS.              |
++----------------------+--------+-------------------------------------------------+
+|``keyword``           | string | Job keyword (PURGE)                             |
++----------------------+--------+-------------------------------------------------+
+|``parameters``        | string | Parameters associated with the job.             |
++----------------------+--------+-------------------------------------------------+
+|``startTime``         | string | Start time of the job.                          |
++----------------------+--------+-------------------------------------------------+
+|``createdBy``         | string | Username that initiated the job.                |
++----------------------+--------+-------------------------------------------------+
 
-  **Request Query Parameters**
+**Response Example** ::
 
-  +-----------------+----------+---------------------------------------------------+
-  | Name            | Required | Description                                       |
-  +=================+==========+===================================================+
-  | ``dsId``        | no       | Filter jobs by Delivery Service ID.               |
-  +-----------------+----------+---------------------------------------------------+
-  | ``userId``      | no       | Filter jobs by User ID.                           |
-  +-----------------+----------+---------------------------------------------------+
+	{
+	 "response": [
+			{
+				 "id": 1
+				 "assetUrl": "http:\/\/foo-bar.domain.net\/taco.html",
+				 "deliveryService": "foo-bar",
+				 "keyword": "PURGE",
+				 "parameters": "TTL:48h",
+				 "startTime": "2015-05-14 08:56:36-06",
+				 "createdBy": "jdog24"
+			},
+			{
+				 "id": 2
+				 "assetUrl": "http:\/\/foo-bar.domain.net\/bell.html",
+				 "deliveryService": "foo-bar",
+				 "keyword": "PURGE",
+				 "parameters": "TTL:72h",
+				 "startTime": "2015-05-16 08:56:36-06",
+				 "createdBy": "jdog24"
+			}
+	 ]
+	}
 
-  **Response Properties**
+.. [1] Only jobs running on Delivery Services that the logged-in user's Tenant has permissions to see will be returned - regardless of role.
 
-  +----------------------+--------+-------------------------------------------------+
-  | Parameter            | Type   | Description                                     |
-  +======================+========+=================================================+
-  |``id``                |  int   | Job id                                          |
-  +----------------------+--------+-------------------------------------------------+
-  |``assetUrl``          | string | URL of the asset to invalidate.                 |
-  +----------------------+--------+-------------------------------------------------+
-  |``deliveryService``   | string | Unique identifier of the job's DS.              |
-  +----------------------+--------+-------------------------------------------------+
-  |``keyword``           | string | Job keyword (PURGE)                             |
-  +----------------------+--------+-------------------------------------------------+
-  |``parameters``        | string | Parameters associated with the job.             |
-  +----------------------+--------+-------------------------------------------------+
-  |``startTime``         | string | Start time of the job.                          |
-  +----------------------+--------+-------------------------------------------------+
-  |``createdBy``         | string | Username that initiated the job.                |
-  +----------------------+--------+-------------------------------------------------+
+``POST``
+========
+Creates a new content invalidation job
 
-  **Response Example** ::
-
-    {
-     "response": [
-        {
-           "id": 1
-           "assetUrl": "http:\/\/foo-bar.domain.net\/taco.html",
-           "deliveryService": "foo-bar",
-           "keyword": "PURGE",
-           "parameters": "TTL:48h",
-           "startTime": "2015-05-14 08:56:36-06",
-           "createdBy": "jdog24"
-        },
-        {
-           "id": 2
-           "assetUrl": "http:\/\/foo-bar.domain.net\/bell.html",
-           "deliveryService": "foo-bar",
-           "keyword": "PURGE",
-           "parameters": "TTL:72h",
-           "startTime": "2015-05-16 08:56:36-06",
-           "createdBy": "jdog24"
-        }
-     ]
-    }
-
-|
-
+:Auth. Required: Yes
+:Roles Required:
 
 **GET /api/1.2/jobs/:id**
 
-  Get a job by ID (currently limited to invalidate content (PURGE) jobs).
+Get a job by ID (currently limited to invalidate content (PURGE) jobs).
 
-  Authentication Required: Yes
+Authentication Required: Yes
 
-  Role(s) Required: Operations or Admin
+Role(s) Required: Operations or Admin
 
-  **Response Properties**
+**Response Properties**
 
-  +----------------------+--------+-------------------------------------------------+
-  | Parameter            | Type   | Description                                     |
-  +======================+========+=================================================+
-  |``id``                |  int   | Job id                                          |
-  +----------------------+--------+-------------------------------------------------+
-  |``assetUrl``          | string | URL of the asset to invalidate.                 |
-  +----------------------+--------+-------------------------------------------------+
-  |``deliveryService``   | string | Unique identifier of the job's DS.              |
-  +----------------------+--------+-------------------------------------------------+
-  |``keyword``           | string | Job keyword (PURGE)                             |
-  +----------------------+--------+-------------------------------------------------+
-  |``parameters``        | string | Parameters associated with the job.             |
-  +----------------------+--------+-------------------------------------------------+
-  |``startTime``         | string | Start time of the job.                          |
-  +----------------------+--------+-------------------------------------------------+
-  |``createdBy``         | string | Username that initiated the job.                |
-  +----------------------+--------+-------------------------------------------------+
++----------------------+--------+-------------------------------------------------+
+| Parameter            | Type   | Description                                     |
++======================+========+=================================================+
+|``id``                |  int   | Job id                                          |
++----------------------+--------+-------------------------------------------------+
+|``assetUrl``          | string | URL of the asset to invalidate.                 |
++----------------------+--------+-------------------------------------------------+
+|``deliveryService``   | string | Unique identifier of the job's DS.              |
++----------------------+--------+-------------------------------------------------+
+|``keyword``           | string | Job keyword (PURGE)                             |
++----------------------+--------+-------------------------------------------------+
+|``parameters``        | string | Parameters associated with the job.             |
++----------------------+--------+-------------------------------------------------+
+|``startTime``         | string | Start time of the job.                          |
++----------------------+--------+-------------------------------------------------+
+|``createdBy``         | string | Username that initiated the job.                |
++----------------------+--------+-------------------------------------------------+
 
-  **Response Example** ::
+**Response Example** ::
 
-    {
-     "response": [
-        {
-           "id": 1
-           "assetUrl": "http:\/\/foo-bar.domain.net\/taco.html",
-           "deliveryService": "foo-bar",
-           "keyword": "PURGE",
-           "parameters": "TTL:48h",
-           "startTime": "2015-05-14 08:56:36-06",
-           "createdBy": "jdog24"
-        }
-     ]
-    }
+	{
+	 "response": [
+			{
+				 "id": 1
+				 "assetUrl": "http:\/\/foo-bar.domain.net\/taco.html",
+				 "deliveryService": "foo-bar",
+				 "keyword": "PURGE",
+				 "parameters": "TTL:48h",
+				 "startTime": "2015-05-14 08:56:36-06",
+				 "createdBy": "jdog24"
+			}
+	 ]
+	}
 
 |

@@ -33,40 +33,69 @@ No parameters available.
 
 Response Structure
 ------------------
-:cname:
-:ttl:             Time to live for the cname
 :deliveryService: The ``xml_id`` that uniquely identifies the Delivery Service that uses the federation mappings in ``mappings``
+:mappings:        An array of objects that represent the mapping of a federation's Canonical Name (CNAME) to one or more resolvers
 
-.. code-block:: json
+	:cname:    The actual CNAME used by the federation
+	:resolve4: An array of IPv4 addresses capable of resolving the federation's CNAME
+	:resolve6: An array of IPv6 addresses capable of resolving the federation's CNAME
+	:ttl:      The Time To Live (TTL) of the CNAME in hours
+
+.. code-block:: http
 	:caption: Response Example
 
-	{ "response": [{
-		"mappings": [
-			"cname": "cname-01.",
-			"ttl": 8865,
-		],
-		"deliveryService": "ds-01",
-	}]}
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: d6Llm5qNc2sfgVH9IimW7hA4wvtBUq6EzUmpJf805kB0k6v2WysNgFEWK4hBXNdAYkr8hYuKPrwDy3tCx0OZ8Q==
+	X-Server-Name: traffic_ops_golang/
+	Date: Mon, 03 Dec 2018 17:19:13 GMT
+	Content-Length: 136
+
+	{ "response": [
+		{
+			"mappings": [
+				{
+					"ttl": 300,
+					"cname": "blah.blah.",
+					"resolve4": [
+						"0.0.0.0/32"
+					],
+					"resolve6": [
+						"::/128"
+					]
+				}
+			],
+			"deliveryService": "demo1"
+		}
+	]}
+
 
 ``POST``
 ========
-Allows a user to add federations for their Delivery Service(s).
+Allows a user to create federation resolvers for Delivery Services, providing the Delivery Service is within a CDN that has some associated federation.
+
+.. seealso:: Confusingly, this endpoint does **not** create a new federation; to do that, the :ref:`to-api-cdns_name_federations` endpoint must be used. Furthermore, the federation must properly be assigned to a Delivery Service using the :ref:`to-api-federations-id-deliveryservices` and assigned to the user creating resolvers using :ref:`to-api-federations-id-users`.
+
+.. seealso:: The :ref:`to-api-federations-id-federation_resolvers` endpoint duplicates this functionality.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
-:Response Type:
+:Response Type:  Object (string)
 
-	**Request Properties**
+Request Structure
+-----------------
+:federations: The top-level key that must exist - an array of objects that each describe a set of resolvers for a Delivery Service's federation
 
-	+---------------------+--------+----------------------------------------------------+
-	|    Parameter        |  Type  |                   Description                      |
-	+=====================+========+====================================================+
-	| ``deliveryService`` | string | Unique string that describes the deliveryservice.  |
-	+---------------------+--------+----------------------------------------------------+
-	| ``resolve4``        | array  | Array of IPv4 Addresses.                           |
-	+---------------------+--------+----------------------------------------------------+
-	| ``resolve6``        | array  | Array of IPv6 Addresses.                           |
-	+---------------------+--------+----------------------------------------------------+
+	:deliveryService: The 'xml_id' of the Delivery Service which will use the federation resolvers specified in ``mappings``
+	:mappings:        An object containing two arrays of IP addresses to use as federation resolvers
+
+		:resolve4: An array of IPv4 addresses that can resolve the Delivery Service's federation
+		:resolve6: An array of IPv6 addresses that can resolve the Delivery Service's federation
 
 .. code-block::http
 	:caption: Request Example
@@ -76,31 +105,65 @@ Allows a user to add federations for their Delivery Service(s).
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
-	Content-Length: 75
+	Content-Length: 119
 	Content-Type: application/json
 
-	{
+	{ "federations": [{
 		"deliveryService": "demo1",
-		"resolve4": ["0.0.0.0."],
-		"resolve6": ["::"]
-	}
+		"mappings": {
+			"resolve4": ["0.0.0.0"],
+			"resolve6": ["::"]
+		}
+	}]}
 
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Mon, 03 Dec 2018 17:00:29 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Mon, 03 Dec 2018 21:00:29 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: dXg86uD2Un1AeBCeeBLSo2rsYgl6NOHHQEc5oMlpw1THOh2HwGdjwB3rPd/qoYIhOxcnnHoEstrEiHmucFev4A==
+	Content-Length: 63
+
+	{ "response": "admin successfully created federation resolvers." }
+
+
+``DELETE``
+==========
+Deletes **all** federation resolvers associated with the logged-in user's federations.
+
+:Auth. Required: Yes
+:Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Response Type:  a
 
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/1.1 404 NOT FOUND
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	Content-Type: application/json
+	Date: Mon, 03 Dec 2018 17:55:10 GMT
+	Server: Mojolicious (Perl)
+	Set-Cookie: mojolicious=...; expires=Mon, 03 Dec 2018 21:55:10 GMT; path=/; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: b84HraJH6Kiqrz7i1L1juDBJWdkdYbbClnWM0lZDljvpSkVT9adFTTrHiv7Mjtt2RKquGdzFZ6tqt9s+ODxqsw==
+	Content-Length: 93
 
-
-**DELETE /api/1.2/federations.json**
-
-	Deletes **all** federations associated with a user's delivery service(s).
-
-	Authentication Required: Yes
-
-	Role(s) Required: Federation
-
-|
+	{ "response": "admin successfully deleted all federation resolvers: [ 0.0.0.0/32, ::/128 ]." }
 
 
 **PUT /api/1.2/federations.json**
