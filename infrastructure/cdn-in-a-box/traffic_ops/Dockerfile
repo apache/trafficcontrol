@@ -36,7 +36,8 @@ RUN yum install -y epel-release && \
         perl-Crypt-ScryptKDF \
         perl-Test-CPAN-Meta \
         perl-JSON-PP \
-        git && \
+        git \
+        jq && \
     yum-config-manager --add-repo 'http://vault.centos.org/7.5.1804/os/x86_64/' && \
     yum -y install --enablerepo=vault* golang-1.9.4 && \
     yum -y clean all
@@ -86,4 +87,5 @@ ADD enroller/server_template.json \
 
 ADD traffic_ops_data /traffic_ops_data
 
+RUN chown -R trafops:trafops /opt/traffic_ops
 CMD /run.sh

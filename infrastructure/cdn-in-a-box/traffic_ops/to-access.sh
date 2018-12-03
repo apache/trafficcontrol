@@ -142,12 +142,6 @@ to-enroll() {
 		sleep 2
 	done
 
-	while true; do
-		[ "$serverType" = "to" ] && break
-		[ -f "$ENROLLER_DIR/initial-load-done" ] && break
-		echo "Waiting for traffic-ops to do initial load ..."
-		sleep 2
-	done
 	if [[ ! -d ${ENROLLER_DIR}/servers ]]; then
 		echo "${ENROLLER_DIR}/servers not found -- contents:"
 		find ${ENROLLER_DIR} -ls
