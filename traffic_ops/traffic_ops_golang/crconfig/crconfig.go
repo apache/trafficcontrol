@@ -27,7 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const ConfigModifiedExceptDSS = "modified-excluding-delivery-service-servers"
+const ConfigModifiedExceptDSS = "modified-excluding-deliveryservices-and-deliveryserviceservers"
 
 func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfig, error) {
 	crc := tc.CRConfig{APIVersion: 1.4}
@@ -68,19 +68,15 @@ func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfi
 		lastUpdated = loLastUpdated
 	}
 
-	dsLastUpdated := time.Time{}
-	if crc.DeliveryServices, dsLastUpdated, err = makeDSes(cdn, cdnDomain, serverDSNames, tx); err != nil {
+	if crc.DeliveryServices, _, err = makeDSes(cdn, cdnDomain, serverDSNames, tx); err != nil {
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
-	}
-	if dsLastUpdated.After(lastUpdated) {
-		lastUpdated = dsLastUpdated
 	}
 
 	// TODO change to real reqPath, and verify everything works. Currently emulates the existing TO, in case anything relies on it
 	emulateOldPath := "/tools/write_crconfig/" + cdn
 	crc.Stats = makeStats(cdn, user, toHost, emulateOldPath, toVersion)
 
-	crc.Config[ConfigModifiedExceptDSS] = dsLastUpdated.Format(time.RFC3339Nano)
+	crc.Config[ConfigModifiedExceptDSS] = lastUpdated.Format(time.RFC3339Nano)
 
 	return &crc, nil
 }
