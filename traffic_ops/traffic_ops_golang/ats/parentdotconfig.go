@@ -219,19 +219,17 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 
 				parentRetry := ds.MSOParentRetry
 				if atsMajorVer >= 6 && parentRetry != "" {
-					removeSpaceReplacer := strings.NewReplacer(" ", "", "\t", "", "\n", "")
-					unavailableServerRetryResponses := removeSpaceReplacer.Replace(ds.MSOUnavailableServerRetryResponses)
-					if unavailableServerRetryResponsesValid(unavailableServerRetryResponses) {
-						log.Errorf("DEBUG unavailableServerRetryResponsesValid '%+v'\n", unavailableServerRetryResponses)
-						textLine += ` parent_retry=` + parentRetry + ` unavailable_server_retry_responses=` + unavailableServerRetryResponses
+					if unavailableServerRetryResponsesValid(ds.MSOUnavailableServerRetryResponses) {
+						log.Errorf("DEBUG unavailableServerRetryResponsesValid '%+v'\n", ds.MSOUnavailableServerRetryResponses)
+						textLine += ` parent_retry=` + parentRetry + ` unavailable_server_retry_responses=` + ds.MSOUnavailableServerRetryResponses
 					} else {
-						log.Errorf("DEBUG unavailableServerRetryResponsesValid '%+v' NOT\n", unavailableServerRetryResponses)
-						if unavailableServerRetryResponses != "" {
-							log.Errorln("Malformed unavailable_server_retry_responses parameter '" + unavailableServerRetryResponses + "', not using!")
+						log.Errorf("DEBUG unavailableServerRetryResponsesValid '%+v' NOT\n", ds.MSOUnavailableServerRetryResponses)
+						if ds.MSOUnavailableServerRetryResponses != "" {
+							log.Errorln("Malformed unavailable_server_retry_responses parameter '" + ds.MSOUnavailableServerRetryResponses + "', not using!")
 						}
 						textLine += ` parent_retry=` + parentRetry
 					}
-					textLine += `  max_simple_retries=` + ds.MSOMaxSimpleRetries + ` max_unavailable_server_retries=` + ds.MSOMaxUnavailableServerRetries
+					textLine += ` max_simple_retries=` + ds.MSOMaxSimpleRetries + ` max_unavailable_server_retries=` + ds.MSOMaxUnavailableServerRetries
 				}
 				textLine += "\n"
 				textArr = append(textArr, textLine)
@@ -400,7 +398,7 @@ func unavailableServerRetryResponsesValid(s string) bool {
 	if s == "" {
 		return false
 	}
-	re := regexp.MustCompile(`^"(:?\d{3},)+\d{3}"$`) // TODO benchmark, cache if performance matters
+	re := regexp.MustCompile(`^"(:?\d{3},)+\d{3}"\s*$`) // TODO benchmark, cache if performance matters
 	return re.MatchString(s)
 }
 func removeStrDuplicates(pi []string, seen map[string]struct{}) ([]string, map[string]struct{}) {
