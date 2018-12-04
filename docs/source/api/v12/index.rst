@@ -31,7 +31,6 @@ Traffic Ops API V1.2
 	phys_location
 	profile
 	profile_parameter
-	influxdb
 	region
 	role
 	server
