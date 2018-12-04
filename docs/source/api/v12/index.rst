@@ -21,8 +21,6 @@ Traffic Ops API V1.2
 .. toctree::
 	:maxdepth: 1
 
-	federation_resolver
-	federation_user
 	job
 	parameter
 	phys_location
