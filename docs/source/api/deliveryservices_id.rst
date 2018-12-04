@@ -295,6 +295,7 @@ Response Structure
 .. [1] Users with the roles "admin" and/or "operation" will be able to see *all* Delivery Services, whereas any other user will only see the Delivery Services their Tenant is allowed to see.
 .. [2] This only applies to HTTP Delivery Services
 .. [3] See :ref:`multi-site-origin`
+.. [4] This only applies to DNS-routed Delivery Services
 
 ``PUT``
 =======
@@ -478,8 +479,7 @@ Request Structure
 .. [5] These fields must be defined if and only if ``geoLimit`` is non-zero
 .. [6] These fields are required for HTTP-routed Delivery Services, and optional for all others
 .. [7] These fields are required for HTTP-routed and DNS-routed Delivery Services, but are optional for (and in fact may have no effect on) STEERING and ANY_MAP Delivery Services
-.. [8] See :ref:`token-based-auth` for more information
-.. [9] This only applies to DNS-routed Delivery Services
+.. [8] See "token-based-auth" TODO --- wat for more information
 
 Response Structure
 ------------------

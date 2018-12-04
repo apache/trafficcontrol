@@ -455,7 +455,7 @@ Request Structure
 .. [5] These fields must be defined if and only if ``geoLimit`` is non-zero
 .. [6] These fields are required for HTTP-routed Delivery Services, and optional for all others
 .. [7] These fields are required for HTTP-routed and DNS-routed Delivery Services, but are optional for (and in fact may have no effect on) STEERING and ANY_MAP Delivery Services
-.. [8] See :ref:`token-based-auth` for more information
+.. [8] See "token-based-auth" TODO --- wat for more information
 
 Response Structure
 ------------------
