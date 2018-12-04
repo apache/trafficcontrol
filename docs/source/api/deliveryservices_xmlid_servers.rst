@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-xml_id-servers
+.. _to-api-deliveryservices-xml_id-servers:
 
 ***************************************
 ``deliveryservices/{{xml_id}}/servers``
@@ -41,7 +41,7 @@ Request Structure
 
 :serverNames: An array of hostname of cache servers to assign to this Delivery Service
 
-.. code-block:: htpp
+.. code-block:: http
 	:caption: Request Example
 
 	POST /api/1.4/deliveryservices/test/servers HTTP/1.1
