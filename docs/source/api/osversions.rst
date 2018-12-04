@@ -37,7 +37,7 @@ Response Structure
 This endpoint has no constant keys in its ``response``. Instead, each key in the ``response`` object is the name of an OS, and the value is a string that names the directory where the ISO source can be found. These directories sit under `/var/www/files/` on the Traffic Ops host machine by default, or at the location defined by the ``kickstart.files.location`` parameter, if it is defined.
 
 .. code-block:: http
-	:catpion: Response Example
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
