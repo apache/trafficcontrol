@@ -188,8 +188,14 @@ func main() {
 	flag.Parse()
 
 	if host == nil || *host == "" {
-		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error, a 'host' is required, use '-host'")
-		os.Exit(1)
+		// if the host was not specified on the command line, get it from the kernel
+		h, err := os.Hostname()
+		if err != nil {
+			fmt.Println(time.Now().Format(time.RFC3339Nano) + err.Error() + " and 'host' is required, use '-host'")
+			os.Exit(1)
+		}
+		sl := strings.Split(h, ".")
+		*host = sl[0]
 	}
 
 	useCache := false
