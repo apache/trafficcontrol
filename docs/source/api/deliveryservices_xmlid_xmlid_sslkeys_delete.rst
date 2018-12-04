@@ -45,7 +45,7 @@ Request Structure
 
 Response Structure
 ------------------
-.. code-block:: http
+.. code-block:: json
 	:caption: Response Example
 
 	{ "response": "Successfully deleted ssl keys for <xml_id>" }

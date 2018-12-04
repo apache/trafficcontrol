@@ -45,15 +45,11 @@ Response Structure
 ------------------
 :key<N>: The private URL signing key for this Delivery Service as a base-64-encoded string, where ``<N>`` is the "generation" of the key e.g. the first key will always be named ``"key0"``. Up to 16 concurrent generations are retained at any time (``<N>`` is always on the interval [0,16])
 
-.. code-block:: http
+.. code-block:: json
 	:caption: Response Example
 
-	HTTP/1.1 200 OK
-	Content-Type: application/json
-	Transfer-Encoding: chunked
-
 	{ "response": {
-		key9":"ZvVQNYpPVQWQV8tjQnUl6osm4y7xK4zD",
+		"key9":"ZvVQNYpPVQWQV8tjQnUl6osm4y7xK4zD",
 		"key6":"JhGdpw5X9o8TqHfgezCm0bqb9SQPASWL",
 		"key8":"ySXdp1T8IeDEE1OCMftzZb9EIw_20wwq",
 		"key0":"D4AYzJ1AE2nYisA9MxMtY03TPDCHji9C",
