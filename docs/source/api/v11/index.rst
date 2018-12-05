@@ -20,7 +20,6 @@ Traffic Ops v1.1 API Documentation
 .. toctree::
 	:maxdepth: 1
 
-	parameter
 	phys_location
 	profile
 	region
