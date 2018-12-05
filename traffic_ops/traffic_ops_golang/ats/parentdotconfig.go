@@ -273,7 +273,10 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 
 		log.Errorf("DEBUG PCGen ranging over len(parentInfos[DeliveryServicesAllParentsKey]) %+v\n", len(parentInfos[DeliveryServicesAllParentsKey]))
 
-		for _, parent := range parentInfos[DeliveryServicesAllParentsKey] { // TODO fix magic key
+		parentInfosAllParents := parentInfos[DeliveryServicesAllParentsKey]
+		sort.Sort(ParentInfoSortByRank(parentInfosAllParents))
+
+		for _, parent := range parentInfosAllParents { // TODO fix magic key
 			pTxt := parent.Format()
 			if parent.PrimaryParent {
 				parentInfo = append(parentInfo, pTxt)
