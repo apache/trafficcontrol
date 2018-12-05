@@ -1675,7 +1675,7 @@ class TOSession(restapi.RestApiSession):
 	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/parameter.html#parameter
 	#
 
-	@restapi.api_request(u'get', u'parameters', (u u'1.2', u'1.3',))
+	@restapi.api_request(u'get', u'parameters', (u'1.2', u'1.3',))
 	def get_parameters(self):
 		"""
 		Get all Profile Parameters.
@@ -2083,7 +2083,7 @@ class TOSession(restapi.RestApiSession):
 		"""
 
 	@restapi.api_request(u'get', u'servers/{server_id:d}', (u'1.1', u'1.2',u'1.3',))
-	def get_server_by_id(self, server_id=None:
+	def get_server_by_id(self, server_id=None):
 		"""
 		Get Server by Server ID
 		:param server_id: The server id to retrieve
@@ -2093,7 +2093,7 @@ class TOSession(restapi.RestApiSession):
 		"""
 
 	@restapi.api_request(u'get', u'servers/{server_id:d}/deliveryservices', (u'1.1', u'1.2',u'1.3',))
-	def get_server_delivery_services(self, server_id=None:
+	def get_server_delivery_services(self, server_id=None):
 		"""
 		Retrieves all delivery services assigned to the server
 		:param server_id: The server id to retrieve
@@ -2103,7 +2103,7 @@ class TOSession(restapi.RestApiSession):
 		"""
 
 	@restapi.api_request(u'get', u'servers/total', (u'1.1', u'1.2',u'1.3',))
-	def get_server_type_count(self:
+	def get_server_type_count(self):
 		"""
 		Retrieves a count of CDN servers by type
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
@@ -2111,7 +2111,7 @@ class TOSession(restapi.RestApiSession):
 		"""
 
 	@restapi.api_request(u'get', u'servers/status', (u'1.1', u'1.2',u'1.3',))
-	def get_server_status_count(self:
+	def get_server_status_count(self):
 		"""
 		Retrieves a count of CDN servers by status
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
