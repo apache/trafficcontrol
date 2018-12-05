@@ -262,7 +262,7 @@ def sanitizeContents(raw:str) -> str:
 	# to use curly brace-enclosed text as a key into a dictonary of its arguments. They'll be
 	# rendered into single braces in the output of `.format`, leaving the string ultimately
 	# unchanged in that respect.
-	for line in raw.replace('{', "{{").replace('}', "}}").format(SERVER_INFO).splitlines():
+	for line in SERVER_INFO.sanitize(raw).splitlines():
 		tmp=(" ".join(line.split())).strip() #squeezes spaces and trims leading and trailing spaces
 		tmp=tmp.replace("&amp;", '&') #decodes HTML-encoded ampersands
 		tmp=tmp.replace("&gt;", '>') #decodes HTML-encoded greater-than symbols

@@ -94,7 +94,7 @@ class ServerInfo():
 		                       for a in dir(self)\
 		                       if not a.startswith('_')))
 
-	def __format__(self, fmt:str) -> str:
+	def sanitize(self, fmt:str) -> str:
 		"""
 		Implements ``str.format(self)``
 		"""
