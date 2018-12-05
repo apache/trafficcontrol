@@ -378,7 +378,7 @@ class TOSession(restapi.RestApiSession):
 	#
 
 	@restapi.api_request(u'get', u'caches/stats', (u'1.1', u'1.2', u'1.3',))
-	def get_cache_stats(self):
+	def get_traffic_monitor_cache_stats(self):
 		"""
 		Retrieves cache stats from Traffic Monitor. Also includes rows for aggregates
 		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cache.html#cache
@@ -1514,7 +1514,7 @@ class TOSession(restapi.RestApiSession):
 	#
 
 	@restapi.api_request(u'get', u'federations/{federation_id:d}/federation_resolvers', (u'1.2', u'1.3'))
-	def get_federation_resolvers(self, federation_id=None):
+	def get_federation_resolvers_by_id(self, federation_id=None):
 		"""
 		Retrieves federation resolvers assigned to a federation
 		:param federation_id: The federation id
@@ -2335,8 +2335,7 @@ class TOSession(restapi.RestApiSession):
 
 	@restapi.api_request(u'post', u'tenants', (u'1.1', u'1.2', u'1.3',))
 	def create_tenant(self, data=None):
-		"""
-		Create a tenant
+		"""Create a tenant
 		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/tenant.html#tenants
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[Text, Any]
