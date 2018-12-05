@@ -93,7 +93,7 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.reverse_proxy.enabled",
 			"secure": false,
-			"value": "INT 1"
+			"value": "INT 0"
 		},
 		{
 			"configFile": "records.config",
