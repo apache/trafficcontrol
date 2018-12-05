@@ -30,15 +30,17 @@ RUN	yum -y install \
 	yum -y clean all
 
 ### traffic_ops specific requirements
+# NOTE: temporary workaround for removal of golang packages from CentOS 7 base repo
 RUN	yum -y install \
 		expat-devel \
 		gcc \
-		golang-1.9.4 \
 		libcurl-devel \
 		make \
 		openssl-devel \
 		perl-ExtUtils-MakeMaker \
 		tar && \
+        yum-config-manager --add-repo 'http://vault.centos.org/7.5.1804/os/x86_64/' && \
+        yum -y install --enablerepo=vault* golang-1.9.4 && \
 	yum -y clean all
 
 ADD infrastructure/docker/build/clean_build.sh /
