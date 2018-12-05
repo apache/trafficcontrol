@@ -37,6 +37,15 @@ Request Structure
 	| name | The name of the CDN for which federations will be listed |
 	+------+----------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/cdns/CDN-in-a-Box/federations HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
 :cname:           The Canonical Name (CNAME) used by the federation
@@ -52,23 +61,34 @@ Response Structure
 :lastUpdated: The date and time at which this federation was last modified, in ISO format
 :ttl:         Time to Live (TTL) for the ``cname``, in hours
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	content-type: application/json
+	set-cookie: mojolicious=...; Path=/; HttpOnly
+	whole-content-sha512: SJA7G+7G5KcOfCtnE3Dq5DCobWtGRUKSppiDkfLZoG5+paq4E1aZGqUb6vGVsd+TpPg75MLlhyqfdfCHnhLX/g==
+	x-server-name: traffic_ops_golang/
+	content-length: 170
+	date: Wed, 05 Dec 2018 00:35:40 GMT
 
 	{ "response": [
 		{
-			"id": 41
-			"cname": "booya.com.",
-			"ttl": 34,
-			"description": "fooya",
+			"id": 1,
+			"cname": "test.quest.",
+			"ttl": 48,
+			"description": "A test federation",
+			"lastUpdated": "2018-12-05 00:05:16+00",
 			"deliveryService": {
-				"id": 61,
-				"xmlId": "the-xml-id"
-			},
-			"lastUpdated": "2018-08-01 14:41:48+00"
+				"id": 1,
+				"xmlId": "demo1"
+			}
 		}
 	]}
-
 
 ``POST``
 ========
@@ -95,13 +115,21 @@ Request Structure
 :description: An optional description of the federation
 :ttl:         Time to Live (TTL) for the name record used for ``cname``
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Request Example
 
+	POST /api/1.4/cdns/CDN-in-a-Box/federations HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 72
+	Content-Type: application/json
+
 	{
-		"cname": "the.cname.com.",
+		"cname": "test.quest.",
 		"ttl": 48,
-		"description": "the description"
+		"description": "A test federation"
 	}
 
 
@@ -116,19 +144,31 @@ Response Structure
 :ttl:         Time to Live (TTL) for the ``cname``, in hours
 
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	content-type: application/json
+	set-cookie: mojolicious=...; Path=/; HttpOnly
+	whole-content-sha512: rRsWAIhXzVlj8Hy+8aFjp4Jo1QGTK49m0N1AP5QDyyAZ1TfNIdgtcgiuehu7FiN1IPWRFiv6D9CygFYKGcVDOw==
+	x-server-name: traffic_ops_golang/
+	content-length: 192
+	date: Wed, 05 Dec 2018 00:05:16 GMT
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "Federation created [ cname = the.cname. ] with id: 26."
+			"text": "cdnfederation was created.",
+			"level": "success"
 		}
 	],
 	"response": {
-		"id": 26,
-		"cname": "the.cname.com.",
+		"id": 1,
+		"cname": "test.quest.",
 		"ttl": 48,
-		"description": "the description",
-		"lastUpdated": "2018-08-01 14:41:48+00"
+		"description": "A test federation",
+		"lastUpdated": "2018-12-05 00:05:16+00"
 	}}

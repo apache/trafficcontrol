@@ -37,6 +37,15 @@ Request Structure
 	|  ID  | The integral, unique identifier for the federation for which resolvers will be retrieved |
 	+------+------------------------------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.1/federations/1/federation_resolvers HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
 :id:        The integral, unique identifier of this federation resolver
@@ -48,14 +57,28 @@ Response Structure
 	RESOLVE6
 		This resolver is for IPv6 addresses (and ``ipAddress`` is IPv6)
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	cache-control: no-cache, no-store, max-age=0, must-revalidate
+	content-type: application/json
+	date: Wed, 05 Dec 2018 00:49:50 GMT
+	server: Mojolicious (Perl)
+	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 04:49:50 GMT; path=/; HttpOnly
+	vary: Accept-Encoding
+	whole-content-sha512: csC18kE3YjiILHP1wmJg7V4h/XWY8HUMKyPuZWnde2g7HJ4gTY51HfjCSqhyKvIJQ8Rl7uEqshF3Ey6xIMOX4A==
+	content-length: 63
 
 	{ "response": [
 		{
-			"id": 41
-			"ipAddress": "2.2.2.2/16",
-			"type": "RESOLVE4"
+			"ipAddress": "0.0.0.0",
+			"type": "RESOLVE4",
+			"id": 1
 		}
 	]}
 
@@ -82,11 +105,19 @@ Request Structure
 
 	.. note:: If ``replace`` is not given (and/or not ``true``), then any conflicts with existing assignments will cause the entire operation to fail.
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Request Example
 
+	POST /api/1.4/federations/1/federation_resolvers HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 41
+	Content-Type: application/json
+
 	{
-		"fedResolverIds": [ 2, 3, 4, 5, 6 ],
+		"fedResolverIds": [1],
 		"replace": true
 	}
 
@@ -95,16 +126,32 @@ Response Structure
 :fedResolverIds: An array of integral, unique identifiers for federation resolvers
 :replace:        An optionally-present boolean (default: ``false``) which, if ``true``, any conflicting assignments already in place were overridden by this request
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	cache-control: no-cache, no-store, max-age=0, must-revalidate
+	content-type: application/json
+	date: Wed, 05 Dec 2018 00:47:47 GMT
+	server: Mojolicious (Perl)
+	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 04:47:47 GMT; path=/; HttpOnly
+	vary: Accept-Encoding
+	whole-content-sha512: +JDcRByS3HO6pMg3Gzkvn0w7/v5oRul9e+RxyFIOKJKNHOkZILyQBS+PJpxDeCgwI19+0poW5dyHPPR9SwbNCA==
+	content-length: 148
 
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "5 resolvers(s) were assigned to the cname. federation"
+			"text": "1 resolver(s) were assigned to the test.quest. federation"
 		}
 	],
 	"response": {
-		"fedResolverIds" : [ 2, 3, 4, 5, 6 ],
-		"replace" : true
+		"replace": true,
+		"fedResolverIds": [
+			1
+		]
 	}}

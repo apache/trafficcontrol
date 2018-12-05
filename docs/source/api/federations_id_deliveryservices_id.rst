@@ -21,7 +21,7 @@
 
 ``DELETE``
 ==========
-Removes a Delivery Service from a federation.
+Removes a Delivery Service from a federation. A Delivery Service cannot be removed from a federation if it is the only Delivery Service assigned to said federation
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -39,14 +39,37 @@ Request Structure
 	| dsID | The integral, unique identifier of the Delivery Service which will be removed from the federation identified by ``ID``   |
 	+------+--------------------------------------------------------------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.4/federations/1/deliveryservices/1 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	cache-control: no-cache, no-store, max-age=0, must-revalidate
+	content-type: application/json
+	date: Wed, 05 Dec 2018 01:06:51 GMT
+	server: Mojolicious (Perl)
+	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 05:06:51 GMT; path=/; HttpOnly
+	vary: Accept-Encoding
+	whole-content-sha512: NqAZuZYlF1UWOaazbj/j4gWX7ye0kGGakRRFEkK6ShxqXvCxE0dCTyu75qiLPN2wSgr3FGQnp2Sq345sE7In9g==
+	content-length: 98
 
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Removed delivery service [ booya-12 ] from federation [ cname1. ]"
+			"text": "Removed delivery service [ test ] from federation [ foo.bar. ]"
 		}
 	]}

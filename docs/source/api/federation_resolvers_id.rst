@@ -37,14 +37,38 @@ Request Structure
 	|  ID  | Integral, unique identifier for the federation resolver to be deleted |
 	+------+-----------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.4/federation_resolvers/3 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	cache-control: no-cache, no-store, max-age=0, must-revalidate
+	content-type: application/json
+	date: Wed, 05 Dec 2018 01:06:51 GMT
+	server: Mojolicious (Perl)
+	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 05:06:51 GMT; path=/; HttpOnly
+	vary: Accept-Encoding
+	whole-content-sha512: NqAZuZYlF1UWOaazbj/j4gWX7ye0kGGakRRFEkK6ShxqXvCxE0dCTyu75qiLPN2wSgr3FGQnp2Sq345sE7In9g==
+	content-length: 98
 
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Federation resolver deleted [ IP = 2.2.2.2/32 ] with id: 27"
+			"text": "Federation resolver deleted [ IP = ::1/128 ] with id: 3"
 		}
 	]}
+

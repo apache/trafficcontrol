@@ -39,6 +39,15 @@ Request Structure
 	|  ID  | An integral, unique identifier for the federation to be inspected                   |
 	+------+-------------------------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/cdns/CDN-in-a-Box/federations/1 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
 :cname:           The Canonical Name (CNAME) used by the federation
@@ -54,22 +63,35 @@ Response Structure
 :lastUpdated: The date and time at which this federation was last modified, in ISO format
 :ttl:         Time to Live (TTL) for the ``cname``, in hours
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	content-type: application/json
+	set-cookie: mojolicious=...; Path=/; HttpOnly
+	whole-content-sha512: SJA7G+7G5KcOfCtnE3Dq5DCobWtGRUKSppiDkfLZoG5+paq4E1aZGqUb6vGVsd+TpPg75MLlhyqfdfCHnhLX/g==
+	x-server-name: traffic_ops_golang/
+	content-length: 170
+	date: Wed, 05 Dec 2018 00:36:57 GMT
 
 	{ "response": [
 		{
-			"id": 41
-			"cname": "booya.com.",
-			"ttl": 34,
-			"description": "fooya",
+			"id": 1,
+			"cname": "test.quest.",
+			"ttl": 48,
+			"description": "A test federation",
+			"lastUpdated": "2018-12-05 00:05:16+00",
 			"deliveryService": {
-				"id": 61,
-				"xmlId": "the-xml-id"
-			},
-			"lastUpdated": "2018-08-01 14:41:48+00"
+				"id": 1,
+				"xmlId": "demo1"
+			}
 		}
 	]}
+
 
 ``PUT``
 =======
@@ -98,14 +120,22 @@ Request Structure
 :description: An optional description of the federation
 :ttl:         Time to Live (TTL) for the name record used for ``cname``
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Request Example
 
+	PUT /api/1.4/cdns/CDN-in-a-Box/federations/1 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 33
+	Content-Type: application/json
+
 	{
-		"cname": "the.cname.com.",
-		"ttl": 48,
-		"description": "the description"
+		"cname": "foo.bar.",
+		"ttl": 48
 	}
+
 
 Response Structure
 ------------------
@@ -118,22 +148,35 @@ Response Structure
 :ttl:         Time to Live (TTL) for the ``cname``, in hours
 
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	content-type: application/json
+	set-cookie: mojolicious=...; Path=/; HttpOnly
+	whole-content-sha512: qcjfQ+gDjNxYQ1aq+dlddgrkFWnkFYxsFF+SHDqqH0uVHBVksmU0aTFgltozek/u6wbrGoR1LFf9Fr1C1SbigA==
+	x-server-name: traffic_ops_golang/
+	content-length: 174
+	date: Wed, 05 Dec 2018 01:03:40 GMT
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "Federation updated [ cname = the.cname. ] with id: 26."
+			"text": "cdnfederation was updated.",
+			"level": "success"
 		}
 	],
 	"response": {
-		"id": 26,
-		"cname": "the.cname.com.",
+		"id": 1,
+		"cname": "foo.bar.",
 		"ttl": 48,
-		"description": "the description",
-		"lastUpdated": "2018-08-01 14:41:48+00"
+		"description": null,
+		"lastUpdated": "2018-12-05 01:03:40+00"
 	}}
+
 
 ``DELETE``
 ==========
@@ -155,12 +198,35 @@ Request Structure
 	|  ID  | An integral, unique identifier for the federation to be inspected                   |
 	+------+-------------------------------------------------------------------------------------+
 
-.. code-block:: json
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.4/cdns/CDN-in-a-Box/federations/1 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+
+Response Structure
+------------------
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	content-type: application/json
+	set-cookie: mojolicious=...; Path=/; HttpOnly
+	whole-content-sha512: Cnkfj6dmzTD3if9oiDq33tqf7CnAflKK/SPgqJyfu6HUfOjLJOgKIZvkcs2wWY6EjLVdw5qsatsd4FPoCyjvcw==
+	x-server-name: traffic_ops_golang/
+	content-length: 68
+	date: Wed, 05 Dec 2018 01:17:24 GMT
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "Federation deleted [ cname = the.cname. ] with id: 26."
+			"text": "cdnfederation was deleted.",
+			"level": "success"
 		}
 	]}

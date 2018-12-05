@@ -37,12 +37,20 @@ Request Structure
 	RESOLVE6
 		Resolver is for IPv6 addresses and ``ipAddress`` is IPv6
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Request Example
 
+	POST /api/1.4/federation_resolvers HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 39
+	Content-Type: application/json
+
 	{
-		"ipAddress": "2.2.2.2/32",
-		"typeId": 245
+		"ipAddress": "0.0.0.0",
+		"typeId": 35
 	}
 
 Response Structure
@@ -56,17 +64,31 @@ Response Structure
 	RESOLVE6
 		Resolver is for IPv6 addresses and ``ipAddress`` is IPv6
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	cache-control: no-cache, no-store, max-age=0, must-revalidate
+	content-type: application/json
+	date: Wed, 05 Dec 2018 00:41:42 GMT
+	server: Mojolicious (Perl)
+	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 04:41:42 GMT; path=/; HttpOnly
+	vary: Accept-Encoding
+	whole-content-sha512: JaXUP+onwOhGs+H/w7u2bNm9a7bqGLGDGJRutFsByTODBAfNr+X7NZ4aO+5w3RyDji1Ih1z5sLadQeEcdZj8vw==
+	content-length: 151
 
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Federation resolver created [ IP = 2.2.2.2/32 ] with id: 27"
+			"text": "Federation Resolver created [ IP = 0.0.0.0 ] with id: 1"
 		}
 	],
 	"response": {
-		"id" : 27,
-		"ipAddress" : "2.2.2.2/32",
-		"typeId" : 245,
+		"ipAddress": "0.0.0.0",
+		"id": 1,
+		"typeId": 35
 	}}

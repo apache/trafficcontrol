@@ -178,7 +178,7 @@ Replaces **all** federations associated with a user's Delivery Service(s) with t
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
-:Response Type:  ???
+:Response Type:  Object (string)
 
 Request Structure
 -----------------
@@ -190,8 +190,16 @@ Request Structure
 		:resolve4: An array of IPv4 addresses that can resolve the Delivery Service's federation
 		:resolve6: An array of IPv6 addresses that can resolve the Delivery Service's federation
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Request Example
+
+	PUT /api/1.4/federations HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 113
+	Content-Type: application/json
 
 	{ "federations": [{
 		"deliveryService": "demo1",
@@ -200,3 +208,24 @@ Request Structure
 			"resolve6": ["::1"]
 		}
 	}]}
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	cache-control: no-cache, no-store, max-age=0, must-revalidate
+	content-type: application/json
+	date: Wed, 05 Dec 2018 00:52:31 GMT
+	server: Mojolicious (Perl)
+	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 04:52:30 GMT; path=/; HttpOnly
+	vary: Accept-Encoding, Accept-Encoding
+	whole-content-sha512: dXg86uD2Un1AeBCeeBLSo2rsYgl6NOHHQEc5oMlpw1THOh2HwGdjwB3rPd/qoYIhOxcnnHoEstrEiHmucFev4A==
+	content-length: 63
+
+	{"response": "admin successfully created federation resolvers."}
