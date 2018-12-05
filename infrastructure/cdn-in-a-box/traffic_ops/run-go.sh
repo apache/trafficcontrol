@@ -75,23 +75,6 @@ TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
 to-enroll "to" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 
-### Workaround: Start DeliveryService and Edge association
-while true; do
-  edge_name="$(to-get 'api/1.3/servers/hostname/edge/details' 2>/dev/null | jq -r -c '.response|.hostName')"
-  ds_name="$(to-get 'api/1.3/deliveryservices' 2>/dev/null | jq -r -c '.response[].xmlId')"
-
-  if [ -n "$edge_name" ] && [ "$ds_name" ] ; then
-    tmp_file=$(mktemp)
-    echo "{ \"xmlId\" : \"$ds_name\", \"serverNames\": [ \"$edge_name\" ] }" > $tmp_file
-    cp $tmp_file /shared/enroller/deliveryservice_servers/
-    break
-  else 
-    echo "Waiting for delivery service and edge to exist..."
-  fi
-
-  sleep 2
-done
-
 while true; do
   echo "Verifying that edge was associated to delivery service..."
 
