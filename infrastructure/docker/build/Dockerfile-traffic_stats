@@ -30,8 +30,9 @@ RUN	yum -y install \
 	yum -y clean all
 
 ### traffic_stats specific requirements
-RUN	yum -y install \
-		golang-1.9.4 && \
+# NOTE: temporary workaround for removal of golang packages from CentOS 7 base repo
+RUN yum-config-manager --add-repo 'http://vault.centos.org/7.5.1804/os/x86_64/' && \
+        yum -y install --enablerepo=vault* golang-1.9.4 && \
 	yum -y clean all
 ###
 
