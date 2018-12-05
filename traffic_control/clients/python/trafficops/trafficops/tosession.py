@@ -315,6 +315,7 @@ class TOSession(restapi.RestApiSession):
 
 	#
 	# ASN
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/asn.html#api-1-2-asns
 	#
 
 	# Implemented Direct API URL Endpoint Methods
@@ -323,13 +324,57 @@ class TOSession(restapi.RestApiSession):
 	def get_asns(self, query_params=None):
 		"""
 		Get ASNs.
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/asn.html#api-1-2-asns
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
+	@restapi.api_request(u'get', u'asns/{asn_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def get_asn_by_id(self, asn_id=None):
+		"""
+		Get ASN by ID
+		:param asn_id: The ID of the ASN to retrieve
+		:type asn_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'put', u'asns/{asn_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def update_asn(self, asn_id=None, query_params=None):
+		"""
+		Update ASN
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/asn.html#api-1-2-asns
+		:param asn_id: The ID of the ASN to update
+		:type asn_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'post', u'asns', (u'1.1', u'1.2', u'1.3',))
+	def create_asn(self, data=None):
+		"""
+		Create ASN
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/asn.html#api-1-2-asns
+		:param data: The parameter data to use for cachegroup creation.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'delete', u'asns/{asn_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def delete_asn(self, asn_id=None):
+		"""
+		Delete ASN
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/asn.html#api-1-2-asns
+		:param asn_id: The ID of the ASN to delete
+		:type asn_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
 
 	#
 	# Cache
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cache.html#api-1-2-caches-stats
 	#
 
 	@restapi.api_request(u'get', u'caches/stats', (u'1.1', u'1.2', u'1.3',))
@@ -343,6 +388,7 @@ class TOSession(restapi.RestApiSession):
 
 	#
 	# Cache Group
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cachegroup.html#cache-group
 	#
 
 	@restapi.api_request(u'get', u'cachegroups', (u'1.1', u'1.2', u'1.3',))
@@ -463,6 +509,7 @@ class TOSession(restapi.RestApiSession):
 
 	#
 	# Cache Group Parameters
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cachegroup_parameter.html#cache-group-parameters
 	#
 
 	@restapi.api_request(u'post', u'cachegroupparameters', (u'1.2', u'1.3'))
@@ -489,7 +536,10 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
+	#
 	# Cache Group Fallback
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cachegroup_fallbacks.html#cache-group-fallback
+	#
 
 	@restapi.api_request(u'get', u'cachegroup_fallbacks', (u'1.2', u'1.3'))
 	def get_cache_group_fallbacks(self, query_params=None):
@@ -556,7 +606,7 @@ class TOSession(restapi.RestApiSession):
 
 	#
 	# CDN
-	#
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#cdn
 	#
 	
 	@restapi.api_request(u'get', u'cdns', (u'1.1', u'1.2', u'1.3',))
@@ -631,10 +681,179 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
+	#
+	# CDN Health
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#health
+	#
+
+	@restapi.api_request(u'get', u'cdns/health', (u'1.2', u'1.3',))
+	def get_cdns_health(self):
+		"""
+		Retrieves the health of all locations (cache groups) for all CDNs
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#health
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
+	@restapi.api_request(u'get', u'cdns/{cdn_name:s}/health', (u'1.2', u'1.3',))
+	def get_cdn_health_by_name(self, cdn_name=None):
+		"""
+		Retrieves the health of all locations (cache groups) for a given CDN
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#health
+		:param cdn_name: The CDN name to find health for
+		:type cdn_name: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'cdns/usage', (u'1.2', u'1.3',))
+	def get_cdns_usage(self):
+		"""
+		Retrieves the high-level CDN usage metrics.
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#health
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'cdns/capacity', (u'1.2', u'1.3',))
+	def get_cdns_capacity(self):
+		"""
+		Retrieves the aggregate capacity percentages of all locations (cache groups) for a given CDN.
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#health
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
+	# CDN Routing
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#routing
+	#
+
+	@restapi.api_request(u'get', u'cdns/routing', (u'1.2', u'1.3',))
+	def get_cdns_routing(self):
+		"""
+		Retrieves the aggregate routing percentages of all locations (cache groups) for a given CDN.
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#routing
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
+	# CDN Metrics
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#metrics
+	# These routes are currently not implemented TODO when completed
+	#
+
+	#
+	# CDN Domains
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#domains
+	#
+
+	@restapi.api_request(u'get', u'cdns/domains', (u'1.2', u'1.3',))
+	def get_cdns_domains(self):
+		"""
+		Retrieves the different CDN domains
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#domains
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
+	# CDN Topology
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#topology
+	#
+
+	@restapi.api_request(u'get', u'cdns/{cdn_name:s}/configs', (u'1.2', u'1.3',))
+	def get_cdn_config_info(self, cdn_name=None):
+		"""
+		Retrieves CDN config information
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#topology
+		:param cdn_name: The CDN name to find configs for
+		:type cdn_name: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'cdns/{cdn_name:s}/configs/monitoring', (u'1.2', u'1.3',))
+	def get_cdn_monitoring_info(self, cdn_name=None):
+		"""
+		Retrieves CDN monitoring information
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#topology
+		:param cdn_name: The CDN name to find configs for
+		:type cdn_name: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'cdns/{cdn_name:s}/configs/routing', (u'1.2', u'1.3',))
+	def get_cdn_routing_info(self, cdn_name=None):
+		"""
+		Retrieves CDN routing information
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#topology
+		:param cdn_name: The CDN name to find routing info for
+		:type cdn_name: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
+	# CDN DNSSEC Keys
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#dnssec-keys
+	#
+
+	@restapi.api_request(u'get', u'cdns/name/{cdn_name:s}/dnsseckeys', (u'1.2', u'1.3',))
+	def get_cdn_dns_sec_keys(self, cdn_name=None):
+		"""
+		Gets a list of dnsseckeys for a CDN and all associated Delivery Services
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#dnssec-keys
+		:param cdn_name: The CDN name to find dnsseckeys info for
+		:type cdn_name: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'cdns/name/{cdn_name:s}/dnsseckeys/delete', (u'1.2', u'1.3',))
+	def delete_cdn_dns_sec_keys(self, cdn_name=None):
+		"""
+		Delete dnssec keys for a cdn and all associated delivery services
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#dnssec-keys
+		:param cdn_name: The CDN name to delete dnsseckeys info for
+		:type cdn_name: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'post', u'deliveryservices/dnsseckeys/generate', (u'1.2', u'1.3',))
+	def create_cdn_dns_sec_keys(self, data=None):
+		"""
+		Generates ZSK and KSK keypairs for a CDN and all associated Delivery Services
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#dnssec-keys
+		:param data: The parameter data to use for cachegroup creation.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
+	# CDN SSL Keys
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#ssl-keys
+	#
+
+	@restapi.api_request(u'get', u'cdns/name/{cdn_name:s}/sslkeys', (u'1.2', u'1.3',))
+	def get_cdn_ssl_keys(self, cdn_name=None):
+		"""
+		Returns ssl certificates for all Delivery Services that are a part of the CDN.
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#ssl-keys
+		:param cdn_name: The CDN name to find ssl keys for
+		:type cdn_name: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
 
 	#
 	# Change Logs
-	#https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/changelog.html#change-logs
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/changelog.html#change-logs
 	#
 
 	@restapi.api_request(u'get', u'logs', (u'1.2', u'1.3',))
@@ -669,6 +888,57 @@ class TOSession(restapi.RestApiSession):
 	# Config Files and Config File Metadata
 	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/configfiles_ats.html#config-files-and-config-file-metadata
 	#
+
+	@restapi.api_request(u'get', u'servers/{host_name:s}/configfiles/ats', (u'1.2', u'1.3',))
+	def get_server_config_files(self, host_name=None, query_params=None):
+		"""
+		Get the configuiration files for a given host name
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/configfiles_ats.html#config-files-and-config
+		:param host_name: The host name to get config files for
+		:type host_name: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'servers/{host_name:s}/configfiles/ats/{config_file:s}', (u'1.2', u'1.3',))
+	def get_server_specific_config_file(self, host_name=None, config_file=None, query_params=None):
+		"""
+		Get the configuiration files for a given host name and config file
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/configfiles_ats.html#config-files-and-config
+		:param host_name: The host name to get config files for
+		:type host_name: String
+		:param config_file: The config file name to retrieve for host
+		:type config_file: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'profiles/{profile_name:s}/configfiles/ats/{config_file:s}', (u'1.2', u'1.3',))
+	def get_profile_specific_config_files(self, profile_name=None, config_file=None, query_params=None):
+		"""
+		Get the configuiration files for a given profile name and config file
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/configfiles_ats.html#config-files-and-config
+		:param profile_name: The profile name to get config files for
+		:type host_name: String
+		:param config_file: The config file name to retrieve for host
+		:type config_file: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'cdns/{cdn_name:s}/configfiles/ats/{config_file:s}', (u'1.2', u'1.3',))
+	def get_cdn_specific_config_file(self, cdn_name=None, config_file=None, query_params=None):
+		"""
+		Get the configuiration files for a given cdn name and config file
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/configfiles_ats.html#config-files-and-config
+		:param cdn_name: The cdn name to get config files for
+		:type cdn_name: String
+		:param config_file: The config file name to retrieve for host
+		:type config_file: String
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
 
 	#
 	# Delivery Service
@@ -879,7 +1149,30 @@ class TOSession(restapi.RestApiSession):
 	#
 	# Delivery Service User
 	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/deliveryservice.html#delivery-service-user
-	# (TODO: Add all calls)
+	# 
+
+	@restapi.api_request(u'post', u'deliveryservice_user', (u'1.2', u'1.3'))
+	def create_delivery_service_user_link(self, data=None):
+		"""
+		Create one or more user / delivery service assignments.
+		:param data: The parameter data to use for Delivery Service SSL key generation.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'delete', u'deliveryservice_user/{delivery_service_id:d}/{user_id:d}', (u'1.2', u'1.3'))
+	def delete_delivery_service_user_link(self, delivery_service_id=None, user_id=None):
+		"""
+		Removes a delivery service from a user.
+		:param delivery_service_id: The delivery service id to dissasociate the user
+		:type delivery_service_id: int
+		:param user_id: The user id to dissassociate
+		:type user_id: int
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
 
 	#
 	# Delivery Service SSL Keys
@@ -968,12 +1261,40 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
-	@restapi.api_request(u'post', u'deliveryservices/regexes', (u'1.1', u'1.2', u'1.3',))
-	def delete_deliveryservice_regexes(self, data=None):
+	@restapi.api_request(u'get', u'deliveryservices/{delivery_service_id:d}/regexes/{regex_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def get_deliveryservice_regexes_by_regex_id(self, delivery_service_id=None, regex_id=None):
 		"""
-		Delete RegExes.
-		:param data: The required data to delete delivery service regexes
+		Retrieves a regex for a specific delivery service.
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:param regex_id: The delivery service regex id
+		:type regex_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'post', u'deliveryservices/{delivery_service_id:d}/regexes', (u'1.1', u'1.2', u'1.3',))
+	def create_deliveryservice_regexes(self, delivery_service_id=None, data=None):
+		"""
+		Create a regex for a delivery service
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:param data: The required data to create delivery service regexes
 		:type data: Dict[Text, Any]
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'put', u'deliveryservices/{delivery_service_id:d}/regexes/{regex_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def update_deliveryservice_regexes(self, delivery_service_id=None, regex_id=None, query_params=None):
+		"""
+		Update a regex for a delivery service
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:param regex_id: The delivery service regex id
+		:type regex_id: int
+		:param query_params: The required data to update delivery service regexes
+		:type query_params: Dict[Text, Any]
 		:rtype: Tuple[Dict[Text, Any], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -991,12 +1312,77 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
-
-
-
+	#
 	# Delivery Service Statistics
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/deliveryservice_stats.html#delivery-service-statistics
+	#
 
+	@restapi.api_request(u'get', u'deliveryservice_stats.json', (u'1.1', u'1.2', u'1.3',))
+	def get_delivery_service_stats(self, query_params=None):
+		"""
+		Retrieves statistics on the delivery services.
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
 	# Divisions
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/division.html#divisions
+	#
+
+	@restapi.api_request(u'get', u'divisions', (u'1.1', u'1.2', u'1.3',))
+	def get_divisions(self):
+		"""
+		Get all divisions.
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'divisions/{division_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def get_division_by_id(self, division_id=None):
+		"""
+		Get a division by division id
+		:param division_id: The division id to retrieve
+		:type division_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'put', u'divisions/{division_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def update_division(self, division_id=None, query_params=None):
+		"""
+		Update a division by division id
+		:param division_id: The division id to update
+		:type division_id: int
+		:param query_params: The required data to update delivery service regexes
+		:type query_params: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'post', u'divisions', (u'1.1', u'1.2', u'1.3',))
+	def create_division(self, data=None):
+		"""
+		Create a division
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'delete', u'divisions/{division_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def delete_division(self, division_id=None, query_params=None):
+		"""
+		Delete a division by division id
+		:param division_id: The division id to delete
+		:type division_id: int
+		:param query_params: The required data to update delivery service regexes
+		:type query_params: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
 
 	# Federation
 
@@ -1010,26 +1396,64 @@ class TOSession(restapi.RestApiSession):
 
 	# Hardware Info
 
+	#
 	# ISO
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/iso.html#iso
+	#
 
-	# Jobs
-
-	# Parameter
-	@restapi.api_request(u'get', u'parameters', (u'1.1', u'1.2', u'1.3',))
-	def get_parameters(self):
+	@restapi.api_request(u'get', u'osversions', (u'1.2', u'1.3'))
+	def get_osversions(self):
 		"""
-		Get all Profile Parameters.
+		Get all OS versions for ISO generation and the directory where the kickstarter files are found. 
+		The values are retrieved from osversions.cfg found in either /var/www/files or in the location defined by the kickstart.files.location parameter (if defined).
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
-	@restapi.api_request(u'post', u'parameters/validate', (u'1.1', u'1.2', u'1.3',))
-	def validate_parameter_exists(self, data=None):
+
+	@restapi.api_request(u'post', u'isos', (u'1.2', u'1.3',))
+	def generate_iso(self, data=None):
 		"""
-		Validate that a Parameter exists.
-		:param data: The parameter data to use for parameter validation.
+		Generate an ISO
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[Text, Any]
-		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
+	# Jobs
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/job.html#jobs
+	#
+
+	@restapi.api_request(u'get', u'jobs', (u'1.2', u'1.3'))
+	def get_jobs(self, query_params=None):
+		"""
+		Get all jobs (currently limited to invalidate content (PURGE) jobs) sorted by start time (descending).
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'jobs/{job_id:d}', (u'1.2', u'1.3'))
+	def get_job_by_id(self, job_id=None):
+		"""
+		Get a job by ID (currently limited to invalidate content (PURGE) jobs).
+		:param job_id: The job id to retrieve
+		:type job_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
+	# Parameter
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/parameter.html#parameter
+	#
+
+	@restapi.api_request(u'get', u'parameters', (u u'1.2', u'1.3',))
+	def get_parameters(self):
+		"""
+		Get all Profile Parameters.
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
@@ -1043,8 +1467,39 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
+	@restapi.api_request(u'get', u'parameters/{parameter_id:d}/profiles', (u'1.1', u'1.2', u'1.3',))
+	def get_associated_profiles_by_parameter_id(self, parameter_id=None):
+		"""
+		Get all Profiles associated to a Parameter by Id.
+		:param parameter_id: The parameter id
+		:type parameter_id: int
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'parameters/{parameter_id:d}/unassigned_profiles', (u'1.1', u'1.2', u'1.3',))
+	def get_unassigned_profiles_by_parameter_id(self, parameter_id=None):
+		"""
+		Retrieves all profiles NOT assigned to the parameter.
+		:param parameter_id: The parameter id
+		:type parameter_id: int
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
 	@restapi.api_request(u'get', u'profiles/{id:d}/parameters', (u'1.1', u'1.2', u'1.3',))
 	def get_parameters_by_profile_id(self, profile_id=None):
+		"""
+		Get all Parameters associated with a Profile by Id.
+		:param profile_id: The profile Id
+		:type profile_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'profiles/{id:d}/unassigned_parameters', (u'1.1', u'1.2', u'1.3',))
+	def get_unnassigned_parameters_by_profile_id(self, profile_id=None):
 		"""
 		Get all Parameters associated with a Profile by Id.
 		:param profile_id: The profile Id
@@ -1064,60 +1519,47 @@ class TOSession(restapi.RestApiSession):
 		"""
 
 	@restapi.api_request(u'post', u'parameters', (u'1.1', u'1.2', u'1.3',))
-	def create_parameters(self, data=None):
+	def create_parameter(self, data=None):
 		"""
-		Create Parameters
+		Create Parameter
 		:param data: The parameter(s) data to use for parameter creation.
 		:type data: Union[Dict[Text, Any], List[Dict[Text, Any]]]
 		:rtype: Tuple[Dict[Text, Any], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
-	@restapi.api_request(u'get', u'parameters/{parameter_id:d}/profiles', (u'1.1', u'1.2', u'1.3',))
-	def get_associated_profiles_by_parameter_id(self, parameter_id=None):
+	@restapi.api_request(u'put', u'parameters/{parameter_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def update_parameter(self, parameter_id=None, query_params=None):
 		"""
-		Get all Profiles associated to a Parameter by Id.
-		:param parameter_id: The parameter id
+		Update Parameter
+		:param parameter_id: The parameter id to update
 		:type parameter_id: int
 		:rtype: Tuple[Dict[Text, Any], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
-	@restapi.api_request(u'post', u'profiles/id/{profile_id:d}/parameters', (u'1.1', u'1.2', u'1.3',))
-	def associate_parameters_by_profile_id(self, profile_id=None, data=None):
-		"""
-		Associate Parameters to a Profile by Id.
-		:param profile_id: The profile id
-		:type profile_id: int
-		:param data: The parameter data to associate
-		:type data: Union[Dict[Text, Any], List[Dict[Text, Any]]]
-		:rtype: Tuple[Dict[Text, Any], requests.Response]
-		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
-		"""
 
-	@restapi.api_request(u'post', u'profiles/name/{profile_name}/parameters', (u'1.1', u'1.2', u'1.3',))
-	def associate_parameters_by_profile_name(self, profile_name=None, data=None):
+	@restapi.api_request(u'delete', u'parameters/{parameter_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def delete_parameter(self, parameter_id=None):
 		"""
-		Associate Parameters to a Profile by Name.
-		:param profile_name: The profile name
-		:type profile_name: Text
-		:param data: The parameter data to associate
-		:type data: Union[Dict[Text, Any], List[Dict[Text, Any]]]
-		:rtype: Tuple[Dict[Text, Any], requests.Response]
-		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
-		"""
-
-	@restapi.api_request(u'delete', u'profileparameters/{profile_id:d}/{parameter_id:d}', (u'1.1', u'1.2', u'1.3',))
-	def delete_profile_parameter_association_by_id(self, profile_id=None, parameter_id=None):
-		"""
-		Delete Parameter association by Id for a Profile by Id.
-		:param profile_id: The profile id
-		:type profile_id: int
-		:param parameter_id: The parameter id
+		Delete Parameter
+		:param parameter_id: The parameter id to delete
 		:type parameter_id: int
 		:rtype: Tuple[Dict[Text, Any], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
+
+
+	@restapi.api_request(u'post', u'parameters/validate', (u'1.1', u'1.2', u'1.3',))
+	def validate_parameter_exists(self, data=None):
+		"""
+		Validate that a Parameter exists.
+		:param data: The parameter data to use for parameter validation.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
 
 	# Physical Location
 	@restapi.api_request(u'get', u'phys_locations', (u'1.1', u'1.2', u'1.3',))
@@ -1170,6 +1612,45 @@ class TOSession(restapi.RestApiSession):
 		"""
 
 	# Profile Parameters
+
+
+	@restapi.api_request(u'post', u'profiles/id/{profile_id:d}/parameters', (u'1.1', u'1.2', u'1.3',))
+	def associate_parameters_by_profile_id(self, profile_id=None, data=None):
+		"""
+		Associate Parameters to a Profile by Id.
+		:param profile_id: The profile id
+		:type profile_id: int
+		:param data: The parameter data to associate
+		:type data: Union[Dict[Text, Any], List[Dict[Text, Any]]]
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'post', u'profiles/name/{profile_name}/parameters', (u'1.1', u'1.2', u'1.3',))
+	def associate_parameters_by_profile_name(self, profile_name=None, data=None):
+		"""
+		Associate Parameters to a Profile by Name.
+		:param profile_name: The profile name
+		:type profile_name: Text
+		:param data: The parameter data to associate
+		:type data: Union[Dict[Text, Any], List[Dict[Text, Any]]]
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'delete', u'profileparameters/{profile_id:d}/{parameter_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def delete_profile_parameter_association_by_id(self, profile_id=None, parameter_id=None):
+		"""
+		Delete Parameter association by Id for a Profile by Id.
+		:param profile_id: The profile id
+		:type profile_id: int
+		:param parameter_id: The parameter id
+		:type parameter_id: int
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
 
 	#
 	# InfluxDB
