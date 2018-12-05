@@ -21,7 +21,6 @@ Traffic Ops API V1.2
 .. toctree::
 	:maxdepth: 1
 
-	job
 	parameter
 	phys_location
 	profile
