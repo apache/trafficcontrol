@@ -371,14 +371,11 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 			done[originFQDN] = ds.Name
 		}
 
-		defaultDestText := ""
+		defaultDestText := `dest_domain=. ` + parents
 		if serverParams[ParentConfigParamAlgorithm] == AlgorithmConsistentHash {
-			defaultDestText += `dest_domain=. ` + parents + secParents + ` round_robin=consistent_hash go_direct=false`
-		} else {
-			// default to old situation.
-			// TODO fix - urlhash is not a valid ATS config - see https://github.com/apache/trafficcontrol/issues/3071
-			defaultDestText += `dest_domain=. ` + parents + ` round_robin=urlhash go_direct=false`
+			defaultDestText += secParents
 		}
+		defaultDestText += ` round_robin=consistent_hash go_direct=false`
 
 		if qStr := serverParams[ParentConfigParamQString]; qStr != "" {
 			defaultDestText += ` qstring=` + qStr
