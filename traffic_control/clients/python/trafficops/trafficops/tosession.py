@@ -1240,7 +1240,7 @@ class TOSession(restapi.RestApiSession):
 
 	#
 	# Delivery Service Regexes
-	#
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/deliveryservice_regex.html#delivery-service-regexes
 	#
 
 	@restapi.api_request(u'get', u'deliveryservices_regexes', (u'1.1', u'1.2', u'1.3',))
@@ -1384,17 +1384,243 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
+	#
 	# Federation
+	#
+	#
 
+
+	@restapi.api_request(u'get', u'federations', (u'1.2', u'1.3'))
+	def get_federations(self):
+		"""
+		Retrieves a list of federation mappings (aka federation resolvers) for a the current user
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
+	@restapi.api_request(u'post', u'federations', (u'1.2', u'1.3'))
+	def create_federation(self, data=None):
+		"""
+		Allows a user to add federations for their delivery service(s). 
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
+	@restapi.api_request(u'get', u'cdns/{cdn_name:s}/federations', (u'1.2', u'1.3'))
+	def get_federations_for_cdn(self, cdn_name=None):
+		"""
+		Retrieves a list of federations for a cdn.
+		:param cdn_name: The CDN name to find federation
+		:type cdn_name: String 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
+	@restapi.api_request(u'get', u'cdns/{cdn_name:s}/federations/{federation_id:d}', (u'1.2', u'1.3'))
+	def get_federation_for_cdn_by_id(self, cdn_name=None, federation_id=None):
+		"""
+		Retrieves a federation for a cdn.
+		:param cdn_name: The CDN name to find federation
+		:type cdn_name: String 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
+	@restapi.api_request(u'post', u'cdns/{cdn_name:s}/federations', (u'1.2', u'1.3'))
+	def create_federation_in_cdn(self, cdn_name=None, data=None):
+		"""
+		Create a federation.
+		:param cdn_name: The CDN name to find federation
+		:type cdn_name: String 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'put', u'cdns/{cdn_name:s}/federations/{federation_id:d}', (u'1.2', u'1.3'))
+	def update_federation_in_cdn(self, cdn_name=None, federation_id=None, query_params=None):
+		"""
+		Update a federation.
+		:param cdn_name: The CDN name to find federation
+		:type cdn_name: String 
+		:param federation_id: The federation id
+		:type federation_id: int 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'delete', u'cdns/{cdn_name:s}/federations/{federation_id:d}', (u'1.2', u'1.3'))
+	def delete_federation_in_cdn(self, cdn_name=None, federation_id=None):
+		"""
+		Delete a federation.
+		:param cdn_name: The CDN name to find federation
+		:type cdn_name: String 
+		:param federation_id: The federation id
+		:type federation_id: int 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
 	# Federation Delivery Service
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/federation_deliveryservice.html
+	#
 
+	@restapi.api_request(u'get', u'federations/{federation_id:d}/deliveryservices', (u'1.2', u'1.3'))
+	def get_federation_delivery_services(self, federation_id=None):
+		"""
+		Retrieves delivery services assigned to a federation
+		:param federation_id: The federation id
+		:type federation_id: int 
+		:param federation_id: The federation id
+		:type federation_id: int 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
+	@restapi.api_request(u'post', u'federations/{federation_id:d}/deliveryservices', (u'1.2', u'1.3'))
+	def assign_delivery_services_to_federations(self, federation_id=None, data=None):
+		"""
+		Create one or more federation / delivery service assignments. 
+		:param federation_id: The federation id
+		:type federation_id: int 
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'delete', u'federation_resolvers/{federation_id:d}/deliveryservices/{delivery_service_id:d}', (u'1.2', u'1.3'))
+	def delete_federation_resolver(self, federation_resolver_id=None, delivery_service_id=None):
+		"""
+		Removes a delivery service from a federation. 
+		:param federation_id: The federation id
+		:type federation_id: int 
+		:param federation_id: The delivery service id
+		:type federation_id: int 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
 	# Federation Federation Resolver
+	#
+	#
 
+	@restapi.api_request(u'get', u'federations/{federation_id:d}/federation_resolvers', (u'1.2', u'1.3'))
+	def get_federation_resolvers(self, federation_id=None):
+		"""
+		Retrieves federation resolvers assigned to a federation
+		:param federation_id: The federation id
+		:type federation_id: int 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
+	@restapi.api_request(u'post', u'federations/{federation_id:d}/federation_resolvers', (u'1.2', u'1.3'))
+	def assign_federation_resolver_to_federations(self, federation_id=None, data=None):
+		"""
+		Create one or more federation / federation resolver assignments. 
+		:param federation_id: The federation id
+		:type federation_id: int 
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
 	# Federation Resolver
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/federation_resolver.html#federation-resolver
+	#
 
+	@restapi.api_request(u'get', u'federation_resolvers', (u'1.2', u'1.3'))
+	def get_federation_resolvers(self, query_params=None):
+		"""
+		Get federation resolvers. 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
+	@restapi.api_request(u'post', u'federation_resolvers', (u'1.2', u'1.3'))
+	def create_federation_resolver(self, data=None):
+		"""
+		Create a federation resolver. 
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'delete', u'federation_resolvers/{federation_resolver_id:d}', (u'1.2', u'1.3'))
+	def delete_federation_resolver(self, federation_resolver_id=None):
+		"""
+		Delete a federation resolver. 
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+
+	#
 	# Federation User
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/federation_user.html#federation-user
+	#
 
+	@restapi.api_request(u'get', u'federations/{federation_id:d}/users', (u'1.2', u'1.3'))
+	def get_federation_users(self, federation_id=None):
+		"""
+		Retrieves users assigned to a federation. 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'post', u'federations/{federation_id:d}/users', (u'1.2', u'1.3'))
+	def create_federation_user(self, federation_id=None, data=None):
+		"""
+		Create one or more federation / user assignments. 
+		:param federation_id: Federation ID
+		:type federation_id: int
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'delete', u'federations/{federation_id:d}/users/{user_id:d}', (u'1.2', u'1.3'))
+	def delete_federation_user(self, federation_id=None, user_id=None):
+		"""
+		Delete one or more federation / user assignments. 
+		:param federation_id: Federation ID
+		:type federation_id: int
+		:param user_id: Federation User ID
+		:type user_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
 	# Hardware Info
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/hwinfo.html#hardware-info
+	#
+
+	@restapi.api_request(u'get', u'hwinfo.json', (u'1.2', u'1.3'))
+	def get_hwinfo(self):
+		"""
+		Get hwinfo for servers. 
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
 
 	#
 	# ISO
@@ -1560,8 +1786,11 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
-
+	#
 	# Physical Location
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/phys_location.html#physical-location
+	#
+
 	@restapi.api_request(u'get', u'phys_locations', (u'1.1', u'1.2', u'1.3',))
 	def get_physical_locations(self, query_params=None):
 		"""
@@ -1570,11 +1799,71 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
+	@restapi.api_request(u'get', u'phys_locations/trimmed.json', (u'1.1', u'1.2', u'1.3',))
+	def get_trimmed_physical_locations(self):
+		"""
+		Get Physical Locations with name only
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'phys_locations/{physical_location_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def get_physical_location_by_id(self, physical_location_id=None):
+		"""
+		Get Physical Location by id
+		:param physical_location_id: The id to retrieve
+		:type physical_location_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'put', u'phys_locations/{physical_location_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def update_physical_location(self, physical_location_id=None, query_params=None):
+		"""
+		Update Physical Location by id
+		:param physical_location_id: The id to update
+		:type physical_location_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'post', u'regions/{region_name:s}/phys_locations', (u'1.1', u'1.2', u'1.3',))
+	def create_physical_location(self, region_name=None, query_params=None):
+		"""
+		Create physical location
+		:param region_name: the name of the region to create physical location into
+		:type region_name: String
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'delete', u'phys_locations/{physical_location_id:d}', (u'1.1', u'1.2', u'1.3',))
+	def delete_physical_location(self, physical_location_id=None, query_params=None):
+		"""
+		Delete Physical Location by id
+		:param physical_location_id: The id to delete
+		:type physical_location_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	#
 	# Profiles
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/profile.html#profiles
+	#
+
 	@restapi.api_request(u'get', u'profiles', (u'1.1', u'1.2', u'1.3',))
 	def get_profiles(self, query_params=None):
 		"""
 		Get Profiles.
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'profiles/trimmed', (u'1.1', u'1.2', u'1.3',))
+	def get_trimmed_profiles(self):
+		"""
+		Get Profiles with names only
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1586,6 +1875,30 @@ class TOSession(restapi.RestApiSession):
 		:param profile_id: The profile Id
 		:type profile_id: int
 		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'post', u'profiles', (u'1.1', u'1.2', u'1.3',))
+	def create_profile(self, data=None):
+		"""
+		Create a profile
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'post', u'profiles/name/{new_profile_name:s}/copy/{copy_profile_name:s}', (u'1.1', u'1.2', u'1.3',))
+	def copy_profile(self, new_profile_name=None, copy_profile_name=None, data=None):
+		"""
+		Copy profile to a new profile. The new profile name must not exist
+		:param new_profile_name: The name of profile to copy to
+		:type new_profile_name: String
+		:param copy_profile_name: The name of profile copy from
+		:type copy_profile_name: String
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
@@ -1611,7 +1924,18 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
+	#
 	# Profile Parameters
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/profile_parameter.html#api-1-2-profileparameters
+	#
+
+	@restapi.api_request(u'post', u'profileparameters', (u'1.1', u'1.2', u'1.3',))
+	def associate_paramater_to_profile(self, data=None):
+		"""
+		Associate parameter to profile.
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
 
 
 	@restapi.api_request(u'post', u'profiles/id/{profile_id:d}/parameters', (u'1.1', u'1.2', u'1.3',))
@@ -1625,6 +1949,27 @@ class TOSession(restapi.RestApiSession):
 		:rtype: Tuple[Dict[Text, Any], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
+
+	@restapi.api_request(u'post', u'profileparameter', (u'1.1', u'1.2', u'1.3',))
+	def assign_profile_to_parameter_ids(self, data=None):
+		"""
+		Create one or more profile / parameter assignments.
+		:param data: The data to assign
+		:type data: Union[Dict[Text, Any], List[Dict[Text, Any]]]
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'post', u'parameterprofile', (u'1.1', u'1.2', u'1.3',))
+	def assign_parameter_to_profile_ids(self, data=None):
+		"""
+		Create one or more parameter / profile assignments.
+		:param data: The data to assign
+		:type data: Union[Dict[Text, Any], List[Dict[Text, Any]]]
+		:rtype: Tuple[Dict[Text, Any], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
 
 	@restapi.api_request(u'post', u'profiles/name/{profile_name}/parameters', (u'1.1', u'1.2', u'1.3',))
 	def associate_parameters_by_profile_name(self, profile_name=None, data=None):
@@ -1724,8 +2069,55 @@ class TOSession(restapi.RestApiSession):
 
 	#
 	# Server
+	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/server.html#server
 	#
-	#
+
+	@restapi.api_request(u'get', u'servers', (u'1.1', u'1.2',u'1.3',))
+	def get_servers(self, query_params=None):
+		"""
+		Get Servers.
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[Text, Any]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'servers/{server_id:d}', (u'1.1', u'1.2',u'1.3',))
+	def get_server_by_id(self, server_id=None:
+		"""
+		Get Server by Server ID
+		:param server_id: The server id to retrieve
+		:type server_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'servers/{server_id:d}/deliveryservices', (u'1.1', u'1.2',u'1.3',))
+	def get_server_delivery_services(self, server_id=None:
+		"""
+		Retrieves all delivery services assigned to the server
+		:param server_id: The server id to retrieve
+		:type server_id: int
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'servers/total', (u'1.1', u'1.2',u'1.3',))
+	def get_server_type_count(self:
+		"""
+		Retrieves a count of CDN servers by type
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
+	@restapi.api_request(u'get', u'servers/status', (u'1.1', u'1.2',u'1.3',))
+	def get_server_status_count(self:
+		"""
+		Retrieves a count of CDN servers by status
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+		"""
+
 	@restapi.api_request(u'get', u'servers/hostname/{name}/details', (u'1.1', u'1.2', u'1.3',))
 	def get_server_details(self, name=None):
 		"""
@@ -1737,12 +2129,12 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
-	@restapi.api_request(u'get', u'servers', (u'1.1', u'1.2',u'1.3',))
-	def get_servers(self, query_params=None):
+	@restapi.api_request(u'post', u'servercheck', (u'1.1', u'1.2', u'1.3',))
+	def create_servercheck(self, data=None):
 		"""
-		Get Servers.
-		:param query_params: The optional url query parameters for the call
-		:type query_params: Dict[Text, Any]
+		Post a server check result to the serverchecks table.
+		:param data: The parameter data to use for server creation
+		:type data: Dict[Text, Any]
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
