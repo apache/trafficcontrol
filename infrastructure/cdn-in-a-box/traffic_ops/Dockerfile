@@ -26,18 +26,20 @@ FROM centos:7
 RUN yum install -y epel-release && \
     yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm && \
     yum install -y \
-	    cpanminus \
-      bind-utils \ 
-      net-tools \ 
-	    gettext \
-	    nmap-ncat \
-	    openssl \
-	    perl \
-	    perl-Crypt-ScryptKDF \
-	    perl-Test-CPAN-Meta \
-      perl-JSON-PP \
-      git \ 
-      golang 
+        cpanminus \
+        bind-utils \
+        net-tools \
+        gettext \
+        nmap-ncat \
+        openssl \
+        perl \
+        perl-Crypt-ScryptKDF \
+        perl-Test-CPAN-Meta \
+        perl-JSON-PP \
+        git && \
+    yum-config-manager --add-repo 'http://vault.centos.org/7.5.1804/os/x86_64/' && \
+    yum -y install --enablerepo=vault* golang-1.9.4 && \
+    yum -y clean all
 
 RUN cpanm Carton
 RUN yum install -y perl-DBIx-Connector
