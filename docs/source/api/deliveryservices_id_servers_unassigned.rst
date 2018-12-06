@@ -67,8 +67,8 @@ Response Structure
 :mgmtIpGateway:  The IPv4 gateway of the management port (optional
 :mgmtIpNetmask:  The IPv4 netmask of the management port (optional
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:physLocation:   The physical location name (see :ref:`to-api-v11-phys-loc`)
-:physLocationId: The physical location id (see :ref:`to-api-v11-phys-loc`)
+:physLocation:   The physical location name (see :ref:`to-api-phys_locations`)
+:physLocationId: The physical location id (see :ref:`to-api-phys_locations`)
 :profile:        The assigned profile name (see :ref:`to-api-v11-profile`)
 :profileDesc:    The assigned profile description (see :ref:`to-api-v11-profile`)
 :profileId:      The assigned profile Id (see :ref:`to-api-v11-profile`)

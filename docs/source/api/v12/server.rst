@@ -108,9 +108,9 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``offlineReason``  | string | A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status.                                   |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``physLocation``   | string | The physical location name (see :ref:`to-api-v11-phys-loc`).                                               |
+  | ``physLocation``   | string | The physical location name (see :ref:`to-api-phys_locations`).                                             |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``physLocationId`` | string | The physical location id (see :ref:`to-api-v11-phys-loc`).                                                 |
+  | ``physLocationId`` | string | The physical location id (see :ref:`to-api-phys_locations`).                                               |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``profile``        | string | The assigned profile name (see :ref:`to-api-v11-profile`).                                                 |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
@@ -264,9 +264,9 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``offlineReason``  | string | A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status.                                   |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``physLocation``   | string | The physical location name (see :ref:`to-api-v11-phys-loc`).                                               |
+  | ``physLocation``   | string | The physical location name (see :ref:`to-api-phys_locations`).                                             |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``physLocationId`` | string | The physical location id (see :ref:`to-api-v11-phys-loc`).                                                 |
+  | ``physLocationId`` | string | The physical location id (see :ref:`to-api-phys_locations`).                                               |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``profile``        | string | The assigned profile name (see :ref:`to-api-v11-profile`).                                                 |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
@@ -745,7 +745,7 @@ Server
   +----------------------+--------+-------------------------------------------------------------------------------------------------------------+
   | ``mgmtIpNetmask``    | string | The IPv4 netmask of the management port (optional).                                                         |
   +----------------------+--------+-------------------------------------------------------------------------------------------------------------+
-  | ``physLocation``     | string | The physical location name (see :ref:`to-api-v12-phys-loc`).                                                |
+  | ``physLocation``     | string | The physical location name (see :ref:`to-api-phys_locations`).                                              |
   +----------------------+--------+-------------------------------------------------------------------------------------------------------------+
   | ``profile``          | string | The assigned profile name (see :ref:`to-api-v12-profile`).                                                  |
   +----------------------+--------+-------------------------------------------------------------------------------------------------------------+
