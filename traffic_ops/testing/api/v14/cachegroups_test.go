@@ -22,7 +22,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestCacheGroups(t *testing.T) {
@@ -225,7 +224,6 @@ func DeleteTestCacheGroups(t *testing.T) {
 }
 
 func CheckCacheGroupsAuthentication(t *testing.T) {
-	failed := false
 	errFormat := "expected error from %s when unauthenticated"
 
 	cg := testData.CacheGroups[0]
@@ -233,38 +231,25 @@ func CheckCacheGroupsAuthentication(t *testing.T) {
 	resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by name: %v - %v\n", *cg.Name, err)
-		failed = true
 	}
 	cg = resp[0]
 
-	errors := make([]utils.ErrorAndMessage, 0)
-
-	_, _, err = NoAuthTOSession.CreateCacheGroupNullable(cg)
-	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "CreateCacheGroup")})
-
-	_, _, err = NoAuthTOSession.GetCacheGroupsNullable()
-	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "GetCacheGroups")})
-
-	_, _, err = NoAuthTOSession.GetCacheGroupNullableByName(*cg.Name)
-	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "GetCacheGroupByName")})
-
-	_, _, err = NoAuthTOSession.GetCacheGroupNullableByID(*cg.ID)
-	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "GetCacheGroupByID")})
-
-	_, _, err = NoAuthTOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
-	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "UpdateCacheGroupByID")})
-
-	_, _, err = NoAuthTOSession.DeleteCacheGroupByID(*cg.ID)
-	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "DeleteCacheGroupByID")})
-
-	for _, err := range errors {
-		if err.Error != nil {
-			t.Error(err.Message)
-			failed = true
-		}
+	if _, _, err = NoAuthTOSession.CreateCacheGroupNullable(cg); err == nil {
+		t.Error(fmt.Errorf(errFormat, "CreateCacheGroup"))
 	}
-
-	if !failed {
-		log.Debugln("TestCacheGroupsAuthentication() PASSED: ")
+	if _, _, err = NoAuthTOSession.GetCacheGroupsNullable(); err == nil {
+		t.Error(fmt.Errorf(errFormat, "GetCacheGroups"))
+	}
+	if _, _, err = NoAuthTOSession.GetCacheGroupNullableByName(*cg.Name); err == nil {
+		t.Error(fmt.Errorf(errFormat, "GetCacheGroupByName"))
+	}
+	if _, _, err = NoAuthTOSession.GetCacheGroupNullableByID(*cg.ID); err == nil {
+		t.Error(fmt.Errorf(errFormat, "GetCacheGroupByID"))
+	}
+	if _, _, err = NoAuthTOSession.UpdateCacheGroupNullableByID(*cg.ID, cg); err == nil {
+		t.Error(fmt.Errorf(errFormat, "UpdateCacheGroupByID"))
+	}
+	if _, _, err = NoAuthTOSession.DeleteCacheGroupByID(*cg.ID); err == nil {
+		t.Error(fmt.Errorf(errFormat, "DeleteCacheGroupByID"))
 	}
 }
