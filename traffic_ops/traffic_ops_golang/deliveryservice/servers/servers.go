@@ -511,11 +511,6 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 		return nil, nil, errors.New("reading dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
 	}
 
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(tx)
-	if err != nil {
-		log.Errorln("checking if tenancy is enabled: " + err.Error())
-		return nil, nil, err, http.StatusInternalServerError
-	}
 	if where != "" {
 		where = where + " AND "
 	} else {
@@ -523,15 +518,13 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	}
 	where += "ds.id in (SELECT deliveryService FROM deliveryservice_server where server = :server)"
 
-	if tenancyEnabled {
-		log.Debugln("Tenancy is enabled")
-		tenantIDs, err := tenant.GetUserTenantIDListTx(tx, user.TenantID)
-		if err != nil {
-			log.Errorln("received error querying for user's tenants: " + err.Error())
-			return nil, nil, err, http.StatusInternalServerError
-		}
-		where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
+	log.Debugln("Tenancy is enabled")
+	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, user.TenantID)
+	if err != nil {
+		log.Errorln("received error querying for user's tenants: " + err.Error())
+		return nil, nil, err, http.StatusInternalServerError
 	}
+	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
 
 	query := deliveryservice.GetDSSelectQuery() + where + orderBy
 	queryValues["server"] = dss.APIInfo().Params["id"]
