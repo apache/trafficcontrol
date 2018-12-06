@@ -543,6 +543,10 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]
 	}
+	if _, ok := params["orderby"]; !ok {
+		params["orderby"] = "xml_id"
+	}
+
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
@@ -555,10 +559,6 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 		"logsEnabled":      dbhelpers.WhereColumnInfo{"ds.logs_enabled", api.IsBool},
 		"tenant":           dbhelpers.WhereColumnInfo{"ds.tenant_id", api.IsInt},
 		"signingAlgorithm": dbhelpers.WhereColumnInfo{"ds.signing_algorithm", nil},
-	}
-
-	if _, ok := params["orderby"]; !ok {
-		params["orderby"] = "xml_id"
 	}
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
@@ -586,6 +586,10 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
+	return GetDeliveryServices(query, queryValues, tx)
+}
+
+func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceNullable, []error, tc.ApiErrorType) {
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
@@ -938,6 +942,11 @@ func deleteLocationParam(tx *sql.Tx, configFile string) error {
 		return errors.New("executing parameter profile_parameter delete: " + err.Error())
 	}
 	return nil
+}
+
+// export the selectQuery for the 'servers' package.
+func GetDSSelectQuery() string {
+	return selectQuery()
 }
 
 func selectQuery() string {

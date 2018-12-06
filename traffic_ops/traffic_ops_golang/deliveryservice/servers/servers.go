@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
@@ -472,7 +473,7 @@ func dssSelectQuery() string {
 
 type TODSSDeliveryService struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	tc.DSSDeliveryService
+	tc.DeliveryServiceNullable
 }
 
 func (dss *TODSSDeliveryService) APIInfo() *api.APIInfo {
@@ -480,98 +481,63 @@ func (dss *TODSSDeliveryService) APIInfo() *api.APIInfo {
 }
 
 func TypeSingleton(reqInfo *api.APIInfo) api.Reader {
-	return &TODSSDeliveryService{reqInfo, tc.DSSDeliveryService{}}
+	return &TODSSDeliveryService{reqInfo, tc.DeliveryServiceNullable{}}
 }
 
 // Read shows all of the delivery services associated with the specified server.
 func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
-	orderby := dss.APIInfo().Params["orderby"]
-	if orderby == "" {
-		orderby = "deliveryService"
+	returnable := []interface{}{}
+	params := dss.APIInfo().Params
+	tx := dss.APIInfo().Tx.Tx
+	user := dss.APIInfo().User
+
+	if err := api.IsInt(params["id"]); err != nil {
+		return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
 	}
 
-	query := SDSSelectQuery()
-	log.Debugln("Query is ", query)
+	if _, ok := params["orderby"]; !ok {
+		params["orderby"] = "xml_id"
+	}
 
-	rows, err := dss.APIInfo().Tx.Queryx(query, dss.APIInfo().Params["id"])
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+		"xml_id": dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
+		"xmlId":  dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
+	}
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
+	if len(errs) > 0 {
+		return nil, nil, errors.New("reading server dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
+	}
+
+	if where != "" {
+		where = where + " AND "
+	} else {
+		where = "WHERE "
+	}
+	where += "ds.id in (SELECT deliveryService FROM deliveryservice_server where server = :server)"
+
+	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, user.TenantID)
 	if err != nil {
-		log.Errorf("Error querying DeliveryserviceServers: %v", err)
-		return nil, nil, errors.New("dss querying: " + err.Error()), http.StatusInternalServerError
+		log.Errorln("received error querying for user's tenants: " + err.Error())
+		return nil, nil, err, http.StatusInternalServerError
 	}
-	defer rows.Close()
+	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
 
-	services := []interface{}{}
-	for rows.Next() {
-		var s tc.DSSDeliveryService
-		if err = rows.StructScan(&s); err != nil {
-			return nil, nil, errors.New("dss scanning: " + err.Error()), http.StatusInternalServerError
-		}
-		services = append(services, s)
+	query := deliveryservice.GetDSSelectQuery() + where + orderBy
+	queryValues["server"] = dss.APIInfo().Params["id"]
+	log.Debugln("generated deliveryServices query: " + query)
+	log.Debugf("executing with values: %++v\n", queryValues)
+
+	dses, errs, _ := deliveryservice.GetDeliveryServices(query, queryValues, dss.APIInfo().Tx)
+	if len(errs) > 0 {
+		return nil, nil, errors.New("reading server dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
 	}
 
-	return services, nil, nil, http.StatusOK
-}
-
-func SDSSelectQuery() string {
-
-	selectStmt := `SELECT
- 		active,
-		ccr_dns_ttl,
-		cdn_id,
-		cacheurl,
-		check_path,
-		dns_bypass_cname,
-		dns_bypass_ip,
-		dns_bypass_ip6,
-		dns_bypass_ttl,
-		dscp,
-		display_name,
-		edge_header_rewrite,
-		geo_limit,
-		geo_limit_countries,
-		geolimit_redirect_url,
-		geo_provider,
-		global_max_mbps,
-		global_max_tps,
-		http_bypass_fqdn,
-		id,
-		ipv6_routing_enabled,
-		info_url,
-		initial_dispersion,
-		last_updated,
-		logs_enabled,
-		long_desc,
-		long_desc_1,
-		long_desc_2,
-		max_dns_answers,
-		mid_header_rewrite,
-		miss_lat,
-		miss_long,
-		multi_site_origin,
-		multi_site_origin_algorithm,
-		(SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
-		FROM origin o
-		WHERE o.deliveryservice = d.id
-		AND o.is_primary) as org_server_fqdn,
-		origin_shield,
-		profile,
-		protocol,
-		qstring_ignore,
-		range_request_handling,
-		regex_remap,
-		regional_geo_blocking,
-		remap_text,
-		routing_name,
-		ssl_key_version,
-		signing_algorithm,
-		tr_request_headers,
-		tr_response_headers,
-		tenant_id,
-		type,
-		xml_id
-	FROM deliveryservice d
-		WHERE id in (SELECT deliveryService FROM deliveryservice_server where server = $1)`
-	return selectStmt
+	for _, ds := range dses {
+		returnable = append(returnable, ds)
+	}
+	return returnable, nil, nil, http.StatusOK
 }
 
 func updateQuery() string {
