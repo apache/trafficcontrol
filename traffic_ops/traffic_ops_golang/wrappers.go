@@ -63,7 +63,7 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 			if user.PrivLevel < privLevelRequired {
 				api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
 			}
-			r = api.AddUserToReq(r, user)
+			api.AddUserToReq(r, user)
 			handlerFunc(w, r)
 		}
 	}
