@@ -526,8 +526,8 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 	return user, nil, nil, http.StatusOK
 }
 
-func AddUserToReq(r *http.Request, u auth.CurrentUser) *http.Request {
+func AddUserToReq(r *http.Request, u auth.CurrentUser) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey, u)
-	return r.WithContext(ctx)
+	*r = *r.WithContext(ctx)
 }
