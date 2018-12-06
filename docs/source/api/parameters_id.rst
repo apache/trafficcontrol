@@ -23,6 +23,9 @@
 =======
 Gets details about a specific parameter
 
+.. deprecated:: 1.1
+	Use the ``id`` query parameter of the :ref:`to-api-parameters` endpoint instead
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
