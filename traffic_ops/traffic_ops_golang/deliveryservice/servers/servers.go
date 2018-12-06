@@ -518,7 +518,6 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	}
 	where += "ds.id in (SELECT deliveryService FROM deliveryservice_server where server = :server)"
 
-	log.Debugln("Tenancy is enabled")
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, user.TenantID)
 	if err != nil {
 		log.Errorln("received error querying for user's tenants: " + err.Error())
