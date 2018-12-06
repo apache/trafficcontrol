@@ -99,6 +99,68 @@ variables.env
 .. [2] Consider ``make -j`` to build quickly, if your computer can handle multiple builds at once.
 .. [3] Please do NOT use the Perl endpoints directly. The CDN will only work properly if everything hits the Go API, which will proxy to the Perl endpoints as needed.
 
+X.509 SSL/TLS Certificates
+=========================
+All components in Apache Traffic Control utilize SSL/TLS secure communications by default.  For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Certificate Authority (CA) is generated at the first initial startup.  Additional self-signed wildcard certificates are generated for each container service and all delivery services of the CDN.  All certificates and keys are stored in the ``ca`` host volume which is located at ``infrastruture/cdn-in-a-box/traffic_ops/ca`` [4]_. 
+
+.. _ciab-x509-certificate-list:
+.. table:: Self-Signed X.509 Certificate List
+
+	+---------------------------+-----------------------------------+------------------------------+
+	| Filename                  | Description                       | X.509 CN/SAN                 |                  
+	+===========================+===================================+==============================+
+	| CIAB-CA.crt               | Shared CA Certificate             | N/A                          |
+	+---------------------------+-----------------------------------+------------------------------+
+	| infra.ciab.test.crt       | Infrastruture Certificate         | \*.infra.ciab.test           |
+	+---------------------------+-----------------------------------+------------------------------+
+	| demo1.mycdn.ciab.test.crt | Demo1 Delivery Service Certificate| \*.demo1.mycdn.ciab.test     |
+	+---------------------------+-----------------------------------+------------------------------+
+	| demo2.mycdn.ciab.test.crt | Demo2 Delivery Service Certificate| \*.demo2.mycdn.ciab.test     |
+	+---------------------------+-----------------------------------+------------------------------+
+	| demo3.mycdn.ciab.test.crt | Demo3 Delivery Service Certificate| \*.demo3.mycdn.ciab.test     |
+	+---------------------------+-----------------------------------+------------------------------+
+
+.. [4] The ``ca`` volume is not purged with normal ``docker volume`` commands. This feature is by design to allow the existing shared SSL certificate to be trusted at the system level across restarts. To re-generate all SSL certificates and keys, remove the ``infrastructure/cdn-in-a-box/traffic_ops/ca`` directory before startup.
+
+Trusting the CA 
+---------------
+For developer and testing use-cases, it may be necessary to have full x509 CA validation by HTTPS clients [5]_.  For x509 validation to work properly, the self-signed x509 CA certificate must be trusted either at the system leevel or by the client applicatoin itself. Procedures to import and trust the CA x.509 certifcate are outlined below for OSX, Windows, and two Linuxs below [6]_.  
+
+Importing the CA Certificate on OSX
+-----------------------------------
+1. Copy the CIAB root CA certificate from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA.crt`` to the Mac.
+2. Import the CIAB root CA certificate on the Mac.
+3. Double-click the CIAB root CA certificate to open it in Keychain Access.
+4. The CIAB root CA certificate appears in login.
+5. Copy the CIAB root CA certificate to System.
+6. Open the CIAB root CA certificate, expand Trust, select Use System Defaults, and save your changes.
+7. Reopen the CIAB root CA certificate, expand Trust, select Always Trust, and save your changes.
+8. Delete the CIAB root CA certificate from login.
+9. Restart all HTTPS clients (browsers, etc).
+
+Importing the CA certificate on Windows
+---------------------------------------
+1. Copy the CIAB root CA certificate from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA.crt`` to Windows filesystem.
+2. As Administrator, start the Microsoft Management Console.
+3. Add the Certificates snap-in for the computer account and manage certificates for the local computer.
+4. Import the CIAB root CA certificate into Trusted Root Certification Authorities > Certificates.
+5. Restart all HTTPS clients (browsers, etc).
+
+Importing the CA certificate on Linux/Centos7
+---------------------------------------------
+1. Copy the CIAB root CA certificate from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA.crt`` to path ``/etc/pki/ca-trust/source/anchors``. 
+2. Run ``update-ca-trust-extract`` as the root user.
+3. Restart all HTTPS clients (browsers, etc).
+
+Importing the CA certificate on Linux/Ubuntu
+--------------------------------------------
+1. Copy the CIAB root CA certificate from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA.crt`` to path ``/usr/local/share/ca-certificates``. 
+2. Run ``update-ca-certificates`` as the root user.
+3. Restart all HTTPS clients (browsers, etc).
+
+.. [5] All containers within CDN-in-a-Box start up with the self-signed CA already trusted. 
+.. [6] HTTP Client applications such as Google Chrome, Firefox, curl, and wget can also be individually configured to trust the CA certificate.  Each application procedure can be found quickly online via Google.
+
 Advanced Usage
 ==============
 This section will be amended as functionality is added to the CDN in a Box project.
@@ -109,16 +171,98 @@ The "enroller" provides an efficient way for Traffic Ops to be populated with da
 
 The enroller runs within CDN in a Box using the ``-dir <dir>`` switch which provides the above behavior.  It can also be run using the ``-http :<port>`` switch to instead have it listen on the indicated port.  In this case, it accepts only POST requests with the JSON provided using the POST JSON method, e.g. ``curl -X POST https://enroller/api/1.4/regions -d @newregion.json``.   CDN in a Box does not currently use this method, but may be modified in the future to avoid using the shared volume approach.
 
+Mock Origin Service
+-------------------
+The default "origin" service container provides a basic static file HTTP server as the central respository for content.  Additional files can be added to the origin root content directory located at ``infrastructure/cdn-in-a-box/origin/content``.  To request content directly from the origin directly and bypass the CDN:
 
-The Test Client
----------------
-The "testclient" service is an optional extension to CDN in a Box which provides several more user-friendly interfaces to the CDN network. Specifically it contains:
+* Origin Service URL: http://origin.infra.ciab.test/index.html 
+* Docker Host: http://localhost:9200/index.html
 
-* A small HTTP proxy on port 7070
-* An SSH server listening on port 2200
-* A VNC server on port 5900
-* A Socks5 Proxy on port 9090
+.. _ciab-optional-containers:
 
-Using this, the CDN can be directly utilized using the network's internal name resolution and a web browser. To use the test client, pass ``-f docker-compose.testclient.yml`` either to the same ``docker-compose`` command, or to a separate ``docker-compose`` command run after the CDN in a Box has already started. If the former is done, note that it is also necessary to pass ``-f docker-compose.yml`` to properly build the entire system along with the test client.
+Optional Containers
+===================
+
+All optional containers that are not part of the core CDN-in-a-Box stack are located in the ``infrastructure/cdn-in-a-box/optional`` directory.
+
+.. code-block:: shell
+
+	infrastructure/cdn-in-a-box/optional/docker-compose.$NAME.yml
+	infrastructure/cdn-in-a-box/optional/$NAME/Dockerfile
+
+Multiple optional containers may be combined by using a shell alias:
+
+.. code-block:: shell
+
+	# From the infrastructure/cdn-in-a-box directory
+	alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.$NAME1.yml -f  $PWD/optional/docker-compose.$NAME2.yml"
+	docker volume prune -f
+	mydc build
+	mydc up
+
+Socks Proxy
+-----------
+Dantes socks proxy is an optional container that can be used to provide browsers and other clients the ability to resolve DNS queries and network connectivity directly on the tcnet bridged interface.  This is very helpful when running the CDN-In-A-Box stack on OSX/Windows docker host that lacks network bridge/ipforward support. Below is the basic procedure to enable the Socks Proxy support for CDN-in-a-Box:
+
+1. Start the CDN-in-a-Box stack at least once so that the x.509 self-signed certificate authority (CA) is created.
+2. On the host, import and Trust the CA for your target OS. See `Trusting the CA`_
+3. On the host, using either firefox or chrome, download the FoxyProxy Standard browser plugin which enables dynamic proxy support via URL regex
+4. Once FoxyProxy is installed, click the Fox icon on the upper right hand of the browser window, select 'Options'
+5. Once in Options Dialog, Click 'Add New Proxy' and navigate to the General tab:
+6. Fill in the General tab according to the table 
+
+	+------------+---------+
+	| Name       |   Value |
+	+============+=========+
+	| Proxy Name |    CIAB |
+	+------------+---------+
+	| Color      |   Green |
+	+------------+---------+
+
+7. Fill in the Proxy Details tab according to the table
+
+	+----------------------------+-----------+
+	| Name                       |     Value |
+	+============================+===========+
+	| Manual Proxy Configuration |      CIAB |
+	+----------------------------+-----------+
+	| Host or IP Address         | localhost |
+	+----------------------------+-----------+
+	| Port                       |      9080 |
+	+----------------------------+-----------+
+	| Socks Proxy                |   checked |
+	+----------------------------+-----------+
+	| Socks V5                   |  selected |
+	+----------------------------+-----------+
+
+8. Go to URL Patterns tab, click Add New Pattern, and fill out form according to 
+
+	+--------------+--------------+
+	| Name         |        Value |
+	+==============+==============+
+	| Pattern Name | CIAB Pattern |
+	+--------------+--------------+
+	| URL Pattern  |   \*.test/\* |
+	+--------------+--------------+
+	| Whitelist    |     selected |
+	+--------------+--------------+
+	| Wildcards    |     selected |
+	+--------------+--------------+
+
+9. Enable dynamic 'pre-defined and patterns' mode by clicking the fox icon in the upper right of the browser. This mode only forwards URLs that match the wildcard `\*.test/\*` to the Socks V5 proxy.
+
+10. On the docker host start up CDN-in-a-Box stack using a custom bash alias
+
+.. code-block:: shell
+
+	# From infrastructure/cdn-in-a-box
+	alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.socksproxy.yml"
+	docker volume prune -f
+	mydc build 
+	mydc kill 
+	mydc rm -fv 
+	mydc up
+
+11. Once the CDN-in-a-box stack has started, use the aformentioned browser to access traffic portal via the socks proxy on the docker host.
 
 .. seealso:: `The official Docker Compose documentation CLI reference <https://docs.docker.com/compose/reference/>`_ for complete instructions on how to pass service definition files to the ``docker-compose`` executable.
