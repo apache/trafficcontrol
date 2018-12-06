@@ -487,7 +487,7 @@ func TypeSingleton(reqInfo *api.APIInfo) api.Reader {
 // Read shows all of the delivery services associated with the specified server.
 func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
-	params := make(map[string]string)
+	params := dss.APIInfo().Params
 	tx := dss.APIInfo().Tx.Tx
 	user := dss.APIInfo().User
 
@@ -540,12 +540,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 
 	dses, errs, _ := deliveryservice.GetDeliveryServices(query, queryValues, dss.APIInfo().Tx)
 	if len(errs) > 0 {
-		for _, err := range errs {
-			if err.Error() == `id cannot parse to integer` { // TODO create const for string
-				return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
-			}
-		}
-		return nil, nil, errors.New("reading dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
+		return nil, nil, errors.New("reading server dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
 	}
 
 	for _, ds := range dses {
