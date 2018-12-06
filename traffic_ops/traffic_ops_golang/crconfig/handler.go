@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
 )
 
 // Handler creates and serves the CRConfig from the raw SQL data.
@@ -61,6 +62,28 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	snapshot, cdnExists, err := GetSnapshot(inf.Tx.Tx, inf.Params["cdn"])
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		return
+	}
+	if !cdnExists {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
+		return
+	}
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Write([]byte(`{"response":` + snapshot + `}`))
+}
+
+// SnapshotGetMonitoringHandler gets and serves the CRConfig from the snapshot table.
+func SnapshotGetMonitoringHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	snapshot, cdnExists, err := GetSnapshotMonitoring(inf.Tx.Tx, inf.Params["cdn"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
 		return
@@ -129,11 +152,18 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := Snapshot(inf.Tx.Tx, crConfig); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snaphsotting CRConfig: "+err.Error()))
+	monitoringJSON, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, cdn)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" getting monitoring.json data: "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, inf.User, inf.Tx.Tx)
+
+	if err := Snapshot(inf.Tx.Tx, crConfig, monitoringJSON); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snaphsotting CRConfig and Monitoring: "+err.Error()))
+		return
+	}
+
+	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig and Monitor performed for "+cdn, inf.User, inf.Tx.Tx)
 	w.WriteHeader(http.StatusOK) // TODO change to 204 No Content in new version
 }
 
@@ -152,7 +182,13 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := Snapshot(inf.Tx.Tx, crConfig); err != nil {
+	tm, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"])
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" getting monitoring.json data: "+err.Error()))
+		return
+	}
+
+	if err := Snapshot(inf.Tx.Tx, crConfig, tm); err != nil {
 		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
 		return
 	}

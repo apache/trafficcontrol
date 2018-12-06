@@ -53,7 +53,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federations"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/login"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/physlocation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ping"
@@ -142,7 +141,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.4, http.MethodGet, `cdns/dnsseckeys/refresh/?(\.json)?$`, cdn.RefreshDNSSECKeys, auth.PrivLevelOperations, Authenticated, nil},
 
 		//CDN: Monitoring: Traffic Monitor
-		{1.1, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, monitoring.Get, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, crconfig.SnapshotGetMonitoringHandler, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Division: CRUD
 		{1.1, http.MethodGet, `divisions/?(\.json)?$`, api.ReadHandler(division.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -275,9 +274,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.2, http.MethodGet, `servers/details$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
 		{1.2, http.MethodGet, `servers/status$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
 		{1.2, http.MethodGet, `servers/totals$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
-
-		//Monitoring
-		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoring.Get, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//ASNs
 		{1.3, http.MethodGet, `asns/?(\.json)?$`, api.ReadHandler(asn.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},

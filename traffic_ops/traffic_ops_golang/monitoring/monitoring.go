@@ -109,10 +109,10 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(getMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"]))
+	api.RespWriter(w, r, inf.Tx.Tx)(GetMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"]))
 }
 
-func getMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
+func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
 	monitors, caches, routers, err := getMonitoringServers(tx, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting servers: %v", err)

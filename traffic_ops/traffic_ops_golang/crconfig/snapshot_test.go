@@ -21,6 +21,7 @@ package crconfig
 
 import (
 	"context"
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"reflect"
@@ -28,7 +29,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -36,10 +37,16 @@ func ExpectedGetSnapshot(crc *tc.CRConfig) ([]byte, error) {
 	return json.Marshal(crc)
 }
 
+func ExpectedGetMontioringSnapshot(crc *tc.CRConfig, tx *sql.Tx) ([]byte, error) {
+	tm, _ := monitoring.GetMonitoringJSON(tx, *crc.Stats.CDNName)
+	return json.Marshal(tm)
+}
+
 func MockGetSnapshot(mock sqlmock.Sqlmock, expected []byte, cdn string) {
 	rows := sqlmock.NewRows([]string{"snapshot"})
 	rows = rows.AddRow(expected)
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	rows = rows.AddRow(expected)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetSnapshot(t *testing.T) {
@@ -97,8 +104,8 @@ func (a Any) Match(v driver.Value) bool {
 	return true
 }
 
-func MockSnapshot(mock sqlmock.Sqlmock, expected []byte, cdn string) {
-	mock.ExpectExec("insert").WithArgs(cdn, expected, AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
+func MockSnapshot(mock sqlmock.Sqlmock, expected []byte, expectedtm []byte, cdn string) {
+	mock.ExpectExec("insert").WithArgs(cdn, expected, AnyTime{}, expectedtm).WillReturnResult(sqlmock.NewResult(1, 1))
 }
 
 func TestSnapshot(t *testing.T) {
@@ -112,23 +119,31 @@ func TestSnapshot(t *testing.T) {
 
 	crc := &tc.CRConfig{}
 	crc.Stats.CDNName = &cdn
-
 	mock.ExpectBegin()
-	expected, err := ExpectedGetSnapshot(crc)
-	if err != nil {
-		t.Fatalf("GetSnapshot creating expected err expected: nil, actual: %v", err)
-	}
-	MockSnapshot(mock, expected, cdn)
-	mock.ExpectCommit()
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
+
+	expected, err := ExpectedGetSnapshot(crc)
+	if err != nil {
+		t.Fatalf("GetSnapshot creating expected err expected: nil, actual: %v", err)
+	}
+
+	expectedtm, err := ExpectedGetMontioringSnapshot(crc, tx)
+	if err != nil {
+		t.Fatalf("GetSnapshotMonitor creating expected err expected: nil, actual: %v", err)
+	}
+
+	tm, _ := monitoring.GetMonitoringJSON(tx, *crc.Stats.CDNName)
+	MockSnapshot(mock, expected, expectedtm, cdn)
+	mock.ExpectCommit()
+
 	defer tx.Commit()
 
-	if err := Snapshot(tx, crc); err != nil {
+	if err := Snapshot(tx, crc, tm); err != nil {
 		t.Fatalf("GetSnapshot err expected: nil, actual: %v", err)
 	}
 }
