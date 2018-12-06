@@ -27,7 +27,7 @@ Get all jobs (currently limited to invalidate content (PURGE) jobs) sorted by st
 :Roles Required: "operations" or "admin"
 :Response Type:  Array
 
-.. warning:: This endpoint will respect tenancy rules *if and **only** if*  the ``dsId`` query parameter is used.
+.. warning:: This endpoint will respect tenancy rules *if and only if*  the ``dsId`` query parameter is used.
 
 Request Structure
 -----------------
