@@ -29,7 +29,15 @@ Returns a JSON representation of all configured Divisions.
 
 Request Structure
 -----------------
-No parameters available
+.. table:: Request Query Parameters
+
+	+------+--------------------------------------------------------------+
+	| Name | Description                                                  |
+	+======+==============================================================+
+	|  id  | Filter for divisions having this integral, unique identifier |
+	+------+--------------------------------------------------------------+
+	| name | Filter for divisions with this name                          |
+	+------+--------------------------------------------------------------+
 
 Response Structure
 ------------------

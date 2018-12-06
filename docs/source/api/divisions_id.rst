@@ -23,6 +23,9 @@
 =======
 Get a specific Division.
 
+.. deprecated:: 1.1
+	Use the ``id`` query parameter of the ``GET`` method of :ref:`to-api-divisions` instead.
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
