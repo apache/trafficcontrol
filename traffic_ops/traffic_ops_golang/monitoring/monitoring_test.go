@@ -659,9 +659,9 @@ func TestGetMonitoringJSON(t *testing.T) {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sqlResp, err := getMonitoringJSON(tx, cdn)
+	sqlResp, err := GetMonitoringJSON(tx, cdn)
 	if err != nil {
-		t.Errorf("getMonitoringJSON expected: nil error, actual: %v", err)
+		t.Errorf("GetMonitoringJSON expected: nil error, actual: %v", err)
 	}
 
 	resp.Response.TrafficServers = sortCaches(resp.Response.TrafficServers)
@@ -676,22 +676,22 @@ func TestGetMonitoringJSON(t *testing.T) {
 	sqlResp.DeliveryServices = sortDeliveryServices(sqlResp.DeliveryServices)
 
 	if !reflect.DeepEqual(sqlResp.TrafficServers, resp.Response.TrafficServers) {
-		t.Errorf("getMonitoringJSON expected TrafficServers: %+v actual: %+v", resp.Response.TrafficServers, sqlResp.TrafficServers)
+		t.Errorf("GetMonitoringJSON expected TrafficServers: %+v actual: %+v", resp.Response.TrafficServers, sqlResp.TrafficServers)
 	}
 	if !reflect.DeepEqual(sqlResp.TrafficMonitors, resp.Response.TrafficMonitors) {
-		t.Errorf("getMonitoringJSON expected TrafficMonitors: %+v actual: %+v", resp.Response.TrafficMonitors, sqlResp.TrafficMonitors)
+		t.Errorf("GetMonitoringJSON expected TrafficMonitors: %+v actual: %+v", resp.Response.TrafficMonitors, sqlResp.TrafficMonitors)
 	}
 	if !reflect.DeepEqual(sqlResp.Cachegroups, resp.Response.Cachegroups) {
-		t.Errorf("getMonitoringJSON expected Cachegroups: %+v actual: %+v", resp.Response.Cachegroups, sqlResp.Cachegroups)
+		t.Errorf("GetMonitoringJSON expected Cachegroups: %+v actual: %+v", resp.Response.Cachegroups, sqlResp.Cachegroups)
 	}
 	if !reflect.DeepEqual(sqlResp.Profiles, resp.Response.Profiles) {
-		t.Errorf("getMonitoringJSON expected Profiles: %+v actual: %+v", resp.Response.Profiles, sqlResp.Profiles)
+		t.Errorf("GetMonitoringJSON expected Profiles: %+v actual: %+v", resp.Response.Profiles, sqlResp.Profiles)
 	}
 	if !reflect.DeepEqual(sqlResp.DeliveryServices, resp.Response.DeliveryServices) {
-		t.Errorf("getMonitoringJSON expected DeliveryServices: %+v actual: %+v", resp.Response.DeliveryServices, sqlResp.DeliveryServices)
+		t.Errorf("GetMonitoringJSON expected DeliveryServices: %+v actual: %+v", resp.Response.DeliveryServices, sqlResp.DeliveryServices)
 	}
 	if !reflect.DeepEqual(sqlResp.Config, resp.Response.Config) {
-		t.Errorf("getMonitoringJSON expected Config: %+v actual: %+v", resp.Response.Config, sqlResp.Config)
+		t.Errorf("GetMonitoringJSON expected Config: %+v actual: %+v", resp.Response.Config, sqlResp.Config)
 	}
 
 }
