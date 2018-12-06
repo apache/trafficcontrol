@@ -29,6 +29,12 @@ import (
 )
 
 func TestLoginFail(t *testing.T) {
+	CreateTestCDNs(t)
+	PostTestLoginFail(t)
+	DeleteTestCDNs(t)
+}
+
+func PostTestLoginFail(t *testing.T) {
 	log.Debugln("TestLoginFail")
 	// This specifically tests a previous bug: auth failure returning a 200, causing the client to think the request succeeded, and deserialize no matching fields successfully, and return an empty object.
 
