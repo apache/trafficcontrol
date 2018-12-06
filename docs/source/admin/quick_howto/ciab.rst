@@ -124,7 +124,7 @@ All components in Apache Traffic Control utilize SSL/TLS secure communications b
 
 Trusting the CA 
 ---------------
-For developer and testing use-cases, it may be necessary to have full x509 CA validation by HTTPS clients [5]_.  For x509 validation to work properly, the self-signed x509 CA certificate must be trusted either at the system leevel or by the client applicatoin itself. Procedures to import and trust the CA x.509 certifcate are outlined below for OSX, Windows, and two Linuxs below [6]_.  
+For developer and testing use-cases, it may be necessary to have full x509 CA validation by HTTPS clients [5]_.  For x509 validation to work properly, the self-signed x509 CA certificate must be trusted either at the system leevel or by the client applicatoin itself. Procedures to import and trust the CA x.509 certifcate are outlined below [6]_.
 
 Importing the CA Certificate on OSX
 -----------------------------------
