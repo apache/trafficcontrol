@@ -200,6 +200,28 @@ Multiple optional containers may be combined by using a shell alias:
 	mydc build
 	mydc up
 
+VNC Server 
+----------
+The tightvnc optional container provides a basic lightweight window manager (fluxbox), firefox browser, xterm, and a few other utilities within the CDN-In-A-Box tcnet bridge network. This can be very helpful for quick demonstrations of CDN-in-a-Box that require the use of real container network FQDNs and full X.509 validation.
+
+1. Download and install a VNC client. TightVNC client is preferred as it supports window resizing, host-to-vnc copy/pasting, and optimized frame buffer compression.
+2. Set your VNC console password by adding the ``VNC_PASSWD`` environment variable to ``infrastructure/cdn-in-a-box/varibles.env``. The password needs to be at least six characters long.  The default password is randomized for security.
+3. Start up CDN-in-a-Box stack using a custom bash alias
+
+.. code-block:: shell
+
+	# From infrastructure/cdn-in-a-box
+	alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.vnc.yml"
+	docker volume prune -f
+	mydc build 
+	mydc kill 
+	mydc rm -fv 
+	mydc up
+
+4. Connect with a VNC client to localhost port 9080.  
+5. When Traffic Portal becomes available, the Firefox within the VNC instance will subsequently be started. 
+6. An xterm with bash shell is also automatically spawned and minimized for convenience. 
+
 Socks Proxy
 -----------
 Dantes socks proxy is an optional container that can be used to provide browsers and other clients the ability to resolve DNS queries and network connectivity directly on the tcnet bridged interface.  This is very helpful when running the CDN-In-A-Box stack on OSX/Windows docker host that lacks network bridge/ipforward support. Below is the basic procedure to enable the Socks Proxy support for CDN-in-a-Box:

@@ -24,13 +24,18 @@ This container provides a basic lightweight window manager (fluxbox), firefox br
 ## VNC Container Lifecycle
 
 ```
-# From $SRC_ROOT/infrastructure/cdn-in-a-box
-alias vncdc='docker-compose -f docker-compose.yml -f optional/docker-compose.vnc.yml'
-vncdc build 
-vncdc kill && vncdc rm -fv 
+# From infrastructure/cdn-in-a-box
+alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.vnc.yml"
 docker volume prune -f
-vncdc up
+mydc rm -fv 
+mydc kill 
+mydc build 
+mydc up
 ```
+
+## VNC Clients
+- Tight VNC Client: https://www.tightvnc.com
+- Real VNC Client: https://www.realvnc.com
 
 ## VNC Connection Information
 - Docker Host/Port: localhost:5909
