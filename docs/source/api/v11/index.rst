@@ -21,7 +21,6 @@ Traffic Ops v1.1 API Documentation
 	:maxdepth: 1
 
 	profile
-	region
 	role
 	server
 	static_dns

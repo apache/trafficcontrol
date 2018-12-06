@@ -23,7 +23,6 @@ Traffic Ops API V1.2
 
 	profile
 	profile_parameter
-	region
 	role
 	server
 	static_dns
