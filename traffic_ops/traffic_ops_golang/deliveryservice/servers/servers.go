@@ -491,6 +491,10 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	tx := dss.APIInfo().Tx.Tx
 	user := dss.APIInfo().User
 
+	if err := api.IsInt(params["id"]); err != nil {
+		return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
+	}
+
 	if _, ok := params["orderby"]; !ok {
 		params["orderby"] = "xml_id"
 	}
@@ -503,12 +507,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		for _, err := range errs {
-			if err.Error() == `id cannot parse to integer` { // TODO create const for string
-				return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
-			}
-		}
-		return nil, nil, errors.New("reading dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
+		return nil, nil, errors.New("reading server dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
 	}
 
 	if where != "" {
