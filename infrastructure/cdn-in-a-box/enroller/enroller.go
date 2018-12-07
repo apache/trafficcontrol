@@ -57,19 +57,19 @@ func printJSON(label string, b interface{}) {
 	log.Infoln(label, buf.String())
 }
 
-func (s session) getParameterIDMatching(m tc.Parameter) (int, error) {
+func (s session) getParameter(m tc.Parameter) (tc.Parameter, error) {
 	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
 	// doing this the hard way for now
 	parameters, _, err := s.GetParameters()
 	if err != nil {
-		return -1, err
+		return m, err
 	}
 	for _, p := range parameters {
 		if p.Name == m.Name && p.Value == m.Value && p.ConfigFile == m.ConfigFile {
-			return p.ID, nil
+			return p, nil
 		}
 	}
-	return -1, fmt.Errorf("no parameter matching name %s, configFile %s, value %s", m.Name, m.ConfigFile, m.Value)
+	return m, fmt.Errorf("no parameter matching name %s, configFile %s, value %s", m.Name, m.ConfigFile, m.Value)
 }
 
 func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
@@ -317,37 +317,34 @@ func enrollParameter(toSession *session, r io.Reader) error {
 	}
 
 	for _, p := range params {
-		paramID, err := toSession.getParameterIDMatching(p)
+		eparam, err := toSession.getParameter(p)
 		var alerts tc.Alerts
 		if err == nil {
 			// existing param -- update
-			alerts, _, err = toSession.UpdateParameterByID(paramID, p)
+			alerts, _, err = toSession.UpdateParameterByID(eparam.ID, p)
 			if err != nil {
-				log.Infof("error updating parameter %d: %s with %+v ", paramID, err.Error(), p)
+				log.Infof("error updating parameter %d: %s with %+v ", eparam.ID, err.Error(), p)
 				break
 			}
 		} else {
 			alerts, _, err = toSession.CreateParameter(p)
 			if err != nil {
-				if strings.Contains(err.Error(), "already exists") {
-					log.Infof("parameter %s already exists\n", p.Name)
-					return nil
-				}
 				log.Infof("error creating parameter: %s from %+v\n", err.Error(), p)
 				return err
 			}
-		}
-		// link parameter with profiles
-		if len(p.Profiles) > 0 {
-			paramID, err := toSession.getParameterIDMatching(p)
+			eparam, err = toSession.getParameter(p)
 			if err != nil {
 				return err
 			}
+		}
 
+		// link parameter with profiles
+		if len(p.Profiles) > 0 {
 			var profiles []string
 			err = json.Unmarshal(p.Profiles, &profiles)
 			if err != nil {
 				log.Infof("%v", err)
+				return err
 			}
 
 			for _, n := range profiles {
@@ -359,7 +356,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 					return errors.New("no profile with name " + n)
 				}
 
-				pp := tc.ProfileParameter{ParameterID: paramID, ProfileID: profiles[0].ID}
+				pp := tc.ProfileParameter{ParameterID: eparam.ID, ProfileID: profiles[0].ID}
 				_, _, err = toSession.CreateProfileParameter(pp)
 				if err != nil {
 					if strings.Contains(err.Error(), "already exists") {
@@ -522,6 +519,8 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		log.Infof("error decoding Profile: %s\n", err)
 		return err
 	}
+	// get a copy of the parameters
+	parameters := profile.Parameters
 
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("  ", "")
@@ -540,7 +539,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		createProfile = true
 	} else {
 		// updating - ID needs to match
-		profile.ID = profiles[0].ID
+		profile = profiles[0]
 	}
 
 	var alerts tc.Alerts
@@ -558,7 +557,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		if err != nil || len(profiles) == 0 {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
 		}
-		profile.ID = profiles[0].ID
+		profile = profiles[0]
 		action = "creating"
 	} else {
 		alerts, _, err = toSession.UpdateProfileByID(profile.ID, profile)
@@ -570,8 +569,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	//log.Infof("total profile is  %+v\n", profile)
-	for _, p := range profile.Parameters {
+	for _, p := range parameters {
 		var name, configFile, value string
 		var secure bool
 		if p.ConfigFile != nil {
@@ -584,34 +582,31 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			value = *p.Value
 		}
 		param := tc.Parameter{ConfigFile: configFile, Name: name, Value: value, Secure: secure}
-		log.Infof("creating param %+v\n", param)
-		id, err := toSession.getParameterIDMatching(param)
+		eparam, err := toSession.getParameter(param)
 		if err != nil {
 			// create it
+			log.Infof("creating param %+v\n", param)
 			_, _, err = toSession.CreateParameter(param)
 			if err != nil {
-				if !strings.Contains(err.Error(), "already exists") {
-					log.Infof("can't create parameter %+v: %s\n", param, err.Error())
-				}
+				log.Infof("can't create parameter %+v: %s\n", param, err.Error())
 				continue
 			}
-			param.ID, err = toSession.getParameterIDMatching(param)
+			eparam, err = toSession.getParameter(param)
 			if err != nil {
 				log.Infof("error getting new parameter %+v\n", param)
-				param.ID, err = toSession.getParameterIDMatching(param)
+				eparam, err = toSession.getParameter(param)
 				log.Infof(err.Error())
-
+				continue
 			}
 		} else {
-			param.ID = id
-			toSession.UpdateParameterByID(param.ID, param)
+			log.Infof("found param %+v\n", eparam)
 		}
 
-		if param.ID < 1 {
-			log.Infof("param ID not found for %v", param)
+		if eparam.ID < 1 {
+			log.Infof("param ID not found for %v", eparam)
 			continue
 		}
-		pp := tc.ProfileParameter{ProfileID: profile.ID, ParameterID: param.ID}
+		pp := tc.ProfileParameter{ProfileID: profile.ID, ParameterID: eparam.ID}
 		_, _, err = toSession.CreateProfileParameter(pp)
 		if err != nil {
 			if !strings.Contains(err.Error(), "already exists") {
