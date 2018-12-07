@@ -1,0 +1,58 @@
+{
+  "cdnName": "ALL",
+  "description": "Edge Cache - Apache Traffic Server",
+  "name": "GLOBAL",
+  "type": "UNK_PROFILE",
+  "params": [
+    {
+      "value": "https://trafficops.infra.ciab.test:443/",
+      "name": "tm.url",
+      "configFile": "global"
+    },
+    {
+      "value": "/images/tc_logo.png",
+      "configFile": "global",
+      "name": "tm.logourl"
+    },
+    {
+      "configFile": "global",
+      "name": "tm.instance_name",
+      "value": "CDN-In-A-Box"
+    },
+    {
+      "value": "https://trafficops.infra.ciab.test/GeoLiteCity.dat.gz",
+      "configFile": "CRConfig.json",
+      "name": "geolocation.polling.url"
+    },
+    {
+      "name": "geolocation6.polling.url",
+      "configFile": "CRConfig.json",
+      "value": "https://trafficops.infra.ciab.test/GeoLiteCity.dat.gz"
+    },
+    {
+      "value": "Traffic Ops",
+      "configFile": "global",
+      "name": "tm.toolname"
+    },
+    {
+      "value": "0",
+      "configFile": "global",
+      "name": "use_reval_pending"
+    },
+    {
+      "name": "use_tenancy",
+      "configFile": "global",
+      "value": "1"
+    },
+    {
+      "name": "default_geo_miss_latitude",
+      "configFile": "global",
+      "value": "0"
+    },
+    {
+      "name": "default_geo_miss_longitude",
+      "configFile": "global",
+      "value": "-1"
+    }
+  ]
+}
