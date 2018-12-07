@@ -80,17 +80,21 @@ load_data_from() {
     local status=0
     for d in $endpoints; do
         [[ -d $d ]] || continue
+        # Let containers know to write out server.json
+        if [[ "$d" = "deliveryservice_servers" ]] ; then 
+           touch "$ENROLLER_DIR/initial-load-done"
+           sync
+        fi 
         for f in "$d"/*.json; do 
             echo "Loading $f"
             delayfor "$f"
             envsubst "$vars" <$f  > "$ENROLLER_DIR"/$f
+            sync
         done
     done
     if [[ $status -ne 0 ]]; then
         exit $status
     fi
-    # After done loading all data
-    touch "$ENROLLER_DIR/initial-load-done"
     cd -
 }
 
