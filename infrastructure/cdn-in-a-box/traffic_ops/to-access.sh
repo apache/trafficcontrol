@@ -136,16 +136,29 @@ to-delete() {
 #         serverType - the type of the server to be created; one of "edge", "mid", "tm"
 to-enroll() {
 
-	while true; do
-		[ -d "${ENROLLER_DIR}/servers" ] && break
-		echo "Waiting for ${ENROLLER_DIR}/servers ..."
-		sync 
+	# Force fflush() on /shared 
+	sync 
+
+	# Wait for the initial data load to be copied
+	until [[ -f "$ENROLLER_DIR/initial-load-done" ]] ; do
+		echo "Waiting for enroller initial data load to complete...."
 		sleep 2
+		sync 
 	done
 
+	# Wait for the Enroller servers directory to be created
+	until [[ -d "${ENROLLER_DIR}/servers" ]] ; do 
+		echo "Waiting for ${ENROLLER_DIR}/servers ..."
+		sleep 2
+		sync 
+	done
+
+	# If the servers dir vanishes, the docker shared volume isn't working right
 	if [[ ! -d ${ENROLLER_DIR}/servers ]]; then
-		echo "${ENROLLER_DIR}/servers not found -- contents:"
+		echo "ERROR: ${ENROLLER_DIR}/servers not found -- contents:"
 		find ${ENROLLER_DIR} -ls
+		echo "ERROR: Halting Execution."
+		tail -F /dev/null
 	fi
 
 	local serverType="$1"
@@ -243,7 +256,6 @@ to-enroll() {
 	esac
 
 	# replace env references in the file
-	mkdir -p ${ENROLLER_DIR}/servers
 	envsubst < "/server_template.json" > "${ENROLLER_DIR}/servers/$HOSTNAME.json"
 
 	sleep 3
