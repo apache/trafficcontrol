@@ -19,7 +19,7 @@
 ``parameters/{{ID}}/profiles``
 ******************************
 .. deprecated:: 1.1
-	Check the ``profiles`` array within parameter objects returned by the :ref:`to-api-parameters` and :ref:`to-api-parameters-id` endpoints instead.
+	Use the ``param`` query parameter of :ref:`to-api-profiles` instead.
 
 ``GET``
 =======

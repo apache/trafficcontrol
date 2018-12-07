@@ -19,7 +19,7 @@
 ``profiles/{{ID}}/parameters``
 ******************************
 .. deprecated:: 1.1
-	Use :ref:`to-api-profiles-name-name-parameters` instead
+	Refer to the ``params`` key in the response of :ref:`to-api-profiles-id` instead
 
 ``GET``
 =======
