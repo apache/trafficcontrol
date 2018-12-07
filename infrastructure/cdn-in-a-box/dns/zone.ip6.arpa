@@ -36,5 +36,7 @@ $TTL 30 ; 30 seconds
 0.2.1         IN PTR   mid.infra.ciab.test.
 0.4.1         IN PTR   origin.infra.ciab.test.
 0.0.2         IN PTR   enroller.infra.ciab.test.
+3.3.2         IN PTR   socksproxy.infra.ciab.test.
 0.5.2         IN PTR   client.infra.ciab.test.
+1.5.2         IN PTR   vnc.infra.ciab.test.
 4.5.2         IN PTR   dns.infra.ciab.test.

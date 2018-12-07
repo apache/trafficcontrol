@@ -64,8 +64,14 @@ origin            IN AAAA fc01:9400:1000:8::140
 enroller          IN A    172.16.239.200
 enroller          IN AAAA fc01:9400:1000:8::200
 
+socksproxy        IN A    172.16.239.233
+socksproxy        IN AAAA fc01:9400:1000:8::233
+
 client            IN A    172.16.239.250
 client            IN AAAA fc01:9400:1000:8::250
+
+vnc               IN A    172.16.239.251
+vnc               IN AAAA fc01:9400:1000:8::251
 
 dns               IN A    172.16.239.254
 dns               IN AAAA fc01:9400:1000:8::254

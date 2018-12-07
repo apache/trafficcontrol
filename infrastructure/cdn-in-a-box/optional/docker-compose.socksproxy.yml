@@ -44,39 +44,26 @@ networks:
         - subnet: "fc01:9400:1000:8::/64"
 
 services:
-  # TestClient is a VNC/Proxy container for development/testing CDN-In-A-Box 
-  # This container should not be merged to the Apache TrafficServer REPO due to 
-  # possible licence issues with video playback software and codecs
-  testclient:
-    build:
-      context: .
-      dockerfile: testclient/Dockerfile
-      args:
-        VNC_USER: "demo"
-        VNC_PASSWD: "demo"
-    environment:
-      VNC_RESOLUTION: "1400x900"
-      VNC_DEPTH: 32
-      VNC_WM: "fluxbox"
-    env_file: 
-      - variables.env
-    hostname: client
+  # Optional Socks Proxy for docker hosts that have limited bridge/ipforwarding support.
+  socksproxy:
+    image: wernight/dante
+    hostname: socksproxy
     domainname: infra.ciab.test
     networks:
       tcnet:
-        ipv4_address: 172.16.239.250
-        ipv6_address: "fc01:9400:1000:8::250"
+        ipv4_address: 172.16.239.233
+        ipv6_address: "fc01:9400:1000:8::233"
     ports:
-      - "50022:22"
-      - "55900:5900"
-      - "59090:9090"
+      - "9080:1080"
     volumes:
-      - shared:/shared
       - ./dns/container-resolv.conf:/etc/resolv.conf
-      - ~/Library/Containers/com.docker.docker/Data/docker.sock:/var/run/docker.sock
-      
+    
 volumes:
   schemas:
     external: false
-  enroller:
+  shared:
     external: false
+  content:  
+    external: false
+  ca:
+    external: false 

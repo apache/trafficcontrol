@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -18,20 +18,17 @@
 
 VNC_DEPTH=${VNC_DEPTH:-32}
 VNC_RESOLUTION=${VNC_DEPTH:-1440x900}
-VNC_WM=${VNC_WM:-fluxbox}
+
+startfluxbox &
+
+sleep 3
 
 vncconfig -iconic &
-firefox &
 xterm -bg black -fg white +sb &
 
-case $VNC_WM in
-  "xfce")
-    startxfce4 &
-    ;;
-  "fluxbox")
-    startfluxbox &
-    ;;
-  *)
-    echo "No such Window Manager"
-  ;;
-esac
+until nc 'trafficportal.infra.ciab.test' 443 </dev/null >/dev/null 2>&1; do
+  echo "Waiting for Traffic Portal to start" 
+  sleep 2
+done
+
+firefox 'http://trafficportal.infra.ciab.test' &
