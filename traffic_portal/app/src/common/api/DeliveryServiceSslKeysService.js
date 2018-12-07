@@ -60,7 +60,7 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
         $http.post(ENV.api['root'] + "deliveryservices/sslkeys/add", sslKeys)
         .then(
             function(result) {
-            	messageModel.setMessages([ { level: 'success', text: 'SSL Keys updated for ' + deliveryService.xmlId } ], false);
+                messageModel.setMessages(result.data.alerts, false);
                 request.resolve(result.data.response);
             },
             function(fault) {
