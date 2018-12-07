@@ -51,7 +51,7 @@ Response Structure
 :cname:           The Canonical Name (CNAME) used by the federation
 :deliveryService: An object with keys that provide identifying information for the Delivery Service using this federation
 
-	:id:    The integral, unique identifer for the Delivery Service
+	:id:    The integral, unique identifier for the Delivery Service
 	:xmlId: The Delivery Service's uniquely identifying 'xml_id'
 
 :description: An optionally-present field containing a description of the field
