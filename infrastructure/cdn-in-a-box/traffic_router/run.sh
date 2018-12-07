@@ -65,8 +65,6 @@ cp $X509_CA_CERT_FILE $CATALINA_BASE/conf
 cp $X509_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
 
-# Enroll Traffic Router
-to-enroll tr || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 # Add traffic 
 for crtfile in $(find $CATALINA_BASE/conf -name \*.crt -type f) 
@@ -99,6 +97,9 @@ until nc $TM_FQDN $TM_PORT </dev/null >/dev/null 2>&1; do
   echo "Waiting for Traffic Monitor to start..."
   sleep 3
 done
+
+# Enroll Traffic Router
+to-enroll tr || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 touch $LOGFILE $ACCESSLOG
 tail -F $CATALINA_OUT $CATALINA_LOG $LOGFILE $ACCESSLOG &  

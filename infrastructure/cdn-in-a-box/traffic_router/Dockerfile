@@ -29,10 +29,9 @@ ARG TOMCAT_RPM=traffic_router/tomcat.rpm
 RUN yum -y install epel-release git rpm-build net-tools iproute nc wget tar unzip \
           perl-JSON perl-WWWCurl which make autoconf automake gcc gcc-c++ apr apr-devel \
           openssl openssl-devel bind-utils net-tools perl-JSON-PP gettext \
-          java-1.8.0-openjdk-devel-debug.x86_64 \
-          java-1.8.0-openjdk && \ 
+          java-1.8.0-openjdk-headless java-1.8.0-openjdk-devel && \
     yum -y clean all && \
-    ln -s /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.*.el7_5.x86_64-debug /opt/java
+    ln -sfv $(find /usr/lib/jvm -type d -name 'java-1.8.0*openjdk*') /opt/java
 
 ADD $TRAFFIC_ROUTER_RPM /traffic_router.rpm
 ADD $TOMCAT_RPM /tomcat.rpm

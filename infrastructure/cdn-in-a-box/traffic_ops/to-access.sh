@@ -137,8 +137,9 @@ to-delete() {
 to-enroll() {
 
 	while true; do
-		[ -d "$ENROLLER_DIR" ] && break
-		echo "Waiting for $ENROLLER_DIR ..."
+		[ -d "${ENROLLER_DIR}/servers" ] && break
+		echo "Waiting for ${ENROLLER_DIR}/servers ..."
+		sync 
 		sleep 2
 	done
 
@@ -146,6 +147,7 @@ to-enroll() {
 		echo "${ENROLLER_DIR}/servers not found -- contents:"
 		find ${ENROLLER_DIR} -ls
 	fi
+
 	local serverType="$1"
 
 	if [[ ! -z "$2" ]]; then
@@ -241,6 +243,7 @@ to-enroll() {
 	esac
 
 	# replace env references in the file
+	mkdir -p ${ENROLLER_DIR}/servers
 	envsubst < "/server_template.json" > "${ENROLLER_DIR}/servers/$HOSTNAME.json"
 
 	sleep 3
