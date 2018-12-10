@@ -38,5 +38,4 @@ done
 # if [[ -x ]]; then;./config.sh; done          traffic_ops/run-go.sh
 source config.sh
 
-./traffic_ops_integration_test -cfg=traffic-ops-test.conf
-exit $?
+./traffic_ops_integration_test -test.v -cfg=traffic-ops-test.conf 2>&1 | ./go-junit-report --package-name=golang.test.toapi --set-exit-code > /junit/golang.test.toapi.xml && chmod 777 -R /junit && cat /junit/golang.test.toapi.xml

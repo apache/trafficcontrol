@@ -31,11 +31,11 @@ cat <<-EOF >/opt/integration/app/traffic-ops-test.conf
 {
     "default": {
         "logLocations": {
-            "debug": "stdout",
-            "error": "stdout",
-            "event": "stdout",
-            "info": "stdout",
-            "warning": "stdout"
+            "debug": "null",
+            "error": "null",
+            "event": "null",
+            "info": "null",
+            "warning": "null"
         },
         "session": {
             "timeoutInSecs": 60

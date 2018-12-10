@@ -32,6 +32,9 @@ WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 RUN go get -u golang.org/x/net/publicsuffix golang.org/x/crypto/scrypt
 RUN go test -c ./v1* -o traffic_ops_integration_test
 
+RUN go get -u github.com/jstemmer/go-junit-report
+RUN cd /go/src/github.com/jstemmer/go-junit-report && go build
+
 FROM debian:stretch
 RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools vim && apt-get clean
 
@@ -49,6 +52,11 @@ COPY --from=integration-builder \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_integration_test \
     /opt/integration/app/
 
+COPY --from=integration-builder \
+    /go/bin/go-junit-report \
+    /opt/integration/app/
+
+VOLUME ["/junit"]
+
 WORKDIR /opt/integration/app
 CMD ./run.sh
-
