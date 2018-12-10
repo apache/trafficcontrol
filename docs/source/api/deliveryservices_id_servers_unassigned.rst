@@ -67,20 +67,20 @@ Response Structure
 :mgmtIpGateway:  The IPv4 gateway of the management port (optional
 :mgmtIpNetmask:  The IPv4 netmask of the management port (optional
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:physLocation:   The physical location name (see :ref:`to-api-phys_locations`)
-:physLocationId: The physical location id (see :ref:`to-api-phys_locations`)
-:profile:        The assigned profile name (see :ref:`to-api-v11-profile`)
-:profileDesc:    The assigned profile description (see :ref:`to-api-v11-profile`)
-:profileId:      The assigned profile Id (see :ref:`to-api-v11-profile`)
+:physLocation:   The physical location name
+:physLocationId: The physical location id
+:profile:        The assigned profile name
+:profileDesc:    The assigned profile description
+:profileId:      The assigned profile Id
 :rack:           A string indicating rack location
 :routerHostName: The human readable name of the router
 :routerPortName: The human readable name of the router port
-:status:         The Status string (See :ref:`to-api-v11-status`)
-:statusId:       The Status id (See :ref:`to-api-v11-status`)
+:status:         The Status string
+:statusId:       The Status id
 :tcpPort:        The default TCP port on which the main application listens (80 for a cache in most cases
-:type:           The name of the type of this server (see :ref:`to-api-v11-type`)
-:typeId:         The id of the type of this server (see :ref:`to-api-v11-type`)
-:updPending:     bool  |
+:type:           The name of the type of this server
+:typeId:         The id of the type of this server
+:updPending:     bool
 
 .. code-block:: json
 	:caption: Response Example

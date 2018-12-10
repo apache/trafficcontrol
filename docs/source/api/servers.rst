@@ -65,7 +65,11 @@ Response Structure
 :cdnId:          The integral, unique identifier of the CDN to which the server belongs
 :cdnName:        Name of the CDN to which the server belongs
 :domainName:     The domain part of the server's Fully Qualified Domain Name (FQDN)
-:guid:           An identifier used to uniquely identify the server ***
+:guid:           An identifier used to uniquely identify the server
+
+	.. deprecated:: 1.1
+		This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS connections/requests
 :id:             An integral, unique identifier for this server
@@ -280,7 +284,11 @@ Response Structure
 :cdnId:          The integral, unique identifier of the CDN to which the server belongs
 :cdnName:        Name of the CDN to which the server belongs
 :domainName:     The domain part of the server's Fully Qualified Domain Name (FQDN)
-:guid:           An identifier used to uniquely identify the server ***
+:guid:           An identifier used to uniquely identify the server
+
+	.. deprecated:: 1.1
+		This is a legacy key which only still exists for compatibility reasons - it should always be ``null``
+
 :hostName:       The (short) hostname of the server
 :httpsPort:      The port on which the server listens for incoming HTTPS connections/requests
 :id:             An integral, unique identifier for this server

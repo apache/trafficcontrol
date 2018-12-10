@@ -105,7 +105,7 @@ Request Structure
 :type:            The type of the profile
 :routingDisabled: A boolean which, if ``true``, will prevent the Traffic Router from directing traffic to any servers assigned this profile
 
-.. code-block::
+.. code-block:: http
 	:caption: Request Example
 
 	POST /api/1.4/profiles HTTP/1.1

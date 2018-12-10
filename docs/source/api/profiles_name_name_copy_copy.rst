@@ -56,7 +56,7 @@ Response Structure
 :name:            The name of the new profile
 :profileCopyFrom: The name of the profile from which the copy was made
 
-.. code-block::
+.. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK

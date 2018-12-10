@@ -160,8 +160,8 @@ Response Structure
 
 	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
 
-:signed:           ``true`` if token-based authentication\ [8]_ is enabled for this Delivery Service, ``false`` otherwise
-:signingAlgorithm: Type of URL signing method to sign the URLs\ [8]_, basically comes down to one of two plugins or ``null``:
+:signed:           ``true`` if token-based authentication is enabled for this Delivery Service, ``false`` otherwise
+:signingAlgorithm: Type of URL signing method to sign the URLs, basically comes down to one of two plugins or ``null``:
 
 	``null``
 		Token-based authentication is not enabled for this Delivery Service
@@ -569,8 +569,8 @@ Response Structure
 
 	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
 
-:signed:           ``true`` if token-based authentication\ [8]_ is enabled for this Delivery Service, ``false`` otherwise
-:signingAlgorithm: Type of URL signing method to sign the URLs\ [8]_, basically comes down to one of two plugins or ``null``:
+:signed:           ``true`` if token-based authentication is enabled for this Delivery Service, ``false`` otherwise
+:signingAlgorithm: Type of URL signing method to sign the URLs, basically comes down to one of two plugins or ``null``:
 
 	``null``
 		Token-based authentication is not enabled for this Delivery Service
