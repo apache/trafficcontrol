@@ -172,16 +172,16 @@ Response Structure
 
 	.. seealso:: `The Apache Trafficserver documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/url_sig.en.html>`_ and `the draft RFC for uri_signing <https://tools.ietf.org/html/draft-ietf-cdni-uri-signing-16>`_ - note, however that the current implementation of uri_signing uses Draft 12 of that RFC document, **NOT** the latest
 
-:sslKeyVersion:       This integer indicates the generation of keys in use by the Delivery Service - if any - and is incremented by the Traffic Portal client whenever new keys are generated
+:sslKeyVersion: This integer indicates the generation of keys in use by the Delivery Service - if any - and is incremented by the Traffic Portal client whenever new keys are generated
 
 	.. warning:: This number will not be correct if keys are manually replaced using the API, as the key generation API does not increment it!
 
-:tenantId:            The integral, unique identifier of the tenant who owns this Delivery Service
-:trRequestHeaders:    If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:trResponseHeaders:   If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:type:                The name of the routing type of this Delivery Service e.g. "HTTP"
-:typeId:              The integral, unique identifier of the routing type of this Delivery Service
-:xmlId:               A unique string that describes this Delivery Service - exists for legacy reasons
+:tenantId:          The integral, unique identifier of the tenant who owns this Delivery Service
+:trRequestHeaders:  If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
+:trResponseHeaders: If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
+:type:              The name of the routing type of this Delivery Service e.g. "HTTP"
+:typeId:            The integral, unique identifier of the routing type of this Delivery Service
+:xmlId:             A unique string that describes this Delivery Service - exists for legacy reasons
 
 .. code-block:: http
 	:caption: Response Example
@@ -382,8 +382,8 @@ Request Structure
 	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
 
 :routingName:      The routing name of this Delivery Service, used as the top-level part of the FQDN used by clients to request content from the Delivery Service e.g. ``routingName.xml_id.CDNName.com``
-:signed:           An optional field which should be ``true`` if token-based authentication\ [8]_ will be enabled for this Delivery Service, ``false`` (default) otherwise
-:signingAlgorithm: Type of URL signing method to sign the URLs\ [8]_, basically comes down to one of two plugins or ``null``:
+:signed:           An optional field which should be ``true`` if token-based authentication will be enabled for this Delivery Service, ``false`` (default) otherwise
+:signingAlgorithm: Type of URL signing method to sign the URLs, basically comes down to one of two plugins or ``null``:
 
 	``null``
 		Token-based authentication is not enabled for this Delivery Service
@@ -455,7 +455,6 @@ Request Structure
 .. [5] These fields must be defined if and only if ``geoLimit`` is non-zero
 .. [6] These fields are required for HTTP-routed Delivery Services, and optional for all others
 .. [7] These fields are required for HTTP-routed and DNS-routed Delivery Services, but are optional for (and in fact may have no effect on) STEERING and ANY_MAP Delivery Services
-.. [8] See "token-based-auth" TODO --- wat for more information
 
 Response Structure
 ------------------
