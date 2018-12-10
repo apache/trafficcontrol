@@ -18,11 +18,12 @@
 ******************************
 ``profiles/{{ID}}/parameters``
 ******************************
-.. deprecated:: 1.1
-	Refer to the ``params`` key in the response of :ref:`to-api-profiles-id` instead
 
 ``GET``
 =======
+.. deprecated:: 1.1
+	Refer to the ``params`` key in the response of :ref:`to-api-profiles-id` instead
+
 Retrieves all parameters assigned to the profile.
 
 :Auth. Required: Yes
@@ -107,3 +108,139 @@ Response Structure
 			"value": "90"
 		}
 	]}
+
+``POST``
+========
+.. deprecated:: 1.1
+	Use :ref:`to-api-profiles-name-name-parameters` instead
+
+Associate parameters to a profile. If the parameter does not exist, create it and associate to the profile. If the parameter already exists, associate it to the profile. If the parameter is already associated with the profile, keep the association.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Object
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+-------------------------------------------------------------------------------------+
+	| Name | Description                                                                         |
+	+======+=====================================================================================+
+	|  ID  | An integral, unique identifier for the profile to which parameters will be assigned |
+	+------+-------------------------------------------------------------------------------------+
+
+This endpoint accepts two formats for the request payload:
+
+Single Object Format
+	For assigning a single parameter to a single profile
+Parameter Array Format
+	For making multiple assignments of parameters to profiles simultaneously
+
+.. warning:: Most API endpoints dealing with parameters treat ``secure`` as a boolean value, whereas this endpoint takes the legacy approach of treating it as an integer. Be careful when passing data back and forth, as boolean values will **not** be accepted by this endpoint!
+
+Single Parameter Format
+"""""""""""""""""""""""
+:configFile: The *base* filename of the configuration file to which this parameter shall belong e.g. "foo" not "/path/to/foo"
+:name:       Parameter name
+:secure:     An integer which, when any number other than ``0``, will prohibit users who do not have the "admin" role from viewing the parameter's ``value`` (at the time of this writing the obfuscation value is defined to be ``"********"``)
+:value:      Parameter value
+
+.. code-block:: http
+	:caption: Response Example - Single Parameter Format
+
+	POST /api/1.1/profiles/18/parameters HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 99
+	Content-Type: application/json
+
+	{
+		"name": "test",
+		"configFile": "quest",
+		"value": "A test parameter for API examples",
+		"secure": 0
+	}
+
+
+Parameter Array Format
+""""""""""""""""""""""
+:configFile: The *base* filename of the configuration file to which this parameter shall belong e.g. "foo" not "/path/to/foo"
+:name:       Parameter name
+:secure:     An integer which, when any number other than ``0``, will prohibit users who do not have the "admin" role from viewing the parameter's ``value`` (at the time of this writing the obfuscation value is defined to be ``"********"``)
+:value:      Parameter value
+
+.. code-block:: http
+	:caption: Request Example - Parameter Array Format
+
+	POST /api/1.1/profiles/18/parameters HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 212
+	Content-Type: application/json
+
+	[{
+		"name": "test",
+		"configFile": "quest",
+		"value": "A test parameter for API examples",
+		"secure": 0
+	},
+	{
+		"name": "foo",
+		"configFile": "bar",
+		"value": "Another test parameter for API examples",
+		"secure": 0
+	}]
+
+Response Structure
+------------------
+:parameters: An array of objects representing the parameters which have been assigned
+
+	:configFile: The *base* filename of the configuration file to which this parameter shall belong e.g. "foo" not "/path/to/foo"
+	:name:       Parameter name
+	:secure:     An integer which, when any number other than ``0``, will prohibit users who do not have the "admin" role from viewing the parameter's ``value`` (at the time of this writing the obfuscation value is defined to be ``"********"``)
+	:value:      Parameter value
+
+:profileId:   The integral, unique identifier for the profile to which the parameter(s) have been assigned
+:profileName: Name of the profile to which the parameter(s) have been assigned
+
+.. code-block:: http
+	:caption: Response Example - Single Parameter Format
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: R2QUyCaNvKvVv/PNVNmEd/ma5h/iP1fMJlqhv+x2jE/zNpHJ1KVXt6s3btB8nnHv6IDF/gt5kIzQ0mbW5U8bpg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Mon, 10 Dec 2018 14:45:28 GMT
+	Content-Length: 253
+
+	{ "alerts": [
+		{
+			"text": "Assign parameters successfully to profile test",
+			"level": "success"
+		}
+	],
+	"response": {
+		"parameters": [
+			{
+				"configFile": "quest",
+				"name": "test",
+				"secure": 0,
+				"value": "A test parameter for API examples",
+				"id": 126
+			}
+		],
+		"profileId": 18,
+		"profileName": "test"
+	}}
+
+.. note:: The format of the request does not affect the format of the response. ``parameters`` will be an array either way.

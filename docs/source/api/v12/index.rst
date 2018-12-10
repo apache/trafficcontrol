@@ -21,7 +21,6 @@ Traffic Ops API V1.2
 .. toctree::
 	:maxdepth: 1
 
-	profile_parameter
 	role
 	server
 	static_dns
