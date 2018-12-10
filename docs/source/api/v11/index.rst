@@ -20,7 +20,6 @@ Traffic Ops v1.1 API Documentation
 .. toctree::
 	:maxdepth: 1
 
-	status
 	system
 	to_extension
 	type
