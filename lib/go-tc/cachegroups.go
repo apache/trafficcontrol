@@ -54,6 +54,7 @@ type CacheGroup struct {
 	Type                        string               `json:"typeName" db:"type_name"` // aliased to type_name to disambiguate struct scans due to join on 'type' table
 	TypeID                      int                  `json:"typeId" db:"type_id"`     // aliased to type_id to disambiguate struct scans due join on 'type' table
 	LastUpdated                 TimeNoMod            `json:"lastUpdated" db:"last_updated"`
+	Fallbacks                   []string             `json:"fallbacks" db:"fallbacks"`
 }
 
 type CacheGroupNullable struct {
@@ -71,6 +72,7 @@ type CacheGroupNullable struct {
 	Type                        *string               `json:"typeName" db:"type_name"` // aliased to type_name to disambiguate struct scans due to join on 'type' table
 	TypeID                      *int                  `json:"typeId" db:"type_id"`     // aliased to type_id to disambiguate struct scans due join on 'type' table
 	LastUpdated                 *TimeNoMod            `json:"lastUpdated" db:"last_updated"`
+	Fallbacks                   *[]string             `json:"fallbacks" db:"fallbacks"`
 }
 
 type CachegroupTrimmedName struct {

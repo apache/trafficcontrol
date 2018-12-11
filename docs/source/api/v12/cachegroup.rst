@@ -70,6 +70,8 @@ Cache Group
   +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``fallbackToClosest``             | bool   | Behaviour during non-availability/ failure of configured fallbacks       |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``fallbacks``                     | array  | Array of fallback cache group names associated with a cache group        |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
 
   **Response Example** ::
 
@@ -93,7 +95,12 @@ Cache Group
              "CZ",
              "GEO"
            ],
-           "fallbackToClosest":true
+           "fallbackToClosest":true,
+           "fallbacks": [
+             "cg_fallback_1",
+             "cg_fallback_2",
+             "cg_fallback_3"
+           ]
         },
         {
            "id": "22",
@@ -109,7 +116,8 @@ Cache Group
            "typeName": "MID_LOC",
            "typeId": "4",
            "localizationMethods": null,
-           "fallbackToClosest":false
+           "fallbackToClosest":false,
+           "fallbacks": []
         }
      ],
     }
@@ -184,6 +192,8 @@ Cache Group
   +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``fallbackToClosest``             | bool   | Behaviour during non-availability/ failure of configured fallbacks       |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``fallbacks``                     | array  | Array of fallback cache group names associated with a cache group        |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
 
   **Response Example** ::
 
@@ -207,7 +217,12 @@ Cache Group
            "shortName": "dcchi",
            "typeName": "MID_LOC",
            "typeId": "4",
-           "fallbackToClosest":true
+           "fallbackToClosest":true,
+           "fallbacks": [
+             "cg_fallback_1",
+             "cg_fallback_2",
+             "cg_fallback_3"
+           ]
         }
      ],
     }
@@ -474,6 +489,8 @@ Cache Group
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``fallbackToClosest``           | no       | Behaviour on configured fallbacks failure, true / false           |
   +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``fallbacks``                   | no       | Array of fallback cache group names associated with a cache group |
+  +---------------------------------+----------+-------------------------------------------------------------------+
 
   **Request Example** ::
 
@@ -488,7 +505,12 @@ Cache Group
           "GEO"
         ],
         "typeId": 6,
-        "fallbackToClosest":true
+        "fallbackToClosest":true,
+        "fallbacks": [
+          "cg_fallback_1",
+          "cg_fallback_2",
+          "cg_fallback_3"
+        ]
     }
 
   **Response Properties**
@@ -522,6 +544,8 @@ Cache Group
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``lastUpdated``                    | string | The Time / Date this entry was last updated                       |
   +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``fallbacks``                      | array  | Array of fallback cache group names associated with a cache group |
+  +------------------------------------+--------+-------------------------------------------------------------------+
   | ``alerts``                         | array  | A collection of alert messages.                                   |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``>level``                         | string | Success, info, warning or error.                                  |
@@ -554,7 +578,12 @@ Cache Group
             "id" : "104",
             "parentCachegroupId" : "103",
             "secondaryParentCachegroupId" : null,
-            "fallbackToClosest":true
+            "fallbackToClosest":true,
+            "fallbacks": [
+              "cg_fallback_1",
+              "cg_fallback_2",
+              "cg_fallback_3"
+            ]
         }
     }
    
@@ -599,6 +628,8 @@ Cache Group
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``fallbackToClosest``           | no       | Behaviour on configured fallbacks failure, true / false           |
   +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``fallbacks``                   | no       | Array of fallback cache group names associated with a cache group |
+  +---------------------------------+----------+-------------------------------------------------------------------+
 
   **Request Example** ::
 
@@ -614,7 +645,12 @@ Cache Group
           "CZ",
           "GEO"
         ],
-        "fallbackToClosest":true
+        "fallbackToClosest":true,
+        "fallbacks": [
+          "cg_fallback_1",
+          "cg_fallback_2",
+          "cg_fallback_3"
+        ]
     }
 
   **Response Properties**
@@ -645,6 +681,8 @@ Cache Group
   | ``typeName``                       | string | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``fallbackToClosest``              | bool   | Behaviour during non-availability/failure of configured fallbacks |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``fallbacks``                      | array  | Array of fallback cache group names associated with a cache group |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``lastUpdated``                    | string | The Time / Date this entry was last updated                       |
   +------------------------------------+--------+-------------------------------------------------------------------+
@@ -681,7 +719,12 @@ Cache Group
             "id" : "104",
             "parentCachegroupId" : "103",
             "secondaryParentCachegroupId" : null,
-            "fallbackToClosest":true
+            "fallbackToClosest":true,
+            "fallbacks": [
+              "cg_fallback_1",
+              "cg_fallback_2",
+              "cg_fallback_3"
+            ]
         }
     }
 
