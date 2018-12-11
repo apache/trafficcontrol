@@ -44,7 +44,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editDeliveryServiceRequest(request)" ng-repeat="request in ::dsRequests" ng-class="::{'active': closed(request)}">
-                <td data-search="^{{::request.deliveryService.xmlId}}$">{{::request.deliveryService.xmlId}}</td>
+                <td name="xmlId" data-search="^{{::request.deliveryService.xmlId}}$">{{::request.deliveryService.xmlId}}</td>
                 <td data-search="^{{::request.changeType}}$">{{::request.changeType}}</td>
                 <td data-search="^{{::request.status}}$">
                     <span ng-if="!open(request)">{{::request.status}}</span>

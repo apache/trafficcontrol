@@ -24,7 +24,7 @@ under the License.
 <div class="modal-body">
     <form name="dsRequestForm" novalidate>
         <p ng-bind-html="params.message"></p>
-        <select class="form-control" ng-model="selectedStatusId" ng-options="status.id as status.name for status in statuses" required>
+        <select name="requestStatus" class="form-control" ng-model="selectedStatusId" ng-options="status.id as status.name for status in statuses" required>
             <option value="">Select request status...</option>
         </select>
         <textarea name="comment" rows="5" cols="17" style="margin-top: 10px;" placeholder="Enter request comment..." class="form-control" ng-model="comment" required></textarea>
