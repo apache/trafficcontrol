@@ -53,6 +53,8 @@ type ITrafficOpsSession interface {
 	BackupFileExists() bool
 }
 
+const localHostIP = "127.0.0.1"
+
 var ErrNilSession = fmt.Errorf("nil session")
 
 // TODO rename CRConfigCacheObj
@@ -68,8 +70,8 @@ type ByteMapCache struct {
 }
 
 func (s TrafficOpsSessionThreadsafe) BackupFileExists() bool {
-	if _, err := os.Stat(s.CrConfigBackupFile); !os.IsNotExist(err) {
-		if _, err = os.Stat(s.TmConfigBackupFile); !os.IsNotExist(err) {
+	if _, err := os.Stat(s.CRConfigBackupFile); !os.IsNotExist(err) {
+		if _, err = os.Stat(s.TMConfigBackupFile); !os.IsNotExist(err) {
 			return true
 		}
 	}
@@ -165,13 +167,13 @@ type TrafficOpsSessionThreadsafe struct {
 	m                  *sync.Mutex
 	lastCRConfig       ByteMapCache
 	crConfigHist       CRConfigHistoryThreadsafe
-	CrConfigBackupFile string
-	TmConfigBackupFile string
+	CRConfigBackupFile string
+	TMConfigBackupFile string
 }
 
 // NewTrafficOpsSessionThreadsafe returns a new threadsafe TrafficOpsSessionThreadsafe wrapping the given `Session`.
 func NewTrafficOpsSessionThreadsafe(s *client.Session, crConfigHistoryLimit uint64, cfg config.Config) TrafficOpsSessionThreadsafe {
-	return TrafficOpsSessionThreadsafe{session: &s, m: &sync.Mutex{}, lastCRConfig: NewByteMapCache(), crConfigHist: NewCRConfigHistoryThreadsafe(crConfigHistoryLimit), CrConfigBackupFile: cfg.CrConfigBackupFile, TmConfigBackupFile: cfg.TmConfigBackupFile}
+	return TrafficOpsSessionThreadsafe{session: &s, m: &sync.Mutex{}, lastCRConfig: NewByteMapCache(), crConfigHist: NewCRConfigHistoryThreadsafe(crConfigHistoryLimit), CRConfigBackupFile: cfg.CRConfigBackupFile, TMConfigBackupFile: cfg.TMConfigBackupFile}
 }
 
 // Set sets the internal Traffic Ops session. This is safe for multiple goroutines, being aware they will race.
@@ -247,33 +249,35 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 
 	ss := s.get()
 
-	var b []byte
-	var err error
 	var remoteAddr string
-	var reqInf client.ReqInf
 
 	if ss == nil {
 		return nil, ErrNilSession
+	}
+
+	b, reqInf, err := ss.GetCRConfig(cdn)
+	if err == nil {
+		remoteAddr = reqInf.RemoteAddr.String()
+		ioutil.WriteFile(s.CRConfigBackupFile, b, 0644)
 	} else {
-		b, reqInf, err = ss.GetCRConfig(cdn)
-		if err == nil {
-			remoteAddr = reqInf.RemoteAddr.String()
-			ioutil.WriteFile(s.CrConfigBackupFile, b, 0644)
-		} else {
-			if s.BackupFileExists() {
-				b, _ = ioutil.ReadFile(s.CrConfigBackupFile)
-				remoteAddr = "127.0.0.1"
-				log.Errorln("Error getting CRConfig from traffic_ops, backup file exists, reading from file")
-			} else {
-				return nil, ErrNilSession
+		if s.BackupFileExists() {
+			b, err = ioutil.ReadFile(s.CRConfigBackupFile)
+			if err != nil {
+				err = errors.New("file Read Error: " + err.Error())
+				return nil, err
 			}
+			remoteAddr = localHostIP
+			log.Errorln("Error getting CRConfig from traffic_ops, backup file exists, reading from file")
+			err = nil
+		} else {
+			return nil, ErrNilSession
 		}
 	}
 
 	hist := &CRConfigStat{time.Now(), remoteAddr, tc.CRConfigStats{}, err}
 	defer s.crConfigHist.Add(hist)
 
-	if err != nil && remoteAddr != "127.0.0.1" {
+	if err != nil {
 		return b, err
 	}
 
@@ -312,29 +316,32 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	if ss == nil {
 		return nil, ErrNilSession
 	}
-	var configMap *tc.TrafficMonitorConfigMap
-	var err error
 
-	configMap, _, err = ss.GetTrafficMonitorConfigMap(cdn)
-	if configMap != nil {
+	configMap, _, err := ss.GetTrafficMonitorConfigMap(cdn)
+	if err != nil {
+		// Default error case, no backup file exists
+		if !s.BackupFileExists() {
+			return configMap, err
+		}
+
+		b, err := ioutil.ReadFile(s.TMConfigBackupFile)
+		if err != nil {
+			return nil, errors.New("reading TMConfigBackupFile: " + err.Error())
+		}
+
+		log.Errorln("Error getting configMap from traffic_ops, backup file exists, reading from file")
 		json := jsoniter.ConfigFastest
-		data, err := json.Marshal(*configMap)
-		if err == nil {
-			ioutil.WriteFile(s.TmConfigBackupFile, data, 0644)
+		if err = json.Unmarshal(b, &configMap); err != nil {
+			log.Errorln("Error unmarshaling JSON from TMConfigBackupFile")
 		}
-	} else {
-		if s.BackupFileExists() {
-			b, _ := ioutil.ReadFile(s.TmConfigBackupFile)
-			log.Errorln("Error getting configMap from traffic_ops, backup file exists, reading from file")
-			json := jsoniter.ConfigFastest
-			err = json.Unmarshal(b, &configMap)
-			if err != nil {
-				log.Warnf("Error unmarshaling TmConfigBackupFile, ", err)
-			}
-
-		}
+		return configMap, err
 	}
 
+	json := jsoniter.ConfigFastest
+	data, err := json.Marshal(*configMap)
+	if err == nil {
+		ioutil.WriteFile(s.TMConfigBackupFile, data, 0644)
+	}
 	return configMap, err
 }
 
