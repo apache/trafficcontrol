@@ -41,9 +41,9 @@ const (
 	//StaticFileDir is the directory that contains static html and js files.
 	StaticFileDir = "/opt/traffic_monitor/static/"
 	//CrConfigBackupFile is the default file name to store the last crconfig
-	CrConfigBackupFile = "crconfig.backup"
+	CRConfigBackupFile = "crconfig.backup"
 	//TmConfigBackupFile is the default file name to store the last tmconfig
-	TmConfigBackupFile = "tmconfig.backup"
+	TMConfigBackupFile = "tmconfig.backup"
 )
 
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
@@ -71,8 +71,8 @@ type Config struct {
 	CRConfigHistoryCount         uint64        `json:"crconfig_history_count"`
 	TrafficOpsMinRetryInterval   time.Duration `json:"-"`
 	TrafficOpsMaxRetryInterval   time.Duration `json:"-"`
-	CrConfigBackupFile           string        `json:"crconfig_backup_file"`
-	TmConfigBackupFile           string        `json:"tmconfig_backup_file"`
+	CRConfigBackupFile           string        `json:"crconfig_backup_file"`
+	TMConfigBackupFile           string        `json:"tmconfig_backup_file"`
 	TrafficOpsDiskRetryMax       uint64        `json:"-"`
 }
 
@@ -107,8 +107,8 @@ var DefaultConfig = Config{
 	CRConfigHistoryCount:         20000,
 	TrafficOpsMinRetryInterval:   100 * time.Millisecond,
 	TrafficOpsMaxRetryInterval:   60000 * time.Millisecond,
-	CrConfigBackupFile:           CrConfigBackupFile,
-	TmConfigBackupFile:           TmConfigBackupFile,
+	CRConfigBackupFile:           CRConfigBackupFile,
+	TMConfigBackupFile:           TMConfigBackupFile,
 	TrafficOpsDiskRetryMax:       2,
 }
 
@@ -158,8 +158,8 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		TrafficOpsMinRetryIntervalMs   *uint64 `json:"traffic_ops_min_retry_interval_ms"`
 		TrafficOpsMaxRetryIntervalMs   *uint64 `json:"traffic_ops_max_retry_interval_ms"`
 		TrafficOpsDiskRetryMax         *uint64 `json:"traffic_ops_disk_retry_max"`
-		CrConfigBackupFile             *string `json:"crconfig_backup_file"`
-		TmConfigBackupFile             *string `json:"tmconfig_backup_file"`
+		CRConfigBackupFile             *string `json:"crconfig_backup_file"`
+		TMConfigBackupFile             *string `json:"tmconfig_backup_file"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -208,11 +208,11 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if aux.TrafficOpsDiskRetryMax != nil {
 		c.TrafficOpsDiskRetryMax = *aux.TrafficOpsDiskRetryMax
 	}
-	if aux.CrConfigBackupFile != nil {
-		c.CrConfigBackupFile = *aux.CrConfigBackupFile
+	if aux.CRConfigBackupFile != nil {
+		c.CRConfigBackupFile = *aux.CRConfigBackupFile
 	}
-	if aux.TmConfigBackupFile != nil {
-		c.TmConfigBackupFile = *aux.TmConfigBackupFile
+	if aux.TMConfigBackupFile != nil {
+		c.TMConfigBackupFile = *aux.TMConfigBackupFile
 	}
 	return nil
 }
