@@ -50,7 +50,7 @@ Installation
 		yum update -y
 		yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
 		yum install -y postgresql96-server
-		su - postgres -c /usr/pgsql-9.6/bin/initdb -A md5 -W #-W forces the user to provide a superuser (postgres) password
+		su - postgres -c '/usr/pgsql-9.6/bin/initdb -A md5 -W' #-W forces the user to provide a superuser (postgres) password
 
 
 	Edit ``/var/lib/pgsql/9.6/data/pg_hba.conf`` to allow your Traffic Ops instance to access the PostgreSQL server. For example if you are going to install Traffic Ops on ``99.33.99.1`` add::
