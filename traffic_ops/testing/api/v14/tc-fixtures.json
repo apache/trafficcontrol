@@ -46,13 +46,60 @@
             "typeName": "EDGE_LOC"
         },
         {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "fallback1",
+            "parentCachegroupName": "parentCachegroup",
+            "secondaryParentCachegroupName": "secondaryCachegroup",
+            "shortName": "fb1",
+            "localizationMethods": [
+                "CZ",
+                "DEEP_CZ",
+                "GEO"
+            ],
+            "typeName": "EDGE_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "fallback2",
+            "parentCachegroupName": "parentCachegroup",
+            "secondaryParentCachegroupName": "secondaryCachegroup",
+            "shortName": "fb2",
+            "localizationMethods": [
+                "CZ",
+                "DEEP_CZ",
+                "GEO"
+            ],
+            "typeName": "EDGE_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "fallback3",
+            "parentCachegroupName": "parentCachegroup",
+            "secondaryParentCachegroupName": "secondaryCachegroup",
+            "shortName": "fb3",
+            "localizationMethods": [
+                "CZ",
+                "DEEP_CZ",
+                "GEO"
+            ],
+            "typeName": "EDGE_LOC"
+        },
+        {
             "latitude": 24.1234,
             "longitude": -121.1234,
             "name": "cachegroup2",
             "parentCachegroupName": "parentCachegroup",
             "secondaryParentCachegroupName": "secondaryCachegroup",
             "shortName": "cg2",
-            "typeName": "EDGE_LOC"
+            "typeName": "EDGE_LOC",
+            "fallbacks": [
+                "fallback1",
+                "fallback2",
+                "fallback3"
+            ]
         }
     ],
     "cdns": [
