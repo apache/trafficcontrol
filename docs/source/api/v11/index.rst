@@ -20,6 +20,5 @@ Traffic Ops v1.1 API Documentation
 .. toctree::
 	:maxdepth: 1
 
-	to_extension
 	type
 	user
