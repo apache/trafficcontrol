@@ -23,4 +23,3 @@ Traffic Ops API V1.2
 
 	type
 	user
-	topology
