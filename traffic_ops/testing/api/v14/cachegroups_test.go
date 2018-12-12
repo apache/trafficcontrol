@@ -147,6 +147,81 @@ func UpdateTestCacheGroups(t *testing.T) {
 		failed = true
 	}
 
+	// test cachegroup fallbacks
+
+	// Retrieve the CacheGroup to check CacheGroup name got updated
+	firstEdgeCG := testData.CacheGroups[3]
+	resp, _, err = TOSession.GetCacheGroupNullableByName(*firstEdgeCG.Name)
+	if err != nil {
+		t.Errorf("cannot GET CacheGroup by name: '$%s', %v\n", *firstEdgeCG.Name, err)
+		failed = true
+	}
+	cg = resp[0]
+	if *cg.Name != *firstEdgeCG.Name {
+		t.Errorf("results do not match actual: %s, expected: %s\n", *cg.ShortName, *firstEdgeCG.Name)
+		failed = true
+	}
+
+	// Test adding fallbacks when previously nil
+	expectedFallbacks := []string{"fallback1", "fallback2"}
+	cg.Fallbacks = &expectedFallbacks
+	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
+	if err != nil {
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, updResp)
+		failed = true
+	}
+
+	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
+	if err != nil {
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", *cg.ID, err)
+		failed = true
+	}
+	cg = resp[0]
+	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
+		t.Errorf("failed to update fallbacks (expected = %v, actual = %v\n", expectedFallbacks, *cg.Fallbacks)
+		failed = true
+	}
+
+	// Test adding fallback to existing list
+	expectedFallbacks = []string{"fallback1", "fallback2", "fallback3"}
+	cg.Fallbacks = &expectedFallbacks
+	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
+	if err != nil {
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, updResp)
+		failed = true
+	}
+
+	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
+	if err != nil {
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", *cg.ID, err)
+		failed = true
+	}
+	cg = resp[0]
+	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
+		t.Errorf("failed to update fallbacks (expected = %v, actual = %v\n", expectedFallbacks, *cg.Fallbacks)
+		failed = true
+	}
+
+	// Test removing fallbacks
+	expectedFallbacks = []string{}
+	cg.Fallbacks = &expectedFallbacks
+	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
+	if err != nil {
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, updResp)
+		failed = true
+	}
+
+	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
+	if err != nil {
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", *cg.ID, err)
+		failed = true
+	}
+	cg = resp[0]
+	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
+		t.Errorf("failed to update fallbacks (expected = %v, actual = %v\n", expectedFallbacks, *cg.Fallbacks)
+		failed = true
+	}
+
 	if !failed {
 		log.Debugln("UpdateTestCacheGroups() PASSED: ")
 	}
