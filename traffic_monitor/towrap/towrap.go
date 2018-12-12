@@ -331,8 +331,8 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 
 		log.Errorln("Error getting configMap from traffic_ops, backup file exists, reading from file")
 		json := jsoniter.ConfigFastest
-		if err = json.Unmarshal(b, &configMap); err != nil {
-			log.Errorln("Error unmarshaling JSON from TMConfigBackupFile")
+		if err := json.Unmarshal(b, &configMap); err != nil {
+			return nil, errors.New("unmarhsalling backup file monitoring.json: " + err.Error())
 		}
 		return configMap, err
 	}
