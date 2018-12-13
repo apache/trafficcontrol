@@ -692,12 +692,6 @@
                     "value": "/etc/trafficserver/"
                 },
                 {
-                    "configFile": "remap.config",
-                    "name": "location",
-                    "secure": false,
-                    "value": "/etc/trafficserver/"
-                },
-                {
                     "configFile": "storage.config",
                     "name": "location",
                     "secure": false,
@@ -714,24 +708,6 @@
                     "name": "CONFIG proxy.config.url_remap.remap_required",
                     "secure": false,
                     "value": "INT 0"
-                },
-                {
-                    "configFile": "rascal.properties",
-                    "name": "health.threshold.loadavg",
-                    "secure": false,
-                    "value": "25.0"
-                },
-                {
-                    "configFile": "rascal.properties",
-                    "name": "health.threshold.availableBandwidthInKbps",
-                    "secure": false,
-                    "value": ">1750000"
-                },
-                {
-                    "configFile": "rascal.properties",
-                    "name": "history.count",
-                    "secure": false,
-                    "value": "30"
                 },
                 {
                     "configFile": "rascal.properties",
@@ -762,12 +738,6 @@
                     "name": "trafficserver",
                     "secure": false,
                     "value": "0:off\t1:off\t2:on\t3:on\t4:on\t5:on\t6:off"
-                },
-                {
-                    "configFile": "plugin.config",
-                    "name": "regex_revalidate.so",
-                    "secure": false,
-                    "value": "--config regex_revalidate.config"
                 },
                 {
                     "configFile": "regex_revalidate.config",
