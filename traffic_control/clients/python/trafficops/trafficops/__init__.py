@@ -24,4 +24,4 @@ from common.restapi import *
 from trafficops.tosession import *
 
 # The Module Version
-__version__ = '0.1.0'
+__version__ = '0.1.1'

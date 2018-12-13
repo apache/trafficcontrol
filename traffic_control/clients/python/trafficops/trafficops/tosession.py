@@ -28,7 +28,7 @@ import sys
 
 # Third-party Modules
 import munch
-
+from future.utils import raise_from
 import requests.exceptions as rex
 
 # Local Modules
@@ -208,13 +208,13 @@ class TOSession(restapi.RestApiSession):
 			msg = msg.format(e)
 			logging.error(msg)
 			logging.warning("disabling certificate verification is not recommended.")
-			raise restapi.LoginError(msg) from e
+			raise_from(restapi.LoginError(msg), e)
 		except restapi.OperationError as e:
 			logging.debug("%s", e, exc_info=True, stack_info=True)
 			msg = u'Logging in to Traffic Ops has failed. Reason: {0}'.format(e)
 			self.close()
 			logging.error(msg)
-			raise restapi.OperationError(msg) from e
+			raise_from(restapi.OperationError(msg), e)
 
 		logging.info("Authenticated.")
 

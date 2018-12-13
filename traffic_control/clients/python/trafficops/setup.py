@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #
@@ -27,8 +28,8 @@ for line in open('trafficops/__init__.py').readlines():
 setup(
     name='TrafficOps',
     version=version,
-    author='Robert Scrimo Jr.',
-    author_email='robert_scrimo@comcast.com',
+    author='Apache Software foundation',
+    author_email='dev@trafficcontrol.apache.org',
     packages=['common', 'trafficops'],
     url='http://trafficcontrol.apache.org/',
     license='http://www.apache.org/licenses/LICENSE-2.0',
