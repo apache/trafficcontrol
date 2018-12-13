@@ -29,9 +29,6 @@ API Routes
 	:glob:
 
 	*
-	v11/index
-	v12/index
-	v14/index
 
 .. _to-api-response-structure:
 

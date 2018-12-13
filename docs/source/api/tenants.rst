@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v12-tenant:
+.. _to-api-tenants:
 
 ***********
 ``tenants``
@@ -32,7 +32,7 @@ Request Structure
 .. table:: Request Query Parameters
 
 	+--------+------------------------------------------------------------------------------------+
-    |  Name  | Description                                                                        |
+	|  Name  | Description                                                                        |
 	+========+====================================================================================+
 	| active | If ``true``, return only active tenants; if ``false`` return only inactive tenants |
 	+--------+------------------------------------------------------------------------------------+

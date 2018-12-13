@@ -19,7 +19,6 @@
 ``deliveryservice_user``
 ************************
 
-
 ``POST``
 ========
 Assigns one or more Delivery Services to a user.

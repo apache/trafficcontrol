@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-snapshot-name:
+.. _to-api-cdns-snapshot-name:
 
 **************************
 ``cdns/{{name}}/snapshot``
