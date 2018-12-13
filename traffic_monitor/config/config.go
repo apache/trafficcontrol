@@ -41,9 +41,9 @@ const (
 	//StaticFileDir is the directory that contains static html and js files.
 	StaticFileDir = "/opt/traffic_monitor/static/"
 	//CrConfigBackupFile is the default file name to store the last crconfig
-	CRConfigBackupFile = "crconfig.backup"
+	CRConfigBackupFile = "/opt/traffic_monitor/crconfig.backup"
 	//TmConfigBackupFile is the default file name to store the last tmconfig
-	TMConfigBackupFile = "tmconfig.backup"
+	TMConfigBackupFile = "/opt/traffic_monitor/tmconfig.backup"
 )
 
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
