@@ -163,6 +163,20 @@ func (cg TOCacheGroup) Validate() error {
 		return err
 	}
 
+	if cg.Fallbacks != nil {
+		for _, fallback := range *cg.Fallbacks {
+			isValid, err := cg.isValidCacheGroupFallback(fallback)
+			if err != nil {
+				return err
+			}
+
+			if !isValid {
+				log.Errorf("the cache group " + fallback + "is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
+				return errors.New("the cache group " + fallback + "is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
+			}
+		}
+	}
+
 	validName := validation.NewStringRule(IsValidCacheGroupName, "invalid characters found - Use alphanumeric . or - or _ .")
 	validShortName := validation.NewStringRule(IsValidCacheGroupName, "invalid characters found - Use alphanumeric . or - or _ .")
 	latitudeErr := "Must be a floating point number within the range +-90"
@@ -234,7 +248,7 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 }
 
 func (cg *TOCacheGroup) createLocalizationMethods() error {
-	q := `DELETE FROM cachegroup_localization_method where cachegroup = $1`
+	q := `DELETE FROM cachegroup_localization_method WHERE cachegroup = $1`
 	if _, err := cg.ReqInfo.Tx.Tx.Exec(q, *cg.ID); err != nil {
 		return fmt.Errorf("unable to delete cachegroup_localization_methods for cachegroup %d: %s", *cg.ID, err.Error())
 	}
@@ -250,39 +264,19 @@ func (cg *TOCacheGroup) createLocalizationMethods() error {
 }
 
 func (cg *TOCacheGroup) createCacheGroupFallbacks() error {
-	if cg.Fallbacks != nil {
-		for _, fallback := range *cg.Fallbacks {
-			isValid, err := cg.isValidCacheGroupFallback(fallback)
-			if err != nil {
-				return err
-			}
-
-			if !isValid {
-				log.Errorf("the cache group " + fallback + "is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
-				return errors.New("the cache group " + fallback + "is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
-			}
-		}
-
-		deleteCgfQuery := `DELETE FROM cachegroup_fallbacks where primary_cg = $1`
-		if _, err := cg.ReqInfo.Tx.Tx.Exec(deleteCgfQuery, *cg.ID); err != nil {
-			return fmt.Errorf("unable to delete cachegroup_fallbacks for cachegroup %d: %s", *cg.ID, err.Error())
-		}
-		insertCgfQuery := `INSERT INTO cachegroup_fallbacks (primary_cg, backup_cg, set_order) VALUES ($1, $2, $3)`
-		for orderIndex, fallback := range *cg.Fallbacks {
-			var backupId int
-			query := `SELECT cachegroup.id FROM cachegroup WHERE cachegroup.name = $1;`
-			err := cg.ReqInfo.Tx.Tx.QueryRow(query, fallback).Scan(&backupId)
-			if err != nil {
-				log.Errorf("received error: %++v from cachegroup query execution", err)
-				return err
-			}
-
-			if _, err := cg.ReqInfo.Tx.Tx.Exec(insertCgfQuery, *cg.ID, backupId, orderIndex); err != nil {
-				return fmt.Errorf("unable to insert cachegroup_fallbacks for cachegroup %d: %s", *cg.ID, err.Error())
-			}
+	deleteCgfQuery := `DELETE FROM cachegroup_fallbacks WHERE primary_cg = $1`
+	if _, err := cg.ReqInfo.Tx.Tx.Exec(deleteCgfQuery, *cg.ID); err != nil {
+		return fmt.Errorf("unable to delete cachegroup_fallbacks for cachegroup %d: %s", *cg.ID, err.Error())
+	}
+	if cg.Fallbacks == nil {
+		return nil
+	}
+	insertCgfQuery := `INSERT INTO cachegroup_fallbacks (primary_cg, backup_cg, set_order) VALUES ($1, (SELECT cachegroup.id FROM cachegroup WHERE cachegroup.name = $2), $3)`
+	for orderIndex, fallback := range *cg.Fallbacks {
+		if _, err := cg.ReqInfo.Tx.Tx.Exec(insertCgfQuery, *cg.ID, fallback, orderIndex); err != nil {
+			return fmt.Errorf("unable to insert cachegroup_fallbacks for cachegroup %d: %s", *cg.ID, err.Error())
 		}
 	}
-
 	return nil
 }
 
@@ -293,7 +287,7 @@ SELECT cachegroup.id
 FROM cachegroup 
 JOIN type on type.id = cachegroup.type 
 WHERE cachegroup.name = $1 
-AND (type.name LIKE 'EDGE%')
+AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
 	err := cg.ReqInfo.Tx.Tx.QueryRow(query, fallbackName).Scan(&isValid)
@@ -302,33 +296,6 @@ AND (type.name LIKE 'EDGE%')
 		return false, err
 	}
 	return isValid, nil
-}
-
-func (cg *TOCacheGroup) deleteCacheGroupFallbacks() error {
-	deleteFallbacksQuery := `DELETE FROM cachegroup_fallbacks WHERE primary_cg = $1`
-	result, err := cg.ReqInfo.Tx.Tx.Exec(deleteFallbacksQuery, *cg.ID)
-	if err != nil {
-		return fmt.Errorf("delete fallbacks for primary_cg %d: %s", *cg.ID, err.Error())
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("delete fallbacks for primary_cg, getting rows affected: %d: %s", *cg.ID, err.Error())
-	}
-
-	log.Infof("deleted fallbacks for primary_cg %d, %d rows affected", *cg.ID, rowsAffected)
-
-	deleteFallbacksQuery = `DELETE FROM cachegroup_fallbacks WHERE backup_cg = $1`
-	result, err = cg.ReqInfo.Tx.Tx.Exec(deleteFallbacksQuery, *cg.ID)
-	if err != nil {
-		return fmt.Errorf("delete fallbacks for backup_cg %d: %s", *cg.ID, err.Error())
-	}
-	rowsAffected, err = result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("delete fallbacks for backup_cg %d, getting rows affected: %s", *cg.ID, err.Error())
-	}
-	log.Infof("deleted fallbacks for backup_cg %d, %d rows affected", *cg.ID, rowsAffected)
-
-	return nil
 }
 
 func (cg *TOCacheGroup) createCoordinate() (*int, error) {
@@ -560,10 +527,6 @@ func (cg *TOCacheGroup) Delete() (error, error, int) {
 		if err = cg.deleteCoordinate(*coordinateID); err != nil {
 			return nil, errors.New("cg delete: deleting coord: " + err.Error()), http.StatusInternalServerError
 		}
-	}
-
-	if err = cg.deleteCacheGroupFallbacks(); err != nil {
-		return nil, errors.New("cg delete: deleting fallbacks: " + err.Error()), http.StatusInternalServerError
 	}
 
 	result, err := cg.ReqInfo.Tx.NamedExec(deleteQuery(), cg)
