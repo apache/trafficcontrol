@@ -62,24 +62,6 @@ func GetTestATSConfigs(t *testing.T) {
 	}
 	server := serverList[0]
 
-	// profiles, _, err := TOSession.GetProfileByName(server.Profile)
-	// if err != nil {
-	// 	t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
-	// }
-	// if len(profiles) < 1 {
-	// 	t.Errorf("cannot GET Profile '"+server.Profile+"' by name: no profiles\n", err, resp)
-	// }
-	// profile := profiles[0]
-
-	// cdns, _, err := TOSession.GetCDNByName(server.CDN)
-	// if err != nil {
-	// 	t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
-	// }
-	// if len(profiles) < 1 {
-	// 	t.Errorf("cannot GET Profile '"+server.Profile+"' by name: no profiles\n", err, resp)
-	// }
-	// profile := profiles[0]
-
 	_, _, err = TOSession.GetATSServerConfigList(server.ID)
 	if err != nil {
 		t.Fatalf("Getting server '" + server.HostName + "' config list: " + err.Error() + "\n")
