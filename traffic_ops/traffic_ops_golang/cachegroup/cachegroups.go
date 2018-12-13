@@ -163,6 +163,19 @@ func (cg TOCacheGroup) Validate() error {
 		return err
 	}
 
+	if cg.Fallbacks != nil {
+		for _, fallback := range *cg.Fallbacks {
+			isValid, err := cg.isValidCacheGroupFallback(fallback)
+			if err != nil {
+				return err
+			}
+
+			if !isValid {
+				return errors.New("the cache group " + fallback + " is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
+			}
+		}
+	}
+
 	validName := validation.NewStringRule(IsValidCacheGroupName, "invalid characters found - Use alphanumeric . or - or _ .")
 	validShortName := validation.NewStringRule(IsValidCacheGroupName, "invalid characters found - Use alphanumeric . or - or _ .")
 	latitudeErr := "Must be a floating point number within the range +-90"
@@ -224,12 +237,17 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 	if err = cg.createLocalizationMethods(); err != nil {
 		return nil, errors.New("cg create: creating localization methods: " + err.Error()), http.StatusInternalServerError
 	}
+
+	if err = cg.createCacheGroupFallbacks(); err != nil {
+		return nil, errors.New("cg create: creating cache group fallbacks: " + err.Error()), http.StatusInternalServerError
+	}
+
 	cg.LastUpdated = &lastUpdated
 	return nil, nil, http.StatusOK
 }
 
 func (cg *TOCacheGroup) createLocalizationMethods() error {
-	q := `DELETE FROM cachegroup_localization_method where cachegroup = $1`
+	q := `DELETE FROM cachegroup_localization_method WHERE cachegroup = $1`
 	if _, err := cg.ReqInfo.Tx.Tx.Exec(q, *cg.ID); err != nil {
 		return fmt.Errorf("unable to delete cachegroup_localization_methods for cachegroup %d: %s", *cg.ID, err.Error())
 	}
@@ -242,6 +260,41 @@ func (cg *TOCacheGroup) createLocalizationMethods() error {
 		}
 	}
 	return nil
+}
+
+func (cg *TOCacheGroup) createCacheGroupFallbacks() error {
+	deleteCgfQuery := `DELETE FROM cachegroup_fallbacks WHERE primary_cg = $1`
+	if _, err := cg.ReqInfo.Tx.Tx.Exec(deleteCgfQuery, *cg.ID); err != nil {
+		return fmt.Errorf("unable to delete cachegroup_fallbacks for cachegroup %d: %s", *cg.ID, err.Error())
+	}
+	if cg.Fallbacks == nil {
+		return nil
+	}
+	insertCgfQuery := `INSERT INTO cachegroup_fallbacks (primary_cg, backup_cg, set_order) VALUES ($1, (SELECT cachegroup.id FROM cachegroup WHERE cachegroup.name = $2), $3)`
+	for orderIndex, fallback := range *cg.Fallbacks {
+		if _, err := cg.ReqInfo.Tx.Tx.Exec(insertCgfQuery, *cg.ID, fallback, orderIndex); err != nil {
+			return fmt.Errorf("unable to insert cachegroup_fallbacks for cachegroup %d: %s", *cg.ID, err.Error())
+		}
+	}
+	return nil
+}
+
+func (cg *TOCacheGroup) isValidCacheGroupFallback(fallbackName string) (bool, error) {
+	var isValid bool
+	query := `SELECT(
+SELECT cachegroup.id 
+FROM cachegroup 
+JOIN type on type.id = cachegroup.type 
+WHERE cachegroup.name = $1 
+AND (type.name = 'EDGE_LOC')
+) IS NOT NULL;`
+
+	err := cg.ReqInfo.Tx.Tx.QueryRow(query, fallbackName).Scan(&isValid)
+	if err != nil {
+		log.Errorf("received error: %++v from cachegroup fallback validation query execution", err)
+		return false, err
+	}
+	return isValid, nil
 }
 
 func (cg *TOCacheGroup) createCoordinate() (*int, error) {
@@ -329,6 +382,7 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	for rows.Next() {
 		var s TOCacheGroup
 		lms := make([]tc.LocalizationMethod, 0)
+		cgfs := make([]string, 0)
 		if err = rows.Scan(
 			&s.ID,
 			&s.Name,
@@ -343,10 +397,12 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 			&s.Type,
 			&s.TypeID,
 			&s.LastUpdated,
+			pq.Array(&cgfs),
 		); err != nil {
 			return nil, nil, errors.New("cg read: scanning: " + err.Error()), http.StatusInternalServerError
 		}
 		s.LocalizationMethods = &lms
+		s.Fallbacks = &cgfs
 		cacheGroups = append(cacheGroups, s)
 	}
 
@@ -399,6 +455,11 @@ func (cg *TOCacheGroup) Update() (error, error, int) {
 	if err = cg.createLocalizationMethods(); err != nil {
 		return nil, errors.New("cg update: creating localization methods: " + err.Error()), http.StatusInternalServerError
 	}
+
+	if err = cg.createCacheGroupFallbacks(); err != nil {
+		return nil, errors.New("cg create: creating cache group fallbacks: " + err.Error()), http.StatusInternalServerError
+	}
+
 	return nil, nil, http.StatusOK
 }
 
@@ -519,7 +580,8 @@ cachegroup.secondary_parent_cachegroup_id,
 cgs.name AS secondary_parent_cachegroup_name,
 type.name AS type_name,
 cachegroup.type AS type_id,
-cachegroup.last_updated
+cachegroup.last_updated,
+(SELECT coalesce(array_agg(CAST(cg2.name as text) ORDER BY cgf.set_order ASC), '{}') AS fallbacks FROM cachegroup cg2 INNER JOIN cachegroup_fallbacks cgf ON cgf.backup_cg = cg2.id WHERE cgf.primary_cg = cachegroup.id)
 FROM cachegroup
 LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id

@@ -53,6 +53,10 @@ func getTestCacheGroups() []tc.CacheGroup {
 		Type:        "EDGE_LOC",
 		TypeID:      6,
 		LastUpdated: tc.TimeNoMod{Time: time.Now()},
+		Fallbacks: []string{
+			"cachegroup2",
+			"cachegroup3",
+		},
 	}
 	cgs = append(cgs, testCG1)
 
@@ -103,6 +107,7 @@ func TestReadCacheGroups(t *testing.T) {
 		"type_name",
 		"type_id",
 		"last_updated",
+		"fallbacks",
 	})
 
 	for _, ts := range testCGs {
@@ -120,6 +125,7 @@ func TestReadCacheGroups(t *testing.T) {
 			ts.Type,
 			ts.TypeID,
 			ts.LastUpdated,
+			[]byte("{cachegroup2,cachegroup3}"),
 		)
 	}
 	mock.ExpectBegin()
