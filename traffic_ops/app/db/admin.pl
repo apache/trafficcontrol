@@ -32,6 +32,8 @@ use DBIx::Class::Schema::Loader qw/make_schema_at/;
 use Env;
 use Env qw(HOME);
 
+print STDERR "WARNING: this script is deprecated, please use the db/admin binary instead.\n\n";
+
 my $usage = "\n"
 	. "Usage:  $PROGRAM_NAME [--env (development|test|production|integration)] [arguments]\t\n\n"
 	. "Example:  $PROGRAM_NAME --env=test reset\n\n"

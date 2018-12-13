@@ -33,6 +33,7 @@ selenium(?:                          MIT. Properly documented in LICENSE ){0}
 gmx(?:                               MIT. Properly documented in LICENSE ){0}
 stoppableListener(?:                 MIT. Properly documented in LICENSE ){0}
 fsnotify\.v1(?:                      MIT. Properly documented in LICENSE ){0}
+yaml\.v2(?:                          Apache 2.0. Properly documented in LICENSE ){0}
 jwt\-go(?:                           MIT. Properly documented in LICENSE ){0}
 pq(?:                                MIT. Properly documented in LICENSE ){0}
 bootstrap(?:-theme)?\.(?:css|js)(?:  MIT. Properly documented in LICENSE ){0}
