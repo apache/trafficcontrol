@@ -171,8 +171,7 @@ func (cg TOCacheGroup) Validate() error {
 			}
 
 			if !isValid {
-				log.Errorf("the cache group " + fallback + "is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
-				return errors.New("the cache group " + fallback + "is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
+				return errors.New("the cache group " + fallback + " is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
 			}
 		}
 	}
