@@ -97,7 +97,7 @@ Request Structure
 		:resolve4: An array of IPv4 addresses that can resolve the Delivery Service's federation
 		:resolve6: An array of IPv6 addresses that can resolve the Delivery Service's federation
 
-.. code-block::http
+.. code-block:: http
 	:caption: Request Example
 
 	POST /api/1.1/federations HTTP/1.1
