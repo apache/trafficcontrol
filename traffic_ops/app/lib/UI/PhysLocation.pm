@@ -225,7 +225,7 @@ sub create {
 		my $email      = $self->param('location.email'),
 		my $comments   = $self->param('location.comments'),
 		my $region     = $self->param('location.region'),
-		my $data       = $self->get_phsyical_location_names();
+		my $data       = $self->get_physical_location_names();
 
 	my $names       = $data->{'names'};
 	my $short_names = $data->{'short_names'};
@@ -320,7 +320,7 @@ sub create {
 	return $self->redirect_to( '/phys_location/' . $new_id . '/edit' );
 }
 
-sub get_phsyical_location_names {
+sub get_physical_location_names {
 	my $self = shift;
 
 	my %data;

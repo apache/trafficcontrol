@@ -62,7 +62,7 @@ ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =
     ->json_is( "/response/0/configFile" => "configFile10" )
     ->json_is( "/response/0/value" => "value10" )
     ->json_is( "/response/0/secure" => "0" )
-		, 'Does the paramters created return?';
+		, 'Does the parameters created return?';
 
 ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json => 
 	[
@@ -88,7 +88,7 @@ ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =
     ->json_is( "/response/1/configFile" => "configFile2" )
     ->json_is( "/response/1/value" => "value2" )
     ->json_is( "/response/1/secure" => "1" )
-		, 'Does the paramters created return?';
+		, 'Does the parameters created return?';
 
 ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json => [
         {
@@ -122,7 +122,7 @@ ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =
     ])->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/alerts/0/text" => "parameter [name:param3 , configFile:configFile3 , value:value3] already exists." )
-		, 'Does the paramters created return?';
+		, 'Does the parameters created return?';
 
 ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json => [
         {
@@ -139,7 +139,7 @@ ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =
     ])->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/alerts/0/text" => 'parameter [name:param3 , configFile:configFile3 , value:value3] already exists.' )
-		, 'Does the paramters create return?';
+		, 'Does the parameters create return?';
 
 ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json => [
         {
@@ -153,7 +153,7 @@ ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =
         }
     ])->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		, 'Does the paramters created return?';
+		, 'Does the parameters created return?';
 
 my $para_id = &get_param_id('param2');
 
@@ -166,7 +166,7 @@ ok $t->put_ok('/api/1.2/parameters/' . $para_id => {Accept => 'application/json'
 	->json_is( "/response/configFile" => "configFile2" )
 	->json_is( "/response/value" => "value2.1" )
 	->json_is( "/response/secure" => "0" )
-		, 'Does the paramters modified return?';
+		, 'Does the parameters modified return?';
 
 ok $t->put_ok('/api/1.2/parameters/' . $para_id => {Accept => 'application/json'} => json => {
             'name'  => 'param2.1',
@@ -178,12 +178,12 @@ ok $t->put_ok('/api/1.2/parameters/' . $para_id => {Accept => 'application/json'
 	->json_is( "/response/configFile" => "configFile2.1" )
 	->json_is( "/response/value" => "value2.1" )
 	->json_is( "/response/secure" => "1" )
-		, 'Does the paramters modified return?';
+		, 'Does the parameters modified return?';
 
 ok $t->put_ok('/api/1.2/parameters/0' => {Accept => 'application/json'} => json => {
     })->status_is(404)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		, 'Does the paramters modified return?';
+		, 'Does the parameters modified return?';
 
 ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -213,7 +213,7 @@ ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} 
 	->json_is( "/response/configFile" => "configFile1" )
 	->json_is( "/response/value" => "value1" )
 	->json_is( "/response/secure" => "0" )
-		, 'Does the paramters validate return?';
+		, 'Does the parameters validate return?';
 
 ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} => json => {
             'configFile' => 'configFile1',
@@ -222,7 +222,7 @@ ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} 
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_like( "/alerts/0/text" => qr/is required.$/ )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		, 'Does the paramters validate return?';
+		, 'Does the parameters validate return?';
 ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} => json => {
             'name'  => 'param1',
             'value'      => 'value1'
@@ -230,7 +230,7 @@ ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} 
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_like( "/alerts/0/text" => qr/is required.$/ )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		, 'Does the paramters validate return?';
+		, 'Does the parameters validate return?';
 ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} => json => {
             'name'  => 'param1',
             'configFile' => 'configFile1',
@@ -238,7 +238,7 @@ ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} 
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_like( "/alerts/0/text" => qr/is required.$/ )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		, 'Does the paramters validate return?';
+		, 'Does the parameters validate return?';
 ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} => json => {
             'name'  => 'noexist',
             'configFile' => 'noexist',
@@ -247,7 +247,7 @@ ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} 
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_like( "/alerts/0/text" => qr/does not exist.$/ )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		, 'Does the paramters validate return?';
+		, 'Does the parameters validate return?';
 
 
 #checking if a parameter vaule can be changed to "0"
@@ -267,7 +267,7 @@ ok $t->get_ok('/api/1.2/parameters/'. $para_id)->status_is(200)
 		->json_is( "/response/0/name" => "default1" )
 		->json_is( "/response/0/value" => "1" )
 		->json_is( "/response/0/configFile" => "configFile3" )
-	, 'Does the paramter get return?';
+	, 'Does the parameter get return?';
 
 ok $t->put_ok('/api/1.2/parameters/' . $para_id => {Accept => 'application/json'} => json => {
 			'value'      => '0',
@@ -276,7 +276,7 @@ ok $t->put_ok('/api/1.2/parameters/' . $para_id => {Accept => 'application/json'
 		->json_is( "/response/name" => "default1" )
 		->json_is( "/response/configFile" => "configFile3" )
 		->json_is( "/response/value" => "0" )
-	, 'Was the paramters modification return?';
+	, 'Was the parameters modification return?';
 
 ok $t->get_ok('/api/1.2/parameters/'. $para_id)->status_is(200)
 		->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -286,7 +286,7 @@ ok $t->get_ok('/api/1.2/parameters/'. $para_id)->status_is(200)
 	, 'Was the parameter really changed?';
 
 ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(200)
-	, 'Does the paramter deleted?';
+	, 'Does the parameter deleted?';
 
 
 
@@ -306,19 +306,19 @@ ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =
     )->status_is(403)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/alerts/0/text" => "You must be an admin or oper to perform this operation!" )
-		, 'Does the paramters created return?';
+		, 'Does the parameters created return?';
 
 ok $t->put_ok('/api/1.2/parameters/' . $para_id => {Accept => 'application/json'} => json => {
     })->status_is(403)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/alerts/0/text" => "You must be an admin or oper to perform this operation!" )
-		, 'Does the paramters modified return?';
+		, 'Does the parameters modified return?';
 
 $para_id = &get_param_id('param1');
 ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(403)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/alerts/0/text" => "You must be an admin or oper to perform this operation!" )
-		, 'Does the paramter delete return?';
+		, 'Does the parameter delete return?';
 
 $para_id = &get_param_id('domain_name');
 ok $t->get_ok('/api/1.2/parameters/'. $para_id)->status_is(200)
@@ -327,7 +327,7 @@ ok $t->get_ok('/api/1.2/parameters/'. $para_id)->status_is(200)
 	->json_is( "/response/0/value" => "foo.com" )
 	->json_is( "/response/0/configFile" => "CRConfig.json" )
 	->json_is( "/response/0/secure" => "0" )
-		, 'Does the paramter get return?';
+		, 'Does the parameter get return?';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

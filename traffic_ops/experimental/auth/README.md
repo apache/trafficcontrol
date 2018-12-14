@@ -18,7 +18,7 @@
 -->
 
 
-A simple authentication server written in go that authenticates user agains the `tm_user` table and returns a jwt representing the user, incl. its API access capabilities, derived from the user's role.
+A simple authentication server written in go that authenticates user against the `tm_user` table and returns a jwt representing the user, incl. its API access capabilities, derived from the user's role.
 
 * To run:
 `go run auth.go auth.config my-secret`

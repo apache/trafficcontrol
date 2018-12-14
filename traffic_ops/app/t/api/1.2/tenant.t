@@ -192,29 +192,29 @@ ok $t->get_ok("/api/1.2/tenants")->status_is(200)
 	->json_is( "/response/4/id", $tenantE_id)
 	->json_is( "/response/1/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
-#tenants heirarchy- test depth, height, root
+#tenants hierarchy- test depth, height, root
 my $tenant_utils_of_root = Utils::Tenant->new(undef, $root_tenant_id, $schema);
 my $tenants_data = $tenant_utils_of_root->create_tenants_data_from_db();
 
 ok $tenant_utils_of_root->is_root_tenant($tenants_data, $root_tenant_id) == 1; 
-ok $tenant_utils_of_root->get_tenant_heirarchy_depth($tenants_data, $root_tenant_id) == 0; 
-ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $root_tenant_id) == 2; 
+ok $tenant_utils_of_root->get_tenant_hierarchy_depth($tenants_data, $root_tenant_id) == 0; 
+ok $tenant_utils_of_root->get_tenant_hierarchy_height($tenants_data, $root_tenant_id) == 2; 
 
 ok $tenant_utils_of_root->is_root_tenant($tenants_data, $tenantA_id) == 0; 
-ok $tenant_utils_of_root->get_tenant_heirarchy_depth($tenants_data, $tenantA_id) == 1; 
-ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $tenantA_id) == 1; 
+ok $tenant_utils_of_root->get_tenant_hierarchy_depth($tenants_data, $tenantA_id) == 1; 
+ok $tenant_utils_of_root->get_tenant_hierarchy_height($tenants_data, $tenantA_id) == 1; 
 
 ok $tenant_utils_of_root->is_root_tenant($tenants_data, $tenantB_id) == 0; 
-ok $tenant_utils_of_root->get_tenant_heirarchy_depth($tenants_data, $tenantB_id) == 1; 
-ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $tenantB_id) == 0; 
+ok $tenant_utils_of_root->get_tenant_hierarchy_depth($tenants_data, $tenantB_id) == 1; 
+ok $tenant_utils_of_root->get_tenant_hierarchy_height($tenants_data, $tenantB_id) == 0; 
 
 ok $tenant_utils_of_root->is_root_tenant($tenants_data, $tenantD_id) == 0; 
-ok $tenant_utils_of_root->get_tenant_heirarchy_depth($tenants_data, $tenantD_id) == 2; 
-ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $tenantD_id) == 0; 
+ok $tenant_utils_of_root->get_tenant_hierarchy_depth($tenants_data, $tenantD_id) == 2; 
+ok $tenant_utils_of_root->get_tenant_hierarchy_height($tenants_data, $tenantD_id) == 0; 
 
 ok $tenant_utils_of_root->is_root_tenant($tenants_data, $tenantE_id) == 0; 
-ok $tenant_utils_of_root->get_tenant_heirarchy_depth($tenants_data, $tenantE_id) == 2; 
-ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $tenantE_id) == 0; 
+ok $tenant_utils_of_root->get_tenant_hierarchy_depth($tenants_data, $tenantE_id) == 2; 
+ok $tenant_utils_of_root->get_tenant_hierarchy_height($tenants_data, $tenantE_id) == 0; 
 
 ############################
 #testing tenancy checks
@@ -275,7 +275,7 @@ ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'applica
 		->json_is( "/response/name" => "use_tenancy" )
 		->json_is( "/response/configFile" => "global" )
 		->json_is( "/response/value" => "0" )
-    , 'Was the disabling paramter set?';
+    , 'Was the disabling parameter set?';
 
 my $tenant_utils_of_d_disabled = Utils::Tenant->new(undef, $tenantD_id, $schema);
 my $tenants_data_of_d_disabled = $tenant_utils_of_d_disabled->create_tenants_data_from_db();
@@ -297,7 +297,7 @@ ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'applica
 		->json_is( "/response/name" => "use_tenancy" )
 		->json_is( "/response/configFile" => "global" )
 		->json_is( "/response/value" => "1" )
-    , 'Was the disabling paramter unset?';
+    , 'Was the disabling parameter unset?';
 
 
 #################

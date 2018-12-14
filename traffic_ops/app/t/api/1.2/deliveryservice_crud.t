@@ -56,7 +56,7 @@ sub run_ut {
 			->json_is( "/response/name" => "use_tenancy" )
 			->json_is( "/response/configFile" => "global" )
 			->json_is( "/response/value" => $use_tenancy )
-		, 'Was the disabling paramter set?';
+		, 'Was the disabling parameter set?';
 
 	# It gets existing delivery services
 	ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )

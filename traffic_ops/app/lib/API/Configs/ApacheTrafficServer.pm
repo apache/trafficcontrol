@@ -1806,7 +1806,7 @@ sub regex_revalidate_dot_config {
 		my $job_cdn_id = $row->job_deliveryservice->cdn_id;
 		if ( $cdn_obj->id == $job_cdn_id ) {
 
-			# if there are multipe with same re, pick the longes lasting.
+			# if there are multiple with same re, pick the longes lasting.
 			if ( !defined( $regex_time{ $row->asset_url } )
 				|| ( defined( $regex_time{ $row->asset_url } ) && $purge_end > $regex_time{ $row->asset_url } ) )
 			{
@@ -1833,7 +1833,7 @@ sub set_dscp_dot_config {
 		$dscp_decimal = $1;
 	}
 	else {
-		$text = "An error occured generating the DSCP header rewrite file.";
+		$text = "An error occurred generating the DSCP header rewrite file.";
 	}
 	$text .= "cond %{REMAP_PSEUDO_HOOK}\n" . "set-conn-dscp " . $dscp_decimal . " [L]\n";
 

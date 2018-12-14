@@ -63,7 +63,7 @@ class ServerInfo():
 		Constructs a server object out of some kind of raw API response
 
 		:param raw: some kind of ungodly huge JSON object from one API endpoint or
-			another. Attempts will be made to resolve inconsistent naming accross
+			another. Attempts will be made to resolve inconsistent naming across
 			endpoints.
 		:raises ValueError: when the passed object doesn't have all required fields
 		"""
@@ -153,7 +153,7 @@ def getTOJSONResponse(uri:str) -> dict:
 
 	:returns: The decoded JSON response as an object
 
-			.. note:: If the API response containes a 'response' object, this function will
+			.. note:: If the API response contains a 'response' object, this function will
 				only return that object. Also, if the API response contains an 'alerts' object,
 				they will be logged appropriately
 
@@ -181,7 +181,7 @@ def getTOJSONResponse(uri:str) -> dict:
 		if "alerts" in resp:
 			for alert in resp["alerts"]:
 				if "level" in alert:
-					msg = alert["text"] if "text" in alert else "Unkown"
+					msg = alert["text"] if "text" in alert else "Unknown"
 					API_LOGGERS[alert["level"]](msg)
 				elif "text" in alert:
 					logging.warning("Traffic Ops API alert: %s", alert["text"])
@@ -201,7 +201,7 @@ def getUpdateStatus(host:str) -> dict:
 
 	:param host: The (short) hostname of the server to query
 	:raises ValueError: if ``host`` is not a :const:`str`
-	:raises PermissionError: if a new cookie is required, but fails to be aquired
+	:raises PermissionError: if a new cookie is required, but fails to be acquired
 	:returns: An object representing the API's response
 	"""
 	global CACHED_UPDATE_STATUS

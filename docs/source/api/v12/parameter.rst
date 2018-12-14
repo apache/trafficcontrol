@@ -416,7 +416,7 @@ Parameter
   Role(s) Required: admin or oper
 
   **Request Route Parameters**
-  The request route parameters accept 2 formats, both single paramter and parameters array formats are acceptable.
+  The request route parameters accept 2 formats, both single parameter and parameters array formats are acceptable.
 
   single parameter format:
 

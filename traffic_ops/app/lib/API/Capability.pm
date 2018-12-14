@@ -172,7 +172,7 @@ sub delete {
 	my $rs_data = $self->db->resultset("ApiCapability")->find( { 'me.capability' => $name } );
 	if ( defined($rs_data) ) {
 		my $reference_id = $rs_data->id;
-		return $self->alert("Capability \'$name\' is refered by an api_capability mapping: $reference_id. Deletion failed.");
+		return $self->alert("Capability \'$name\' is referred by an api_capability mapping: $reference_id. Deletion failed.");
 	}
 
 	my $rs = $capability->delete();

@@ -59,7 +59,7 @@ ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'applica
         ->json_is( "/response/name" => "use_tenancy" )
         ->json_is( "/response/configFile" => "global" )
         ->json_is( "/response/value" => "0" )
-    , 'Was the disabling paramter set?';
+    , 'Was the disabling parameter set?';
 
 # there is currently 1 delivery service assigned to user with id=200
 $t->get_ok('/api/1.2/users/200/deliveryservices')->status_is(200)->$count_response(1)
@@ -120,7 +120,7 @@ ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'applica
         ->json_is( "/response/name" => "use_tenancy" )
         ->json_is( "/response/configFile" => "global" )
         ->json_is( "/response/value" => "1" )
-    , 'Was the disabling paramter unset?';
+    , 'Was the disabling parameter unset?';
 
 my $portal_user_id = $schema->resultset('TmUser')->find( { username => Test::TestHelper::PORTAL_ROOT_USER } )->id;
 # there is currently 0 delivery service assigned to PORTAL_ROOT_USER, but the feature is disabled

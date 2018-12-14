@@ -317,7 +317,7 @@ var prettyPrint = (function(){
 							this.parentNode.appendChild( prettyPrintThis(obj,{maxDepth:1}) );
 						} catch(e) {
 							this.parentNode.appendChild(
-								util.table(['ERROR OCCURED DURING OBJECT RETRIEVAL'],'error').addRow([e.message]).node   
+								util.table(['ERROR OCCURRED DURING OBJECT RETRIEVAL'],'error').addRow([e.message]).node   
 							);
 						}
 					}

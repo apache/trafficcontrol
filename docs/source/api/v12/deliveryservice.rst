@@ -169,7 +169,7 @@ Delivery Service
   |                              |        | - 2: drop query string at edge, and do not use it in the cache-key.                                                                  |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``rangeRequestHandling``     | int    | How to treat range requests:                                                                                                         |
-  |                              |        | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                      |
+  |                              |        | - 0 Do not cache (ranges requested from files that are already cached due to a non range request will be a HIT)                      |
   |                              |        | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin. |
   |                              |        | - 2 Use the cache_range_requests plugin.                                                                                             |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -423,7 +423,7 @@ Delivery Service
   |                              |        | - 2: drop query string at edge, and do not use it in the cache-key.                                                                  |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``rangeRequestHandling``     | int    | How to treat range requests:                                                                                                         |
-  |                              |        | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                      |
+  |                              |        | - 0 Do not cache (ranges requested from files that are already cached due to a non range request will be a HIT)                      |
   |                              |        | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin. |
   |                              |        | - 2 Use the cache_range_requests plugin.                                                                                             |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2191,7 +2191,7 @@ URL Sig Keys
   |                              |          | Required for DNS* and HTTP* delivery services.                                                          |
   +------------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | rangeRequestHandling         | yes|no   | How to treat range requests (required for DNS* and HTTP* delivery services):                            |
-  |                              |          | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will   |
+  |                              |          | - 0 Do not cache (ranges requested from files that are already cached due to a non range request will   |
   |                              |          | be a HIT)                                                                                               |
   |                              |          | - 1 Use the background_fetch plugin.                                                                    |
   |                              |          | - 2 Use the cache_range_requests plugin.                                                                |
@@ -2382,7 +2382,7 @@ URL Sig Keys
   |                              |        | - 2: drop query string at edge, and do not use it in the cache-key.                                                                  |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``rangeRequestHandling``     | int    | How to treat range requests:                                                                                                         |
-  |                              |        | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                      |
+  |                              |        | - 0 Do not cache (ranges requested from files that are already cached due to a non range request will be a HIT)                      |
   |                              |        | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin. |
   |                              |        | - 2 Use the cache_range_requests plugin.                                                                                             |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2623,7 +2623,7 @@ URL Sig Keys
   |                          |          | Required for DNS* and HTTP* delivery services.                                                          |
   +--------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | rangeRequestHandling     | yes|no   | How to treat range requests (required for DNS* and HTTP* delivery services):                            |
-  |                          |          | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will   |
+  |                          |          | - 0 Do not cache (ranges requested from files that are already cached due to a non range request will   |
   |                          |          | be a HIT)                                                                                               |
   |                          |          | - 1 Use the background_fetch plugin.                                                                    |
   |                          |          | - 2 Use the cache_range_requests plugin.                                                                |
@@ -2814,7 +2814,7 @@ URL Sig Keys
   |                              |        | - 2: drop query string at edge, and do not use it in the cache-key.                                                                  |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``rangeRequestHandling``     | int    | How to treat range requests:                                                                                                         |
-  |                              |        | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                      |
+  |                              |        | - 0 Do not cache (ranges requested from files that are already cached due to a non range request will be a HIT)                      |
   |                              |        | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin. |
   |                              |        | - 2 Use the cache_range_requests plugin.                                                                                             |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -3094,7 +3094,7 @@ URL Sig Keys
   |                              |        | - 2: drop query string at edge, and do not use it in the cache-key.                                                                  |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``rangeRequestHandling``     | int    | How to treat range requests:                                                                                                         |
-  |                              |        | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                      |
+  |                              |        | - 0 Do not cache (ranges requested from files that are already cached due to a non range request will be a HIT)                      |
   |                              |        | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin. |
   |                              |        | - 2 Use the cache_range_requests plugin.                                                                                             |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+

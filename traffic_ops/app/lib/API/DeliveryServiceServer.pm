@@ -100,7 +100,7 @@ sub assign_servers_to_ds {
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-		return $self->alert("Invalid delivery-service assignment. The delivery-service is not avaialble for your tenant.");
+		return $self->alert("Invalid delivery-service assignment. The delivery-service is not available for your tenant.");
 	}
 
 	if ( ref($servers) ne 'ARRAY' ) {

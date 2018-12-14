@@ -166,7 +166,7 @@ func (builder *FetchValueCommandBuilder) WithKey(key string) *FetchValueCommandB
 }
 
 // WithR sets the number of nodes that must report back a successful read in order for the
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchValueCommandBuilder) WithR(r uint32) *FetchValueCommandBuilder {
@@ -175,7 +175,7 @@ func (builder *FetchValueCommandBuilder) WithR(r uint32) *FetchValueCommandBuild
 }
 
 // WithPr sets the number of primary nodes (N) that must be read from in order for the command
-// operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchValueCommandBuilder) WithPr(pr uint32) *FetchValueCommandBuilder {
@@ -184,7 +184,7 @@ func (builder *FetchValueCommandBuilder) WithPr(pr uint32) *FetchValueCommandBui
 }
 
 // WithNVal sets the number of times this command operation is replicated in the Cluster. If
-// ommitted, the ring default is used.
+// omitted, the ring default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchValueCommandBuilder) WithNVal(nval uint32) *FetchValueCommandBuilder {
@@ -449,7 +449,7 @@ func (builder *StoreValueCommandBuilder) WithW(w uint32) *StoreValueCommandBuild
 
 // WithDw (durable writes) sets the number of nodes that must report back a successful write to
 // backend storage in order for the command operation to be considered a success by Riak. If
-// ommitted, the bucket default is used.
+// omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *StoreValueCommandBuilder) WithDw(dw uint32) *StoreValueCommandBuilder {
@@ -458,7 +458,7 @@ func (builder *StoreValueCommandBuilder) WithDw(dw uint32) *StoreValueCommandBui
 }
 
 // WithPw sets the number of primary nodes (N) that must report back a successful write in order for
-// the command operation to be considered a success by Riak.  If ommitted, the bucket default is
+// the command operation to be considered a success by Riak.  If omitted, the bucket default is
 // used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
@@ -468,7 +468,7 @@ func (builder *StoreValueCommandBuilder) WithPw(pw uint32) *StoreValueCommandBui
 }
 
 // WithNVal sets the number of times this command operation is replicated in the Cluster. If
-// ommitted, the ring default is used.
+// omitted, the ring default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *StoreValueCommandBuilder) WithNVal(nval uint32) *StoreValueCommandBuilder {
@@ -631,7 +631,7 @@ func (builder *DeleteValueCommandBuilder) WithVClock(vclock []byte) *DeleteValue
 }
 
 // WithR sets the number of nodes that must report back a successful read in order for the
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *DeleteValueCommandBuilder) WithR(r uint32) *DeleteValueCommandBuilder {
@@ -640,7 +640,7 @@ func (builder *DeleteValueCommandBuilder) WithR(r uint32) *DeleteValueCommandBui
 }
 
 // WithW sets the number of nodes that must report back a successful write in order for then
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *DeleteValueCommandBuilder) WithW(w uint32) *DeleteValueCommandBuilder {
@@ -649,7 +649,7 @@ func (builder *DeleteValueCommandBuilder) WithW(w uint32) *DeleteValueCommandBui
 }
 
 // WithPr sets the number of primary nodes (N) that must be read from in order for the command
-// operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *DeleteValueCommandBuilder) WithPr(pr uint32) *DeleteValueCommandBuilder {
@@ -658,7 +658,7 @@ func (builder *DeleteValueCommandBuilder) WithPr(pr uint32) *DeleteValueCommandB
 }
 
 // WithPw sets the number of primary nodes (N) that must report back a successful write in order for
-// the command operation to be considered a success by Riak.  If ommitted, the bucket default is
+// the command operation to be considered a success by Riak.  If omitted, the bucket default is
 // used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
@@ -669,7 +669,7 @@ func (builder *DeleteValueCommandBuilder) WithPw(pw uint32) *DeleteValueCommandB
 
 // WithDw (durable writes) sets the number of nodes that must report back a successful write to
 // backend storage in order for the command operation to be considered a success by Riak. If
-// ommitted, the bucket default is used.
+// omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *DeleteValueCommandBuilder) WithDw(dw uint32) *DeleteValueCommandBuilder {
@@ -680,7 +680,7 @@ func (builder *DeleteValueCommandBuilder) WithDw(dw uint32) *DeleteValueCommandB
 // WithRw (delete quorum) sets the number of nodes that must report back a successful delete to
 // backend storage in order for the command operation to be considered a success by Riak. It
 // represents the read and write operations that are completed internal to Riak to complete a delete.
-// If ommitted, the bucket default is used.
+// If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *DeleteValueCommandBuilder) WithRw(rw uint32) *DeleteValueCommandBuilder {

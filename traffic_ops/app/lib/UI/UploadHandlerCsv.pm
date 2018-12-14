@@ -230,7 +230,7 @@ sub checkNamedValues {
 	my $physLocationHashRef = shift;
 	my $processCSVErrors    = '';
 
-	# allow integers for backward compatability but if non-integer then validate as well
+	# allow integers for backward compatibility but if non-integer then validate as well
 	if ( !exists $cdnHashRef->{$enteredCdn} ) {
 		$processCSVErrors
 			.= $errorLineDelim

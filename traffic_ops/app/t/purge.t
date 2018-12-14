@@ -241,7 +241,7 @@ foreach my $cache ( keys %{$slist} ) {
 		ok( $content =~ qr/$test_string/m, $cache . ' should have test_string in regex_revalidate.config' );
 	}
 	else {
-		# JvD note: there are mutliple delivery services that are in both CDNs but have the same origin.
+		# JvD note: there are multiple delivery services that are in both CDNs but have the same origin.
 		# if ( $ds_name !~ /omg-.*/ ) {    #
 		# 	ok( $content !~ qr/$test_string/m, $cache . ' should not have test_string in regex_revalidate.config' );
 		# }

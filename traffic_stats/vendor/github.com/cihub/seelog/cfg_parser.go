@@ -194,14 +194,14 @@ func fillPredefinedFormats() error {
 }
 
 // configFromXMLDecoder parses data from a given XML decoder.
-// Returns parsed config which can be used to create logger in case no errors occured.
+// Returns parsed config which can be used to create logger in case no errors occurred.
 // Returns error if format is incorrect or anything happened.
 func configFromXMLDecoder(xmlParser *xml.Decoder, rootNode xml.Token) (*configForParsing, error) {
 	return configFromXMLDecoderWithConfig(xmlParser, rootNode, nil)
 }
 
 // configFromXMLDecoderWithConfig parses data from a given XML decoder.
-// Returns parsed config which can be used to create logger in case no errors occured.
+// Returns parsed config which can be used to create logger in case no errors occurred.
 // Returns error if format is incorrect or anything happened.
 func configFromXMLDecoderWithConfig(xmlParser *xml.Decoder, rootNode xml.Token, cfg *CfgParseParams) (*configForParsing, error) {
 	_, ok := rootNode.(xml.StartElement)
@@ -221,14 +221,14 @@ func configFromXMLDecoderWithConfig(xmlParser *xml.Decoder, rootNode xml.Token, 
 }
 
 // configFromReader parses data from a given reader.
-// Returns parsed config which can be used to create logger in case no errors occured.
+// Returns parsed config which can be used to create logger in case no errors occurred.
 // Returns error if format is incorrect or anything happened.
 func configFromReader(reader io.Reader) (*configForParsing, error) {
 	return configFromReaderWithConfig(reader, nil)
 }
 
 // configFromReaderWithConfig parses data from a given reader.
-// Returns parsed config which can be used to create logger in case no errors occured.
+// Returns parsed config which can be used to create logger in case no errors occurred.
 // Returns error if format is incorrect or anything happened.
 func configFromReaderWithConfig(reader io.Reader, cfg *CfgParseParams) (*configForParsing, error) {
 	config, err := unmarshalConfig(reader)

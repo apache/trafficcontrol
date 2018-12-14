@@ -129,7 +129,7 @@ sub update {
 		#parent replacement
 		if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $tenant->parent_id)) {
 			#Current owning tenant is not under user's tenancy
-			return $self>alert("Invalid parent tenant change. The current tenant parent is not avaialble for you to edit");
+			return $self>alert("Invalid parent tenant change. The current tenant parent is not available for you to edit");
 		}
 		if (!defined($tenant_utils->get_tenant_by_id($tenants_data, $params->{parentId}))) {
 			return $self->alert("Parent tenant does not exists.");
@@ -138,21 +138,21 @@ sub update {
 			#Parent tenant to be set is not under user's tenancy
 			return $self->alert("Invalid parent tenant. This tenant is not available to you for parent assignment.");
 		}
-		my $parent_depth = $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $params->{parentId});
+		my $parent_depth = $tenant_utils->get_tenant_hierarchy_depth($tenants_data, $params->{parentId});
 		if (!defined($parent_depth))
 		{
 			return $self->alert("Failed to retrieve parent tenant depth.");
 		}
 
-		my $tenant_height = $tenant_utils->get_tenant_heirarchy_height($tenants_data, $id);
+		my $tenant_height = $tenant_utils->get_tenant_hierarchy_height($tenants_data, $id);
 		if (!defined($tenant_height))
 		{
 			return $self->alert("Failed to retrieve tenant height.");
 		}
 	
-		if ($parent_depth+$tenant_height+1 > $tenant_utils->max_heirarchy_limit())
+		if ($parent_depth+$tenant_height+1 > $tenant_utils->max_hierarchy_limit())
 		{
-			return $self->alert("Parent tenant is invalid: heirarchy limit reached.");
+			return $self->alert("Parent tenant is invalid: hierarchy limit reached.");
 		}
 	
 		if ($params->{parentId} == $id){
@@ -234,16 +234,16 @@ sub create {
 		return $self->alert("Invalid parent tenant. This tenant is not available to you for parent assignment.");
 	}
 
-    my $parent_depth = $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $params->{parentId});
+    my $parent_depth = $tenant_utils->get_tenant_hierarchy_depth($tenants_data, $params->{parentId});
 
 	if (!defined($parent_depth))
 	{
 		return $self->alert("Failed to retrieve parent tenant depth.");
 	}
 	
-	if ($parent_depth+1 > $tenant_utils->max_heirarchy_limit()-1)
+	if ($parent_depth+1 > $tenant_utils->max_hierarchy_limit()-1)
 	{
-		return $self->alert("Parent tenant is invalid: heirarchy limit reached.");
+		return $self->alert("Parent tenant is invalid: hierarchy limit reached.");
 	}
 	
 	my $existing = $self->db->resultset('Tenant')->search( { name => $params->{name} } )->get_column('name')->single();

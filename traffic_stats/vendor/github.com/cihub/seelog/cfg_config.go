@@ -164,7 +164,7 @@ func LoggerFromXMLDecoder(xmlParser *xml.Decoder, rootNode xml.Token) (LoggerInt
 // instantiate it as many times as config is reloaded.
 //
 // * LoggerFromCustomReceiver takes value and uses it without modification and
-// reinstantiation, directy passing it to the dispatcher tree.
+// reinstantiation, directly passing it to the dispatcher tree.
 func LoggerFromCustomReceiver(receiver CustomReceiver) (LoggerInterface, error) {
 	constraints, err := NewMinMaxConstraints(TraceLvl, CriticalLvl)
 	if err != nil {

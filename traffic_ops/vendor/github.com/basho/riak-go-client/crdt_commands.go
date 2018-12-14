@@ -144,7 +144,7 @@ func (builder *UpdateCounterCommandBuilder) WithIncrement(increment int64) *Upda
 }
 
 // WithW sets the number of nodes that must report back a successful write in order for then
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *UpdateCounterCommandBuilder) WithW(w uint32) *UpdateCounterCommandBuilder {
@@ -153,7 +153,7 @@ func (builder *UpdateCounterCommandBuilder) WithW(w uint32) *UpdateCounterComman
 }
 
 // WithPw sets the number of primary nodes (N) that must report back a successful write in order for
-// the command operation to be considered a success by Riak.  If ommitted, the bucket default is
+// the command operation to be considered a success by Riak.  If omitted, the bucket default is
 // used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
@@ -344,7 +344,7 @@ func (builder *FetchCounterCommandBuilder) WithKey(key string) *FetchCounterComm
 }
 
 // WithR sets the number of nodes that must report back a successful read in order for the
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchCounterCommandBuilder) WithR(r uint32) *FetchCounterCommandBuilder {
@@ -353,7 +353,7 @@ func (builder *FetchCounterCommandBuilder) WithR(r uint32) *FetchCounterCommandB
 }
 
 // WithPr sets the number of primary nodes (N) that must be read from in order for the command
-// operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchCounterCommandBuilder) WithPr(pr uint32) *FetchCounterCommandBuilder {
@@ -534,7 +534,7 @@ func (builder *UpdateSetCommandBuilder) WithRemovals(removals ...[]byte) *Update
 }
 
 // WithW sets the number of nodes that must report back a successful write in order for then
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *UpdateSetCommandBuilder) WithW(w uint32) *UpdateSetCommandBuilder {
@@ -543,7 +543,7 @@ func (builder *UpdateSetCommandBuilder) WithW(w uint32) *UpdateSetCommandBuilder
 }
 
 // WithPw sets the number of primary nodes (N) that must report back a successful write in order for
-// the command operation to be considered a success by Riak.  If ommitted, the bucket default is
+// the command operation to be considered a success by Riak.  If omitted, the bucket default is
 // used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
@@ -554,7 +554,7 @@ func (builder *UpdateSetCommandBuilder) WithPw(pw uint32) *UpdateSetCommandBuild
 
 // WithDw (durable writes) sets the number of nodes that must report back a successful write to
 // backend storage in order for the command operation to be considered a success by Riak. If
-// ommitted, the bucket default is used.
+// omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *UpdateSetCommandBuilder) WithDw(dw uint32) *UpdateSetCommandBuilder {
@@ -716,7 +716,7 @@ func (builder *UpdateGSetCommandBuilder) WithAdditions(adds ...[]byte) *UpdateGS
 }
 
 // WithW sets the number of nodes that must report back a successful write in order for then
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *UpdateGSetCommandBuilder) WithW(w uint32) *UpdateGSetCommandBuilder {
@@ -725,7 +725,7 @@ func (builder *UpdateGSetCommandBuilder) WithW(w uint32) *UpdateGSetCommandBuild
 }
 
 // WithPw sets the number of primary nodes (N) that must report back a successful write in order for
-// the command operation to be considered a success by Riak.  If ommitted, the bucket default is
+// the command operation to be considered a success by Riak.  If omitted, the bucket default is
 // used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
@@ -736,7 +736,7 @@ func (builder *UpdateGSetCommandBuilder) WithPw(pw uint32) *UpdateGSetCommandBui
 
 // WithDw (durable writes) sets the number of nodes that must report back a successful write to
 // backend storage in order for the command operation to be considered a success by Riak. If
-// ommitted, the bucket default is used.
+// omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *UpdateGSetCommandBuilder) WithDw(dw uint32) *UpdateGSetCommandBuilder {
@@ -879,7 +879,7 @@ func (builder *FetchSetCommandBuilder) WithKey(key string) *FetchSetCommandBuild
 }
 
 // WithR sets the number of nodes that must report back a successful read in order for the
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchSetCommandBuilder) WithR(r uint32) *FetchSetCommandBuilder {
@@ -888,7 +888,7 @@ func (builder *FetchSetCommandBuilder) WithR(r uint32) *FetchSetCommandBuilder {
 }
 
 // WithPr sets the number of primary nodes (N) that must be read from in order for the command
-// operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchSetCommandBuilder) WithPr(pr uint32) *FetchSetCommandBuilder {
@@ -1425,7 +1425,7 @@ func (builder *UpdateMapCommandBuilder) WithMapOperation(mapOperation *MapOperat
 }
 
 // WithW sets the number of nodes that must report back a successful write in order for then
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *UpdateMapCommandBuilder) WithW(w uint32) *UpdateMapCommandBuilder {
@@ -1434,7 +1434,7 @@ func (builder *UpdateMapCommandBuilder) WithW(w uint32) *UpdateMapCommandBuilder
 }
 
 // WithPw sets the number of primary nodes (N) that must report back a successful write in order for
-// the command operation to be considered a success by Riak.  If ommitted, the bucket default is
+// the command operation to be considered a success by Riak.  If omitted, the bucket default is
 // used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
@@ -1445,7 +1445,7 @@ func (builder *UpdateMapCommandBuilder) WithPw(pw uint32) *UpdateMapCommandBuild
 
 // WithDw (durable writes) sets the number of nodes that must report back a successful write to
 // backend storage in order for the command operation to be considered a success by Riak. If
-// ommitted, the bucket default is used.
+// omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *UpdateMapCommandBuilder) WithDw(dw uint32) *UpdateMapCommandBuilder {
@@ -1594,7 +1594,7 @@ func (builder *FetchMapCommandBuilder) WithKey(key string) *FetchMapCommandBuild
 }
 
 // WithR sets the number of nodes that must report back a successful read in order for the
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchMapCommandBuilder) WithR(r uint32) *FetchMapCommandBuilder {
@@ -1603,7 +1603,7 @@ func (builder *FetchMapCommandBuilder) WithR(r uint32) *FetchMapCommandBuilder {
 }
 
 // WithPr sets the number of primary nodes (N) that must be read from in order for the command
-// operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchMapCommandBuilder) WithPr(pr uint32) *FetchMapCommandBuilder {
@@ -1767,7 +1767,7 @@ func (builder *UpdateHllCommandBuilder) WithAdditions(adds ...[]byte) *UpdateHll
 }
 
 // WithW sets the number of nodes that must report back a successful write in order for then
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *UpdateHllCommandBuilder) WithW(w uint32) *UpdateHllCommandBuilder {
@@ -1776,7 +1776,7 @@ func (builder *UpdateHllCommandBuilder) WithW(w uint32) *UpdateHllCommandBuilder
 }
 
 // WithPw sets the number of primary nodes (N) that must report back a successful write in order for
-// the command operation to be considered a success by Riak.  If ommitted, the bucket default is
+// the command operation to be considered a success by Riak.  If omitted, the bucket default is
 // used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
@@ -1787,7 +1787,7 @@ func (builder *UpdateHllCommandBuilder) WithPw(pw uint32) *UpdateHllCommandBuild
 
 // WithDw (durable writes) sets the number of nodes that must report back a successful write to
 // backend storage in order for the command operation to be considered a success by Riak. If
-// ommitted, the bucket default is used.
+// omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *UpdateHllCommandBuilder) WithDw(dw uint32) *UpdateHllCommandBuilder {
@@ -1921,7 +1921,7 @@ func (builder *FetchHllCommandBuilder) WithKey(key string) *FetchHllCommandBuild
 }
 
 // WithR sets the number of nodes that must report back a successful read in order for the
-// command operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// command operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchHllCommandBuilder) WithR(r uint32) *FetchHllCommandBuilder {
@@ -1930,7 +1930,7 @@ func (builder *FetchHllCommandBuilder) WithR(r uint32) *FetchHllCommandBuilder {
 }
 
 // WithPr sets the number of primary nodes (N) that must be read from in order for the command
-// operation to be considered a success by Riak. If ommitted, the bucket default is used.
+// operation to be considered a success by Riak. If omitted, the bucket default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *FetchHllCommandBuilder) WithPr(pr uint32) *FetchHllCommandBuilder {

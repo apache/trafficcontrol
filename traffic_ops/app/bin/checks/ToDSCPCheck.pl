@@ -381,7 +381,7 @@ sub help() {
    print "     cms_interface: required\n";
    print "        Interface used to communicate with edges.\n";
    print "     name: optional\n";
-   print "        The long name of this check. used in conjuction with syslog_facility.\n";
+   print "        The long name of this check. used in conjunction with syslog_facility.\n";
    print "     syslog_facility: optional\n";
    print "        The syslog facility to send messages. Requires the \"name\" option to\n";
    print "        be set.\n";

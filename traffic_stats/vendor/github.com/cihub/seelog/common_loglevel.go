@@ -59,7 +59,7 @@ var levelToStringRepresentations = map[LogLevel]string{
 	Off:         OffStr,
 }
 
-// LogLevelFromString parses a string and returns a corresponding log level, if sucessfull.
+// LogLevelFromString parses a string and returns a corresponding log level, if successful.
 func LogLevelFromString(levelStr string) (level LogLevel, found bool) {
 	for lvl, lvlStr := range levelToStringRepresentations {
 		if lvlStr == levelStr {

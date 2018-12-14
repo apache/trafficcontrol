@@ -333,7 +333,7 @@ Profile parameters
     +--------+----------+-------------+
 
     **Request Properties**
-    The request properties accept 2 formats, both single paramter and parameters array formats are acceptable.
+    The request properties accept 2 formats, both single parameter and parameters array formats are acceptable.
 
     single parameter format:
 

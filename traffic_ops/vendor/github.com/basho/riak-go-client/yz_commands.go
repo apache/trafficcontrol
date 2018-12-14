@@ -110,7 +110,7 @@ func (builder *StoreIndexCommandBuilder) WithSchemaName(schemaName string) *Stor
 }
 
 // WithNVal sets the number of times this command operation is replicated in the Cluster. If
-// ommitted, the ring default is used.
+// omitted, the ring default is used.
 //
 // See http://basho.com/posts/technical/riaks-config-behaviors-part-2/
 func (builder *StoreIndexCommandBuilder) WithNVal(nval uint32) *StoreIndexCommandBuilder {

@@ -160,7 +160,7 @@ type EcdhesKeyWrapDecrypt struct {
 type ByteKey []byte
 
 // ByteWithECPrivateKey holds the EC-DSA private key that generated
-// the key along witht he key itself. This is required to set the
+// the key along with he key itself. This is required to set the
 // proper values in the JWE headers
 type ByteWithECPrivateKey struct {
 	ByteKey

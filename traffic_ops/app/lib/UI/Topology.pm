@@ -914,7 +914,7 @@ sub compare_lists {
 
     my $list_compare_obj = List::Compare->new( \@$list_db, \@$list_disk );
 
-    my @db_only = $list_compare_obj->get_Lonly;
+    my @db_only = $list_compare_obj->get_Lonely;
     if ( $#db_only >= 0 ) {
         push( @compare_text, "    " . $text . " only in Traffic Ops:" );
         foreach my $ds_string (@db_only) {

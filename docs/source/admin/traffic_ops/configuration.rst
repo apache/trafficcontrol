@@ -295,7 +295,7 @@ Content Purge is controlled by the following parameters in the profile of the ca
 +----------------------+-------------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
 
 
-Note that the TTL the adminstrator enters in the purge request should be longer than the TTL of the content to ensure the bad content will not be used. If the CDN is serving content of unknown, or unlimited TTL, the administrator should consider using `proxy-config-http-cache-guaranteed-min-lifetime <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/records.config.en.html#proxy-config-http-cache-guaranteed-min-lifetime>`_ to limit the maximum time an object can be in the cache before it is considered stale, and set that to the same value as `maxRevalDurationDays` (Note that the former is in seconds and the latter is in days, so convert appropriately).
+Note that the TTL the administrator enters in the purge request should be longer than the TTL of the content to ensure the bad content will not be used. If the CDN is serving content of unknown, or unlimited TTL, the administrator should consider using `proxy-config-http-cache-guaranteed-min-lifetime <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/records.config.en.html#proxy-config-http-cache-guaranteed-min-lifetime>`_ to limit the maximum time an object can be in the cache before it is considered stale, and set that to the same value as `maxRevalDurationDays` (Note that the former is in seconds and the latter is in days, so convert appropriately).
 
 
 

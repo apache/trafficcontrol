@@ -139,7 +139,7 @@ you need to do to get started is to create constraints, exceptions and a dispatc
 functions in this package are used to provide such capabilities.
 
 Here is an example of configuration in code, that demonstrates an async loop logger that logs to a simple split dispatcher with
-a console receiver using a specified format and is filtered using a top-level min-max constraints and one expection for
+a console receiver using a specified format and is filtered using a top-level min-max constraints and one exception for
 the 'main.go' file. So, this is basically a demonstration of configuration of most of the features:
 
   package main

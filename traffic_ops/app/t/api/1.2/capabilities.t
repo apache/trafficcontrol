@@ -169,7 +169,7 @@ $t->post_ok("/api/1.2/api_capabilities" => {Accept => 'application/json'} => jso
 
 #test delete -  should fail
 $t->delete_ok("/api/1.2/capabilities/$cap_name")->status_is(400)
-	->json_is( "/alerts/0/text" => "Capability \'$cap_name\' is refered by an api_capability mapping: 1. Deletion failed." )
+	->json_is( "/alerts/0/text" => "Capability \'$cap_name\' is referred by an api_capability mapping: 1. Deletion failed." )
 	, 'Did delete succeed?';
 
 

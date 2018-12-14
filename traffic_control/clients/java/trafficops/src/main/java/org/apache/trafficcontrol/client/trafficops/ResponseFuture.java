@@ -85,7 +85,7 @@ public abstract class ResponseFuture<T extends Response> extends CompletableFutu
 		}
 		protected abstract ResponseFuture<T> autoBuild();
 		public abstract ResponseFuture.Builder<T> setHandleException(BiConsumer<ResponseFuture<T>, Throwable> function);
-		public abstract ResponseFuture.Builder<T> setResponseType(Class<T> respone);
+		public abstract ResponseFuture.Builder<T> setResponseType(Class<T> response);
 		public abstract ResponseFuture.Builder<T> setMethod(ResponseFuture.Method method);
 		public abstract ResponseFuture.Builder<T> setUri(URI uri);
 		public ResponseFuture.Builder<T> setUri(String uri){
@@ -118,7 +118,7 @@ public abstract class ResponseFuture<T extends Response> extends CompletableFutu
 			if(resp.getAlerts() != null) {
 				for(Alert a: resp.getAlerts()) {
 					if("error".equals(a.getLevel())) {
-						_handleException(new OperationException("Recieved error from server: "+ a.getText()));
+						_handleException(new OperationException("Received error from server: "+ a.getText()));
 						return;
 					}
 				}

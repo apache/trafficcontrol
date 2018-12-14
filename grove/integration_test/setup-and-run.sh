@@ -25,7 +25,7 @@ for i in {1..1000} ; do  dd if=/dev/urandom of=${i}k.bin bs=${i}k count=1 > /dev
 httpd
 
 cd /
-echo Setting up go enviroment...
+echo Setting up go environment...
 export GOPATH=~/go
 go get golang.org/x/text
 go get golang.org/x/sys/unix

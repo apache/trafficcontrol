@@ -131,7 +131,7 @@ to-delete() {
 		curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X DELETE "$TO_URL/$1"
 }
 
-# Constructs a server's JSON definiton and places it into the enroller's structure for loading
+# Constructs a server's JSON definition and places it into the enroller's structure for loading
 # args:
 #         serverType - the type of the server to be created; one of "edge", "mid", "tm"
 to-enroll() {

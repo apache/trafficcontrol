@@ -62,7 +62,7 @@ sub run_ut {
 			->json_is( "/response/name" => "use_tenancy" )
 			->json_is( "/response/configFile" => "global" )
 			->json_is( "/response/value" => $use_tenancy )
-		, 'Was the disabling paramter set?';
+		, 'Was the disabling parameter set?';
 
 	#adding a user
 	my $addedUserName = "user1";
