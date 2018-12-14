@@ -147,9 +147,9 @@ func StartStatHistoryManager(
 
 		// There are 2 timers: the Buffer, and the Flush.
 		// The Buffer says "never process until this much time has elapsed"
-		// The Flush says "if we're continuously getting new stats, with no break, and this much time has elasped, go ahead and process anyway to prevent starvation"
+		// The Flush says "if we're continuously getting new stats, with no break, and this much time has elapsed, go ahead and process anyway to prevent starvation"
 		//
-		// So, we continuously read from the stat channel, until Buffer has elasped. Even if the channel is empty, wait and keep trying to read.
+		// So, we continuously read from the stat channel, until Buffer has elapsed. Even if the channel is empty, wait and keep trying to read.
 		// Then, we move to State 2: continuously read from the stat channel, while there are things to read. If at any point there's nothing more to read, then process. Otherwise, if there are always thing to read, then after Flush time has elapsed, then go ahead and read anyway, and go to State 1.
 		//
 		// Note that either the Buffer or Flush may be configured to be 0.

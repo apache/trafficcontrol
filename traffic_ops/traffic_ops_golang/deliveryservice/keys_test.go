@@ -207,7 +207,7 @@ func TestVerifyAndEncodeCertificate(t *testing.T) {
 	// should fail, can't verify self signed cert against this rootCA
 	dat, _, err = verifyCertificate(SelfSignedCertOnly, rootCA)
 	if err == nil {
-		t.Errorf("Unexpected result, a certificate verification error should have occured")
+		t.Errorf("Unexpected result, a certificate verification error should have occurred")
 	}
 
 	// should pass, unknown authority is just a warning not an error

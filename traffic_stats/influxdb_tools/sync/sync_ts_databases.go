@@ -193,7 +193,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 	fmt.Println("queryString ", queryString)
 	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s records from sourceDb\n", statName)
+		fmt.Printf("An error occurred getting %s records from sourceDb\n", statName)
 		return
 	}
 	sourceStats := getCacheStats(res)
@@ -201,7 +201,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 	//get values from target DB
 	targetRes, err := queryDB(targetClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s record from target db: %v\n", statName, err)
+		fmt.Printf("An error occurred getting %s record from target db: %v\n", statName, err)
 		return
 	}
 	targetStats := getCacheStats(targetRes)
@@ -265,14 +265,14 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 	fmt.Println("queryString ", queryString)
 	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s records from sourceDb: %v\n", statName, err)
+		fmt.Printf("An error occurred getting %s records from sourceDb: %v\n", statName, err)
 		return
 	}
 	sourceStats := getDeliveryServiceStats(res)
 	// get value from target DB
 	targetRes, err := queryDB(targetClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s record from target db: %v\n", statName, err)
+		fmt.Printf("An error occurred getting %s record from target db: %v\n", statName, err)
 		return
 	}
 	targetStats := getDeliveryServiceStats(targetRes)
@@ -326,14 +326,14 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 	}
 	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s records from sourceDb: %v\n", statName, err)
+		fmt.Printf("An error occurred getting %s records from sourceDb: %v\n", statName, err)
 		return
 	}
 	sourceStats := getDailyStats(res)
 	// get value from target DB
 	targetRes, err := queryDB(targetClient, queryString, db)
 	if err != nil {
-		fmt.Printf("An error occured getting %s record from target db: %v\n", statName, err)
+		fmt.Printf("An error occurred getting %s record from target db: %v\n", statName, err)
 		return
 	}
 	targetStats := getDailyStats(targetRes)

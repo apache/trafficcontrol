@@ -64,7 +64,7 @@ func atsLog(icfg interface{}, d AfterRespondData) {
 }
 
 // getParentStrings returns the phr and pqsn ATS log event strings (in that order).
-// This covers almost all occurences that we currently see from ATS.
+// This covers almost all occurrences that we currently see from ATS.
 func getParentStrings(code int, hit bool, proxyStr string, toFQDN string) (string, string) {
 	// the most common case (hopefully), do this first
 	if hit {

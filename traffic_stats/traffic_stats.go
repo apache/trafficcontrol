@@ -295,7 +295,7 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 	log.Infof("queryString = %v\n", queryString)
 	res, err := queryDB(client, queryString, "cache_stats")
 	if err != nil {
-		log.Errorf("An error occured getting max bandwidth! %v\n", err)
+		log.Errorf("An error occurred getting max bandwidth! %v\n", err)
 		return
 	}
 	if res != nil && len(res[0].Series) > 0 {
@@ -352,7 +352,7 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 	log.Infof("queryString = %v\n", queryString)
 	res, err := queryDB(client, queryString, "cache_stats")
 	if err != nil {
-		log.Error("An error occured getting max bandwidth!\n")
+		log.Error("An error occurred getting max bandwidth!\n")
 		return
 	}
 	if res != nil && len(res[0].Series) > 0 {

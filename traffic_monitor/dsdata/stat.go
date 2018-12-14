@@ -341,7 +341,7 @@ func NewStats(size int) *Stats {
 	return &Stats{DeliveryService: make(map[tc.DeliveryServiceName]*Stat, size)}
 }
 
-// LastStats includes the previously recieved stats for DeliveryServices and Caches, the stat itself, when it was received, and the stat value per second.
+// LastStats includes the previously received stats for DeliveryServices and Caches, the stat itself, when it was received, and the stat value per second.
 type LastStats struct {
 	DeliveryServices map[tc.DeliveryServiceName]*LastDSStat
 	Caches           map[tc.CacheName]*LastStatsData

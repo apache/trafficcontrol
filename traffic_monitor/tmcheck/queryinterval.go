@@ -43,7 +43,7 @@ func ValidateQueryInterval(tmURI string, toClient *to.Session) error {
 	return nil
 }
 
-// QueryIntervalValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
+// QueryIntervalValidator is designed to be run as a goroutine, and does not return. It continuously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
 func QueryIntervalValidator(
 	tmURI string,
 	toClient *to.Session,
@@ -56,7 +56,7 @@ func QueryIntervalValidator(
 	Validator(tmURI, toClient, interval, grace, onErr, onResumeSuccess, onCheck, ValidateQueryInterval)
 }
 
-// AllMonitorsQueryIntervalValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `tc.TrafficMonitorName` will be empty.
+// AllMonitorsQueryIntervalValidator is designed to be run as a goroutine, and does not return. It continuously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `tc.TrafficMonitorName` will be empty.
 func AllMonitorsQueryIntervalValidator(
 	toClient *to.Session,
 	interval time.Duration,

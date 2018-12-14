@@ -85,7 +85,7 @@ func ValidateCRStates(crstates *tc.CRStates, crconfig *tc.CRConfig) error {
 	return nil
 }
 
-// CRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
+// CRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continuously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
 func CRStatesOfflineValidator(
 	tmURI string,
 	toClient *to.Session,
@@ -98,7 +98,7 @@ func CRStatesOfflineValidator(
 	Validator(tmURI, toClient, interval, grace, onErr, onResumeSuccess, onCheck, ValidateOfflineStates)
 }
 
-// AllMonitorsCRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `tc.TrafficMonitorName` will be empty.
+// AllMonitorsCRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continuously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `tc.TrafficMonitorName` will be empty.
 func AllMonitorsCRStatesOfflineValidator(
 	toClient *to.Session,
 	interval time.Duration,

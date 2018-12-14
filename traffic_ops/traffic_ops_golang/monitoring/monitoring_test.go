@@ -121,7 +121,7 @@ func TestGetMonitoringServers(t *testing.T) {
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expections: %s", err)
+		t.Errorf("there were unfulfilled exceptions: %s", err)
 	}
 }
 
@@ -171,7 +171,7 @@ func TestGetCachegroups(t *testing.T) {
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expections: %s", err)
+		t.Errorf("there were unfulfilled exceptions: %s", err)
 	}
 }
 
@@ -359,7 +359,7 @@ func TestGetProfiles(t *testing.T) {
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expections: %s", err)
+		t.Errorf("there were unfulfilled exceptions: %s", err)
 	}
 }
 
@@ -421,7 +421,7 @@ func TestGetDeliveryServices(t *testing.T) {
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expections: %s", err)
+		t.Errorf("there were unfulfilled exceptions: %s", err)
 	}
 }
 
@@ -464,7 +464,7 @@ func TestGetConfig(t *testing.T) {
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expections: %s", err)
+		t.Errorf("there were unfulfilled exceptions: %s", err)
 	}
 }
 

@@ -291,7 +291,7 @@ func (ds *TODeliveryServiceV12) Delete() (error, error, int) {
 	}
 
 	if _, err := ds.ReqInfo.Tx.Tx.Exec(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`, pq.Array(configFiles)); err != nil {
-		return nil, errors.New("TODeliveryServiceV12.Delete deleting delivery service parameteres: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("TODeliveryServiceV12.Delete deleting delivery service parameters: " + err.Error()), http.StatusInternalServerError
 	}
 
 	return nil, nil, http.StatusOK

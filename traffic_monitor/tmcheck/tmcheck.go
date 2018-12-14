@@ -154,7 +154,7 @@ type AllValidatorFunc func(
 	onCheck func(tc.TrafficMonitorName, error),
 )
 
-// CRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
+// CRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continuously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
 func Validator(
 	tmURI string,
 	toClient *to.Session,

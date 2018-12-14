@@ -97,7 +97,7 @@ func createDailyStats(client influx.Client, replication int) {
 func createDatabase(client influx.Client, db string) {
 	err := influxdb.Create(client, fmt.Sprintf("CREATE DATABASE %s", db))
 	if err != nil {
-		fmt.Printf("An error occured creating the %v database: %v\n", db, err)
+		fmt.Printf("An error occurred creating the %v database: %v\n", db, err)
 		return
 	}
 	fmt.Println("Successfully created database: ", db)
@@ -110,7 +110,7 @@ func createRetentionPolicy(client influx.Client, db string, name string, duratio
 	}
 	err := influxdb.Create(client, qString)
 	if err != nil {
-		fmt.Printf("An error occured creating the retention policy %s on database: %s:  %v\n", name, db, err)
+		fmt.Printf("An error occurred creating the retention policy %s on database: %s:  %v\n", name, db, err)
 		return
 	}
 	fmt.Printf("Successfully created retention policy %s for database: %s\n", name, db)
@@ -119,7 +119,7 @@ func createRetentionPolicy(client influx.Client, db string, name string, duratio
 func createContinuousQuery(client influx.Client, name string, query string) {
 	err := influxdb.Create(client, query)
 	if err != nil {
-		fmt.Printf("An error occured creating continuous query %s: %v\n", name, err)
+		fmt.Printf("An error occurred creating continuous query %s: %v\n", name, err)
 		return
 	}
 	fmt.Println("Successfully created continuous query ", name)
