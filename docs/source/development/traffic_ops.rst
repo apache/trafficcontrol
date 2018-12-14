@@ -28,6 +28,7 @@ To work on Traffic Ops you need a CentOS 7+ environment that has the following i
 - `Carton 1.0.12 <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_
 
 	- libpcap (plus development library - usually "libpcap-dev" or "libpcap-devel")
+	- libpq (plus development library - usually "libpq-dev" or "libpq-devel")
 	- cpan JSON
 	- cpan JSON\:\:PP
 
@@ -280,6 +281,8 @@ Use `prove <http://perldoc.perl.org/prove.html>`_ (should be installed with Perl
 
 - To run the Unit Tests: ``prove -qrp  app/t/``
 - To run the Integration Tests: ``prove -qrp app/t_integration/``
+
+.. note:: As progress continues on moving Traffic Ops to run entirely in Go, the number of passing tests has increased. This means that the tests are not a reliable way to test Traffic Ops, as they are expected to fail more and more as functionality is stripped from the Perl codebase.
 
 The KableTown CDN example
 -------------------------
