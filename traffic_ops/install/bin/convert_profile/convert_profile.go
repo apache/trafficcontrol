@@ -191,7 +191,7 @@ func ValidateParameters(profile *Profile,
 	return true
 }
 
-// ConvertProfile will modify paramaters as described by matching entries in conversionActions
+// ConvertProfile will modify parameters as described by matching entries in conversionActions
 // If ignoreValue is set to true, the Value field in matcher will be ignored, effectively matching
 // all values
 func ConvertProfile(profile *Profile,
@@ -224,7 +224,7 @@ func ConvertProfile(profile *Profile,
 	profile.Parameters = filteredParams
 }
 
-// paramsMatch returns true when param fulfills all matching critera in matcher
+// paramsMatch returns true when param fulfills all matching criteria in matcher
 func paramsMatch(matcher Parameter, param Parameter, ignoreValue bool) bool {
 	nameRe := regexp.MustCompile(matcher.Name)
 	cfgRe := regexp.MustCompile(matcher.ConfigFile)

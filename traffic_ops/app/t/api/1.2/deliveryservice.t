@@ -62,7 +62,7 @@ ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'applica
         ->json_is( "/response/name" => "use_tenancy" )
         ->json_is( "/response/configFile" => "global" )
         ->json_is( "/response/value" => $use_tenancy )
-    , 'Was the disabling paramter set?';
+    , 'Was the disabling parameter set?';
 
     # we will assign 2 more servers to ds 100
 ok $t->post_ok('/api/1.2/deliveryserviceserver' => {Accept => 'application/json'} => json => {

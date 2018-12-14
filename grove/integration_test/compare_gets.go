@@ -158,7 +158,7 @@ func main() {
 	originURL := flag.String("org", "http://localhost", "The origin URL (default: \"http://localhost\")")
 	cacheURL := flag.String("cache", "http://localhost:8080", "The cache URL (default: \"http://localhost:8080\")")
 	path := flag.String("path", "", "The path to GET")
-	orgHdrs := flag.String("ohdrs", "", "Comma seperated list of headers to add to origin request")
+	orgHdrs := flag.String("ohdrs", "", "Comma separated list of headers to add to origin request")
 	cacheHdrs := flag.String("chdrs", "", "Comma separated list of headers to add to cache request")
 	ignoreHdrs := flag.String("ignorehdrs", "Server,Date", "Comma separated list of headers to ignore in the compare")
 	ignoreMultiPartBoundary := flag.Bool("ignorempb", true, "Ignore multi part boundary in body comparison.")

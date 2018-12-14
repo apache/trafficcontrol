@@ -173,7 +173,7 @@ The enroller runs within CDN in a Box using the ``-dir <dir>`` switch which prov
 
 Mock Origin Service
 -------------------
-The default "origin" service container provides a basic static file HTTP server as the central respository for content. Additional files can be added to the origin root content directory located at ``infrastructure/cdn-in-a-box/origin/content``. To request content directly from the origin directly and bypass the CDN:
+The default "origin" service container provides a basic static file HTTP server as the central repository for content. Additional files can be added to the origin root content directory located at ``infrastructure/cdn-in-a-box/origin/content``. To request content directly from the origin directly and bypass the CDN:
 
 * Origin Service URL: http://origin.infra.ciab.test/index.html
 * Docker Host: http://localhost:9200/index.html

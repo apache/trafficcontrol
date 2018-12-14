@@ -16,7 +16,6 @@ package cache
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/apache/trafficcontrol/grove/cachedata"
 	"github.com/apache/trafficcontrol/grove/plugin"
@@ -96,7 +95,7 @@ func (r *Responder) Do() {
 	// TODO move plugins.BeforeRespond here? How do we distinguish between success, and know to set headers? r.OriginReqSuccess?
 	bytesSent, err := r.F()
 	if err != nil {
-		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.Req.RemoteAddr + " " + r.Req.Method + " " + r.Req.RequestURI + ": responding: " + err.Error())
+		log.Errorf("%s %s %s %v : responding: %v", r.Req.RemoteAddr, r.Req.Method, r.Req.RequestURI, r.ResponseCode, err.Error())
 	}
 	web.TryFlush(r.W) // TODO remove? Let plugins do it, if they need to?
 

@@ -76,6 +76,7 @@ The config file has the following fields:
 | `rfc_compliant` | Whether to strictly adhere to RFC 7234. If false, client requests which can harm a parent, such as `no-cache` are ignored. |
 | `port` | The HTTP port to serve on. |
 | `https_port` | The HTTPS port to serve on. |
+| `disable_http2` | When set to true, HTTP2 support is disabled, the default is 'false' with HTTP2 enabled. changing this setting requires a restart of grove. |
 | `cache_size_bytes` | The maximum size of the memory cache, in bytes. This is a soft maximum, and the cache may temporarily exceed this size until older values can be purged. The cache uses a Least Recently Used algorithm, purging the oldest requested object when a request for an uncached object is received with a full cache. Also note the cache size calculation does not currently count headers. |
 | `remap_rules_file` | The file with remap rules. See [Remap Rules](#remap-rules). |
 | `concurrent_rule_requests` | The maximum number of simultaneous requests which will be issued to a parent for any rule. |

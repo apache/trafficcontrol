@@ -175,7 +175,7 @@ func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLev
 	w.Write(respBts)
 }
 
-// IntParams parses integer parameters, and returns map of the given params, or an error if any integer param is not an integer. The intParams may be nil if no integer parameters are required. Note this does not check existence; if an integer paramter is required, it should be included in the requiredParams given to NewInfo.
+// IntParams parses integer parameters, and returns map of the given params, or an error if any integer param is not an integer. The intParams may be nil if no integer parameters are required. Note this does not check existence; if an integer parameter is required, it should be included in the requiredParams given to NewInfo.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func IntParams(params map[string]string, intParamNames []string) (map[string]int, error) {
 	intParams := map[string]int{}

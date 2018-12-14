@@ -121,7 +121,7 @@ func GetDNSSECKeysV11(w http.ResponseWriter, r *http.Request) {
 
 func GetDSRecordTTL(tx *sql.Tx, cdn string) (time.Duration, error) {
 	ttlSeconds := 0
-	if err := tx.QueryRow(`SELECT JSON_EXTRACT_PATH_TEXT(content, 'config', 'ttls', 'DS') FROM snapshot WHERE cdn = $1`, cdn).Scan(&ttlSeconds); err != nil {
+	if err := tx.QueryRow(`SELECT JSON_EXTRACT_PATH_TEXT(crconfig, 'config', 'ttls', 'DS') FROM snapshot WHERE cdn = $1`, cdn).Scan(&ttlSeconds); err != nil {
 		return 0, errors.New("getting cdn '" + cdn + "' DS Record TTL from CRConfig: " + err.Error())
 	}
 	return time.Duration(ttlSeconds) * time.Second, nil

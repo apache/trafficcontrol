@@ -270,7 +270,7 @@ sub generate_iso {
 			}
 
 			# slurp it in..
-			undef $/;
+			local $/;
 			$data = <$fh>;
 
 			close $fh;

@@ -274,7 +274,7 @@ These are the types of servers that can be managed in Traffic Ops:
 +---------------+---------------------------------------------+
 | RASCAL        | Rascal health polling & reporting           |
 +---------------+---------------------------------------------+
-| TOOLS_SERVER  | Ops hosts for managment                     |
+| TOOLS_SERVER  | Ops hosts for management                     |
 +---------------+---------------------------------------------+
 | RIAK          | Riak keystore                               |
 +---------------+---------------------------------------------+
@@ -1001,7 +1001,7 @@ Generate ISO is a tool for building custom ISOs for building caches on remote ho
 The interface is *mostly* self-explanatory as it's got hints.
 
 +-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
-| Field                         |  Explaination                                                                                                                   |
+| Field                         |  Explanation                                                                                                                   |
 +===============================+=================================================================================================================================+
 |Choose a server from list:     | This option gets all the server names currently in the Traffic Ops database and will autofill known values.                     |
 +-------------------------------+---------------------------------------------------------------------------------------------------------------------------------+
@@ -1223,4 +1223,4 @@ If a new Delivery Service is created and added to a CDN that has DNSSEC enabled,
 
 Regeneration of expiring keys for a Delivery Service
 ----------------------------------------------------
-Traffic Ops has a process, controlled by cron, to check for expired or expiring keys and re-generate them.  The process runs at 5 minute intervals to check and see if keys are expired or close to expiring (withing 10 minutes by default).  If keys are expired for a Delivery Service, traffic ops will regenerate new keys and store them in Traffic Vault.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process.
+Traffic Ops has a process, controlled by cron, to check for expired or expiring keys and re-generate them.  The process runs at 5 minute intervals to check and see if keys are expired or close to expiring (within 10 minutes by default).  If keys are expired for a Delivery Service, traffic ops will regenerate new keys and store them in Traffic Vault.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process.

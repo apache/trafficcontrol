@@ -80,7 +80,7 @@ def read_config(config_file):
 def find_usable_net_devs(location):
     ''' Search through iface_dir looking for /speed files. 
     Build a dict keyed on speed (in otherwords the speed is the key with a list of
-    interfaces as teh value). '''
+    interfaces as the value). '''
     # We "pre-seed" the dictionary with the standard interface names at a 
     # speed of 5 so that if there's nothing else we set that up. This 
     # makes it easier  to reconfigure later.

@@ -89,7 +89,7 @@ while getopts :lvq? opt; do
 		\?)
 			PROJECTS=`$SELF -l | sed "s/^/		- /"`
 			echo "Usage: $SELF [options] [projects]"
-			echo "	-q	Quiet mode. Supresses output."
+			echo "	-q	Quiet mode. Suppresses output."
 			echo "	-v	Verbose mode. Lists all build output."
 			echo "	-l	List available projects."
 			echo

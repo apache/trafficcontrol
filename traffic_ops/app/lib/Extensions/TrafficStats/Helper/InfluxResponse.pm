@@ -36,7 +36,7 @@ sub parse_retention_period_in_seconds {
 	my $self             = shift;
 	my $retention_period = shift;
 
-	undef $/;
+	local $/;
 
 	my ( $hour, $minutes, $seconds ) = $retention_period =~ /(\d*)h(\d*)m(\d*)s/ms;
 

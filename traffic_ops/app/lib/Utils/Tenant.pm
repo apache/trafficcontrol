@@ -225,7 +225,7 @@ sub is_tenant_resource_accessible {
     my $tenants_data     = shift;
     my $resource_tenancy = shift;
 
-    return $self->_is_resource_accessable( $tenants_data, $resource_tenancy);
+    return $self->_is_resource_accessible( $tenants_data, $resource_tenancy);
 }
 
 sub is_user_resource_accessible {
@@ -233,7 +233,7 @@ sub is_user_resource_accessible {
     my $tenants_data     = shift;
     my $resource_tenancy = shift;
 
-    return $self->_is_resource_accessable( $tenants_data, $resource_tenancy);
+    return $self->_is_resource_accessible( $tenants_data, $resource_tenancy);
 }
 
 sub is_ds_resource_accessible {
@@ -241,7 +241,7 @@ sub is_ds_resource_accessible {
     my $tenants_data     = shift;
     my $resource_tenancy = shift;
 
-    return $self->_is_resource_accessable( $tenants_data, $resource_tenancy);
+    return $self->_is_resource_accessible( $tenants_data, $resource_tenancy);
 }
 
 sub is_ds_resource_accessible_to_tenant {
@@ -250,7 +250,7 @@ sub is_ds_resource_accessible_to_tenant {
     my $resource_tenancy = shift;
     my $user_tenancy = shift;
 
-    return $self->_is_resource_accessable_to_tenant( $tenants_data, $resource_tenancy, $user_tenancy);
+    return $self->_is_resource_accessible_to_tenant( $tenants_data, $resource_tenancy, $user_tenancy);
 }
 
 sub use_tenancy {
@@ -264,7 +264,7 @@ sub use_tenancy {
     return 0;
 }
 
-sub get_tenant_heirarchy_depth {
+sub get_tenant_hierarchy_depth {
 
     #return "undef" in case of error
     #a root tenant is of depth 0
@@ -284,9 +284,9 @@ sub get_tenant_heirarchy_depth {
     while ( defined($iter_id) ) {
         $iter_id = $tenants_data->{tenants_dict}{$iter_id}{parent};
         $depth++;
-        if ( $depth > $self->max_heirarchy_limit() ) {
+        if ( $depth > $self->max_hierarchy_limit() ) {
             $self->_error(
-"Check tenancy depth for tenant $tenant_id - reached heirarchy limit"
+"Check tenancy depth for tenant $tenant_id - reached hierarchy limit"
             );
             return undef;
         }
@@ -295,7 +295,7 @@ sub get_tenant_heirarchy_depth {
     return $depth - 1;
 }
 
-sub get_tenant_heirarchy_height {
+sub get_tenant_hierarchy_height {
 
     #return "undef" in case of error
     #a leaf tenant is of height 0
@@ -369,10 +369,10 @@ sub is_anchestor_of {
         }
         $iter_id = $tenants_data->{tenants_dict}{$iter_id}{parent};
         $descendant_depth++;
-        if ( $descendant_depth > $self->max_heirarchy_limit() )
+        if ( $descendant_depth > $self->max_hierarchy_limit() )
         {    #recursion limit
             $self->_error(
-"Tenants relation failed for tenants $anchestor_id / $descendant_id - reached heirarchy limit"
+"Tenants relation failed for tenants $anchestor_id / $descendant_id - reached hierarchy limit"
             );
             return undef;
         }
@@ -381,7 +381,7 @@ sub is_anchestor_of {
     return 0;
 }
 
-sub max_heirarchy_limit {
+sub max_hierarchy_limit {
     my $self = shift;
     return 100;
 }
@@ -401,15 +401,15 @@ sub _error {
     }
 }
 
-sub _is_resource_accessable {
+sub _is_resource_accessible {
     my $self = shift;
     my $tenants_data = shift;
     my $resource_tenant = shift;
     my $user_tenant = $self->current_user_tenant();
-    return $self->_is_resource_accessable_to_tenant($tenants_data, $resource_tenant, $user_tenant)
+    return $self->_is_resource_accessible_to_tenant($tenants_data, $resource_tenant, $user_tenant)
 }
 
-sub _is_resource_accessable_to_tenant {
+sub _is_resource_accessible_to_tenant {
     my $self            = shift;
     my $tenants_data    = shift;
     my $resource_tenant = shift;

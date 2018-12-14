@@ -322,7 +322,7 @@ my %definition_for = (
 		using => {
 			name => 'TOOLS_SERVER',
 			use_in_table => 'server',
-			description => 'Ops hosts for managment ',
+			description => 'Ops hosts for management ',
 			last_updated => '2015-12-10 15:43:45',
 		},
 	},

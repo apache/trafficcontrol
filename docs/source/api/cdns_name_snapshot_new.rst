@@ -96,7 +96,7 @@ Response Structure
 		:refresh: A string containing an integer that sets the number of seconds after which secondary name servers should query the master for the SOA record, to detect zone changes
 		:retry:   A string containing an integer that sets the number of seconds after which secondary name servers should retry to request the serial number from the master if the master does not respond
 
-			.. note:: `RFC 1035 <https://tools.ietf.org/html/rfc1035>`_ dictates that this should always be less than ``refresh``.
+			.. note:: :rfc:`1035` dictates that this should always be less than ``refresh``.
 
 		.. seealso:: `The Wikipedia page on Start of Authority records <https://en.wikipedia.org/wiki/SOA_record>`_.
 
@@ -252,7 +252,7 @@ Response Structure
 		:refresh: A string containing an integer that sets the number of seconds after which secondary name servers should query the master for the SOA record, to detect zone changes
 		:retry:   A string containing an integer that sets the number of seconds after which secondary name servers should retry to request the serial number from the master if the master does not respond
 
-			.. note:: `RFC 1035 <https://tools.ietf.org/html/rfc1035>`_ dictates that this should always be less than ``refresh``.
+			.. note:: :rfc:`1035` dictates that this should always be less than ``refresh``.
 
 		.. seealso:: `The Wikipedia page on Start of Authority records <https://en.wikipedia.org/wiki/SOA_record>`_.
 

@@ -330,7 +330,7 @@ func contentRoutersSection(cdnName string, db *sqlx.DB) (map[string]ContentRoute
 	retMap := make(map[string]ContentRouter)
 	for _, row := range crs {
 		out := row
-		out.HostName = "" // omitempty will make it dissapear
+		out.HostName = "" // omitempty will make it disappear
 		retMap[row.HostName] = out
 	}
 
@@ -348,7 +348,7 @@ func monitorSection(cdnName string, db *sqlx.DB) (map[string]Monitor, error) {
 	retMap := make(map[string]Monitor)
 	for _, row := range ms {
 		out := row
-		out.HostName = "" // omitempty will make it dissapear
+		out.HostName = "" // omitempty will make it disappear
 		retMap[row.HostName] = out
 	}
 
@@ -366,7 +366,7 @@ func edgeLocationSection(cdnName string, db *sqlx.DB) (map[string]EdgeLocation, 
 	retMap := make(map[string]EdgeLocation)
 	for _, row := range edges {
 		out := row
-		out.Name = "" // omitempty will make it dissapear
+		out.Name = "" // omitempty will make it disappear
 		retMap[row.Name] = out
 	}
 

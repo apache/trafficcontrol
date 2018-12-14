@@ -20,7 +20,7 @@ Introduction
 Traffic Router is a Java Tomcat application that routes clients to the closest available cache on the CDN using both HTTP and DNS.  Cache availability is determined by Traffic Monitor; consequently Traffic Router polls Traffic Monitor for its configuration and cache health state information, and uses this data to make routing decisions.  HTTP routing is performed by localizing the client based on the request's source IP address (IPv4 or IPv6), and issues an HTTP 302 redirect to the nearest cache.  HTTP routing utilizes consistent hashing on request URLs to optimize cache performance and request distribution.  DNS routing is performed by localizing clients, resolvers in most cases, requesting ``A`` and ``AAAA`` records for a configurable name such as ``foo.deliveryservice.somecdn.net``. Traffic Router is comprised of seven separate Maven modules:
 
 * shared - A reusable utility JAR for defining Delivery Service Certificates
-* configuration - A resuable JAR defining the ConfigurationListener interface
+* configuration - A reusable JAR defining the ConfigurationListener interface
 * connector - A JAR that overrides Tomcat's standard Http11Protocol Connector class and allows Traffic Router to delay opening listen sockets until it is in a state suitable for routing traffic
 * geolocation - Submodule for defining geolocation services
 * neustar - A Jar that provides a bean "neustarGeolocationService" that implements the GeolocationService interface defined in the geolocation maven submodule, which can optionally be added to the build of Traffic Router
@@ -108,7 +108,7 @@ To install the Traffic Router Developer environment:
 	f. Ensure ``traffic_router_api``, ``traffic_router_connector``, and ``traffic_router_core`` are checked; Finish (this step can take several minutes to complete)
 	g. Ensure ``traffic_router_api``, ``traffic_router_connector``, and ``traffic_router_core`` have been opened by Eclipse after importing
 
-7. From the terminal or your IDE, run ``mvn clean verify`` from the ``traffic_router`` directory. This will run a series of integration tests and will temporarily start and embeded version of Traffic Router and a 'fake' simulated instance of Traffic Monitor.
+7. From the terminal or your IDE, run ``mvn clean verify`` from the ``traffic_router`` directory. This will run a series of integration tests and will temporarily start and embedded version of Traffic Router and a 'fake' simulated instance of Traffic Monitor.
 
 8. Start the embedded Tomcat instance for Core from within your IDE by following these steps:
 
@@ -139,7 +139,7 @@ Test Cases
 
 RPM Packaging
 =============
-Running ``mvn package`` on a Linux based distribution will trigger the build process to create the Traffic Router rpm and the Traffic Router .war file, but will not run the integration tests, so it is a good way to update those artifacts quickly during development. But the prefered way to build the Traffic Router RPMs is to navigate to the root of the Traffic Control source tree and run:
+Running ``mvn package`` on a Linux based distribution will trigger the build process to create the Traffic Router rpm and the Traffic Router .war file, but will not run the integration tests, so it is a good way to update those artifacts quickly during development. But the preferred way to build the Traffic Router RPMs is to navigate to the root of the Traffic Control source tree and run:
 
 ./pkg -v traffic_router_build
 

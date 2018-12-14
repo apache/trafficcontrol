@@ -1326,7 +1326,7 @@ sub create_dnssec_keys {
 		my $json_data = encode_json($keys);
 		$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
 	} else {
-		my $err = "Could not create DNSSEC keys for $xml_id.  Reponse was " . $get_keys->{_content};
+		my $err = "Could not create DNSSEC keys for $xml_id.  Response was " . $get_keys->{_content};
 		$self->app->log->error($err);
 		return $err;
 	}

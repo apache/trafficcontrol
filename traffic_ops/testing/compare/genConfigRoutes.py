@@ -36,17 +36,16 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")
 
 #: An absolute path to the Traffic Ops python packages (This assumes that the script is run from
 #: within the repository's normal directory structure)
-TO_LIBS_PATH = os.path.join(ROOT, "traffic_control", "clients", "python", "trafficops")
+TO_LIBS_PATH = os.path.join(ROOT, "traffic_control", "clients", "python") 
 
 sys.path.insert(0, TO_LIBS_PATH)
-sys.path.insert(0, os.path.join(TO_LIBS_PATH, "trafficops"))
 from trafficops.tosession import TOSession
-from common.restapi import LoginError, OperationError, InvalidJSONError
+from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 
 #: A format specifier for logging output. Propagates to all imported modules.
 LOG_FMT = "%(levelname)s: %(asctime)s line %(lineno)d in %(module)s.%(funcName)s: %(message)s"
 
-__version__ = "2.0.0"
+__version__ = "2.0.0-1"
 
 def getConfigRoutesForServers(servers:typing.List[dict], inst:TOSession) \
                                                                -> typing.Generator[str, None, None]:
@@ -62,7 +61,7 @@ def getConfigRoutesForServers(servers:typing.List[dict], inst:TOSession) \
 	for server in servers:
 		try:
 			yield "/api/1.3/servers/%s/configfiles/ats" % server.hostName
-			for file in inst.getServerConfigFiles(servername=server.hostName)[0].configFiles:
+			for file in inst.get_server_config_files(host_name=server.hostName)[0].configFiles:
 				if "apiUri" in file:
 					yield file.apiUri
 				else:

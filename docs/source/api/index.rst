@@ -30,19 +30,54 @@ API Routes
 
 	*
 
+How to Read this Documentation
+==============================
+Each endpoint is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 1.1, 1.2, 1.3, 1.4. All endpoints are documented as though they were being used in version 1.4. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.
+
+Every endpoint is documented with a section for each method, containing the subsections "Request Structure" and "Response Structure" which identify all properties and structure of the Request to and Response from the endpoint. Before these subsections, three key pieces of information will be provided:
+
+Auth. Required
+	This will either be 'Yes' to indicate that a user must be authenticated (or "logged-in") via e.g. :ref:`to-api-user-login` to use this method of the endpoint, or 'No' to indicate that this is not required.
+Roles Required
+	Any permissions roles that are allowed to use this method of the endpoint will be listed here. Users with roles not listed here will be unable to properly use these endpoints
+Response Type
+	Unless otherwise noted, all responses are JSON objects. See `Response Structure`_ for more information.
+
+The methods of endpoints that require/accept data payloads - unless otherwise noted - always interpret the content of the payload as a JSON object, regardless of the request's ``Content-Type`` header. Because of this, all payloads are - unless otherwise noted - JSON objects. The Request Structure and Response Structure subsections will contain explanations of the fields before any examples like e.g.
+
+:foo: A constant field that always contains "foo"
+:bar: An array of objects that each represent a "bar" object
+
+	:name:  The bar's name
+	:value: The bar's value (an integer)
+
+All fields are mandatory in a request payload, or always present in a response payload unless otherwise noted in the field description.
+
+In most cases, JSON objects have been "pretty-printed" by inserting line breaks and indentation. This means that the ``Content-Length`` HTTP header does not, in general, accurately portray the length of the content displayed in Request Examples and Response Examples. Also, the Traffic Ops endpoints will ignore any content negotiation, meaning that the ``Content-Type`` header of a request is totally meaningless. A utility may choose to pass the data as e.g. :mimetype:`application/x-www-form-urlencoded` (cURL's default ``Content-Type``) when constructing a Request Example, but the example itself will most often show :mimetype:`application/json` in order for syntax highlighting to properly work.
+
 .. _to-api-response-structure:
 
 Response Structure
-==================
-All successful responses have the following structure:
+------------------
+Unless otherwise noted, all response payloads come as JSON objects.
 
 .. code-block:: json
+	:caption: Response Structure
 
 	{
 		"response": "<JSON object with main response>",
 	}
 
-To make the documentation easier to read, only the ``<JSON object with main response>`` is documented, even though the response endpoints may return other top-level objects (most commonly the ``"alerts"`` object.
+To make the documentation easier to read, only the ``<JSON object with main response>`` is documented, even though the response endpoints may return other top-level objects (most commonly the ``"alerts"`` object). The field definitions listed in the Response Structure subsection of an endpoint method are the elements of this object. Sometimes the ``response`` object is a string, sometimes it's an object that maps keys to values, sometimes it's an array that contains many arbitrary objects, and sometimes it isn't present at all. For ease of reading, the field lists delegate the distinction to be made by the ``Response Type`` field directly under the request method heading.
+
+Response Type Meanings
+""""""""""""""""""""""
+Array
+	The fields in the field list refer to the keys of the objects in the ``response`` array.
+Object
+	The fields in the field list refer to the keys of the ``response`` object.
+``undefined``
+	No ``response`` object is present in the response payload. Unless the format is otherwise noted, this means that there should be no field list in the "Response Structure" subsection.
 
 Using API Endpoints
 ===================
@@ -52,6 +87,8 @@ Using API Endpoints
 	.. note:: Many tools have methods for doing this without manual intervention - a web browser for instance will automatically remember and properly handle cookies. Another common tool, cURL, has command line switches that will also accomplish this. Most high-level programming language libraries will implement a cookie-handling method as well.
 
 #. Pass the Mojolicious cookie value, along with any subsequent calls to an authenticated API endpoint.
+
+.. note:: Many endpoints support a ``.json`` suffix. This should be avoided at all costs, because there's no real consistency regarding when it may be used, and the output of API endpoints, in general, are not capable of representing POSIX-compliant files (as a 'file extension' might imply).
 
 Example Session
 ---------------
@@ -99,7 +136,7 @@ Traffic Ops responds with a Mojolicious cookie to be used for future requests, a
 	Connection: keep-alive
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
-	Set-Cookie: mojolicious=eyJhdXRoX2RhdGEiOiJhZG1pbiIsImV4cGlyZXMiOjE1Mzg1MDY5OTgsImJ5IjoidHJhZmZpY2NvbnRyb2wtZ28tdG9jb29raWUifQ--bcc9aade79b6de436cb4962ef5cec397f7ac5bd2; Path=/; Expires=Tue, 02 Oct 2018 19:03:18 GMT; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 02 Oct 2018 19:03:18 GMT; HttpOnly
 	Content-Type: application/json
 	Date: Tue, 02 Oct 2018 12:53:32 GMT
 	Access-Control-Allow-Credentials: true
@@ -119,7 +156,7 @@ Using this cookie, the user can now access their original target - the ``/api/1.
 
 	GET /api/1.1/asns HTTP/1.1
 	Accept: application/json
-	Cookie: mojolicious=eyJleHBpcmVzIjoxNDI5NDAyMjAxLCJhdXRoX2RhdGEiOiJhZG1pbiJ9--f990d03b7180b1ece97c3bb5ca69803cd6a79862;
+	Cookie: mojolicious=...;
 	Host: trafficops.infra.ciab.test
 	User-Agent: Example
 
@@ -137,7 +174,7 @@ Using this cookie, the user can now access their original target - the ``/api/1.
 	Content-Length: 48
 	Content-Type: application/json
 	Date: Tue, 02 Oct 2018 12:55:57 GMT
-	Set-Cookie: mojolicious=eyJhdXRoX2RhdGEiOi…ccd4eae46c6; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
 	Whole-Content-SHA512: u+Q5X7z/DMTc/VzRGaFlJBA8btA8EC…dnA85HCYTm8vVwsQCvle+uVc1nA==
 	X-Server-Name: traffic_ops_golang/
 
@@ -164,13 +201,13 @@ API Errors
 ==========
 If an API endpoint has something to say besides the actual response (usually an error message), it will add a top-level object to the response JSON with the key ``"alerts"``. This will be an array of objects that represent messages from the server, each with the following string fields:
 
-:``level``: ``"success"``, ``"info"``, ``"warning"`` or ``"error"`` as appropriate
-:``text``: The alert's actual message
+:level: ``"success"``, ``"info"``, ``"warning"`` or ``"error"`` as appropriate
+:text: The alert's actual message
 
 The most common errors returned by Traffic Ops are:
 
 401 Unauthorized
-	When a Mojolicious cookie is supplied that is invalid or expired, or the login credentials are incorrect the server responds with a ``401 UNAUTHORIZED`` response code.
+	When a "mojolicious" cookie is supplied that is invalid or expired, or the login credentials are incorrect the server responds with a ``401 UNAUTHORIZED`` response code.
 
 	.. code-block:: http
 		:caption: Example of a Response to a Login Request with Bad Credentials
@@ -208,7 +245,7 @@ The most common errors returned by Traffic Ops are:
 		Content-Type: text/html;charset=UTF-8
 		Date: Tue, 02 Oct 2018 13:58:56 GMT
 		Server: Mojolicious (Perl)
-		Set-Cookie: mojolicious=eyJhdXRoX2RhdGEiOiJhZG1pbiIsImV4cGlyZXMiOjE1Mzg1MDMxMzYsImJ5IjoidHJhZmZpY2NvbnRyb2wtZ28tdG9jb29raWUifQ----9b144306f8bb6020eadb950647b3dc0eebeb7eae; expires=Tue, 02 Oct 2018 17:58:56 GMT; path=/; HttpOnly
+		Set-Cookie: mojolicious=...; expires=Tue, 02 Oct 2018 17:58:56 GMT; path=/; HttpOnly
 		Vary: Accept-Encoding
 		Whole-Content-Sha512: Ff5hO8ZUNUMbwCW0mBuUlsvrSmm/Giijpq7O3uLivLZ6VOu6eGom4Jag6UqlBbbDBnP6AG7l1Szdt74TT6NidA==
 		Transfer-Encoding: chunked
@@ -231,7 +268,7 @@ The most common errors returned by Traffic Ops are:
 		Content-Type: application/json
 		Date: Tue, 02 Oct 2018 17:29:42 GMT
 		Server: Mojolicious (Perl)
-		Set-Cookie: mojolicious=eyJhdXRoX2RhdGEiOiJhZG1pbiIsImV4cGlyZXMiOjE0Mjk0MDQzMDZ9--1b08977e91f8f68b0ff5d5e5f6481c76ddfd0853; expires=Sun, 19 Apr 2015 00:45:06 GMT; path=/; HttpOnly
+		Set-Cookie: mojolicious=..; expires=Sun, 19 Apr 2015 00:45:06 GMT; path=/; HttpOnly
 		Vary: Accept-Encoding
 		Whole-Content-Sha512: gFa4NYFmofCbV7YqgwyFRzKk90+KNgoZu6p2Nx98J4Gy7/2j55tYknvk53WXuMdMKKrgYMop4uiYOla1k1ozQQ==
 

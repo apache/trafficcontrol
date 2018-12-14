@@ -441,7 +441,7 @@ the specific language governing permissions and limitations under the Apache Lic
                     data: data,
                     success: function (data) {
                         // TODO - replace query.page with query so users have access to term, page, etc.
-                        // added query as third paramter to keep backwards compatibility
+                        // added query as third parameter to keep backwards compatibility
                         var results = options.results(data, query.page, query);
                         query.callback(results);
                     },

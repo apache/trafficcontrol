@@ -22,6 +22,8 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
+	"net/url"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -52,14 +54,14 @@ func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReq
 	}
 
 	if !useClientReqHost {
-		paramHost, ok, err := getGlobalParam(tx, "tm.url")
+		paramTMURL, ok, err := getGlobalParam(tx, "tm.url")
 		if err != nil {
 			return nil, errors.New("getting global 'tm.url' parameter: " + err.Error())
 		}
 		if !ok {
 			log.Warnln("Making CRConfig: no global tm.url parameter found! Using request host header instead!")
 		}
-		toHost = paramHost
+		toHost = getTMURLHost(paramTMURL)
 	}
 
 	if emulateOldPath {
@@ -68,4 +70,27 @@ func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReq
 
 	crc.Stats = makeStats(cdn, user, toHost, reqPath, toVersion)
 	return &crc, nil
+}
+
+// getTMURLHost returns the FQDN from a tm.url global parameter, which should be either an FQDN or a Hostname.
+// If tmURL is a valid URL, the FQDN is returned.
+// if tmURL is not a valid URL, it is returned with any leading 'http://' or 'http://' removed, and everything after the next '/' removed.
+func getTMURLHost(tmURL string) string {
+	if !strings.HasPrefix(tmURL, "http://") && !strings.HasPrefix(tmURL, "https://") {
+		tmURL = "http://" + tmURL // if it doesn't begin with "http://", add it so it's a valid URL to parse
+	}
+	uri, err := url.Parse(tmURL)
+	if err == nil {
+		return uri.Host
+	}
+
+	// if it isn't a valid URL, do the best we can: strip the protocol and path
+	tmURL = strings.TrimPrefix(tmURL, "https://")
+	tmURL = strings.TrimPrefix(tmURL, "http://")
+	pathStart := strings.Index(tmURL, "/")
+	if pathStart == -1 {
+		return tmURL
+	}
+	tmURL = tmURL[:pathStart]
+	return tmURL
 }

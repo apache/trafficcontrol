@@ -24,5 +24,5 @@ ALTER TABLE snapshot RENAME content TO crconfig;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-ALTER TABLE snapshot DELETE COLUMN monitoring;
+ALTER TABLE snapshot DROP COLUMN monitoring;
 ALTER TABLE snapshot RENAME crconfig TO content;

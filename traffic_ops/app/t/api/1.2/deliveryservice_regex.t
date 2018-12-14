@@ -117,7 +117,7 @@ ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'applica
 		->json_is( "/response/name" => "use_tenancy" )
 		->json_is( "/response/configFile" => "global" )
 		->json_is( "/response/value" => "0" )
-	, 'Was the disabling paramter set?';
+	, 'Was the disabling parameter set?';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

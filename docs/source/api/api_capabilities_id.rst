@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-api_capabilities_id:
+.. _to-api-api_capabilities-id:
 
 ***************************
 ``api_capabilities/{{ID}}``

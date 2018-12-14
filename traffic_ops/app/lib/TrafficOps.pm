@@ -239,7 +239,7 @@ sub setup_mojo_plugins {
         my $c = $self->load_conf();
 	$config = $self->plugin( 'Config' => { default => $c } );
 
-	# setting a default message if no user account is found in tm_user. this default can be overriden in cdn.conf
+	# setting a default message if no user account is found in tm_user. this default can be overridden in cdn.conf
 	$config->{'to'}{'no_account_found_msg'} //= "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator.";
 
 	if ( !defined $ENV{MOJO_INACTIVITY_TIMEOUT} ) {

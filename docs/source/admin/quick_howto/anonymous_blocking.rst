@@ -63,7 +63,7 @@ Configure Anonymous Blocking
 		:scale: 100%
 		:align: center
 
-#. Enable Anonmyous Blocking for a Delivery Service
+#. Enable Anonymous Blocking for a Delivery Service
 
 	.. figure:: anonymous_blocking/02.png
 		:scale: 100%

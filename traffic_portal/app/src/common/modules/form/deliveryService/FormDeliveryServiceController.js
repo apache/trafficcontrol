@@ -72,12 +72,12 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.COMPLETE = 4;
 
     $scope.saveable = function() {
-        // this may be overriden in a child class. i.e. FormEditDeliveryServiceController
+        // this may be overridden in a child class. i.e. FormEditDeliveryServiceController
         return true;
     };
 
     $scope.deletable = function() {
-        // this may be overriden in a child class. i.e. FormEditDeliveryServiceController
+        // this may be overridden in a child class. i.e. FormEditDeliveryServiceController
         return true;
     };
 

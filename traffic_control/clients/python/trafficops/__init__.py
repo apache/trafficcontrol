@@ -13,3 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+# Import Local Modules into the 'trafficops' package namespace for convenience.
+from .tosession import TOSession
+from .restapi import InvalidJSONError, LoginError, OperationError, api_request, RestApiSession
+
+__all__ = [u'TOSession',
+           u'InvalidJSONError',
+           u'LoginError',
+           u'OperationError',
+           u'api_request',
+           u'RestApiSession']
+
+# The Module Version
+__version__ = '1.0.0'

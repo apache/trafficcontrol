@@ -59,7 +59,7 @@ sub all {
 		return $self->success( \@regexes );
 	}
 	else {
-		return $self->forbidden("Forbidden. Insufficent privileges.");
+		return $self->forbidden("Forbidden. Insufficient privileges.");
 	}
 
 }

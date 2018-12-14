@@ -129,7 +129,7 @@ Perl Formatting Conventions
 ===========================
 `Perltidy <http://perltidy.sourceforge.net/>`_ is for use in code formatting.
 
-.. code-block::perl
+.. code-block:: perl
 	:caption: Example Perltidy Configuration (usually in ``~/.perltidyrc``)
 
 	-l=156
@@ -155,11 +155,11 @@ Perl Formatting Conventions
 
 Database Management
 ===================
-The ``app/db/admin.pl`` script is for use in managing the Traffic Ops database tables. This essentially serves as a front-end for `Goose <https://bitbucket.org/liamstask/goose/>`_ Below is an example of its usage.
+The ``app/db/admin`` binary is for use in managing the Traffic Ops database tables. This essentially serves as a front-end for `Goose <https://bitbucket.org/liamstask/goose/>`_ Below is an example of its usage.
 
-.. note:: For proper resolution of Perl library paths and SOL statement files, it's recommended that this script be run from the ``app`` directory
+.. note:: For proper resolution of configuration and SOL statement files, it's recommended that this binary be run from the ``app`` directory
 
-``db/admin.pl [options] command``
+``db/admin [options] command``
 
 Options:
 
@@ -202,12 +202,12 @@ status
 upgrade
 	Performs a migration on the database for the current environment, then seeds it and patches it using the SQL statements from the ``app/db/patches.sql`` file
 
-.. code-block::bash
+.. code-block:: bash
 	:caption: Example Usage
 
-	db/admin.pl --env=test reset
+	db/admin --env=test reset
 
-The environments are defined in the ``app/db/dbconf.yml`` file, and the name of the database generated will be the name of the environment for which it was created. To use the ``admin.pl`` script, you may need to add ``traffic_ops/lib`` and ``traffic_ops/local/lib/perl5`` to your `PERL5LIB <http://modperlbook.org/html/3-9-2-2-Using-the-PERL5LIB-environment-variable.html>`_ environment variable.
+The environments are defined in the ``app/db/dbconf.yml`` file, and the name of the database generated will be the name of the environment for which it was created.
 
 
 
@@ -218,7 +218,7 @@ To install the Traffic Ops Developer environment:
 #. Clone the `Traffic Control repository <https://github.com/apache/trafficcontrol>`_ from GitHub.
 #. Install the local dependencies using `Carton <https://metacpan.org/release/Carton>`_.
 
-	.. code-block::shell
+	.. code-block:: shell
 		:caption: Install Development Dependencies
 
 		cd traffic_ops/app
@@ -229,30 +229,12 @@ To install the Traffic Ops Developer environment:
 	.. seealso:: `PostgreSQL instructions on setting up a database <https://wiki.postgresql.org/wiki/First_steps>`_.
 
 
-#. Use the ``setup`` command of the ``admin.pl`` script (see `Database Management`_ for usage) to set up the traffic_ops database(s).
+#. Use the ``reset`` and ``upgrade`` commands of the ``admin`` binary (see `Database Management`_ for usage) to set up the traffic_ops database(s).
 
-	 Example Output::
+	.. code-block:: shell
+		:caption: Example Usage
 
-		$ db/admin.pl --env=development setup
-		Using database.conf: conf/development/database.conf
-		Using database.conf: conf/development/database.conf
-		Using database.conf: conf/development/database.conf
-		Using database.conf: conf/development/database.conf
-		Using database.conf: conf/development/database.conf
-		Using database.conf: conf/development/database.conf
-		Executing 'drop database to_development'
-		Executing 'create database to_development'
-		Creating database tables...
-		Warning: Using a password on the command line interface can be insecure.
-		Migrating database...
-		goose: migrating db environment 'development', current version: 0, target: 20150210100000
-		OK    20141222103718_extension.sql
-		OK    20150108100000_add_job_deliveryservice.sql
-		OK    20150205100000_cg_location.sql
-		OK    20150209100000_cran_to_asn.sql
-		OK    20150210100000_ds_keyinfo.sql
-		Seeding database...
-		Warning: Using a password on the command line interface can be insecure.
+		db/admin --env=development reset && db/admin --env=development upgrade
 
 #. (Optional) To load the 'KableTown' example/testing data set into the tables, use the ``setup_kabletown.pl`` script located in ``app/bin/db/``.
 
@@ -291,7 +273,7 @@ The integration tests will load an example CDN with most of the features of Traf
 #. Be sure the integration tests have been run
 #. Start the Traffic Ops server. The ``MOJO_MODE`` environment variable should be set to the name of the environment that has been loaded.
 
-	.. code-block::bash
+	.. code-block:: bash
 		:caption: Example Startup
 
 		export MOJO_MODE=integration

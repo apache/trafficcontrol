@@ -31,7 +31,7 @@ In order to run the tests you will need the following:
     
     `$ cd trafficcontrol/traffic_ops/app`
     
-    `$ db/admin.pl --env=test reset` 
+    `$ db/admin --env=test reset` 
 
     NOTE on passwords:
     Check that the passwords defined defined for your `to_test` database match 

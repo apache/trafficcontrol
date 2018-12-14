@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cachegroup_id_unassigned_parameters:
+.. _to-api-cachegroups-id-unassigned_parameters:
 
 ********************************************
 ``cachegroups/{{id}}/unassigned_parameters``

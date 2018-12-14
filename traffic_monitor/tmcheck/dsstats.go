@@ -88,7 +88,7 @@ func ValidateDSStatsData(dsStats *dsdata.StatsOld, crconfig *tc.CRConfig) error 
 	return nil
 }
 
-// DSStatsValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
+// DSStatsValidator is designed to be run as a goroutine, and does not return. It continuously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
 func DSStatsValidator(
 	tmURI string,
 	toClient *to.Session,
@@ -101,7 +101,7 @@ func DSStatsValidator(
 	Validator(tmURI, toClient, interval, grace, onErr, onResumeSuccess, onCheck, ValidateDSStats)
 }
 
-// AllMonitorsDSStatsValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `tc.TrafficMonitorName` will be empty.
+// AllMonitorsDSStatsValidator is designed to be run as a goroutine, and does not return. It continuously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `tc.TrafficMonitorName` will be empty.
 func AllMonitorsDSStatsValidator(
 	toClient *to.Session,
 	interval time.Duration,

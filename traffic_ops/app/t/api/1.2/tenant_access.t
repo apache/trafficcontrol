@@ -43,7 +43,7 @@ Test::TestHelper->load_core_data($schema);
 #globals
 my $root_tenant_id = get_tenant_id("root");
 
-# building the below heirarchy,
+# building the below hierarchy,
 # and creating an admin user for each tenant
 #
 # -root
@@ -1754,5 +1754,5 @@ sub set_use_tenancy {
             ->json_is( "/response/name" => "use_tenancy" )
             ->json_is( "/response/configFile" => "global" )
             ->json_is( "/response/value" => $value )
-        , 'Was the use_tenancy paramter set?';
+        , 'Was the use_tenancy parameter set?';
 }

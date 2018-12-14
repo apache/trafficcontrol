@@ -25,7 +25,7 @@ type DSServers map[tc.DeliveryServiceName]DSServer
 type DSServer struct {
 	// TODO handle Steering
 	Name    string
-	DSFQDNs []string // TOOD determine if neccessary, how to index
+	DSFQDNs []string // TODO determine if necessary, how to index
 }
 
 type DSServer struct {

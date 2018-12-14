@@ -17,7 +17,7 @@
 Traffic Stats Administration
 ****************************
 
-Traffic Stats consists of three seperate components: Traffic Stats, InfluxDB, and Grafana. See below for information on installing and configuring each component as well as configuring the integration between the three and Traffic Ops.
+Traffic Stats consists of three separate components: Traffic Stats, InfluxDB, and Grafana. See below for information on installing and configuring each component as well as configuring the integration between the three and Traffic Ops.
 
 Installation
 ========================

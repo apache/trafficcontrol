@@ -51,7 +51,7 @@ Usage
 
 Options
 
--q      Quiet mode. Supresses output.
+-q      Quiet mode. Suppresses output.
 -v      Verbose mode. Lists all build output.
 -l      List available projects.
 
@@ -87,9 +87,11 @@ Building Individual Components
 ==============================
 Each Traffic Control component can be individually built, and the instructions for doing so may be found in their respective component's development documentation.
 
+.. _docs-build:
+
 Building This Documentation
 ---------------------------
-This documentation uses the `Sphinx documentation build system <http://www.sphinx-doc.org/en/master/>`_, and as such requires a Python3 version that is at least 3.4.1, but no greater than 3.6.5\ [3]_. It also has dependency on Sphinx, and Sphinx extensions and themes. All of these can be easily installed using `pip` by referencing the requirements file like so:
+This documentation uses the `Sphinx documentation build system <http://www.sphinx-doc.org/en/master/>`_, and as such requires a Python3 version that is at least 3.4.1. It also has dependency on Sphinx, and Sphinx extensions and themes. All of these can be easily installed using `pip` by referencing the requirements file like so:
 
 .. code-block:: shell
 	:caption: Run from the Repository's Root Directory
@@ -99,5 +101,3 @@ This documentation uses the `Sphinx documentation build system <http://www.sphin
 Once all dependencies have been satisfied, build using the Makefile at ``docs/Makefile``.
 
 Alternatively, it is also possible to :ref:`pkg` or to :ref:`build-with-dc`, both of which will output a documentation "tarball" to ``dist/``.
-
-.. [3] A bug in `pygments` prevents Python 3.7.x from working with Sphinx

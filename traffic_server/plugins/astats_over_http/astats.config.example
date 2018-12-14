@@ -7,6 +7,6 @@ allow_ip=127.0.0.1/32
 allow_ip6=::1/64
 
 # record_types
-# hexidecimal int (without 0x), each bit (1 through 7) representing a record type to return.  0x100 is for the built in system stats.  
-# This can be overriden from the url, e.g.: http://localhost/_astats?record.types=100
+# hexadecimal int (without 0x), each bit (1 through 7) representing a record type to return.  0x100 is for the built in system stats.  
+# This can be overridden from the url, e.g.: http://localhost/_astats?record.types=100
 record_types=144

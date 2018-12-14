@@ -110,6 +110,6 @@ func TestAsn(t *testing.T) {
 
 	// Make sure all the right queries were seen
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expections: %s", err)
+		t.Errorf("there were unfulfilled exceptions: %s", err)
 	}
 }

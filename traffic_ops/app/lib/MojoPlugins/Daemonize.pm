@@ -25,7 +25,7 @@ sub register {
 	$app->renderer->add_helper(
 		# Note: Calling fork_and_daemonize() returns twice: Once for the parent and the other for the daemon (=child).
 		# Caller should check return value:
-		#  <0 means an error occured
+		#  <0 means an error occurred
 		#  0 means you are the daemon (=child)
 		#  1 means you are the parent (= original process)
 		fork_and_daemonize => sub {
