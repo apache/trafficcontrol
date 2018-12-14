@@ -286,7 +286,7 @@ class TOSession(restapi.RestApiSession):
 
 		return result_set, response  # Note: Return last response object received
 
-# 
+#
 # PUT ALL API DEFINITIONS BELOW AND UNDER ITS RESPECTIVE PAGE (whether it is 1.2 or 1.3, etc, if its a CDN put it under CDN header and corresponding calls)
 #
 
@@ -558,7 +558,7 @@ class TOSession(restapi.RestApiSession):
 		Creates fallback configuration for the cache group. New fallbacks can be added only via POST.
 		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cachegroup_fallbacks.html#api-1-2-cachegroup-fallbacks
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
- 		:type data: Dict[Text, Any]
+		:type data: Dict[Text, Any]
 		:rtype: Tuple[Dict[Text, Any], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -566,7 +566,7 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'put', u'cachegroup_fallbacks', (u'1.2', u'1.3'))
 	def update_cache_group_fallbacks(self, data=None):
 		"""
-		Updates an existing fallback configuration for the cache group. 
+		Updates an existing fallback configuration for the cache group.
 		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cachegroup_fallbacks.html#api-1-2-cachegroup-fallbacks
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[Text, Any]
@@ -608,7 +608,7 @@ class TOSession(restapi.RestApiSession):
 	# CDN
 	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/cdn.html#cdn
 	#
-	
+
 	@restapi.api_request(u'get', u'cdns', (u'1.1', u'1.2', u'1.3',))
 	def get_cdns(self):
 		"""
@@ -1048,7 +1048,7 @@ class TOSession(restapi.RestApiSession):
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
 
-	# 
+	#
 	# Delivery Service Health
 	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/deliveryservice.html#health
 	#
@@ -1138,7 +1138,7 @@ class TOSession(restapi.RestApiSession):
 	def delete_deliveryservice_servers_by_id(self, delivery_service_id=None, server_id=None):
 		"""
 		Removes a server (cache) from a delivery service.
-		:param delivery_service_id: The delivery service id 
+		:param delivery_service_id: The delivery service id
 		:type delivery_service_id: int
 		:param server_id: The server id to remove from delivery service
 		:type server_id: int
@@ -1149,7 +1149,7 @@ class TOSession(restapi.RestApiSession):
 	#
 	# Delivery Service User
 	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/deliveryservice.html#delivery-service-user
-	# 
+	#
 
 	@restapi.api_request(u'post', u'deliveryservice_user', (u'1.2', u'1.3'))
 	def create_delivery_service_user_link(self, data=None):
@@ -1402,7 +1402,7 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'post', u'federations', (u'1.2', u'1.3'))
 	def create_federation(self, data=None):
 		"""
-		Allows a user to add federations for their delivery service(s). 
+		Allows a user to add federations for their delivery service(s).
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[Text, Any]
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
@@ -1415,7 +1415,7 @@ class TOSession(restapi.RestApiSession):
 		"""
 		Retrieves a list of federations for a cdn.
 		:param cdn_name: The CDN name to find federation
-		:type cdn_name: String 
+		:type cdn_name: String
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1426,7 +1426,7 @@ class TOSession(restapi.RestApiSession):
 		"""
 		Retrieves a federation for a cdn.
 		:param cdn_name: The CDN name to find federation
-		:type cdn_name: String 
+		:type cdn_name: String
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1437,7 +1437,7 @@ class TOSession(restapi.RestApiSession):
 		"""
 		Create a federation.
 		:param cdn_name: The CDN name to find federation
-		:type cdn_name: String 
+		:type cdn_name: String
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1447,9 +1447,9 @@ class TOSession(restapi.RestApiSession):
 		"""
 		Update a federation.
 		:param cdn_name: The CDN name to find federation
-		:type cdn_name: String 
+		:type cdn_name: String
 		:param federation_id: The federation id
-		:type federation_id: int 
+		:type federation_id: int
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1459,9 +1459,9 @@ class TOSession(restapi.RestApiSession):
 		"""
 		Delete a federation.
 		:param cdn_name: The CDN name to find federation
-		:type cdn_name: String 
+		:type cdn_name: String
 		:param federation_id: The federation id
-		:type federation_id: int 
+		:type federation_id: int
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1476,9 +1476,9 @@ class TOSession(restapi.RestApiSession):
 		"""
 		Retrieves delivery services assigned to a federation
 		:param federation_id: The federation id
-		:type federation_id: int 
+		:type federation_id: int
 		:param federation_id: The federation id
-		:type federation_id: int 
+		:type federation_id: int
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1487,9 +1487,9 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'post', u'federations/{federation_id:d}/deliveryservices', (u'1.2', u'1.3'))
 	def assign_delivery_services_to_federations(self, federation_id=None, data=None):
 		"""
-		Create one or more federation / delivery service assignments. 
+		Create one or more federation / delivery service assignments.
 		:param federation_id: The federation id
-		:type federation_id: int 
+		:type federation_id: int
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[Text, Any]
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
@@ -1499,11 +1499,11 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'delete', u'federation_resolvers/{federation_id:d}/deliveryservices/{delivery_service_id:d}', (u'1.2', u'1.3'))
 	def delete_federation_resolver(self, federation_resolver_id=None, delivery_service_id=None):
 		"""
-		Removes a delivery service from a federation. 
+		Removes a delivery service from a federation.
 		:param federation_id: The federation id
-		:type federation_id: int 
+		:type federation_id: int
 		:param federation_id: The delivery service id
-		:type federation_id: int 
+		:type federation_id: int
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1518,7 +1518,7 @@ class TOSession(restapi.RestApiSession):
 		"""
 		Retrieves federation resolvers assigned to a federation
 		:param federation_id: The federation id
-		:type federation_id: int 
+		:type federation_id: int
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1527,9 +1527,9 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'post', u'federations/{federation_id:d}/federation_resolvers', (u'1.2', u'1.3'))
 	def assign_federation_resolver_to_federations(self, federation_id=None, data=None):
 		"""
-		Create one or more federation / federation resolver assignments. 
+		Create one or more federation / federation resolver assignments.
 		:param federation_id: The federation id
-		:type federation_id: int 
+		:type federation_id: int
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[Text, Any]
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
@@ -1544,7 +1544,7 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'get', u'federation_resolvers', (u'1.2', u'1.3'))
 	def get_federation_resolvers(self, query_params=None):
 		"""
-		Get federation resolvers. 
+		Get federation resolvers.
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1553,7 +1553,7 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'post', u'federation_resolvers', (u'1.2', u'1.3'))
 	def create_federation_resolver(self, data=None):
 		"""
-		Create a federation resolver. 
+		Create a federation resolver.
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[Text, Any]
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
@@ -1563,7 +1563,7 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'delete', u'federation_resolvers/{federation_resolver_id:d}', (u'1.2', u'1.3'))
 	def delete_federation_resolver(self, federation_resolver_id=None):
 		"""
-		Delete a federation resolver. 
+		Delete a federation resolver.
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
 		:type data: Dict[Text, Any]
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
@@ -1579,7 +1579,7 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'get', u'federations/{federation_id:d}/users', (u'1.2', u'1.3'))
 	def get_federation_users(self, federation_id=None):
 		"""
-		Retrieves users assigned to a federation. 
+		Retrieves users assigned to a federation.
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1587,7 +1587,7 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'post', u'federations/{federation_id:d}/users', (u'1.2', u'1.3'))
 	def create_federation_user(self, federation_id=None, data=None):
 		"""
-		Create one or more federation / user assignments. 
+		Create one or more federation / user assignments.
 		:param federation_id: Federation ID
 		:type federation_id: int
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
@@ -1599,7 +1599,7 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'delete', u'federations/{federation_id:d}/users/{user_id:d}', (u'1.2', u'1.3'))
 	def delete_federation_user(self, federation_id=None, user_id=None):
 		"""
-		Delete one or more federation / user assignments. 
+		Delete one or more federation / user assignments.
 		:param federation_id: Federation ID
 		:type federation_id: int
 		:param user_id: Federation User ID
@@ -1616,7 +1616,7 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'get', u'hwinfo.json', (u'1.2', u'1.3'))
 	def get_hwinfo(self):
 		"""
-		Get hwinfo for servers. 
+		Get hwinfo for servers.
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
 		"""
@@ -1630,7 +1630,7 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'get', u'osversions', (u'1.2', u'1.3'))
 	def get_osversions(self):
 		"""
-		Get all OS versions for ISO generation and the directory where the kickstarter files are found. 
+		Get all OS versions for ISO generation and the directory where the kickstarter files are found.
 		The values are retrieved from osversions.cfg found in either /var/www/files or in the location defined by the kickstart.files.location parameter (if defined).
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
@@ -2279,7 +2279,7 @@ class TOSession(restapi.RestApiSession):
 
 	#
 	# Steering Targets
-	# 
+	#
 	#
 
 	#
@@ -2348,7 +2348,7 @@ class TOSession(restapi.RestApiSession):
 	# TO Extensions
 	# https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/to_extension.html#to-extensions
 	#
-	
+
 	@restapi.api_request(u'get', u'to_extensions.json', (u'1.1', u'1.2', u'1.3',))
 	def get_to_extensions(self):
 		"""
@@ -2484,8 +2484,8 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'get', u'user/current/jobs.json', (u'1.1', u'1.2', u'1.3',))
 	def get_authenticated_user_jobs(self):
 		"""
-		Retrieves the user’s list of jobs.
-		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/user.html#api-1-2-users
+		Retrieves the user's list of jobs.
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/user_current_jobs.html
 
 		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
 		:raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
@@ -2494,9 +2494,9 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'post', u'user/current/jobs', (u'1.1', u'1.2', u'1.3',))
 	def create_invalidation_job(self, data=None):
 		"""
-		Invalidating content on the CDN is sometimes necessary when the origin was mis-configured and something is cached in the CDN that needs to be removed. 
+		Invalidating content on the CDN is sometimes necessary when the origin was mis-configured and something is cached in the CDN that needs to be removed.
 		Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time.
-		To speed up content invalidation, Traffic Ops will not try to remove the content from the caches, but it makes the content inaccessible using the regex_revalidate ATS plugin (https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_revalidate.en.html). 
+		To speed up content invalidation, Traffic Ops will not try to remove the content from the caches, but it makes the content inaccessible using the regex_revalidate ATS plugin (https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_revalidate.en.html).
 		This forces a revalidation of the content, rather than a new get..
 		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/user.html#api-1-2-users
 		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
@@ -2513,9 +2513,9 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'get', u'cdns/{cdn_name}/snapshot', (u'1.2', u'1.3',))
 	def get_current_snapshot_crconfig(self, cdn_name=None):
 		"""
-		Retrieves the CURRENT snapshot for a CDN which doesn’t necessarily represent the current state of the CDN. 
+		Retrieves the CURRENT snapshot for a CDN which doesn't necessarily represent the current state of the CDN.
 		The contents of this snapshot are currently used by Traffic Monitor and Traffic Router.
-		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/topology.html#snapshot-crconfig
+		https://traffic-control-cdn.readthedocs.io/en/latest/api/cdns_name_snapshot.html
 		:param cdn_name: The CDN name
 		:type cdn_name: Text
 		:rtype: Tuple[Dict[Text, Any], requests.Response]
@@ -2525,8 +2525,8 @@ class TOSession(restapi.RestApiSession):
 	@restapi.api_request(u'get', u'cdns/{cdn_name}/snapshot/new', (u'1.2', u'1.3',))
 	def get_pending_snapshot_crconfig(self, cdn_name=None):
 		"""
-		Retrieves a PENDING snapshot for a CDN which represents the current state of the CDN. 
-		The contents of this snapshot are NOT currently used by Traffic Monitor and Traffic Router. 
+		Retrieves a PENDING snapshot for a CDN which represents the current state of the CDN.
+		The contents of this snapshot are NOT currently used by Traffic Monitor and Traffic Router.
 		Once a snapshot is performed, this snapshot will become the CURRENT snapshot and will be used by Traffic Monitor and Traffic Router.
 		https://traffic-control-cdn.readthedocs.io/en/latest/api/v12/topology.html#snapshot-crconfig
 		:param cdn_name: The CDN name
