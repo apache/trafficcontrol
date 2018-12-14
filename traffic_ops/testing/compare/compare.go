@@ -36,7 +36,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-const __version__ = "3.1.1"
+const __version__ = "4.0.0"
 const SHORT_HEADER = "# DO NOT EDIT"
 const LONG_HEADER = "# TRAFFIC OPS NOTE:"
 const LUA_HEADER = "-- DO NOT EDIT"
@@ -214,10 +214,20 @@ func scrubPlainText(lines []string) string {
 			continue
 		}
 
-		r += l
+		r += l + "\n"
 	}
 
 	return r
+}
+
+func hashlines(lines []string) map[string]struct{} {
+	m := make(map[string]struct{})
+
+	for _, l := range lines {
+		m[l] = struct{}{}
+	}
+
+	return m
 }
 
 // Given a slice of (exactly two) result objects, compares the plain text content of their responses
@@ -240,7 +250,7 @@ func handlePlainTextResponse(responses *[]result, route string) {
 
 		// If the two files have different numbers of lines, they definitely differ
 		if len(lines0) != len(lines1) {
-			writeAllResults(route, result0Str, (*responses)[0].TO, result1Str, (*responses)[1].TO)
+			writeAllResults(route, result0Str, (*responses)[0].TO, result1Str, (*responses)[1].TO, false)
 			return
 		}
 
@@ -255,8 +265,34 @@ func handlePlainTextResponse(responses *[]result, route string) {
 	if scrubbedResult0 == scrubbedResult1 {
 		log.Printf("Identical results (%d bytes) from %s\n", len(result0), route)
 	} else {
-		writeAllResults(route, result0Str, (*responses)[0].TO, result1Str, (*responses)[1].TO)
+		writeAllResults(route,
+		                result0Str,
+		                (*responses)[0].TO,
+		                result1Str,
+		                (*responses)[1].TO,
+		                checkOrderDiffs(scrubbedResult0, scrubbedResult1))
 	}
+}
+
+// This function checks for order-only differences in the passed plaintext API responses - the message
+// output will indicate whether the difference was caused purely by an ordering of lines or not.
+func checkOrderDiffs(s0 string, s1 string) bool {
+	m0 := hashlines(strings.Split(s0, "\n"))
+	m1 := hashlines(strings.Split(s1, "\n"))
+
+	for k, _ := range m0 {
+		if _, ok := m1[k]; !ok {
+			return false
+		}
+		delete(m1, k)
+	}
+
+	for k, _ := range m1 {
+		if _, ok := m0[k]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 // Removes keys that generate false positives in comparisons from the passed JSON object
@@ -369,13 +405,13 @@ func handleJSONResponse(responses *[]result, route string) {
 	if string(result0Bytes) == string(result1Bytes) {
 		log.Printf("Identical results (%d bytes) from %s\n", len(result0Bytes), route)
 	} else {
-		writeAllResults(route, string(result0Orig), (*responses)[0].TO, string(result1Orig), (*responses)[1].TO)
+		writeAllResults(route, string(result0Orig), (*responses)[0].TO, string(result1Orig), (*responses)[1].TO, false)
 	}
 }
 
 // Writes out a set of results for a given route, and logs to stderr information about what was
 // written
-func writeAllResults(route string, result0 string, connect0 *Connect, result1 string, connect1 *Connect) {
+func writeAllResults(route string, result0 string, connect0 *Connect, result1 string, connect1 *Connect, orderOnly bool) {
 	p0, err := connect0.writeResults(route, result0)
 	if err != nil {
 		log.Fatalf("Error writing results for %s: %s", route, err.Error())
@@ -386,7 +422,11 @@ func writeAllResults(route string, result0 string, connect0 *Connect, result1 st
 		log.Fatalf("Error writing results for %s: %s", route, err.Error())
 	}
 
-	log.Println("Diffs from ", route, " written to ", p0, " and ", p1)
+	if orderOnly {
+		log.Println("Order-only diffs from ", route, " written to ", p0, " and ", p1)
+	} else {
+		log.Println("Diffs from ", route, " written to ", p0, " and ", p1)
+	}
 }
 
 func (to *Connect) writeResults(route string, res string) (string, error) {
