@@ -61,7 +61,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	cdn := testData.CDNs[0].Name
 
 	tmURLParamName := "tm.url"
-	tmURLExpected := "https://crconfig.tm.url.test.invalid"
+	tmURLExpected := "crconfig.tm.url.test.invalid"
 	_, _, err := TOSession.CreateParameter(tc.Parameter{
 		ConfigFile: "global",
 		Name:       tmURLParamName,
