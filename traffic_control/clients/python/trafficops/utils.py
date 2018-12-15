@@ -26,9 +26,7 @@ import logging
 # Python 2 to Python 3 Compatibility
 from builtins import str
 
-
-logger = logging.getLogger(__name__)
-
+LOGGER = logging.getLogger(__name__)
 
 def log_with_debug_info(logging_level=logging.INFO, msg=u'', parent=False, separator=u':'):
 	"""
@@ -40,17 +38,22 @@ def log_with_debug_info(logging_level=logging.INFO, msg=u'', parent=False, separ
 	:type logging_level: int
 	:param msg: The message to log.
 	:type msg: Text
-	:param parent: If True, use the caller's parent information instead of the caller's information in the
-				   message.
+	:param parent: If True, use the caller's parent information instead of the caller's information
+		in the message.
 	:type parent: bool
 	:param separator: The string to use for the component separator
 	:type separator: Text
 	:return: '<file name>:<function name>:<line number>: <msg>'
-			 e.g. 'tosession.py:_build_endpoint:199: This is a message to log.'
+		e.g. 'tosession.py:_build_endpoint:199: This is a message to log.'
 	:rtype: Text
 	"""
 
-	frame, file_path, line_number, function_name, lines, index = inspect.stack()[1 if not parent else 2]
+	frame,\
+	file_path,\
+	line_number,\
+	function_name,\
+	_,\
+	_ = inspect.stack()[1 if not parent else 2]
 	file_name = os.path.split(file_path)[-1]
 	calling_module = inspect.getmodule(frame).__name__
 	debug_msg = separator.join(map(str, (file_name, function_name, line_number, u' '))) + str(msg)
