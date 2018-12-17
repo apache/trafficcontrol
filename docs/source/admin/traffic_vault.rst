@@ -32,23 +32,25 @@ The following steps were taken to configure Riak in our environments.
 
 Self Signed Certificate configuration
 -------------------------------------
-Below shows how to create self signed certs for Trafficvault.
 
-Note: Self Signed Certificates are not recommended for production use. Intended for dev or learning purposes only. Modify subject as necessary.   
+note:: Self Signed Certificates are not recommended for production use. Intended for dev or learning purposes only. Modify subject as necessary.   
 
-	``cd ~``
-	``mkdir certs``
-	``cd certs``
-	``openssl genrsa -out ca-bundle.key 2048``
-	``openssl req -new -key ca-bundle.key -out ca-bundle.csr -subj "/C=US/ST=CO/L=DEN/O=somecompany/OU=CDN/CN=somecompany.net/emailAddress=someuser@somecompany.net"``
-	``openssl x509 -req -days 365 -in ca-bundle.csr -signkey ca-bundle.key -out ca-bundle.crt``
-	``openssl genrsa -out server.key 2048``
-	``openssl req -new -key server.key -out server.csr -subj "/C=US/ST=CO/L=DEN/O=somecompany/OU=CDN/CN=somecompany.net/emailAddress=someuser@somecompany.net"``
-	``openssl x509 -req -days 365 -in server.csr -CA ca-bundle.crt -CAkey ca-bundle.key -CAcreateserial -out server.crt``
-	``mkdir /etc/riak/certs``
-	``mv -f server.crt /etc/riak/certs/.``
-	``mv -f server.key /etc/riak/certs/.``
-	``mv -f ca-bundle.crt /etc/pki/tls/certs/.``
+code-block:: shell
+    :caption: Self-Signed Certificate Configuration
+
+	cd ~
+	mkdir certs
+	cd certs
+	openssl genrsa -out ca-bundle.key 2048
+	openssl req -new -key ca-bundle.key -out ca-bundle.csr -subj "/C=US/ST=CO/L=DEN/O=somecompany/OU=CDN/CN=somecompany.net/emailAddress=someuser@somecompany.net"
+	openssl x509 -req -days 365 -in ca-bundle.csr -signkey ca-bundle.key -out ca-bundle.crt
+	openssl genrsa -out server.key 2048
+	openssl req -new -key server.key -out server.csr -subj "/C=US/ST=CO/L=DEN/O=somecompany/OU=CDN/CN=somecompany.net/emailAddress=someuser@somecompany.net"
+	openssl x509 -req -days 365 -in server.csr -CA ca-bundle.crt -CAkey ca-bundle.key -CAcreateserial -out server.crt
+	mkdir /etc/riak/certs
+	mv -f server.crt /etc/riak/certs/.
+	mv -f server.key /etc/riak/certs/.
+	mv -f ca-bundle.crt /etc/pki/tls/certs/.
 
 
 Riak configuration file configuration
