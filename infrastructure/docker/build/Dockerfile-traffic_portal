@@ -39,9 +39,10 @@ RUN	yum -y install \
 		ruby-devel \
 		rubygems
 
-RUN	gem update --system
-RUN	gem install compass
-RUN	npm -g install bower grunt-cli
+RUN	gem update --system && \
+	gem install rb-inotify -v 0.9.10 && \
+	gem install compass && \
+	npm -g install bower grunt-cli
 
 # bower will not run as root by default
 RUN	echo '{ "allow_root": true }' > /root/.bowerrc
