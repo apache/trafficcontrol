@@ -27,9 +27,9 @@ Glossary
 		An ATS plugin that allows you to monitor vitals of the ATS server. See :ref:`astats`.
 
 	cache
-		A caching proxy server. See :ref:`caching_proxy`.
+		Sometimes used to refer to a caching proxy server. See :ref:`caching_proxy`.
 
-	cachegroup
+	Cache Group
 		A group of caches that together create a combined larger cache using consistent hashing. See :ref:`cachegroup`.
 
 	consistent hashing
@@ -41,7 +41,7 @@ Glossary
 	coverage zone map
 		The coverage zone map (czm) or coverage zone file (zcf) is a file that maps network prefixes to cachegroups. See :ref:`localization`.
 
-	delivery service
+	Delivery Service
 		A grouping of content in the CDN, usually a determined by the URL hostname. See :ref:`ds`.
 
 	edge (tier or cache)
@@ -56,7 +56,7 @@ Glossary
 	geo localization or geo routing
 		Localizing clients to the nearest caches using a geo database like the one from Maxmind.
 
- 	health protocol
+ 	Health Protocol
  		The protocol to monitor the health of all the caches. See :ref:`health-proto`.
 
  	localization

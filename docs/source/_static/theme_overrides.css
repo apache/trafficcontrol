@@ -69,3 +69,7 @@
 .wy-table-responsive > table, .wy-table-responsive > table th, .wy-table-responsive > table td {
   border-color: #989898 !important;
 }
+
+abbr {
+  cursor: help;
+}

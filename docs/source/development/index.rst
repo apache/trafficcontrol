@@ -29,4 +29,5 @@ Use this guide to start developing applications that consume the Traffic Control
   traffic_router
   traffic_monitor
   traffic_stats
+  documentation_guidelines
 
