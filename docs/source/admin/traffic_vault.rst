@@ -33,9 +33,9 @@ The following steps were taken to configure Riak in our environments.
 Self Signed Certificate configuration
 -------------------------------------
 
-note:: Self Signed Certificates are not recommended for production use. Intended for dev or learning purposes only. Modify subject as necessary.   
+.. note:: Self Signed Certificates are not recommended for production use. Intended for dev or learning purposes only. Modify subject as necessary.   
 
-code-block:: shell
+.. code-block:: shell
     :caption: Self-Signed Certificate Configuration
 
 	cd ~
