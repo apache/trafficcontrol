@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cachegroups_trimmed:
+.. _to-api-cachegroups-trimmed:
 
 ***********************
 ``cachegroups/trimmed``

@@ -13,16 +13,34 @@
 .. limitations under the License.
 ..
 
-.. _tools:
+*****************************
+Apache-TrafficControl Package
+*****************************
 
-*****
-Tools
-*****
-This is a living list of tools used to interact with, test, and develop for the Traffic Control CDN.
+Package Contents
+================
+.. automodule:: trafficops
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-.. toctree::
-	:maxdepth: 2
+TOSession
+---------
+.. automodule:: trafficops.tosession
+	:members:
+	:undoc-members:
+	:show-inheritance:
 
-	compare
-	python_client
-	traffic_vault_util
+RestAPI
+-------
+.. automodule:: trafficops.restapi
+	:members:
+	:undoc-members:
+	:show-inheritance:
+
+Utils
+-----
+.. automodule:: trafficops.utils
+	:members:
+	:undoc-members:
+	:show-inheritance:
