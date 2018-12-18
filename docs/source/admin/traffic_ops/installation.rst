@@ -238,7 +238,7 @@ To upgrade from older Traffic Ops versions, run the following commands as the ro
 		systemctl stop traffic_ops
 		yum upgrade traffic_ops
 		pushd /opt/traffic_ops/app/
-		PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade
+		./db/admin --env production upgrade
 
 After this completes, see :ref:`to-install` to run the ``postinstall`` script.
 Once the ``postinstall`` script, has finished, run the following command as the root user (or with ``sudo``):
