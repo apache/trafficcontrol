@@ -20,6 +20,9 @@ package status
  */
 
 import (
+	"database/sql"
+	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -35,11 +38,12 @@ import (
 type TOStatus struct {
 	api.APIInfoImpl `json:"-"`
 	tc.StatusNullable
+	SQLDescription sql.NullString `json:"-" db:"description"`
 }
 
 func (v *TOStatus) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOStatus) InsertQuery() string           { return insertQuery() }
-func (v *TOStatus) NewReadObj() interface{}       { return &tc.Status{} }
+func (v *TOStatus) NewReadObj() interface{}       { return &TOStatus{} }
 func (v *TOStatus) SelectQuery() string           { return selectQuery() }
 func (v *TOStatus) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
@@ -87,10 +91,28 @@ func (status TOStatus) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (st *TOStatus) Read() ([]interface{}, error, error, int) { return api.GenericRead(st) }
-func (st *TOStatus) Update() (error, error, int)              { return api.GenericUpdate(st) }
-func (st *TOStatus) Create() (error, error, int)              { return api.GenericCreate(st) }
-func (st *TOStatus) Delete() (error, error, int)              { return api.GenericDelete(st) }
+func (st *TOStatus) Read() ([]interface{}, error, error, int) {
+	readVals, userErr, sysErr, errCode := api.GenericRead(st)
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, errCode
+	}
+
+	for _, iStatus := range readVals {
+		status, ok := iStatus.(*TOStatus)
+		if !ok {
+			return nil, nil, fmt.Errorf("TOStatus.Read: api.GenericRead returned unexpected type %T\n", iStatus), http.StatusInternalServerError
+		}
+		if status.SQLDescription.Valid {
+			status.Description = &status.SQLDescription.String
+		}
+	}
+
+	return readVals, nil, nil, http.StatusOK
+}
+
+func (st *TOStatus) Update() (error, error, int) { return api.GenericUpdate(st) }
+func (st *TOStatus) Create() (error, error, int) { return api.GenericCreate(st) }
+func (st *TOStatus) Delete() (error, error, int) { return api.GenericDelete(st) }
 
 func selectQuery() string {
 	return `

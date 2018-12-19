@@ -58,7 +58,7 @@ type Status struct {
 }
 
 type StatusNullable struct {
-	Description *string    `json:"description" db:"description"`
+	Description *string    `json:"description"`
 	ID          *int       `json:"id" db:"id"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        *string    `json:"name" db:"name"`
