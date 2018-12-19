@@ -1680,6 +1680,9 @@
         {
             "description": "Pre Production. Not active in any configuration.",
             "name": "PRE_PROD"
+        },
+        {
+            "name": "TEST_NULL_DESCRIPTION"
         }
     ],
     "tenants": [
