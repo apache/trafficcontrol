@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-origin:
+.. _to-api-origins:
 
 ***********
 ``origins``

@@ -149,7 +149,7 @@ Overview
 --------
 Domain Name System Security Extensions (DNSSEC) is a set of extensions to DNS that provides a cryptographic mechanism for resolvers to verify the authenticity of responses served by an authoritative DNS server.
 
-Several RFCs (4033, 4044, 4045) describe the low level details and define the extensions, RFC 7129 provides clarification around authenticated denial of existence of records, and finally RFC 6781 describes operational best practices for administering an authoritative DNSSEC enabled DNS server. The authenticated denial of existence RFC describes how an authoritative DNS server responds in NXDOMAIN and NODATA scenarios when DNSSEC is enabled.
+Several RFCs (:rfc:`4033`, :rfc:`4044`, :rfc:`4045`) describe the low level details and define the extensions, :rfc:`7129` provides clarification around authenticated denial of existence of records, and finally RFC 6781 describes operational best practices for administering an authoritative DNSSEC enabled DNS server. The authenticated denial of existence RFC describes how an authoritative DNS server responds in NXDOMAIN and NODATA scenarios when DNSSEC is enabled.
 
 Traffic Router currently supports DNSSEC with NSEC, however, NSEC3 and more configurable options are planned for the future.
 
@@ -165,9 +165,7 @@ To enable DNSSEC for a CDN in Traffic Portal, Go to 'CDNs' from the sidebar and 
 
 Rolling Zone Signing Keys
 -------------------------
-Traffic Router currently follows the zone signing key pre-publishing operational best practice described in `section 4.1.1.1 of RFC 6781`_. Once DNSSEC is enabled for a CDN in Traffic Portal, key rolls are triggered by Traffic Ops via the automated key generation process, and Traffic Router selects the active zone signing keys based on the expiration information returned from the 'keystore' API of Traffic Ops.
-
-.. _section 4.1.1.1 of RFC 6781: https://tools.ietf.org/html/rfc6781#section-4.1.1.1
+Traffic Router currently follows the zone signing key pre-publishing operational best practice described in :rfc:`6781#section-4.1.1.1`. Once DNSSEC is enabled for a CDN in Traffic Portal, key rolls are triggered by Traffic Ops via the automated key generation process, and Traffic Router selects the active zone signing keys based on the expiration information returned from the 'keystore' API of Traffic Ops.
 
 .. _tr-logs:
 

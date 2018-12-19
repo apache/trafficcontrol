@@ -53,7 +53,7 @@ The methods of endpoints that require/accept data payloads - unless otherwise no
 
 All fields are mandatory in a request payload, or always present in a response payload unless otherwise noted in the field description.
 
-In most cases, JSON objects have been "pretty-printed" by inserting line breaks and indentation. This means that the ``Content-Length`` HTTP header does not, in general, accurately portray the length of the content displayed in Request Examples and Response Examples. Also, the Traffic Ops endpoints will ignore any content negotiation, meaning that the ``Content-Type`` header of a request is totally meaningless. A utility may choose to pass the data as e.g. ``application/x-www-form-urlencoded`` (cURL's default ``Content-Type``) when constructing a Request Example, but the example itself will most often show ``application/json`` in order for syntax highlighting to properly work.
+In most cases, JSON objects have been "pretty-printed" by inserting line breaks and indentation. This means that the ``Content-Length`` HTTP header does not, in general, accurately portray the length of the content displayed in Request Examples and Response Examples. Also, the Traffic Ops endpoints will ignore any content negotiation, meaning that the ``Content-Type`` header of a request is totally meaningless. A utility may choose to pass the data as e.g. :mimetype:`application/x-www-form-urlencoded` (cURL's default ``Content-Type``) when constructing a Request Example, but the example itself will most often show :mimetype:`application/json` in order for syntax highlighting to properly work.
 
 .. _to-api-response-structure:
 
