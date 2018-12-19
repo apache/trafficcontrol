@@ -124,7 +124,7 @@ func main() {
 	httpsConnStateCallback := (func(net.Conn, http.ConnState))(nil)
 	tlsConfig := (*tls.Config)(nil)
 	if cfg.CertFile != "" && cfg.KeyFile != "" {
-		if httpsListener, httpsConns, httpsConnStateCallback, tlsConfig, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), certs); err != nil {
+		if httpsListener, httpsConns, httpsConnStateCallback, tlsConfig, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), certs, cfg.DisableHTTP2); err != nil {
 			log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
 			return
 		}
@@ -163,10 +163,10 @@ func main() {
 	plugins.OnStartup(remapper.PluginCfg(), pluginContext, plugin.StartupData{Config: cfg, Shared: remapper.PluginSharedCfg()})
 
 	// TODO add config to not serve HTTP (only HTTPS). If port is not set?
-	httpServer := startServer(httpHandler, httpListener, httpConnStateCallback, nil, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
+	httpServer := startServer(httpHandler, httpListener, httpConnStateCallback, nil, cfg.Port, idleTimeout, readTimeout, writeTimeout, cfg.DisableHTTP2, "http")
 
 	if cfg.CertFile != "" && cfg.KeyFile != "" {
-		httpsServer = startServer(httpsHandler, httpsListener, httpsConnStateCallback, tlsConfig, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
+		httpsServer = startServer(httpsHandler, httpsListener, httpsConnStateCallback, tlsConfig, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, cfg.DisableHTTP2, "https")
 	}
 
 	reloadConfig := func() {
@@ -214,7 +214,7 @@ func main() {
 		}
 
 		if cfg.HTTPSPort != oldCfg.HTTPSPort {
-			if httpsListener, httpsConns, httpsConnStateCallback, tlsConfig, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), certs); err != nil {
+			if httpsListener, httpsConns, httpsConnStateCallback, tlsConfig, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), certs, cfg.DisableHTTP2); err != nil {
 				log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
 			}
 		}
@@ -269,7 +269,7 @@ func main() {
 				}
 
 			}
-			httpServer = startServer(httpHandler, httpListener, httpConnStateCallback, nil, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
+			httpServer = startServer(httpHandler, httpListener, httpConnStateCallback, nil, cfg.Port, idleTimeout, readTimeout, writeTimeout, cfg.DisableHTTP2, "http")
 		}
 
 		if (httpsServer == nil || cfg.HTTPSPort != oldCfg.HTTPSPort) && cfg.CertFile != "" && cfg.KeyFile != "" {
@@ -286,7 +286,7 @@ func main() {
 				}
 			}
 
-			httpsServer = startServer(httpsHandler, httpsListener, httpsConnStateCallback, tlsConfig, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
+			httpsServer = startServer(httpsHandler, httpsListener, httpsConnStateCallback, tlsConfig, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, cfg.DisableHTTP2, "https")
 		}
 	}
 
@@ -324,7 +324,7 @@ func signalReloader(sig os.Signal, f func()) {
 }
 
 // startServer starts an HTTP or HTTPS server on the given port, and returns it.
-func startServer(handler http.Handler, listener net.Listener, connState func(net.Conn, http.ConnState), tlsConfig *tls.Config, port int, idleTimeout time.Duration, readTimeout time.Duration, writeTimeout time.Duration, protocol string) *http.Server {
+func startServer(handler http.Handler, listener net.Listener, connState func(net.Conn, http.ConnState), tlsConfig *tls.Config, port int, idleTimeout time.Duration, readTimeout time.Duration, writeTimeout time.Duration, h2Disabled bool, protocol string) *http.Server {
 
 	server := &http.Server{
 		Handler:      handler,
@@ -336,12 +336,17 @@ func startServer(handler http.Handler, listener net.Listener, connState func(net
 		WriteTimeout: writeTimeout,
 	}
 
-	// TODO configurable H2 timeouts and buffer sizes
-	h2Conf := &http2.Server{
-		IdleTimeout: idleTimeout,
-	}
-	if err := http2.ConfigureServer(server, h2Conf); err != nil {
-		log.Errorln(" server configuring HTTP/2: " + err.Error())
+	// HTTP2 is enabled if config.DisableHTTP2 is false
+	if !h2Disabled {
+		// TODO configurable H2 timeouts and buffer sizes
+		h2Conf := &http2.Server{
+			IdleTimeout: idleTimeout,
+		}
+		if err := http2.ConfigureServer(server, h2Conf); err != nil {
+			log.Errorln(" server configuring HTTP/2: " + err.Error())
+		}
+	} else {
+		log.Warnln("disabling HTTP2 Server per configuation setting.")
 	}
 
 	go func() {
