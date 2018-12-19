@@ -62,13 +62,13 @@ DELETE
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, RFC 7518.         |
+	| ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, :rfc:`7518`       |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in RFC 7516.                    |
+	| ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in :rfc:`7516`                  |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in RFC 7516.                                 |
+	| ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in :rfc:`7516`                               |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see RFC 7516.                       |
+	| ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see :rfc:`7516`                     |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
 	**Response Example** ::
@@ -121,13 +121,13 @@ DELETE
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, RFC 7518.         |
+	| ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, :rfc:`7518`       |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in RFC 7516.                    |
+	| ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in :rfc:`7516`                  |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in RFC 7516.                                 |
+	| ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in :rfc:`7516`                               |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see RFC 7516.                       |
+	| ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see :rfc:`7516`                     |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
 	**Request Example** ::
@@ -179,13 +179,13 @@ DELETE
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, RFC 7518.         |
+	| ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, :rfc:`7518`       |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in RFC 7516.                    |
+	| ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in :rfc:`7516`                  |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in RFC 7516.                                 |
+	| ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in :rfc:`7516`                               |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see RFC 7516.                       |
+	| ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see :rfc:`7516`                     |
 	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
 	**Request Example** ::
