@@ -1,0 +1,172 @@
+#!/usr/bin/perl
+
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+
+use strict;
+use warnings;
+
+use DBI;
+use JSON;
+use CGI::Carp qw/fatalsToBrowser/;
+use Data::Dumper;
+use Encode;
+
+my %query_params = &getFormData();
+my $json = JSON->new->utf8;
+my $json_obj;
+
+my $unixtime = time();
+my $server_name = $ENV{'SERVER_NAME'};
+my $cdn_domain_name = "<CDN-DOMAIN_NAME>";
+my $hex_string = $server_name;
+$hex_string =~ s/(.)/sprintf("%d",ord($1))/eg;
+my $int1  = int($hex_string) % 4;
+my $int2  = $hex_string % 40;
+my $int3  = $hex_string % 400;
+my $int4  = $hex_string % 4000;
+my $int5  = $hex_string % 40000;
+my $int6  = $hex_string % 400000;
+my $int7  = $hex_string % 4000000;
+my $int8  = $hex_string % 40000000;
+my $int9  = $hex_string % 40000000;
+my $int10 = $hex_string % 400000000;
+
+my $hit_fresh = int($int10 + $unixtime + $int4);
+my $hit_fresh_process = int($hit_fresh);
+my $hit_revalidated = int(($int10/2) + $unixtime + $int1);
+my $miss_cold = int(($int10/2) + $unixtime + $int3);
+my $miss_not_cacheable = int(($int7/3) + $unixtime + $int1);
+my $miss_changed = int(($unixtime/10000000) + $int1);
+my $miss_client_no_cache = 0;
+my $aborts = int(($unixtime/10000000) + $int2*2);
+my $possible_aborts = 0; 
+my $connect_failed = int(($unixtime/1000000) + $int2*4 + $int1*2);
+my $other = int((($unixtime/1000000) + $int3)/100);
+my $unclassified = 0; 
+my $write_bytes = int($unixtime*50 + $int4*$int5);
+my $current_client_connections = int($int5*rand()); 
+my $bytes_used = int($write_bytes/20 + $int2*$int5);
+my $bytes_total = int($bytes_used + $int10);
+my $v1_bytes_used = int($bytes_used); 
+my $v1_bytes_total = int($bytes_total);
+my $load_avg_1 = sprintf("%.2f",$unixtime/100000000+(8*rand()));
+my $load_avg_5 = sprintf("%.2f",$load_avg_1 / 2);
+my $load_avg_15 = sprintf("%.2f",$load_avg_1 / 3);
+my $running_procs = int(15*rand($int1));
+my $total_procs = int(2*$running_procs+($int1+2)*2);
+my $last_proc_id = $int5;
+my $proc_loadavg = "$load_avg_1 $load_avg_5 $load_avg_15 $running_procs/$total_procs $last_proc_id";
+my $if_rbytes = int($unixtime*760000000+$bytes_total);
+my $if_rpackets = int($if_rbytes/875);
+my $if_rmcast = int($if_rpackets/$int4);
+my $if_tbytes = int($if_rbytes/1.5);
+my $if_tpackets = int($if_tbytes/1500);
+my $proc_net_dev = $query_params{'inf.name'}. ":$if_rbytes $if_rpackets 0 0 0 0 0 $if_rmcast $if_tbytes $if_tpackets 0 0 0 0 0 0";
+my @ds_bytes;
+my @ds_bytes_in;
+my @ds_200s;
+my @ds_400s;
+my @ds_500s;
+for (my $i=1;$i<10;$i++) {
+	my $rand1 = undef;
+	$rand1 = rand($int1); 
+	$ds_bytes[$i] = int($if_tbytes/10 + ($rand1*$rand1));
+	$ds_bytes_in[$i] = int($if_rbytes/10 + ($rand1*$rand1));
+	$ds_200s[$i] = int($ds_bytes[$i]/9000*0.95);
+	$ds_400s[$i] = int($ds_bytes[$i]/9000*0.04);
+	$ds_500s[$i] = int($ds_bytes[$i]/9000*0.01);
+}
+$ds_bytes[10] = int($if_tbytes/10 + rand($int1) * rand($int1));
+$ds_bytes_in[10] = int($if_rbytes/10 + rand($int1) * rand($int1));
+$ds_200s[10] = int($ds_bytes[10]/9000*0.95);
+$ds_400s[10] = int($ds_bytes[10]/9000*0.04);
+$ds_500s[10] = int($ds_bytes[10]/9000*0.01);
+
+#proc.net.dev: "bond0:181566812618839 43321349767 0 0 0 0 0 4710035 517574148613675 34658736727 0 0 0 0 0 0"
+
+if (exists $query_params{'application'} ) {
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.hit_fresh"} = $hit_fresh;
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.hit_fresh.process"} = $hit_fresh_process;
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.hit_revalidated"} = $hit_revalidated;
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.miss_cold"} = $miss_cold;
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.miss_not_cacheable"} = $miss_not_cacheable;
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.miss_changed"} = $miss_changed;
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.miss_client_no_cache"} = $miss_client_no_cache;
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.errors.aborts"} = $aborts;
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.errors.possible_aborts"} = $possible_aborts; 
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.errors.connect_failed"} = $connect_failed;
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.errors.other"} = $other;
+    $json_obj->{'ats'}->{"proxy.process.http.transaction_counts.other.unclassified"} = $unclassified; 
+    $json_obj->{'ats'}->{"proxy.process.net.write_bytes"} = $write_bytes;
+    $json_obj->{'ats'}->{"proxy.process.http.current_client_connections"} = $current_client_connections; 
+    $json_obj->{'ats'}->{"proxy.process.cache.bytes_used"} = $bytes_used;
+    $json_obj->{'ats'}->{"proxy.process.cache.bytes_total"} = $bytes_total;
+    $json_obj->{'ats'}->{"proxy.process.cache.volume_1.bytes_used"} = $v1_bytes_used; 
+    $json_obj->{'ats'}->{"proxy.process.cache.volume_1.bytes_total"} = $v1_bytes_total;
+	for(my $i=1;$i<10;$i++) {
+		my $number = sprintf('%.2d', $i);
+    		$json_obj->{'ats'}->{"plugin.remap_stats." . $server_name  . ".omg-" . $number . "$cdn_domain_name.out_bytes"} = $ds_bytes[$i];
+    		$json_obj->{'ats'}->{"plugin.remap_stats." . $server_name  . ".omg-" . $number . "$cdn_domain_name.in_bytes"} = $ds_bytes_in[$i];
+    		$json_obj->{'ats'}->{"plugin.remap_stats." . $server_name  . ".omg-" . $number . "$cdn_domain_name.status_2xx"} = $ds_200s[$i];
+    		$json_obj->{'ats'}->{"plugin.remap_stats." . $server_name  . ".omg-" . $number . "$cdn_domain_name.status_4xx"} = $ds_400s[$i];
+    		$json_obj->{'ats'}->{"plugin.remap_stats." . $server_name  . ".omg-" . $number . "$cdn_domain_name.status_5xx"} = $ds_500s[$i];
+	}
+	my $number = 10;
+	$json_obj->{'ats'}->{"plugin.remap_stats." . $server_name  . ".omg-" . $number . "$cdn_domain_name.out_bytes"} = $ds_bytes[10];
+	$json_obj->{'ats'}->{"plugin.remap_stats." . $server_name  . ".omg-" . $number . "$cdn_domain_name.in_bytes"} = $ds_bytes_in[10];
+	$json_obj->{'ats'}->{"plugin.remap_stats." . $server_name  . ".omg-" . $number . "$cdn_domain_name.status_2xx"} = $ds_200s[10];
+    	$json_obj->{'ats'}->{"plugin.remap_stats." . $server_name  . ".omg-" . $number . "$cdn_domain_name.status_4xx"} = $ds_400s[10];
+    	$json_obj->{'ats'}->{"plugin.remap_stats." . $server_name  . ".omg-" . $number . "$cdn_domain_name.status_5xx"} = $ds_500s[10];
+    $json_obj->{'ats'}->{"server"} = "3.3.0-dev";
+}
+$json_obj->{'system'}->{"inf.name"} = $query_params{"inf.name"};
+$json_obj->{'system'}->{"inf.speed"} = "10000";
+$json_obj->{'system'}->{"proc.net.dev"} = $proc_net_dev;
+$json_obj->{'system'}->{"proc.loadavg"} = $proc_loadavg;
+$json_obj->{'system'}->{"something"} = "here";
+
+
+print "Content-type: text/html\n\n";
+print $json->utf8->encode( $json_obj );
+
+
+sub getFormData {
+    my $buffer = "";
+    my %hash = ();
+    my @params = ();
+
+    if ($ENV{'REQUEST_METHOD'} eq 'GET') {
+        $buffer = $ENV{'QUERY_STRING'};
+	$hash{"four"}="two";
+    }
+    else {
+        read(STDIN, $buffer, $ENV{'CONTENT_LENGTH'});
+    }
+    if ($buffer =~ m/\&/) {
+        @params = split(/\&/,$buffer);    
+    }
+    else {
+        @params = split(/\;/,$buffer);    
+    }
+    foreach my $p (@params) {
+        (my $key, my $value) = split(/\=/,$p);
+	$hash{$key}=$value; 
+    }
+    return %hash;
+}
