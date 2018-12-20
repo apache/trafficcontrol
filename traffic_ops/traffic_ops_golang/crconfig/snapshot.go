@@ -115,3 +115,14 @@ WHERE c.name = $1
 	}
 	return monitorSnapshot.String, true, nil
 }
+
+func SnapshotDS(tx *sql.Tx, ds tc.DeliveryServiceName) error {
+	qry := `
+INSERT INTO deliveryservice_snapshots (deliveryservice, time) VALUES ($1, now())
+ON CONFLICT(deliveryservice) DO UPDATE SET time=now()
+`
+	if _, err := tx.Exec(qry, ds); err != nil {
+		return errors.New("inserting the deliveryservice snapshot into database: " + err.Error())
+	}
+	return nil
+}

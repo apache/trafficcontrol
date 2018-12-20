@@ -517,3 +517,12 @@ func GetFederationIDForUserIDByXMLID(tx *sql.Tx, userID int, xmlid string) (uint
 	}
 	return id, true, nil
 }
+
+// DSExists returns whether the delivery service exists.
+func DSExists(ds tc.DeliveryServiceName, tx *sql.Tx) (bool, error) {
+	count := 0
+	if err := tx.QueryRow(`SELECT count(*) FROM deliveryservice WHERE xml_id = $1`, ds).Scan(&count); err != nil {
+		return false, errors.New("querying delivery service existence: " + err.Error())
+	}
+	return count > 0, nil
+}

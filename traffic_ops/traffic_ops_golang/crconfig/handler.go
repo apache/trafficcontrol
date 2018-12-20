@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
 )
@@ -227,4 +228,30 @@ func writePerlHTMLErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, logErr
 	log.Errorln(logErr.Error())
 	tx.Rollback()
 	http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Error: "+err.Error()), http.StatusFound)
+}
+
+func SnapshotDSHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"ds-name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	ds := tc.DeliveryServiceName(inf.Params["ds-name"])
+
+	if ok, err := dbhelpers.DSExists(ds, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("snapshot ds handler checking delivery service existence: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service '"+string(ds)+"' not found"), nil)
+		return
+	}
+
+	if err := SnapshotDS(inf.Tx.Tx, ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("performing ds '"+string(ds)+"' snapshot: "+err.Error()))
+		return
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of DS performed for '"+string(ds)+"'", inf.User, inf.Tx.Tx)
+	w.WriteHeader(http.StatusNoContent)
 }
