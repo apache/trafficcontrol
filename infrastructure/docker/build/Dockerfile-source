@@ -23,7 +23,9 @@ MAINTAINER Dan Kirkwood
 # docker run --volume /trafficcontrol:$(pwd) ...
 VOLUME /trafficcontrol
 
-RUN	yum -y install \
+RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+	yum -y update ca-certificates && \
+	yum -y install \
 		git && \
 	yum -y clean all
 
