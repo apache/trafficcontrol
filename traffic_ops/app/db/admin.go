@@ -90,6 +90,7 @@ const (
 	CmdLoadSchema    = "load_schema"
 	CmdReverseSchema = "reverse_schema"
 	CmdPatch         = "patch"
+	CmdCheck         = "check"
 
 	// goose commands that don't match the commands for this tool
 	GooseUp = "up"
@@ -248,10 +249,12 @@ func upgrade() {
 	goose(GooseUp)
 	seed()
 	patch()
+	check()
 }
 
 func migrate() {
 	goose(GooseUp)
+	check()
 }
 
 func down() {
@@ -264,6 +267,7 @@ func redo() {
 
 func status() {
 	goose(CmdStatus)
+	check()
 }
 
 func dbVersion() {
@@ -300,6 +304,7 @@ func loadSchema() {
 	if err != nil {
 		die("Can't create database tables")
 	}
+	check()
 }
 
 func reverseSchema() {
@@ -326,6 +331,38 @@ func patch() {
 	fmt.Printf("%s", out)
 	if err != nil {
 		die("Can't patch database w/ required data")
+	}
+}
+
+func check() {
+	fmt.Println("Checking for bad data...")
+	query := `select dups.ds_name from (WITH duplicate_origins as (
+  SELECT fqdn FROM origin
+  where is_primary
+  GROUP BY fqdn
+  HAVING COUNT(*) > 1
+)
+SELECT o.fqdn, ds.xml_id AS ds_name
+FROM origin o
+JOIN duplicate_origins du on du.fqdn = o.fqdn
+JOIN deliveryservice ds ON ds.id = o.deliveryservice
+WHERE o.is_primary
+ORDER BY fqdn) as dups;`
+
+	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-d", DBName, "-U", DBUser, "-etAc", query)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error occurred searching for bad data: %s\n", err)
+		die("")
+	}
+
+	outlines := strings.Split(string(out), "\n")[12:]
+	for _, l := range outlines {
+		if len(l) > 0 {
+			fmt.Fprintf(os.Stderr, "Delivery Service '%s' shares an origin FQDN with at least one other Delivery Service!\n", l)
+			fmt.Fprintln(os.Stderr, "This causes UNDEFINED BEHAVIOUR and WILL BE DISALLOWED IN FUTURE RELEASES!")
+			fmt.Fprintln(os.Stderr, "You are STRONGLY advised to fix this situation by either adding CNAME records for origins that must be reached by multiple Delivery Services, or removing old, unused Delivery Services!\n")
+		}
 	}
 }
 
@@ -432,6 +469,7 @@ func main() {
 	commands[CmdLoadSchema] = loadSchema
 	commands[CmdReverseSchema] = reverseSchema
 	commands[CmdPatch] = patch
+	commands[CmdCheck] = check
 
 	userCmd := flag.Arg(0)
 	if cmd, ok := commands[userCmd]; ok {
