@@ -28,8 +28,9 @@ type Config struct {
 	// RFCCompliant determines whether `Cache-Control: no-cache` requests are honored. The ability to ignore `no-cache` is necessary to protect origin servers from DDOS attacks. In general, CDNs and caching proxies with the goal of origin protection should set RFCComplaint false. Cache with other goals (performance, load balancing, etc) should set RFCCompliant true.
 	RFCCompliant bool `json:"rfc_compliant"`
 	// Port is the HTTP port to serve on
-	Port      int `json:"port"`
-	HTTPSPort int `json:"https_port"`
+	Port         int  `json:"port"`
+	HTTPSPort    int  `json:"https_port"`
+	DisableHTTP2 bool `json:"disable_http2"`
 	// CacheSizeBytes is the size of the memory cache, in bytes.
 	CacheSizeBytes int    `json:"cache_size_bytes"`
 	RemapRulesFile string `json:"remap_rules_file"`
@@ -89,6 +90,7 @@ const MSPerSec = 1000
 var DefaultConfig = Config{
 	RFCCompliant:           true,
 	Port:                   80,
+	DisableHTTP2:           false,
 	HTTPSPort:              443,
 	CacheSizeBytes:         bytesPerGibibyte,
 	RemapRulesFile:         "remap.config",
