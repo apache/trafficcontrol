@@ -117,6 +117,11 @@ WHERE c.name = $1
 }
 
 func SnapshotDS(tx *sql.Tx, ds tc.DeliveryServiceName) error {
+	// TODO add custom snapshot func, that only copies data used by this DS, for performance
+	if err := UpdateSnapshotTablesForDS(tx, ds); err != nil {
+		return errors.New("updating snapshot tables: " + err.Error())
+	}
+
 	qry := `
 INSERT INTO deliveryservice_snapshots (deliveryservice, time) VALUES ($1, now())
 ON CONFLICT(deliveryservice) DO UPDATE SET time=now()
