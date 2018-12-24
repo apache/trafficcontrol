@@ -37,20 +37,11 @@ RUN	yum -y install \
 		libffi-devel \
 		make \
 		nodejs \
-		npm
+		npm \
+		ruby-devel \
+		rubygems
 
-# NOTE: error installing with default ruby 2.0.0.   This allows us to upgrade to 2.3
-RUN	yum -y install \
-		centos-release-scl \
-		openssl-devel && \
-	yum -y install \
-		rh-ruby23 \
-		rh-ruby23-ruby-devel \
-		rh-ruby23-runygems
-
-RUN	. /opt/rh/rh-ruby23/enable && \
-	gem update --system --no-document && \
-	gem install rb-inotify && \
+RUN	gem install rb-inotify -v 0.9.10 && \
 	gem install compass && \
 	npm -g install bower grunt-cli
 
