@@ -46,11 +46,20 @@ directories, such that their filenames are as follows:
 * `traffic_ops/traffic_ops.rpm`
 * `traffic_portal/traffic_portal.rpm`
 
-Finally, run the test CDN using the command:
+Run the test CDN using the command:
 
 ```bash
 docker-compose up --build
 ```
+
+Take a CDN config snapshot after your containers are all set:
+
+1. Visit your Traffic Portal and go to [`https://trafficportal.infra.ciab.test/#!/cdns/2`](https://trafficportal.infra.ciab.test/#!/cdns/2)
+2. Click on **Diff CDN Config Snapshot**
+3. Click on **Perform Snapshot** after you checked those changes
+
+Your CIAB is ready and you can access the demo site now:
+[`http://video.demo1.mycdn.ciab.test`](http://video.demo1.mycdn.ciab.test)
 
 ## Components
 > The following assumes that the default configuration provided in
