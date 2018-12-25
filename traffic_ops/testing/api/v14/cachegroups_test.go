@@ -25,7 +25,7 @@ import (
 )
 
 func TestCacheGroups(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups}, func() {
+	WithObjs(t, []TCObj{Types, Parameters, CacheGroups}, func() {
 		GetTestCacheGroups(t)
 		CheckCacheGroupsAuthentication(t)
 		UpdateTestCacheGroups(t)

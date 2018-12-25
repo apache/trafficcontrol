@@ -17,6 +17,9 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
+	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -41,4 +44,49 @@ func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, repla
 		return nil, err
 	}
 	return &resp.Response, nil
+}
+
+func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alerts, ReqInf, error) {
+	route := apiBase + `/deliveryservice_server/` + strconv.Itoa(dsID) + "/" + strconv.Itoa(serverID)
+	reqResp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
+	}
+	defer reqResp.Body.Close()
+	resp := tc.Alerts{}
+	if err = json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
+		return tc.Alerts{}, reqInf, errors.New("decoding response: " + err.Error())
+	}
+	return resp, reqInf, nil
+}
+
+func (to *Session) GetDeliveryServiceServers() (tc.DeliveryServiceServerResponse, ReqInf, error) {
+	route := apiBase + `/deliveryserviceserver`
+	reqResp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.DeliveryServiceServerResponse{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
+	}
+	defer reqResp.Body.Close()
+	resp := tc.DeliveryServiceServerResponse{}
+	if err = json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
+		return tc.DeliveryServiceServerResponse{}, reqInf, errors.New("decoding response: " + err.Error())
+	}
+	return resp, reqInf, nil
+}
+
+func (to *Session) GetDeliveryServiceServersN(n int) (tc.DeliveryServiceServerResponse, ReqInf, error) {
+	route := apiBase + `/deliveryserviceserver` + `?limit=` + strconv.Itoa(n)
+	reqResp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.DeliveryServiceServerResponse{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
+	}
+	defer reqResp.Body.Close()
+	resp := tc.DeliveryServiceServerResponse{}
+	if err = json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
+		return tc.DeliveryServiceServerResponse{}, reqInf, errors.New("decoding response: " + err.Error())
+	}
+	return resp, reqInf, nil
 }

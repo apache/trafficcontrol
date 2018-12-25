@@ -19,12 +19,14 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 func TestTenants(t *testing.T) {
-	WithObjs(t, []TCObj{Tenants}, func() {
+	WithObjs(t, []TCObj{Parameters, Tenants}, func() {
 		GetTestTenants(t)
 		UpdateTestTenants(t)
 	})
@@ -110,27 +112,195 @@ func DeleteTestTenants(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Tenant by name: %v - %v\n", t1, err)
 	}
-
-	_, err = TOSession.DeleteTenant(strconv.Itoa(tenant1.ID))
-	if err == nil {
-		t.Errorf("%s has child tenants -- should not be able to delete", t1)
-	}
-	expected := `Tenant '` + strconv.Itoa(tenant1.ID) + `' has child tenants. Please update these child tenants and retry.`
-	if !strings.Contains(err.Error(), expected) {
-		t.Errorf("expected error: %s;  got %s", expected, err.Error())
+	expectedChildDeleteErrMsg := `Tenant '` + strconv.Itoa(tenant1.ID) + `' has child tenants. Please update these child tenants and retry.`
+	if _, err := TOSession.DeleteTenant(strconv.Itoa(tenant1.ID)); err == nil {
+		t.Fatalf("%s has child tenants -- should not be able to delete", t1)
+	} else if !strings.Contains(err.Error(), expectedChildDeleteErrMsg) {
+		t.Errorf("expected error: %s;  got %s", expectedChildDeleteErrMsg, err.Error())
 	}
 
-	t2 := "tenant2"
-	tenant2, _, err := TOSession.TenantByName(t2)
-	_, err = TOSession.DeleteTenant(strconv.Itoa(tenant2.ID))
+	deletedTenants := map[string]struct{}{}
+	for {
+		initLenDeleted := len(deletedTenants)
+		for _, tn := range testData.Tenants {
+			if _, ok := deletedTenants[tn.Name]; ok {
+				continue
+			}
+
+			hasParent := false
+			for _, otherTenant := range testData.Tenants {
+				if _, ok := deletedTenants[otherTenant.Name]; ok {
+					continue
+				}
+				if otherTenant.ParentName == tn.Name {
+					hasParent = true
+					break
+				}
+			}
+			if hasParent {
+				continue
+			}
+
+			toTenant, _, err := TOSession.TenantByName(tn.Name)
+			if err != nil {
+				t.Fatalf("getting tenant %s: %v", tn.Name, err)
+			}
+			if _, err = TOSession.DeleteTenant(strconv.Itoa(toTenant.ID)); err != nil {
+				t.Fatalf("deleting tenant %s: %v", toTenant.Name, err)
+			}
+			deletedTenants[tn.Name] = struct{}{}
+
+		}
+		if len(deletedTenants) == len(testData.Tenants) {
+			break
+		}
+		if len(deletedTenants) == initLenDeleted {
+			t.Fatalf("could not delete tenants: not tenant without an existing child found (cycle?)")
+		}
+	}
+}
+
+func TestTenantsActive(t *testing.T) {
+	CreateTestCDNs(t)
+	CreateTestTypes(t)
+	CreateTestTenants(t)
+	CreateTestParameters(t)
+	CreateTestProfiles(t)
+	CreateTestStatuses(t)
+	CreateTestDivisions(t)
+	CreateTestRegions(t)
+	CreateTestPhysLocations(t)
+	CreateTestCacheGroups(t)
+	CreateTestServers(t)
+	CreateTestDeliveryServices(t)
+	CreateTestUsers(t)
+
+	UpdateTestTenantsActive(t)
+
+	ForceDeleteTestUsers(t)
+	DeleteTestDeliveryServices(t)
+	DeleteTestServers(t)
+	DeleteTestCacheGroups(t)
+	DeleteTestPhysLocations(t)
+	DeleteTestRegions(t)
+	DeleteTestDivisions(t)
+	DeleteTestStatuses(t)
+	DeleteTestProfiles(t)
+	DeleteTestParameters(t)
+	DeleteTestTenants(t)
+	DeleteTestTypes(t)
+	DeleteTestCDNs(t)
+}
+
+func UpdateTestTenantsActive(t *testing.T) {
+	originalTenants, _, err := TOSession.Tenants()
 	if err != nil {
-		t.Errorf("error deleting tenant %s: %v", t2, err)
+		t.Fatalf("getting tenants error expected: nil, actual: %+v", err)
 	}
 
-	// Now should be able to delete t1
-	tenant1, _, err = TOSession.TenantByName(t1)
-	_, err = TOSession.DeleteTenant(strconv.Itoa(tenant1.ID))
+	setTenantActive(t, "tenant1", true)
+	setTenantActive(t, "tenant2", true)
+	setTenantActive(t, "tenant3", false)
+
+	// ds3 has tenant3. Even though tenant3 is inactive, we should still be able to get it, because our user is tenant1, which is active.
+	dses, _, err := TOSession.GetDeliveryServiceByXMLID("ds3")
 	if err != nil {
-		t.Errorf("error deleting tenant %s: %v", t1, err)
+		t.Fatalf("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active)")
+	} else if len(dses) != 1 {
+		t.Errorf("admin user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
+	}
+
+	setTenantActive(t, "tenant1", true)
+	setTenantActive(t, "tenant2", false)
+	setTenantActive(t, "tenant3", true)
+
+	// ds3 has tenant3. Even though tenant3's parent, tenant2, is inactive, we should still be able to get it, because our user is tenant1, which is active.
+	_, _, err = TOSession.GetDeliveryServiceByXMLID("ds3")
+	if err != nil {
+		t.Fatalf("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active)")
+	}
+
+	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	tenant3Session, _, err := client.LoginWithAgent(TOSession.URL, "tenant3user", "pa$$word", true, "to-api-v14-client-tests/tenant3user", true, toReqTimeout)
+	if err != nil {
+		t.Fatalf("failed to get log in with tenant3user: " + err.Error())
+	}
+
+	tenant4Session, _, err := client.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v14-client-tests/tenant4user", true, toReqTimeout)
+	if err != nil {
+		t.Fatalf("failed to get log in with tenant4user: " + err.Error())
+	}
+
+	// tenant3user with tenant3 has no access to ds3 with tenant3 when parent tenant2 is inactive
+	dses, _, err = tenant3Session.GetDeliveryServiceByXMLID("ds3")
+	for _, ds := range dses {
+		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 parent tenant2 is inactive, expected: no ds", ds.XMLID)
+	}
+
+	setTenantActive(t, "tenant1", true)
+	setTenantActive(t, "tenant2", true)
+	setTenantActive(t, "tenant3", false)
+
+	// tenant3user with tenant3 has no access to ds3 with tenant3 when tenant3 is inactive
+	dses, _, err = tenant3Session.GetDeliveryServiceByXMLID("ds3")
+	for _, ds := range dses {
+		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 is inactive, expected: no ds", ds.XMLID)
+	}
+
+	setTenantActive(t, "tenant1", true)
+	setTenantActive(t, "tenant2", true)
+	setTenantActive(t, "tenant3", true)
+
+	// tenant3user with tenant3 has access to ds3 with tenant3
+	dses, _, err = tenant3Session.GetDeliveryServiceByXMLID("ds3")
+	if err != nil {
+		t.Errorf("tenant3user getting delivery service ds3 error expected: nil, actual: %+v", err)
+	} else if len(dses) == 0 {
+		t.Errorf("tenant3user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
+	}
+
+	// 1. ds2 has tenant2.
+	// 2. tenant3user has tenant3.
+	// 3. tenant2 is not a child of tenant3 (tenant3 is a child of tenant2)
+	// 4. Therefore, tenant3user should not have access to ds2
+	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLID("ds2")
+	for _, ds := range dses {
+		t.Errorf("tenant3user got delivery service %+v with tenant2, expected: no ds", ds.XMLID)
+	}
+
+	// 1. ds1 has tenant1.
+	// 2. tenant4user has tenant4.
+	// 3. tenant1 is not a child of tenant4 (tenant4 is unrelated to tenant1)
+	// 4. Therefore, tenant4user should not have access to ds1
+	dses, _, _ = tenant4Session.GetDeliveryServiceByXMLID("ds1")
+	for _, ds := range dses {
+		t.Errorf("tenant4user got delivery service %+v with tenant1, expected: no ds", ds.XMLID)
+	}
+
+	setTenantActive(t, "tenant3", false)
+	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLID("ds3")
+	for _, ds := range dses {
+		t.Errorf("tenant3user was inactive, but got delivery service %+v with tenant3, expected: no ds", ds.XMLID)
+	}
+
+	for _, tn := range originalTenants {
+		if tn.Name == "root" {
+			continue
+		}
+		if _, err := TOSession.UpdateTenant(strconv.Itoa(tn.ID), &tn); err != nil {
+			t.Fatalf("restoring original tenants: " + err.Error())
+		}
+	}
+}
+
+func setTenantActive(t *testing.T, name string, active bool) {
+	tn, _, err := TOSession.TenantByName(name)
+	if err != nil {
+		t.Fatalf("cannot GET Tenant by name: %s - %v\n", name, err)
+	}
+	tn.Active = active
+	_, err = TOSession.UpdateTenant(strconv.Itoa(tn.ID), tn)
+	if err != nil {
+		t.Fatalf("cannot UPDATE Tenant by id: %v\n", err)
 	}
 }

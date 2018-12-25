@@ -136,11 +136,28 @@ func GetUserTenantListTx(user auth.CurrentUser, tx *sql.Tx) ([]tc.TenantNullable
 	return tenants, nil
 }
 
+// GetUserTenantIDListTx returns a list of tenant IDs accessible to the given tenant.
+// Note: If the given tenant or any of its parents are inactive, no IDs will be returned. If child tenants are needed even if the current tenant is inactive, use GetUserTenantListTx instead.
 func GetUserTenantIDListTx(tx *sql.Tx, userTenantID int) ([]int, error) {
 	query := `
-WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
-UNION SELECT t.id, t.name, t.active, t.parent_id  FROM tenant t JOIN q ON q.id = t.parent_id)
-SELECT id FROM q;
+WITH RECURSIVE
+user_tenant_id as (select $1::bigint as v),
+user_tenant_parents AS (
+  SELECT active, parent_id FROM tenant WHERE id = (select v from user_tenant_id)
+  UNION
+  SELECT t.active, t.parent_id FROM TENANT t JOIN user_tenant_parents ON user_tenant_parents.parent_id = t.id
+),
+user_tenant_active AS (
+  SELECT bool_and(active) as v FROM user_tenant_parents
+),
+user_tenant_children AS (
+  SELECT id, name, active, parent_id
+  FROM tenant WHERE id = (SELECT v FROM user_tenant_id) AND (SELECT v FROM user_tenant_active)
+  UNION
+  SELECT t.id, t.name, t.active, t.parent_id
+  FROM tenant t JOIN user_tenant_children ON user_tenant_children.id = t.parent_id
+)
+SELECT id FROM user_tenant_children;
 `
 	rows, err := tx.Query(query, userTenantID)
 	if err != nil {
@@ -171,13 +188,46 @@ func IsTenancyEnabledTx(tx *sql.Tx) (bool, error) {
 }
 
 // IsResourceAuthorizedToUserTx returns a boolean value describing if the user has access to the provided resource tenant id and an error
-// if use_tenancy is set to false (0 in the db) this method will return true allowing access.
+// If use_tenancy is set to false (0 in the db) this method will return true allowing access.
+// If the user tenant is inactive (or any of its parent tenants are inactive), false will be returned.
 func IsResourceAuthorizedToUserTx(resourceTenantID int, user *auth.CurrentUser, tx *sql.Tx) (bool, error) {
-	// $1 is the user tenant ID and $2 is the resource tenant ID
-	query := `WITH RECURSIVE q AS (SELECT id, active FROM tenant WHERE id = $1
-	UNION SELECT t.id, t.active FROM TENANT t JOIN q ON q.id = t.parent_id),
-	tenancy AS (SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY)
-	SELECT id, active, tenancy.value AS use_tenancy FROM tenancy, q WHERE id = $2 UNION ALL SELECT -1, false, tenancy.value AS use_tenancy FROM tenancy FETCH FIRST 1 ROW ONLY;`
+	query := `
+WITH RECURSIVE
+user_tenant_id as (select $1::bigint as v),
+resource_tenant_id as (select $2::bigint as v),
+user_tenant_parents AS (
+  SELECT active, parent_id FROM tenant WHERE id = (select v from user_tenant_id)
+  UNION
+  SELECT t.active, t.parent_id FROM TENANT t JOIN user_tenant_parents ON user_tenant_parents.parent_id = t.id
+),
+q AS (
+  SELECT id, active FROM tenant WHERE id = (select v from user_tenant_id)
+  UNION
+  SELECT t.id, t.active FROM TENANT t JOIN q ON q.id = t.parent_id
+),
+tenancy AS (
+  SELECT
+    COALESCE(value::boolean,FALSE) AS value
+  FROM
+    parameter
+  WHERE
+    name = 'use_tenancy'
+    AND config_file = 'global'
+  UNION ALL SELECT FALSE
+  FETCH FIRST 1 ROW ONLY
+)
+SELECT
+  id,
+  (select bool_and(active) from user_tenant_parents) as active,
+  tenancy.value AS use_tenancy
+FROM
+  tenancy,
+  q
+WHERE
+  id = (select v from resource_tenant_id)
+UNION ALL SELECT -1, false, tenancy.value AS use_tenancy FROM tenancy
+FETCH FIRST 1 ROW ONLY;
+`
 
 	var tenantID int
 	var active bool

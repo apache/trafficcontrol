@@ -31,7 +31,7 @@ const (
 )
 
 func TestRoles(t *testing.T) {
-	WithObjs(t, []TCObj{Roles}, func() {
+	WithObjs(t, []TCObj{Parameters, Roles}, func() {
 		UpdateTestRoles(t)
 		GetTestRoles(t)
 	})

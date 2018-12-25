@@ -23,7 +23,7 @@ import (
 )
 
 func TestTypes(t *testing.T) {
-	WithObjs(t, []TCObj{Types}, func() {
+	WithObjs(t, []TCObj{Parameters, Types}, func() {
 		UpdateTestTypes(t)
 		GetTestTypes(t)
 	})

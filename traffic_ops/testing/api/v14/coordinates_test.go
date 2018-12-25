@@ -23,7 +23,7 @@ import (
 )
 
 func TestCoordinates(t *testing.T) {
-	WithObjs(t, []TCObj{Coordinates}, func() {
+	WithObjs(t, []TCObj{Parameters, Coordinates}, func() {
 		GetTestCoordinates(t)
 		UpdateTestCoordinates(t)
 	})

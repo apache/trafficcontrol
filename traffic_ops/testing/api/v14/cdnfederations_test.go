@@ -25,7 +25,7 @@ import (
 var fedIDs []int
 
 func TestCDNFederations(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, DeliveryServices, CDNFederations}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServices, CDNFederations}, func() {
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
 	})

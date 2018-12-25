@@ -114,9 +114,15 @@ func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v\n", pl.Name, err)
 	}
-	if len(resp) > 0 {
-		respParameter := resp[0]
 
+	if len(resp) == 0 {
+		// TODO This fails for the ProfileParameters test; determine a way to check this, even for ProfileParameters
+		// t.Errorf("DeleteTestParameter got no params for %+v %+v\n", pl.Name, pl.ConfigFile)
+	} else if len(resp) > 1 {
+		// TODO figure out why this happens, and be more precise about deleting things where created.
+		// t.Errorf("DeleteTestParameter params for %+v %+v expected 1, actual %+v\n", pl.Name, pl.ConfigFile, len(resp))
+	}
+	for _, respParameter := range resp {
 		delResp, _, err := TOSession.DeleteParameterByID(respParameter.ID)
 		if err != nil {
 			t.Errorf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
