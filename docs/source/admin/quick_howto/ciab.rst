@@ -77,7 +77,15 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 
 .. seealso:: :ref:`tr-api` and :ref:`tm-api`
 
-While the components may be interacted with by the host using these ports, the true operation of the CDN can only truly be seen from within the Docker network. To see the CDN in action, connect to a container within the CDN in a Box project and use cURL to request the URL ``http://video.demo1.mycdn.ciab.test`` which will be resolved by the DNS container to the IP of the Traffic Router, which will provide a ``302 FOUND`` response pointing to the Edge-Tier cache. A typical choice for this is the "enroller" service, which has a very nuanced purpose not discussed here but already has the ``curl`` command line tool installed. For a more user-friendly interface into the CDN network, see `VNC Server`_.
+While the components may be interacted with by the host using these ports, the true operation of the CDN can only truly be seen from within the Docker network.
+
+Before you go to see the CDN in action, there is an additional action must operate on the portal:
+
+1. Visit your Traffic Portal and go to `CDNs / CDN-in-a-Box <https://trafficportal.infra.ciab.test/#!/cdns/2>`_
+2. Click on **Diff CDN Config Snapshot**
+3. Click on **Perform Snapshot** after you checked those changes
+
+After that, connect to a container within the CDN in a Box project and use cURL to request the URL ``http://video.demo1.mycdn.ciab.test`` which will be resolved by the DNS container to the IP of the Traffic Router, which will provide a ``302 FOUND`` response pointing to the Edge-Tier cache. A typical choice for this is the "enroller" service, which has a very nuanced purpose not discussed here but already has the ``curl`` command line tool installed. For a more user-friendly interface into the CDN network, see `VNC Server`_.
 
 .. code-block:: shell
 	:caption: Example Command to See the CDN in Action
