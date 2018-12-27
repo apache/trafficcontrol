@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel, userModel) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -36,10 +36,13 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     };
 
     var getTenants = function() {
-        tenantService.getTenants()
-            .then(function(result) {
-                $scope.tenants = result;
-                tenantUtils.addLevels($scope.tenants);
+        tenantService.getTenant(userModel.user.tenantId)
+            .then(function(tenant) {
+                tenantService.getTenants()
+                    .then(function(tenants) {
+                        $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant.parentId, []);
+                        tenantUtils.addLevels($scope.tenants);
+                    });
             });
     };
 
@@ -299,5 +302,5 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel', 'userModel'];
 module.exports = FormDeliveryServiceController;

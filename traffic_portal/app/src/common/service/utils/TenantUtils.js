@@ -17,34 +17,70 @@
  * under the License.
  */
 
-var TenantUtils = function() {
+var TenantUtils = function () {
 
 	/*
 	 * recurse thru a hierarchical structure and
 	 * add a 'level' property to each item
 	 */
-	var applyLevels = function(arr, level) {
-		_.each(arr, function(item) {
+	var applyLevels = function (arr, level) {
+		_.each(arr, function (item) {
 			item.level = level;
 			applyLevels(item.children, level + 1);
 		});
+	};
+
+	var hierarchySortFunc = function (a, b) {
+		return a.name > b.name;
+	};
+
+	/*
+	 * sort parent groups into an array
+	 * representative of the hierarchy order
+	 */
+	this.hierarchySort = function (parentGroups, rootParentId, result) {
+
+		if (parentGroups[rootParentId] == undefined) return;
+		var arr = parentGroups[rootParentId].sort(hierarchySortFunc);
+		for (var i = 0; i < arr.length; i++) {
+			result.push(arr[i]);
+			this.hierarchySort(parentGroups, arr[i].id, result);
+		}
+
+		return result;
+	};
+
+	/*
+	 * take a flat tenant array and
+	 * group the tenants by parentId
+	 */
+	this.groupTenantsByParent = function (tenants) {
+
+		var parentGroups = {};
+
+		for (var i = 0; i < tenants.length; i++) {
+			if (parentGroups[tenants[i].parentId] == undefined) parentGroups[tenants[i].parentId] = [];
+			parentGroups[tenants[i].parentId].push(tenants[i]);
+		}
+
+		return parentGroups;
 	};
 
 	/*
 	 * Takes a flat tenant array and turns it into a hierarchical
 	 * representation of tenants based on their parent/child relationships
 	 */
-	this.convertToHierarchy = function(tenantsArr) {
+	this.convertToHierarchy = function (tenantsArr) {
 		var map = {};
 
 		for (var i = 0; i < tenantsArr.length; i++) {
 			var obj = tenantsArr[i];
-			obj.children= [];
+			obj.children = [];
 
 			map[obj.id] = obj;
 
 			var parent = (i == 0) ? '-' : obj.parentId; // the first item is always the top-level tenant
-			if(!map[parent]){
+			if (!map[parent]) {
 				map[parent] = {
 					children: []
 				};
@@ -55,7 +91,7 @@ var TenantUtils = function() {
 		return map['-'].children;
 	};
 
-	this.addLevels = function(tenants) {
+	this.addLevels = function (tenants) {
 		// convert a flat tenant list into a hierarchy
 		var tenantHierarchy = this.convertToHierarchy(tenants);
 		// and then walk down the hierarchy to find out how deeply nested each tenant is and add a 'level' property to each tenant

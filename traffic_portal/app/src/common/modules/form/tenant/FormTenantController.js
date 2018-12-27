@@ -17,13 +17,16 @@
  * under the License.
  */
 
-var FormTenantController = function(tenant, $scope, $location, formUtils, tenantUtils, locationUtils, tenantService) {
+var FormTenantController = function(tenant, $scope, $location, formUtils, tenantUtils, locationUtils, tenantService, userModel) {
 
     var getTenants = function() {
-        tenantService.getTenants()
-            .then(function(result) {
-                $scope.tenants = result;
-                tenantUtils.addLevels($scope.tenants);
+        tenantService.getTenant(userModel.user.tenantId)
+            .then(function(tenant) {
+                tenantService.getTenants()
+                    .then(function(tenants) {
+                        $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant.parentId, []);
+                        tenantUtils.addLevels($scope.tenants);
+                    });
             });
     };
 
@@ -59,5 +62,5 @@ var FormTenantController = function(tenant, $scope, $location, formUtils, tenant
 
 };
 
-FormTenantController.$inject = ['tenant', '$scope', '$location', 'formUtils', 'tenantUtils', 'locationUtils', 'tenantService'];
+FormTenantController.$inject = ['tenant', '$scope', '$location', 'formUtils', 'tenantUtils', 'locationUtils', 'tenantService', 'userModel'];
 module.exports = FormTenantController;
