@@ -40,6 +40,7 @@ type CurrentUser struct {
 	ID           int            `json:"id" db:"id"`
 	PrivLevel    int            `json:"privLevel" db:"priv_level"`
 	TenantID     int            `json:"tenantId" db:"tenant_id"`
+	Role         int            `json:"role" db:"role"`
 	Capabilities pq.StringArray `json:"capabilities" db:"capabilities"`
 }
 
@@ -79,6 +80,7 @@ func GetCurrentUserFromDB(DB *sqlx.DB, user string, timeout time.Duration) (Curr
 	qry := `
 SELECT
   r.priv_level,
+  r.id as role,
   u.id,
   u.username,
   COALESCE(u.tenant_id, -1) AS tenant_id,
@@ -93,7 +95,7 @@ WHERE
 
 	var currentUserInfo CurrentUser
 	if DB == nil {
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
 	}
 	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
 	defer dbClose()
@@ -101,11 +103,11 @@ WHERE
 	err := DB.GetContext(dbCtx, &currentUserInfo, qry, user)
 	switch {
 	case err == sql.ErrNoRows:
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, errors.New("user not found"), fmt.Errorf("checking user %v info: user not in database", user), http.StatusUnauthorized
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}}, errors.New("user not found"), fmt.Errorf("checking user %v info: user not in database", user), http.StatusUnauthorized
 	case err == context.DeadlineExceeded || err == context.Canceled:
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, nil, fmt.Errorf("db access timed out: %s number of open connections: %d\n", err, DB.Stats().OpenConnections), http.StatusServiceUnavailable
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}}, nil, fmt.Errorf("db access timed out: %s number of open connections: %d\n", err, DB.Stats().OpenConnections), http.StatusServiceUnavailable
 	case err != nil:
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, nil, fmt.Errorf("Error checking user %v info: %v", user, err.Error()), http.StatusInternalServerError
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}}, nil, fmt.Errorf("Error checking user %v info: %v", user, err.Error()), http.StatusInternalServerError
 	default:
 		return currentUserInfo, nil, nil, http.StatusOK
 	}
@@ -121,7 +123,7 @@ func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
 			return nil, fmt.Errorf("CurrentUser found with bad type: %T", v)
 		}
 	}
-	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, errors.New("No user found in Context")
+	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}}, errors.New("No user found in Context")
 }
 
 func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, timeout time.Duration) (bool, error, error) {

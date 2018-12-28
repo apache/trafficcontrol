@@ -136,6 +136,10 @@ func (user *TOUser) Create() (error, error, int) {
 		return err, nil, http.StatusBadRequest
 	}
 
+	if usrErr, sysErr, code := user.privCheck(); code != http.StatusOK {
+		return usrErr, sysErr, code
+	}
+
 	// Convert password to SCRYPT
 	*user.LocalPassword, err = auth.DerivePassword(*user.LocalPassword)
 	if err != nil {
@@ -223,10 +227,34 @@ func (user *TOUser) Read() ([]interface{}, error, error, int) {
 	return users, nil, nil, http.StatusOK
 }
 
+func (user *TOUser) privCheck() (error, error, int) {
+	// if user Role does not exist the database constraint should catch it
+	//	untested so far
+	//	what do the other dbhelper GETters do?
+	privLevel, _, err := dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx, *user.Role)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	// what is the original error?
+	if user.ReqInfo.User.PrivLevel < privLevel {
+		return fmt.Errorf("user cannot update a user with a role more privileged than themselves"), nil, http.StatusForbidden
+	}
+
+	return nil, nil, http.StatusOK
+}
+
 func (user *TOUser) Update() (error, error, int) {
 
-	if user.ReqInfo.User.ID == *user.ID && user.Role != nil {
-		return fmt.Errorf("users cannot update their own role"), nil, http.StatusBadRequest
+	// user is updating themselves
+	if user.ReqInfo.User.ID == *user.ID {
+		if user.ReqInfo.User.Role != *user.Role {
+			return fmt.Errorf("users cannot update their own role"), nil, http.StatusBadRequest
+		}
+	}
+
+	if usrErr, sysErr, code := user.privCheck(); code != http.StatusOK {
+		return usrErr, sysErr, code
 	}
 
 	if user.LocalPassword != nil {
@@ -269,8 +297,9 @@ func (user *TOUser) Update() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+// Delete is unimplemented, needed to satisfy CRUDer
 func (user *TOUser) Delete() (error, error, int) {
-	return api.GenericDelete(user)
+	return nil, nil, http.StatusNotImplemented
 }
 
 func (u *TOUser) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {

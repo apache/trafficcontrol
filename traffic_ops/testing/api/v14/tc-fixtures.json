@@ -1948,6 +1948,28 @@
             "tenant": "tenant4",
             "uid": 0,
             "username": "tenant4user"
+        },
+        {
+            "addressLine1": "address of ops",
+            "addressLine2": "place",
+            "city": "somewhere",
+            "company": "else",
+            "country": "UK",
+            "email": "ops@example.com",
+            "fullName": "Operations User",
+            "gid": 0,
+            "localPasswd": "pa$$word",
+            "confirmLocalPasswd": "pa$$word",
+            "newUser": false,
+            "phoneNumber": "",
+            "postalCode": "",
+            "publicSshKey": "",
+            "registrationSent": "",
+            "role": 3,
+            "stateOrProvince": "",
+            "tenant": "root",
+            "uid": 0,
+            "username": "opsuser"
         }
     ],
     "steeringTargets": [

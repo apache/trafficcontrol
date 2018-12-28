@@ -17,14 +17,19 @@ package v14
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 func TestUsers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Users}, func() {
 		UpdateTestUsers(t)
+		OpsUpdateAdminTest(t)
+		UserSelfUpdateTest(t)
+		UserUpdateOwnRoleTest(t)
 		GetTestUsers(t)
 		GetTestUserCurrent(t)
 	})
@@ -40,6 +45,86 @@ func CreateTestUsers(t *testing.T) {
 			t.Fatalf("could not CREATE user: %v\n", err)
 		}
 		log.Debugln("Response: ", resp.Alerts)
+	}
+}
+
+func OpsUpdateAdminTest(t *testing.T) {
+	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v14-client-tests/opsuser", true, toReqTimeout)
+	if err != nil {
+		t.Fatalf("failed to get log in with opsuser: %v", err.Error())
+	}
+
+	resp, _, err := TOSession.GetUserByUsername("admin")
+	if err != nil {
+		t.Errorf("cannot GET user by name: 'admin', %v\n", err)
+	}
+	user := resp[0]
+
+	fullName := "oops"
+	email := "oops@ops.net"
+	user.FullName = &fullName
+	user.Email = &email
+
+	_, _, err = opsTOClient.UpdateUserByID(*user.ID, &user)
+	if err == nil {
+		t.Errorf("ops user incorrectly updated an admin\n")
+	}
+}
+
+func UserSelfUpdateTest(t *testing.T) {
+	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	opsTOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v14-client-tests/opsuser", true, toReqTimeout)
+	if err != nil {
+		t.Fatalf("failed to get log in with opsuser: %v", err.Error())
+	}
+
+	resp, _, err := TOSession.GetUserByUsername("opsuser")
+	if err != nil {
+		t.Errorf("cannot GET user by name: 'opsuser', %v\n", err)
+	}
+	user := resp[0]
+
+	fullName := "Oops-man"
+	email := "operator@comcast.net"
+	user.FullName = &fullName
+	user.Email = &email
+
+	var updateResp *tc.UpdateUserResponse
+	updateResp, _, err = opsTOClient.UpdateUserByID(*user.ID, &user)
+	if err != nil {
+		t.Errorf("cannot UPDATE user by id: %v - %v\n", err, updateResp)
+	}
+
+	// Make sure it got updated
+	resp2, _, err := TOSession.GetUserByID(*user.ID)
+	if err != nil {
+		t.Errorf("cannot GET user by id: '%d', %v\n", *user.ID, err)
+	}
+	updatedUser := resp2[0]
+
+	if updatedUser.FullName == nil || updatedUser.Email == nil {
+		t.Errorf("user was not correctly updated, field is null")
+	}
+	if *updatedUser.FullName != fullName {
+		t.Errorf("results do not match actual: %s, expected: %s\n", *updatedUser.FullName, fullName)
+	}
+	if *updatedUser.Email != email {
+		t.Errorf("results do not match acutal: %s, expected: %s\n", *updatedUser.Email, email)
+	}
+}
+
+func UserUpdateOwnRoleTest(t *testing.T) {
+	resp, _, err := TOSession.GetUserByUsername(SessionUserName)
+	if err != nil {
+		t.Errorf("cannot GET user by name: '%s', %v\n", SessionUserName, err)
+	}
+	user := resp[0]
+
+	*user.Role = *user.Role + 1
+	_, _, err = TOSession.UpdateUserByID(*user.ID, &user)
+	if err == nil {
+		t.Errorf("user incorrectly updated their role\n")
 	}
 }
 
@@ -61,11 +146,10 @@ func UpdateTestUsers(t *testing.T) {
 
 	// Make sure it got updated
 	resp2, _, err := TOSession.GetUserByID(*user.ID)
-	updatedUser := resp2[0]
-
 	if err != nil {
 		t.Errorf("cannot GET user by id: '%d', %v\n", *user.ID, err)
 	}
+	updatedUser := resp2[0]
 	if *updatedUser.City != newCity {
 		t.Errorf("results do not match actual: %s, expected: %s\n", *updatedUser.City, newCity)
 	}
@@ -108,10 +192,15 @@ func ForceDeleteTestUsers(t *testing.T) {
 		usernames = append(usernames, `'`+*user.Username+`'`)
 	}
 
-	q := `DELETE FROM tm_user WHERE username IN (` + strings.Join(usernames, ",") + `)`
+	// there is a constraint that prevents users from being deleted when they have a log
+	q := `DELETE FROM log WHERE NOT tm_user = (SELECT id FROM tm_user WHERE username = 'admin')`
+	err = execSQL(db, q, "log")
+	if err != nil {
+		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
+	}
 
+	q = `DELETE FROM tm_user WHERE username IN (` + strings.Join(usernames, ",") + `)`
 	err = execSQL(db, q, "tm_user")
-
 	if err != nil {
 		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
 	}
