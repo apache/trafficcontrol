@@ -90,17 +90,38 @@ while true; do
   sleep 2
 done
 
-# Snapshot the CDN 
-until [ $(to-get '/CRConfig-Snapshots/CDN-in-a-Box/CRConfig.json' 2>/dev/null | jq -c -e '.config|length') -gt 0 ] ; do 
-  sleep 2
-  echo "Do Snapshot for CDN-in-a-Box..."; 
-  to-put 'api/1.3/cdns/2/snapshot'
+### Automatic Queue/Snapshot ###
+while [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]] ; do
+  # AUTO_SNAPQUEUE_SERVERS should be a comma delimited list of expected docker service names to be enrolled - see varibles.env
+  expected_servers_json=$(echo "$AUTO_SNAPQUEUE_SERVERS" | tr ',' '\n' | jq -R . | jq -M -c -e -s '.|sort')
+  expected_servers_list=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|join(",")')
+  expected_servers_total=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|length')
+
+  current_servers_json=$(to-get 'api/1.4/servers' 2>/dev/null | jq -c -e '[.response[] | .xmppId] | sort')
+  [ -z "$current_servers_json" ] && current_servers_json='[]'
+  current_servers_list=$(jq -r -n --argjson current "$current_servers_json" '$current|join(",")')
+  current_servers_total=$(jq -r -n --argjson current "$current_servers_json" '$current|length')
+ 
+  remain_servers_json=$(jq -n --argjson expected "$expected_servers_json" --argjson current "$current_servers_json" '$expected-$current')
+  remain_servers_list=$(jq -r -n --argjson remain "$remain_servers_json" '$remain|join(",")')
+  remain_servers_total=$(jq -r -n --argjson remain "$remain_servers_json" '$remain|length')
+    
+  echo "AUTO-SNAPQUEUE - Expected Servers ($expected_servers_total): $expected_servers_list"
+  echo "AUTO-SNAPQUEUE - Current Servers ($current_servers_total): $current_servers_list"
+  echo "AUTO-SNAPQUEUE - Remain Servers ($remain_servers_total): $remain_servers_list"
+
+  if ((remain_servers_total == 0)) ; then
+     echo "AUTO-SNAPQUEUE - All expected servers enrolled."
+     sleep $AUTO_SNAPQUEUE_ACTION_WAIT
+     echo "AUTO-SNAPQUEUE - Do automatic snapshot..."
+     to-put 'api/1.3/cdns/2/snapshot'
+     sleep $AUTO_SNAPQUEUE_ACTION_WAIT
+     echo "AUTO-SNAPQUEUE - Do queue updates..."
+     to-post 'api/1.3/cdns/2/queue_update' '{"action":"queue"}'
+     break
+  fi 
+
+  sleep $AUTO_SNAPQUEUE_POLL_INTERVAL
 done
-
-# Queue Updates 
-sleep 1
-to-post 'api/1.3/cdns/2/queue_update' '{"action":"queue"}'
-
-### Workaround: End DeliveryService and Edge association
 
 exec tail -f /dev/null

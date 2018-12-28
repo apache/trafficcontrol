@@ -111,7 +111,7 @@ to-post() {
 	fi
 	to-auth && \
 	    curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X POST $data "$TO_URL/$1"
-	[[ -n $t ]] && rm "$t"
+	[[ -n $t ]] && rm -f "$t"
 }
 
 to-put() {
