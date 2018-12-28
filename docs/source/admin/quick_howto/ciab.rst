@@ -171,6 +171,14 @@ The "enroller" provides an efficient way for Traffic Ops to be populated with da
 
 The enroller runs within CDN in a Box using the ``-dir <dir>`` switch which provides the above behavior. It can also be run using the ``-http :<port>`` switch to instead have it listen on the indicated port. In this case, it accepts only POST requests with the JSON provided using the POST JSON method, e.g. ``curl -X POST https://enroller/api/1.4/regions -d @newregion.json``.  CDN in a Box does not currently use this method, but may be modified in the future to avoid using the shared volume approach.
 
+Auto Snapshot/Queue-Updates
+---------------------------
+An automatic snapshot of the current Traffic Ops CDN configuration/toplogy will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled.  To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [7]_.  The snapshot and queue-updates actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled.  The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (snapshot and queue-updates) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [8]_.
+
+.. [7] Automatic Snapshot/Queue-Updates is enabled by default in ``infrastructure/cdn-in-a-box/variables.env``.
+.. [8] Server poll interval and delay action wait are defaulted to a value of 2 seconds.
+
+
 Mock Origin Service
 -------------------
 The default "origin" service container provides a basic static file HTTP server as the central respository for content. Additional files can be added to the origin root content directory located at ``infrastructure/cdn-in-a-box/origin/content``. To request content directly from the origin directly and bypass the CDN:

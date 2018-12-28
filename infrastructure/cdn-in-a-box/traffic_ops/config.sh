@@ -90,7 +90,8 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "max_db_connections": 20,
         "backend_max_connections": {
             "mojolicious": 4
-        }
+        },
+        "crconfig_snapshot_use_client_request_host": true
     },
     "cors" : {
         "access_control_allow_origin" : "*"
