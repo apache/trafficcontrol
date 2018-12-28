@@ -17,9 +17,11 @@
  * under the License.
  */
 
-var TableTenantsController = function(tenants, $scope, $state, locationUtils) {
+var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, locationUtils, tenantUtils) {
 
-    $scope.tenants = tenants;
+    $scope.isUserTenant = function(tenant) {
+        return tenant.id == currentUserTenant.id;
+    };
 
     $scope.editTenant = function(id) {
         locationUtils.navigateToPath('/tenants/' + id);
@@ -29,19 +31,23 @@ var TableTenantsController = function(tenants, $scope, $state, locationUtils) {
         locationUtils.navigateToPath('/tenants/new');
     };
 
-    $scope.refresh = function() {
-        $state.reload(); // reloads all the resolves for the view
-    };
+    var init = function() {
 
-    angular.element(document).ready(function () {
-        $('#tenantsTable').dataTable({
-            "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": 25,
-            "aaSorting": []
-        });
-    });
+        $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), currentUserTenant.parentId, []);
+        tenantUtils.addLevels($scope.tenants);
+
+        $timeout(function () {
+            $('#tenantsTable').dataTable({
+                "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+                "iDisplayLength": -1,
+                "bSort": false
+            });
+        }, 100);
+
+    };
+    init();
 
 };
 
-TableTenantsController.$inject = ['tenants', '$scope', '$state', 'locationUtils'];
+TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$timeout', 'locationUtils', 'tenantUtils'];
 module.exports = TableTenantsController;
