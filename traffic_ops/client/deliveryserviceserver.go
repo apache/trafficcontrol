@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -61,23 +62,21 @@ func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alert
 	return resp, reqInf, nil
 }
 
+// GetDeliveryServiceServers gets all delivery service servers, with the default API limit.
 func (to *Session) GetDeliveryServiceServers() (tc.DeliveryServiceServerResponse, ReqInf, error) {
-	route := apiBase + `/deliveryserviceserver`
-	reqResp, remoteAddr, err := to.request(http.MethodGet, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.DeliveryServiceServerResponse{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
-	}
-	defer reqResp.Body.Close()
-	resp := tc.DeliveryServiceServerResponse{}
-	if err = json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
-		return tc.DeliveryServiceServerResponse{}, reqInf, errors.New("decoding response: " + err.Error())
-	}
-	return resp, reqInf, nil
+	return to.getDeliveryServiceServers(url.Values{})
 }
 
+// GetDeliveryServiceServersN gets all delivery service servers, with a limit of n.
 func (to *Session) GetDeliveryServiceServersN(n int) (tc.DeliveryServiceServerResponse, ReqInf, error) {
-	route := apiBase + `/deliveryserviceserver` + `?limit=` + strconv.Itoa(n)
+	return to.getDeliveryServiceServers(url.Values{"limit": []string{strconv.Itoa(n)}})
+}
+
+func (to *Session) getDeliveryServiceServers(urlQuery url.Values) (tc.DeliveryServiceServerResponse, ReqInf, error) {
+	route := apiBase + `/deliveryserviceserver`
+	if qry := urlQuery.Encode(); qry != "" {
+		route += `?` + qry
+	}
 	reqResp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
