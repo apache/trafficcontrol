@@ -25,31 +25,9 @@ import (
 )
 
 func TestReadOnlyCannotModify(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	CreateTestDeliveryServices(t)
-	CreateTestUsers(t)
-
-	CreateTestCDNWithReadOnlyUser(t)
-
-	ForceDeleteTestUsers(t)
-	DeleteTestDeliveryServices(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Users}, func() {
+		CreateTestCDNWithReadOnlyUser(t)
+	})
 }
 
 func CreateTestCDNWithReadOnlyUser(t *testing.T) {

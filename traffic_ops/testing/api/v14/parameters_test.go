@@ -28,11 +28,10 @@ func TestParameters(t *testing.T) {
 	//toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
 	//SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Portal, Config.TrafficOps.UserPassword)
 
-	CreateTestParameters(t)
-	UpdateTestParameters(t)
-	GetTestParameters(t)
-	DeleteTestParameters(t)
-
+	WithObjs(t, []TCObj{Parameters}, func() {
+		UpdateTestParameters(t)
+		GetTestParameters(t)
+	})
 }
 
 func CreateTestParameters(t *testing.T) {

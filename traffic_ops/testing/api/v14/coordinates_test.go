@@ -23,10 +23,10 @@ import (
 )
 
 func TestCoordinates(t *testing.T) {
-	CreateTestCoordinates(t)
-	GetTestCoordinates(t)
-	UpdateTestCoordinates(t)
-	DeleteTestCoordinates(t)
+	WithObjs(t, []TCObj{Coordinates}, func() {
+		GetTestCoordinates(t)
+		UpdateTestCoordinates(t)
+	})
 }
 
 func CreateTestCoordinates(t *testing.T) {

@@ -21,32 +21,10 @@ import (
 )
 
 func TestDeliveryServicesCachegroups(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	CreateTestServers(t)
-	CreateTestDeliveryServices(t)
-
-	CreateTestCachegroupsDeliveryServices(t)
-	DeleteTestCachegroupsDeliveryServices(t)
-
-	DeleteTestDeliveryServices(t)
-	DeleteTestServers(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+		CreateTestCachegroupsDeliveryServices(t)
+		DeleteTestCachegroupsDeliveryServices(t)
+	})
 }
 
 const TestEdgeServerCacheGroupName = "cachegroup1" // TODO this is the name hard-coded in the create servers test; change to be dynamic

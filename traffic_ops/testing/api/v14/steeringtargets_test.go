@@ -23,34 +23,10 @@ import (
 )
 
 func TestSteeringTargets(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	CreateTestServers(t)
-	CreateTestDeliveryServices(t)
-
-	CreateTestSteeringTargets(t)
-	GetTestSteeringTargets(t)
-	UpdateTestSteeringTargets(t)
-	DeleteTestSteeringTargets(t)
-
-	DeleteTestDeliveryServices(t)
-	DeleteTestServers(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, SteeringTargets}, func() {
+		GetTestSteeringTargets(t)
+		UpdateTestSteeringTargets(t)
+	})
 }
 
 func CreateTestSteeringTargets(t *testing.T) {
