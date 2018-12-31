@@ -24,7 +24,7 @@
 
 ``GET``
 =======
-Retrieves the fail-over state for a Delivery Service.
+Retrieves the fail-over state for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
@@ -34,24 +34,24 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------------------+
-	| Name | Description                                                             |
-	+======+=========================================================================+
-	|  ID  | The integral, unique identifier of the Delivery Service being inspected |
-	+------+-------------------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------------+
+	| Name | Description                                                                     |
+	+======+=================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service` being inspected |
+	+------+---------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
-:enabled:  ``true`` if failover has been enabled for this Delivery Service, ``false`` otherwise
-:failover: An object describing the failover configuration for this Delivery Service
+:enabled:  ``true`` if failover has been enabled for this :term:`Delivery Service`, ``false`` otherwise
+:failover: An object describing the failover configuration for this :term:`Delivery Service`
 
 	:configured:  ``true`` if this failover configuration has been updated by some Traffic Ops user, ``false`` otherwise
-	:destination: An object describing the Cache Group within this Delivery Service which will utilize this failover configuration
+	:destination: An object describing the Cache Group within this :term:`Delivery Service` which will utilize this failover configuration
 
-		:location: The integral, unique identifier of a Cache Group within this Delivery Service which will utilize this failover configuration
+		:location: The integral, unique identifier of a Cache Group within this :term:`Delivery Service` which will utilize this failover configuration
 		:type:     The 'type' of the Cache Group identified by ``location``
 
-	:enabled:   ``true`` if failover has been enabled for this Delivery Service, ``false`` otherwise
+	:enabled:   ``true`` if failover has been enabled for this :term:`Delivery Service`, ``false`` otherwise
 	:locations: An array of integral, unique identifiers for Cache Groups to use for failover
 
 .. code-block:: http
@@ -83,4 +83,4 @@ Response Structure
 
 
 
-.. [1] If a user does not have either the "admin" nor "operations" role, then only Delivery Services assigned to the user's Tenant will be able to be queried with this endpoint
+.. [1] If a user does not have either the "admin" nor "operations" role, then only :term:`Delivery Service`\ s assigned to the user's Tenant will be able to be queried with this endpoint

@@ -19,9 +19,8 @@
 Configure Multi-Site Origin
 ***************************
 
-The following steps will take you through the procedure of setting up a Multi-Site Origin (MSO).
-
-#. Create :term:`Cache Group`\ s for the origin locations, and assign the appropriate parent-child relationship between the mid and origin :term:`Cache Group`\ s. Each mid :term:`Cache Group` can be assigned a primary and secondary origin parent :term:`Cache Group`. When the mid cache parent configuration is generated, origins in the primary :term:`Cache Group`\ s will be listed first, followed by origins in the secondary :term:`Cache Group`. Origin servers assigned to the Delivery Service that are assigned to neither the primary nor secondary :term:`Cache Group`\ s will be listed last.
+The following steps will take you through the procedure of setting up an :abbr:`MSO (Multi-Site Origin)`.
+#. Create :term:`Cache Group`\ s for the origin locations, and assign the appropriate parent-child relationship between the Mid-tier :term:`Cache Group`\ (s) and origin :term:`Cache Group`\ s. Each Mid-tier :term:`Cache Group` can be assigned a primary and secondary origin parent :term:`Cache Group`. When the :term:`Cache Group` parent configuration is generated, origins in the primary :term:`Cache Group`\ s will be listed first, followed by origins in the secondary :term:`Cache Group`. Origin servers assigned to the :term:`Delivery Service` that are assigned to neither the primary nor secondary :term:`Cache Group`\ s will be listed last.
 
 	.. figure:: multi_site/00.png
 		:scale: 100%
@@ -39,35 +38,35 @@ The following steps will take you through the procedure of setting up a Multi-Si
 		:scale: 100%
 		:align: center
 
-#. Check the multi-site check box in the delivery service screen:
+#. Check the multi-site check box in the :term:`Delivery Service`\ screen:
 
 	.. figure:: multi_site/mso-enable.png
 		:scale: 100%
 		:align: center
 
-#. Assign the org servers to the delivery service that will have the multi site feature. Org servers assigned to a delivery service with multi-site checked will be assigned to be the origin servers for this DS.
+#. Assign the org servers to the :term:`Delivery Service` that will have the multi site feature. Origin servers assigned to a :term:`Delivery Service` with multi-site checked will be assigned to be the origin servers for this :term:`Delivery Service`.
 
 	.. figure:: multi_site/03.png
 		:scale: 100%
 		:align: center
 
-	.. Note:: “Origin Server Base URL” uniqueness: In order to enable MID caches to distinguish delivery services by different MSO algorithms while performing parent fail-over, it requires that “Origin Server Base URL” (OSBU) for each MSO-enabled Delivery Service is unique. This means that the OSBU of a MSO-enabled Delivery Service should be different with the OSBUs of any other Delivery Service, regardless of whether they are MSO-enabled or not. The exceptions to this rule are:
+	.. Note:: “Origin Server Base URL” uniqueness: In order to enable Mid-tier :term:`Cache Group` to distinguish :term:`Delivery Service`\ s by different :abbr:`MSO (Multi-Site Origin)` algorithms while performing parent fail-over, it requires that :abbr:`OSBU (Origin Server Base URL)` for each :abbr:`MSO (Multi-Site Origin)`\ -enabled :term:`Delivery Service` is unique. This means that the :abbr:`OSBU (Origin Server Base URL)` of an :abbr:`MSO (Multi-Site Origin)`\ -enabled :term:`Delivery Service`\ should be different from the :abbr:`OSBU (Origin Server Base URL)`\ s of any other :term:`Delivery Service`, regardless of whether they are :abbr:`MSO (Multi-Site Origin)`\ -enabled or not. The exceptions to this rule are:
 
-		- If there are multiple CDNs created on the same Traffic Ops, delivery services across different CDNs may have the same OSBU configured.
-		- If several delivery services in the same CDN have the same MSO algorithm configured, they may share the same OSBU.
-		- If delivery services are assigned with different MID :term:`Cache Group`\ s respectively, they can share the same OSBU.
-		- This OSBU must be valid - ATS will perform a DNS lookup on this FQDN even if IPs, not DNS, are used in the parent.config.
-		- The OSBU entered as the "Origin Server Base URL" will be sent to the origins as a host header. All origins must be configured to respond to this host.
+		- If there are multiple CDNs created on the same Traffic Ops, :term:`Delivery Service`\ s across different CDNs may have the same :abbr:`OSBU (Origin Server Base URL)` configured.
+		- If several :term:`Delivery Service`\ s in the same CDN have the same :abbr:`MSO (Multi-Site Origin)` algorithm configured, they may share the same :abbr:`OSBU (Origin Server Base URL)`.
+		- If delivery services are assigned with different Mid-tier :term:`Cache Group`\ s respectively, they can share the same :abbr:`OSBU (Origin Server Base URL)`.
+		- This :abbr:`OSBU (Origin Server Base URL)` must be valid - :abbr:`ATS (Apache Traffic Server)` will perform a DNS lookup on this :abbr:`FQDN (Fully Qualified Domain Name)` even if IPs, not DNS, are used in the :file:`parent.config`.
+		- The :abbr:`OSBU (Origin Server Base URL)` entered as the "Origin Server Base URL" will be sent to the origins as a host header. All origins must be configured to respond to this host.
 
-#. Create a delivery service profile. This must be done to set the MSO algorithm. Also, as of ATS 6.x, multi-site options must be set as parameters within the parent.config. Header rewrite parameters will be ignored. See `ATS parent.config <https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/files/parent.config.en.html>`_ for more details. These parameters are now handled by the creation of a delivery service profile.
+#. Create a delivery service profile. This must be done to set the :abbr:`MSO (Multi-Site Origin)` algorithm. Also, as of :abbr:`ATS (Apache Traffic Server)` 6.x, multi-site options must be set as parameters within the :file:`parent.config`. Header rewrite parameters will be ignored. See `ATS parent.config <https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/files/parent.config.en.html>`_ for more details. These parameters are now handled by the creation of a :term:`Delivery Service` profile.
 
-	a) Create a profile of the type DS_PROFILE for the delivery service in question.
+	a) Create a profile of the type ``DS_PROFILE`` for the :term:`Delivery Service` in question.
 
 		.. figure:: multi_site/ds_profile.png
 			:scale: 50%
 			:align: center
 
-	#) Click "Show profile parameters" to bring up the parameters screen for the profile. Create parameters for the following:
+	#) Click :guilabel:`Show profile parameters` to bring up the parameters screen for the profile. Create parameters for the following:
 
 		+----------------------------------------+------------------+--------------------------+-------------------------+
 		| Parameter Name                         | Config File Name | Value                    | ATS parent.config value |
@@ -96,9 +95,8 @@ The following steps will take you through the procedure of setting up a Multi-Si
 			:scale: 100%
 			:align: center
 
-	#) In the delivery service page, select the newly created DS_PROFILE and save the delivery service.
+	#) In the :term:`Delivery Service` page, select the newly created ``DS_PROFILE`` and save the :term:`Delivery Service`.
 
 #. Turn on parent_proxy_routing in the MID profile.
 
-.. Note:: Support for multisite configurations with single-layer CDNs is now available.  If a cachegroup's defined parents are either blank or of the type ORG_LOC, that cache's parent.config will be generated as a top layer cache, even if it is an edge.  In the past, parent.config generation was strictly determined by cache type. The new method examines the parent cachegroup definitions and generates the parent.config accordingly.
-
+.. Note:: Support for multisite configurations with single-layer CDNs is now available. If a :term:`Cache Group`\ s defined parents are either blank or of the type ``ORG_LOC``, that :term:`cache server`'s ``parent.config`` will be generated as a top layer cache, even if it is an edge. In the past, ``parent.config`` generation was strictly determined by cache type. The new method examines the parent :term:`Cache Group` definitions and generates the :file:`parent.config` accordingly.

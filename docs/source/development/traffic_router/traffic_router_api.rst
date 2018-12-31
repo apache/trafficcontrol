@@ -15,77 +15,459 @@
 
 .. _tr-api:
 
-
+******************
 Traffic Router API
-==================
+******************
+By default, Traffic Router serves its API via HTTP (not HTTPS) on port 3333. This can be configured in :file:`/opt/traffic_router/conf/server.xml` or by setting a :term:`Parameter` named ``api.port`` with ``configFile`` ``server.xml`` on the Traffic Router's :term:`Profile`.
 
-**/crs/stats**
+Traffic Router API endpoints only respond to ``GET`` requests.
 
+``/crs/stats``
+==============
 General stats.
 
-|
+Request Structure
+-----------------
+.. code-block:: http
+	:caption: Request Example
 
-**/crs/stats/ip/<ipaddress>**
+	GET /crs/stats HTTP/1.1
+	Host: trafficrouter.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
 
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Content-Type: application/json;charset=UTF-8
+	Transfer-Encoding: chunked
+	Date: Tue, 15 Jan 2019 21:02:09 GMT
+
+	{ "app": {
+		"buildTimestamp": "2019-01-10",
+		"name": "traffic_router",
+		"deploy-dir": "/opt/traffic_router",
+		"git-revision": "437e9df81",
+		"version": "3.0.0"
+	},
+	"stats": {
+		"dnsMap": {},
+		"httpMap": {
+			"video.demo1.mycdn.ciab.test": {
+				"czCount": 0,
+				"geoCount": 0,
+				"deepCzCount": 0,
+				"missCount": 0,
+				"dsrCount": 0,
+				"errCount": 0,
+				"staticRouteCount": 0,
+				"fedCount": 0,
+				"regionalDeniedCount": 0,
+				"regionalAlternateCount": 0
+			}
+		},
+		"totalDnsCount": 0,
+		"totalHttpCount": 1,
+		"totalDsMissCount": 0,
+		"appStartTime": 1547584831677,
+		"averageDnsTime": 0,
+		"averageHttpTime": 1547584863270,
+		"updateTracker": {
+			"lastHttpsCertificatesCheck": 1547586068932,
+			"lastGeolocationDatabaseUpdaterUpdate": 1547584858917,
+			"lastCacheStateCheck": 1547586128932,
+			"lastCacheStateChange": 1547584867102,
+			"lastNetworkUpdaterUpdate": 1547584857484,
+			"lastHttpsCertificatesUpdate": 1547586071079,
+			"lastSteeringWatcherUpdate": 1547584923514,
+			"lastConfigCheck": 1547586127344,
+			"lastConfigChange": 1547584863406,
+			"lastNetworkUpdaterCheck": 1547584857465,
+			"lastGeolocationDatabaseUpdaterCheck": 1547584858906,
+			"lastFederationsWatcherUpdate": 1547584863433,
+			"lastHttpsCertificatesFetchSuccess": 1547586069070,
+			"lastSteeringWatcherCheck": 1547586124630,
+			"lastFederationsWatcherCheck": 1547586124584,
+			"lastHttpsCertificatesFetchAttempt": 1547586068932
+		}
+	}}
+
+``/crs/stats/ip/{{IP}}``
+================================
 Geolocation information for an IPv4 or IPv6 address.
 
-|
+Request Structure
+-----------------
+.. table:: Request Path Parameters
 
-**/crs/locations**
+	+------+------------------------------------------------------------------------+
+	| Name | Description                                                            |
+	+======+========================================================================+
+	|  IP  | The IP address for which statics will be returned. May be IPv4 or IPv6 |
+	+------+------------------------------------------------------------------------+
 
-A list of configured cache groups.
+.. code-block:: http
+	:caption: Request Example
 
-|
+	GET /crs/stats/ip/255.255.255.255 HTTP/1.1
+	Host: trafficrouter.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
 
-**/crs/locations/caches**
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
 
+	HTTP/1.1 200 OK
+	Content-Disposition: inline;filename=f.txt
+	Content-Type: application/json;charset=UTF-8
+	Transfer-Encoding: chunked
+	Date: Tue, 15 Jan 2019 21:06:09 GMT
+
+	{ "locationByGeo": {
+		"city": "Woodridge",
+		"countryCode": "US",
+		"latitude": "41.7518",
+		"postalCode": "60517",
+		"countryName": "United States",
+		"longitude": "-88.0489"
+	},
+	"locationByFederation": "not found",
+	"requestIp": "69.241.118.34",
+	"locationByCoverageZone": "not found"
+	}
+
+``/crs/locations``
+==================
+A list of configured :term:`Cache Group`\ s to which the Traffic Router is capable of routing client traffic.
+
+Request Structure
+-----------------
+.. code-block:: http
+	:caption: Request Example
+
+	GET /crs/locations HTTP/1.1
+	Host: trafficrouter.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+
+Response Structure
+------------------
+:locations: An array of the names of :term:`Cache Group`\ s to which this Traffic Router is capable of routing client traffic
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Content-Type: application/json;charset=UTF-8
+	Transfer-Encoding: chunked
+	Date: Tue, 15 Jan 2019 21:12:17 GMT
+
+	{ "locations": [
+		"CDN_in_a_Box_Edge"
+	]}
+
+``/crs/locations/caches``
+=========================
 A mapping of caches to cache groups and their current health state.
 
-|
+Request Structure
+-----------------
+.. code-block:: http
+	:caption: Request Example
 
-**/crs/locations/<location>/caches**
+	GET /crs/locations/caches HTTP/1.1
+	Host: trafficrouter.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
 
-A list of caches for this cache group only.
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
 
-|
+	HTTP/1.1 200 OK
+	Content-Type: application/json;charset=UTF-8
+	Transfer-Encoding: chunked
+	Date: Tue, 15 Jan 2019 21:15:53 GMT
 
-**/crs/consistenthash/cache/coveragezone/?ip=<ip>&deliveryServiceId=<deliveryServiceId>&requestPath=<requestPath>**
+	{ "locations": {
+		"CDN_in_a_Box_Edge": [
+			{
+				"cacheId": "edge",
+				"fqdn": "edge.infra.ciab.test",
+				"ipAddresses": [
+					"172.16.239.100",
+					"fc01:9400:1000:8:0:0:0:100"
+				],
+				"port": 0,
+				"adminStatus": null,
+				"lastUpdateHealthy": false,
+				"lastUpdateTime": 0,
+				"connections": 0,
+				"currentBW": 0,
+				"availBW": 0,
+				"cacheOnline": true
+			}
+		]
+	}}
 
-The resulting cache of the consistent hash using coverage zone file for a given client IP, delivery service, and request path.
+``/crs/locations/{{cachegroup}}/caches``
+========================================
+A list of :term:`cache server`\ s for this :term:`Cache Group` only.
 
-|
+Request Structure
+-----------------
+.. table:: Request Path Parameters
 
-**/crs/consistenthash/cache/deep/coveragezone/?ip=<ip>&deliveryServiceId=<deliveryServiceId>&requestPath=<requestPath>**
+	+------------+------------------------------------------------------------------------------------------------------------+
+	| Name       | Description                                                                                                |
+	+============+============================================================================================================+
+	| cachegroup | The name of a :term:`Cache Group` of which a list of constituent :term:`cache server`\ s will be retrieved |
+	+------------+------------------------------------------------------------------------------------------------------------+
 
-The resulting cache of the consistent hash using deep coverage zone file (deep caching) for a given client IP, delivery service, and request path.
 
-|
+.. code-block:: http
+	:caption: Request Example
 
-**/crs/consistenthash/cache/geolocation/?ip=<ip>&deliveryServiceId=<deliveryServiceId>&requestPath=<requestPath>**
+	GET /crs/locations/CDN_in_a_Box_Edge/caches HTTP/1.1
+	Host: trafficrouter.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
 
-The resulting cache of the consistent hash using geolocation for a given client IP, delivery service, and request path.
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
 
-|
+	HTTP/1.1 200 OK
+	Content-Type: application/json;charset=UTF-8
+	Transfer-Encoding: chunked
+	Date: Tue, 15 Jan 2019 21:18:25 GMT
 
-**/crs/consistenthash/deliveryservice/?deliveryServiceId=<deliveryServiceId>&requestPath=<requestPath>**
+	{ "caches": [
+		{
+			"cacheId": "edge",
+			"fqdn": "edge.infra.ciab.test",
+			"ipAddresses": [
+				"172.16.239.100",
+				"fc01:9400:1000:8:0:0:0:100"
+			],
+			"port": 0,
+			"adminStatus": null,
+			"lastUpdateHealthy": false,
+			"lastUpdateTime": 0,
+			"connections": 0,
+			"currentBW": 0,
+			"availBW": 0,
+			"cacheOnline": true
+		}
+	]}
 
-The resulting delivery service of the consistent hash for a given delivery service and request path -- used to test steering delivery services.
 
-|
+``/crs/consistenthash/cache/coveragezone``
+===========================================
+The resulting cache of the consistent hash using coverage zone file for a given client IP, :term:`Delivery Service`, and request path.
 
-**/crs/coveragezone/caches/?deliveryServiceId=<deliveryServiceId>&cacheLocationId=<cacheLocationId>**
+Request Structure
+-----------------
+.. table:: Request Query Parameters
 
-A list of caches for a given delivery service and cache location.
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| ip                | yes      | The IP address of a potential client                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| requestPath       | yes      | The... request path?                                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
 
-|
+Response Structure
+------------------
+TBD
 
-**/crs/coveragezone/cachelocation/?ip=<ip>&deliveryServiceId=<deliveryServiceId>**
+``/crs/consistenthash/cache/deep/coveragezone``
+===============================================
+The resulting cache of the consistent hash using deep coverage zone file (deep caching) for a given client IP, :term:`Delivery Service`, and request path.
 
-The resulting cache location for a given client IP and delivery service.
+Request Structure
+-----------------
+.. table:: Request Query Parameters
 
-|
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| ip                | yes      | The IP address of a potential client                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| requestPath       | yes      | The... request path?                                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
 
-**/crs/deepcoveragezone/cachelocation/?ip=<ip>&deliveryServiceId=<deliveryServiceId>**
+Response Structure
+------------------
+TBD
 
-The resulting cache location using deep coverage zone file (deep caching) for a given client IP and delivery service.
+``/crs/consistenthash/cache/geolocation``
+=========================================
+The resulting cache of the consistent hash using geographic location for a given client IP, :term:`Delivery Service`, and request path.
 
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| ip                | yes      | The IP address of a potential client                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| requestPath       | yes      | The... request path?                                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+Response Structure
+------------------
+TBD
+
+``/crs/consistenthash/deliveryservice/``
+========================================
+The resulting :term:`Delivery Service` of the consistent hash for a given :term:`Delivery Service` and request path -- used to test STEERING :term:`Delivery Service`\ s.
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| requestPath       | yes      | The... request path?                                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /crs/consistenthash/deliveryservice?deliveryServiceId=demo1&requestPath=/ HTTP/1.1
+	Host: trafficrouter.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Content-Type: application/json;charset=UTF-8
+	Transfer-Encoding: chunked
+	Date: Tue, 15 Jan 2019 21:40:51 GMT
+
+	{ "id": "demo1",
+	"coverageZoneOnly": false,
+	"geoRedirectUrl": null,
+	"geoRedirectFile": null,
+	"geoRedirectUrlType": "INVALID_URL",
+	"routingName": "video",
+	"missLocation": {
+		"latitude": 42,
+		"longitude": -88,
+		"postalCode": null,
+		"city": null,
+		"countryCode": null,
+		"countryName": null,
+		"defaultLocation": false,
+		"properties": {
+			"city": null,
+			"countryCode": null,
+			"latitude": "42.0",
+			"postalCode": null,
+			"countryName": null,
+			"longitude": "-88.0"
+		}
+	},
+	"dispersion": {
+		"limit": 1,
+		"shuffled": true
+	},
+	"ip6RoutingEnabled": true,
+	"responseHeaders": {},
+	"requestHeaders": [],
+	"regionalGeoEnabled": false,
+	"geolocationProvider": "maxmindGeolocationService",
+	"anonymousIpEnabled": false,
+	"sslEnabled": true,
+	"acceptHttp": true,
+	"deepCache": "NEVER",
+	"dns": false,
+	"locationLimit": 0,
+	"maxDnsIps": 0,
+	"sslReady": true,
+	"available": true
+	}
+
+``/crs/coveragezone/caches``
+============================
+A list of caches for a given :term:`Delivery Service` and :term:`Cache Group`.
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| cacheLocationId   | yes      | The name of a :term:`Cache Group` to which this Traffic Router is capable of routing client traffic          |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+Response Structure
+------------------
+TBD
+
+``/crs/coveragezone/cachelocation``
+===================================
+The resulting :term:`Cache Group` for a given client IP and :term:`Delivery Service`.
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| ip                | yes      | The IP address of a potential client                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+Response Structure
+------------------
+TBD
+
+``/crs/deepcoveragezone/cachelocation``
+=======================================
+The resulting :term:`Cache Group` using deep coverage zone file (deep caching) for a given client IP and :term:`Delivery Service`.
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| ip                | yes      | The IP address of a potential client                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+Response Structure
+------------------
+TBD

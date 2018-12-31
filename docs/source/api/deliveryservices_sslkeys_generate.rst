@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Generates an SSL certificate, csr, and private key for a Delivery Service
+Generates an SSL certificate, csr, and private key for a :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,11 +31,11 @@ Request Structure
 -----------------
 :city:     An optional field which, if present, will represent the resident city of the generated SSL certificate
 :country:  An optional field which, if present, will represent the resident country of the generated SSL certificate
-:hostname: The desired hostname of the Delivery Service
+:hostname: The desired hostname of the :term:`Delivery Service`
 
-	.. note:: In most cases, this must be the same as the 'Delivery Service URL'
+	.. note:: In most cases, this must be the same as the :term:`Delivery Service` URL'
 
-:key:          The 'xml_id' of the Delivery Service for which keys will be generated
+:key:          The 'xml_id' of the :term:`Delivery Service` for which keys will be generated
 :organization: An optional field which, if present, will represent the organization for which the SSL certificate was generated
 :state:        An optional field which, if present, will represent the resident state or province of the generated SSL certificate
 :businessUnit: An optional field which, if present, will represent the business unit for which the SSL certificate was generated

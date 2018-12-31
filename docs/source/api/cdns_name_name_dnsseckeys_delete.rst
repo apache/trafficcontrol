@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Delete DNSSEC keys for a CDN and all associated Delivery Services.
+Delete DNSSEC keys for a CDN and all associated :term:`Delivery Service`\ s.
 
 :Auth. Required: Yes
 :Roles Required: "admin"

@@ -13,9 +13,6 @@
 .. limitations under the License.
 ..
 
-.. index::
-	Default Profiles
-
 .. _default-profiles:
 
 ****************
@@ -25,25 +22,25 @@ Traffic Ops has the concept of :ref:`working-with-profiles`, which are an integr
 
 .. _to-profiles-min-needed:
 
-Minimum Traffic Ops Profiles needed
------------------------------------
+Minimum Traffic Ops Profiles Needed
+===================================
 
-- EDGE_ATS_<version>_<platform>_PROFILE.traffic_ops
-- MID_ATS_<version>_<platform>_PROFILE.traffic_ops
-- TRAFFIC_MONITOR_PROFILE.traffic_ops
-- TRAFFIC_ROUTER_PROFILE.traffic_ops
-- TRAFFIC_STATS_PROFILE.traffic_ops
-- EDGE_GROVE_PROFILE.traffic_ops
+- :file:`EDGE_ATS_{version}_{platform}_PROFILE.traffic_ops`
+- :file:`MID_ATS_{version}_{platform}_PROFILE.traffic_ops`
+- :file:`TRAFFIC_MONITOR_PROFILE.traffic_ops`
+- :file:`TRAFFIC_ROUTER_PROFILE.traffic_ops`
+- :file:`TRAFFIC_STATS_PROFILE.traffic_ops`
+- :file:`EDGE_GROVE_PROFILE.traffic_ops`
 
 .. note:: Despite that these have the ``.traffic_ops`` extension, they use JSON to store data. If your syntax highlighting doesn't work in some editor or viewer, try changing the extension to ``.json``.
 
 .. warning:: These profiles will likely need to be modified to suit your system. Many of them contain hardware-specific parameters and parameter values.
 
 Steps to Import a Profile
--------------------------
+=========================
 #. Sign into Traffic Portal
-#. Under the 'Configure' menu, select 'Profiles'
-#. From the 'More' drop-down menu, click on 'Import Profile'
+#. Navigate to :menuselection:`Configure --> Profiles`
+#. Click on :menuselection:`More --> Import Profile`
 #. Drag and drop your desired profile into the upload pane
-#. Click 'Import'
-#. Continue these steps for each of the :ref:`to-profiles-min-needed`.
+#. Click :guilabel:`Import`
+#. Continue these steps for each of the `Minimum Traffic Ops Profiles Needed`_.

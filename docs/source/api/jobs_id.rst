@@ -41,7 +41,7 @@ Response Structure
 ------------------
 :assetUrl:        A regular expression - matching URLs will be operated upon according to ``keyword``
 :createdBy:       The username of the user who initiated the job
-:deliveryService: The 'xml_id' that uniquely identifies the Delivery Service on which this job operates
+:deliveryService: The 'xml_id' that uniquely identifies the :term:`Delivery Service` on which this job operates
 :id:              An integral, unique identifier for this job
 :keyword:         A keyword that represents the operation being performed by the job:
 

@@ -25,7 +25,8 @@
 Traffic Ops - Using
 *******************
 
-.. caution:: The Traffic Ops UI is deprecated, and will be removed entirely in the next major release (4.0). A much better way to interact with the CDN is to :ref:`use Traffic Portal <usingtrafficportal>`, which is the the only UI that will be receiving updates for the foreseeable future.
+.. deprecated:: 3.0
+	The Traffic Ops UI is deprecated, and will be removed entirely in the next major release (4.0). A much better way to interact with the CDN is to :ref:`use Traffic Portal <usingtrafficportal>`, which is the the only UI that will be receiving updates for the foreseeable future.
 
 The Traffic Ops Menu
 ====================
@@ -66,7 +67,7 @@ Information on the health of the system. Hover over this tab to get to the follo
 
 Delivery Services
 -----------------
-The main Delivery Service table. This is where you Create/Read/Update/Delete Delivery Services of all types. Hover over to get the following sub option:
+The main :term:`Delivery Service` table. This is where you Create/Read/Update/Delete :term:`Delivery Service`\ s of all types. Hover over to get the following sub option:
 
 +-------------+--------------------------------------+
 |    Option   |             Description              |
@@ -79,11 +80,11 @@ Servers
 -------
 The main Servers table. This is where you Create/Read/Update/Delete servers of all types.  Click the main tab to get to the main table, and hover over to get these sub options:
 
-+-------------------+------------------------------------------------------------------------------------------+
-|       Option      |                                       Description                                        |
-+===================+==========================================================================================+
-| Upload Server CSV | Bulk add of servers from a csv file. See :ref:`bulkserver`                               |
-+-------------------+------------------------------------------------------------------------------------------+
++-------------------+--------------------------------------+
+|       Option      | Description                          |
++===================+======================================+
+| Upload Server CSV | Bulk add of servers from a CSV file. |
++-------------------+--------------------------------------+
 
 Parameters
 ----------
@@ -285,10 +286,9 @@ These are the types of servers that can be managed in Traffic Ops:
 | INFLUXDB      | influxDb server                             |
 +---------------+---------------------------------------------+
 
-
 Delivery Service
 ================
-The fields in the Delivery Service view are:
+The fields in the :term:`Delivery Service` view are:
 
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Name                                       | Description                                                                                                                                                            |
@@ -327,7 +327,7 @@ The fields in the Delivery Service view are:
 |                                            |                                                                                                                                                                        |
 |                                            | See :ref:`signed-urls`.                                                                                                                                                |
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Deep Caching                               | Enables clients to be routed to the closest possible "deep" edge caches on a per Delivery Service basis.                                                               |
+| Deep Caching                               | Enables clients to be routed to the closest possible "deep" edge caches on a per :term:`Delivery Service` basis.                                                       |
 |                                            | See `Deep Caching <http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#deep-caching-deep-coverage-zone-topology>`_                           |
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Query String Handling                      | How to treat query strings:                                                                                                                                            |
@@ -378,7 +378,7 @@ The fields in the Delivery Service view are:
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | HTTP Bypass FQDN                           | Traffic Router will redirect to this FQDN (with the same path) when the Max Bps or Max Tps for this delivery service exceeds.                                          |
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Delivery Service DNS TTL                   | The Time To Live on the DNS record for the Traffic Router A and AAAA records. Setting too high or too low will result in poor caching performance.                     |
+| :term:`Delivery Service` DNS TTL           | The Time To Live on the DNS record for the Traffic Router A and AAAA records. Setting too high or too low will result in poor caching performance.                     |
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Fair Queuing Pacing Rate Bps               | The maximum bytes per second a cache will delivery on any single TCP connection. This uses the Linux kernel’s Fair Queuing setsockopt (SO_MAX_PACING_RATE) to limit    |
 |                                            | the rate of delivery. Traffic exceeding this speed will only be rate-limited and not diverted. This option requires net.core.default_qdisc = fq in /etc/sysctl.conf.   |
@@ -401,7 +401,7 @@ The fields in the Delivery Service view are:
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Use Multi Site Origin Feature              | Set True/False to enable/disable the Multi Site Origin feature for this delivery service. See :ref:`multi-site-origin`                                                 |
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Delivery Service Profile                   | Only used if a delivery service uses configurations that specifically require a profile. Example: MSO configurations or cachekey plugin would require a ds profile to  |
+| :term:`Delivery Service` :term:`Profile`   | Only used if a delivery service uses configurations that specifically require a profile. Example: MSO configurations or cachekey plugin would require a ds profile to  |
 |                                            | be used.                                                                                                                                                               |
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Geo Miss Default Latitude                  | Default Latitude for this delivery service. When client localization fails for both Coverage Zone and Geo Lookup, this the client will be routed as if it was at this  |
@@ -472,11 +472,8 @@ The fields in the Delivery Service view are:
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. [1] These fields are not validated by Traffic Ops to be correct syntactically, and can cause Traffic Server to not start if invalid. Please use with caution.
-.. [2] It is not recommended to change the Routing Name of a Delivery Service after deployment because this changes its Delivery FQDN (i.e. ``<routing-name>.<deliveryservice>.<cdn-domain>``), which means that SSL certificates may need to be updated and clients using the Delivery Service will need to be transitioned to the new Delivery URL.
+.. [2] It is not recommended to change the Routing Name of a :term:`Delivery Service` after deployment because this changes its Delivery FQDN (i.e. ``<routing-name>.<deliveryservice>.<cdn-domain>``), which means that SSL certificates may need to be updated and clients using the :term:`Delivery Service` will need to be transitioned to the new Delivery URL.
 
-
-.. index::
-	Delivery Service Type
 
 .. _ds-types:
 
@@ -508,11 +505,11 @@ One of the most important settings when creating the delivery service is the sel
 | ANY_MAP         | ANY_MAP is not known to Traffic Router. For this Delivery Sevice, the "Raw Remap Text" field in the input form will be used as the remap line in the cache's :file:`remap.config`.                |
 |                 | For more information see `ANY_MAP Raw Remap Text`_                                                                                                                                                |
 +-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| STEERING        | The Delivery Service will be used to route to other delivery services. The target delivery services and the routing weights for those delivery services will be defined by an admin or steering   |
-|                 | user. For more information see the `steering feature <../traffic_router.html#steering-feature>`_ documentation                                                                                    |
+| STEERING        | The :term:`Delivery Service` will be used to route to other delivery services. The target delivery services and the routing weights for those delivery services will be defined by an admin or    |
+|                 | steering user. For more information see the `steering feature <../traffic_router.html#steering-feature>`_ documentation                                                                           |
 +-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | CLIENT_STEERING | Similar to STEERING except that a client can send a request to Traffic Router with a query param of `trred=false`, and Traffic Router will return an HTTP 200 response with a body that contains  |
-|                 | a list of Delivery Service URLs that the client can connect to.  Therefore, the client is doing the steering, not the Traffic Router.                                                             |
+|                 | a list of :term:`Delivery Service` URLs that the client can connect to. Therefore, the client is doing the steering, not the Traffic Router                                                       |
 +-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. _federations:
@@ -570,14 +567,14 @@ The Raw Remap Text may contain the following special strings that will be replac
 
 ANY_MAP ##OVERRIDE##
 """"""""""""""""""""
-.. warning:: The ANY_MAP ``##OVERRIDE##`` special string is a temporary solution and will be deprecated once Delivery Service Versioning is implemented.
+.. warning:: The ANY_MAP ``##OVERRIDE##`` special string is a temporary solution and will be deprecated once :term:`Delivery Service` Versioning is implemented.
 
-A special ``##OVERRIDE##`` string has been added to allow an ANY_MAP rule to override another Delivery Service's remap rule, implemented by :program:`traffic_ops_ort`.  When present, the original Delivery Service remap rule is commented out with an ``##OVERRIDDEN##`` prefix and the ``##OVERRIDE##`` rule is activated in its place.
+A special ``##OVERRIDE##`` string has been added to allow an ANY_MAP rule to override another :term:`Delivery Service`'s remap rule, implemented by :program:`traffic_ops_ort`.  When present, the original :term:`Delivery Service` remap rule is commented out with an ``##OVERRIDDEN##`` prefix and the ``##OVERRIDE##`` rule is activated in its place.
 
 :abbr:`ATS (Apache Traffic Server)` `remap.config <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_:
 
 .. code-block:: text
-	:caption: Delivery Service :file:`remap.config` line:
+	:caption: :term:`Delivery Service` :file:`remap.config` line:
 
 	map http://from.com/ http://to.com/
 
@@ -593,11 +590,11 @@ A special ``##OVERRIDE##`` string has been added to allow an ANY_MAP rule to ove
 	map http://from.com/ http://to.com/ thundering_herd_mitigation.so
 	##OVERRIDDEN## map http://from.com/ http://to.com/
 
-The ANY_MAP ``##OVERRIDE##`` may be used to incrementally deploy plugins by assigning a subset of caches to the ANY_MAP ``##OVERRIDE##`` Delivery Service in addition to the original Delivery Service.  This allows Traffic Router to send traffic to edges based on the original Delivery Service but serve them using the ANY_MAP override Raw Remap Text.
+The ANY_MAP ``##OVERRIDE##`` may be used to incrementally deploy plugins by assigning a subset of caches to the ANY_MAP ``##OVERRIDE##`` :term:`Delivery Service` in addition to the original :term:`Delivery Service`.  This allows Traffic Router to send traffic to edges based on the original :term:`Delivery Service` but serve them using the ANY_MAP override Raw Remap Text.
 
 .. warning:: The from endpoint must exactly match for this to properly work (ie: trailing URL '/'), otherwise :abbr:`ATS (Apache Traffic Server)` may fail to initialize or reload while processing :file:`remap.config`.
 
-.. note:: Any of these ANY_MAP ``##OVERRIDE##`` rules **should** be documented in the comment fields of the original Delivery Service to assist with troubleshooting.
+.. note:: Any of these ANY_MAP ``##OVERRIDE##`` rules **should** be documented in the comment fields of the original :term:`Delivery Service` to assist with troubleshooting.
 
 .. index::
 	Token Based Authentication
@@ -710,13 +707,13 @@ Parameters in the Mid (parent) profile that influence this feature:
 Qstring Handling
 ----------------
 
-Delivery services have a Query String Handling option that, when set to ignore, will automatically add a regex remap to that delivery service's config.  There may be times this is not preferred, or there may be requirements for one delivery service or server(s) to behave differently.  When this is required, the psel.qstring_handling parameter can be set in either the delivery service profile or the server profile, but it is important to note that the server profile will override ALL delivery services assigned to servers with this profile parameter.  If the parameter is not set for the server profile but is present for the Delivery Service profile, this will override the setting in the delivery service.  A value of "ignore" will not result in the addition of regex remap configuration.
+Delivery services have a Query String Handling option that, when set to ignore, will automatically add a regex remap to that delivery service's config.  There may be times this is not preferred, or there may be requirements for one delivery service or server(s) to behave differently.  When this is required, the psel.qstring_handling parameter can be set in either the delivery service profile or the server profile, but it is important to note that the server profile will override ALL delivery services assigned to servers with this profile parameter.  If the parameter is not set for the server profile but is present for the :term:`Delivery Service` profile, this will override the setting in the delivery service.  A value of "ignore" will not result in the addition of regex remap configuration.
 
 +-----------------------+---------------+---------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |      Name             |    Filename   | Default |                                                                                    Description                                                                    |
 +=======================+===============+=========+===================================================================================================================================================================+
 | psel.qstring_handling | parent.config | -       | Sets qstring handling without the use of regex remap for a delivery service when assigned to a delivery service profile, and overrides qstring handling for all   |
-|                       |               |         | Delivery Services for associated servers when assigned to a server profile. Value must be "consider" or "ignore".                                                 |
+|                       |               |         | :term:`Delivery Service`\ s for associated servers when assigned to a server profile. Value must be "consider" or "ignore".                                       |
 +-----------------------+---------------+---------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. _multi-site-origin:
@@ -830,8 +827,8 @@ Traffic Router Profile
 | api.auth.url                            | CRConfig.json          | The API authentication URL (https://${tmHostname}/api/1.1/user/login); ${tmHostname} is a search and replace token used by Traffic Router to     |
 |                                         |                        | construct the correct URL)                                                                                                                       |
 +-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| consistent.dns.routing                  | CRConfig.json          | Control whether DNS Delivery Services use consistent hashing on the edge FQDN to select caches for answers. May improve performance if set to    |
-|                                         |                        | true; defaults to false                                                                                                                          |
+| consistent.dns.routing                  | CRConfig.json          | Control whether DNS :term:`Delivery Service`\ s use consistent hashing on the edge FQDN to select caches for answers. May improve performance if |
+|                                         |                        | set to true; defaults to false                                                                                                                   |
 +-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
 | dnssec.enabled                          | CRConfig.json          | Whether DNSSEC is enabled; this parameter is updated via the DNSSEC administration user interface.                                               |
 +-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -884,11 +881,6 @@ The regex remap expression allows to to use a regex and resulting match group(s)
 
 	^/([^?]*).* http://origin.example.com/remapped/$1
 
-..   index::
-	HOST_REGEXP
-	PATH_REGEXP
-	HEADER_REGEXP
-	Delivery Service regexp
 
 .. _ds-regexp:
 
@@ -1027,7 +1019,7 @@ The Deep Coverage Zone File (DCZF) format is similar to the CZF format but adds 
 
 Each entry in the ``caches`` list is the hostname of an edge cache registered in Traffic Ops which will be used for "deep" caching in that Deep Coverage Zone. Unlike a regular CZF, coverage zones in the DCZF do not map to a :term:`Cache Group` in Traffic Ops, so currently the deep coverage zone name only needs to be unique.
 
-If the Traffic Router gets a DCZF "hit" for a requested Delivery Service that has Deep Caching enabled, the client will be routed to an available "deep" cache from that zone's ``caches`` list.
+If the Traffic Router gets a DCZF "hit" for a requested :term:`Delivery Service` that has Deep Caching enabled, the client will be routed to an available "deep" cache from that zone's ``caches`` list.
 
 .. note:: The ``"coordinates"`` section is optional.
 
@@ -1226,7 +1218,7 @@ To invalidate content:
 #. Click **Tools > Invalidate Content**
 #. Fill out the form fields:
 
-	- Select the **Delivery Service**
+	- Select the *:term:`Delivery Service`**
 	- Enter the **Path Regex** - this should be a `PCRE <http://www.pcre.org/>`_ compatible regular expression for the path to match for forcing the revalidation. Be careful to only match on the content you need to remove - revalidation is an expensive operation for many origins, and a simple ``/.*`` can cause an overload condition of the origin.
 	- Enter the **Time To Live** - this is how long the revalidation rule will be active for. It usually makes sense to make this the same as the ``Cache-Control`` header from the origin which sets the object time to live in cache (by ``max-age`` or ``Expires``). Entering a longer TTL here will make the caches do unnecessary work.
 	- Enter the **Start Time** - this is the start time when the revalidation rule will be made active. It is pre-populated with the current time, leave as is to schedule ASAP.
@@ -1236,14 +1228,14 @@ To invalidate content:
 
 Manage DNSSEC Keys
 ==================
-In order to support `DNSSEC <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`_ in Traffic Router, Traffic Ops provides some actions for managing DNSSEC keys for a CDN and associated Delivery Services.  DNSSEC Keys consist of a Key Signing Keys (KSK) which are used to sign other DNSKEY records as well as Zone Signing Keys (ZSK) which are used to sign other records.  DNSSEC Keys are stored in `Traffic Vault <../../overview/traffic_vault.html>`_ and should only be accessible to Traffic Ops.  Other applications needing access to this data, such as Traffic Router, must use the Traffic Ops `DNSSEC APIs <../../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ to retrieve this information.
+In order to support `DNSSEC <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`_ in Traffic Router, Traffic Ops provides some actions for managing DNSSEC keys for a CDN and associated :term:`Delivery Service`\ s.  DNSSEC Keys consist of a Key Signing Keys (KSK) which are used to sign other DNSKEY records as well as Zone Signing Keys (ZSK) which are used to sign other records.  DNSSEC Keys are stored in `Traffic Vault <../../overview/traffic_vault.html>`_ and should only be accessible to Traffic Ops.  Other applications needing access to this data, such as Traffic Router, must use the Traffic Ops `DNSSEC APIs <../../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ to retrieve this information.
 
 To Manage DNSSEC Keys:
 1. Click **Tools -> Manage DNSSEC Keys**
 2. Choose a CDN and click **Manage DNSSEC Keys**
 
 	- If keys have not yet been generated for a CDN, this screen will be mostly blank with just the **CDN** and **DNSSEC Active?** fields being populated.
-	- If keys have been generated for the CDN, the Manage DNSSEC Keys screen will show the TTL and Top Level Domain (TLD) KSK Expiration for the CDN as well as DS Record information which will need to be added to the parent zone of the TLD in order for DNSSEC to work.
+	- If keys have been generated for the CDN, the Manage DNSSEC Keys screen will show the TTL and Top Level Domain (TLD) :abbr:`KSK (Key Signing Key)` Expiration for the CDN as well as DS Record information which will need to be added to the parent zone of the TLD in order for DNSSEC to work.
 
 The Manage DNSSEC Keys screen also allows a user to perform the following actions:
 
@@ -1253,31 +1245,31 @@ Fairly straight forward, this button set the **dnssec.enabled** param to either 
 
 Generate Keys
 -------------
-Generate Keys will generate DNSSEC keys for the CDN TLD as well as for each Delivery Service in the CDN.  It is important to note that this button will create a new KSK for the TLD and, therefore, a new DS Record.  Any time a new DS Record is created, it will need to be added to the parent zone of the TLD in order for DNSSEC to work properly.  When a user clicks the **Generate Keys** button, they will be presented with a screen with the following fields:
+Generate Keys will generate DNSSEC keys for the CDN TLD as well as for each :term:`Delivery Service` in the CDN.  It is important to note that this button will create a new :abbr:`KSK (Key Signing Key)` for the TLD and, therefore, a new DS Record.  Any time a new DS Record is created, it will need to be added to the parent zone of the TLD in order for DNSSEC to work properly.  When a user clicks the **Generate Keys** button, they will be presented with a screen with the following fields:
 
 - **CDN:** This is not editable and displays the CDN for which keys will be generated
-- **ZSK Expiration (Days):**  Sets how long (in days) the Zone Signing Key will be valid for the CDN and associated Delivery Services. The default is 30 days.
-- **KSK Expiration (Days):**  Sets how long (in days) the Key Signing Key will be valid for the CDN and associated Delivery Services. The default is 365 days.
+- **ZSK Expiration (Days):**  Sets how long (in days) the Zone Signing Key will be valid for the CDN and associated :term:`Delivery Service`\ s. The default is 30 days.
+- **KSK Expiration (Days):**  Sets how long (in days) the Key Signing Key will be valid for the CDN and associated :term:`Delivery Service`\ s. The default is 365 days.
 - **Effective Date (GMT):** The time from which the new keys will be active.  Traffic Router will use this value to determine when to start signing with the new keys and stop signing with the old keys.
 
 Once these fields have been correctly entered, a user can click Generate Keys.  The user will be presented with a confirmation screen to help them understand the impact of generating the keys.  If a user confirms, the keys will be generated and stored in Traffic Vault.
 
 Regenerate KSK
 --------------
-Regenerate KSK will create a new Key Signing Key for the CDN TLD. A new DS Record will also be generated and need to be put into the parent zone in order for DNSSEC to work correctly. The **Regenerate KSK** button is only available if keys have already been generated for a CDN.  The intent of the button is to provide a mechanism for generating a new KSK when a previous one expires or if necessary for other reasons such as a security breach.  When a user goes to generate a new KSK they are presented with a screen with the following options:
+Regenerate :abbr:`KSK (Key Signing Key)` will create a new Key Signing Key for the CDN TLD. A new DS Record will also be generated and need to be put into the parent zone in order for DNSSEC to work correctly. The **Regenerate KSK** button is only available if keys have already been generated for a CDN.  The intent of the button is to provide a mechanism for generating a new :abbr:`KSK (Key Signing Key)` when a previous one expires or if necessary for other reasons such as a security breach.  When a user goes to generate a new :abbr:`KSK (Key Signing Key)` they are presented with a screen with the following options:
 
 :CDN: This is not editable and displays the CDN for which keys will be generated
-:KSK Expiration (Days): Sets how long (in days) the Key Signing Key will be valid for the CDN and associated Delivery Services. The default is 365 days.
-:Effective Date (GMT): The time from which the new KSK and DS Record will be active.  Since generating a new KSK will generate a new DS Record that needs to be added to the parent zone, it is very important to make sure that an effective date is chosen that allows for time to get the DS Record into the parent zone.  Failure to get the new DS Record into the parent zone in time could result in DNSSEC errors when Traffic Router tries to sign responses.
+:KSK Expiration (Days): Sets how long (in days) the Key Signing Key will be valid for the CDN and associated :term:`Delivery Service`\ s. The default is 365 days.
+:Effective Date (GMT): The time from which the new :abbr:`KSK (Key Signing Key)` and DS Record will be active. Since generating a new :abbr:`KSK (Key Signing Key)` will generate a new DS Record that needs to be added to the parent zone, it is very important to make sure that an effective date is chosen that allows for time to get the DS Record into the parent zone. Failure to get the new DS Record into the parent zone in time could result in DNSSEC errors when Traffic Router tries to sign responses.
 
-Once these fields have been correctly entered, a user can click Generate KSK.  The user will be presented with a confirmation screen to help them understand the impact of generating the KSK.  If a user confirms, the KSK will be generated and stored in Traffic Vault.
+Once these fields have been correctly entered, a user can click Generate KSK. The user will be presented with a confirmation screen to help them understand the impact of generating the KSK.  If a user confirms, the :abbr:`KSK (Key Signing Key)` will be generated and stored in Traffic Vault.
 
-Additionally, Traffic Ops also performs some systematic management of DNSSEC keys.  This management is necessary to help keep keys in sync for Delivery Services in a CDN as well as to make sure keys do not expire without human intervention.
+Additionally, Traffic Ops also performs some systematic management of :abbr:`DNSSEC (DNS Security Extensions)` keys. This management is necessary to help keep keys in sync for :term:`Delivery Service`\ s in a CDN as well as to make sure keys do not expire without human intervention.
 
 Generation of keys for new Delivery Services
 --------------------------------------------
-If a new Delivery Service is created and added to a CDN that has DNSSEC enabled, Traffic Ops will create DNSSEC keys for the Delivery Service and store them in Traffic Vault.
+If a new :term:`Delivery Service` is created and added to a CDN that has :abbr:`DNSSEC (DNS Security Extensions)` enabled, Traffic Ops will create :abbr:`DNSSEC (DNS Security Extensions)` keys for the :term:`Delivery Service` and store them in Traffic Vault.
 
 Regeneration of expiring keys for a Delivery Service
 ----------------------------------------------------
-Traffic Ops has a process, controlled by cron, to check for expired or expiring keys and re-generate them.  The process runs at 5 minute intervals to check and see if keys are expired or close to expiring (withing 10 minutes by default).  If keys are expired for a Delivery Service, traffic ops will regenerate new keys and store them in Traffic Vault.  This process is the same for the CDN TLD ZSK, however Traffic Ops will not re-generate the CDN TLD KSK systematically.  The reason is that when a KSK is regenerated for the CDN TLD then a new DS Record will also be created.  The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new KSK in order for DNSSEC to work correctly.  Therefore, management of the KSK needs to be a manual process.
+Traffic Ops has a process, controlled by :manpage:`cron(8)`, to check for expired or expiring keys and re-generate them. The process runs at 5 minute intervals to check and see if keys are expired or close to expiring (withing 10 minutes by default). If keys are expired for a :term:`Delivery Service`, Traffic Ops will regenerate new keys and store them in Traffic Vault. This process is the same for the CDN :abbr:`TLD (Top-Level Domain)` :abbr:`ZSK (Zone Signing Key)`, however Traffic Ops will not re-generate the CDN :abbr:`TLD (Top-Level Domain)` :abbr:`KSK (Key Signing Key)` systematically. The reason is that when a :abbr:`KSK (Key Signing Key)` is regenerated for the CDN :abbr:`TLD (Top-Level Domain)` then a new DS Record will also be created. The new DS Record needs to be added to the parent zone before Traffic Router attempts to sign with the new :abbr:`KSK (Key Signing Key)` in order for :abbr:`DNSSEC (DNS Security Extensions)` to work correctly. Therefore, management of the :abbr:`KSK (Key Signing Key)` needs to be a manual process.

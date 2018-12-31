@@ -23,7 +23,7 @@ The Traffic Monitor URLs below allow certain query parameters for use in control
 .. note:: Unlike :ref:`Traffic Ops API endpoints <to-api>`\ , no authentication is required for any of these, and as such there can be no special role requirements for a user.
 
 ``/publish/EventLog``
-=========================
+=====================
 Gets a log of recent changes in the availability of polled caches.
 
 ``GET``
@@ -84,7 +84,7 @@ Response Structure
 """"""""""""""""""
 :pp: Stores any provided request parameters provided as a string
 :date: A ``ctime``-like string representation of the time at which the response was served
-:caches: An object with keys that are the names of monitored cache servers
+:caches: An object with keys that are the names of monitored :term:`cache server`\ s
 
 	:<server name>: Each server's object is a collection of keys that are the names of statistics
 
@@ -134,7 +134,7 @@ Response Structure
 """"""""""""""""""
 :pp: Stores any provided request parameters provided as a string
 :date: A ``ctime``-like string representation of the time at which the response was served
-:caches: An object with keys that are the names of monitored cache servers - only the cache named by the ``cache`` request path parameter will be shown
+:caches: An object with keys that are the names of monitored :term:`cache server`\ s - only the cache named by the ``cache`` request path parameter will be shown
 
 	:<server name>: The requested server's object is a collection of keys that are the names of statistics
 
@@ -151,11 +151,11 @@ Response Structure
 
 ``/publish/DsStats``
 ====================
-Statistics gathered for Delivery Services
+Statistics gathered for :term:`Delivery Service`\ s
 
 ``GET``
 -------
-:Response Type: ?
+:Response Type: Object
 
 Request Structure
 """""""""""""""""
@@ -179,7 +179,7 @@ TODO
 
 ``/publish/DsStats/{{deliveryService}}``
 ========================================
-Statistics gathered for this Delivery Service only.
+Statistics gathered for this :term:`Delivery Service` only.
 
 ``GET``
 -------
@@ -189,11 +189,11 @@ Request Structure
 """""""""""""""""
 .. table:: Request Path Parameters
 
-	+---------------------+--------+---------------------------------------------+
-	| Parameter           | Type   |                Description                  |
-	+=====================+========+=============================================+
-	| ``deliveryService`` | string | The name of the Delivery Service to inspect |
-	+---------------------+--------+---------------------------------------------+
+	+---------------------+--------+-----------------------------------------------------+
+	| Parameter           | Type   | Description                                         |
+	+=====================+========+=====================================================+
+	| ``deliveryService`` | string | The name of the :term:`Delivery Service` to inspect |
+	+---------------------+--------+-----------------------------------------------------+
 
 
 .. table:: Request Query Parameters
@@ -216,7 +216,7 @@ TODO
 
 ``/publish/CrStates``
 =====================
-The current state of this CDN per the health protocol.
+The current state of this CDN per the ref:`health-proto`.
 
 ``GET``
 -------
@@ -235,7 +235,7 @@ The current state of this CDN per this Traffic Monitor only.
 
 ``/publish/CrConfig``
 =====================
-The CrConfig served to and consumed by Traffic Router.
+The CDN :term:`Snapshot` (historically named a "CRConfig") served to and consumed by Traffic Router.
 
 ``GET``
 -------
@@ -290,7 +290,7 @@ TODO
 
 ``/publish/StatSummary``
 ========================
-The summary of cache statistics.
+The summary of :term:`cache server` statistics.
 
 ``GET``
 -------

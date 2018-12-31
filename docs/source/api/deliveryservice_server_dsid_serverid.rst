@@ -21,7 +21,7 @@
 
 ``DELETE``
 ==========
-Removes a cache server from a Delivery Service.
+Removes a :term:`cache server` from a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_
@@ -31,15 +31,15 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+----------+----------+-------------------------------------------------------+
-	| Name     | Required | Description                                           |
-	+==========+==========+=======================================================+
-	| dsId     | yes      | An integral, unique identifier for a Delivery Service |
-	+----------+----------+-------------------------------------------------------+
-	| serverID | yes      | An integral, unique identifier for a server           |
-	+----------+----------+-------------------------------------------------------+
+	+----------+----------+---------------------------------------------------------------+
+	| Name     | Required | Description                                                   |
+	+==========+==========+===============================================================+
+	| dsId     | yes      | An integral, unique identifier for a :term:`Delivery Service` |
+	+----------+----------+---------------------------------------------------------------+
+	| serverID | yes      | An integral, unique identifier for a server                   |
+	+----------+----------+---------------------------------------------------------------+
 
-.. note:: The server identified by ``serverID`` must be a cache server, or the assignment will fail.
+.. note:: The server identified by ``serverID`` must be a :term:`cache server`, or the assignment will fail.
 
 Response Structure
 ------------------
@@ -65,4 +65,4 @@ Response Structure
 		}
 	]}
 
-.. [1] Users with the "admin" or "operations" roles will be able to delete *any* Delivery Service, whereas other users will only be able to delete Delivery Services that their tenant has permissions to delete.
+.. [1] Users with the "admin" or "operations" roles will be able to delete *any*:term:`Delivery Service`, whereas other users will only be able to delete :term:`Delivery Service`\ s that their tenant has permissions to delete.

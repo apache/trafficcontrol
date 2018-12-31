@@ -23,7 +23,7 @@
 
 ``POST``
 ========
-Allows user to upload an SSL certificate, csr, and private key for a Delivery Service.
+Allows user to upload an SSL certificate, csr, and private key for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,14 +31,14 @@ Allows user to upload an SSL certificate, csr, and private key for a Delivery Se
 
 Request Structure
 -----------------
-:cdn:         The name of the CDN to which the Delivery Service belongs
+:cdn:         The name of the CDN to which the :term:`Delivery Service` belongs
 :certificate: An object that contains the actual components of the SSL key
 
-	:crt: The certificate for the Delivery Service identified by ``key``
-	:csr: The csr file for the Delivery Service identified by ``key``
-	:key: The private key for the Delivery Service identified by ``key``
+	:crt: The certificate for the :term:`Delivery Service` identified by ``key``
+	:csr: The csr file for the :term:`Delivery Service` identified by ``key``
+	:key: The private key for the :term:`Delivery Service` identified by ``key``
 
-:key:     The 'xml_id' of the Delivery Service to which these keys will be assigned
+:key:     The 'xml_id' of the :term:`Delivery Service` to which these keys will be assigned
 :version: An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
 
 .. code-block:: http

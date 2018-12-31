@@ -18,9 +18,9 @@
 *************************************
 Configure Regional Geo-blocking (RGB)
 *************************************
-.. Note:: RGB is only supported for HTTP delivery services.
+.. Note:: :abbr:`RGB (Regional Geographic-based Blocking)` is only supported for HTTP :term:`Delivery Service`\ s.
 
-#. Prepare an RGB configuration file. RGB uses a configuration file in JSON format to define regional geographic blocking rules for Delivery Services. The file needs to be put on an HTTP server accessible to Traffic Router.
+#. Prepare an :abbr:`RGB (Regional Geographic-based Blocking)` configuration file. :abbr:`RGB (Regional Geographic-based Blocking)` uses a configuration file in JSON format to define regional geographic blocking rules for :term:`Delivery Service`\ s. The file needs to be put on an HTTP server accessible to Traffic Router.
 
 	.. code-block:: json
 		:caption: Example Configuration File
@@ -45,35 +45,35 @@ Configure Regional Geo-blocking (RGB)
 		}
 
 	``deliveryServiceId``
-		Should be equal to the ``ID`` or ``xml_id`` field of the intended Delivery Service as configured in Traffic Portal
+		Should be equal to the ``ID`` or ``xml_id`` field of the intended :term:`Delivery Service` as configured in Traffic Portal
 	``urlRegex``
 		A regular expression to be used to determine to what URLs the rule shall apply; a URL that matches it is subject to the rule
 	``geoLocation``
-		An object that currently supports only the keys ``includePostalCode`` and ``excludePostalCode`` (mutually exclusive). When the ``includePostalCode`` key is used, only the clients whose Forward Sortation Areas (FSA)s - the first three postal characters of Canadian postal codes - are in the ``includePostalCode`` list are able to view the content at URLs matched by the ``urlRegex``. When ``excludePostalCode`` is used, any client whose FSA is not in the ``excludePostalCode`` list will be allowed to view the content
+		An object that currently supports only the keys ``includePostalCode`` and ``excludePostalCode`` (mutually exclusive). When the ``includePostalCode`` key is used, only the clients whose :abbr:`FSA (Forward Sortation Areas)`\ s - the first three postal characters of Canadian postal codes - are in the ``includePostalCode`` list are able to view the content at URLs matched by the ``urlRegex``. When ``excludePostalCode`` is used, any client whose :abbr:`FSA (Forward Sortation Areas)` is not in the ``excludePostalCode`` list will be allowed to view the content
 	``redirectUrl``
-		The URL that will be returned to the blocked clients. Without a domain name in the URL, the URL will still be served in the same Delivery Service. Thus Traffic Router will redirect the client to a chosen cache server assigned to the Delivery Service. If the URL includes a domain name, Traffic Router simply redirects the client to the defined URL. In the later case, the redirect URL must not match the ``urlRegex`` value, or an infinite loop of  HTTP ``302 Found`` responses will occur at the Traffic Router
+		The URL that will be returned to the blocked clients. Without a domain name in the URL, the URL will still be served in the same :term:`Delivery Service`. Thus Traffic Router will redirect the client to a chosen :term:`cache server` assigned to the :term:`Delivery Service`. If the URL includes a domain name, Traffic Router simply redirects the client to the defined URL. In the later case, the redirect URL must not match the ``urlRegex`` value, or an infinite loop of  HTTP ``302 Found`` responses will occur at the Traffic Router
 	``ipWhiteList``
-		An optional element that is an array of CIDR (Classless Inter-Domain Routing) blocks indicating the IPv4 subnets that are allowed by the rule. If this list exists and the value is not empty, client IP will be matched against the CIDR list, bypassing the value of ``geoLocation``. If there is no match in the white list, Traffic Router defers to the value of ``geoLocation`` to determine if content ought to be blocked.
+		An optional element that is an array of :abbr:`CIDR (Classless Inter-Domain Routing)` blocks indicating the IPv4 subnets that are allowed by the rule. If this list exists and the value is not empty, client IP will be matched against the :abbr:`CIDR (Classless Inter-Domain Routing)` list, bypassing the value of ``geoLocation``. If there is no match in the white list, Traffic Router defers to the value of ``geoLocation`` to determine if content ought to be blocked.
 
 
-#. Add RGB parameters in Traffic Portal to the Delivery Service's Traffic Router(s)'s profile(s). The ``configFile`` field should be set to ``CRConfig.json``, and the following two parameter name/values need to be specified:
+#. Add :abbr:`RGB (Regional Geographic-based Blocking)` parameters in Traffic Portal to the :term:`Delivery Service`'s Traffic Router(s)'s profile(s). The ``configFile`` field should be set to ``CRConfig.json``, and the following two parameter name/values need to be specified:
 
 	``regional_geoblocking.polling.url``
 		The URL of the RGB configuration file. Traffic Router will fetch the file from this URL using an HTTP ``GET`` request.
 	``regional_geoblocking.polling.interval``
-		The interval on which Traffic Router polls the RGB configuration file.
+		The interval on which Traffic Router polls the :abbr:`RGB (Regional Geographic-based Blocking)` configuration file.
 
 	.. figure:: regionalgeo/01.png
 		:scale: 100%
 		:align: center
 
-#. Enable RGB for a delivery service
+#. Enable RGB for a :term:`Delivery Service`
 
 	.. figure:: regionalgeo/02.png
 		:scale: 100%
 		:align: center
 
-#. Go to Tools->Snapshot CRConfig, perform “Diff CRConfig” and click "Write CRConfig".
+#. Go to :menuselection:`Tools --> Snapshot CRConfig`, perform :guilabel:`Diff CRConfig` and click :guilabel:`Write CRConfig`.
 
 	.. figure:: regionalgeo/03.png
 		:scale: 70%
@@ -83,24 +83,25 @@ Traffic Router Access Log
 =========================
 .. seealso:: :ref:`tr-logs`
 
-RGB extends the ``rtype`` field and adds a new field ``rgb`` in Traffic Router access.log to help to monitor this feature. A value of ``RGALT`` in the ``rtype`` field indicates that a request is redirected to an alternate URL by RGB; a value of ``RGDENY`` indicates that a request is denied by RGB because there is no matching rule in the RGB configuration file for this request. When RGB is enabled, the ``RGB`` field will be non-empty with following format::
+RGB extends the ``rtype`` field and adds a new field ``rgb`` in Traffic Router access.log to help to monitor this feature. A value of ``RGALT`` in the ``rtype`` field indicates that a request is redirected to an alternate URL by :abbr:`RGB (Regional Geographic-based Blocking)`; a value of ``RGDENY`` indicates that a request is denied by :abbr:`RGB (Regional Geographic-based Blocking)` because there is no matching rule in the :abbr:`RGB (Regional Geographic-based Blocking)` configuration file for this request. When :abbr:`RGB (Regional Geographic-based Blocking)` is enabled, the ``RGB`` field will be non-empty with following format:
 
-	{FSA}:{allowed/disallowed}:{include/exclude postal}:{fallback config}:{allowed by whitelist}
+``{FSA}:{allowed/disallowed}:{include/exclude postal}:{fallback config}:{allowed by whitelist}``
 
 
 FSA
-	FSA part of the client’s postal code, which is retrieved from a geographic location database. If this field is empty, a dash (“-“) is filled in.
+	:dfn:`FSA` part of the client’s postal code, which is retrieved from a geographic location database. If this field is empty, a dash (“-“) is filled in.
 allowed/disallowed
-	This flag shows if a request was allowed or disallowed by RGB (1 for yes, and 0 for no).
+	This flag shows if a request was allowed or disallowed by :abbr:`RGB (Regional Geographic-based Blocking)` (1 for yes, and 0 for no).
 include/exclude postal
 	This shows that when a rule in JSON is matched for a request, it's value is "I" if the rule matched because of an ``includePostalCode`` rule, "X" if the rule matched because of an ``excludePostalCode`` rule, or "-" if no rule matched.
 fallback config
-	When Traffic Router fails to parse an RGB configuration file as JSON, Traffic Router will handle requests with latest valid configuration that it had, but will set the ``fallback config`` flag to 1. If no fall-back occurred, then the flag is set to 0.
+	When Traffic Router fails to parse an :abbr:`RGB (Regional Geographic-based Blocking)` configuration file as JSON, Traffic Router will handle requests with latest valid configuration that it had, but will set the ``fallback config`` flag to 1. If no fall-back occurred, then the flag is set to 0.
 allowed by whitelist
 	If a request is allowed by a ``whitelist`` field in the configuration, this flag is set to 1; for all other cases, it is 0.
 
 
-Example::
+.. code-block:: squid
+	:caption: Example
 
 	1446442214.685 qtype=HTTP chi=129.100.254.79 url="http://foo.geo2.cdn.com/live5.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="-" rdtl=- rerr="-" rgb="N6G:1:X:0:0" pssc=302 ttms=3 rurl=http://cent6-44.geo2.cdn.com/live5.m3u8 rh="-"
 

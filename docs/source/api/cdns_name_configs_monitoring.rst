@@ -62,14 +62,14 @@ Response Structure
 	:tm.healthParams.polling.url: The URL from which a list of health-polling parameters can be obtained
 	:tm.polling.interval:         The interval at which to poll for configuration updates
 
-:deliveryServices: An array of objects representing each Delivery Service provided by this CDN
+:deliveryServices: An array of objects representing each :term:`Delivery Service` provided by this CDN
 
-	:status:             The Delivery Service's status
-	:totalKbpsThreshold: A threshold rate of data transfer this Delivery Service is configured to handle, in Kilobits per second
-	:totalTpsThreshold:  A threshold amount of transactions per second that this Delivery Service is configured to handle
+	:status:             The :term:`Delivery Service`'s status
+	:totalKbpsThreshold: A threshold rate of data transfer this :term:`Delivery Service` is configured to handle, in Kilobits per second
+	:totalTpsThreshold:  A threshold amount of transactions per second that this :term:`Delivery Service` is configured to handle
 	:xmlId:              An integral, unique identifier for this Deliver Service (named "xmlId" for legacy reasons)
 
-:profiles: An array of the profiles in use by the cache servers and Delivery Services belonging to this CDN
+:profiles: An array of the profiles in use by the :term:`cache server` s and :term:`Delivery Service`\ s belonging to this CDN
 
 	:name:       The profile's name
 	:parameters: An array of the parameters in this profile that relate to monitoring configuration. This can be ``null`` if the servers using this profile cannot be monitored (e.g. Traffic Routers)
@@ -96,9 +96,9 @@ Response Structure
 :trafficServers: An array of objects that represent the caches being monitored within this CDN
 
 	:cacheGroup:    The Cache Group to which this cache belongs
-	:fqdn:          A Fully Qualified Domain Name (FQDN) that resolves to the cache server's IP (or IPv6) address
-	:hashId:        The short name for the cache server - named "hashId" for legacy reasons
-	:hostName:      The (short) hostname of the cache server
+	:fqdn:          A Fully Qualified Domain Name (FQDN) that resolves to the :term:`cache server`'s IP (or IPv6) address
+	:hashId:        The short name for the :term:`cache server` - named "hashId" for legacy reasons
+	:hostName:      The (short) hostname of the :term:`cache server`
 	:interfacename: The name of the network interface device being used by the cache's HTTP proxy
 	:ip6:           The cache's IPv6 address - when applicable
 	:ip:            The cache's IP address

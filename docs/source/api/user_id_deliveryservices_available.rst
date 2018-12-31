@@ -19,7 +19,7 @@
 
 ``GET``
 =======
-Lists identifying information for all of the Delivery Services assigned to a user - **not**, as the name implies, the Delivery Services *available* to be assigned to that user.
+Lists identifying information for all of the :term:`Delivery Service`\ s assigned to a user - **not**, as the name implies, the :term:`Delivery Service`\ s *available* to be assigned to that user.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -29,11 +29,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-----------------------------------------------------------------------------------------+
-	| Name | Description                                                                             |
-	+======+=========================================================================================+
-	|  ID  | The integral, unique identifier of the users whose Delivery Services shall be retrieved |
-	+------+-----------------------------------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                       |
+	+======+===================================================================================================+
+	|  ID  | The integral, unique identifier of the users whose :term:`Delivery Service`\ s shall be retrieved |
+	+------+---------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -46,9 +46,9 @@ Request Structure
 
 Response Structure
 ------------------
-:displayName: This Delivery Service's name
-:id:          The integral, unique identifier of this Delivery Service
-:xmlId:       The 'xml_id' which (also) uniquely identifies this Delivery Service
+:displayName: This :term:`Delivery Service`'s name
+:id:          The integral, unique identifier of this :term:`Delivery Service`
+:xmlId:       The 'xml_id' which (also) uniquely identifies this :term:`Delivery Service`
 
 .. code-block:: http
 	:caption: Response Example

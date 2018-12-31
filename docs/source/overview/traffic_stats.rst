@@ -13,21 +13,21 @@
 .. limitations under the License.
 ..
 
-.. _tc-ts:
+.. _ts-overview:
 
 *************
 Traffic Stats
 *************
-Traffic Stats is a program written in `Go <http://golang.org>`_ that is used to acquire and store statistics about CDNs controlled by Traffic Control. Traffic Stats mines metrics from Traffic Monitor's JSON APIs and stores the data in `InfluxDB <http://influxdb.com>`_. Data is typically stored in InfluxDB on a short-term basis (30 days or less). The data from InfluxDB is then used to drive graphs created by `Grafana <http://grafana.org>`_ - which are linked to from Traffic Ops - as well as provide data exposed through the Traffic Ops API. Traffic Stats performs two functions:
+:dfn:`Traffic Stats` is a program written in `Go <http://golang.org>`_ that is used to acquire and store statistics about CDNs controlled by Traffic Control. Traffic Stats mines metrics from the :ref:`tm-api` and stores the data in `InfluxDB <http://influxdb.com>`_. Data is typically stored in InfluxDB on a short-term basis (30 days or less). The data from InfluxDB is then used to drive graphs created by `Grafana <http://grafana.org>`_ - which are linked to from :ref:`tp-overview` - as well as provide data exposed through the :ref:`to-api`. Traffic Stats performs two functions:
 
-- Gathers stat data for Edge Caches and Delivery Services at a configurable interval (10 second default) from the Traffic Monitor API's and stores the data in InfluxDB
-- Summarizes all of the stats once a day (around midnight UTC) and creates a daily report containing the Max Gbps Served and the Total Bytes Served.
+- Gathers statistics for Edge-tier :term:`cache server`\ s and :term:`Delivery Service`\ s at a configurable interval (10 second default) from the :ref:`tm-api` and stores the data in InfluxDB
+- Summarizes all of the statistics once a day (around midnight UTC) and creates a daily report containing the Max :abbr:`Gbps (Gigabits per second)` Served and the Total Bytes Served.
 
-Stat data is stored in three different databases:
+Statistics are stored in three different databases:
 
-- ``cache_stats``: Stores data gathered from edge caches. The `measurements <https://influxdb.com/docs/v0.9/concepts/glossary.html#measurement>`_ stored by cache are: bandwidth, maxKbps, and ``client_connections`` (``ats.proxy.process.http.current_client_connections``). Cache Data is stored with `tags <https://influxdb.com/docs/v0.9/concepts/glossary.html#tag>`_ for hostname, Cache Group, and CDN. Data can be queried using tags.
+- ``cache_stats``: Stores data gathered from edge-tier :term:`cache server`\ s. The `measurements <https://influxdb.com/docs/v0.9/concepts/glossary.html#measurement>`_ stored by ``cache_stats`` are: bandwidth, maxKbps, and ``client_connections`` (``ats.proxy.process.http.current_client_connections``). Cache Data is stored with `tags <https://influxdb.com/docs/v0.9/concepts/glossary.html#tag>`_ for hostname, :term:`Cache Group`, and CDN. Data can be queried using tags.
 
-- ``deliveryservice_stats``: Stores data for Delivery Services. The measurements stored by delivery service are:
+- ``deliveryservice_stats``: Stores data for :term:`Delivery Service`\ s. The measurements stored by :term:`Delivery Service` are:
 
 	- ``kbps``
 	- ``status_4xx``
@@ -38,8 +38,8 @@ Stat data is stored in three different databases:
 	- ``tps_5xx``
 	- ``tps_total``
 
-	Delivery Service statistics are stored with tags for Cache Group, CDN, and Delivery Service ``xml_id``.
+	:term:`Delivery Service`\ statistics are stored with tags for :term:`Cache Group`, CDN, and :term:`Delivery Service` ``xml_id``.
 
 - ``daily_stats``: Stores summary data for daily activities. The statistics that are currently summarized are Max Bandwidth and Bytes Served and they are stored by CDN.
 
-Traffic Stats does not influence overall CDN operation, but is required in order to display charts in Traffic Portal and the legacy Traffic Ops UI.
+Traffic Stats does not influence overall CDN operation, but is required in order to display charts in :ref:`tp-overview`.

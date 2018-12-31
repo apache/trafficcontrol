@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Retrieves detailed and summary metrics for Mid-tier and Edge-tier caches assigned to a Delivery Service.
+Retrieves detailed and summary metrics for Mid-tier and Edge-tier caches assigned to a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None

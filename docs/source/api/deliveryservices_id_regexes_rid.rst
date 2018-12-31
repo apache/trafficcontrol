@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves a specific routing regular expression for a specific Delivery Service.
+Retrieves a specific routing regular expression for a specific :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
@@ -34,7 +34,7 @@ Request Structure
 	+------+-----------------------------------------------------------------------------------+
 	| Name |                Description                                                        |
 	+======+===================================================================================+
-	|  ID  | The integral, unique identifier of the Delivery Service being inspected           |
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service` being inspected   |
 	+------+-----------------------------------------------------------------------------------+
 	| rID  | The integral, unique identifier of the routing regular expression being inspected |
 	+------+-----------------------------------------------------------------------------------+
@@ -81,7 +81,7 @@ Response Structure
 		}
 	]}
 
-.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by Delivery Services their tenant has permissions to see.
+.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to see.
 
 
 ``PUT``
@@ -99,7 +99,7 @@ Request Structure
 	+------+-----------------------------------------------------------------------------------+
 	| Name |                Description                                                        |
 	+======+===================================================================================+
-	|  ID  | The integral, unique identifier of the Delivery Service being inspected           |
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service` being inspected   |
 	+------+-----------------------------------------------------------------------------------+
 	| rID  | The integral, unique identifier of the routing regular expression being inspected |
 	+------+-----------------------------------------------------------------------------------+
@@ -166,7 +166,7 @@ Response Structure
 	}}
 
 
-.. [2] If tenancy is used, then users (regardless of role) will only be able to edit the routing regular expressions used by Delivery Services their tenant has permissions to edit. Assuming tenancy is satisfied, a routing regular expression can only be edited by a user with the "admin" or "operations" role.
+.. [2] If tenancy is used, then users (regardless of role) will only be able to edit the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to edit. Assuming tenancy is satisfied, a routing regular expression can only be edited by a user with the "admin" or "operations" role.
 
 ``DELETE``
 ==========
@@ -183,7 +183,7 @@ Request Structure
 	+------+-----------------------------------------------------------------------------------+
 	| Name |                Description                                                        |
 	+======+===================================================================================+
-	|  ID  | The integral, unique identifier of the Delivery Service being inspected           |
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service` being inspected   |
 	+------+-----------------------------------------------------------------------------------+
 	| rID  | The integral, unique identifier of the routing regular expression being inspected |
 	+------+-----------------------------------------------------------------------------------+
@@ -221,4 +221,4 @@ Response Structure
 		}
 	]}
 
-.. [3] If tenancy is used, then users (regardless of role) will only be able to delete the routing regular expressions used by Delivery Services their tenant has permissions to delete. Assuming tenancy is satisfied, a routing regular expression can only be deleted by a user with the "admin" or "operations" role.
+.. [3] If tenancy is used, then users (regardless of role) will only be able to delete the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to delete. Assuming tenancy is satisfied, a routing regular expression can only be deleted by a user with the "admin" or "operations" role.

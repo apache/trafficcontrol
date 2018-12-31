@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves routing method statistics for a particular Delivery Service
+Retrieves routing method statistics for a particular :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_
@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+----------------------------------------------------------------------+
-	| Name | Description                                                          |
-	+======+======================================================================+
-	|  ID  | The integral, unique identifier for the Delivery Service of interest |
-	+------+----------------------------------------------------------------------+
+	+------+------------------------------------------------------------------------------+
+	| Name | Description                                                                  |
+	+======+==============================================================================+
+	|  ID  | The integral, unique identifier for the :term:`Delivery Service` of interest |
+	+------+------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -48,15 +48,15 @@ Request Structure
 
 Response Structure
 ------------------
-:cz:                The percent of requests to the Traffic Router for this Delivery Service that were satisfied by a coverage zone file (CZF)
-:dsr:               The percent of requests to the Traffic Router for this Delivery Service that were satisfied by sending the client to an overflow Delivery Service
-:err:               The percent of requests to the Traffic Router for this Delivery Service that resulted in an error
-:fed:               The percent of requests to the Traffic Router for this Delivery Service that were satisfied by sending the client to a federated CDN
-:geo:               The percent of requests to the Traffic Router for this Delivery Service that were satisfied using 3rd party geographic IP mapping
-:miss:              The percent of requests to the Traffic Router for this Delivery Service that could not be satisfied
-:regionalAlternate: The percent of requests to the Traffic Router for this Delivery Service that were satisfied by sending the client to the alternate, Regional Geo-blocking URL
-:regionalDenied:    The percent of Traffic Router requests for this Delivery Service that were denied due to geographic location policy
-:staticRoute:       The percent of requests to the Traffic Router for this Delivery Service that were satisfied with pre-configured DNS entries
+:cz:                The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a coverage zone file (CZF)
+:dsr:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to an overflow :term:`Delivery Service`
+:err:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that resulted in an error
+:fed:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to a federated CDN
+:geo:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied using 3rd party geographic IP mapping
+:miss:              The percent of requests to the Traffic Router for this :term:`Delivery Service` that could not be satisfied
+:regionalAlternate: The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to the alternate, Regional Geo-blocking URL
+:regionalDenied:    The percent of Traffic Router requests for this :term:`Delivery Service` that were denied due to geographic location policy
+:staticRoute:       The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied with pre-configured DNS entries
 
 .. code-block:: http
 	:caption: Response Example
@@ -88,4 +88,4 @@ Response Structure
 		"miss": 0
 	}}
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to see details for *all* Delivery Services, whereas any other user will only see details for the Delivery Services their Tenant is allowed to see.
+.. [1] Users with the roles "admin" and/or "operations" will be able to see details for *all* :term:`Delivery Service`\ s, whereas any other user will only see details for the :term:`Delivery Service`\ s their Tenant is allowed to see.

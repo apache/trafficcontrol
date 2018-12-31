@@ -33,8 +33,8 @@ Request Structure
 -----------------
 :details: An object describing the actual parameters for the Delivery Service request
 
-	:customer:        Name of the customer associated with the Delivery Service
-	:deepCachingType: An optional string describing when to do Deep Caching for this Delivery Service - one of:
+	:customer:        Name of the customer associated with the :term:`Delivery Service`
+	:deepCachingType: An optional string describing when to do Deep Caching for this :term:`Delivery Service` - one of:
 
 		NEVER
 			Never use deep caching (default)
@@ -49,39 +49,39 @@ Request Structure
 
 	:hasNegativeCachingCustomization:  ``true`` if any customization is required for negative caching, ``false`` otherwise
 	:hasOriginACLWhitelist:            ``true`` if access to the origin is restricted using an Access Control List (ACL or "whitelist") of IP addresses
-	:hasOriginDynamicRemap:            If ``true``, this Delivery Service can dynamically map to multiple origin URLs
-	:hasSignedURLs:                    If ``true``, this Delivery Service's URLs are signed
+	:hasOriginDynamicRemap:            If ``true``, this :term:`Delivery Service` can dynamically map to multiple origin URLs
+	:hasSignedURLs:                    If ``true``, this :term:`Delivery Service`'s URLs are signed
 	:headerRewriteEdge:                An optional string containing a header re-write rule to be used at the Edge tier
 	:headerRewriteMid:                 An optional string containing a header re-write rule to be used at the Mid tier
 	:headerRewriteRedirectRouter:      An optional string containing a header re-write rule to be used by the Traffic Router
-	:maxLibrarySizeEstimate:           A special string that describes the estimated size of the sum total of content available through this Delivery Service
-	:negativeCachingCustomizationNote: A note remarking on the use, customization, or complications associated with negative caching for this Delivery Service
+	:maxLibrarySizeEstimate:           A special string that describes the estimated size of the sum total of content available through this :term:`Delivery Service`
+	:negativeCachingCustomizationNote: A note remarking on the use, customization, or complications associated with negative caching for this :term:`Delivery Service`
 	:notes:                            An optional string containing additional instructions or notes regarding the Request
-	:originHeaders:                    An optional, comma-separated string of header values that must be passed to requests to the Delivery Service's origin
-	:originTestFile:                   A URL path to a test file available on the Delivery Service's origin server
-	:originURL:                        The URL of the Delivery Service's origin server
-	:otherOriginSecurity:              An optional string describing any and all other origin security measures that need to be considered for access to the Delivery Service's origin
+	:originHeaders:                    An optional, comma-separated string of header values that must be passed to requests to the :term:`Delivery Service`'s origin
+	:originTestFile:                   A URL path to a test file available on the :term:`Delivery Service`'s origin server
+	:originURL:                        The URL of the :term:`Delivery Service`'s origin server
+	:otherOriginSecurity:              An optional string describing any and all other origin security measures that need to be considered for access to the :term:`Delivery Service`'s origin
 	:overflowService:                  An optional string containing the IP address or URL of an overflow point (used if rate limits are met or exceeded
-	:peakBPSEstimate:                  A special string describing the estimated peak data transfer rate of the Delivery Service in Bytes Per Second (BPS)
-	:peakTPSEstimate:                  A special string describing the estimated peak transaction rate of the Delivery Service in Transactions Per Second (TPS)
-	:queryStringHandling:              A special string describing how the Delivery Service should treat URLs containing query parameters
-	:rangeRequestHandling:             A special string describing how the Delivery Service should handle range requests
-	:rateLimitingGBPS:                 An optional field which, if defined, should contain the maximum allowed data transfer rate for the Delivery Service in GigaBytes Per Second (GBPS)
-	:rateLimitingTPS:                  An optional field which, if defined, should contain the maximum allowed transaction rate for the Delivery Service in Transactions Per Second (TPS)
-	:routingName:                      The routing name for the Delivery Service, e.g. ``SomeRoutingName.DeliveryService_xml_id.CDNName.com``
-	:routingType:                      The Delivery Service's routing type, should be one of:
+	:peakBPSEstimate:                  A special string describing the estimated peak data transfer rate of the :term:`Delivery Service` in Bytes Per Second (BPS)
+	:peakTPSEstimate:                  A special string describing the estimated peak transaction rate of the :term:`Delivery Service` in Transactions Per Second (TPS)
+	:queryStringHandling:              A special string describing how the :term:`Delivery Service`\ should treat URLs containing query parameters
+	:rangeRequestHandling:             A special string describing how the :term:`Delivery Service`\ should handle range requests
+	:rateLimitingGBPS:                 An optional field which, if defined, should contain the maximum allowed data transfer rate for the :term:`Delivery Service` in GigaBytes Per Second (GBPS)
+	:rateLimitingTPS:                  An optional field which, if defined, should contain the maximum allowed transaction rate for the :term:`Delivery Service` in Transactions Per Second (TPS)
+	:routingName:                      The routing name for the :term:`Delivery Service`, e.g. ``SomeRoutingName.DeliveryService_xml_id.CDNName.com``
+	:routingType:                      The :term:`Delivery Service`'s routing type, should be one of:
 
 		HTTP
-			The Traffic Router re-directs clients to cache servers using the HTTP ``302 REDIRECT`` response code
+			The Traffic Router re-directs clients to :term:`cache server`\ s using the HTTP ``302 REDIRECT`` response code
 		DNS
-			The Traffic Router responds to requests for name resolution of the Delivery Service's routing name with IP addresses of cache servers
+			The Traffic Router responds to requests for name resolution of the :term:`Delivery Service`'s routing name with IP addresses of :term:`cache server`\ s
 		STEERING
-			This Delivery Service routes clients to other Delivery Services - which will in turn (generally) route them to clients
+			This :term:`Delivery Service` routes clients to other :term:`Delivery Service`\ s - which will in turn (generally) route them to clients
 		ANY_MAP
 			Some kind of undocumented black magic is used to get clients to... content, probably?
 
-	:serviceAliases: An optional array of aliases for this Delivery Service
-	:serviceDesc:    A description of the Delivery Service
+	:serviceAliases: An optional array of aliases for this :term:`Delivery Service`
+	:serviceDesc:    A description of the :term:`Delivery Service`
 
 :emailTo: The email to which the Delivery Service request will be sent
 
@@ -126,9 +126,7 @@ Response Structure
 .. code-block:: json
 	:caption: Response Example
 
-	{ "alerts": [
-		{
-			"level": "success",
-			"text": "Delivery Service request sent to foo@bar.com."
-		}
-	]}
+	{ "alerts": [{
+		"level": "success",
+		"text": "Delivery Service request sent to foo@bar.com."
+	}]}

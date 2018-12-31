@@ -13,26 +13,22 @@
 .. limitations under the License.
 ..
 
-.. index::
-	Log File Analysis
-	CDN
-	Content Delivery Network
-
+*************************
 Content Delivery Networks
-=========================
-The vast majority of today's Internet traffic is media files (often video or audio) being sent from a single source (the *Content Provider*) to many thousands or even millions of destinations (the *Content Consumers*). Content Delivery Networks are the technology that make that one-to-many distribution possible in an economical way. A Content Delivery Network (CDN) is a distributed system of servers for delivering content over HTTP. These servers are deployed in multiple locations with the goal of optimizing the delivery of content to the end users, while minimizing the traffic on the network. A CDN typically consists of the following:
+*************************
+The vast majority of today's Internet traffic is media files (often video or audio) being sent from a single source (the *Content Provider*) to many thousands or even millions of destinations (the *Content Consumers*). :abbr:`CDN (Content Delivery Network)`\ s are the technology that make that one-to-many distribution efficient. A :abbr:`CDN (Content Delivery Network)` is a distributed system of servers for delivering content over HTTP(S). These servers are deployed in multiple locations with the goal of optimizing the delivery of content to the end users, while minimizing the traffic on the network. A :abbr:`CDN (Content Delivery Network)` typically consists of the following:
 
-Caching Proxies
-	The proxy (cache or caching proxy) is a server that both proxies the requests and caches the results for reusing.
+:term:`Cache Server`\ s
+	The :dfn:`cache server` is a server that both proxies the requests and caches the results for reuse. Traffic Control uses `Apache Traffic Server <http://trafficserver.apache.org/>`_ to provide :term:`cache server`\ s.
 
 Content Router
-	The Content Router ensures that the end user is connected to the optimal cache for the location of the end user and content availability.
+	A :dfn:`content router` ensures that the end user is connected to the optimal :term:`cache server` for the location of the end user and content availability. Traffic Control uses :ref:`tr-overview` as a :dfn:`content router`.
 
 Health Protocol
-	The :ref:`health-proto` monitors the usage of the caches and tenants in the CDN.
+	The :ref:`health-proto` monitors the usage of the :term:`cache server`\ s and tenants in the :abbr:`CDN (Content Delivery Network)`.
 
 Configuration Management System
-	In many cases a CDN encompasses hundreds of servers across a large geographic area. The Configuration Management System allows an operator to manage these servers.
+	In many cases a :abbr:`CDN (Content Delivery Network)` encompasses hundreds or even thousands of servers across a large geographic area. In such cases, manual configuration of servers becomes impractical, and so a central authority on configuration is used to automate the tasks as much as possible. :ref:`to-overview` is the Traffic Control configuration management system, which is interacted with via :ref:`tp-overview`.
 
 Log File Analysis System
-	Every transaction in the CDN gets logged. The Log File Analysis System aggregates all of the log entries from all of the servers to a central location for analysis and troubleshooting.
+	Statistics and analysis are extremely important to the management and administration of a :abbr:`CDN (Content Delivery Network)`. Transaction logs and usage statistics for a Traffic Control :abbr:`CDN (Content Delivery Network)` are gathered into :ref:`ts-overview`.

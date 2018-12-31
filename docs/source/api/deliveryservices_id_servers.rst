@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Retrieves properties of Edge-Tier servers assigned to a Delivery Service.
+Retrieves properties of Edge-Tier servers assigned to a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_
@@ -152,5 +152,5 @@ Response Structure
 	]}
 
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to the see servers associated with *any* Delivery Services, whereas any other user will only be able to see the servers associated with Delivery Services their Tenant is allowed to see.
+.. [1] Users with the roles "admin" and/or "operations" will be able to the see servers associated with *any* :term:`Delivery Service`\ s, whereas any other user will only be able to see the servers associated with :term:`Delivery Service`\ s their Tenant is allowed to see.
 .. [2] See `the Wikipedia article on Out-of-Band Management <https://en.wikipedia.org/wiki/Out-of-band_management>`_ for more information.

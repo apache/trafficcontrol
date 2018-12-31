@@ -25,7 +25,7 @@ Retrieves detailed, aggregated statistics for caches configured in Traffic Ops.
 
 .. versionadded:: 1.2
 
-.. seealso:: This gives an aggregate of statistics for *all caches* within a particular CDN and time range. For statistics basic statistics from all caches regardless of CDN and at the current time, use :ref:`to-api-caches_stats`.
+.. seealso:: This gives an aggregate of statistics for *all caches* within a particular CDN and time range. For statistics basic statistics from all caches regardless of CDN and at the current time, use :ref:`to-api-caches-stats`.
 
 ``GET``
 -------
