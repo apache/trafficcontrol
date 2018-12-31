@@ -79,7 +79,7 @@ func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	if !keysExist {
 		// TODO emulates Perl; change to error, 404?
-		api.WriteRespAlert(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ") // emulates Perl
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ", struct{}{}) // emulates Perl
 		return
 	}
 
@@ -113,7 +113,7 @@ func GetDNSSECKeysV11(w http.ResponseWriter, r *http.Request) {
 	}
 	if !keysExist {
 		// TODO emulates Perl; change to error, 404?
-		api.WriteRespAlert(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ") // emulates Perl
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ", struct{}{}) // emulates Perl
 		return
 	}
 	api.WriteResp(w, r, riakKeys)
