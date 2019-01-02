@@ -29,27 +29,27 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// Make creates and returns the CRConfig from the database.
-func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReqHost bool, emulateOldPath bool) (*tc.CRConfig, error) {
+// Make creates and returns the CRConfig from the database. If live, use latest data; otherwise, use the latest data up to the snapshot times.
+func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReqHost bool, emulateOldPath bool, live bool) (*tc.CRConfig, error) {
 	crc := tc.CRConfig{}
 	err := error(nil)
 
-	cdnDomain, dnssecEnabled, err := getCDNInfo(cdn, tx)
+	cdnDomain, dnssecEnabled, err := getCDNInfo(tx, cdn, live)
 	if err != nil {
 		return nil, errors.New("Error getting CDN info: " + err.Error())
 	}
 
-	if crc.Config, err = makeCRConfigConfig(cdn, tx, dnssecEnabled, cdnDomain); err != nil {
+	if crc.Config, err = makeCRConfigConfig(tx, cdn, dnssecEnabled, cdnDomain, live); err != nil {
 		return nil, errors.New("Error getting Config: " + err.Error())
 	}
 
-	if crc.ContentServers, crc.ContentRouters, crc.Monitors, err = makeCRConfigServers(cdn, tx, cdnDomain); err != nil {
+	if crc.ContentServers, crc.ContentRouters, crc.Monitors, err = makeCRConfigServers(tx, cdn, cdnDomain, live); err != nil {
 		return nil, errors.New("Error getting Servers: " + err.Error())
 	}
-	if crc.EdgeLocations, crc.RouterLocations, err = makeLocations(cdn, tx); err != nil {
+	if crc.EdgeLocations, crc.RouterLocations, err = makeLocations(tx, cdn, live); err != nil {
 		return nil, errors.New("Error getting Edge Locations: " + err.Error())
 	}
-	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, tx); err != nil {
+	if crc.DeliveryServices, err = makeDSes(tx, cdn, cdnDomain, live); err != nil {
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
 	}
 

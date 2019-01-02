@@ -22,7 +22,6 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -35,18 +34,20 @@ const MonitorTypeName = "RASCAL"
 const EdgeTypePrefix = "EDGE"
 const MidTypePrefix = "MID"
 
-func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
+func makeCRConfigServers(tx *sql.Tx, cdn string, cdnDomain string, live bool) (
 	map[string]tc.CRConfigTrafficOpsServer,
 	map[string]tc.CRConfigRouter,
 	map[string]tc.CRConfigMonitor,
 	error,
 ) {
-	allServers, err := getAllServers(cdn, tx)
+	allServers, err := getAllServers(tx, cdn, live)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	serverDSes, err := getServerDSes(cdn, tx, cdnDomain)
+	serverIDNames := allServersToServerIDNames(allServers)
+
+	serverDSes, err := getServerDSes(tx, cdn, cdnDomain, serverIDNames, live)
 	if err != nil {
 		return nil, nil, nil, errors.New("getting server deliveryservices: " + err.Error())
 	}
@@ -83,7 +84,7 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 			}
 		case strings.HasPrefix(*s.ServerType, tc.EdgeTypePrefix) || strings.HasPrefix(*s.ServerType, tc.MidTypePrefix):
 			if s.RoutingDisabled == 0 {
-				s.CRConfigTrafficOpsServer.DeliveryServices = serverDSes[tc.CacheName(host)]
+				s.CRConfigTrafficOpsServer.DeliveryServices = serverDSes[host]
 			}
 			servers[host] = s.CRConfigTrafficOpsServer
 		}
@@ -96,33 +97,93 @@ type ServerUnion struct {
 	tc.CRConfigTrafficOpsServer
 	APIPort       *string
 	SecureAPIPort *string
+	ID            int
 }
 
 const DefaultWeightMultiplier = 1000.0
 const DefaultWeight = 0.999
 
-func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
+func getAllServers(tx *sql.Tx, cdn string, live bool) (map[string]ServerUnion, error) {
 	servers := map[string]ServerUnion{}
 
-	serverParams, err := getServerParams(cdn, tx)
+	serverParams, err := getServerParams(tx, cdn, live)
 	if err != nil {
-		return nil, errors.New("Error getting server params: " + err.Error())
+		return nil, errors.New("getting server params: " + err.Error())
 	}
 
 	// TODO select deliveryservices as array?
-	q := `
-select s.host_name, cg.name as cachegroup, concat(s.host_name, '.', s.domain_name) as fqdn, s.xmpp_id as hashid, s.https_port, s.interface_name, s.ip_address, s.ip6_address, s.tcp_port, p.name as profile_name, cast(p.routing_disabled as int), st.name as status, t.name as type
-from server as s
-inner join cachegroup as cg ON cg.id = s.cachegroup
-inner join type as t on t.id = s.type
-inner join profile as p ON p.id = s.profile
-inner join status as st ON st.id = s.status
-where cdn_id = (select id from cdn where name = $1)
-and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
+	qry := `
+WITH cdn_name AS (
+  SELECT $1::text as v
+),
+snapshot_time AS (
+  SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
+)
+SELECT
+  host_name,
+  cachegroup,
+  fqdn,
+  hashid,
+  https_port,
+  interface_name,
+  ip_address,
+  ip6_address,
+  tcp_port,
+  profile_name,
+  routing_disabled,
+  status,
+  type,
+  id
+FROM (
+SELECT DISTINCT ON (s.host_name)
+  s.host_name,
+  cg.name as cachegroup,
+  concat(s.host_name, '.', s.domain_name) as fqdn,
+  s.xmpp_id as hashid,
+  s.https_port,
+  s.interface_name,
+  s.ip_address,
+  s.ip6_address,
+  s.tcp_port,
+  p.name as profile_name,
+  cast(p.routing_disabled as int),
+  st.name as status,
+  t.name as type,
+  s.id,
+  s.deleted
+FROM
+  server_snapshot s
+  JOIN cachegroup_snapshot cg ON cg.id = s.cachegroup
+  JOIN type_snapshot t ON t.id = s.type
+  JOIN profile_snapshot p ON p.id = s.profile
+  JOIN status_snapshot st ON st.id = s.status
+WHERE
+  s.cdn_id = (SELECT id FROM cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= (select v from snapshot_time))
+  AND (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 `
-	rows, err := tx.Query(q, cdn)
+	if !live {
+		qry += `
+  AND s.last_updated <= (select v from snapshot_time)
+  AND cg.last_updated <= (select v from snapshot_time)
+  AND t.last_updated <= (select v from snapshot_time)
+  AND p.last_updated <= (select v from snapshot_time)
+  AND st.last_updated <= (select v from snapshot_time)
+`
+	}
+	qry += `
+ORDER BY
+  s.host_name,
+  s.last_updated,
+  cg.last_updated,
+  t.last_updated,
+  p.last_updated,
+  st.last_updated
+DESC
+) s WHERE s.deleted = false
+`
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
-		return nil, errors.New("Error querying servers: " + err.Error())
+		return nil, errors.New("querying servers: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -136,8 +197,8 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 
 		host := ""
 		status := ""
-		if err := rows.Scan(&host, &s.CacheGroup, &s.Fqdn, &hashId, &httpsPort, &s.InterfaceName, &s.Ip, &ip6, &port, &s.Profile, &s.RoutingDisabled, &status, &s.ServerType); err != nil {
-			return nil, errors.New("Error scanning server: " + err.Error())
+		if err := rows.Scan(&host, &s.CacheGroup, &s.Fqdn, &hashId, &httpsPort, &s.InterfaceName, &s.Ip, &ip6, &port, &s.Profile, &s.RoutingDisabled, &status, &s.ServerType, &s.ID); err != nil {
+			return nil, errors.New("scanning server: " + err.Error())
 		}
 
 		s.LocationId = s.CacheGroup
@@ -185,88 +246,160 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		servers[host] = s
 	}
 	if err := rows.Err(); err != nil {
-		return nil, errors.New("Error iterating router param rows: " + err.Error())
+		return nil, errors.New("iterating router param rows: " + err.Error())
 	}
 
 	return servers, nil
 }
 
-func getServerDSNames(cdn string, tx *sql.Tx) (map[tc.CacheName][]tc.DeliveryServiceName, error) {
-	q := `
-select s.host_name, ds.xml_id
-from deliveryservice_server as dss
-inner join server as s on dss.server = s.id
-inner join deliveryservice as ds on ds.id = dss.deliveryservice
-inner join type as dt on dt.id = ds.type
-inner join profile as p on p.id = s.profile
-inner join status as st ON st.id = s.status
-where ds.cdn_id = (select id from cdn where name = $1)
-and ds.active = true` +
-		fmt.Sprintf(" and dt.name != '%s' ", tc.DSTypeAnyMap) + `
-and p.routing_disabled = false
-and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
+// getServerDSNames returns a map[serverID]dsID
+func getServerDSNames(tx *sql.Tx, cdn string, live bool) (map[int][]int, error) {
+	qry := `
+WITH cdn_name AS (
+  SELECT $1::text as v
+)
+SELECT dss.server, dss.deliveryservice FROM (
+SELECT DISTINCT ON (dss.server, dss.deliveryservice) dss.server, dss.deliveryservice, dss.deleted
+FROM
+  deliveryservice_server_snapshot dss
+  JOIN server_snapshot s ON dss.server = s.id
+  JOIN deliveryservice_snapshot ds ON ds.id = dss.deliveryservice
+  JOIN profile_snapshot p ON p.id = s.profile
+  JOIN status_snapshot st ON st.id = s.status
+  JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = ds.xml_id
+  JOIN type_snapshot dt ON dt.id = ds.type
+WHERE
+  ds.cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= dsn.time)
+  AND ds.active = true
+  AND p.routing_disabled = false
+  AND (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
+	AND dt.name <> '` + string(tc.DSTypeAnyMap) + `'
 `
-	rows, err := tx.Query(q, cdn)
+	if !live {
+		qry += `
+  AND dss.last_updated <= dsn.time
+  AND s.last_updated <= dsn.time
+  AND ds.last_updated <= dsn.time
+  AND p.last_updated <= dsn.time
+  AND st.last_updated <= dsn.time
+  AND dt.last_updated <= dsn.time
+`
+	}
+	qry += `
+ORDER BY
+  dss.server,
+  dss.deliveryservice,
+  ds.last_updated,
+  dt.last_updated,
+  dss.last_updated,
+  s.last_updated,
+  p.last_updated,
+  st.last_updated
+DESC
+) dss WHERE dss.deleted = false
+`
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
-		return nil, errors.New("Error querying server deliveryservice names: " + err.Error())
+		return nil, errors.New("querying server deliveryservice names: " + err.Error())
 	}
 	defer rows.Close()
 
-	serverDSes := map[tc.CacheName][]tc.DeliveryServiceName{}
+	serverDSes := map[int][]int{}
 	for rows.Next() {
-		ds := ""
-		server := ""
+		ds := 0
+		server := 0
 		if err := rows.Scan(&server, &ds); err != nil {
-			return nil, errors.New("Error scanning server deliveryservice names: " + err.Error())
+			return nil, errors.New("scanning server deliveryservice names: " + err.Error())
 		}
-		serverDSes[tc.CacheName(server)] = append(serverDSes[tc.CacheName(server)], tc.DeliveryServiceName(ds))
+		serverDSes[server] = append(serverDSes[server], ds)
 	}
 	return serverDSes, nil
 }
 
 type DSRouteInfo struct {
-	IsDNS bool
-	IsRaw bool
-	Remap string
+	DSName string
+	IsDNS  bool
+	IsRaw  bool
+	Remap  string
 }
 
-func getServerDSes(cdn string, tx *sql.Tx, domain string) (map[tc.CacheName]map[string][]string, error) {
-	serverDSNames, err := getServerDSNames(cdn, tx)
+// getServerDSes returns a map[serverName][dsName][]regexPattern
+func getServerDSes(tx *sql.Tx, cdn string, domain string, serverIDNames map[int]string, live bool) (map[string]map[string][]string, error) {
+	serverDSNames, err := getServerDSNames(tx, cdn, live)
 	if err != nil {
-		return nil, errors.New("Error getting server deliveryservices: " + err.Error())
+		return nil, errors.New("getting server deliveryservice names: " + err.Error())
 	}
 
-	q := `
-select ds.xml_id as ds, dt.name as ds_type, ds.routing_name, r.pattern as pattern
-from regex as r
-inner join type as rt on r.type = rt.id
-inner join deliveryservice_regex as dsr on dsr.regex = r.id
-inner join deliveryservice as ds on ds.id = dsr.deliveryservice
-inner join type as dt on dt.id = ds.type
-where ds.cdn_id = (select id from cdn where name = $1)
-and ds.active = true` +
-		fmt.Sprintf(" and dt.name != '%s' ", tc.DSTypeAnyMap) + `
-and rt.name = 'HOST_REGEXP'
-order by dsr.set_number asc
+	qry := `
+WITH cdn_name AS (
+  SELECT $1::text as v
+)
+SELECT ds_id, ds, ds_type, routing_name, pattern FROM (
+SELECT DISTINCT ON (ds.xml_id, dt.name, ds.routing_name, r.pattern)
+  ds.id as ds_id,
+  ds.xml_id as ds,
+  dt.name as ds_type,
+  ds.routing_name,
+  r.pattern as pattern,
+  dsr.set_number,
+  ds.deleted
+FROM
+  regex_snapshot as r
+  JOIN type_snapshot rt on r.type = rt.id
+  JOIN deliveryservice_regex_snapshot dsr on dsr.regex = r.id
+  JOIN deliveryservice_snapshot ds on ds.id = dsr.deliveryservice
+  JOIN type_snapshot dt on dt.id = ds.type
+  JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = ds.xml_id
+WHERE
+  ds.cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= dsn.time)
+  AND ds.active = true
+  AND rt.name = 'HOST_REGEXP'
+	AND dt.name <> '` + string(tc.DSTypeAnyMap) + `'
 `
-	rows, err := tx.Query(q, cdn)
+	if !live { // TODO use template?
+		qry += `
+  AND r.last_updated <= dsn.time
+  AND rt.last_updated <= dsn.time
+  AND dsr.last_updated <= dsn.time
+  AND ds.last_updated <= dsn.time
+  AND dt.last_updated <= dsn.time
+`
+	}
+	qry += `
+ORDER BY
+  ds.xml_id,
+  dt.name,
+  ds.routing_name,
+  r.pattern,
+  r.last_updated,
+  rt.last_updated,
+  dsr.last_updated,
+  ds.last_updated,
+  dt.last_updated
+DESC
+) s where deleted = false
+ORDER BY set_number ASC
+`
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
-		return nil, errors.New("Error server deliveryservices: " + err.Error())
+		return nil, errors.New("querying: " + err.Error())
 	}
 	defer rows.Close()
 
 	hostReplacer := strings.NewReplacer(`\`, ``, `.*`, ``)
 
-	dsInfs := map[string][]DSRouteInfo{}
+	dsInfs := map[int][]DSRouteInfo{}
 	for rows.Next() {
-		ds := ""
+		dsID := 0
+		dsName := ""
 		dsType := ""
 		dsPattern := ""
 		dsRoutingName := ""
 		inf := DSRouteInfo{}
-		if err := rows.Scan(&ds, &dsType, &dsRoutingName, &dsPattern); err != nil {
-			return nil, errors.New("Error scanning server deliveryservices: " + err.Error())
+		if err := rows.Scan(&dsID, &dsName, &dsType, &dsRoutingName, &dsPattern); err != nil {
+			return nil, errors.New("scanning server deliveryservices: " + err.Error())
 		}
+		inf.DSName = dsName
 		inf.IsDNS = strings.HasPrefix(dsType, "DNS")
 		inf.IsRaw = !strings.Contains(dsPattern, `.*`)
 		if !inf.IsRaw {
@@ -279,15 +412,20 @@ order by dsr.set_number asc
 		} else {
 			inf.Remap = dsPattern
 		}
-		dsInfs[ds] = append(dsInfs[ds], inf)
+		dsInfs[dsID] = append(dsInfs[dsID], inf)
 	}
 
-	serverDSPatterns := map[tc.CacheName]map[string][]string{}
-	for server, dses := range serverDSNames {
-		for _, dsName := range dses {
-			dsInfList, ok := dsInfs[string(dsName)]
+	serverDSPatterns := map[string]map[string][]string{}
+	for serverID, dsIDs := range serverDSNames {
+		server, ok := serverIDNames[serverID]
+		if !ok {
+			log.Errorf("Creating CRConfig: getting server dses: server ID %+v not in allServers, skipping!", serverID)
+			continue
+		}
+		for _, dsID := range dsIDs {
+			dsInfList, ok := dsInfs[dsID]
 			if !ok {
-				log.Warnln("Creating CRConfig: deliveryservice " + string(dsName) + " has no regexes, skipping")
+				log.Warnf("Creating CRConfig: deliveryservice %v has no regexes, skipping", dsID)
 				continue
 			}
 			for _, dsInf := range dsInfList {
@@ -297,7 +435,7 @@ order by dsr.set_number asc
 				if _, ok := serverDSPatterns[server]; !ok {
 					serverDSPatterns[server] = map[string][]string{}
 				}
-				serverDSPatterns[server][string(dsName)] = append(serverDSPatterns[server][string(dsName)], dsInf.Remap)
+				serverDSPatterns[server][dsInf.DSName] = append(serverDSPatterns[server][dsInf.DSName], dsInf.Remap)
 			}
 		}
 	}
@@ -312,22 +450,57 @@ type ServerParams struct {
 	WeightMultiplier *float64
 }
 
-func getServerParams(cdn string, tx *sql.Tx) (map[string]ServerParams, error) {
+func getServerParams(tx *sql.Tx, cdn string, live bool) (map[string]ServerParams, error) {
 	params := map[string]ServerParams{}
 
-	q := `
-select s.host_name, p.name, p.value
-from server as s
-left join profile_parameter as pp on pp.profile = s.profile
-left join parameter as p on p.id = pp.parameter
-inner join status as st ON st.id = s.status
-where s.cdn_id = (select id from cdn where name = $1)
-and ((p.config_file = 'CRConfig.json' and (p.name = 'weight' or p.name = 'weightMultiplier')) or (p.name = 'api.port') or (p.name = 'secure.api.port'))
-and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
+	qry := `
+WITH cdn_name AS (
+  SELECT $1::text as v
+),
+snapshot_time AS (
+  SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
+)
+SELECT server_name, param_name, param_val FROM (
+SELECT DISTINCT ON (s.host_name, p.name)
+  s.host_name as server_name,
+  p.name as param_name,
+  p.value as param_val,
+  s.deleted as server_deleted
+FROM
+  server_snapshot s
+  LEFT JOIN profile_parameter_snapshot pp ON pp.profile = s.profile
+  LEFT JOIN parameter_snapshot p ON p.id = pp.parameter
+  JOIN status_snapshot st ON st.id = s.status
+WHERE
+  s.cdn_id = (SELECT id FROM cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= (select v from snapshot_time))
+  AND (
+    (p.config_file = 'CRConfig.json' AND (p.name = 'weight' or p.name = 'weightMultiplier'))
+    OR (p.name = 'api.port') OR (p.name = 'secure.api.port')
+	)
+  AND (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 `
-	rows, err := tx.Query(q, cdn)
+	if !live {
+		qry += `
+  AND s.last_updated <= (select v from snapshot_time)
+  AND pp.last_updated <= (select v from snapshot_time)
+  AND p.last_updated <= (select v from snapshot_time)
+  AND st.last_updated <= (select v from snapshot_time)
+`
+	}
+	qry += `
+ORDER BY
+  s.host_name,
+  p.name,
+  s.last_updated,
+  pp.last_updated,
+  p.last_updated,
+  st.last_updated
+DESC
+) s WHERE server_deleted = false
+`
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
-		return nil, errors.New("Error querying server parameters: " + err.Error())
+		return nil, errors.New("querying server parameters: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -336,7 +509,7 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		name := ""
 		val := ""
 		if err := rows.Scan(&server, &name, &val); err != nil {
-			return nil, errors.New("Error scanning server parameters: " + err.Error())
+			return nil, errors.New("scanning server parameters: " + err.Error())
 		}
 
 		param := params[server]
@@ -365,30 +538,54 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 	return params, nil
 }
 
-// getCDNInfo returns the CDN domain, and whether DNSSec is enabled
-func getCDNInfo(cdn string, tx *sql.Tx) (string, bool, error) {
+// // WithDSSnapshotTimes returns DS snapshot times as a "with" query part.
+// // Note this exists, so we can fake the times to get a "live" snapshot. Queries could obviously just query the table in other queries, but by using this, WithDSSnapshotTimesLive can be swapped in.
+// func WithDSSnapshotTimes() string {
+// 	return `
+// WITH ds_snapshot_time AS (
+//   SELECT deliveryservice, time from deliveryservice_snapshots
+// )
+// `
+// }
+
+// getCDNInfoSnapshotted returns the CDN domain, and whether DNSSec is enabled, from the _snapshot tables.
+// The live argument is whether to get the latest data, not the snapshot time. Note this still queries the snapshot tables, so live calls must be preceded by populating the snapshot tables, e.g. with UpdateSnapshotTables.
+func getCDNInfo(tx *sql.Tx, cdn string, live bool) (string, bool, error) {
+	qryArgs := []interface{}{}
+	withCDNSnapshotTimeQueryPart, qryArgs := WithCDNSnapshotTime(cdn, live, qryArgs)
+	qry := `
+WITH ` + withCDNSnapshotTimeQueryPart + `,
+ ` + CDNTable.WithLatest() + `
+SELECT domain_name, dnssec_enabled
+FROM ` + CDNTable.SnapshotLatestTable() + ` c
+WHERE c.name = $` + strconv.Itoa(len(qryArgs)+1) + `
+`
+	qryArgs = append(qryArgs, cdn)
+
 	domain := ""
 	dnssec := false
-	if err := tx.QueryRow(`select domain_name, dnssec_enabled from cdn where name = $1`, cdn).Scan(&domain, &dnssec); err != nil {
-		return "", false, errors.New("Error querying CDN domain name: " + err.Error())
+	if err := tx.QueryRow(qry, qryArgs...).Scan(&domain, &dnssec); err != nil {
+		return "", false, errors.New("querying CDN domain name: " + err.Error())
 	}
 	return domain, dnssec, nil
 }
 
 // getCDNNameFromID returns the CDN name given the ID, false if the no CDN with the given ID exists, and an error if the database query fails.
 func getCDNNameFromID(id int, tx *sql.Tx) (string, bool, error) {
+	// TODO change to use snapshot tables
 	name := ""
 	if err := tx.QueryRow(`select name from cdn where id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
 			return "", false, nil
 		}
-		return "", false, errors.New("Error querying CDN name: " + err.Error())
+		return "", false, errors.New("querying CDN name: " + err.Error())
 	}
 	return name, true, nil
 }
 
 // getGlobalParam returns the global parameter with the requested name, whether it existed, and any error
 func getGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
+	// TODO change to use snapshot tables?
 	val := ""
 	if err := tx.QueryRow(`SELECT value FROM parameter WHERE config_file = 'global' and name = $1`, name).Scan(&val); err != nil {
 		if err == sql.ErrNoRows {
@@ -397,4 +594,13 @@ func getGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
 		return "", false, errors.New("querying global parameter '" + name + "': " + err.Error())
 	}
 	return val, true, nil
+}
+
+// allServersToServerIDNames returns a map[serverID]serverHostName
+func allServersToServerIDNames(servers map[string]ServerUnion) map[int]string {
+	serverIDNames := make(map[int]string, len(servers))
+	for serverName, server := range servers {
+		serverIDNames[server.ID] = serverName
+	}
+	return serverIDNames
 }

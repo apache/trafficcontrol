@@ -311,7 +311,7 @@ func GetDSRequiredCapabilitiesFromID(id int, tx *sql.Tx) ([]string, error) {
 }
 
 // Returns true if the cdn exists
-func CDNExists(cdnName string, tx *sql.Tx) (bool, error) {
+func CDNExists(tx *sql.Tx, cdnName string) (bool, error) {
 	var id int
 	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, cdnName).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {
@@ -519,7 +519,7 @@ func GetFederationIDForUserIDByXMLID(tx *sql.Tx, userID int, xmlid string) (uint
 }
 
 // DSExists returns whether the delivery service exists.
-func DSExists(ds tc.DeliveryServiceName, tx *sql.Tx) (bool, error) {
+func DSExists(tx *sql.Tx, ds tc.DeliveryServiceName) (bool, error) {
 	count := 0
 	if err := tx.QueryRow(`SELECT count(*) FROM deliveryservice WHERE xml_id = $1`, ds).Scan(&count); err != nil {
 		return false, errors.New("querying delivery service existence: " + err.Error())
