@@ -23,7 +23,9 @@ MAINTAINER John Rushford
 VOLUME /trafficcontrol
 
 ### Common for all sub-component builds
-RUN	yum -y install \
+RUN	yum -y update ca-certificates &&\
+ rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+	yum -y install \
 		epel-release && \
 	yum -y clean all
 RUN	yum -y install \
