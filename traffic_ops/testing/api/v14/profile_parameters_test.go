@@ -27,19 +27,9 @@ import (
 const queryParamFormat = "?profileId=%d&parameterId=%d"
 
 func TestProfileParameters(t *testing.T) {
-
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestParameters(t)
-	CreateTestProfiles(t)
-	CreateTestProfileParameters(t)
-	GetTestProfileParameters(t)
-	DeleteTestProfileParameters(t)
-	DeleteTestParameters(t)
-	DeleteTestProfiles(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
-
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
+		GetTestProfileParameters(t)
+	})
 }
 
 func CreateTestProfileParameters(t *testing.T) {

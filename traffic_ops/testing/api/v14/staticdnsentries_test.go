@@ -24,35 +24,11 @@ import (
 )
 
 func TestStaticDNSEntries(t *testing.T) {
-
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	CreateTestServers(t)
-	CreateTestDeliveryServices(t)
-	CreateTestStaticDNSEntries(t)
-	GetTestStaticDNSEntries(t)
-	UpdateTestStaticDNSEntries(t)
-	UpdateTestStaticDNSEntriesInvalidAddress(t)
-	DeleteTestStaticDNSEntries(t)
-	DeleteTestDeliveryServices(t)
-	DeleteTestServers(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
-
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, StaticDNSEntries}, func() {
+		GetTestStaticDNSEntries(t)
+		UpdateTestStaticDNSEntries(t)
+		UpdateTestStaticDNSEntriesInvalidAddress(t)
+	})
 }
 
 func CreateTestStaticDNSEntries(t *testing.T) {

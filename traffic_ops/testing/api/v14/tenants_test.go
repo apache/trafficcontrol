@@ -24,10 +24,10 @@ import (
 )
 
 func TestTenants(t *testing.T) {
-	CreateTestTenants(t)
-	GetTestTenants(t)
-	UpdateTestTenants(t)
-	DeleteTestTenants(t)
+	WithObjs(t, []TCObj{Tenants}, func() {
+		GetTestTenants(t)
+		UpdateTestTenants(t)
+	})
 }
 
 func CreateTestTenants(t *testing.T) {

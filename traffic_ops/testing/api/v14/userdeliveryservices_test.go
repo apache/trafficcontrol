@@ -21,31 +21,9 @@ import (
 )
 
 func TestUserDeliveryServices(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	CreateTestDeliveryServices(t)
-
-	CreateTestUsersDeliveryServices(t)
-	GetTestUsersDeliveryServices(t)
-	DeleteTestUsersDeliveryServices(t)
-
-	DeleteTestDeliveryServices(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, UsersDeliveryServices}, func() {
+		GetTestUsersDeliveryServices(t)
+	})
 }
 
 const TestUsersDeliveryServicesUser = "admin" // TODO make dynamic

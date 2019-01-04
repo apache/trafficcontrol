@@ -32,18 +32,10 @@ const (
 )
 
 func TestDeliveryServiceRequests(t *testing.T) {
-
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestDeliveryServiceRequests(t)
-	GetTestDeliveryServiceRequests(t)
-	UpdateTestDeliveryServiceRequests(t)
-	DeleteTestDeliveryServiceRequests(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
-
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, DeliveryServiceRequests}, func() {
+		GetTestDeliveryServiceRequests(t)
+		UpdateTestDeliveryServiceRequests(t)
+	})
 }
 
 func CreateTestDeliveryServiceRequests(t *testing.T) {
@@ -59,172 +51,143 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestRequired(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	dsr := testData.DeliveryServiceRequests[dsrRequired]
-	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-	if err != nil {
-		t.Errorf("Error occurred %v", err)
-	}
+	WithObjs(t, []TCObj{CDNs, Types, Tenants}, func() {
+		dsr := testData.DeliveryServiceRequests[dsrRequired]
+		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		if err != nil {
+			t.Errorf("Error occurred %v", err)
+		}
 
-	if len(alerts.Alerts) == 0 {
-		t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
-	}
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+		if len(alerts.Alerts) == 0 {
+			t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
+		}
+	})
 }
 
 func TestDeliveryServiceRequestRules(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants}, func() {
+		routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
+		// Test the xmlId length and form
+		XMLID := "X " + strings.Repeat("X", 46)
+		displayName := strings.Repeat("X", 49)
 
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
-	// Test the xmlId length and form
-	XMLID := "X " + strings.Repeat("X", 46)
-	displayName := strings.Repeat("X", 49)
+		dsr := testData.DeliveryServiceRequests[dsrGood]
+		dsr.DeliveryService.DisplayName = displayName
+		dsr.DeliveryService.RoutingName = routingName
+		dsr.DeliveryService.XMLID = XMLID
 
-	dsr := testData.DeliveryServiceRequests[dsrGood]
-	dsr.DeliveryService.DisplayName = displayName
-	dsr.DeliveryService.RoutingName = routingName
-	dsr.DeliveryService.XMLID = XMLID
-
-	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-	if err != nil {
-		t.Errorf("Error occurred %v", err)
-	}
-	if len(alerts.Alerts) == 0 {
-		t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
-	}
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
-
+		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		if err != nil {
+			t.Errorf("Error occurred %v", err)
+		}
+		if len(alerts.Alerts) == 0 {
+			t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
+		}
+	})
 }
 
 func TestDeliveryServiceRequestTypeFields(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestParameters(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters}, func() {
+		dsr := testData.DeliveryServiceRequests[dsrBadTenant]
 
-	dsr := testData.DeliveryServiceRequests[dsrBadTenant]
+		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+		if err != nil {
+			t.Errorf("Error occurred %v", err)
+		}
 
-	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-	if err != nil {
-		t.Errorf("Error occurred %v", err)
-	}
+		expected := []string{
+			"deliveryservice_request was created.",
+			//"'xmlId' the length must be between 1 and 48",
+		}
 
-	expected := []string{
-		"deliveryservice_request was created.",
-		//"'xmlId' the length must be between 1 and 48",
-	}
+		utils.Compare(t, expected, alerts.ToStrings())
 
-	utils.Compare(t, expected, alerts.ToStrings())
-
-	dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
-	if len(dsrs) != 1 {
-		t.Errorf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
-	}
-	alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(dsrs[0].ID)
-	if err != nil {
-		t.Errorf("cannot DELETE DeliveryServiceRequest by id: %d - %v - %v\n", dsrs[0].ID, err, alert)
-	}
-
-	DeleteTestParameters(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
-
+		dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
+		if len(dsrs) != 1 {
+			t.Errorf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
+		}
+		alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(dsrs[0].ID)
+		if err != nil {
+			t.Errorf("cannot DELETE DeliveryServiceRequest by id: %d - %v - %v\n", dsrs[0].ID, err, alert)
+		}
+	})
 }
 
 func TestDeliveryServiceRequestBad(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	// try to create non-draft/submitted
-	src := testData.DeliveryServiceRequests[dsrDraft]
-	s, err := tc.RequestStatusFromString("pending")
-	if err != nil {
-		t.Errorf(`unable to create Status from string "pending"`)
-	}
-	src.Status = s
+	WithObjs(t, []TCObj{CDNs, Types, Tenants}, func() {
+		// try to create non-draft/submitted
+		src := testData.DeliveryServiceRequests[dsrDraft]
+		s, err := tc.RequestStatusFromString("pending")
+		if err != nil {
+			t.Errorf(`unable to create Status from string "pending"`)
+		}
+		src.Status = s
 
-	alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
-	if err != nil {
-		t.Errorf("Error creating DeliveryServiceRequest %v", err)
-	}
-	expected := []string{
-		`'status' invalid transition from draft to pending`,
-	}
-	utils.Compare(t, expected, alerts.ToStrings())
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+		alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
+		if err != nil {
+			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+		}
+		expected := []string{
+			`'status' invalid transition from draft to pending`,
+		}
+		utils.Compare(t, expected, alerts.ToStrings())
+	})
 }
 
 // TestDeliveryServiceRequestWorkflow tests that transitions of Status are
 func TestDeliveryServiceRequestWorkflow(t *testing.T) {
-
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	// test empty request table
-	dsrs, _, err := TOSession.GetDeliveryServiceRequests()
-	if err != nil {
-		t.Errorf("Error getting empty list of DeliveryServiceRequests %v++", err)
-	}
-	if dsrs == nil {
-		t.Errorf("Expected empty DeliveryServiceRequest slice -- got nil")
-	}
-	if len(dsrs) != 0 {
-		t.Errorf("Expected no entries in DeliveryServiceRequest slice -- got %d", len(dsrs))
-	}
-
-	// Create a draft request
-	src := testData.DeliveryServiceRequests[dsrDraft]
-
-	alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
-	if err != nil {
-		t.Errorf("Error creating DeliveryServiceRequest %v", err)
-	}
-
-	expected := []string{`deliveryservice_request was created.`}
-	utils.Compare(t, expected, alerts.ToStrings())
-
-	// Create a duplicate request -- should fail because xmlId is the same
-	alerts, _, err = TOSession.CreateDeliveryServiceRequest(src)
-	if err != nil {
-		t.Errorf("Error creating DeliveryServiceRequest %v", err)
-	}
-
-	expected = []string{`An active request exists for delivery service 'test-transitions'`}
-	utils.Compare(t, expected, alerts.ToStrings())
-
-	dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)
-	if len(dsrs) != 1 {
-		t.Errorf("Expected 1 deliveryServiceRequest -- got %d", len(dsrs))
-		if len(dsrs) == 0 {
-			t.Fatal("Cannot proceed")
+	WithObjs(t, []TCObj{CDNs, Types, Tenants}, func() {
+		// test empty request table
+		dsrs, _, err := TOSession.GetDeliveryServiceRequests()
+		if err != nil {
+			t.Errorf("Error getting empty list of DeliveryServiceRequests %v++", err)
 		}
-	}
+		if dsrs == nil {
+			t.Errorf("Expected empty DeliveryServiceRequest slice -- got nil")
+		}
+		if len(dsrs) != 0 {
+			t.Errorf("Expected no entries in DeliveryServiceRequest slice -- got %d", len(dsrs))
+		}
 
-	alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
+		// Create a draft request
+		src := testData.DeliveryServiceRequests[dsrDraft]
 
-	expected = []string{
-		"deliveryservice_request was updated.",
-	}
+		alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
+		if err != nil {
+			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+		}
 
-	utils.Compare(t, expected, alerts.ToStrings())
-	if dsr.Status != tc.RequestStatus("submitted") {
-		t.Errorf("expected status=submitted,  got %s", string(dsr.Status))
-	}
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+		expected := []string{`deliveryservice_request was created.`}
+		utils.Compare(t, expected, alerts.ToStrings())
 
+		// Create a duplicate request -- should fail because xmlId is the same
+		alerts, _, err = TOSession.CreateDeliveryServiceRequest(src)
+		if err != nil {
+			t.Errorf("Error creating DeliveryServiceRequest %v", err)
+		}
+
+		expected = []string{`An active request exists for delivery service 'test-transitions'`}
+		utils.Compare(t, expected, alerts.ToStrings())
+
+		dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)
+		if len(dsrs) != 1 {
+			t.Errorf("Expected 1 deliveryServiceRequest -- got %d", len(dsrs))
+			if len(dsrs) == 0 {
+				t.Fatal("Cannot proceed")
+			}
+		}
+
+		alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
+
+		expected = []string{
+			"deliveryservice_request was updated.",
+		}
+
+		utils.Compare(t, expected, alerts.ToStrings())
+		if dsr.Status != tc.RequestStatus("submitted") {
+			t.Errorf("expected status=submitted,  got %s", string(dsr.Status))
+		}
+	})
 }
 
 func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string) (tc.Alerts, tc.DeliveryServiceRequest) {
