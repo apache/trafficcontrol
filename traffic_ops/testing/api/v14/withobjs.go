@@ -89,5 +89,5 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	Tenants:                        {CreateTestTenants, DeleteTestTenants},
 	Types:                          {CreateTestTypes, DeleteTestTypes},
 	Users:                          {CreateTestUsers, ForceDeleteTestUsers},
-	UsersDeliveryServices: {CreateTestUsersDeliveryServices, DeleteTestUsersDeliveryServices},
+	UsersDeliveryServices:          {CreateTestUsersDeliveryServices, DeleteTestUsersDeliveryServices},
 }
