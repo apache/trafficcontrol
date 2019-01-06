@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+set-dns.sh
+
 . /to-access.sh
 
 TO_URL=https://${TO_FQDN}:${TO_PORT}

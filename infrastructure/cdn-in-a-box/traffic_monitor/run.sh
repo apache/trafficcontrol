@@ -38,6 +38,8 @@ do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
+set-dns.sh
+
 source /to-access.sh
 
 # Wait on SSL certificate generation

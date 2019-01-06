@@ -50,9 +50,19 @@ create_bind_cache_dir() {
   chown root:${BIND_USER} /var/cache/bind
 }
 
+create_zonefile_cron() {
+	# this is a cron job, rather than only running once, so containers added to the Docker Network later will be picked up and inserted.
+	# This facilitates running cdn-in-a-box as independent 'docker run' containers, rather than docker-compose.
+	printf "* * * * * root /usr/local/sbin/set-zonefile.sh\n" > /etc/cron.d/set-zonefile
+	chmod 0600 /etc/cron.d/set-zonefile
+}
+
 create_pid_dir
 create_bind_data_dir
 create_bind_cache_dir
+create_zonefile_cron
+
+nohup cron -f > cron.out & # The Docker container doesn't run cron by default
 
 # allow arguments to be passed to named
 if [[ ${1:0:1} = '-' ]]; then

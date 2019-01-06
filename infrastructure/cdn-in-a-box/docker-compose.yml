@@ -59,7 +59,6 @@ services:
         ipv4_address: 172.16.239.10
         ipv6_address: "fc01:9400:1000:8::10"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
       - /var/lib/postgresql/data
       - shared:/shared
     env_file:
@@ -91,7 +90,7 @@ services:
     ports:
       - "6443:443"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - shared:/shared
 
   # trafficops-perl runs the legacy Traffic Ops in Perl using the Mojolicious framework.  This remains
@@ -119,7 +118,7 @@ services:
       - "60443:443"
     volumes:
       - ./traffic_ops/ca:/ca
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - shared:/shared
 
   # trafficportal defines the web interface for Traffic Ops.  It uses only the API exposed by Traffic Ops
@@ -144,7 +143,7 @@ services:
     ports:
       - "443:443"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - shared:/shared
 
   # trafficmonitor is an HTTP service that monitors the caches in a CDN for a variety of metrics
@@ -157,8 +156,8 @@ services:
     depends_on:
       - enroller
     volumes:
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - shared:/shared
-      - ./dns/container-resolv.conf:/etc/resolv.conf
     domainname: infra.ciab.test
     env_file:
       - variables.env
@@ -195,7 +194,7 @@ services:
       - "3443:443"
       - "3333:3333"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - shared:/shared
 
   # trafficvault runs a riak container to store private keys
@@ -213,7 +212,7 @@ services:
     labels:
       - "com.basho.riak.cluster.name=trafficvault"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - schemas:/etc/riak/schemas
       - shared:/shared
     domainname: infra.ciab.test
@@ -253,7 +252,7 @@ services:
     ports:
       - "9000:80"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - shared:/shared
 
   # mid cache
@@ -276,7 +275,7 @@ services:
     ports:
       - "9100:80"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - shared:/shared
 
   # origin provides the content to be distributed through the CDN caches
@@ -297,7 +296,7 @@ services:
     ports:
       - "9200:80"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - shared:/shared
       - ./origin/content:/var/www/html
 
@@ -317,7 +316,7 @@ services:
         ipv4_address: 172.16.239.200
         ipv6_address: "fc01:9400:1000:8::200"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - shared:/shared
 
   # Bind9 DNS services work in combination with the traffic router to route clients to the optimal cache
@@ -328,6 +327,7 @@ services:
     env_file:
       - variables.env
     volumes:
+      - ./dns/set-zonefile.sh:/usr/local/sbin/set-zonefile.sh
       - shared:/shared
     hostname: dns
     domainname: infra.ciab.test

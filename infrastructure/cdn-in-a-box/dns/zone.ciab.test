@@ -28,53 +28,8 @@ $TTL 30
 
 $ORIGIN infra.ciab.test.
 
-gw                IN A    172.16.239.1
-gw								IN AAAA fc01:9400:1000:8::1
-
-db                IN A    172.16.239.10
-db								IN AAAA fc01:9400:1000:8::10
-
-trafficops        IN A    172.16.239.20
-trafficops        IN AAAA fc01:9400:1000:8::20
-
-trafficops-perl   IN A    172.16.239.21
-trafficops-perl   IN AAAA fc01:9400:1000:8::21
-
-trafficportal     IN A    172.16.239.30
-trafficportal     IN AAAA fc01:9400:1000:8::30
-
-trafficmonitor    IN A    172.16.239.40
-trafficmonitor    IN AAAA fc01:9400:1000:8::40
-
-trafficvault      IN A    172.16.239.50
-trafficvault      IN AAAA fc01:9400:1000:8::50
-
-trafficrouter     IN A    172.16.239.60
-trafficrouter     IN AAAA fc01:9400:1000:8::60
-
-edge              IN A    172.16.239.100
-edge              IN AAAA fc01:9400:1000:8::100
-
-mid               IN A    172.16.239.120
-mid               IN AAAA fc01:9400:1000:8::120
-
-origin            IN A    172.16.239.140
-origin            IN AAAA fc01:9400:1000:8::140
-
-enroller          IN A    172.16.239.200
-enroller          IN AAAA fc01:9400:1000:8::200
-
-socksproxy        IN A    172.16.239.233
-socksproxy        IN AAAA fc01:9400:1000:8::233
-
-client            IN A    172.16.239.250
-client            IN AAAA fc01:9400:1000:8::250
-
-vnc               IN A    172.16.239.251
-vnc               IN AAAA fc01:9400:1000:8::251
-
-dns               IN A    172.16.239.254
-dns               IN AAAA fc01:9400:1000:8::254
+; Hosts should be dynamically inserted here by /usr/local/bin/set-zonefile.sh via /etc/cron.d/set-zonefile.
+; If this comment is all that's under ORIGIN infra.ciab.test, there is likely a problem with set-zonefile.sh.
 
 $ORIGIN mycdn.ciab.test.
 @                 NS   trafficrouter.infra.ciab.test.
