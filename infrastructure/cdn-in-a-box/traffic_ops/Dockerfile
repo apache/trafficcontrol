@@ -37,6 +37,7 @@ RUN yum install -y epel-release && \
         perl-Test-CPAN-Meta \
         perl-JSON-PP \
         git \
+        iproute \
         jq && \
     yum-config-manager --add-repo 'http://vault.centos.org/7.5.1804/os/x86_64/' && \
     yum -y install --enablerepo=vault* golang-1.9.4 && \

@@ -33,16 +33,6 @@
 ---
 version: '2.1'
 
-networks:
-  tcnet:
-    driver: bridge
-    enable_ipv6: true
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.16.239.0/24
-        - subnet: "fc01:9400:1000:8::/64"
-
 services:
   # db is the Traffic Ops database running in postgresql.  Only trafficops and trafficops-perl need to have access to it.
   # All other components access the database thru the Traffic Ops API
@@ -54,12 +44,7 @@ services:
     domainname: infra.ciab.test
     depends_on:
       - dns
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.10
-        ipv6_address: "fc01:9400:1000:8::10"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
       - /var/lib/postgresql/data
       - shared:/shared
     env_file:
@@ -84,14 +69,11 @@ services:
       - variables.env
     hostname: trafficops
     image: trafficops-go
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.20
-        ipv6_address: "fc01:9400:1000:8::20"
     ports:
       - "6443:443"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # trafficops-perl runs the legacy Traffic Ops in Perl using the Mojolicious framework.  This remains
@@ -110,16 +92,15 @@ services:
       - variables.env
     hostname: trafficops-perl
     image: trafficops-perl
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.21
-        ipv6_address: "fc01:9400:1000:8::21"
     # TODO: change to expose: "60443" to limit to containers
     ports:
       - "60443:443"
     volumes:
       - ./traffic_ops/ca:/ca
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
+      - ./dns/insert-db-into-dns.sh:/usr/local/sbin/insert-db-into-dns.sh
+      - ./traffic_ops/set-to-ips-from-dns.sh:/usr/local/sbin/set-to-ips-from-dns.sh
       - shared:/shared
 
   # trafficportal defines the web interface for Traffic Ops.  It uses only the API exposed by Traffic Ops
@@ -137,14 +118,11 @@ services:
       - variables.env
     hostname: trafficportal
     image: trafficportal
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.30
-        ipv6_address: "fc01:9400:1000:8::30"
     ports:
       - "443:443"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # trafficmonitor is an HTTP service that monitors the caches in a CDN for a variety of metrics
@@ -157,17 +135,14 @@ services:
     depends_on:
       - enroller
     volumes:
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
-      - ./dns/container-resolv.conf:/etc/resolv.conf
     domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: trafficmonitor
     image: trafficmonitor
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.40
-        ipv6_address: "fc01:9400:1000:8::40"
     ports:
       - "80:80"
 
@@ -185,17 +160,14 @@ services:
     env_file:
       - variables.env
     hostname: trafficrouter
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.60
-        ipv6_address: "fc01:9400:1000:8::60"
     ports:
       - "3053:53"
       - "3080:80"
       - "3443:443"
       - "3333:3333"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # trafficvault runs a riak container to store private keys
@@ -213,17 +185,14 @@ services:
     labels:
       - "com.basho.riak.cluster.name=trafficvault"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - schemas:/etc/riak/schemas
       - shared:/shared
     domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: trafficvault
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.50
-        ipv6_address: "fc01:9400:1000:8::50"
 
   # Apache Traffic Server (ATS) caches defined here
   # base image from which all other caches inherit (builds and installs ATS+plugins)
@@ -246,14 +215,11 @@ services:
     env_file:
       - variables.env
     hostname: edge
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.100
-        ipv6_address: "fc01:9400:1000:8::100"
     ports:
       - "9000:80"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # mid cache
@@ -269,14 +235,11 @@ services:
     env_file:
       - variables.env
     hostname: mid
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.120
-        ipv6_address: "fc01:9400:1000:8::120"
     ports:
       - "9100:80"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # origin provides the content to be distributed through the CDN caches
@@ -290,14 +253,11 @@ services:
     env_file:
       - variables.env
     hostname: origin
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.140
-        ipv6_address: "fc01:9400:1000:8::140"
     ports:
       - "9200:80"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
       - ./origin/content:/var/www/html
 
@@ -312,12 +272,9 @@ services:
     env_file:
       - variables.env
     hostname: enroller
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.200
-        ipv6_address: "fc01:9400:1000:8::200"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   # Bind9 DNS services work in combination with the traffic router to route clients to the optimal cache
@@ -328,13 +285,11 @@ services:
     env_file:
       - variables.env
     volumes:
+      - ./dns/set-self-dns.sh:/usr/local/sbin/set-self-dns.sh
+      - ./dns/set-dns-update.sh:/usr/local/sbin/set-dns-update.sh
       - shared:/shared
     hostname: dns
     domainname: infra.ciab.test
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.254
-        ipv6_address: "fc01:9400:1000:8::254"
     ports:
       - "9353:53"
 
@@ -343,7 +298,7 @@ volumes:
     external: false
   shared:
     external: false
-  content:  
+  content:
     external: false
   ca:
-    external: false 
+    external: false

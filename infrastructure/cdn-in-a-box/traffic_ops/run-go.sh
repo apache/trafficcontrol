@@ -42,6 +42,9 @@ do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
+set-dns.sh
+insert-self-into-dns.sh
+
 # Source to-access functions and FQDN vars
 source /to-access.sh
 

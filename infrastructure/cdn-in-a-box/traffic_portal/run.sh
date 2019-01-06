@@ -27,6 +27,9 @@ LOGFILE="/var/log/traffic_portal/traffic_portal.log"
 MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
 
+set-dns.sh
+insert-self-into-dns.sh
+
 source /to-access.sh
 
 # Wait on SSL certificate generation
