@@ -832,7 +832,7 @@ func getQueryStringRule(dsQstringIgnore int) (remapdata.QueryStringRule, error) 
 	case DeliveryServiceQueryStringCacheAndRemap:
 		return remapdata.QueryStringRule{Remap: true, Cache: true}, nil
 	case DeliveryServiceQueryStringNoCacheRemap:
-		return remapdata.QueryStringRule{Remap: true, Cache: true}, nil
+		return remapdata.QueryStringRule{Remap: true, Cache: false}, nil
 	case DeliveryServiceQueryStringNoCacheNoRemap:
 		return remapdata.QueryStringRule{Remap: false, Cache: false}, nil
 	default:
