@@ -22,14 +22,17 @@ Setuptools build/install script for the Python Traffic Control client
 import sys
 import os
 from setuptools import setup, find_packages
-from trafficops import __version__ as version
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+
+about = {}
+with open(os.path.join(HERE, 'trafficops', '__version__.py'), mode='r', encoding='utf-8') as f:
+	exec(f.read(), about)
 
 with open(os.path.join(HERE, "README.rst")) as fd:
 	setup(
 	       name="Apache-TrafficControl",
-	       version=version,
+	       version=about["__version__"],
 	       author="Apache Software Foundation",
 	       author_email="dev@trafficcontrol.apache.org",
 	       description="Python API Client for Traffic Control",
