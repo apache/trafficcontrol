@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TrafficPortalService = function($http, $q, ENV) {
+var TrafficPortalService = function($http, $q, messageModel, ENV) {
 
     this.getReleaseVersionInfo = function() {
         var deferred = $q.defer();
@@ -55,11 +55,18 @@ var TrafficPortalService = function($http, $q, ENV) {
             .then(
                 function(result) {
                     download(result.data, moment().format() + '.pg_dump');
+                },
+                function(fault) {
+                    if (fault && fault.alerts && fault.alerts.length > 0) {
+                        messageModel.setMessages(fault.alerts, false);
+                    } else {
+                        messageModel.setMessages([ { level: 'error', text: fault.status.toString() + ': ' + fault.statusText } ], false);
+                    }
                 }
             );
     };
 
 };
 
-TrafficPortalService.$inject = ['$http', '$q', 'ENV'];
+TrafficPortalService.$inject = ['$http', '$q', 'messageModel', 'ENV'];
 module.exports = TrafficPortalService;
