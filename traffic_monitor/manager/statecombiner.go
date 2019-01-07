@@ -148,6 +148,31 @@ func combineDSState(
 	combinedStates.SetDeliveryService(deliveryServiceName, deliveryService)
 }
 
+// pruneCombinedDSState deletes delivery services in combined states which have been removed from localStates and peerStates
+func pruneCombinedDSState(combinedStates peer.CRStatesThreadsafe, localStates tc.CRStates, peerStates peer.CRStatesPeersThreadsafe) {
+	combinedCRStates := combinedStates.Get()
+
+	// remove any DS in combinedStates NOT in local states or peer states
+	for deliveryServiceName := range combinedCRStates.DeliveryService {
+		inPeer := false
+		inLocal := false
+		for _, iPeerStates := range peerStates.GetCrstates() {
+			if _, ok := iPeerStates.DeliveryService[deliveryServiceName]; ok {
+				inPeer = true
+				break
+			}
+		}
+
+		if _, ok := localStates.DeliveryService[deliveryServiceName]; ok {
+			inLocal = true
+		}
+
+		if !inPeer && !inLocal {
+			combinedStates.DeleteDeliveryService(deliveryServiceName)
+		}
+	}
+}
+
 // pruneCombinedCaches deletes caches in combined states which have been removed from localStates.
 func pruneCombinedCaches(combinedStates peer.CRStatesThreadsafe, localStates tc.CRStates) {
 	combinedCaches := combinedStates.GetCaches()
@@ -167,6 +192,7 @@ func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerSt
 		combineDSState(deliveryServiceName, localDeliveryService, events, peerOptimistic, peerStates, localStates, combinedStates, overrideMap, toData)
 	}
 
+	pruneCombinedDSState(combinedStates, localStates, peerStates)
 	pruneCombinedCaches(combinedStates, localStates)
 }
 
