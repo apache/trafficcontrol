@@ -129,8 +129,6 @@ Request Structure
 -----------------
 :dsId: The integral, unique identifier of the Delivery Service on which the revalidation job shall operate
 
-	.. note:: As well as satisfying tenancy and role authentication\ [1]_, the user must have been assigned the Delivery Service identified by this integral, unique identifier.
-
 :regex: This should be a `PCRE <http://www.pcre.org/>`_-compatible regular expression for the path to match for forcing the revalidation
 
 	.. warning:: This is concatenated directly to the origin URL of the Delivery Service identified by ``dsId`` to make the full regular expression. Thus it is not necessary to restate the URL but it should be noted that if the origin URL does not end with a backslash (``/``) then this should begin with an escaped backslash to ensure proper behavior (otherwise it will match against FQDNs, which leads to undefined behavior in Traffic Control).
@@ -188,4 +186,4 @@ Response Structure
 		}
 	]}
 
-.. [1] Regardless of role or tenancy, a user may only create content revalidation jobs on Delivery Services assigned to him or her. A role is only required if tenancy is not used; if tenancy is used by Traffic Control, then the user will be able to create the content revalidation job on Delivery Services assigned to his or her user and tenant regardless of role. This means that **even read-only users can create content invalidation jobs for Delivery Services owned by themselves and their tenants**. This behavior is considered a bug, and it is tracked by `GitHub Issue #3116 <https://github.com/apache/trafficcontrol/issues/3116>`_.
+.. [1] A role is only required if tenancy is not used; if tenancy is used by Traffic Control, then the user will be able to create the content revalidation job on Delivery Services scoped to his or her tenancy regardless of role. This means that **even read-only users can create content invalidation jobs for Delivery Services scoped to their tenancy**. This behavior is considered a bug, and it is tracked by `GitHub Issue #3116 <https://github.com/apache/trafficcontrol/issues/3116>`_.
