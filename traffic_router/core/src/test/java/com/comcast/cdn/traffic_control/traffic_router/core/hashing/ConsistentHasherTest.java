@@ -179,25 +179,25 @@ public class ConsistentHasherTest {
 	@Test
 	public void testPatternBasedHashing() throws Exception {
 		// use regex to standardize path
-		final String regex = "(/.*?)/\\d*?(/.*?)(/*.m3u8)";
-		final String expectedResult = "/foo/bar/index.m3u8";
+		final String regex = "/.*?(/.*?/).*?(.m3u8)";
+		final String expectedResult = "/some_stream_name1234/.m3u8";
 
-		String requestPath = "/foo/123/bar/index.m3u8";
+		String requestPath = "/path12341234/some_stream_name1234/some_info4321.m3u8";
 		String pathToHash = trafficRouter.buildPatternBasedHashString(regex, requestPath);
 		assertThat(pathToHash, equalTo(expectedResult));
 		DefaultHashable hashableResult1 = consistentHasher.selectHashable(hashables, null, pathToHash);
 
-		requestPath = "/foo/321/bar/index.m3u8";
+		requestPath = "/pathasdf1234/some_stream_name1234/some_other_info.m3u8";
 		pathToHash = trafficRouter.buildPatternBasedHashString(regex, requestPath);
 		assertThat(pathToHash, equalTo(expectedResult));
 		DefaultHashable hashableResult2 = consistentHasher.selectHashable(hashables, null, pathToHash);
 
-		requestPath = "/foo/1/bar/index.m3u8";
+		requestPath = "/path4321fdsa/some_stream_name1234/4321some_info.m3u8";
 		pathToHash = trafficRouter.buildPatternBasedHashString(regex, requestPath);
 		assertThat(pathToHash, equalTo(expectedResult));
 		DefaultHashable hashableResult3 = consistentHasher.selectHashable(hashables, null, pathToHash);
 
-		requestPath = "/foo/123321123321/bar/index.m3u8";
+		requestPath = "/1234pathfdas/some_stream_name1234/some_info.m3u8";
 		pathToHash = trafficRouter.buildPatternBasedHashString(regex, requestPath);
 		assertThat(pathToHash, equalTo(expectedResult));
 		DefaultHashable hashableResult4 = consistentHasher.selectHashable(hashables, null, pathToHash);
