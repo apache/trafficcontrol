@@ -861,7 +861,8 @@ public class TrafficRouter {
 			return null;
 		}
 
-		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), requestPath);
+		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
 	}
 
 	public Cache consistentHashForGeolocation(final String ip, final String deliveryServiceId, final String requestPath) {
@@ -890,6 +891,10 @@ public class TrafficRouter {
 		}
 
 		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), requestPath);
+	}
+
+	public String buildPatternBasedHashStringDeliveryService(final String deliveryServiceId, final String requestPath) {
+		return buildPatternBasedHashString(cacheRegister.getDeliveryService(deliveryServiceId), requestPath);
 	}
 
 	private boolean isSteeringDeliveryService(final DeliveryService deliveryService) {

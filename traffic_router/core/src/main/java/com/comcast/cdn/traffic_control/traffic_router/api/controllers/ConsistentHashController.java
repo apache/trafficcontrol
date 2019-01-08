@@ -26,6 +26,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 @RequestMapping("/consistenthash")
 public class ConsistentHashController {
@@ -88,5 +91,41 @@ public class ConsistentHashController {
 		}
 
 		return ResponseEntity.ok(deliveryService);
+	}
+
+	@RequestMapping(value = "/patternbased/regex")
+	public @ResponseBody
+	ResponseEntity<Map<String, String>> testPatternBasedRegex(@RequestParam(name = "regex") final String regex,
+										 @RequestParam(name = "requestPath") final String requestPath) {
+
+		final String pathToHash = trafficRouterManager.getTrafficRouter().buildPatternBasedHashString(regex, requestPath);
+
+		if (pathToHash == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		}
+
+		final Map<String, String> map = new HashMap<String, String>();
+		map.put("requestPath", requestPath);
+		map.put("consistentHashRegex", regex);
+		map.put("resultingPathToConsistentHash", pathToHash);
+		return ResponseEntity.ok(map);
+	}
+
+	@RequestMapping(value = "/patternbased/deliveryservice")
+	public @ResponseBody
+	ResponseEntity<Map<String, String>> testPatternBasedDeliveryService(@RequestParam(name = "deliveryServiceId") final String deliveryServiceId,
+																		@RequestParam(name = "requestPath") final String requestPath) {
+
+		final String pathToHash = trafficRouterManager.getTrafficRouter().buildPatternBasedHashStringDeliveryService(deliveryServiceId, requestPath);
+
+		if (pathToHash == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		}
+
+		final Map<String, String> map = new HashMap<String, String>();
+		map.put("requestPath", requestPath);
+		map.put("deliveryServiceId", deliveryServiceId);
+		map.put("resultingPathToConsistentHash", pathToHash);
+		return ResponseEntity.ok(map);
 	}
 }
