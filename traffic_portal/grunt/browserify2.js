@@ -42,8 +42,7 @@ module.exports = {
                                 'es5-shim/es5-shim.min.js',
                                 'jquery/jquery.min.js',
                                 'json3/lib/json3.min.js',
-                                'restangular/dist/restangular.min.js',
-                                'angular-moment-picker/dist/angular-moment-picker.min.js'
+                                'restangular/dist/restangular.min.js'
                             ]
                     },
                     {
@@ -104,8 +103,7 @@ module.exports = {
                                 'es5-shim/es5-shim.js',
                                 'jquery/jquery.js',
                                 'json3/lib/json3.js',
-                                'restangular/dist/restangular.js',
-	                            'angular-moment-picker/dist/angular-moment-picker.min.js'
+                                'restangular/dist/restangular.js'
                             ]
                     },
                     {
