@@ -14,10 +14,20 @@
 # limitations under the License.
 #
 use strict;
-use File::Basename;
+use Schema;
+use DBIx::Class::Schema::Loader qw/make_schema_at/;
 
-STDERR->autoflush(1);
-print STDERR "WARNING: this script is deprecated, please use the db/admin binary instead.\n\n";
-my $args = join(" ", @ARGV);
-my $new_admin = dirname(__FILE__) . "/admin";
-exit(system("$new_admin " . $args));
+my $db_info = Schema->get_dbinfo();
+
+my $user    = $db_info->{user};
+my $pass    = $db_info->{password};
+my $dsn     = Schema->get_dsn();
+make_schema_at(
+	'Schema', {
+		debug                   => 1,
+		dump_directory          => './lib',
+		overwrite_modifications => 1,
+		exclude => 'goose_db_version',
+	},
+	[ $dsn, $user, $pass ],
+);

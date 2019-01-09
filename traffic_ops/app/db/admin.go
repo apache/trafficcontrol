@@ -303,12 +303,13 @@ func loadSchema() {
 }
 
 func reverseSchema() {
-	fmt.Println("WARNING: the '" + CmdReverseSchema + "' command will be removed with Traffic Ops Perl because it will no longer be necessary")
-	cmd := exec.Command("db/admin.pl", "--env="+Environment, CmdReverseSchema)
+	fmt.Fprintf(os.Stderr, "WARNING: the '%s' command will be removed with Traffic Ops Perl because it will no longer be necessary\n", CmdReverseSchema)
+	cmd := exec.Command("db/reverse_schema.pl")
+	cmd.Env = append(os.Environ(), "MOJO_MODE="+Environment)
 	out, err := cmd.CombinedOutput()
 	fmt.Printf("%s", out)
 	if err != nil {
-		die("Can't run `db/admin.pl reverse_schema`: " + err.Error())
+		die("Can't run `db/reverse_schema.pl`: " + err.Error())
 	}
 }
 
