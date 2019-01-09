@@ -222,7 +222,7 @@ INSERT INTO parameter (name, config_file, value) (
     CONCAT('`+paramPrefix+`', xml_id, '.config'),
     (select v from ats_config_location)
   FROM deliveryservice WHERE id = ANY($1)
-) ON CONFLICT (name, config_file, value) DO UPDATE SET id = EXCLUDED.id RETURNING id
+) ON CONFLICT (name, config_file, value) DO UPDATE SET name = EXCLUDED.name RETURNING id
 `, pq.Array(dsIDs))
 	if err != nil {
 		return errors.New("inserting parameters: " + err.Error())
