@@ -110,7 +110,7 @@ to-post() {
 		data="--data @$t"
 	fi
 	to-auth && \
-	    curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X POST $data "$TO_URL/$1"
+	    curl $CURLAUTH $CURLOPTS -H 'Content-Type: application/json;charset=UTF-8' --cookie "$COOKIEJAR" -X POST $data "$TO_URL/$1"
 	[[ -n $t ]] && rm -f "$t"
 }
 

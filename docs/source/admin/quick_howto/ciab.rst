@@ -101,65 +101,72 @@ variables.env
 
 X.509 SSL/TLS Certificates
 ==========================
-All components in Apache Traffic Control utilize SSL/TLS secure communications by default. For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Certificate Authority (CA) is generated at the first initial startup. Additional self-signed wildcard certificates are generated for each container service and all delivery services of the CDN. All certificates and keys are stored in the ``ca`` host volume which is located at ``infrastruture/cdn-in-a-box/traffic_ops/ca`` [4]_.
+All components in Apache Traffic Control utilize SSL/TLS secure communications by default. For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Root Certificate Authority (CA) is generated at the first initial startup. An X.509 Intermediate Certificate Authority (CA) is also generated and signed by the Root CA.  Additional wildcard certificates are generated/signed by the Intermediate CA for each container service and demo1, demo2, and demo3 delivery services. All certificates and keys are stored in the ``ca`` host volume which is located at ``infrastruture/cdn-in-a-box/traffic_ops/ca`` [4]_.
 
 .. _ciab-x509-certificate-list:
 .. table:: Self-Signed X.509 Certificate List
 
-	+---------------------------+-----------------------------------+------------------------------+
-	| Filename                  | Description                       | X.509 CN/SAN                 |
-	+===========================+===================================+==============================+
-	| CIAB-CA.crt               | Shared CA Certificate             | N/A                          |
-	+---------------------------+-----------------------------------+------------------------------+
-	| infra.ciab.test.crt       | Infrastruture Certificate         | \*.infra.ciab.test           |
-	+---------------------------+-----------------------------------+------------------------------+
-	| demo1.mycdn.ciab.test.crt | Demo1 Delivery Service Certificate| \*.demo1.mycdn.ciab.test     |
-	+---------------------------+-----------------------------------+------------------------------+
-	| demo2.mycdn.ciab.test.crt | Demo2 Delivery Service Certificate| \*.demo2.mycdn.ciab.test     |
-	+---------------------------+-----------------------------------+------------------------------+
-	| demo3.mycdn.ciab.test.crt | Demo3 Delivery Service Certificate| \*.demo3.mycdn.ciab.test     |
-	+---------------------------+-----------------------------------+------------------------------+
+	+---------------------------+-------------------------------------------+------------------------------+
+	| Filename                  | Description                               | X.509 CN/SAN                 |
+	+===========================+===========================================+==============================+
+	| CIAB-CA-root.crt          | Shared Root CA Certificate                | N/A                          |
+	+---------------------------+-------------------------------------------+------------------------------+
+	| CIAB-CA-intr.crt          | Shared Intermediate CA Certificate        | N/A                          |
+	+---------------------------+-------------------------------------------+------------------------------+
+	| CIAB-CA-fullchain.crt     | Shared CA Certificate Chain Bundle [5]_   | N/A                          |
+	+---------------------------+-------------------------------------------+------------------------------+
+	| infra.ciab.test.crt       | Infrastruture Certificate                 | \*.infra.ciab.test           |
+	+---------------------------+-------------------------------------------+------------------------------+
+	| demo1.mycdn.ciab.test.crt | Demo1 Delivery Service Certificate        | \*.demo1.mycdn.ciab.test     |
+	+---------------------------+-------------------------------------------+------------------------------+
+	| demo2.mycdn.ciab.test.crt | Demo2 Delivery Service Certificate        | \*.demo2.mycdn.ciab.test     |
+	+---------------------------+-------------------------------------------+------------------------------+
+	| demo3.mycdn.ciab.test.crt | Demo3 Delivery Service Certificate        | \*.demo3.mycdn.ciab.test     |
+	+---------------------------+-------------------------------------------+------------------------------+
 
 .. [4] The ``ca`` volume is not purged with normal ``docker volume`` commands. This feature is by design to allow the existing shared SSL certificate to be trusted at the system level across restarts. To re-generate all SSL certificates and keys, remove the ``infrastructure/cdn-in-a-box/traffic_ops/ca`` directory before startup.
+.. [5] The full chain bundle is a file that contains both the Root and Intermediate CA certificates.
 
 Trusting the CA
 ---------------
-For developer and testing use-cases, it may be necessary to have full x509 CA validation by HTTPS clients [5]_. For x509 validation to work properly, the self-signed x509 CA certificate must be trusted either at the system level or by the client application itself. Procedures to import and trust the CA x.509 certificate are outlined below [6]_.
+For developer and testing use-cases, it may be necessary to have full x509 CA validation by HTTPS clients [6]_ [7]_. For x509 validation to work properly, the self-signed x509 CA certificate must be trusted either at the system level or by the client application itself. Procedures to import and trust the CA x.509 certificate are outlined below [8]_.
 
 Importing the CA Certificate on OSX
 -----------------------------------
-#. Copy the CIAB root CA certificate from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA.crt`` to the Mac.
-#. Import the CIAB root CA certificate on the Mac.
-#. Double-click the CIAB root CA certificate to open it in Keychain Access.
+#. Copy the CIAB root and intermediate CA certificates from ``infrastructure/cdn-in-a-box/traffic_ops/ca`` to the Mac.
+#. Double-click the CIAB CA certificate to open it in Keychain Access.
 #. The CIAB root CA certificate appears in login.
 #. Copy the CIAB root CA certificate to System.
 #. Open the CIAB root CA certificate, expand Trust, select Use System Defaults, and save your changes.
 #. Reopen the CIAB root CA certificate, expand Trust, select Always Trust, and save your changes.
 #. Delete the CIAB root CA certificate from login.
+#. Repeat the last six steps to import the Intermediate CA Certificate
 #. Restart all HTTPS clients (browsers, etc).
 
 Importing the CA certificate on Windows
 ---------------------------------------
-#. Copy the CIAB root CA certificate from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA.crt`` to Windows filesystem.
+#. Copy the CIAB root and intermediate CA certificate from ``infrastructure/cdn-in-a-box/traffic_ops/ca`` to Windows filesystem.
 #. As Administrator, start the Microsoft Management Console.
 #. Add the Certificates snap-in for the computer account and manage certificates for the local computer.
 #. Import the CIAB root CA certificate into Trusted Root Certification Authorities > Certificates.
+#. Import the CIAB intermediate CA certificate into Trusted Root Certification Authorities > Certificates.
 #. Restart all HTTPS clients (browsers, etc).
 
 Importing the CA certificate on Linux/Centos7
 ---------------------------------------------
-#. Copy the CIAB root CA certificate from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA.crt`` to path ``/etc/pki/ca-trust/source/anchors``.
+#. Copy the CIAB full chain CA certificate bundle from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt`` to path ``/etc/pki/ca-trust/source/anchors``.
 #. Run ``update-ca-trust-extract`` as the root user.
 #. Restart all HTTPS clients (browsers, etc).
 
 Importing the CA certificate on Linux/Ubuntu
 --------------------------------------------
-#. Copy the CIAB root CA certificate from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA.crt`` to path ``/usr/local/share/ca-certificates``.
+#. Copy the CIAB full chain CA certificate bundle from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt`` to path ``/usr/local/share/ca-certificates``.
 #. Run ``update-ca-certificates`` as the root user.
 #. Restart all HTTPS clients (browsers, etc).
 
-.. [5] All containers within CDN-in-a-Box start up with the self-signed CA already trusted.
-.. [6] HTTP Client applications such as Google Chrome, Firefox, curl, and wget can also be individually configured to trust the CA certificate. Each application procedure can be found quickly online via Google.
+.. [6] All containers within CDN-in-a-Box start up with the self-signed CA already trusted.
+.. [7] The demo1 Delivery Service X509 certificate is automatically imported into traffic vault on startup.
+.. [8] HTTP Client applications such as Google Chrome, Firefox, curl, and wget can also be individually configured to trust the CA certificate. Each application procedure can be found quickly online via Google.
 
 Advanced Usage
 ==============
@@ -173,11 +180,10 @@ The enroller runs within CDN in a Box using the ``-dir <dir>`` switch which prov
 
 Auto Snapshot/Queue-Updates
 ---------------------------
-An automatic snapshot of the current Traffic Ops CDN configuration/toplogy will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled.  To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [7]_.  The snapshot and queue-updates actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled.  The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (snapshot and queue-updates) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [8]_.
+An automatic snapshot of the current Traffic Ops CDN configuration/toplogy will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled.  To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [9]_.  The snapshot and queue-updates actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled.  The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (snapshot and queue-updates) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [10]_.
 
-.. [7] Automatic Snapshot/Queue-Updates is enabled by default in ``infrastructure/cdn-in-a-box/variables.env``.
-.. [8] Server poll interval and delay action wait are defaulted to a value of 2 seconds.
-
+.. [9] Automatic Snapshot/Queue-Updates is enabled by default in `variables.env`_.
+.. [10] Server poll interval and delay action wait are defaulted to a value of 2 seconds.
 
 Mock Origin Service
 -------------------
