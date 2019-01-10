@@ -29,12 +29,15 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
 const DefaultKSKTTLSeconds = 60
 const DefaultKSKEffectiveMultiplier = 2
+const DefaultKSKExpiration = 365 * 24 * time.Hour
+const DefaultZSKExpiration = 30 * 24 * time.Hour
 
 func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
@@ -48,6 +51,16 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 	req := tc.CDNGenerateKSKReq{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
+		return
+	}
+
+	cdnDomain, cdnExists, err := dbhelpers.GetCDNDomainFromName(inf.Tx.Tx, cdnName)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN domain: "+err.Error()))
+		return
+	}
+	if !cdnExists {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("cdn '"+string(cdnName)+"' not found"), nil)
 		return
 	}
 
@@ -75,7 +88,8 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 	}
 
 	isKSK := true
-	newKey, err := regenExpiredKeys(isKSK, dnssecKeys[string(cdnName)], *req.EffectiveDate, true, true)
+	cdnDNSDomain := cdnDomain + "."
+	newKey, err := regenExpiredKeys(isKSK, cdnDNSDomain, dnssecKeys[string(cdnName)], *req.EffectiveDate, true, true)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("regenerating CDN DNSSEC keys: "+err.Error()))
 		return
@@ -142,9 +156,11 @@ WHERE
 	return ttl, mult, nil
 }
 
-// regenExpiredKeys regenerates expired keys. The key is the map key into the keys object, which may be a CDN name or a delivery service name.
-func regenExpiredKeys(typeKSK bool, existingKeys tc.DNSSECKeySetV11, effectiveDate time.Time, tld bool, resetExp bool) (tc.DNSSECKeySetV11, error) {
+const DefaultDNSSECKeyTTL = 60 * time.Second
 
+// regenExpiredKeys regenerates expired keys. The key is the map key into the keys object, which may be a CDN name or a delivery service name.
+// The name is the name of the key, either the CDN name or the Delivery Service name. If existingKeys contains any keys marked "new", the name argument is not used, but the name of the previously-new key is used instead. These should match, and a warning is logged if they differ.
+func regenExpiredKeys(typeKSK bool, name string, existingKeys tc.DNSSECKeySetV11, effectiveDate time.Time, tld bool, resetExp bool) (tc.DNSSECKeySetV11, error) {
 	existingKey := ([]tc.DNSSECKeyV11)(nil)
 	if typeKSK {
 		existingKey = existingKeys.KSK
@@ -162,19 +178,28 @@ func regenExpiredKeys(typeKSK bool, existingKeys tc.DNSSECKeySetV11, effectiveDa
 		}
 	}
 
-	if !oldKeyFound {
-		return existingKeys, errors.New("no old key found") // TODO verify this is correct (Perl doesn't check)
-	}
-
-	name := oldKey.Name
-	ttl := time.Duration(oldKey.TTLSeconds) * time.Second
-	expiration := oldKey.ExpirationDateUnix
-	inception := oldKey.InceptionDateUnix
-	const secPerDay = 86400
-	expirationDays := (expiration - inception) / secPerDay
-
 	newInception := time.Now()
-	newExpiration := time.Now().Add(time.Duration(expirationDays) * time.Hour * 24)
+	defaultExpiration := DefaultZSKExpiration
+	if typeKSK {
+		defaultExpiration = DefaultKSKExpiration
+	}
+	newExpiration := newInception.Add(defaultExpiration)
+
+	ttl := DefaultDNSSECKeyTTL
+	if oldKeyFound {
+		expiration := oldKey.ExpirationDateUnix
+		inception := oldKey.InceptionDateUnix
+		const secPerDay = 86400
+		expirationDays := (expiration - inception) / secPerDay
+
+		if name != oldKey.Name {
+			log.Warnln("regenExpiredKeys given name '" + name + "' which doesn't match existingKey name '" + oldKey.Name + "' - using existing key name in refresh! Ignoring expected passed name!")
+		}
+
+		name = oldKey.Name
+		ttl = time.Duration(oldKey.TTLSeconds) * time.Second
+		newExpiration = time.Now().Add(time.Duration(expirationDays) * time.Hour * 24)
+	}
 
 	keyType := tc.DNSSECKSKType
 	if !typeKSK {
@@ -185,16 +210,21 @@ func regenExpiredKeys(typeKSK bool, existingKeys tc.DNSSECKeySetV11, effectiveDa
 		return tc.DNSSECKeySetV11{}, errors.New("getting and generating DNSSEC keys: " + err.Error())
 	}
 
-	oldKey.Status = tc.DNSSECKeyStatusExpired
-	if resetExp {
-		oldKey.ExpirationDateUnix = effectiveDate.Unix()
+	newKeys := []tc.DNSSECKeyV11{newKey}
+	if oldKeyFound {
+		oldKey.Status = tc.DNSSECKeyStatusExpired
+		if resetExp {
+			oldKey.ExpirationDateUnix = effectiveDate.Unix()
+		}
+
+		newKeys = append(newKeys, oldKey)
 	}
 
 	regenKeys := tc.DNSSECKeySetV11{}
 	if typeKSK {
-		regenKeys = tc.DNSSECKeySetV11{ZSK: existingKeys.ZSK, KSK: []tc.DNSSECKeyV11{newKey, oldKey}}
+		regenKeys = tc.DNSSECKeySetV11{ZSK: existingKeys.ZSK, KSK: newKeys}
 	} else {
-		regenKeys = tc.DNSSECKeySetV11{ZSK: []tc.DNSSECKeyV11{newKey, oldKey}, KSK: existingKeys.KSK}
+		regenKeys = tc.DNSSECKeySetV11{ZSK: newKeys, KSK: existingKeys.KSK}
 	}
 	return regenKeys, nil
 }

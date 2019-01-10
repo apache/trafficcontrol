@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -151,7 +152,7 @@ func genKeys(dsName string, ksk bool, ttl time.Duration, tld bool) (string, stri
 	if ksk && tld {
 		dsRecord := dnskey.ToDS(digestType)
 		if dsRecord == nil {
-			return "", "", nil, errors.New("creating DS record from DNSKEY record: " + err.Error())
+			return "", "", nil, fmt.Errorf("creating DS record from DNSKEY record: converting dnskey %++v to DS failed", dnskey)
 		}
 		keyDS = &tc.DNSSECKeyDSRecordV11{Algorithm: int64(dsRecord.Algorithm), DigestType: int64(dsRecord.DigestType), Digest: dsRecord.Digest}
 	}

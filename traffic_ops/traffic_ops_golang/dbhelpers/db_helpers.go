@@ -174,3 +174,15 @@ func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 	}
 	return tc.CDNName(name), true, nil
 }
+
+// GetCDNDomainFromName returns the domain, whether the cdn exists, and any error.
+func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) {
+	domain := ""
+	if err := tx.QueryRow(`SELECT domain_name FROM cdn WHERE name = $1`, cdnName).Scan(&domain); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("Error querying CDN name: " + err.Error())
+	}
+	return domain, true, nil
+}
