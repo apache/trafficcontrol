@@ -189,6 +189,10 @@
             "title": "Check Path",
             "desc": "A path (ex: /crossdomain.xml) to verify the connection to the origin server with. This can be used by Check Extension scripts to do periodic health checks against the delivery service."
           },
+          "consistentHashRegex": {
+            "title": "Consistent Hash Regex",
+            "desc": "Regex used to extract parts of the request path using grouping in order to build a consistent request string to be used for cache selection."
+          },
           "deepCachingType": {
             "title": "Deep Caching",
             "desc": "Enables clients to be routed to the closest possible deep edge caches on a per Delivery Service basis.<br><br><a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#rl-deep-cache\" target=\"_blank\">See Deep Caching</a>"
