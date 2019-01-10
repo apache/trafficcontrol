@@ -268,7 +268,7 @@ public class ConsistentHashTest {
 		CloseableHttpResponse response = null;
 
 		try {
-			String requestPath = URLEncoder.encode("/path12341234/some_stream_name1234/some_info4321.m3u8", "UTF-8");
+			String requestPath = URLEncoder.encode("/some/path/thing.m3u8", "UTF-8");
 			String encodedConsistentHashRegex = URLEncoder.encode(consistentHashRegex, "UTF-8");
 			HttpGet httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/patternbased/regex?regex=" + encodedConsistentHashRegex + "&requestPath=" + requestPath);
 
@@ -280,7 +280,7 @@ public class ConsistentHashTest {
 			JsonNode resp = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
 			String resultingPathToConsistentHash = resp.get("resultingPathToConsistentHash").asText();
 
-			requestPath = URLEncoder.encode("/other_path4321/some_stream_name1234/other_info1234.m3u8", "UTF-8");
+			requestPath = URLEncoder.encode("/other/path/other_thing.m3u8", "UTF-8");
 			httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/patternbased/regex?regex=" + encodedConsistentHashRegex + "&requestPath=" + requestPath);
 
 			response = closeableHttpClient.execute(httpGet);
@@ -298,7 +298,7 @@ public class ConsistentHashTest {
 		CloseableHttpResponse response = null;
 
 		try {
-			String requestPath = URLEncoder.encode("/path12341234/some_stream_name1234/some_info4321.m3u8", "UTF-8");
+			String requestPath = URLEncoder.encode("/some/path/thing.m3u8", "UTF-8");
 			HttpGet httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/cache/coveragezone?ip=" + ipAddressInCoverageZone + "&deliveryServiceId=" + deliveryServiceId + "&requestPath=" + requestPath);
 
 			response = closeableHttpClient.execute(httpGet);
@@ -319,8 +319,45 @@ public class ConsistentHashTest {
 
 			response.close();
 
-			requestPath = URLEncoder.encode("/other_path4321/some_stream_name1234/other_info1234.m3u8", "UTF-8");
+			requestPath = URLEncoder.encode("/other/path/other_thing.m3u8", "UTF-8");
 			httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/cache/coveragezone?ip=" + ipAddressInCoverageZone + "&deliveryServiceId=" + deliveryServiceId + "&requestPath=" + requestPath);
+
+			response = closeableHttpClient.execute(httpGet);
+			cacheNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+			assertThat(cacheNode.get("id").asText(), equalTo(cacheId));
+		} finally {
+			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void itAppliesPatternBasedConsistentHashingForRequestsOutsideCoverageZone() throws Exception {
+		CloseableHttpResponse response = null;
+
+		try {
+			String requestPath = URLEncoder.encode("/some/path/thing.m3u8", "UTF-8");
+			HttpGet httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/cache/geolocation?ip=8.8.8.8&deliveryServiceId=" + deliveryServiceId + "&requestPath=" + requestPath);
+
+			response = closeableHttpClient.execute(httpGet);
+
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
+
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+			JsonNode cacheNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+
+			String cacheId = cacheNode.get("id").asText();
+			assertThat(cacheId, not(equalTo("")));
+
+			response.close();
+
+			response = closeableHttpClient.execute(httpGet);
+			cacheNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+			assertThat(cacheNode.get("id").asText(), equalTo(cacheId));
+
+			response.close();
+
+			requestPath = URLEncoder.encode("/other/path/other_thing.m3u8", "UTF-8");
+			httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/cache/geolocation?ip=8.8.8.8&deliveryServiceId=" + deliveryServiceId + "&requestPath=" + requestPath);
 
 			response = closeableHttpClient.execute(httpGet);
 			cacheNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));

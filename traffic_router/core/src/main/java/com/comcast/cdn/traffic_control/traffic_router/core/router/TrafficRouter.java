@@ -890,7 +890,8 @@ public class TrafficRouter {
 			return null;
 		}
 
-		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), requestPath);
+		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
 	}
 
 	public String buildPatternBasedHashStringDeliveryService(final String deliveryServiceId, final String requestPath) {
