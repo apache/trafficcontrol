@@ -526,6 +526,7 @@
   "deliveryServices": {
     "https-only-test": {
       "sslEnabled": "true",
+      "consistentHashRegex": "/.*?(/.*?/).*?(.m3u8)",
       "protocol": {
         "acceptHttp" : "false",
         "acceptHttps" : "true",
