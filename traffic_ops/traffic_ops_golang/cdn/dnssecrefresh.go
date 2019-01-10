@@ -174,7 +174,8 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 			log.Infoln("The ZSK keys for '" + string(cdnInf.CDNName) + "' are expired!")
 			effectiveDate := expiration.Add(ttl * time.Duration(effectiveMultiplier) * -1) // -1 to subtract
 			isKSK := false
-			newKeys, err := regenExpiredKeys(isKSK, keys[string(cdnInf.CDNName)], effectiveDate, false, false)
+			cdnDNSDomain := cdnInf.CDNDomain + "."
+			newKeys, err := regenExpiredKeys(isKSK, cdnDNSDomain, keys[string(cdnInf.CDNName)], effectiveDate, false, false)
 			if err != nil {
 				log.Errorln("refreshing DNSSEC Keys: regenerating expired ZSK keys: " + err.Error())
 			} else {
@@ -222,7 +223,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 				log.Infoln("The KSK keys for '" + ds.DSName + "' are expired!")
 				effectiveDate := expiration.Add(ttl * time.Duration(effectiveMultiplier) * -1) // -1 to subtract
 				isKSK := true
-				newKeys, err := regenExpiredKeys(isKSK, dsKeys, effectiveDate, false, false)
+				newKeys, err := regenExpiredKeys(isKSK, string(ds.DSName), dsKeys, effectiveDate, false, false)
 				if err != nil {
 					log.Errorln("refreshing DNSSEC Keys: regenerating expired KSK keys for ds '" + string(ds.DSName) + "': " + err.Error())
 				} else {
@@ -242,7 +243,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 				log.Infoln("The ZSK keys for '" + ds.DSName + "' are expired!")
 				effectiveDate := expiration.Add(ttl * time.Duration(effectiveMultiplier) * -1) // -1 to subtract
 				isKSK := false
-				newKeys, err := regenExpiredKeys(isKSK, dsKeys, effectiveDate, false, false)
+				newKeys, err := regenExpiredKeys(isKSK, string(ds.DSName), dsKeys, effectiveDate, false, false)
 				if err != nil {
 					log.Errorln("refreshing DNSSEC Keys: regenerating expired ZSK keys for ds '" + string(ds.DSName) + "': " + err.Error())
 				} else {
@@ -262,6 +263,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 
 type DNSSECKeyRefreshCDNInfo struct {
 	CDNName                    tc.CDNName
+	CDNDomain                  string
 	DNSSECEnabled              bool
 	TLDTTLsDNSKEY              *uint64
 	DNSKEYEffectiveMultiplier  *uint64
@@ -275,6 +277,7 @@ func getDNSSECKeyRefreshParams(tx *sql.Tx) (map[tc.CDNName]DNSSECKeyRefreshCDNIn
 WITH cdn_profile_ids AS (
   SELECT
     DISTINCT(c.name) as cdn_name,
+    c.domain_name as cdn_domain,
     c.dnssec_enabled as cdn_dnssec_enabled,
     MAX(p.id) as profile_id -- We only want 1 profile, so get the probably-newest if there's more than one.
   FROM
@@ -307,15 +310,17 @@ GROUP BY pi.cdn_name, pi.cdn_dnssec_enabled
 	params := map[tc.CDNName]DNSSECKeyRefreshCDNInfo{}
 	for rows.Next() {
 		cdnName := tc.CDNName("")
+		cdnDomain := ""
 		dnssecEnabled := false
 		name := util.StrPtr("")
 		valStr := util.StrPtr("")
-		if err := rows.Scan(&cdnName, &dnssecEnabled, &name, &valStr); err != nil {
+		if err := rows.Scan(&cdnName, &cdnDomain, &dnssecEnabled, &name, &valStr); err != nil {
 			return nil, errors.New("scanning cdn dnssec key refresh parameters: " + err.Error())
 		}
 
 		inf := params[cdnName]
 		inf.CDNName = cdnName
+		inf.CDNDomain = cdnDomain
 		inf.DNSSECEnabled = dnssecEnabled
 
 		if name == nil || valStr == nil {
