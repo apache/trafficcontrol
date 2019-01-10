@@ -367,15 +367,18 @@ Topology
 
 	'Topology' Menu
 
+.. _tp-configure-cache-groups:
+
 Cache Groups
 ------------
 'Cache Groups' are sets of cache servers, typically grouped by geographic proximity. This menu allows user to add or remove caches from Cache Groups as well as creating, updating and deleting Cache Groups themselves. Each entry in the table of Cache Groups on this page has the following fields:
 
-:Name:       The full name of this Cache Group
-:Short Name: A shorter, more human-friendly name for this Cache Group
-:Type:       The Type of this Cache Group (see :ref:`tp-configure-types`)
-:Latitude:   A geographic latitude assigned to this Cache Group
-:Longitude:  A geographic longitude assigned to this Cache Group
+:Name:                  The full name of this Cache Group
+:Short Name:            A shorter, more human-friendly name for this Cache Group
+:Type:                  The Type of this Cache Group (see :ref:`tp-configure-types`)
+:Latitude:              A geographic latitude assigned to this Cache Group
+:Longitude:             A geographic longitude assigned to this Cache Group
+:Failover Locations:    A list of cache groups to fallback to in case of failure.  Fallback to Geo Failover allows fallback geographically in case of failure.
 
 Cache group management includes the ability to (where applicable):
 

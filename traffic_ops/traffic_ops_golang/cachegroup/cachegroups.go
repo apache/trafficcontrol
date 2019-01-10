@@ -205,6 +205,11 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 		return nil, errors.New("cg create: creating coord:" + err.Error()), http.StatusInternalServerError
 	}
 
+	if cg.FallbackToClosest == nil {
+		fbc := true
+		cg.FallbackToClosest = &fbc
+	}
+
 	resultRows, err := cg.ReqInfo.Tx.Tx.Query(
 		insertQuery(),
 		cg.Name,
@@ -213,6 +218,7 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 		cg.TypeID,
 		cg.ParentCachegroupID,
 		cg.SecondaryParentCachegroupID,
+		cg.FallbackToClosest,
 	)
 	if err != nil {
 		return api.ParseDBError(err)
@@ -398,6 +404,7 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 			&s.TypeID,
 			&s.LastUpdated,
 			pq.Array(&cgfs),
+			&s.FallbackToClosest,
 		); err != nil {
 			return nil, nil, errors.New("cg read: scanning: " + err.Error()), http.StatusInternalServerError
 		}
@@ -428,6 +435,7 @@ func (cg *TOCacheGroup) Update() (error, error, int) {
 		cg.ParentCachegroupID,
 		cg.SecondaryParentCachegroupID,
 		cg.TypeID,
+		cg.FallbackToClosest,
 		cg.ID,
 	)
 	if err != nil {
@@ -555,8 +563,9 @@ short_name,
 coordinate,
 type,
 parent_cachegroup_id,
-secondary_parent_cachegroup_id
-) VALUES($1,$2,$3,$4,$5,$6)
+secondary_parent_cachegroup_id,
+fallback_to_closest
+) VALUES($1,$2,$3,$4,$5,$6,$7)
 RETURNING id,last_updated`
 	return query
 }
@@ -581,7 +590,8 @@ cgs.name AS secondary_parent_cachegroup_name,
 type.name AS type_name,
 cachegroup.type AS type_id,
 cachegroup.last_updated,
-(SELECT coalesce(array_agg(CAST(cg2.name as text) ORDER BY cgf.set_order ASC), '{}') AS fallbacks FROM cachegroup cg2 INNER JOIN cachegroup_fallbacks cgf ON cgf.backup_cg = cg2.id WHERE cgf.primary_cg = cachegroup.id)
+(SELECT coalesce(array_agg(CAST(cg2.name as text) ORDER BY cgf.set_order ASC), '{}') AS fallbacks FROM cachegroup cg2 INNER JOIN cachegroup_fallbacks cgf ON cgf.backup_cg = cg2.id WHERE cgf.primary_cg = cachegroup.id),
+cachegroup.fallback_to_closest
 FROM cachegroup
 LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
@@ -602,7 +612,9 @@ short_name=$2,
 coordinate=$3,
 parent_cachegroup_id=$4,
 secondary_parent_cachegroup_id=$5,
-type=$6 WHERE id=$7 RETURNING last_updated`
+type=$6,
+fallback_to_closest=$7
+WHERE id=$8 RETURNING last_updated`
 	return query
 }
 

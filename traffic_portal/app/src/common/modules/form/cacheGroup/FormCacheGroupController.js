@@ -23,6 +23,7 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
         cacheGroupService.getCacheGroups({ orderby: 'name' })
             .then(function(result) {
                 $scope.cacheGroups = result;
+                $scope.getFallbackOptions();
             });
     };
 
@@ -34,6 +35,8 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
     };
 
     $scope.cacheGroup = cacheGroup;
+
+    $scope.cacheGroupFallbackUpdated = false;
 
     $scope.viewAsns = function() {
         $location.path($location.path() + '/asns');
@@ -63,6 +66,10 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
         GEO: false
     };
 
+    $scope.cacheGroupFallbackOptions = [];
+
+    $scope.selectedCacheGroupFallbackOptions = [];
+
     $scope.setLocalizationMethods = function(cacheGroup) {
         var methods = [];
         var keys = Object.keys($scope.localizationMethods);
@@ -90,13 +97,110 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
         }
     };
 
+    var initCacheGroupFallbackGeo = function() {
+        if (cacheGroup.fallbackToClosest == null || cacheGroup.fallbackToClosest === '') {
+            cacheGroup.fallbackToClosest = true;
+        }
+    };
+
+    function CacheGroupFallbackOption(index, group) {
+        this.index = index;
+        this.group = group;
+    }
+
+    $scope.getFallbackOptions = function() {
+        for (var i = 0; i < $scope.cacheGroups.length; i++) {
+            var cg = $scope.cacheGroups[i];
+            if (cg.typeId !== 6 || cg.name == cacheGroup.name) continue;
+            var fb = new CacheGroupFallbackOption(i, $scope.cacheGroups[i].name);
+            if (cacheGroup.fallbacks.indexOf(cg.name) < 0) {
+                $scope.cacheGroupFallbackOptions.push(fb);
+            } else {
+                $scope.selectedCacheGroupFallbackOptions.push(fb);
+            }
+        }
+    };
+
+    $scope.fallbackSelected = '';
+
+    $scope.draggedFallback = '';
+
+    $scope.droppedFallback = '';
+
+    $scope.moveAbove = true;
+
+    $scope.updateFallbacks = function(cacheGroup) {
+        if (cacheGroup.fallbacks == null) {
+            cacheGroup.fallbacks = new Array();
+        }
+        if (cacheGroup.fallbacks.indexOf($scope.fallbackSelected) === -1) {
+            cacheGroup.fallbacks.push($scope.fallbackSelected);
+        }
+        for (var i = 0; i < $scope.cacheGroupFallbackOptions.length; i++) {
+            var fbo = $scope.cacheGroupFallbackOptions[i];
+            if (fbo.group === $scope.fallbackSelected) {
+                $scope.cacheGroupFallbackOptions.splice($scope.cacheGroupFallbackOptions.indexOf(fbo), 1);
+                $scope.selectedCacheGroupFallbackOptions.push(fbo);
+                break;
+            }
+        }
+        $scope.fallbackSelected = '';
+    };
+
+    $scope.save = function(cacheGroup) {
+        $scope.setLocalizationMethods(cacheGroup);
+        cacheGroupService.createCacheGroup(cacheGroup);
+        $scope.cacheGroupFallbackUpdated = false;
+    };
+
+    $scope.removeFallback = function(fb) {
+        cacheGroup.fallbacks.splice(cacheGroup.fallbacks.indexOf(fb), 1);
+        $scope.cacheGroupFallbackUpdated = true;
+        for (var i = 0; i < $scope.selectedCacheGroupFallbackOptions.length; i++) {
+            var fbo = $scope.selectedCacheGroupFallbackOptions[i];
+            if (fbo.group === fb) {
+                $scope.selectedCacheGroupFallbackOptions.splice($scope.selectedCacheGroupFallbackOptions.indexOf(fbo), 1);
+                for (var j = 0; j < $scope.cacheGroupFallbackOptions.length; j++) {
+                    if ($scope.cacheGroupFallbackOptions[j].index > fbo.index) {
+                        $scope.cacheGroupFallbackOptions.splice(j, 0, fbo);
+                        break;
+                    } else if (j === $scope.cacheGroupFallbackOptions.length - 1) {
+                        $scope.cacheGroupFallbackOptions.splice(j + 1, 0, fbo);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    };
+
+    $scope.handleDrag = function(fb) {
+        $scope.draggedFallback = fb;
+    };
+
+    $scope.handleDrop = function(fb) {
+        $scope.droppedFallback = fb;
+        var draggedIndex = cacheGroup.fallbacks.indexOf($scope.draggedFallback);
+        var droppedIndex = cacheGroup.fallbacks.indexOf($scope.droppedFallback);
+        var newIndex = droppedIndex;
+        if (draggedIndex < droppedIndex) {
+            newIndex = droppedIndex - 1;
+        }
+        if (!$scope.moveAbove) {
+            newIndex = newIndex + 1;
+        }
+        cacheGroup.fallbacks.splice(draggedIndex, 1);
+        cacheGroup.fallbacks.splice(newIndex, 0, $scope.draggedFallback);
+        $scope.cacheGroupFallbackUpdated = true;
+    };
+
     var init = function () {
         initLocalizationMethods();
         getCacheGroups();
         getTypes();
+        initCacheGroupFallbackGeo();
     };
     init();
-
 };
 
 FormCacheGroupController.$inject = ['cacheGroup', '$scope', '$location', 'formUtils', 'locationUtils', 'cacheGroupService', 'typeService'];
