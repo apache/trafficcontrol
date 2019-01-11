@@ -1110,6 +1110,7 @@ sub process_config_files {
 				|| $file =~ m/\.cer$/
 				|| $file =~ m/\.key$/
 				|| $file eq "logs_xml.config"
+				|| $file eq "logging.config"
 				|| $file eq "ssl_multicert.config" )
 			)
 		{
