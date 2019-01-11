@@ -19,6 +19,8 @@
 """
 This script is meant to generate a list of Traffic Ops API routes that point to configuration files
 for cache servers. It verifies that servers of the same name both exist and have the same routes.
+
+Note that the Python Apache-TrafficControl client package must be installed to use this script.
 """
 
 import argparse
@@ -29,18 +31,10 @@ import time
 import typing
 import sys
 
-random.seed(time.time())
-
-#: The repository root directory
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-
-#: An absolute path to the Traffic Ops python packages (This assumes that the script is run from
-#: within the repository's normal directory structure)
-TO_LIBS_PATH = os.path.join(ROOT, "traffic_control", "clients", "python") 
-
-sys.path.insert(0, TO_LIBS_PATH)
 from trafficops.tosession import TOSession
 from trafficops.restapi import LoginError, OperationError, InvalidJSONError
+
+random.seed(time.time())
 
 #: A format specifier for logging output. Propagates to all imported modules.
 LOG_FMT = "%(levelname)s: %(asctime)s line %(lineno)d in %(module)s.%(funcName)s: %(message)s"
