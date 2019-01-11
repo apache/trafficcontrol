@@ -113,7 +113,7 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
             var cg = $scope.cacheGroups[i];
             if (cg.typeId !== 6 || cg.name == cacheGroup.name) continue;
             var fb = new CacheGroupFallbackOption(i, $scope.cacheGroups[i].name);
-            if (cacheGroup.fallbacks.indexOf(cg.name) < 0) {
+            if (cacheGroup.fallbacks == null || cacheGroup.fallbacks.indexOf(cg.name) < 0) {
                 $scope.cacheGroupFallbackOptions.push(fb);
             } else {
                 $scope.selectedCacheGroupFallbackOptions.push(fb);
