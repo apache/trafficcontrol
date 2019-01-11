@@ -31,9 +31,9 @@ RUN mkdir -p /go/src/github.com/apache/trafficcontrol/traffic_control/clients/py
 
 RUN apk update
 RUN apk add python3 git
-RUN python3 -m ensurepip && python3 -m pip install --upgrade pip && python3 -m pip install requests munch
-
 ADD traffic_control/clients/python /go/src/github.com/apache/trafficcontrol/traffic_control/clients/python/
+RUN python3 -m ensurepip && python3 -m pip install --upgrade pip && python3 -m pip install /go/src/github.com/apache/trafficcontrol/traffic_control/clients/python/
+
 ADD lib /go/src/github.com/apache/trafficcontrol/lib
 ADD vendor /go/src/github.com/apache/trafficcontrol/vendor
 ADD traffic_ops/vendor/github.com/kelseyhightower /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/github.com/kelseyhightower

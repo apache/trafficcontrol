@@ -74,6 +74,7 @@ These can be overridden by command line switches as described above. If a userna
 
 genConfigRoutes.py
 ------------------
+.. note:: This script uses the :ref:`py-client`, and so that must be installed to use it.
 
 ``usage: genConfigRoutes.py [-h] [--refURL REFURL] [--testURL TESTURL]``
                           ``[--refUser REFUSER] [--refPasswd REFPASSWD]``

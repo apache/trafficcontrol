@@ -13,6 +13,8 @@
 .. limitations under the License.
 ..
 
+.. _py-client:
+
 *****************************
 Apache-TrafficControl Package
 *****************************

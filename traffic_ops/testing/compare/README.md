@@ -69,6 +69,9 @@ These can be overridden by command line switches as described above. If a userna
 
 ### genConfigRoutes.py
 
+!!! note
+  This script requires the Apache-TrafficControl client package to be installed. See the [client README](../../../traffic_control/clients/python/README.rst) for installation instructions.
+
 usage: genConfigRoutes.py [-h] [--refURL REFURL] [--testURL TESTURL]
                           [--refUser REFUSER] [--refPasswd REFPASSWD]
                           [--testUser TESTUSER] [--testPasswd TESTPASSWD] [-k]
