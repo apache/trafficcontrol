@@ -17,22 +17,11 @@
  * under the License.
  */
 
-var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils, locationUtils, cacheGroupService, typeService) {
+var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, $location, formUtils, locationUtils, cacheGroupService) {
 
-    var getCacheGroups = function() {
-        cacheGroupService.getCacheGroups({ orderby: 'name' })
-            .then(function(result) {
-                $scope.cacheGroups = result;
-                $scope.getFallbackOptions();
-            });
-    };
+    $scope.types = types;
 
-    var getTypes = function() {
-        typeService.getTypes({ useInTable: 'cachegroup' })
-            .then(function(result) {
-                $scope.types = result;
-            });
-    };
+    $scope.cacheGroups = cacheGroups;
 
     $scope.cacheGroup = cacheGroup;
 
@@ -209,12 +198,11 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
 
     var init = function () {
         initLocalizationMethods();
-        getCacheGroups();
-        getTypes();
+        $scope.getFallbackOptions();
         initCacheGroupFallbackGeo();
     };
     init();
 };
 
-FormCacheGroupController.$inject = ['cacheGroup', '$scope', '$location', 'formUtils', 'locationUtils', 'cacheGroupService', 'typeService'];
+FormCacheGroupController.$inject = ['cacheGroup', 'types', 'cacheGroups', '$scope', '$location', 'formUtils', 'locationUtils', 'cacheGroupService', 'typeService'];
 module.exports = FormCacheGroupController;

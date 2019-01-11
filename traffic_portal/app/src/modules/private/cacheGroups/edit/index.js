@@ -29,6 +29,12 @@ module.exports = angular.module('trafficPortal.private.cacheGroups.edit', [])
                         resolve: {
                             cacheGroup: function($stateParams, cacheGroupService) {
                                 return cacheGroupService.getCacheGroup($stateParams.cacheGroupId);
+                            },
+                            types: function(typeService) {
+                                return typeService.getTypes({ useInTable: 'cachegroup' });
+                            },
+                            cacheGroups: function(cacheGroupService) {
+                                return cacheGroupService.getCacheGroups({ orderby: 'name' });
                             }
                         }
                     }
