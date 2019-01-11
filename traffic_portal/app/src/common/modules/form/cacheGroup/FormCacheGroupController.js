@@ -194,6 +194,16 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
         $scope.cacheGroupFallbackUpdated = true;
     };
 
+    $scope.isEdgeLoc = function() {
+        var selectedType = '';
+        for (var i = 0; i < $scope.types.length; i++) {
+            if ($scope.types[i].id == cacheGroup.typeId) {
+                selectedType = $scope.types[i].name;
+            }
+        }
+        return selectedType == 'EDGE_LOC';
+    };
+
     var init = function () {
         initLocalizationMethods();
         getCacheGroups();
