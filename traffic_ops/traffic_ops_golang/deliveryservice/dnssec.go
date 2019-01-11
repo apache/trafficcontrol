@@ -113,7 +113,7 @@ func GetDNSSECKeysV11(keyType string, dsName string, ttl time.Duration, inceptio
 func genKeys(dsName string, ksk bool, ttl time.Duration, tld bool) (string, string, *tc.DNSSECKeyDSRecordV11, error) {
 	bits := 1024
 	flags := 256
-	algorithm := dns.RSASHA256 // 8 - http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
+	algorithm := dns.RSASHA1 // 5 - http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
 	protocol := 3
 
 	if ksk {
