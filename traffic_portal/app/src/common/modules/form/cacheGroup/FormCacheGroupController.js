@@ -111,7 +111,7 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
     $scope.getFallbackOptions = function() {
         for (var i = 0; i < $scope.cacheGroups.length; i++) {
             var cg = $scope.cacheGroups[i];
-            if (cg.typeId !== 6 || cg.name == cacheGroup.name) continue;
+            if (!$scope.isEdgeLoc(cg.typeId) || cg.name == cacheGroup.name) continue;
             var fb = new CacheGroupFallbackOption(i, $scope.cacheGroups[i].name);
             if (cacheGroup.fallbacks == null || cacheGroup.fallbacks.indexOf(cg.name) < 0) {
                 $scope.cacheGroupFallbackOptions.push(fb);
@@ -194,11 +194,14 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
         $scope.cacheGroupFallbackUpdated = true;
     };
 
-    $scope.isEdgeLoc = function() {
+    $scope.isEdgeLoc = function(id) {
         var selectedType = '';
-        for (var i = 0; i < $scope.types.length; i++) {
-            if ($scope.types[i].id == cacheGroup.typeId) {
-                selectedType = $scope.types[i].name;
+        if ($scope.types != null) {
+            for (var i = 0; i < $scope.types.length; i++) {
+                if ($scope.types[i].id == id) {
+                    selectedType = $scope.types[i].name;
+                    break;
+                }
             }
         }
         return selectedType == 'EDGE_LOC';
