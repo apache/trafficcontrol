@@ -20,7 +20,6 @@ package deliveryservice
  */
 
 import (
-	"bytes"
 	"crypto/x509"
 	"database/sql"
 	"encoding/base64"
@@ -327,12 +326,14 @@ func verifyCertificate(certificate string, rootCA string) (string, bool, error) 
 	}
 	pemEncodedChain := ""
 	for _, link := range chain[0] {
-		// Only print non-self signed elements of the chain
-		if link.AuthorityKeyId != nil && !bytes.Equal(link.AuthorityKeyId, link.SubjectKeyId) {
-			block := &pem.Block{Type: "CERTIFICATE", Bytes: link.Raw}
-			pemEncodedChain += string(pem.EncodeToMemory(block))
-		}
+		// Include all certificates in the chain, since verification was successful.
+		block := &pem.Block{Type: "CERTIFICATE", Bytes: link.Raw}
+		pemEncodedChain += string(pem.EncodeToMemory(block))
 	}
+   
+  	if len(pemEncodedChain) < 1 {
+		return "", false, errors.New("Invalid empty certicate chain in request")
+  	}
 
 	return pemEncodedChain, false, nil
 }
