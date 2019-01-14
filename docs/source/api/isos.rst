@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-iso:
+.. _to-api-isos:
 
 ********
 ``isos``

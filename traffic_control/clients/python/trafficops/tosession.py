@@ -66,7 +66,7 @@ class TOSession(RestApiSession):
 			pass
 
 
-	.. caption:: python3
+	.. code-block:: python3
 		:caption: End-point with URL parameters and no query parameters
 
 		@api_request(u'get', u'cdns/{cdn_id:d}', (u'1.1', u'1.2',))
@@ -74,28 +74,28 @@ class TOSession(RestApiSession):
 			pass
 
 
-	.. caption:: python3
+	.. code-block:: python3
 		:caption: End-point with no URL parameters but with query parameters
 
 		@api_request(u'get', u'deliveryservices', (u'1.1', u'1.2',))
 		def get_deliveryservices(self, query_params=None):
 			pass
 
-	.. caption:: python3
+	.. code-block:: python3
 		:caption: End-point with URL parameters and query parameters
 
 		@api_request(u'get', u'deliveryservices/xmlId/{xml_id}/sslkeys', (u'1.1', u'1.2',))
 		def get_deliveryservice_ssl_keys_by_xml_id(self, xml_id=None, query_params=None):
 			pass
 
-	.. caption:: python3
+	.. code-block:: python3
 		:caption: End-point with request data
 
 		@api_request(u'post', u'cdns', (u'1.1', u'1.2',))
 		def create_cdn(self, data=None):
 			pass
 
-	.. caption:: python3
+	.. code-block:: python3
 		:caption: End-point with URL parameters and request data
 
 		@api_request(u'put', u'cdns', (u'1.1', u'1.2',))
@@ -106,17 +106,11 @@ class TOSession(RestApiSession):
 
 	:meth:`get_cdns` calls endpoint :ref:`to-api-cdns` e.g. ``t.get_cdns()``
 
-	:meth:`get_types` calls endpoint :ref:`to-api-types`, optionally with query parameters e.g.
+	:meth:`get_types` calls endpoint :ref:`to-api-types`, optionally with query parameters e.g. ``get_foo_data(id=45, query_params={'sort': 'asc'})`` calls endpoint ``GET api/1.x/foo/45?sort=asc`` (presumably)
 
-	``get_types(query_params={'useInTable': 'servers'})``
-	``get_foo_data(id=45, query_params={'sort': 'asc'})`` calls endpoint
-	``GET api/1.x/foo/45?sort=asc`` (presumably)
+	:meth:`cdns_queue_update` calls endpoint :ref:`to-api-cdns-name-queue_update`, with an ID path parameter and a JSON payload e.g. ``cdns_queue_update(id=1, data={'action': 'queue'})``
 
-	:meth:`cdns_queue_update` calls endpoint :ref:`to-api-cdns-name-queue_update`, with an ID path
-	parameter and a JSON payload e.g. ``cdns_queue_update(id=1, data={'action': 'queue'})``
-
-	.. note:: Only a small subset of the API endpoints are implemented. More can be implemented as
-		needed.
+	.. note:: Only a small subset of the API endpoints are implemented. More can be implemented as needed.
 	"""
 
 	def __init__(self, host_ip, host_port=443, api_version=u'1.3', ssl=True, headers=None,
@@ -191,9 +185,8 @@ class TOSession(RestApiSession):
 	def to_url(self):
 		"""
 		The URL without the api portion. (read-only)
-		:return: The URL should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?' e.g
-			https://to.somedomain.net or https://to.somedomain.net:443
 
+		:return: The URL should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?' e.g https://to.somedomain.net or https://to.somedomain.net:443
 		:rtype: str
 		"""
 
@@ -203,9 +196,8 @@ class TOSession(RestApiSession):
 	def base_url(self):
 		"""
 		Returns the base url. (read-only)
-		:return: The base url should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?' e.g
-			https://to.somedomain.net/api/1.2/
 
+		:return: The base url should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?' e.g https://to.somedomain.net/api/1.2/
 		:rtype: str
 		"""
 
@@ -493,9 +485,8 @@ class TOSession(RestApiSession):
 		"""
 		Retrieve fallback related configurations for a cache group
 		:ref:`to-api-cachegroup_fallbacks`
-		:param query_params: Either cacheGroupId or fallbackId must be used or can be used
-			simultaneously
 
+		:param query_params: Either cacheGroupId or fallbackId must be used or can be used simultaneously
 		:type query_params: Dict[str, int]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
@@ -528,9 +519,8 @@ class TOSession(RestApiSession):
 		"""
 		Deletes an existing fallback related configurations for a cache group
 		:ref:`to-api-cachegroup_fallbacks`
-		:param query_params: Either cacheGroupId or fallbackId must be used or can be used
-			simultaneously
 
+		:param query_params: Either cacheGroupId or fallbackId must be used or can be used simultaneously
 		:type query_params: Dict[str, int]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
@@ -701,16 +691,18 @@ class TOSession(RestApiSession):
 	#
 	# CDN Topology
 	#
-	@api_request(u'get', u'cdns/{cdn_name:s}/configs', (u'1.2', u'1.3',))
-	def get_cdn_config_info(self, cdn_name=None):
-		"""
-		Retrieves CDN config information
-		:ref:`to-api-cdns-name-configs`
-		:param cdn_name: The CDN name to find configs for
-		:type cdn_name: String
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
+
+	# At the time of this writing (Tues. Jan 15 2019), this endpoint doesn't appear to exist.
+	# @api_request(u'get', u'cdns/{cdn_name:s}/configs', (u'1.2', u'1.3',))
+	# def get_cdn_config_info(self, cdn_name=None):
+	# 	"""
+	# 	Retrieves CDN config information
+	# 	:ref:`to-api-cdns-name-configs`
+	# 	:param cdn_name: The CDN name to find configs for
+	# 	:type cdn_name: String
+	# 	:rtype: Tuple[Dict[str, Any], requests.Response]
+	# 	:raises: Union[LoginError, OperationError]
+	# 	"""
 
 	@api_request(u'get', u'cdns/{cdn_name:s}/configs/monitoring', (u'1.2', u'1.3',))
 	def get_cdn_monitoring_info(self, cdn_name=None):
@@ -741,7 +733,7 @@ class TOSession(RestApiSession):
 	def get_cdn_dns_sec_keys(self, cdn_name=None):
 		"""
 		Gets a list of dnsseckeys for a CDN and all associated Delivery Services
-		:ref:`to-api-cdns-name--name-dnsseckeys`
+		:ref:`to-api-cdns-name-name-dnsseckeys`
 		:param cdn_name: The CDN name to find dnsseckeys info for
 		:type cdn_name: String
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -820,7 +812,7 @@ class TOSession(RestApiSession):
 	#
 	# Config Files and Config File Metadata
 	#
-	@api_request(u'get', u'servers/{host_name:s}/configfiles/ats', (u'1.2', u'1.3',))
+	@api_request(u'get', u'servers/{host_name:s}/configfiles/ats', (u'1.2', u'1.3', u'1.4'))
 	def get_server_config_files(self, host_name=None, query_params=None):
 		"""
 		Get the configuiration files for a given host name
@@ -831,7 +823,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request(u'get', u'servers/{host_name:s}/configfiles/ats/{config_file:s}', (u'1.2', u'1.3',))
+	@api_request(u'get', u'servers/{host_name:s}/configfiles/ats/{config_file:s}', (u'1.2', u'1.3', u'1.4'))
 	def get_server_specific_config_file(self, host_name=None, config_file=None, query_params=None):
 		"""
 		Get the configuiration files for a given host name and config file
@@ -909,13 +901,13 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request(u'get', u'deliveryservices/{delivery_service_id:d}/servers/unassigned',
+	@api_request(u'get', u'deliveryservices/{delivery_service_id:d}/unassigned_servers',
 	             (u'1.1', u'1.2', u'1.3',))
 	def get_deliveryservice_unassigned_servers(self, delivery_service_id=None):
 		"""
 		Retrieves properties of CDN EDGE or ORG servers not assigned to a delivery service.
 		(Currently call does not work)
-		:ref:`to-api-deliveryservices-id-servers-unassigned`
+		:ref:`to-api-deliveryservices-id-unassigned_servers`
 		:param delivery_service_id: The delivery service Id
 		:type delivery_service_id: int
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -1081,7 +1073,7 @@ class TOSession(RestApiSession):
 	def delete_deliveryservice_servers_by_id(self, delivery_service_id=None, server_id=None):
 		"""
 		Removes a server (cache) from a delivery service.
-		:ref:`deliveryservice_server-dsid-serverid`
+		:ref:`to-api-deliveryservice_server-dsid-serverid`
 		:param delivery_service_id: The delivery service id
 		:type delivery_service_id: int
 		:param server_id: The server id to remove from delivery service
@@ -1564,7 +1556,7 @@ class TOSession(RestApiSession):
 	def delete_federation_user(self, federation_id=None, user_id=None):
 		"""
 		Delete one or more federation / user assignments.
-		:ref:`to-api-federations-id-users-uid`
+		:ref:`to-api-federations-id-users-id`
 		:param federation_id: Federation ID
 		:type federation_id: int
 		:param user_id: Federation User ID
@@ -2047,7 +2039,7 @@ class TOSession(RestApiSession):
 	#
 	# Server
 	#
-	@api_request(u'get', u'servers', (u'1.1', u'1.2', u'1.3',))
+	@api_request(u'get', u'servers', (u'1.1', u'1.2', u'1.3', u'1.4'))
 	def get_servers(self, query_params=None):
 		"""
 		Get Servers.
@@ -2080,11 +2072,11 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request(u'get', u'servers/total', (u'1.1', u'1.2', u'1.3',))
+	@api_request(u'get', u'servers/totals', (u'1.1', u'1.2', u'1.3',))
 	def get_server_type_count(self):
 		"""
 		Retrieves a count of CDN servers by type
-		:ref:`to-api-servers-total`
+		:ref:`to-api-servers-totals`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -2178,6 +2170,16 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	@api_request(u'get', u'servers/{server_name}/update_status', (u'1.1', u'1.2', u'1.3', u'1.4'))
+	def get_server_update_status(self, server_name=None):
+		"""
+		Gets the current update status of a server named ``server_name``.
+		:ref:`to-api-servers-name-update_status`
+		:param server_name: The (short) hostname of the server for which the update status will be fetched
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 	#
 	# Static DNS Entries
 	#
@@ -2239,7 +2241,7 @@ class TOSession(RestApiSession):
 	#
 	# Status
 	#
-	@api_request(u'get', u'statuses', (u'1.1', u'1.2', u'1.3',))
+	@api_request(u'get', u'statuses', (u'1.1', u'1.2', u'1.3', u'1.4'))
 	def get_statuses(self):
 		"""
 		Retrieves a list of the server status codes available.

@@ -23,7 +23,7 @@ exactly like that legacy script, with the ability to set system configuration
 files and start, stop, and restart HTTP cache servers etc.
 """
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __author__  = "Brennan Fieck"
 
 import argparse
@@ -66,14 +66,15 @@ def doMain(args:argparse.Namespace) -> int:
 		logging.critical("Malformed or invalid Traffic_Ops_URL: '%s'", args.Traffic_Ops_URL)
 		return 1
 
-	logging.info("Traffic Ops URL '%s' set and verified", configuration.TO_URL)
+	logging.info("Traffic Ops URL 'https://%s:%d' set and verified",
+	                    configuration.TO_HOST, configuration.TO_PORT)
 
 	if not configuration.setTOCredentials(args.Traffic_Ops_Login):
 		logging.critical("Traffic Ops login credentials invalid or incorrect.")
 		return 1
 
-	logging.info("Got TO Cookie - valid until %s",
-	             datetime.datetime.fromtimestamp(configuration.TO_COOKIE.expires))
+	#logging.info("Got TO Cookie - valid until %s",
+	#             datetime.datetime.fromtimestamp(configuration.TO_COOKIE.expires))
 
 	configuration.WAIT_FOR_PARENTS = args.wait_for_parents
 
