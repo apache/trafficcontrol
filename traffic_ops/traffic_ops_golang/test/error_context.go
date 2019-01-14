@@ -40,6 +40,7 @@ func (e errorCode) ErrorCode() int {
 }
 
 // not a pointer receiver, does not modify itself
+// in the new error the original cause is maintained
 func (e errorCode) Prepend(fmtStr string, fmtArgs ...interface{}) ErrorCoder {
 	err := fmt.Errorf(fmtStr, fmtArgs...)
 	e.error = fmt.Errorf("%v %v", err, e.error)
@@ -54,8 +55,13 @@ func AddErrorCode(code int, err error) ErrorCoder {
 	return NewError(code, "%v", err)
 }
 
-// ErrorContext
-// contains a list of all error codes (a whitelist)
+// ErrorContext regulates which error codes can be made and keeps a count
+// of all the errors created through the context
+//
+// ErrorContext.NewError can be used like test.NewError
+//
+// Implementation details:
+// contains a list of all valid error codes
 //		- allows user to make sure they are creating the correct errors
 //		- actually a map
 //			lookup can be done without linear search
@@ -63,7 +69,32 @@ func AddErrorCode(code int, err error) ErrorCoder {
 // contains mapping from error code to name (either for testing metainfo or used in case no args are given)
 //		not required for all error codes, or for any
 //
-// context.NewError was made to improve upon test.NewError
+// Recommended setup:
+//
+//	package some_regex_checker
+//
+//	const (
+//	    COMMON_BASE            = 10 + iota
+//	    NOT_ENOUGH_ASSIGNMENTS
+//	    BAD_ASSIGNMENT_MATCH
+//		...
+//	)
+//
+//	// scoped to the package name
+//	var ErrorContext *test.ErrorContext
+//
+//	func init() {
+//	    errorCodes := []uint{
+//	        NOT_ENOUGH_ASSIGNMENTS,
+//	        BAD_ASSIGNMENT_MATCH,
+//	    }
+//	    ErrorContext = test.NewErrorContext("cache config", errorCodes)
+//		err := ErrorContext.AddMapping(NOT_ENOUGH_ASSIGNMENTS, "not enough assignments in rule")
+//		// check err
+//	    ErrorContext.TurnPanicOn()
+//		// in non-init function create errors with the context
+//	}
+//
 type ErrorContext struct {
 	calledNewError  bool
 	createdNewError bool
@@ -92,10 +123,10 @@ func NewErrorContext(contextName string, errCodes []uint) *ErrorContext {
 	}
 }
 
-// although highly discouraged, panic mode is made as an option
+// although golang panics are highly discouraged, panic mode is made as an option
 // made this decision partially because type assertions and map membership have similar options
 // if a user doesn't have panic mode on, they should still terminate after running into an error
-// panic is off by default, and must be turned on explicitly
+// panic is off by default, and must be turned on explicitly so that the user must make an active decision
 // panic must be turned on before errors are created
 // once turned on the panic mode can't be turned off
 func (ec *ErrorContext) TurnPanicOn() error {
@@ -106,7 +137,18 @@ func (ec *ErrorContext) TurnPanicOn() error {
 	return nil
 }
 
-// msg should be a plain string without special formatting
+// AddMapping gives a default message for a given error code.
+// Mappings should be configured before errors are called for consistency.
+//
+// usage: ErrorContext.AddMapping(404, "not found")
+//		  err := ErrorContext.NewError(404)
+//        err := ErrorContext.NewError(404, "not found: %v", prev_err")
+// the err automatically has a default message
+// the default message can be overridden with something else to add context to the error
+//
+// parameters:
+//	`code` should exist in the error context, only one mapping can exist per error context
+//  `msg` should be a plain string without special formatting
 func (ec *ErrorContext) AddMapping(code uint, msg string) error {
 	if ec.calledNewError {
 		return ec.internalError(BAD_INIT_TIMING, nil)
@@ -121,6 +163,7 @@ func (ec *ErrorContext) AddMapping(code uint, msg string) error {
 	return nil
 }
 
+// AddMap applies the `AddMapping` function for every element in the given map
 // the function argument will not override the current contents of the map, everything is additive
 // an error is returned if a duplicate code is added
 func (ec *ErrorContext) AddMap(mapping map[uint]string) error {
@@ -166,6 +209,7 @@ func (ec ErrorContext) internalError(code int, offender interface{}) ErrorCoder 
 	return AddErrorCode(code, err)
 }
 
+// whitelist is defined by code map membership
 func (ec ErrorContext) whitelisted(code uint) bool {
 	_, ok := ec.codes[code]
 	return ok
@@ -178,10 +222,13 @@ func (ec *ErrorContext) newError(code uint, fmtStr string, fmtArgs ...interface{
 	return NewError(int(code), fmtStr, fmtArgs...)
 }
 
-// primary error creator
-//	 checks whitelist
-//	 handles internal errors
-//	 interprets args
+// ErrorContext.NewError creates an error similar to test.NewError
+// any error created in this manner must have a code that belongs to the error context
+// the args is interpreted as a format string with args, but I'm using a ...interface{} because
+// if no args are specified a lookup will be made to find the default configured string (see `AddMapping`)
+//
+// usage: NewError(404, "not found: %v", prev_err)
+//		  NewError(404) // (mapping must exist otherwise this is an error)
 func (ec *ErrorContext) NewError(code uint, args ...interface{}) ErrorCoder {
 	ec.calledNewError = true
 
@@ -204,10 +251,14 @@ func (ec *ErrorContext) NewError(code uint, args ...interface{}) ErrorCoder {
 	return ec.internalError(BAD_ERROR_CODE, code)
 }
 
+// AddErrorCode takes a regular error and gives it a code
+// since this method is scoped to an error context, the code must exist in the whitelist
 func (ec ErrorContext) AddErrorCode(code uint, err error) ErrorCoder {
 	return ec.NewError(code, "%v", err)
 }
 
+// GetErrorStats returns the map of error codes
+// ec.codes[code] is the number of times an error with the indexed code has been run
 func (ec ErrorContext) GetErrorStats() map[uint]uint {
 	if ec.createdNewError {
 		return ec.codes
