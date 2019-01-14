@@ -67,16 +67,16 @@ func AddErrorCode(code int, err error) ErrorCoder {
 //			lookup can be done without linear search
 //			we can use the map to keep count of which errors are made
 // contains mapping from error code to name (either for testing metainfo or used in case no args are given)
-//		not required for all error codes, or for any
+//		- not required for all error codes, or for any
 //
 // Recommended setup:
 //
 //	package some_regex_checker
 //
 //	const (
-//	    COMMON_BASE            = 10 + iota
-//	    NOT_ENOUGH_ASSIGNMENTS
-//	    BAD_ASSIGNMENT_MATCH
+//		COMMON_BASE            = 10 + iota
+//		NOT_ENOUGH_ASSIGNMENTS
+//		BAD_ASSIGNMENT_MATCH
 //		...
 //	)
 //
@@ -84,14 +84,14 @@ func AddErrorCode(code int, err error) ErrorCoder {
 //	var ErrorContext *test.ErrorContext
 //
 //	func init() {
-//	    errorCodes := []uint{
-//	        NOT_ENOUGH_ASSIGNMENTS,
-//	        BAD_ASSIGNMENT_MATCH,
-//	    }
-//	    ErrorContext = test.NewErrorContext("cache config", errorCodes)
+//		errorCodes := []uint{
+//			NOT_ENOUGH_ASSIGNMENTS,
+//			BAD_ASSIGNMENT_MATCH,
+//		}
+//		ErrorContext = test.NewErrorContext("cache config", errorCodes)
 //		err := ErrorContext.AddMapping(NOT_ENOUGH_ASSIGNMENTS, "not enough assignments in rule")
 //		// check err
-//	    ErrorContext.TurnPanicOn()
+//		ErrorContext.TurnPanicOn()
 //		// in non-init function create errors with the context
 //	}
 //
@@ -141,13 +141,13 @@ func (ec *ErrorContext) TurnPanicOn() error {
 // Mappings should be configured before errors are called for consistency.
 //
 // usage: ErrorContext.AddMapping(404, "not found")
-//		  err := ErrorContext.NewError(404)
+//        err := ErrorContext.NewError(404)
 //        err := ErrorContext.NewError(404, "not found: %v", prev_err")
 // the err automatically has a default message
 // the default message can be overridden with something else to add context to the error
 //
 // parameters:
-//	`code` should exist in the error context, only one mapping can exist per error context
+//  `code` should exist in the error context, only one mapping can exist per error context
 //  `msg` should be a plain string without special formatting
 func (ec *ErrorContext) AddMapping(code uint, msg string) error {
 	if ec.calledNewError {
@@ -228,7 +228,7 @@ func (ec *ErrorContext) newError(code uint, fmtStr string, fmtArgs ...interface{
 // if no args are specified a lookup will be made to find the default configured string (see `AddMapping`)
 //
 // usage: NewError(404, "not found: %v", prev_err)
-//		  NewError(404) // (mapping must exist otherwise this is an error)
+//        NewError(404) // (mapping must exist otherwise this is an error)
 func (ec *ErrorContext) NewError(code uint, args ...interface{}) ErrorCoder {
 	ec.calledNewError = true
 
