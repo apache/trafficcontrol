@@ -28,7 +28,7 @@ CATALINA_PID="$CATALINA_BASE/temp/tomcat.pid"
 
 CATALINA_OPTS="\
   -server -Xms2g -Xmx8g \
-  -Djava.library.path=$CATALINA_HOME/lib \
+  -Djava.library.path=/usr/lib64:$CATALINA_BASE/lib:$CATALINA_HOME/lib \
   -Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties \
   -Dorg.apache.catalina.connector.Response.ENFORCE_ENCODING_IN_GET_WRITER=false \
   -XX:+UseG1GC \
@@ -37,6 +37,7 @@ CATALINA_OPTS="\
 
 JAVA_HOME=/opt/java
 JAVA_OPTS="\
+  -Djava.library.path=/usr/lib64 \
   -Dcache.config.json.refresh.period=5000 \
   -Djava.awt.headless=true \
   -Djava.security.egd=file:/dev/./urandom"
@@ -61,10 +62,10 @@ done
 source $X509_CA_ENV_FILE
 
 # Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
-cp $X509_CA_CERT_FILE $CATALINA_BASE/conf
-cp $X509_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+cp $X509_CA_ROOT_CERT_FILE $CATALINA_BASE/conf
+cp $X509_CA_INTR_CERT_FILE $CATALINA_BASE/conf
+cp $X509_CA_CERT_FULL_CHAIN_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
-
 
 # Add traffic 
 for crtfile in $(find $CATALINA_BASE/conf -name \*.crt -type f) 
@@ -102,6 +103,6 @@ until nc $TM_FQDN $TM_PORT </dev/null >/dev/null 2>&1; do
 done
 
 touch $LOGFILE $ACCESSLOG
-tail -F $CATALINA_OUT $CATALINA_LOG $LOGFILE $ACCESSLOG &  
+exec /opt/tomcat/bin/catalina.sh run &
 
-exec /opt/tomcat/bin/catalina.sh run 
+tail -F $CATALINA_OUT $CATALINA_LOG $LOGFILE $ACCESSLOG 

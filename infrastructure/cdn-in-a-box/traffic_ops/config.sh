@@ -50,7 +50,7 @@ done
 source "$X509_CA_ENV_FILE"
 
 # Add the CA certificate to sysem TLS trust store
-cp $X509_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+cp $X509_CA_CERT_FULL_CHAIN_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
 
 crt="$X509_INFRA_CERT_FILE"

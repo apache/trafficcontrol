@@ -36,7 +36,7 @@ done
 source "$X509_CA_ENV_FILE"
  
 # Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
-cp "$X509_CA_CERT_FILE" /usr/local/share/ca-certificates
+cp "$X509_CA_CERT_FULL_CHAIN_FILE" /usr/local/share/ca-certificates
 update-ca-certificates
 
 # Traffic Ops must be accepting connections before enroller can start

@@ -38,6 +38,8 @@ ADD $TOMCAT_RPM /tomcat.rpm
 
 RUN yum -y install /traffic_router.rpm /tomcat.rpm
 
+RUN find /usr/lib* -name libtc\* -exec ln -sfv '{}' /opt/tomcat/lib \;
+
 ADD enroller/server_template.json \
     traffic_router/run.sh \
     traffic_ops/to-access.sh \

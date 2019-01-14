@@ -2,7 +2,7 @@
     "xmlId": "demo1",
     "displayName": "Demo 1",
     "tenant": "root",
-    "protocol": 0,
+    "protocol": 2,
     "orgServerFqdn": "http://origin.infra.ciab.test",
     "cdnName": "CDN-in-a-Box",
     "type": "HTTP",
