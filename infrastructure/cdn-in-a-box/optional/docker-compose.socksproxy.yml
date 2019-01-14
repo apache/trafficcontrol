@@ -33,37 +33,27 @@
 ---
 version: '2.1'
 
-networks:
-  tcnet:
-    driver: bridge
-    enable_ipv6: true
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.16.239.0/24
-        - subnet: "fc01:9400:1000:8::/64"
-
 services:
   # Optional Socks Proxy for docker hosts that have limited bridge/ipforwarding support.
   socksproxy:
-    image: wernight/dante
+    build:
+      context: .
+      dockerfile: optional/socksproxy/Dockerfile
     hostname: socksproxy
     domainname: infra.ciab.test
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.233
-        ipv6_address: "fc01:9400:1000:8::233"
     ports:
       - "9080:1080"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
+      - shared:/shared
     
 volumes:
   schemas:
     external: false
   shared:
     external: false
-  content:  
+  content:
     external: false
   ca:
-    external: false 
+    external: false

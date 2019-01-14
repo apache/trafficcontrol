@@ -18,6 +18,13 @@
 
 ################################################################################
 # Wait on SSL certificate generation
+set +x 
+set +e 
+set +m
+
+[[ -f "/usr/local/sbin/set-dns.sh" ]] && /usr/local/sbin/set-dns.sh
+[[ -f "/usr/local/sbin/insert-self-into-dns.sh" ]] && /usr/local/sbin/insert-self-into-dns.sh
+
 until [ -f "$X509_CA_DONE_FILE" ] 
 do
   echo "Waiting on Shared SSL certificate generation"
