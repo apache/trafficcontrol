@@ -83,23 +83,13 @@ def api_request(method_name, api_path, supported_versions):
 	generates the RESTful API endpoint, performs the appropriate call to the endpoint and returns
 	the data to the user.
 
-	:param method_name: A method name defined on the Class, this decorator is decorating, that will
-	                    be called to perform the operation. E.g. 'GET', 'POST', 'PUT', 'DELETE',
-	                    etc. The method_name chosen must have the signature of
-	                    ``<method>(self, api_path, **kwargs)`` e.g.
-	                    ``def get(self, api_path, **kwargs): ...``
-
+	:param method_name: A method name defined on the Class, this decorator is decorating, that will be called to perform the operation. E.g. 'GET', 'POST', 'PUT', 'DELETE', etc. The method_name chosen must have the signature of ``<method>(self, api_path, **kwargs)`` e.g. ``def get(self, api_path, **kwargs): ...``
 	:type method_name: str
-	:param api_path: The path to the API end-point that you want to call which does not
-	                 include the base url e.g. ``user/login``, ``servers``, etc. This string can
-	                 contain substitution parameters as denoted by a valid field_name replacement
-	                 field specification as per :meth:`str.format` e.g. ``cachegroups/{id}`` or
-	                 ``cachegroups/{id:d}``
+	:param api_path: The path to the API end-point that you want to call which does not include the base url e.g. ``user/login``, ``servers``, etc. This string can contain substitution parameters as denoted by a valid field_name replacement field specification as per :meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 	:type api_path: str
 	:param supported_versions: A tuple of API versions that this route supports
 	:type supported_versions: Tuple[str]
-	:return: rtype int: A new function that replaces the original function with a boilerplate
-	                    execution process.
+	:return: rtype int: A new function that replaces the original function with a boilerplate execution process.
 	:rtype: Callable[str, Dict[str, Any]]
 	"""
 
@@ -135,18 +125,14 @@ class RestApiSession(object):
 	             headers=None, verify_cert=True, create_session=False, max_retries=5):
 		"""
 		The class initializer.
+
 		:param host_ip: The dns name or ip address of the RESTful API host to use to talk to the API
 		:type host_ip: str
 		:param host_port: The port to use when contacting the RESTful API
 		:type host_port: int
-		:param api_version: The version of the API to make calls against. If supplied, endpoint
-			version validation will be performed. If supplied as None, no version validation will be
-			performed. :const:`None` is allowed so that non-versioned REST APIs can be implemented.
-
+		:param api_version: The version of the API to make calls against. If supplied, endpoint version validation will be performed. If supplied as None, no version validation will be performed. :const:`None` is allowed so that non-versioned REST APIs can be implemented.
 		:type api_version: Union[str, None]
-		:param api_base_path: The part of the url that is the base path, from the web server root
-			(which may include an API version), for all API endpoints without the server url portion
-			e.g. 'api/', 'api/1.2/'
+		:param api_base_path: The part of the url that is the base path, from the web server root (which may include an API version), for all API endpoints without the server url portion e.g. 'api/', 'api/1.2/'
 
 			.. note:: To specify the base path with the passed ``api_version`` you can specify
 				``api_base_path`` as ``api/{api_version}/`` and the API version will be substituted.
@@ -160,9 +146,7 @@ class RestApiSession(object):
 		:type ssl: bool
 		:param headers: The HTTP headers to use when contacting the RESTful API
 		:type headers: Dict[str, str]
-		:param verify_cert: Should the SSL certificates be verified when contacting the RESTful API.
-			You may want to set this to :const:`False` for systems with self-signed certificates.
-
+		:param verify_cert: Should the SSL certificates be verified when contacting the RESTful API. You may want to set this to :const:`False` for systems with self-signed certificates.
 		:type verify_cert: bool
 		:param create_session: Should a session be created automatically?
 		:type create_session: bool
@@ -229,6 +213,7 @@ class RestApiSession(object):
 	def is_open(self):
 		"""
 		Is the session open to the RESTful API? (Read-only Property)
+
 		:return: :const:`True` if yes, otherwise, :const:`False`
 		:rtype: bool
 		"""
@@ -238,6 +223,7 @@ class RestApiSession(object):
 	def session(self):
 		"""
 		The RESTful API session (Read-only Property)
+
 		:return: The requests session
 		:rtype: :class:`requests.Session`
 		"""
@@ -246,6 +232,7 @@ class RestApiSession(object):
 	def create(self):
 		"""
 		Create the requests.Session to communicate with the RESTful API.
+
 		:return: :const:`None`
 		:rtype: NoneType
 		"""
@@ -263,6 +250,7 @@ class RestApiSession(object):
 	def close(self):
 		"""
 		Close and cleanup the requests Session object.
+
 		:return: :const:`None`
 		:rtype: NoneType
 		"""
@@ -280,9 +268,8 @@ class RestApiSession(object):
 	def server_url(self):
 		"""
 		The URL without the api portion. (read-only)
-		:return: The URL should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?'
-			e.g. 'https://to.somedomain.net' or 'https://to.somedomain.net:443'
 
+		:return: The URL should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?' e.g. 'https://to.somedomain.net' or 'https://to.somedomain.net:443'
 		:rtype: str
 		"""
 
@@ -292,6 +279,7 @@ class RestApiSession(object):
 	def api_version(self):
 		"""
 		Returns the api version. (read-only)
+
 		:return: The api version from which this instance will request endpoints.
 		:rtype: str
 		"""
@@ -302,8 +290,8 @@ class RestApiSession(object):
 	def api_base_url(self):
 		"""
 		Returns the base URL. (read-only)
-		:return: The base URL should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?'
-			e.g. 'https://to.somedomain.net/api/0.1/'
+
+		:return: The base URL should match '[\\w\\+\\-\\.]+://[\\w\\+\\-\\.]+(:\\d+)?' e.g. 'https://to.somedomain.net/api/0.1/'
 		:rtype: str
 		"""
 
@@ -311,29 +299,16 @@ class RestApiSession(object):
 
 	def _build_endpoint(self, api_path, params=None, query_params=None):
 		"""
-		Helper function to form API URL.
-		The base URL is '<protocol>://<hostname>[:<port>]/<api base url>'
-		e.g. 'https://to.somedomain.net/api/0.1/'
-		:param api_path: The path to the API end-point that you want to call which does not include
-			the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution
-			parameters as denoted by a valid field_name replacement field specification as per
-			:meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
+		Helper function to form API URL. The base URL is
+		'<protocol>://<hostname>[:<port>]/<api base url>' e.g. 'https://to.somedomain.net/api/0.1/'
 
+		:param api_path: The path to the API end-point that you want to call which does not include the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution parameters as denoted by a valid field_name replacement field specification as per :meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 		:type api_path: str
-		:param params: If :meth:`str.format` field_name replacement field specifications exists in
-			the ``api_path`` use this dictionary to perform replacements of the specifications with
-			the value(s) in the dictionary that match the parameter name(s) e.g. ``{param_id}`` or
-			``{param_id:d}`` in ``api_string`` is replaced by value in ``params['param_id']``.
-
+		:param params: If :meth:`str.format` field_name replacement field specifications exists in the ``api_path`` use this dictionary to perform replacements of the specifications with the value(s) in the dictionary that match the parameter name(s) e.g. ``{param_id}`` or ``{param_id:d}`` in ``api_string`` is replaced by value in ``params['param_id']``.
 		:type params: Union[Dict[str, Any], None]
-		:param query_params: URL query params to provide to the end-point
-			e.g. ``{ 'sort': 'asc', 'maxresults': 200 }`` which translates to something like
-			``?sort=asc&maxresults=200`` which is appended to the request URL
-
+		:param query_params: URL query params to provide to the end-point e.g. ``{ 'sort': 'asc', 'maxresults': 200 }`` which translates to something like ``?sort=asc&maxresults=200`` which is appended to the request URL
 		:type query_params: Union[Dict[str, Any], None]
-		:return: The base url plus the passed and possibly substituted ``api_path`` to form a
-			complete URL to the API resource to request
-
+		:return: The base url plus the passed and possibly substituted ``api_path`` to form a complete URL to the API resource to request
 		:rtype: str
 		:raises: ValueError
 		"""
@@ -382,45 +357,23 @@ class RestApiSession(object):
 		Helper method to perform HTTP operation requests - This is a boilerplate process for HTTP
 		operations.
 
-		:param operation: Name of method to call on the :attr:`self._session` object to perform the
-			HTTP request
-
+		:param operation: Name of method to call on the :attr:`self._session` object to perform the HTTP request
 		:type operation: str
-		:param api_path: The path to the API end-point that you want to call which does not include
-			the URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution
-			parameters as denoted by a valid field_name replacement field specification as per
-			:meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
-
+		:param api_path: The path to the API end-point that you want to call which does not include the URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution parameters as denoted by a valid field_name replacement field specification as per :meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 		:type api_path: str
-		:param: query_params: URL query parameters to provide to the endpoint e.g.
-			``{ 'sort': 'asc', 'maxresults': 200 }`` which translates to something like
-			``?sort=asc&maxresults=200`` which is appended to the request URL
-
+		:param: query_params: URL query parameters to provide to the endpoint e.g. ``{ 'sort': 'asc', 'maxresults': 200 }`` which translates to something like ``?sort=asc&maxresults=200`` which is appended to the request URL
 		:type query_params: Union[Dict[str, Any], None]
-		:param: munchify: If :const:`True` encapsulate data to be returned in a :class:`munch.Munch`
-			object which allows keys in a Python dictionary to additionally have attribute access
-			e.g. ``a_dict['a_key']`` with :mod:`munch` becomes ``a_dict['a_key']`` or
-			``a_dict.a_key``
-
+		:param: munchify: If :const:`True` encapsulate data to be returned in a :class:`munch.Munch` object which allows keys in a Python dictionary to additionally have attribute access e.g. ``a_dict['a_key']`` with :mod:`munch` becomes ``a_dict['a_key']`` or ``a_dict.a_key``
 		:type munchify: bool
-		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass
-			the keyword parameter ``data`` with the Python data structure e.g. a ``dict``. This
-			method will convert it to JSON before sending it to the API endpoint.
-
+		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass the keyword parameter ``data`` with the Python data structure e.g. a ``dict``. This method will convert it to JSON before sending it to the API endpoint.
 		:type kwargs: Dict[str, Any]
-		:param debug_response: If :const:`True`, the actual response data text will be added to the
-			log if a JSON decoding exception is encountered.
-
+		:param debug_response: If :const:`True`, the actual response data text will be added to the log if a JSON decoding exception is encountered.
 		:type debug_response: bool
 		:type expected_status_codes: Tuple[int]
-		:param: expected_status_codes: expected success HTTP status codes. If the user needs to
-			override the defaults this parameter can be passed e.g. ``(200, 204,)``
-
+		:param: expected_status_codes: expected success HTTP status codes. If the user needs to override the defaults this parameter can be passed e.g. ``(200, 204,)``
 		:type munchify: bool
-
 		:return: Python data structure distilled from JSON from the API request.
-		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]], munch.Munch, List[munch.Munch]],
-					  requests.Response]
+		:rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]], munch.Munch, List[munch.Munch]], requests.Response]
 		:raises: miscellaneous.exceptions.OperationError
 		"""
 
@@ -486,22 +439,13 @@ class RestApiSession(object):
 	def get(self, api_path, *args, **kwargs):
 		"""
 		Perform http get requests
-		:param api_path: The path to the API end-point that you want to call which does not include
-			the base url e.g. ``user/login``, ``servers``, etc. This string can contain substitution
-			parameters as denoted by a valid field_name replacement field specification as per
-			:meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 
+		:param api_path: The path to the API end-point that you want to call which does not include the base url e.g. ``user/login``, ``servers``, etc. This string can contain substitution parameters as denoted by a valid field_name replacement field specification as per :meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 		:type api_path: str
-		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass
-			the keyword parameter ``data`` with the Python data structure. This method will convert
-			it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a
-			dictionary of query parameters
-
+		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass the keyword parameter ``data`` with the Python data structure. This method will convert it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a dictionary of query parameters
 		:type kwargs: Dict[str, Any]
 		:return: Python data structure distilled from JSON from the API request.
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]],
-			requests.Response]
-
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
@@ -510,22 +454,13 @@ class RestApiSession(object):
 	def post(self, api_path, *args, **kwargs):
 		"""
 		Perform http post requests
-		:param api_path: The path to the API end-point that you want to call which does not include
-			the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution
-			parameters as denoted by a valid field_name replacement field specification as per
-			:meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 
+		:param api_path: The path to the API end-point that you want to call which does not include the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution parameters as denoted by a valid field_name replacement field specification as per :meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 		:type api_path: str
-		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass
-			the keyword parameter ``data`` with the Python data structure. This method will convert
-			it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a
-			dictionary of query parameters
-
+		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass the keyword parameter ``data`` with the Python data structure. This method will convert it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a dictionary of query parameters
 		:type kwargs: Dict[str, Any]
 		:return: Python data structure distilled from JSON from the API request.
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]],
-			requests.Response]
-
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
@@ -534,22 +469,13 @@ class RestApiSession(object):
 	def put(self, api_path, *args, **kwargs):
 		"""
 		Perform http put requests
-		:param api_path: The path to the API end-point that you want to call which does not include
-			the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution
-			parameters as denoted by a valid field_name replacement field specification as per
-			:meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 
+		:param api_path: The path to the API end-point that you want to call which does not include the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution parameters as denoted by a valid field_name replacement field specification as per :meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 		:type api_path: str
-		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass
-			the keyword parameter ``data`` with the Python data structure. This method will convert
-			it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a
-			dictionary of query parameters
-
+		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass the keyword parameter ``data`` with the Python data structure. This method will convert it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a dictionary of query parameters
 		:type kwargs: Dict[str, Any]
 		:return: Python data structure distilled from JSON from the API request.
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]],
-			requests.Response]
-
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
@@ -558,22 +484,13 @@ class RestApiSession(object):
 	def delete(self, api_path, *args, **kwargs):
 		"""
 		Perform HTTP DELETE requests
-		:param api_path: The path to the API end-point that you want to call which does not include
-			the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution
-			parameters as denoted by a valid field_name replacement field specification as per
-			:meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 
+		:param api_path: The path to the API end-point that you want to call which does not include the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution parameters as denoted by a valid field_name replacement field specification as per :meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
 		:type api_path: str
-		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass
-			the keyword parameter ``data`` with the Python data structure. This method will convert
-			it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a
-			dictionary of query parameters
-
+		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass the keyword parameter ``data`` with the Python data structure. This method will convert it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a dictionary of query parameters
 		:type kwargs: Dict[str, Any]
 		:return: Python data structure distilled from JSON from the API request.
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]],
-			requests.Response]
-
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 

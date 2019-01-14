@@ -49,9 +49,10 @@ RUN mkdir -p /var/trafficserver /opt/ort && \
 RUN setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_server && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_manager && setcap CAP_NET_BIND_SERVICE=+eip /bin/trafficserver && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_cop
 
 ADD infrastructure/cdn-in-a-box/ort /opt/ort/
+ADD traffic_control/clients/python /opt/Apache-TrafficControl/
 
-WORKDIR /opt/ort
+WORKDIR /opt
 
-RUN touch /var/log/ort.log && pip3 install . && cp traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
+RUN touch /var/log/ort.log && pip3 install ./Apache-TrafficControl && pip3 install ./ort && cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
 
 CMD exit

@@ -22,12 +22,10 @@ hold and set up the log level, run modes, Traffic Ops login
 credentials etc.
 """
 
-import datetime
 import enum
 import logging
 import os
 import platform
-import typing
 
 import distro
 import requests
@@ -167,12 +165,19 @@ def setTSRoot(tsroot:str) -> bool:
 	return True
 
 
-#: Holds the full URL including schema (e.g. 'http') and port that points at Traffic Ops
-TO_URL = None
+#: :const:`True` if Traffic Ops communicates using SSL, :const:`False` otherwise
+TO_USE_SSL = False
+
+#: Holds only the :abbr:`FQDN (Fully Quallified Domain Name)` of the Traffic Ops server
+TO_HOST = None
+
+#: Holds the port number on which the Traffic Ops server listens for incoming HTTP(S) requests
+TO_PORT = None
 
 def setTOURL(url:str) -> bool:
 	"""
-	Sets the :data:`TO_URL` global variable and verifies it
+	Sets the :data:`TO_USE_SSL`, :data:`TO_PORT` and :data:`TO_HOST` global variables and verifies,
+	them.
 
 	:param url: A full URL (including schema - and port when necessary) specifying the location of
 		a running Traffic Ops server
@@ -190,84 +195,60 @@ def setTOURL(url:str) -> bool:
 	except (AttributeError, ValueError) as e:
 		raise ValueError from e
 
-	global TO_URL
-	TO_URL = url
+	global TO_HOST, TO_PORT, TO_USE_SSL
+
+	port = None
+
+	if url.lower().startswith("http://"):
+		url = url[7:]
+		port = 80
+		TO_USE_SSL = False
+	elif url.lower().startswith("https://"):
+		url = url[8:]
+		port = 443
+		TO_USE_SSL = True
+
+	# I'm assuming here that a valid FQDN won't include ':' - and it shouldn't.
+	portpoint = url.find(':')
+	if portpoint > 0:
+		TO_HOST = url[:portpoint]
+		port = int(url[portpoint+1:])
+	else:
+		TO_HOST = url
+
+	if port is None:
+		raise ValueError("Couldn't determine port number from URL '%s'!" % url)
+
+	TO_PORT = port
 
 	return True
 
+#: Holds the username used for logging in to Traffic Ops
+USERNAME = None
 
-#: Holds a Mojolicious cookie for validating connections to Traffic Ops
-TO_COOKIE = None
-
-#: Holds the login information for re-obtaining a cookie when the one in :data:`TO_COOKIE` expires
-TO_LOGIN = None
+#: Holds the password used to authenticate :data:`USERNAME` with Traffic Ops
+PASSWORD = None
 
 def setTOCredentials(login:str) -> bool:
 	"""
 	Parses and returns a JSON-encoded login string for the Traffic Ops API.
-	This will set :data:`TO_COOKIE` and :data:`TO_LOGIN` if login is successful.
+	This will set :data:`USERNAME` and :data:`PASSWORD` if login is successful.
 
 	:param login: The raw login info as passed on the command line (e.g. 'username:password')
 	:raises ValueError: if ``login`` is not a :const:`str`.
 	:returns: whether or not the login could be set and validated successfully
 	"""
 	try:
-		login = '{{"u": "{0}", "p": "{1}"}}'.format(*login.split(':'))
+		u, p = login.split(':')
+		login = '{{"u": "{0}", "p": "{1}"}}'.format(u, p)
 	except IndexError:
 		logging.critical("Bad Traffic_Ops_Login: '%s' - should be like 'username:password'", login)
 		return False
 	except (AttributeError, ValueError) as e:
 		raise ValueError from e
 
-	global TO_LOGIN
-	TO_LOGIN = login
-
-	try:
-		getNewTOCookie()
-	except PermissionError:
-		return False
+	global USERNAME, PASSWORD
+	USERNAME = u
+	PASSWORD = p
 
 	return True
-
-def getNewTOCookie():
-	"""
-	Re-obtains a cookie from Traffic Ops based on the login credentials in :data:`TO_LOGIN`
-
-	:raises PermissionError: if :data:`TO_LOGIN` or :data:`TO_URL` are unset, invalid,
-		or the wrong type
-	"""
-	global TO_URL, TO_LOGIN, VERIFY, TO_COOKIE
-	if TO_URL is None or not isinstance(TO_URL, str) or\
-	   TO_LOGIN is None or not isinstance(TO_LOGIN, str):
-		raise PermissionError("TO_URL and TO_LOGIN must be set prior to calling this function!")
-
-	try:
-		# Obtain login cookie
-		cookie = requests.post(TO_URL + '/api/1.3/user/login', data=TO_LOGIN, verify=VERIFY)
-	except requests.exceptions.RequestException as e:
-		logging.critical("Login credentials rejected by Traffic Ops")
-		raise PermissionError from e
-
-	if not cookie.cookies or 'mojolicious' not in cookie.cookies:
-		logging.error("Response code: %d", cookie.status_code)
-		logging.warning("Response Headers: %s", cookie.headers)
-		logging.debug("Response: %s", cookie.content)
-		raise PermissionError("Login credentials rejected by Traffic Ops")
-
-	TO_COOKIE = [c for c in cookie.cookies if c.name == "mojolicious"][0]
-
-def getTOCookie() -> typing.Dict[str, str]:
-	"""
-	A small, convenience wrapper for getting a current, valid Traffic Ops authentication cookie. If
-	:data:`TO_COOKIE` is expired, this function requests a new one from Traffic Ops
-
-	:returns: A cookie dataset that may be passed directly to :mod:`requests` functions
-	:raises PermissionError: if :data:`TO_LOGIN` and/or :data:`TO_URL` are unset, invalid, or the
-		wrong type
-	"""
-	global TO_COOKIE
-
-	if datetime.datetime.now().timestamp() >= TO_COOKIE.expires:
-		getNewTOCookie()
-
-	return {TO_COOKIE.name: TO_COOKIE.value}
