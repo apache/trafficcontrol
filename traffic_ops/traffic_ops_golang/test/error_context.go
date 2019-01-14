@@ -133,12 +133,14 @@ func (ec *ErrorContext) AddMap(mapping map[uint]string) error {
 }
 
 // all internal errors
-const BAD_ERROR_CODE = -1  // when bad error code is given in creation of new error
-const BAD_MAP_LOOKUP = -2  // when creating an error with no error message, default message wasn't found
-const BAD_MAP_CREATE = -3  // when bad error code is given in creation of map
-const BAD_DUP_MAPPING = -4 // when a mapping is already made
-const BAD_FMT_STRING = -5  // when the fmt string isn't a string
-const BAD_INIT_TIMING = -6 // when the error context is modifed after having created an error
+const (
+	BAD_ERROR_CODE  = -1 - iota // when bad error code is given in creation of new error
+	BAD_MAP_LOOKUP              // when creating an error with no error message, default message wasn't found
+	BAD_MAP_CREATE              // when bad error code is given in creation of map
+	BAD_DUP_MAPPING             // when a mapping is already made
+	BAD_FMT_STRING              // when the fmt string isn't a string
+	BAD_INIT_TIMING             // when the error context is modifed after having created an error
+)
 
 func (ec ErrorContext) internalError(code int, offender interface{}) ErrorCoder {
 
