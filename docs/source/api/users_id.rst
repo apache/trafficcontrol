@@ -118,10 +118,6 @@ Response Structure
 
 ``PUT``
 =======
-.. deprecated:: 1.4
-	Use the ``PUT`` method of the :ref:`to-api-users` endpoint instead.
-
-.. caution:: This endpoint doesn't work in API version 1.4 when attempting to modify the user that is currently logged-in. There's an error checking what fields the user has permissions to modify. The bug is tracked by `GitHub Issue #3118 <https://github.com/apache/trafficcontrol/issues/3118>`_. Note that a user can modify him or herself by calling the endpoint with an API version less than 1.4.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"

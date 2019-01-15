@@ -255,23 +255,3 @@ Response Structure
 		"postalCode": null,
 		"gid": null
 	}}
-
-``PUT``
-=======
-.. caution:: Due to a regular expression error, this method of this endpoint is unavailable at the moment. The bug is tracked by `GitHub Issue #3117 <https://github.com/apache/trafficcontrol/issues/3117>`_.
-
-.. warning:: Users that login via LDAP pass-back cannot be modified
-
-Modifies a user.
-
-:Auth. Required: Yes
-:Roles Required: "admin" or "operations"
-:Response Type:  Object
-
-Request Structure
------------------
-TBD
-
-Response Structure
-------------------
-TBD
