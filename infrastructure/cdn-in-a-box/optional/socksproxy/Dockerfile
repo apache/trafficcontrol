@@ -16,22 +16,29 @@
 # under the License.
 
 ############################################################
-# Dockerfile to build Mid-Tier Cache container images for
-# Apache Traffic Control
-# Based on CentOS 7.2
+# Dockerfile to build optional CiaB Socks Proxy
+# Based on CentOS 7
 ############################################################
+FROM centos:7
 
-FROM alpine:latest
+ARG DANTES_SRC=https://www.inet.no/dante/files/dante-1.4.2.tar.gz
 
-RUN apk add --no-cache lighttpd bash curl bind-tools
+RUN yum install -y net-tools bind-utils iproute wget curl automake autoconf gcc make && \
+    curl -Ls -o /tmp/dante.tar.gz $DANTES_SRC && \
+    tar -C /usr/src -zxvpf $(find /tmp -type f -name dante\*) && \
+    cd $(find /usr/src -type d -name dante\*) && \
+    ./configure --prefix=/usr && \
+    make -j 4 && \
+    make install && \
+    groupadd -g 8062 sockd  && \
+    useradd -m -u 8062 -g sockd sockd && \
+    yum remove -y automake autoconf gcc make && \
+    yum clean all && \
+    rm -rf /tmp/*  
 
-RUN rm /etc/lighttpd/lighttpd.conf
-RUN rm -rf /var/www/localhost/
-RUN mkdir -p /var/www/html/
+COPY optional/socksproxy/sockd.conf /etc
+COPY optional/socksproxy/run.sh /
 
-ADD origin/lighttpd.conf /etc/lighttpd/lighttpd.conf
-ADD origin/run.sh traffic_ops/to-access.sh /
+EXPOSE 1080
 
-EXPOSE 80
-
-CMD /run.sh
+CMD ["/run.sh"]

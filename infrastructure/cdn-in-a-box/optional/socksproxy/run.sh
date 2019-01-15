@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -7,9 +6,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-#
+# 
 #   http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,16 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set-dns.sh
-insert-self-into-dns.sh
+# Script for running the Dantes Socks Proxy 
+set -x 
+set -m 
 
-. /to-access.sh
+[[ -f "/usr/local/sbin/set-dns.sh" ]] && /usr/local/sbin/set-dns.sh
+[[ -f "/usr/local/sbin/insert-self-into-dns.sh" ]] && /usr/local/sbin/insert-self-into-dns.sh
 
-TO_URL=https://${TO_FQDN}:${TO_PORT}
-TO_USER=$TV_USER
-TO_PASSWORD=$TV_PASSWORD
-
-# TODO: Fix Traffic Vault Enrollment
-#to-enroll "tv" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
-
-${RIAK_HOME}/riak-cluster.sh
+sockd

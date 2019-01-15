@@ -16,17 +16,31 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
 
-set-dns.sh
-insert-self-into-dns.sh
+set -eu
 
-. /to-access.sh
+bind_zone_dir='/etc/bind'
+bind_zone_file='zone.ciab.test'
 
-TO_URL=https://${TO_FQDN}:${TO_PORT}
-TO_USER=$TV_USER
-TO_PASSWORD=$TV_PASSWORD
+bind_zone_file_path="${bind_zone_dir}/${bind_zone_file}"
 
-# TODO: Fix Traffic Vault Enrollment
-#to-enroll "tv" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
+domain='infra.ciab.test'
+origin="${domain}."
+origin_line="\$ORIGIN ${origin}"
 
-${RIAK_HOME}/riak-cluster.sh
+function add_zone_entry {
+	host="$1"
+	ip="$2"
+	record="$3"
+
+	sed -E -i "/^${host}\s+IN\s+${record}/d" "${bind_zone_file_path}"
+
+	entry="${host}                IN ${record}    ${ip}"
+	sed -i "s/${origin_line}/${origin_line}\n\n${entry}/" "${bind_zone_file_path}"
+}
+
+dns_container_hostname='dns'
+ip="$(dig +short ${dns_container_hostname})"
+
+add_zone_entry "${dns_container_hostname}" "${ip}" "A"
