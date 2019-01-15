@@ -35,11 +35,10 @@ import (
 
 //we need a type alias to define functions on
 type TOCDN struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.CDNNullable
 }
 
-func (v *TOCDN) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOCDN) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCDN) InsertQuery() string           { return insertQuery() }
 func (v *TOCDN) NewReadObj() interface{}       { return &tc.CDNNullable{} }
@@ -54,13 +53,6 @@ func (v *TOCDN) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TOCDN) UpdateQuery() string { return updateQuery() }
 func (v *TOCDN) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOCDN{reqInfo, tc.CDNNullable{}}
-		return &toReturn
-	}
-}
 
 func (cdn TOCDN) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

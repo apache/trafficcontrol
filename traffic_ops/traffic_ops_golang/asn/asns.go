@@ -37,11 +37,10 @@ const ASNsPrivLevel = 10
 
 //we need a type alias to define functions on
 type TOASNV11 struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.ASNNullable
 }
 
-func (v *TOASNV11) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOASNV11) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOASNV11) InsertQuery() string           { return insertQuery() }
 func (v *TOASNV11) NewReadObj() interface{}       { return &tc.ASNNullable{} }
@@ -56,13 +55,6 @@ func (v *TOASNV11) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TOASNV11) UpdateQuery() string { return updateQuery() }
 func (v *TOASNV11) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOASNV11{reqInfo, tc.ASNNullable{}}
-		return &toReturn
-	}
-}
 
 func (asn TOASNV11) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
@@ -119,7 +111,10 @@ func V11ReadAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	asns, userErr, sysErr, errCode := api.GenericRead(&TOASNV11{ReqInfo: inf})
+
+	asn := &TOASNV11{}
+	asn.SetInfo(inf)
+	asns, userErr, sysErr, errCode := api.GenericRead(asn)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

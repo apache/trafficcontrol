@@ -33,11 +33,10 @@ import (
 
 //we need a type alias to define functions on
 type TOStatus struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.StatusNullable
 }
 
-func (v *TOStatus) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOStatus) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOStatus) InsertQuery() string           { return insertQuery() }
 func (v *TOStatus) NewReadObj() interface{}       { return &tc.Status{} }
@@ -51,13 +50,6 @@ func (v *TOStatus) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TOStatus) UpdateQuery() string { return updateQuery() }
 func (v *TOStatus) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOStatus{reqInfo, tc.StatusNullable{}}
-		return &toReturn
-	}
-}
 
 func (status TOStatus) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

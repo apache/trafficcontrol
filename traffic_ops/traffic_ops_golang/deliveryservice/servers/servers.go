@@ -44,14 +44,9 @@ import (
 
 // TODeliveryServiceRequest provides a type alias to define functions on
 type TODeliveryServiceServer struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.DeliveryServiceServer
 	TenantIDs pq.Int64Array `json:"-" db:"accessibleTenants"`
-}
-
-func GetRefType(inf *api.APIInfo) *TODeliveryServiceServer {
-	s := TODeliveryServiceServer{ReqInfo: inf}
-	return &s
 }
 
 func (dss TODeliveryServiceServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -114,7 +109,9 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	results, err := GetRefType(inf).readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams)
+	dss := TODeliveryServiceServer{}
+	dss.SetInfo(inf)
+	results, err := dss.readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -495,16 +492,8 @@ func dssSelectQuery() string {
 }
 
 type TODSSDeliveryService struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.DeliveryServiceNullable
-}
-
-func (dss *TODSSDeliveryService) APIInfo() *api.APIInfo {
-	return dss.ReqInfo
-}
-
-func TypeSingleton(reqInfo *api.APIInfo) api.Reader {
-	return &TODSSDeliveryService{reqInfo, tc.DeliveryServiceNullable{}}
 }
 
 // Read shows all of the delivery services associated with the specified server.

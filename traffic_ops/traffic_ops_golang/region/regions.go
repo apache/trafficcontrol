@@ -29,11 +29,10 @@ import (
 
 //we need a type alias to define functions on
 type TORegion struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.Region
 }
 
-func (v *TORegion) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TORegion) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = t }
 func (v *TORegion) InsertQuery() string           { return insertQuery() }
 func (v *TORegion) NewReadObj() interface{}       { return &tc.Region{} }
@@ -47,13 +46,6 @@ func (v *TORegion) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TORegion) UpdateQuery() string { return updateQuery() }
 func (v *TORegion) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TORegion{reqInfo, tc.Region{}}
-		return &toReturn
-	}
-}
 
 func (region TORegion) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

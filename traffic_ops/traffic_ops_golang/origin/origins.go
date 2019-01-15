@@ -42,15 +42,8 @@ import (
 
 //we need a type alias to define functions on
 type TOOrigin struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.Origin
-}
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOOrigin{reqInfo, tc.Origin{}}
-		return &toReturn
-	}
 }
 
 func (origin *TOOrigin) SetID(i int) {

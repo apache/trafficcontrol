@@ -45,12 +45,15 @@ import (
 //we need a type alias to define functions on
 
 type TODeliveryServiceV13 struct {
-	ReqInfo *api.APIInfo
+	api.APIInformer
 	tc.DeliveryServiceNullable
 }
 
 func (ds *TODeliveryServiceV13) V12() *TODeliveryServiceV12 {
-	return &TODeliveryServiceV12{ReqInfo: ds.ReqInfo, DeliveryServiceNullableV12: ds.DeliveryServiceNullableV12}
+	v12 := &TODeliveryServiceV12{}
+	v12.DeliveryServiceNullableV12 = ds.DeliveryServiceNullableV12
+	v12.SetInfo(ds.ReqInfo)
+	return v12
 }
 
 func (ds TODeliveryServiceV13) MarshalJSON() ([]byte, error) {
@@ -61,13 +64,6 @@ func (ds *TODeliveryServiceV13) UnmarshalJSON(data []byte) error {
 }
 
 func (ds *TODeliveryServiceV13) APIInfo() *api.APIInfo { return ds.ReqInfo }
-
-func GetTypeV13Factory() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TODeliveryServiceV13{reqInfo, tc.DeliveryServiceNullable{}}
-		return &toReturn
-	}
-}
 
 func (ds TODeliveryServiceV13) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return ds.V12().GetKeyFieldsInfo()

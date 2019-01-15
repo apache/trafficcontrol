@@ -33,11 +33,10 @@ import (
 
 //we need a type alias to define functions on
 type TOType struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.TypeNullable
 }
 
-func (v *TOType) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOType) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOType) InsertQuery() string           { return insertQuery() }
 func (v *TOType) NewReadObj() interface{}       { return &tc.TypeNullable{} }
@@ -51,13 +50,6 @@ func (v *TOType) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TOType) UpdateQuery() string { return updateQuery() }
 func (v *TOType) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOType{reqInfo, tc.TypeNullable{}}
-		return &toReturn
-	}
-}
 
 func (typ TOType) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

@@ -29,6 +29,34 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
+// APIInformer implements APIInfo via the APIInfoer struct
+// It is at this point I'd like to change the name of `APIInfo` so that it has a more
+// meaningful name. However, now is not the time it seems.
+type APIInformer struct {
+	ReqInfo *APIInfo
+}
+
+func (val *APIInformer) SetInfo(inf *APIInfo) {
+	val.ReqInfo = inf
+}
+
+func (val APIInformer) APIInfo() *APIInfo {
+	return val.ReqInfo
+}
+
+// Not sure if all need SetAPIInfo
+// Everything currently existing should implement SetAPIInfo
+// After re-write, look to see where SetAPIInfo was used
+// If it wasn't used for a particular GenericXxx, then delete it
+
+// Before I add SetAPIInfo though I want to make a default implementation for most other methods
+// See https://play.golang.org/p/eq95ilfwEnd
+
+// Update:
+// set api info will need to be a part of the main cruder
+// instead of what I was planning here
+// SetAPIInfo(i *api.APIInfo)
+
 type GenericCreator interface {
 	GetType() string
 	APIInfo() *APIInfo

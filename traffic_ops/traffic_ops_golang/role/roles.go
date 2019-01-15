@@ -39,12 +39,11 @@ import (
 
 type TORole struct {
 	tc.Role
-	ReqInfo        *api.APIInfo    `json:"-"`
-	LastUpdated    *tc.TimeNoMod   `json:"-"`
-	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
+	api.APIInformer `json:"-"`
+	LastUpdated     *tc.TimeNoMod   `json:"-"`
+	PQCapabilities  *pq.StringArray `json:"-" db:"capabilities"`
 }
 
-func (v *TORole) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TORole) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TORole) InsertQuery() string           { return insertQuery() }
 func (v *TORole) NewReadObj() interface{}       { return &TORole{} }
@@ -57,12 +56,6 @@ func (v *TORole) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TORole) UpdateQuery() string { return updateQuery() }
 func (v *TORole) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		return &TORole{ReqInfo: reqInfo}
-	}
-}
 
 func (role TORole) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

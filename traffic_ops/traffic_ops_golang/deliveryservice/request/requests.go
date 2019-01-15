@@ -38,23 +38,15 @@ import (
 
 // TODeliveryServiceRequest is the type alias to define functions on
 type TODeliveryServiceRequest struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.DeliveryServiceRequestNullable
 }
 
-func (v *TODeliveryServiceRequest) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TODeliveryServiceRequest) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TODeliveryServiceRequest) InsertQuery() string           { return insertRequestQuery() }
 func (v *TODeliveryServiceRequest) UpdateQuery() string           { return updateRequestQuery() }
 func (v *TODeliveryServiceRequest) DeleteQuery() string {
 	return `DELETE FROM deliveryservice_request WHERE id = :id`
-}
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TODeliveryServiceRequest{reqInfo, tc.DeliveryServiceRequestNullable{}}
-		return &toReturn
-	}
 }
 
 func (req TODeliveryServiceRequest) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -346,11 +338,8 @@ WHERE id=:id`
 ////////////////////////////////////////////////////////////////
 // Assignment change
 
-func GetAssignmentTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := deliveryServiceRequestAssignment{TODeliveryServiceRequest{reqInfo, tc.DeliveryServiceRequestNullable{}}}
-		return &toReturn
-	}
+func GetAssignmentSingleton() api.CRUDer {
+	return &deliveryServiceRequestAssignment{}
 }
 
 type deliveryServiceRequestAssignment struct {
@@ -417,16 +406,13 @@ func (req deliveryServiceRequestAssignment) ChangeLogMessage(action string) (str
 ////////////////////////////////////////////////////////////////
 // Status change
 
+func GetStatusSingleton() api.CRUDer {
+	return &deliveryServiceRequestStatus{}
+}
+
 // deliveryServiceRequestStatus implements interfaces needed to update the request status only
 type deliveryServiceRequestStatus struct {
 	TODeliveryServiceRequest
-}
-
-func GetStatusTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := deliveryServiceRequestStatus{TODeliveryServiceRequest{reqInfo, tc.DeliveryServiceRequestNullable{}}}
-		return &toReturn
-	}
 }
 
 func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
