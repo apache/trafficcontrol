@@ -57,7 +57,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.value), 'has-feedback': hasError(dsTargetForm.value)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Value *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="value" type="text" class="form-control" ng-model="target.value" ng-maxlength="3" ng-pattern="/^-?\d+$/" required autofocus>
+                    <input name="value" type="number" class="form-control" ng-model="target.value" ng-maxlength="3" ng-pattern="/^-?\d+$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsTargetForm.value, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(dsTargetForm.value, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(dsTargetForm.value, 'pattern')">Whole Number</small>
