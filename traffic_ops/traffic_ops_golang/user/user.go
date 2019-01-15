@@ -266,10 +266,10 @@ func (user *TOUser) Update() (error, error, int) {
 	}
 
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(), user)
-	defer resultRows.Close()
 	if err != nil {
 		return api.ParseDBError(err)
 	}
+	defer resultRows.Close()
 
 	var lastUpdated tc.TimeNoMod
 	var tenant string
@@ -282,6 +282,7 @@ func (user *TOUser) Update() (error, error, int) {
 			return nil, fmt.Errorf("could not scan lastUpdated from insert: %s\n", err), http.StatusInternalServerError
 		}
 	}
+
 	user.LastUpdated = &lastUpdated
 	user.Tenant = &tenant
 	user.RoleName = &rolename
