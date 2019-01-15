@@ -125,12 +125,7 @@ func ReadHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 		defer inf.Close()
 
-		reader, ok := typeFactory(inf).(Reader)
-		if !ok {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CRUDer type using ReadHandler does not satisfy Reader interface"))
-			return
-		}
-
+		reader := typeFactory(inf)
 		results, userErr, sysErr, errCode := reader.Read()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -180,12 +175,7 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 		defer inf.Close()
 
-		u, ok := typeFactory(inf).(Updater)
-		if !ok {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CRUDer type using UpdaterHandler does not satisfy Updater interface"))
-			return
-		}
-
+		u := typeFactory(inf)
 		if err := decodeAndValidateRequestBody(r, u); err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
@@ -216,7 +206,7 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 
 		// check that all keys were properly filled in
 		u.SetKeys(keys)
-		_, ok = u.GetKeys()
+		_, ok := u.GetKeys()
 		if !ok {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to parse required keys from request body"), nil)
 			return // TODO verify?
@@ -264,11 +254,7 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 		defer inf.Close()
 
-		d, ok := typeFactory(inf).(Deleter)
-		if !ok {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CRUDer type using DeleteHandler does not satisfy Deleter interface"))
-			return
-		}
+		d := typeFactory(inf)
 
 		keyFields := d.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
 		keys := make(map[string]interface{})
@@ -321,7 +307,7 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func CreateHandler(typeFactory CRUDFactory) http.HandlerFunc {
+func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
@@ -330,19 +316,14 @@ func CreateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 		defer inf.Close()
 
-		c, ok := typeFactory(inf).(Creator)
-		if !ok {
-			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CRUDer type using CreateHandler does not satisfy Creator interface"))
-			return
-		}
-
-		err := decodeAndValidateRequestBody(r, c)
+		i := typeConstructor(inf)
+		err := decodeAndValidateRequestBody(r, i)
 		if err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}
 
-		if t, ok := c.(Tenantable); ok {
+		if t, ok := i.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
 				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
@@ -354,16 +335,16 @@ func CreateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			}
 		}
 
-		userErr, sysErr, errCode = c.Create()
+		userErr, sysErr, errCode = i.Create()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 
-		if err = CreateChangeLog(ApiChange, Created, c, inf.User, inf.Tx.Tx); err != nil {
+		if err = CreateChangeLog(ApiChange, Created, i, inf.User, inf.Tx.Tx); err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		WriteRespAlertObj(w, r, tc.SuccessLevel, c.GetType()+" was created.", c)
+		WriteRespAlertObj(w, r, tc.SuccessLevel, i.GetType()+" was created.", i)
 	}
 }
