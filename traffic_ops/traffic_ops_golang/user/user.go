@@ -38,15 +38,8 @@ import (
 )
 
 type TOUser struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.User
-}
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOUser{reqInfo, tc.User{}}
-		return &toReturn
-	}
 }
 
 func (user TOUser) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -77,10 +70,6 @@ func (user TOUser) GetType() string {
 func (user *TOUser) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) // non-panicking type assertion
 	user.ID = &i
-}
-
-func (v *TOUser) APIInfo() *api.APIInfo {
-	return v.ReqInfo
 }
 
 func (user *TOUser) SetLastUpdated(t tc.TimeNoMod) {

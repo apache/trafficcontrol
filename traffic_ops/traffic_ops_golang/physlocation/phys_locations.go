@@ -33,11 +33,10 @@ import (
 
 //we need a type alias to define functions on
 type TOPhysLocation struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.PhysLocationNullable
 }
 
-func (v *TOPhysLocation) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOPhysLocation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOPhysLocation) InsertQuery() string           { return insertQuery() }
 func (v *TOPhysLocation) NewReadObj() interface{}       { return &tc.PhysLocationNullable{} }
@@ -51,13 +50,6 @@ func (v *TOPhysLocation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TOPhysLocation) UpdateQuery() string { return updateQuery() }
 func (v *TOPhysLocation) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOPhysLocation{reqInfo, tc.PhysLocationNullable{}}
-		return &toReturn
-	}
-}
 
 func (pl TOPhysLocation) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

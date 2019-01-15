@@ -32,11 +32,10 @@ import (
 )
 
 type TOStaticDNSEntry struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.StaticDNSEntryNullable
 }
 
-func (v *TOStaticDNSEntry) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOStaticDNSEntry) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOStaticDNSEntry) InsertQuery() string           { return insertQuery() }
 func (v *TOStaticDNSEntry) NewReadObj() interface{}       { return &tc.StaticDNSEntryNullable{} }
@@ -57,13 +56,6 @@ func (v *TOStaticDNSEntry) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TOStaticDNSEntry) UpdateQuery() string { return updateQuery() }
 func (v *TOStaticDNSEntry) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOStaticDNSEntry{reqInfo, tc.StaticDNSEntryNullable{}}
-		return &toReturn
-	}
-}
 
 func (staticDNSEntry TOStaticDNSEntry) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

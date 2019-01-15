@@ -36,20 +36,12 @@ import (
 )
 
 type TODeliveryServiceV12 struct {
-	ReqInfo *api.APIInfo
+	api.APIInformer
 	tc.DeliveryServiceNullableV12
 }
 
-func (v *TODeliveryServiceV12) APIInfo() *api.APIInfo { return v.ReqInfo }
 func (v *TODeliveryServiceV12) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
-}
-
-func GetTypeV12Factory() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TODeliveryServiceV12{reqInfo, tc.DeliveryServiceNullableV12{}}
-		return &toReturn
-	}
 }
 
 func (ds TODeliveryServiceV12) GetKeyFieldsInfo() []api.KeyFieldInfo {

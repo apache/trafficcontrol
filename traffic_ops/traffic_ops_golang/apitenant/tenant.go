@@ -42,11 +42,10 @@ import (
 
 // TOTenant provides a local type against which to define methods
 type TOTenant struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.TenantNullable
 }
 
-func (v *TOTenant) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOTenant) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOTenant) InsertQuery() string           { return insertQuery() }
 func (v *TOTenant) NewReadObj() interface{}       { return &tc.TenantNullable{} }
@@ -63,13 +62,6 @@ func (v *TOTenant) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	}
 }
 func (v *TOTenant) UpdateQuery() string { return updateQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOTenant{reqInfo, tc.TenantNullable{}}
-		return &toReturn
-	}
-}
 
 // GetID wraps the ID member with null checking
 // Part of the Identifier interface

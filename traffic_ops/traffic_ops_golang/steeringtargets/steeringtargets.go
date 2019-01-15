@@ -36,14 +36,10 @@ import (
 )
 
 type TOSteeringTargetV11 struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.SteeringTargetNullable
 	DSTenantID  *int          `json:"-" db:"tenant"`
 	LastUpdated *tc.TimeNoMod `json:"-" db:"last_updated"`
-}
-
-func TypeFactory(inf *api.APIInfo) api.CRUDer {
-	return &TOSteeringTargetV11{ReqInfo: inf}
 }
 
 func (st TOSteeringTargetV11) GetKeyFieldsInfo() []api.KeyFieldInfo {

@@ -23,36 +23,61 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
+// not sure if this will be needed after I'm done
 type CRUDer interface {
-	Creator
-	Reader
-	Updater
-	Deleter
+	Create() (error, error, int)
+	Read() ([]interface{}, error, error, int)
+	Update() (error, error, int)
+	Delete() (error, error, int)
+	APIInfoer
 	Identifier
 	Validator
 }
 
-type Updater interface {
-	// Update returns any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Update() (error, error, int)
-}
-
 type Identifier interface {
+
+	// Getters and Setters for key data
+	// The current common case is a single numerical id
+	SetKeys(map[string]interface{})
 	GetKeys() (map[string]interface{}, bool)
+
+	// GetType gives the name of the implementing struct
 	GetType() string
+
+	// GetAuditName returns the name of an object instance. If no name is availible, the id should be returned. "unknown" is the final case
 	GetAuditName() string
+
+	// This should define the key getters and setters
 	GetKeyFieldsInfo() []KeyFieldInfo
 }
 
 type Creator interface {
 	// Create returns any user error, any system error, and the HTTP error code to be returned if there was an error.
 	Create() (error, error, int)
-	SetKeys(map[string]interface{})
+	APIInfoer
+	Identifier
+	Validator
+}
+
+type Reader interface {
+	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
+	Read() ([]interface{}, error, error, int)
+	APIInfoer
+}
+
+type Updater interface {
+	// Update returns any user error, any system error, and the HTTP error code to be returned if there was an error.
+	Update() (error, error, int)
+	APIInfoer
+	Identifier
+	Validator
 }
 
 type Deleter interface {
 	// Delete returns any user error, any system error, and the HTTP error code to be returned if there was an error.
 	Delete() (error, error, int)
+	APIInfoer
+	Identifier
 }
 
 type Validator interface {
@@ -63,7 +88,9 @@ type Tenantable interface {
 	IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 }
 
-type Reader interface {
-	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Read() ([]interface{}, error, error, int)
+// APIInfoer is an interface that guarantees the existance of a variable through its setters and getters.
+// Every CRUD operation uses this login session context
+type APIInfoer interface {
+	SetInfo(*APIInfo)
+	APIInfo() *APIInfo
 }

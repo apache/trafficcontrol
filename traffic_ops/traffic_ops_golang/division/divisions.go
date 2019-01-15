@@ -34,11 +34,10 @@ import (
 
 //we need a type alias to define functions on
 type TODivision struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.DivisionNullable
 }
 
-func (v *TODivision) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TODivision) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TODivision) InsertQuery() string           { return insertQuery() }
 func (v *TODivision) NewReadObj() interface{}       { return &tc.Division{} }
@@ -51,13 +50,6 @@ func (v *TODivision) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TODivision) UpdateQuery() string { return updateQuery() }
 func (v *TODivision) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TODivision{reqInfo, tc.DivisionNullable{}}
-		return &toReturn
-	}
-}
 
 func (division TODivision) GetAuditName() string {
 	if division.Name != nil {

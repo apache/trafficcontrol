@@ -34,11 +34,10 @@ import (
 
 //we need a type alias to define functions on
 type TOCoordinate struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.CoordinateNullable
 }
 
-func (v *TOCoordinate) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOCoordinate) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCoordinate) InsertQuery() string           { return insertQuery() }
 func (v *TOCoordinate) NewReadObj() interface{}       { return &tc.CoordinateNullable{} }
@@ -51,13 +50,6 @@ func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
 func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOCoordinate{reqInfo, tc.CoordinateNullable{}}
-		return &toReturn
-	}
-}
 
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

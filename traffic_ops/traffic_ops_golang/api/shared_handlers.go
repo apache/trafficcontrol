@@ -116,7 +116,7 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
 //      combines the path and query parameters
 //      produces the proper status code based on the error code returned
 //      marshals the structs returned into the proper response json
-func ReadHandler(typeFactory CRUDFactory) http.HandlerFunc {
+func ReadHandler(obj Reader) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
@@ -125,32 +125,8 @@ func ReadHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 		defer inf.Close()
 
-		reader := typeFactory(inf)
-		results, userErr, sysErr, errCode := reader.Read()
-		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-			return
-		}
-		WriteResp(w, r, results)
-	}
-}
-
-// ReadOnlyHandler creates a handler function from the pointer to a struct implementing the Reader interface
-//      this handler retrieves the user from the context
-//      combines the path and query parameters
-//      produces the proper status code based on the error code returned
-//      marshals the structs returned into the proper response json
-func ReadOnlyHandler(typeFactory func(reqInfo *APIInfo) Reader) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-
-		reader := typeFactory(inf)
-		results, userErr, sysErr, errCode := reader.Read()
+		obj.SetInfo(inf)
+		results, userErr, sysErr, errCode := obj.Read()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
@@ -166,7 +142,9 @@ func ReadOnlyHandler(typeFactory func(reqInfo *APIInfo) Reader) http.HandlerFunc
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
+
+// Take an actual object here..
+func UpdateHandler(obj Updater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
@@ -175,13 +153,13 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 		defer inf.Close()
 
-		u := typeFactory(inf)
-		if err := decodeAndValidateRequestBody(r, u); err != nil {
+		obj.SetInfo(inf)
+		if err := decodeAndValidateRequestBody(r, obj); err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}
 
-		keyFields := u.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
+		keyFields := obj.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
 		// ignoring ok value -- will be checked after param processing
 
 		keys := make(map[string]interface{}) // a map of keyField to keyValue where keyValue is an {}interface
@@ -205,15 +183,15 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 
 		// check that all keys were properly filled in
-		u.SetKeys(keys)
-		_, ok := u.GetKeys()
+		obj.SetKeys(keys)
+		_, ok := obj.GetKeys()
 		if !ok {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to parse required keys from request body"), nil)
 			return // TODO verify?
 		}
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
-		if t, ok := u.(Tenantable); ok {
+		if t, ok := obj.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
 				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
@@ -225,17 +203,17 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			}
 		}
 
-		userErr, sysErr, errCode = u.Update()
+		userErr, sysErr, errCode = obj.Update()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 
-		if err := CreateChangeLog(ApiChange, Updated, u, inf.User, inf.Tx.Tx); err != nil {
+		if err := CreateChangeLog(ApiChange, Updated, obj, inf.User, inf.Tx.Tx); err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		WriteRespAlertObj(w, r, tc.SuccessLevel, u.GetType()+" was updated.", u)
+		WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was updated.", obj)
 	}
 }
 
@@ -245,7 +223,7 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 //   *current user
 //   *change log entry
 //   *forming and writing the body over the wire
-func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
+func DeleteHandler(obj Deleter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
@@ -254,9 +232,8 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 		defer inf.Close()
 
-		d := typeFactory(inf)
-
-		keyFields := d.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
+		obj.SetInfo(inf)
+		keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
 		keys := make(map[string]interface{})
 		for _, kf := range keyFields {
 			paramKey := inf.Params[kf.Field]
@@ -272,9 +249,9 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			}
 			keys[kf.Field] = paramValue
 		}
-		d.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
+		obj.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
 
-		if t, ok := d.(Tenantable); ok {
+		if t, ok := obj.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
 				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
@@ -286,18 +263,18 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			}
 		}
 
-		userErr, sysErr, errCode = d.Delete()
+		userErr, sysErr, errCode = obj.Delete()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 
 		log.Debugf("changelog for delete on object")
-		if err := CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx.Tx); err != nil {
+		if err := CreateChangeLog(ApiChange, Deleted, obj, inf.User, inf.Tx.Tx); err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		WriteRespAlert(w, r, tc.SuccessLevel, d.GetType()+" was deleted.")
+		WriteRespAlert(w, r, tc.SuccessLevel, obj.GetType()+" was deleted.")
 	}
 }
 
@@ -307,7 +284,7 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
+func CreateHandler(obj Creator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
@@ -316,14 +293,14 @@ func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 		}
 		defer inf.Close()
 
-		i := typeConstructor(inf)
-		err := decodeAndValidateRequestBody(r, i)
+		obj.SetInfo(inf)
+		err := decodeAndValidateRequestBody(r, obj)
 		if err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}
 
-		if t, ok := i.(Tenantable); ok {
+		if t, ok := obj.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
 				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
@@ -335,16 +312,16 @@ func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 			}
 		}
 
-		userErr, sysErr, errCode = i.Create()
+		userErr, sysErr, errCode = obj.Create()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 
-		if err = CreateChangeLog(ApiChange, Created, i, inf.User, inf.Tx.Tx); err != nil {
+		if err = CreateChangeLog(ApiChange, Created, obj, inf.User, inf.Tx.Tx); err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
-		WriteRespAlertObj(w, r, tc.SuccessLevel, i.GetType()+" was created.", i)
+		WriteRespAlertObj(w, r, tc.SuccessLevel, obj.GetType()+" was created.", obj)
 	}
 }

@@ -40,11 +40,10 @@ const (
 
 //we need a type alias to define functions on
 type TOProfileParameter struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.ProfileParameterNullable
 }
 
-func (v *TOProfileParameter) APIInfo() *api.APIInfo   { return v.ReqInfo }
 func (v *TOProfileParameter) NewReadObj() interface{} { return &tc.ProfileParametersNullable{} }
 func (v *TOProfileParameter) SelectQuery() string     { return selectQuery() }
 func (v *TOProfileParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
@@ -55,13 +54,6 @@ func (v *TOProfileParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo
 	}
 }
 func (v *TOProfileParameter) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOProfileParameter{reqInfo, tc.ProfileParameterNullable{}}
-		return &toReturn
-	}
-}
 
 func (pp TOProfileParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{ProfileIDQueryParam, api.GetIntKey}, {ParameterIDQueryParam, api.GetIntKey}}

@@ -48,11 +48,10 @@ var (
 
 //we need a type alias to define functions on
 type TOParameter struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.ParameterNullable
 }
 
-func (v *TOParameter) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOParameter) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOParameter) InsertQuery() string           { return insertQuery() }
 func (v *TOParameter) NewReadObj() interface{}       { return &tc.ParameterNullable{} }
@@ -66,13 +65,6 @@ func (v *TOParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 func (v *TOParameter) UpdateQuery() string { return updateQuery() }
 func (v *TOParameter) DeleteQuery() string { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOParameter{reqInfo, tc.ParameterNullable{}}
-		return &toReturn
-	}
-}
 
 func (param TOParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{IDQueryParam, api.GetIntKey}}

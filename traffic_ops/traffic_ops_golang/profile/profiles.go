@@ -48,22 +48,14 @@ const (
 
 //we need a type alias to define functions on
 type TOProfile struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.ProfileNullable
 }
 
-func (v *TOProfile) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOProfile) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOProfile) InsertQuery() string           { return insertQuery() }
 func (v *TOProfile) UpdateQuery() string           { return updateQuery() }
 func (v *TOProfile) DeleteQuery() string           { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOProfile{reqInfo, tc.ProfileNullable{}}
-		return &toReturn
-	}
-}
 
 func (prof TOProfile) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{IDQueryParam, api.GetIntKey}}

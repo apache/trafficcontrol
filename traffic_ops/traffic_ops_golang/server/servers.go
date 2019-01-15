@@ -43,22 +43,14 @@ import (
 
 //we need a type alias to define functions on
 type TOServer struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.ServerNullable
 }
 
-func (v *TOServer) APIInfo() *api.APIInfo         { return v.ReqInfo }
 func (v *TOServer) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOServer) InsertQuery() string           { return insertQuery() }
 func (v *TOServer) UpdateQuery() string           { return updateQuery() }
 func (v *TOServer) DeleteQuery() string           { return deleteQuery() }
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOServer{reqInfo, tc.ServerNullable{}}
-		return &toReturn
-	}
-}
 
 func (server TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

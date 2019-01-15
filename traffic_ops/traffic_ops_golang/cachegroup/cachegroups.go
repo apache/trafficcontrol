@@ -40,15 +40,8 @@ import (
 )
 
 type TOCacheGroup struct {
-	ReqInfo *api.APIInfo `json:"-"`
+	api.APIInformer `json:"-"`
 	tc.CacheGroupNullable
-}
-
-func GetTypeSingleton() api.CRUDFactory {
-	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOCacheGroup{reqInfo, tc.CacheGroupNullable{}}
-		return &toReturn
-	}
 }
 
 func (cg TOCacheGroup) GetKeyFieldsInfo() []api.KeyFieldInfo {

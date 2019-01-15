@@ -84,6 +84,7 @@ func getTestCacheGroups() []tc.CacheGroup {
 }
 
 func TestReadCacheGroups(t *testing.T) {
+
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
