@@ -529,14 +529,14 @@ public class TrafficRouter {
 
 		final List<SteeringResult> resultsToRemove = new ArrayList<>();
 
+		// Pattern based consistent hashing - use consistentHashRegex from steering DS instead of targets
+		final String pathToHash = buildPatternBasedHashString(entryDeliveryService, request.getPath());
 		for (final SteeringResult steeringResult : steeringResults) {
 			final DeliveryService ds = steeringResult.getDeliveryService();
 
 			final List<Cache> caches = selectCaches(request, ds, track);
 
 			if (caches != null && !caches.isEmpty()) {
-				// Pattern based consistent hashing
-				final String pathToHash = buildPatternBasedHashString(ds, request.getPath());
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
 				steeringResult.setCache(cache);
 			} else {
@@ -953,7 +953,10 @@ public class TrafficRouter {
 		}
 
 		final Steering steering = steeringRegistry.get(deliveryService.getId());
-		final List<SteeringTarget> steeringTargets = consistentHasher.selectHashables(steering.getTargets(), requestPath);
+
+		// Pattern based consistent hashing
+		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		final List<SteeringTarget> steeringTargets = consistentHasher.selectHashables(steering.getTargets(), pathToHash);
 
 		for (final SteeringTarget steeringTarget : steeringTargets) {
 			final DeliveryService target = cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
@@ -997,7 +1000,12 @@ public class TrafficRouter {
 		final List<SteeringTarget> availableTargets = steering.getTargets().stream()
 				.filter(target -> cacheRegister.getDeliveryService(target.getDeliveryService()) != null)
 				.collect(Collectors.toList());
-		final SteeringTarget steeringTarget = consistentHasher.selectHashable(availableTargets, deliveryService.getDispersion(), requestPath);
+
+		// Pattern based consistent hashing
+		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		final SteeringTarget steeringTarget = consistentHasher.selectHashable(availableTargets, deliveryService.getDispersion(), pathToHash);
+
+		// set parentDS.consistentHashRegex on resulting target DS?
 		return cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
 	}
 
