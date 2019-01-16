@@ -25,6 +25,9 @@ done
 
 source to-access.sh
 
+set-dns.sh
+insert-self-into-dns.sh
+
 TO_URL="https://$TO_FQDN:$TO_PORT"
 while ! to-ping 2>/dev/null; do
    echo waiting for trafficops
@@ -37,4 +40,3 @@ source config.sh
 
 ./traffic_ops_integration_test -cfg=traffic-ops-test.conf
 exit $?
-
