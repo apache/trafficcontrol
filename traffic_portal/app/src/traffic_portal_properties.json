@@ -191,7 +191,7 @@
           },
           "consistentHashRegex": {
             "title": "Consistent Hash Regex",
-            "desc": "Regex used to extract parts of the request path using grouping in order to build a consistent request string to be used for cache selection."
+            "desc": "Regex used to extract parts of the request path using grouping in order to build a consistent request string to be used for cache selection. If this field is set on a steering delivery service, it will override the regex set on the target delivery services."
           },
           "deepCachingType": {
             "title": "Deep Caching",

@@ -95,7 +95,7 @@ public class DeliveryService {
 	private final boolean acceptHttps;
 	private final boolean redirectToHttps;
 	private final DeepCachingType deepCache;
-	private final String consistentHashRegex;
+	private String consistentHashRegex;
 
 	public enum DeepCachingType {
 		NEVER,
@@ -654,4 +654,8 @@ public class DeliveryService {
 	}
 
 	public String getConsistentHashRegex() { return consistentHashRegex; }
+
+	public void setConsistentHashRegex(final String consistentHashRegex) {
+		this.consistentHashRegex = consistentHashRegex;
+	}
 }

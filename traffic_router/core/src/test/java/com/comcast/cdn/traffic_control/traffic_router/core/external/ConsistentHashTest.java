@@ -366,4 +366,68 @@ public class ConsistentHashTest {
 			if (response != null) response.close();
 		}
 	}
+
+	@Test
+	public void itAppliesPatternBasedConsistentHashingToSteeringDeliveryService() throws Exception {
+		CloseableHttpResponse response = null;
+		try {
+			String requestPath = URLEncoder.encode("/some/path/thing.m3u8", "UTF-8");
+			HttpGet httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/deliveryservice?ip=98.76.54.123&deliveryServiceId=" + steeringDeliveryServiceId + "&requestPath=" + requestPath);
+			response = closeableHttpClient.execute(httpGet);
+
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+			JsonNode deliveryServiceNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+			String deliveryServiceId = deliveryServiceNode.get("id").asText();
+			assertThat(deliveryServiceId, isIn(steeredDeliveryServices));
+
+			response.close();
+
+			requestPath = URLEncoder.encode("/other_different_path_12344321/path/other_thing_to_hash_differently.m3u8", "UTF-8");
+			httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/deliveryservice?ip=98.76.54.123&deliveryServiceId=" + steeringDeliveryServiceId + "&requestPath=" + requestPath);
+			response = closeableHttpClient.execute(httpGet);
+
+			deliveryServiceNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+			assertThat(deliveryServiceNode.get("id").asText(), equalTo(deliveryServiceId));
+
+		} finally {
+			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void itAppliesPatternBasedConsistentHashingToSteeringRequestsForCoverageZone() throws Exception {
+		CloseableHttpResponse response = null;
+
+		try {
+			String requestPath = URLEncoder.encode("/some/path/thing.m3u8", "UTF-8");
+			HttpGet httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/cache/coveragezone/steering?ip=" + ipAddressInCoverageZone + "&deliveryServiceId=" + steeringDeliveryServiceId + "&requestPath=" + requestPath);
+
+			response = closeableHttpClient.execute(httpGet);
+
+			assertThat("Expected to find " + ipAddressInCoverageZone + " in coverage zone using delivery service id " + deliveryServiceId, response.getStatusLine().getStatusCode(), equalTo(200));
+
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+			JsonNode cacheNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+
+			String cacheId = cacheNode.get("id").asText();
+			assertThat(cacheId, not(equalTo("")));
+
+			response.close();
+
+			response = closeableHttpClient.execute(httpGet);
+			cacheNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+			assertThat(cacheNode.get("id").asText(), equalTo(cacheId));
+
+			response.close();
+
+			requestPath = URLEncoder.encode("/other_different_path_12344321/path/other_thing_to_hash_differently.m3u8", "UTF-8");
+			httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/cache/coveragezone/steering?ip=" + ipAddressInCoverageZone + "&deliveryServiceId=" + steeringDeliveryServiceId + "&requestPath=" + requestPath);
+
+			response = closeableHttpClient.execute(httpGet);
+			cacheNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+			assertThat(cacheNode.get("id").asText(), equalTo(cacheId));
+		} finally {
+			if (response != null) response.close();
+		}
+	}
 }

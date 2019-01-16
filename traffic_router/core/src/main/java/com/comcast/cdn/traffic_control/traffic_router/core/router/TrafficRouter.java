@@ -969,10 +969,29 @@ public class TrafficRouter {
 		return steeringResults;
 	}
 
+	public Cache consistentHashSteeringForCoverageZone(final String ip, final String deliveryServiceId, final String requestPath) {
+		final DeliveryService deliveryService = consistentHashDeliveryService(deliveryServiceId, requestPath);
+		if (deliveryService == null) {
+			LOGGER.error("Failed getting delivery service from cache register for id '" + deliveryServiceId + "'");
+			return null;
+		}
+
+		final CacheLocation coverageZoneCacheLocation = getCoverageZoneCacheLocation(ip, deliveryService, false, null);
+		final List<Cache> caches = selectCachesByCZ(deliveryService, coverageZoneCacheLocation);
+
+		if (caches == null || caches.isEmpty()) {
+			return null;
+		}
+
+		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
+	}
+
 	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final String requestPath) {
 		return consistentHashDeliveryService(cacheRegister.getDeliveryService(deliveryServiceId), requestPath, "");
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public DeliveryService consistentHashDeliveryService(final DeliveryService deliveryService, final String requestPath, final String xtcSteeringOption) {
 		if (deliveryService == null) {
 			return null;
@@ -1005,8 +1024,12 @@ public class TrafficRouter {
 		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
 		final SteeringTarget steeringTarget = consistentHasher.selectHashable(availableTargets, deliveryService.getDispersion(), pathToHash);
 
-		// set parentDS.consistentHashRegex on resulting target DS?
-		return cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
+		// set target.consistentHashRegex from steering DS, if it is set
+		final DeliveryService targetDeliveryService = cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
+		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty()) {
+			targetDeliveryService.setConsistentHashRegex(deliveryService.getConsistentHashRegex());
+		}
+		return targetDeliveryService;
 	}
 
 	/**

@@ -128,4 +128,19 @@ public class ConsistentHashController {
 		map.put("resultingPathToConsistentHash", pathToHash);
 		return ResponseEntity.ok(map);
 	}
+
+	@RequestMapping(value = "/cache/coveragezone/steering")
+	public @ResponseBody
+	ResponseEntity hashSteeringCoverageZoneCache(@RequestParam(name="ip") final String ip,
+										 @RequestParam(name = "deliveryServiceId") final String deliveryServiceId,
+										 @RequestParam(name = "requestPath") final String requestPath) {
+
+		final Cache cache = trafficRouterManager.getTrafficRouter().consistentHashSteeringForCoverageZone(ip, deliveryServiceId, requestPath);
+
+		if (cache == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{}");
+		}
+
+		return ResponseEntity.ok(cache);
+	}
 }
