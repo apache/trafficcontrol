@@ -221,6 +221,14 @@ func (user *TOUser) Read() ([]interface{}, error, error, int) {
 			return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError
 		}
 
+		// role is a required field for the endpoint, but not for an item in the database
+		// I doubt a nil check is needed, but I'm including it just in case
+		if user.RoleName == nil {
+			return nil, nil, fmt.Errorf("role name is nil", err), http.StatusInternalServerError
+		}
+		user.RoleNameGET = user.RoleName
+		user.RoleName = nil
+
 		users = append(users, *user)
 	}
 
