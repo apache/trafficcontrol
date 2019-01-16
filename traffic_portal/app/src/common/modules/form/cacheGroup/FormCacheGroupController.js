@@ -97,14 +97,18 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
         this.group = group;
     }
 
+    // Creates a list of available Fallback options and a list of previously selected Fallback options
     $scope.getFallbackOptions = function() {
         for (var i = 0; i < $scope.cacheGroups.length; i++) {
             var cg = $scope.cacheGroups[i];
+            // Fallbacks are required to be of type EDGE_LOC and a cachegroup cannot fallback to itself so these are skipped and the loop is continued
             if (!$scope.isEdgeLoc(cg.typeId) || cg.name == cacheGroup.name) continue;
             var fb = new CacheGroupFallbackOption(i, $scope.cacheGroups[i].name);
+            // If the fallback has not been used yet, it is added to the list of available fallbacks
             if (cacheGroup.fallbacks == null || cacheGroup.fallbacks.indexOf(cg.name) < 0) {
                 $scope.cacheGroupFallbackOptions.push(fb);
             } else {
+                // If fallback has been selected previously then it is added to the list of selected fallbacks
                 $scope.selectedCacheGroupFallbackOptions.push(fb);
             }
         }
@@ -118,17 +122,22 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
 
     $scope.moveAbove = true;
 
+    // Updates the list of already selected fallbacks and removes the newly selected fallback from the list of available fallbacks
     $scope.updateFallbacks = function(cacheGroup) {
         if (cacheGroup.fallbacks == null) {
             cacheGroup.fallbacks = new Array();
         }
+        // Add selected fallback to selected list if it is not already there
         if (cacheGroup.fallbacks.indexOf($scope.fallbackSelected) === -1) {
             cacheGroup.fallbacks.push($scope.fallbackSelected);
         }
+        // Update list of available fallbacks so it does not include the newly selected fallback
         for (var i = 0; i < $scope.cacheGroupFallbackOptions.length; i++) {
             var fbo = $scope.cacheGroupFallbackOptions[i];
             if (fbo.group === $scope.fallbackSelected) {
+                // Removes selected fallback from list of availables
                 $scope.cacheGroupFallbackOptions.splice($scope.cacheGroupFallbackOptions.indexOf(fbo), 1);
+                // Adds selected fallback to list of selected
                 $scope.selectedCacheGroupFallbackOptions.push(fbo);
                 break;
             }

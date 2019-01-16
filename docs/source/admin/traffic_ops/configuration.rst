@@ -245,7 +245,7 @@ Below is a list of cache parameters for special configuration, which are unlikel
 +==========================+===================+=========================================================================================================================+
 | not_a_parent             | parent.config     | This is a boolean flag and is considered 'true' if it exists and has any value except 'false'.                          |
 |                          |                   | This prevents servers with this parameter in their profile from being inserted into the ``parent.config`` generated for |
-|                          |                   | servers with this server's Cache Group as a parent of their CacheGroup. This is primarily useful for when edge caches   |
+|                          |                   | servers with this server's Cache Group as a parent of their Cache Group. This is primarily useful for when edge caches   |
 |                          |                   | are configured to have a Cache Group of other edge caches as parents (a highly unusual configuration), and it is        |
 |                          |                   | necessary to exclude some, but not all, edges in the parent Cache Group from the ``parent.config`` (for example,        |
 |                          |                   | because they lack necessary capabilities), but still have all edges in the same Cache Group in order to take traffic    |

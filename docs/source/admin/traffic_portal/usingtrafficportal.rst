@@ -378,7 +378,7 @@ Cache Groups
 :Type:                  The Type of this Cache Group (see :ref:`tp-configure-types`)
 :Latitude:              A geographic latitude assigned to this Cache Group
 :Longitude:             A geographic longitude assigned to this Cache Group
-:Failover Locations:    A list of cache groups to fallback to in case of failure.  Fallback to Geo Failover allows fallback geographically in case of failure.
+:Failover Cache Groups: A list of cache groups to fallback to in case of failure. Fallback to Geo Failover allows fallback geographically in case of failure.
 
 Cache group management includes the ability to (where applicable):
 

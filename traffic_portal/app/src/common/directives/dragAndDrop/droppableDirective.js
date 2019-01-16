@@ -8,22 +8,6 @@ var DroppableDirective = function () {
         link: function(scope, element) {
             var el = element[0];
 
-            el.parentElement.classList.add('grabbable');
-
-            el.addEventListener(
-                'mouseover',
-                function(e) {
-                    this.classList.add('hovering');
-                }
-            );
-
-            el.addEventListener(
-                'mouseout',
-                function(e) {
-                    this.classList.remove('hovering');
-                }
-            );
-
             el.addEventListener(
                 'dragover',
                 function(e) {
@@ -88,7 +72,6 @@ var DroppableDirective = function () {
                 function(e) {
                     if (e.stopPropagation) e.stopPropagation();
                     if (e.preventDefault) e.preventDefault(); // *needed* for firefox
-                    el.parentElement.classList.add('grabbable');
                     this.classList.remove('over');
                     if (e.target.classList.contains('drop-child')) {
                         e.target.parentElement.style.borderTop = '';

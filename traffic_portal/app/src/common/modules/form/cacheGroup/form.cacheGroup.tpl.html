@@ -129,15 +129,15 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.fallbacks), 'has-feedback': hasError(cacheGroupForm.fallbacks)}" ng-hide="!isEdgeLoc(cacheGroup.typeId)">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Failover Locations</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Failover Cache Groups</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select name="fallbackOptions" class="form-control" ng-model="fallbackSelected" ng-options="cachegroup.group as cachegroup.group for cachegroup in cacheGroupFallbackOptions" ng-change="updateFallbacks(cacheGroup)">
-                        <option value="">Add Failover Cache Groups...</option>
+                        <option value="">Add Failover Cache Group...</option>
                     </select>
                     <div class="allFallbacks" id="allFallbacks">
                         <div class="fallback" ng-repeat="fb in cacheGroup.fallbacks" dnd-enable="true" pageid="cacheGroupFallback">
                             <i class="fa fa-ellipsis-v fallback-grip drop-child" aria-hidden="true"></i>
-                            <div class="fallback-list drop-child">{{ $index + 1 }}.     {{fb}}</div>
+                            <div class="fallback-list drop-child">{{ $index + 1 }}.&nbsp&nbsp&nbsp&nbsp&nbsp{{fb}}</div>
                             <div class="fallback-delete drop-child fa fa-trash-o" align="right" ng-click="removeFallback(fb)">
                             </div>
                         </div>
