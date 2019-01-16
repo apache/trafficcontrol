@@ -32,7 +32,7 @@ const (
 )
 
 func TestDeliveryServiceRequests(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, DeliveryServiceRequests}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests}, func() {
 		GetTestDeliveryServiceRequests(t)
 		UpdateTestDeliveryServiceRequests(t)
 	})
@@ -51,7 +51,7 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestRequired(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		dsr := testData.DeliveryServiceRequests[dsrRequired]
 		alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 		if err != nil {
@@ -65,7 +65,7 @@ func TestDeliveryServiceRequestRequired(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestRules(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
 		// Test the xmlId length and form
 		XMLID := "X " + strings.Repeat("X", 46)
@@ -114,7 +114,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestBad(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		// try to create non-draft/submitted
 		src := testData.DeliveryServiceRequests[dsrDraft]
 		s, err := tc.RequestStatusFromString("pending")
@@ -136,7 +136,7 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 
 // TestDeliveryServiceRequestWorkflow tests that transitions of Status are
 func TestDeliveryServiceRequestWorkflow(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
 		// test empty request table
 		dsrs, _, err := TOSession.GetDeliveryServiceRequests()
 		if err != nil {

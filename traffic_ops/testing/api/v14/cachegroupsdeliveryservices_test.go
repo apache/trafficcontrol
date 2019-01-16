@@ -16,12 +16,13 @@ package v14
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func TestDeliveryServicesCachegroups(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		CreateTestCachegroupsDeliveryServices(t)
 		DeleteTestCachegroupsDeliveryServices(t)
 	})
@@ -100,7 +101,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 	log.Debugln("DeleteTestCachegroupsDeliveryServices")
 
-	dss, _, err := TOSession.GetDeliveryServiceServers()
+	dss, _, err := TOSession.GetDeliveryServiceServersN(1000000)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceServers: %v\n", err)
 	}

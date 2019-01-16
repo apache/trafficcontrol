@@ -23,7 +23,7 @@ import (
 )
 
 func TestCDNs(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs}, func() {
+	WithObjs(t, []TCObj{CDNs, Parameters}, func() {
 		UpdateTestCDNs(t)
 		GetTestCDNs(t)
 	})

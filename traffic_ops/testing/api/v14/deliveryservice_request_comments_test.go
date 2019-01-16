@@ -22,7 +22,7 @@ import (
 )
 
 func TestDeliveryServiceRequestComments(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, DeliveryServiceRequests, DeliveryServiceRequestComments}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests, DeliveryServiceRequestComments}, func() {
 		UpdateTestDeliveryServiceRequestComments(t)
 		GetTestDeliveryServiceRequestComments(t)
 	})

@@ -23,7 +23,7 @@ import (
 )
 
 func TestUsers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Users}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Users}, func() {
 		UpdateTestUsers(t)
 		GetTestUsers(t)
 		GetTestUserCurrent(t)
@@ -36,11 +36,10 @@ func CreateTestUsers(t *testing.T) {
 	for _, user := range testData.Users {
 
 		resp, _, err := TOSession.CreateUser(&user)
-		log.Debugln("Response: ", resp.Alerts)
-
 		if err != nil {
-			t.Errorf("could not CREATE user: %v\n", err)
+			t.Fatalf("could not CREATE user: %v\n", err)
 		}
+		log.Debugln("Response: ", resp.Alerts)
 	}
 }
 

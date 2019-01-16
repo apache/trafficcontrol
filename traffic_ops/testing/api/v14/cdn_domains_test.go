@@ -30,7 +30,7 @@ func GetTestDomains(t *testing.T) {
 }
 
 func TestDomains(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Profiles, Statuses}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses}, func() {
 		GetTestDomains(t)
 	})
 }

@@ -24,7 +24,7 @@ import (
 )
 
 func TestStaticDNSEntries(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, StaticDNSEntries}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, StaticDNSEntries}, func() {
 		GetTestStaticDNSEntries(t)
 		UpdateTestStaticDNSEntries(t)
 		UpdateTestStaticDNSEntriesInvalidAddress(t)

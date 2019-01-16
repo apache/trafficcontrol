@@ -17,11 +17,9 @@ package client
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
-	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -131,34 +129,4 @@ func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
-}
-
-func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alerts, ReqInf, error) {
-	route := apiBase + `/deliveryservice_server/` + strconv.Itoa(dsID) + "/" + strconv.Itoa(serverID)
-	reqResp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
-	}
-	defer reqResp.Body.Close()
-	resp := tc.Alerts{}
-	if err = json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
-		return tc.Alerts{}, reqInf, errors.New("decoding response: " + err.Error())
-	}
-	return resp, reqInf, nil
-}
-
-func (to *Session) GetDeliveryServiceServers() (tc.DeliveryServiceServerResponse, ReqInf, error) {
-	route := apiBase + `/deliveryserviceserver`
-	reqResp, remoteAddr, err := to.request(http.MethodGet, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.DeliveryServiceServerResponse{}, reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
-	}
-	defer reqResp.Body.Close()
-	resp := tc.DeliveryServiceServerResponse{}
-	if err = json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
-		return tc.DeliveryServiceServerResponse{}, reqInf, errors.New("decoding response: " + err.Error())
-	}
-	return resp, reqInf, nil
 }

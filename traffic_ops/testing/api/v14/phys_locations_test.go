@@ -23,7 +23,7 @@ import (
 )
 
 func TestPhysLocations(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Divisions, Regions, PhysLocations}, func() {
+	WithObjs(t, []TCObj{CDNs, Parameters, Divisions, Regions, PhysLocations}, func() {
 		UpdateTestPhysLocations(t)
 		GetTestPhysLocations(t)
 	})

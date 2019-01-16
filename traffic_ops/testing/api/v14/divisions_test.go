@@ -23,7 +23,7 @@ import (
 )
 
 func TestDivisions(t *testing.T) {
-	WithObjs(t, []TCObj{Divisions}, func() {
+	WithObjs(t, []TCObj{Parameters, Divisions}, func() {
 		UpdateTestDivisions(t)
 		GetTestDivisions(t)
 	})
