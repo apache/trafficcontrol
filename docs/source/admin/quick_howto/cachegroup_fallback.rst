@@ -2,9 +2,9 @@
 ..
 .. _cachegroup-fallback-qht:
 
-******************************
+*******************************
 Configure Cache Group Fallbacks
-******************************
+*******************************
 
 .. seealso:: :ref:`tp-configure-cache-groups`
 
