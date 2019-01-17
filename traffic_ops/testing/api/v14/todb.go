@@ -79,6 +79,18 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
+	err = SetupJobAgents(db)
+	if err != nil {
+		fmt.Printf("\nError setting up job agents %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
+	err = SetupJobStatuses(db)
+	if err != nil {
+		fmt.Printf("\nError setting up job agents %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
 	return err
 }
 
