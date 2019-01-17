@@ -100,7 +100,8 @@ func wrapPanicRecover(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, stacktrace())
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, stacktrace()))
+				return
 			}
 		}()
 		h(w, r)
