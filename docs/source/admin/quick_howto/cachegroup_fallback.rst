@@ -13,7 +13,7 @@ Configure Cache Group Fallbacks
 	.. figure:: cachegroup_fallback/00.png
 		:width: 60%
 		:align: center
-		:alt: Screenshot of the Traffic Portal UI depicting the :term:`Cache Group`\ s page
+		:alt: Screenshot of the Traffic Portal UI depicting the Cache Groups page
 
 		Cache Groups Page
 
@@ -22,7 +22,7 @@ Configure Cache Group Fallbacks
 	.. figure:: cachegroup_fallback/01.png
 		:width: 60%
 		:align: center
-		:alt: Screenshot of the Traffic Portal UI depicting the :term:`Cache Group` details page
+		:alt: Screenshot of the Traffic Portal UI depicting the Cache Group details page
 
 		Cache Group Details Page
 
@@ -31,7 +31,7 @@ Configure Cache Group Fallbacks
 	.. figure:: cachegroup_fallback/02.png
 		:width: 60%
 		:align: center
-		:alt: Screenshot of the Traffic Portal UI depicting the Failover Cache Groups section of the :term:`Cache Group` details page
+		:alt: Screenshot of the Traffic Portal UI depicting the Failover Cache Groups section of the Cache Group details page
 
 		Failover Cache Groups Section of Cache Group Details Page
 
@@ -40,7 +40,7 @@ Configure Cache Group Fallbacks
 	.. figure:: cachegroup_fallback/03.png
 		:width: 60%
 		:align: center
-		:alt: Screenshot of the Traffic Portal UI depicting the Failover Cache Groups section of the :term:`Cache Group` details page
+		:alt: Screenshot of the Traffic Portal UI depicting the Failover Cache Groups section of the Cache Group details page
 
 		Add New Failover Cache Group Section of Cache Group Details Page
 
@@ -49,7 +49,7 @@ Configure Cache Group Fallbacks
 	.. figure:: cachegroup_fallback/04.png
 		:width: 60%
 		:align: center
-		:alt: Screenshot of the Traffic Portal UI depicting the Failover Cache Groups Drag and Drop of the :term:`Cache Group` details page
+		:alt: Screenshot of the Traffic Portal UI depicting the Failover Cache Groups Drag and Drop of the Cache Group details page
 
 		Failover Cache Groups Section Drag and Drop Functionality
 
@@ -58,7 +58,7 @@ Configure Cache Group Fallbacks
 	.. figure:: cachegroup_fallback/05.png
 		:width: 60%
 		:align: center
-		:alt: Screenshot of the Traffic Portal UI depicting the Failover Cache Groups Delete of the :term:`Cache Group` details page
+		:alt: Screenshot of the Traffic Portal UI depicting the Failover Cache Groups Delete of the Cache Group details page
 
 		Failover Cache Groups Delete
 
