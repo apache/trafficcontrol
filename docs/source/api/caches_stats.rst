@@ -37,7 +37,7 @@ No parameters available.
 
 Response Structure
 ------------------
-:cachegroup:  The name of the Cache Group to which this cache belongs
+:cachegroup:  The name of the :term:`Cache Group` to which this cache belongs
 :connections: Current number of TCP connections maintained by the cache
 :healthy:     ``true`` if Traffic Monitor has marked the cache as "healthy", ``false`` otherwise
 

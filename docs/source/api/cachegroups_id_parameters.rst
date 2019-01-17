@@ -18,7 +18,7 @@
 *********************************
 ``cachegroups/{{ID}}/parameters``
 *********************************
-Gets all the parameters associated with a Cache Group
+Gets all the parameters associated with a :term:`Cache Group`
 
 .. seealso:: :ref:`param-prof`
 
@@ -32,11 +32,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+--------------------------------------------------+
-	| Parameter | Description                                      |
-	+===========+==================================================+
-	| ID        | The integral, unique identifier of a Cache Group |
-	+-----------+--------------------------------------------------+
+	+-----------+----------------------------------------------------------+
+	| Parameter | Description                                              |
+	+===========+==========================================================+
+	| ID        | The integral, unique identifier of a :term:`Cache Group` |
+	+-----------+----------------------------------------------------------+
 
 
 Response Structure

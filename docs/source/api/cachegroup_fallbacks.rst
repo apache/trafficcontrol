@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieve fallback-related configurations for a Cache Group.
+Retrieve fallback-related configurations for a :term:`Cache Group`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+--------------+----------+---------------------------------------------------------------------------------------------------+
-	| Name         | Required | Description                                                                                       |
-	+==============+==========+===================================================================================================+
-	| cacheGroupId |yes\ [1]_ | The integral, unique identifier of a Cache Group whose fallback configurations shall be retrieved |
-	+--------------+----------+---------------------------------------------------------------------------------------------------+
-	| fallbackId   |yes\ [1]_ | The integral, unique identifier of a fallback Cache Group                                         |
-	+--------------+----------+---------------------------------------------------------------------------------------------------+
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
+	| Name         | Required | Description                                                                                               |
+	+==============+==========+===========================================================================================================+
+	| cacheGroupId |yes\ [1]_ | The integral, unique identifier of a :term:`Cache Group` whose fallback configurations shall be retrieved |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
+	| fallbackId   |yes\ [1]_ | The integral, unique identifier of a fallback :term:`Cache Group`                                         |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -50,11 +50,11 @@ Request Structure
 
 Response Structure
 ------------------
-:cacheGroupId:   The integral, unique identifier of the Cache Group described by this entry
-:cacheGroupName: The name of the Cache Group described by this entry
-:fallbackId:     The integral, unique identifier of the Cache Group on which the Cache Group described by this entry will fall back
-:fallbackName:   The name of the Cache Group on which the Cache Group described by this entry will fall back
-:fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the Cache Group described by this entry
+:cacheGroupId:   The integral, unique identifier of the :term:`Cache Group` described by this entry
+:cacheGroupName: The name of the :term:`Cache Group` described by this entry
+:fallbackId:     The integral, unique identifier of the :term:`Cache Group` on which the :term:`Cache Group` described by this entry will fall back
+:fallbackName:   The name of the :term:`Cache Group` on which the :term:`Cache Group` described by this entry will fall back
+:fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the :term:`Cache Group` described by this entry
 
 .. code-block:: http
 	:caption: Response Example
@@ -88,7 +88,7 @@ Response Structure
 
 ``POST``
 ========
-Creates fallback configuration for a Cache Group.
+Creates fallback configuration for a :term:`Cache Group`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -98,9 +98,9 @@ Request Structure
 -----------------
 The request payload for this endpoint **must** be an array, even if only one fallback relationship is being created.
 
-:cacheGroupId:  Integral, unique identifier of a Cache Group to which to assign a fallback
-:fallbackId:    Integral, unique identifier of a Cache Group on which the Cache Group identified by ``cacheGroupId`` will fall back
-:fallbackOrder: The order of this fallback for the Cache Group identified by ``cacheGroupId``
+:cacheGroupId:  Integral, unique identifier of a :term:`Cache Group` to which to assign a fallback
+:fallbackId:    Integral, unique identifier of a :term:`Cache Group` on which the :term:`Cache Group` identified by ``cacheGroupId`` will fall back
+:fallbackOrder: The order of this fallback for the :term:`Cache Group` identified by ``cacheGroupId``
 
 .. code-block:: http
 	:caption: Request Example
@@ -117,11 +117,11 @@ The request payload for this endpoint **must** be an array, even if only one fal
 
 Response Structure
 ------------------
-:cacheGroupId:   The integral, unique identifier of the Cache Group to which this fallback was assigned
-:cacheGroupName: The name of the Cache Group to which this fallback was assigned
-:fallbackId:     The integral, unique identifier of the Cache Group on which this entries Cache Group will fall back
-:fallbackName:   The name of the Cache Group on which this entries Cache Group will fall back
-:fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the Cache Group described by this entry
+:cacheGroupId:   The integral, unique identifier of the :term:`Cache Group` to which this fallback was assigned
+:cacheGroupName: The name of the :term:`Cache Group` to which this fallback was assigned
+:fallbackId:     The integral, unique identifier of the :term:`Cache Group` on which this entries :term:`Cache Group` will fall back
+:fallbackName:   The name of the :term:`Cache Group` on which this entries :term:`Cache Group` will fall back
+:fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the :term:`Cache Group` described by this entry
 
 
 .. code-block:: http
@@ -160,7 +160,7 @@ Response Structure
 
 ``PUT``
 =======
-Updates an existing fallback configuration for one or more Cache Groups.
+Updates an existing fallback configuration for one or more :term:`Cache Group`\ s.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -169,9 +169,9 @@ Updates an existing fallback configuration for one or more Cache Groups.
 Request Structure
 -----------------
 The request payload for this endpoint **must** be an array, even if only one fallback relationship is being updated.
-:cacheGroupId:  Integral, unique identifier of a Cache Group to which to assign a fallback
-:fallbackId:    Integral, unique identifier of a Cache Group on which the Cache Group identified by ``cacheGroupId`` will fall back
-:fallbackOrder: The order of this fallback for the Cache Group identified by ``cacheGroupId``
+:cacheGroupId:  Integral, unique identifier of a :term:`Cache Group` to which to assign a fallback
+:fallbackId:    Integral, unique identifier of a :term:`Cache Group` on which the :term:`Cache Group` identified by ``cacheGroupId`` will fall back
+:fallbackOrder: The order of this fallback for the :term:`Cache Group` identified by ``cacheGroupId``
 
 .. note:: The request data should be an array of these objects (and any number can be submitted per request), see the example
 
@@ -190,11 +190,11 @@ The request payload for this endpoint **must** be an array, even if only one fal
 
 Response Structure
 ------------------
-:cacheGroupId:   The integral, unique identifier of the Cache Group to which this fallback was assigned
-:cacheGroupName: The name of the Cache Group to which this fallback was assigned
-:fallbackId:     The integral, unique identifier of the Cache Group on which this entries Cache Group will fall back
-:fallbackName:   The name of the Cache Group on which this entries Cache Group will fall back
-:fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the Cache Group described by this entry
+:cacheGroupId:   The integral, unique identifier of the :term:`Cache Group` to which this fallback was assigned
+:cacheGroupName: The name of the :term:`Cache Group` to which this fallback was assigned
+:fallbackId:     The integral, unique identifier of the :term:`Cache Group` on which this entries :term:`Cache Group` will fall back
+:fallbackName:   The name of the :term:`Cache Group` on which this entries :term:`Cache Group` will fall back
+:fallbackOrder:  The order of the fallback described by "fallbackId" and "fallbackName" in the list of fallbacks for the :term:`Cache Group` described by this entry
 
 .. code-block:: http
 	:caption: Response Example
@@ -231,7 +231,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Delete fallback list assigned to a Cache Group
+Delete fallback list assigned to a :term:`Cache Group`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -241,13 +241,13 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+--------------+----------+---------------------------------------------------------------------------------------------------+
-	| Name         | Required | Description                                                                                       |
-	+==============+==========+===================================================================================================+
-	| cacheGroupId |yes\ [2]_ | The integral, unique identifier of a Cache Group whose fallback configurations shall be retrieved |
-	+--------------+----------+---------------------------------------------------------------------------------------------------+
-	| fallbackId   |yes\ [2]_ | The integral, unique identifier of a fallback Cache Group                                         |
-	+--------------+----------+---------------------------------------------------------------------------------------------------+
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
+	| Name         | Required | Description                                                                                               |
+	+==============+==========+===========================================================================================================+
+	| cacheGroupId |yes\ [2]_ | The integral, unique identifier of a :term:`Cache Group` whose fallback configurations shall be retrieved |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
+	| fallbackId   |yes\ [2]_ | The integral, unique identifier of a fallback :term:`Cache Group`                                         |
+	+--------------+----------+-----------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -283,4 +283,4 @@ Response Structure
 	}
 
 
-.. [2] At least one of "cacheGroupId" or "fallbackId" must be sent with the request. If both are sent, a single fallback relationship is deleted, whereas using only "cacheGroupId" will result in all fallbacks being removed from the Cache Group identified by that integral, unique identifier, and using only "fallbackId" will remove the Cache Group identified by *that* integral, unique identifier from all other Cache Groups' fallback lists.
+.. [2] At least one of "cacheGroupId" or "fallbackId" must be sent with the request. If both are sent, a single fallback relationship is deleted, whereas using only "cacheGroupId" will result in all fallbacks being removed from the :term:`Cache Group` identified by that integral, unique identifier, and using only "fallbackId" will remove the :term:`Cache Group` identified by *that* integral, unique identifier from all other :term:`Cache Group`\ s' fallback lists.

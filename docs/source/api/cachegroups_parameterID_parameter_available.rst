@@ -25,7 +25,7 @@
 
 ``GET``
 =======
-Gets a list of Cache Groups which are available to have a specific parameter assigned to them
+Gets a list of :term:`Cache Group`\ s which are available to have a specific parameter assigned to them
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -43,8 +43,8 @@ Request Structure
 
 Response Structure
 ------------------
-:id:   An integral, unique identifier for the Cache Group
-:name: The name of the Cache Group
+:id:   An integral, unique identifier for the :term:`Cache Group`
+:name: The name of the :term:`Cache Group`
 
 .. code-block:: json
 	:caption: Response Example

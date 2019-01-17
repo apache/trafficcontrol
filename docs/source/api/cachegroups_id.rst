@@ -18,7 +18,7 @@
 **********************
 ``cachegroups/{{ID}}``
 **********************
-Extracts information about a single Cache Group
+Extracts information about a single :term:`Cache Group`
 
 ``GET``
 =======
@@ -33,16 +33,16 @@ Request Structure
 	+--------------+---------------------------------------------------------------+
 	| Parameter    | Description                                                   |
 	+==============+===============================================================+
-	| ID           | The integral, unique identifier of a Cache Group              |
+	| ID           | The integral, unique identifier of a :term:`Cache Group`      |
 	+--------------+---------------------------------------------------------------+
 
 Response Structure
 ------------------
-:fallbackToClosest:   If ``true``, Traffic Router will direct clients to peers of this Cache Group in the event that it becomes unavailable
-:id:                  Integral, unique identifier for the Cache Group
-:lastUpdated:         The date and time at which this Cache Group was last updated, in an ISO-like format
-:latitude:            Latitude of the Cache Group
-:localizationMethods: An array of strings that name the localization methods enabled for this Cache Group. Each of the three available localization methods may be present, with the following meanings:
+:fallbackToClosest:   If ``true``, Traffic Router will direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable
+:id:                  Integral, unique identifier for the :term:`Cache Group`
+:lastUpdated:         The date and time at which this :term:`Cache Group` was last updated, in an ISO-like format
+:latitude:            Latitude of the :term:`Cache Group`
+:localizationMethods: An array of strings that name the localization methods enabled for this :term:`Cache Group`. Each of the three available localization methods may be present, with the following meanings:
 
 	CZ
 		Lookup in the Traffic Router's "Coverage Zone" file is enabled
@@ -51,15 +51,15 @@ Response Structure
 	GEO
 		Use of a geographical location-to-IP mapping database is enabled
 
-:longitude:                     Longitude of the Cache Group
-:name:                          The name of the Cache Group
-:parentCachegroupId:            Integral, unique identifier of the Cache Group that is this Cache Group's parent
-:parentCachegroupName:          The name of the Cache Group that is this Cache Group's parent
-:secondaryParentCachegroupId:   Integral, unique identifier of the Cache Group that is this Cache Group's secondary parent
-:secondaryParentCachegroupName: The name of the Cache Group that is this Cache Group's secondary parent
-:shortName:                     Abbreviation of the Cache Group Name
-:typeId:                        The integral, unique identifier for the 'Type' of Cache Group
-:typeName:                      The name of the type of this Cache Group
+:longitude:                     Longitude of the :term:`Cache Group`
+:name:                          The name of the :term:`Cache Group`
+:parentCachegroupId:            Integral, unique identifier of the :term:`Cache Group` that is this :term:`Cache Group`\ 's parent
+:parentCachegroupName:          The name of the :term:`Cache Group` that is this :term:`Cache Group`\ 's parent
+:secondaryParentCachegroupId:   Integral, unique identifier of the :term:`Cache Group` that is this :term:`Cache Group`\ 's secondary parent
+:secondaryParentCachegroupName: The name of the :term:`Cache Group` that is this :term:`Cache Group`\ 's secondary parent
+:shortName:                     Abbreviation of the :term:`Cache Group` Name
+:typeId:                        The integral, unique identifier for the 'Type' of :term:`Cache Group`
+:typeName:                      The name of the type of this :term:`Cache Group`
 
 .. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
@@ -103,7 +103,7 @@ Response Structure
 
 ``PUT``
 =======
-Update Cache Group
+Update :term:`Cache Group`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -116,15 +116,15 @@ Request Structure
 	+--------------+---------------------------------------------------------------+
 	| Parameter    | Description                                                   |
 	+==============+===============================================================+
-	| ID           | The integral, unique identifier of a Cache Group              |
+	| ID           | The integral, unique identifier of a :term:`Cache Group`      |
 	+--------------+---------------------------------------------------------------+
 
-:fallbackToClosest: An optional field which, if present and ``true``, will cause Traffic Router to direct clients to peers of this Cache Group in the event that it becomes unavailable
+:fallbackToClosest: An optional field which, if present and ``true``, will cause Traffic Router to direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable
 
 	.. note:: The default value of ``fallbackToClosest`` is ``true``, and if it is ``null`` or ``undefined`` Traffic Control components will still interpret it as ``true``.
 
-:latitude:            An optional field which, if specified, will set the latitude of the new Cache Group\ [1]_
-:localizationMethods: An optional array of strings that name the localization methods enabled for this Cache Group. Each of the three available localization methods may be present, with the following meanings:
+:latitude:            An optional field which, if specified, will set the latitude of the new :term:`Cache Group`\ [1]_
+:localizationMethods: An optional array of strings that name the localization methods enabled for this :term:`Cache Group`. Each of the three available localization methods may be present, with the following meanings:
 
 	CZ
 		Lookup in the Traffic Router's "Coverage Zone" file will be enabled
@@ -133,12 +133,12 @@ Request Structure
 	GEO
 		Use of a geographical location-to-IP mapping database will be enabled
 
-:longitude:                 An optional field which, if specified, will set the longitude of the new Cache Group\ [1]_
-:name:                      The desired name of the Cache Group entry
-:parentCachegroup:          An optional field which, if specified, should be the integral, unique identifier of Cache Group to use as the new Cache Group's parent
-:secondaryParentCachegroup: An optional field which, if specified, should be the integral, unique identifier of Cache Group to use as the new Cache Group's parent
-:shortName:                 A more human-friendly abbreviation of the Cache Group's name
-:typeId:                    The integral, unique identifier of the desired type of the new Cache Group - by default the valid options are: "EDGE_LOC", "MID_LOC" or "ORG_LOC"
+:longitude:                 An optional field which, if specified, will set the longitude of the new :term:`Cache Group`\ [1]_
+:name:                      The desired name of the :term:`Cache Group` entry
+:parentCachegroup:          An optional field which, if specified, should be the integral, unique identifier of :term:`Cache Group` to use as the new :term:`Cache Group`\ 's parent
+:secondaryParentCachegroup: An optional field which, if specified, should be the integral, unique identifier of :term:`Cache Group` to use as the new :term:`Cache Group`\ 's parent
+:shortName:                 A more human-friendly abbreviation of the :term:`Cache Group`\ 's name
+:typeId:                    The integral, unique identifier of the desired type of the new :term:`Cache Group` - by default the valid options are: "EDGE_LOC", "MID_LOC" or "ORG_LOC"
 
 	.. note:: Rather than the actual name of the type, be sure to use the "database ID" of the desired type. Typically this will require looking up the types via the API first, as the IDs of even these default types is not deterministic.
 
@@ -157,11 +157,11 @@ Request Structure
 
 Response Structure
 ------------------
-:fallbackToClosest:   If ``true``, Traffic Router will direct clients to peers of this Cache Group in the event that it becomes unavailable
-:id:                  Integral, unique identifier for the Cache Group
-:lastUpdated:         The date and time at which this Cache Group was last updated, in an ISO-like format
-:latitude:            Latitude of the Cache Group
-:localizationMethods: An array of strings that name the localization methods enabled for this Cache Group. Each of the three available localization methods may be present, with the following meanings:
+:fallbackToClosest:   If ``true``, Traffic Router will direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable
+:id:                  Integral, unique identifier for the :term:`Cache Group`
+:lastUpdated:         The date and time at which this :term:`Cache Group` was last updated, in an ISO-like format
+:latitude:            Latitude of the :term:`Cache Group`
+:localizationMethods: An array of strings that name the localization methods enabled for this :term:`Cache Group`. Each of the three available localization methods may be present, with the following meanings:
 
 	CZ
 		Lookup in the Traffic Router's "Coverage Zone" file is enabled
@@ -170,15 +170,15 @@ Response Structure
 	GEO
 		Use of a geographical location-to-IP mapping database is enabled
 
-:longitude:                     Longitude of the Cache Group
-:name:                          The name of the Cache Group
-:parentCachegroupId:            Integral, unique identifier of the Cache Group that is this Cache Group's parent
-:parentCachegroupName:          The name of the Cache Group that is this Cache Group's parent
-:secondaryParentCachegroupId:   Integral, unique identifier of the Cache Group that is this Cache Group's secondary parent
-:secondaryParentCachegroupName: The name of the Cache Group that is this Cache Group's secondary parent
-:shortName:                     Abbreviation of the Cache Group Name
-:typeId:                        The integral, unique identifier for the 'Type' of Cache Group
-:typeName:                      The name of the type of this Cache Group
+:longitude:                     Longitude of the :term:`Cache Group`
+:name:                          The name of the :term:`Cache Group`
+:parentCachegroupId:            Integral, unique identifier of the :term:`Cache Group` that is this :term:`Cache Group`\ 's parent
+:parentCachegroupName:          The name of the :term:`Cache Group` that is this :term:`Cache Group`\ 's parent
+:secondaryParentCachegroupId:   Integral, unique identifier of the :term:`Cache Group` that is this :term:`Cache Group`\ 's secondary parent
+:secondaryParentCachegroupName: The name of the :term:`Cache Group` that is this :term:`Cache Group`\ 's secondary parent
+:shortName:                     Abbreviation of the :term:`Cache Group` Name
+:typeId:                        The integral, unique identifier for the 'Type' of :term:`Cache Group`
+:typeName:                      The name of the type of this :term:`Cache Group`
 
 .. code-block:: http
 	:caption: Response Example
@@ -220,11 +220,11 @@ Response Structure
 		"lastUpdated": "2018-11-14 19:14:28+00"
 	}}
 
-.. [1] While these fields are technically optional, note that if they are not specified many things may break. For this reason, Traffic Portal requires them when creating or editing Cache Groups.
+.. [1] While these fields are technically optional, note that if they are not specified many things may break. For this reason, Traffic Portal requires them when creating or editing :term:`Cache Group`\ s.
 
 ``DELETE``
 ==========
-Delete Cache Group. Cache Groups which have assigned servers or child Cache Groups cannot be deleted.
+Delete :term:`Cache Group`. :term:`Cache Group`\ s which have assigned servers or child :term:`Cache Group`\ s cannot be deleted.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -234,11 +234,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+--------------+----------------------------------------------------------------+
-	| Parameter    | Description                                                    |
-	+==============+================================================================+
-	| ID           | The integral, unique identifier of a Cache Group to be deleted |
-	+--------------+----------------------------------------------------------------+
+	+--------------+------------------------------------------------------------------------+
+	| Parameter    | Description                                                            |
+	+==============+========================================================================+
+	| ID           | The integral, unique identifier of a :term:`Cache Group` to be deleted |
+	+--------------+------------------------------------------------------------------------+
 
 Response Structure
 ------------------

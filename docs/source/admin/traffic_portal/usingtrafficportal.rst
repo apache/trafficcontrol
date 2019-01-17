@@ -118,14 +118,14 @@ The cache checks page is intended to give an overview of the caches managed by T
 
 Cache Stats
 -----------
-A table showing the results of the periodic check extension scripts that are run. These can be grouped by Cache Group and/or Profile.
+A table showing the results of the periodic check extension scripts that are run. These can be grouped by :term:`Cache Group` and/or Profile.
 
 :Profile:     Name of the profile applied to the Edge-tier or Mid-tier cache server
-:Host:        'ALL' for entries grouped by cache group, or the hostname of a particular cache server
-:Cache Group: Name of the Cache Group to which this server belongs, or the name of the Cache Group that is grouped for entries grouped by Cache Group
+:Host:        'ALL' for entries grouped by :term:`Cache Group`, or the hostname of a particular cache server
+:Cache Group: Name of the :term:`Cache Group` to which this server belongs, or the name of the :term:`Cache Group` that is grouped for entries grouped by :term:`Cache Group`
 :Healthy:     True/False as determined by Traffic Monitor (See :ref:`health-proto`)
-:Status:      Status of the cache or Cache Group
-:Connections: Number of connections to this cache server or Cache Group
+:Status:      Status of the cache or :term:`Cache Group`
+:Connections: Number of connections to this cache server or :term:`Cache Group`
 :MbpsOut:     Data flow outward (toward client) in Megabits per second
 
 Services
@@ -261,7 +261,7 @@ A table of all servers (of all kinds) across all Delivery Services visible to th
 :Type: The type of server e.g. EDGE for an Edge-tier cache
 :Profile: The name of the server's profile
 :CDN: The name of the CDN to which this server is assigned (if any)
-:Cache Group: The name of the Cache Group to which this server belongs
+:Cache Group: The name of the :term:`Cache Group` to which this server belongs
 :ILO: If not empty, this is the IPv4 address of the server's Integrated Lights-Out (ILO) interface
 
 	.. seealso:: `Hewlett Packard ILO Wikipedia Page <https://en.wikipedia.org/wiki/HP_Integrated_Lights-Out>`_
@@ -327,7 +327,7 @@ Parameter management includes the ability to (where applicable):
 
 Types
 -----
-'Types' groups Delivery Services, servers and Cache Groups for various purposes. Each entry in the table shown on this page has the following fields:
+'Types' groups Delivery Services, servers and :term:`Cache Group`\ s for various purposes. Each entry in the table shown on this page has the following fields:
 
 :Name:         The name of the Type
 :Use In Table: States the use of this Type, e.g. ``server`` indicates this is a Type assigned to servers
@@ -340,7 +340,7 @@ Type management includes the ability to (where applicable):
 - delete an existing type
 - view delivery services assigned to a type
 - view servers assigned to a type
-- view cache groups assigned to a type
+- view :term:`Cache Group`\ s assigned to a type
 
 
 Statuses
@@ -371,24 +371,24 @@ Topology
 
 Cache Groups
 ------------
-'Cache Groups' are sets of cache servers, typically grouped by geographic proximity. This menu allows user to add or remove caches from Cache Groups as well as creating, updating and deleting Cache Groups themselves. Each entry in the table of Cache Groups on this page has the following fields:
+':term:`Cache Group`\ s' are sets of cache servers, typically grouped by geographic proximity. This menu allows user to add or remove caches from :term:`Cache Group`\ s as well as creating, updating and deleting :term:`Cache Group`\ s themselves. Each entry in the table of :term:`Cache Group`\ s on this page has the following fields:
 
-:Name:                  The full name of this Cache Group
-:Short Name:            A shorter, more human-friendly name for this Cache Group
+:Name:                  The full name of this :term:`Cache Group`
+:Short Name:            A shorter, more human-friendly name for this :term:`Cache Group`
 :Type:                  The Type of this Cache Group (see :ref:`tp-configure-types`)
-:Latitude:              A geographic latitude assigned to this Cache Group
-:Longitude:             A geographic longitude assigned to this Cache Group
-:Failover Cache Groups: A list of cache groups to fallback to in case of failure. Fallback to Geo Failover allows fallback geographically in case of failure.
+:Latitude:              A geographic latitude assigned to this :term:`Cache Group`
+:Longitude:             A geographic longitude assigned to this :term:`Cache Group`
+:Failover Cache Groups: A list of :term:`Cache Group`\ s to fallback to in case of failure. Fallback to Geo Failover allows fallback geographically in case of failure.
 
-Cache group management includes the ability to (where applicable):
+:term:`Cache Group` management includes the ability to (where applicable):
 
-- create a new cache group
-- update an existing cache group
-- delete an existing cache group
-- queue/clear updates for all servers in a cache group
-- view cache group ASNs
-- view and assign cache group parameters
-- view cache group servers
+- create a new :term:`Cache Group`
+- update an existing :term:`Cache Group`
+- delete an existing :term:`Cache Group`
+- queue/clear updates for all servers in a :term:`Cache Group`
+- view :term:`Cache Group` ASNs
+- view and assign :term:`Cache Group` parameters
+- view :term:`Cache Group` servers
 
 
 Coordinates
@@ -408,7 +408,7 @@ Coordination management includes the ability to (where applicable):
 
 Phys Locations
 --------------
-A table of physical locations which may be assigned to servers and Cache Groups, typically for the purpose of optimizing client routing. Here they can be created, updated deleted and assigned. Each entry has the following columns:
+A table of physical locations which may be assigned to servers and :term:`Cache Group`\ s, typically for the purpose of optimizing client routing. Here they can be created, updated deleted and assigned. Each entry has the following columns:
 
 :Name:       The full name of the physical location
 :Short Name: A shorter, more human-friendly name for this physical location
@@ -436,7 +436,7 @@ Division management includes the ability to (where applicable):
 
 Regions
 -------
-Regions are groups of Cache Groups, and are themselves grouped into Divisions. Each entry in the table on this page has the following fields:
+Regions are groups of :term:`Cache Group`\ s, and are themselves grouped into Divisions. Each entry in the table on this page has the following fields:
 
 :Name:     The name of this Region
 :Division: The Division to which this Region is assigned
@@ -454,7 +454,7 @@ ASNs
 Manage Autonomous System Numbers (ASNs). Each entry in the table on this page has the following fields:
 
 :ASN:         The actual ASN
-:Cache Group: The Cache Group to which this ASN is assigned
+:Cache Group: The :term:`Cache Group` to which this ASN is assigned
 
 ASN management includes the ability to (where applicable):
 

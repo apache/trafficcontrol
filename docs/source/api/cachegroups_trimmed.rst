@@ -18,7 +18,7 @@
 ***********************
 ``cachegroups/trimmed``
 ***********************
-Extract just the names of all Cache Groups.
+Extract just the names of all :term:`Cache Group`\ s.
 
 ``GET``
 =======
@@ -32,7 +32,7 @@ No parameters available
 
 Response Structure
 ------------------
-:name: The name of the Cache Group                    |
+:name: The name of the :term:`Cache Group`                    |
 
 .. code-block:: http
 	:caption: Response Example

@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Queue or dequeue updates for all servers assigned to a cache group limited to a specific CDN.
+Queue or dequeue updates for all servers assigned to a :term:`Cache Group` limited to a specific CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------------------------------------------+
-	| Name | Description                                                                                     |
-	+======+=================================================================================================+
-	| ID   | The integral, unique identifier for the Cache Group for which updates are being queued/dequeued |
-	+------+-------------------------------------------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                             |
+	+======+=========================================================================================================+
+	| ID   | The integral, unique identifier for the :term:`Cache Group` for which updates are being queued/dequeued |
+	+------+---------------------------------------------------------------------------------------------------------+
 
 :action: The action to perform; one of "queue" or "dequeue"
 :cdn:    The full name of the CDN in need of update queue/dequeue\ [1]_
@@ -59,10 +59,10 @@ Request Structure
 Response Structure
 ------------------
 :action:         The action processed, one of "queue" or "dequeue"
-:cachegroupId:   The integral, unique identifier of the Cache Group for which updates were queued/dequeued
-:cachegroupName: The name of the Cache Group for which updates were queued/dequeued
+:cachegroupId:   The integral, unique identifier of the :term:`Cache Group` for which updates were queued/dequeued
+:cachegroupName: The name of the :term:`Cache Group` for which updates were queued/dequeued
 :cdn:            The name of the CDN to which the queue/dequeue operation was restricted
-:serverNames:    An array of the (short) hostnames of the servers within the Cache Group which are also assigned to the CDN specified in the ``"cdn"`` field
+:serverNames:    An array of the (short) hostnames of the servers within the :term:`Cache Group` which are also assigned to the CDN specified in the ``"cdn"`` field
 
 .. code-block:: http
 	:caption: Response Example
