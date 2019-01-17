@@ -17,10 +17,10 @@ package v14
 
 import (
 	"strconv"
+	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"testing"
 )
 
 func TestDeliveryServices(t *testing.T) {
@@ -101,6 +101,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	updatedMaxDNSAnswers := 164598
 	remoteDS.LongDesc = updatedLongDesc
 	remoteDS.MaxDNSAnswers = updatedMaxDNSAnswers
+	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
 
 	if updateResp, err := TOSession.UpdateDeliveryService(strconv.Itoa(remoteDS.ID), &remoteDS); err != nil {
 		t.Errorf("cannot UPDATE DeliveryService by ID: %v - %v\n", err, updateResp)
