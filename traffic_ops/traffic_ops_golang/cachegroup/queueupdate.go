@@ -28,6 +28,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 func QueueUpdates(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +53,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if reqObj.CDN == nil || *reqObj.CDN == "" {
-		cdn, ok, err := getCDNNameFromID(inf.Tx.Tx, int64(*reqObj.CDNID))
+		cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*reqObj.CDNID))
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+strconv.Itoa(int(*reqObj.CDNID))+"': "+err.Error()))
 			return
@@ -96,17 +97,6 @@ type QueueUpdatesResp struct {
 	ServerNames    []tc.CacheName    `json:"serverNames"`
 	CDN            tc.CDNName        `json:"cdn"`
 	CacheGroupID   int64             `json:"cachegroupID"`
-}
-
-func getCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
-	name := ""
-	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = $1`, id).Scan(&name); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("querying CDN ID: " + err.Error())
-	}
-	return tc.CDNName(name), true, nil
 }
 
 func getCGNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
