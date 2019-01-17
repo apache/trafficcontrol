@@ -236,9 +236,6 @@ func (user *TOUser) Read() ([]interface{}, error, error, int) {
 }
 
 func (user *TOUser) privCheck() (error, error, int) {
-	// if user Role does not exist the database constraint should catch it
-	//	untested so far
-	//	what do the other dbhelper GETters do?
 	privLevel, _, err := dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx, *user.Role)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
