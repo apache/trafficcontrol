@@ -765,7 +765,7 @@ class TOSession(RestApiSession):
 	#
 	# CDN SSL Keys
 	#
-	@api_request(u'get', u'cdns/name/{cdn_name:s}/sslkeys', (u'1.2', u'1.3',))
+	@api_request(u'get', u'cdns/name/{cdn_name:s}/sslkeys', (u'1.2', u'1.3', u'1.4'))
 	def get_cdn_ssl_keys(self, cdn_name=None):
 		"""
 		Returns ssl certificates for all Delivery Services that are a part of the CDN.

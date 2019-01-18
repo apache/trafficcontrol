@@ -20,9 +20,14 @@ This module deals with the management of configuration files,
 presumably for a cache server
 """
 
-import os
 import logging
+import os
+import re
 import typing
+
+from base64 import b64decode
+
+from trafficops.restapi import OperationError, InvalidJSONError
 
 #: Holds a set of service names that need reloaded configs, mapped to a boolean which indicates
 #: whether (:const:`True`) or not (:const:`False`) a full restart is required.
@@ -30,6 +35,9 @@ RELOADS_REQUIRED = set()
 
 #: A constant that holds the absolute path to the backup directory for configuration files
 BACKUP_DIR = "/opt/ort/backups"
+
+#: a pre-compiled regular expression to use in parsing
+SSL_KEY_REGEX = re.compile(r'^\s*ssl_cert_name\=(.*)\s+ssl_key_name\=(.*)\s*$')
 
 class ConfigurationError(Exception):
 	"""
@@ -46,8 +54,9 @@ class ConfigFile():
 	location = "" #: An absolute path to the directory containing the file
 	URI = ""      #: A URI where the actual file contents can be found
 	contents = "" #: The full contents of the file - as configured in TO, not the on-disk contents
+	sanitizedContents = "" #: Will store the contents after sanitization
 
-	def __init__(self, raw:dict):
+	def __init__(self, raw:dict = None):
 		"""
 		Constructs a :class:`ConfigFile` object from a raw API response
 
@@ -60,21 +69,23 @@ class ConfigFile():
 		...             "scope": "servers"}))
 		ConfigFile(path='/path/to/test', URI='http://test', scope='servers')
 		"""
-		from .configuration import TO_HOST, TO_PORT, TO_USE_SSL
+		# TODO: pass these in as parameters? Configuration object?
+		from .configuration import TO_HOST, TO_PORT, TO_USE_SSL, TS_ROOT
 
-		try:
-			self.fname = raw["fnameOnDisk"]
-			self.location = raw["location"]
-			if "apiUri" in raw:
-				self.URI = "https://" if TO_USE_SSL else "http://"
-				self.URI = "%s%s:%d/%s" % (self.URI, TO_HOST, TO_PORT, raw["apiUri"].lstrip('/'))
-			else:
-				self.URI = raw["url"]
-			self.scope = raw["scope"]
-		except (KeyError, TypeError, IndexError) as e:
-			raise ValueError from e
+		if raw is not None:
+			try:
+				self.fname = raw["fnameOnDisk"]
+				self.location = raw["location"]
+				if "apiUri" in raw:
+					self.URI = "https://" if TO_USE_SSL else "http://"
+					self.URI = "%s%s:%d/%s" % (self.URI, TO_HOST, TO_PORT, raw["apiUri"].lstrip('/'))
+				else:
+					self.URI = raw["url"]
+				self.scope = raw["scope"]
+			except (KeyError, TypeError, IndexError) as e:
+				raise ValueError from e
 
-		self.path = os.path.join(self.location, self.fname)
+		self.SSLdir = os.path.join(TS_ROOT, "etc", "trafficserver", "ssl")
 
 	def __repr__(self) -> str:
 		"""
@@ -88,6 +99,15 @@ class ConfigFile():
 		"""
 		return "ConfigFile(path=%r, URI=%r, scope=%r)" %\
 		          (self.path, self.URI if self.URI else None, self.scope)
+
+	@property
+	def path(self) -> str:
+		"""
+		The full path to the file on disk
+
+		:returns: The system's path separator concatenating :attr:`location` and :attr`fname`
+		"""
+		return os.path.join(self.location, self.fname)
 
 	def fetchContents(self, api:'to_api.API'):
 		"""
@@ -139,23 +159,29 @@ class ConfigFile():
 		logging.info("Backup File written")
 
 
-	def update(self, api:'to_api.API'):
+	def update(self, api:'to_api.API', cdn:str):
 		"""
 		Updates the file if required, backing up as necessary
 
 		:param api: A valid, authenticated API session for use when interacting with Traffic Ops
+		:param cdn: The name of the CDN to which this server belongs (needed for SSL keys)
 		:raises OSError: when reading/writing files fails for some reason
 		"""
 		from . import utils
 		from .configuration import MODE, Modes, SERVER_INFO
 		from .services import NEEDED_RELOADS, FILES_THAT_REQUIRE_RELOADS
 
-		self.fetchContents(api)
-		finalContents = sanitizeContents(self.contents)
+		if not self.contents:
+			self.fetchContents(api)
+			finalContents = sanitizeContents(self.contents)
+		else:
+			finalContents = self.contents
+
 		# Ensure POSIX-compliant files
 		if not finalContents.endswith('\n'):
 			finalContents += '\n'
 		logging.info("Sanitized output: \n%s", finalContents)
+		self.sanitizedContents = finalContents
 
 		if not os.path.isdir(self.location):
 			if MODE is Modes.INTERACTIVE and\
@@ -202,6 +228,81 @@ class ConfigFile():
 				logging.info("File written to %s", self.path)
 			else:
 				logging.info("File doesn't differ from disk; nothing to do")
+
+		# Now we need to do some advanced processing to a couple specific filenames... unfortunately
+		if self.fname == "ssl_multicert.config":
+			self.advancedSSLProcessing(api, cdn)
+
+	def advancedSSLProcessing(self, api:'to_api.API', cdn:str):
+		"""
+		Does advanced processing on ssl_multicert.config files
+
+		:param api: A valid, authenticated API session for use when interacting with Traffic Ops
+		:param cdn: The name of the CDN to which this server belongs (needed for SSL keys)
+		:raises OSError: when reading/writing files fails for some reason
+		"""
+		global SSL_KEY_REGEX
+
+		logging.info("Doing advanced SSL key processing for CDN '%s'", cdn)
+
+		try:
+			r = api.get_cdn_ssl_keys(cdn_name=cdn)
+
+			if r[1].status_code != 200 and r[1].status_code != 204:
+				raise ValueError("Bad response code: %d - raw response: %s",
+				                               r[1].status_code,    r[1].text)
+		except (OperationError, InvalidJSONError, ValueError) as e:
+			logging.error("Invalid values encountered when communicating with Traffic Ops!")
+			logging.debug("%r", e, stack_info=True, exc_info=True)
+			raise ValueError from e
+
+		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
+
+		for l in self.sanitizedContents.splitlines()[1:]:
+			logging.debug("advanced processing for line: %s", l)
+			m = SSL_KEY_REGEX.search(l)
+
+			if m is None:
+				continue
+
+			full = m.group(2)
+			if full.endswith(".key"):
+				full = full[:-4]
+
+			wildcard = full.find('.')
+			if wildcard >= 0:
+				wildcard = '*'+full[wildcard:]
+			else:
+				# Not sure if this is a reasonable default - if there's no '.' in the key name,
+				# then there's probably something wrong...
+				wildcard = "*." + full
+
+			logging.debug("Searching for '%s' or '%s' matches", full, wildcard)
+
+			for cert in r[0]:
+				if cert.hostname == full or cert.hostname == wildcard:
+					key = type(self)()
+					key.location = self.SSLdir
+					key.fname = m.group(2)
+					key.contents = b64decode(cert.certificate.key).decode()
+
+					logging.info("Processing private SSL key %s ...", key.fname)
+					key.update(api, cdn)
+					logging.info("Done.")
+
+					crt = type(self)()
+					crt.location = self.SSLdir
+					crt.fname = m.group(1)
+					crt.contents = b64decode(cert.certificate.crt).decode()
+
+					logging.info("Processing SSL certificate %s ...", crt.fname)
+					crt.update(api, cdn)
+					logging.info("Done.")
+					break
+			else:
+				logging.critical("Failed to find SSL key in %s for '%s' or by wildcard '%s'!",
+				                                           cdn,    full,            wildcard)
+				raise ValueError("No cert/key pair for ssl_multicert.config line '%s'" % l)
 
 def filesDiffer(a:typing.List[str], b:typing.List[str]) -> bool:
 	"""

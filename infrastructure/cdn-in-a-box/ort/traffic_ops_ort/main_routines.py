@@ -272,7 +272,7 @@ def processConfigurationFiles(api:to_api.API) -> bool:
 		try:
 			file = config_files.ConfigFile(file)
 			logging.info("\n============ Processing File: %s ============", file.fname)
-			file.update(api)
+			file.update(api, configuration.SERVER_INFO.cdnName)
 			logging.info("\n============================================\n")
 
 		# A bad object could just reflect an inconsistent reply structure from the API, so BADASSes
@@ -283,11 +283,9 @@ def processConfigurationFiles(api:to_api.API) -> bool:
 			logging.debug("%s", e, exc_info=True, stack_info=True)
 			return False
 		except ValueError as e:
-			logging.error("%s does not appear to be a valid 'configfile' object!")
+			logging.error("%s does not appear to be a valid 'configfile' object, or has invalid contents!")
 			logging.debug("%s", e, exc_info=True, stack_info=True)
-			if configuration.MODE is not configuration.Modes.BADASS:
-				return False
-			logging.warning("Moving on because we're BADASS")
+			return False
 
 	return True
 

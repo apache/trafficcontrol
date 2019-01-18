@@ -23,7 +23,7 @@ exactly like that legacy script, with the ability to set system configuration
 files and start, stop, and restart HTTP cache servers etc.
 """
 
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 __author__  = "Brennan Fieck"
 
 import argparse

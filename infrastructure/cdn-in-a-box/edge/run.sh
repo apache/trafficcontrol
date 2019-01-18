@@ -55,13 +55,19 @@ found=
 while [[ -z $found ]]; do
     echo 'waiting for enroller setup'
     sleep 3
-    found=$(to-get api/1.3/cdns?name="$CDN" | jq -r '.response[].name')
+    found=$(to-get "api/1.3/cdns?name=$CDN" | jq -r '.response[].name')
 done
 
 to-enroll edge $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 while [[ -z "$(testenrolled)" ]]; do
 	echo "waiting on enrollment"
+	sleep 3
+done
+
+# Wait for SSL keys to exist
+until to-get "api/1.3/cdns/name/$CDN/sslkeys"; do
+	echo 'waiting for SSL keys to exist'
 	sleep 3
 done
 
@@ -76,7 +82,6 @@ crond -im off
 until grep -q demo1 /etc/trafficserver/remap.config; do
 	sleep 3
 done
-crontab -r
 
 touch /var/log/trafficserver/diags.log
 tail -Fn +1 /var/log/trafficserver/diags.log
