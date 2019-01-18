@@ -165,6 +165,7 @@ func generateStoreDNSSECKeys(
 	if !strings.HasSuffix(cdnDNSDomain, ".") {
 		cdnDNSDomain = cdnDNSDomain + "."
 	}
+	cdnDNSDomain = strings.ToLower(cdnDNSDomain)
 
 	inception := time.Now()
 	newCDNZSK, err := deliveryservice.GetDNSSECKeysV11(tc.DNSSECZSKType, cdnDNSDomain, ttl, inception, inception.Add(zExp), tc.DNSSECKeyStatusNew, time.Unix(effectiveDateUnix, 0), false)

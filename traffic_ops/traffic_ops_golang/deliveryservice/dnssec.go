@@ -177,6 +177,7 @@ func GetDSDomainName(dsExampleURLs []string) (string, error) {
 		return "", errors.New("malformed example URL, nothing after first dot")
 	}
 	dsName = dsName[firstDot+1:]
+	dsName = strings.ToLower(dsName)
 	return dsName, nil
 }
 
