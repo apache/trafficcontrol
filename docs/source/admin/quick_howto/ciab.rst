@@ -310,3 +310,16 @@ Dante's socks proxy is an optional container that can be used to provide browser
 #. Once the CDN-in-a-box stack has started, use the aforementioned browser to access traffic portal via the socks proxy on the docker host.
 
 .. seealso:: `The official Docker Compose documentation CLI reference <https://docs.docker.com/compose/reference/>`_ for complete instructions on how to pass service definition files to the ``docker-compose`` executable.
+
+Static Subnet
+-------------
+Since ``docker-compose`` will randomly create a subnet and it has a chance to conflict with your network environment, using static subnet is a good choice.
+
+.. code-block:: shell
+	:caption: CIAB Startup with Static Subnet
+
+	# From the infrastructure/cdn-in-a-box directory
+	alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.static-subnet.yml"
+	docker volume prune -f
+	mydc build
+	mydc up
