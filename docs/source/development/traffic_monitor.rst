@@ -18,7 +18,7 @@ Traffic Monitor
 ***************
 Introduction
 ============
-Traffic Monitor is an HTTP service application that monitors caches, provides health state information to Traffic Router, and collects statistics for use in tools such as Traffic Portal and Traffic Stats. The health state provided by Traffic Monitor is used by Traffic Router to control which caches are available on the CDN.
+Traffic Monitor is an HTTP(S) service application that monitors caches, provides health state information to Traffic Router, and collects statistics for use in tools such as Traffic Portal and Traffic Stats. The health state provided by Traffic Monitor is used by Traffic Router to control which caches are available on the CDN.
 
 Software Requirements
 =====================
@@ -48,15 +48,15 @@ Project Tree Overview
 
 * ``datareq/`` - HTTP routing, which has threadsafe health and stat objects populated by stat and health managers.
 * ``peer/`` - Manager for getting and populating peer data from other Traffic Monitors
-* ``srvhttp/`` - HTTP service. Given a map of endpoint functions, which are lambda closures containing aggregated data objects.
+* ``srvhttp/`` - HTTP(S) service. Given a map of endpoint functions, which are lambda closures containing aggregated data objects. If HTTPS, the HTTP service will redirect to HTTPS.
 * ``static/`` - Web interface files (markup, styling and scripting)
-* ``threadsafe/`` - Threadsafe objects for storing aggregated data needed by multiple goroutines (typically the aggregator and HTTP server)
+* ``threadsafe/`` - Threadsafe objects for storing aggregated data needed by multiple goroutines (typically the aggregator and HTTP(S) server)
 * ``trafficopsdata/`` - Struct for fetching and storing Traffic Ops data needed from the CRConfig. This is primarily mappings, such as delivery service servers, and server types.
 * ``trafficopswrapper/`` - Threadsafe wrapper around the Traffic Ops client. The client used to not be threadsafe, however, it mostly (possibly entirely) is now. But, the wrapper also serves to overwrite the Traffic Ops ``monitoring.json`` values, which are live, with snapshotted CRConfig values.
 
 Architecture
 ============
-At the highest level, Traffic Monitor polls caches, aggregates their data and availability, and serves it at HTTP endpoints in JSON format.
+At the highest level, Traffic Monitor polls caches, aggregates their data and availability, and serves it at HTTP(S) endpoints in JSON format.
 
 In the code, the data flows through microthread (goroutine) pipelines. All stages of the pipeline are independently running microthreads [#f1]_ . The pipelines are:
 
@@ -72,7 +72,7 @@ ops config
 	Polls for changes to the ops config file ``traffic_ops.cfg``, and sends updates to other pollers when the config file has changed.
 
 	* The ops config manager also updates the shared Traffic Ops client, since it's the actor which becomes notified of config changes requiring a new client.
-	* The ops config manager also manages, creates, and recreates the HTTP server, since ops config changes necessitate restarting the HTTP server.
+	* The ops config manager also manages, creates, and recreates the HTTP(S) server, since ops config changes necessitate restarting the HTTP(S) server.
 
 All microthreads in the pipeline are started by ``manager/manager.go:Start()``.
 
@@ -166,11 +166,11 @@ poller
 handler
 	``common/handler/handler.go:OpsConfigFileHandler.Listen()``. Takes the given raw configuration, un-marshals the JSON into an object, and writes the object to its channel, which is read by the Manager, along with any error.
 manager
-	``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for new configurations, and processes them. When a new configuration is received, a new HTTP dispatch map is created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``, and the HTTP server is restarted with the new dispatch map. The Traffic Ops client is also recreated, and stored in its shared data object. The Ops Configuration change subscribers and Traffic Ops Client change subscribers (the Monitor Configuration poller) are also passed the new ops configuration and new Traffic Ops client.
+	``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for new configurations, and processes them. When a new configuration is received, a new HTTP dispatch map is created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``, and the HTTP(S) server is restarted with the new dispatch map. The Traffic Ops client is also recreated, and stored in its shared data object. The Ops Configuration change subscribers and Traffic Ops Client change subscribers (the Monitor Configuration poller) are also passed the new ops configuration and new Traffic Ops client.
 
 Events
 ------
-The ``events`` shared data object is passed to each pipeline microthread which needs to signal events. Most of them do. Events are then logged, and visible in the UI as well as an HTTP JSON endpoint. Most events are caches becoming available or unavailable, but include other things such as peer availability changes.
+The ``events`` shared data object is passed to each pipeline microthread which needs to signal events. Most of them do. Events are then logged, and visible in the UI as well as an HTTP(S) JSON endpoint. Most events are caches becoming available or unavailable, but include other things such as peer availability changes.
 
 State Combiner
 --------------
@@ -186,7 +186,7 @@ Both the Stat and Health pipelines aggregate availability data received from cac
 
 HTTP Data Requests
 ------------------
-Data is provided to HTTP requests via the thread-safe shared data objects (see `Shared Data`_). These objects are closed in lambdas created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``. This is called by the Ops Configuration Manager when it recreates the HTTP server. Each HTTP endpoint is mapped to a function which closes around the shared data objects it needs, and takes the request data it needs (such as query parameters). Each endpoint function resides in its own file in ``traffic_monitor/datareq/``. Because each Go HTTP routing function must be a ``http.HandlerFunc``, wrapper functions take the endpoint functions and return ``http.HandlerFunc`` functions which call them, and which are stored in the dispatch map, to be registered with the HTTP server.
+Data is provided to HTTP requests via the thread-safe shared data objects (see `Shared Data`_). These objects are closed in lambdas created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``. This is called by the Ops Configuration Manager when it recreates the HTTP(S) server. Each HTTP(S) endpoint is mapped to a function which closes around the shared data objects it needs, and takes the request data it needs (such as query parameters). Each endpoint function resides in its own file in ``traffic_monitor/datareq/``. Because each Go HTTP routing function must be a ``http.HandlerFunc``, wrapper functions take the endpoint functions and return ``http.HandlerFunc`` functions which call them, and which are stored in the dispatch map, to be registered with the HTTP(S) server.
 
 Shared Data
 -----------

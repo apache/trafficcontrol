@@ -82,6 +82,7 @@ func StartOpsConfigManager(
 	}
 
 	httpServer := srvhttp.Server{}
+	httpsServer := srvhttp.Server{}
 	opsConfig := threadsafe.NewOpsConfig()
 
 	// TODO remove change subscribers, give Threadsafes directly to the things that need them. If they only set vars, and don't actually do work on change.
@@ -130,10 +131,26 @@ func StartOpsConfigManager(
 			unpolledCaches,
 			monitorConfig,
 		)
-		err = httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout, cfg.StaticFileDir)
-		if err != nil {
-			handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
-			return
+
+		// If the HTTPS Listener is defined in the traffic_ops.cfg file then it creates the HTTPS endpoint and the corresponding HTTP endpoint as a redirect
+		if newOpsConfig.HttpsListener != "" {
+			httpsListenAddress := newOpsConfig.HttpsListener
+			err = httpServer.RunHTTPSRedirect(listenAddress, httpsListenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout, cfg.StaticFileDir)
+			if err != nil {
+				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
+				return
+			}
+			err = httpsServer.Run(endpoints, httpsListenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout, cfg.StaticFileDir, true, newOpsConfig.CertFile, newOpsConfig.KeyFile)
+			if err != nil {
+				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTPS server: %s\n", err))
+				return
+			}
+		} else {
+			err = httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout, cfg.StaticFileDir, false, "", "")
+			if err != nil {
+				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
+				return
+			}
 		}
 
 		// TODO config? parameter?
