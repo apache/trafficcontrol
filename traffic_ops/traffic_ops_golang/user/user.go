@@ -286,11 +286,6 @@ func (user *TOUser) Update() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-// Delete is unimplemented, needed to satisfy CRUDer
-func (user *TOUser) Delete() (error, error, int) {
-	return nil, nil, http.StatusNotImplemented
-}
-
 func (u *TOUser) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 
 	// Delete: only id is given
