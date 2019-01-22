@@ -61,14 +61,17 @@ under the License.
                            moment-picker="dnssecKeysRequest.effectiveDate"
                            format="YYYY-MM-DD HH:mm:ss"
                            start-view="month"
-                           min-date="ctrl.minDateString"
+                           today="true"
                            name="effectiveDate"
-                           type="text" class="form-control"
+                           type="text"
                            ng-model="dnssecKeysRequest.effectiveDate"
                            ng-model-options="{ updateOn: 'blur' }"
+                           ng-pattern="/^[0-9\:\-\ ]+$/"
+                           change="ctrl.zeroSeconds()"
                            required
                            autofocus>
                     <small class="input-error" ng-show="hasPropertyError(cdnGenerateDnssecKeysForm.effectiveDate, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(cdnGenerateDnssecKeysForm.effectiveDate, 'pattern')">Invalid date format</small>
                     <span ng-show="hasError(cdnGenerateDnssecKeysForm.effectiveDate)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>

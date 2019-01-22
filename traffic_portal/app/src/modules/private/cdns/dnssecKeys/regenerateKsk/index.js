@@ -25,7 +25,7 @@ module.exports = angular.module('trafficPortal.private.cdns.dnssecKeys.regenerat
 				views: {
 					cdnDnssecKeysContent: {
 						templateUrl: 'common/modules/form/cdnDnssecKeys/regenerateKsk/form.RegenerateKsk.tpl.html',
-						controller: 'FormRegenerateKskController',
+						controller: 'FormRegenerateKskController as ctrl',
 						resolve: {
 							cdn: function($stateParams, cdnService) {
 								return cdnService.getCDN($stateParams.cdnId);

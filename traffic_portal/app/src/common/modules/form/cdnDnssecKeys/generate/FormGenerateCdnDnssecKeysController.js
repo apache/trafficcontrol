@@ -32,8 +32,11 @@ var FormGenerateCdnDnssecKeysController = function(cdn, dnssecKeysRequest, $scop
 	$scope.dnssecKeysRequest = dnssecKeysRequest;
 
 	var ctrl = this;
-	ctrl.minDateMoment = moment().subtract(1, 'day');
-	ctrl.minDateString = moment().subtract(1, 'day').format('YYYY-MM-DD HH:mm:ss');
+	ctrl.zeroSeconds = function () {
+		$scope.dnssecKeysRequest.effectiveDate = $scope.dnssecKeysRequest.effectiveDate.set({ 'seconds' : 0, });
+	};
+	$scope.dnssecKeysRequest.effectiveDate = moment().utc();
+	ctrl.zeroSeconds();
 
 	$scope.generateLabel = function() {
 		var label = 'Generate DNSSEC Keys';

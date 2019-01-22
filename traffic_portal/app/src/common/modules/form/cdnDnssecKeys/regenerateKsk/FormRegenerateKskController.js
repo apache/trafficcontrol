@@ -36,8 +36,11 @@ var FormRegenerateKskController = function(cdn, dnssecKeysRequest, $scope, $loca
 	};
 
 	var ctrl = this;
-	ctrl.minDateMoment = moment().subtract(1, 'day');
-	ctrl.minDateString = moment().subtract(1, 'day').format('YYYY-MM-DD HH:mm:ss');
+	ctrl.zeroSeconds = function () {
+		$scope.kskRequest.effectiveDate = $scope.kskRequest.effectiveDate.set({ 'seconds' : 0, });
+	};
+	$scope.kskRequest.effectiveDate = moment().utc();
+	ctrl.zeroSeconds();
 
 	$scope.generateLabel = function() {
 		var label = 'Regenerate KSK';

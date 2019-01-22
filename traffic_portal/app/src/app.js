@@ -415,6 +415,7 @@ var trafficPortal = angular.module('trafficPortal', [
 
             momentPickerProvider.options({
                 minutesStep: 1,
+                maxView: 'hour'
             });
 
             RestangularProvider.setBaseUrl(ENV.api['root']);
