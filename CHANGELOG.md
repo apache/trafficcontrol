@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - Warning:  a PUT of an old Cache Group JSON without the fallbackToClosest field will result in a `null` value for that field
 - Issue 2821: Fixed "Traffic Router may choose wrong certificate when SNI names overlap"
 - traffic_ops/app/bin/checks/ToDnssecRefresh.pl now requires "user" and "pass" parameters of an operations-level user! Update your scripts accordingly! This was necessary to move to an API endpoint with proper authentication, which may be safely exposed.
+- Traffic Monitor UI updated to support HTTP or HTTPS traffic.
 
 ## [3.0.0] - 2018-10-30
 ### Added
