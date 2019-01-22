@@ -31,12 +31,15 @@ const (
 )
 
 type OpsConfig struct {
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	Url          string `json:"url"`
-	Insecure     bool   `json:"insecure"`
-	CdnName      string `json:"cdnName"`
-	HttpListener string `json:"httpListener"`
+	Username      string `json:"username"`
+	Password      string `json:"password"`
+	Url           string `json:"url"`
+	Insecure      bool   `json:"insecure"`
+	CdnName       string `json:"cdnName"`
+	HttpListener  string `json:"httpListener"`
+	HttpsListener string `json:"httpsListener"`
+	CertFile      string `json:"certFile"`
+	KeyFile       string `json:"keyFile"`
 }
 
 type Handler interface {

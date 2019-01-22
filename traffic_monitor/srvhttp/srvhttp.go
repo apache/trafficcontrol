@@ -52,6 +52,7 @@ type CommonAPIData struct {
 type Server struct {
 	stoppableListener          *stoppableListener.StoppableListener
 	stoppableListenerWaitGroup sync.WaitGroup
+	addrToRedirect             string
 }
 
 func (s *Server) registerEndpoints(sm *http.ServeMux, endpoints map[string]http.HandlerFunc, staticFileDir string) error {
@@ -77,7 +78,7 @@ func (s *Server) registerEndpoints(sm *http.ServeMux, endpoints map[string]http.
 // Run runs a new HTTP service at the given addr, making data requests to the given c.
 // Run may be called repeatedly, and each time, will shut down any existing service first.
 // Run is NOT threadsafe, and MUST NOT be called concurrently by multiple goroutines.
-func (s *Server) Run(endpoints map[string]http.HandlerFunc, addr string, readTimeout time.Duration, writeTimeout time.Duration, staticFileDir string) error {
+func (s *Server) Run(endpoints map[string]http.HandlerFunc, addr string, readTimeout time.Duration, writeTimeout time.Duration, staticFileDir string, tls bool, certFile string, keyFile string) error {
 	if s.stoppableListener != nil {
 		log.Infof("Stopping Web Server\n")
 		s.stoppableListener.Stop()
@@ -111,6 +112,65 @@ func (s *Server) Run(endpoints map[string]http.HandlerFunc, addr string, readTim
 	s.stoppableListenerWaitGroup.Add(1)
 	go func() {
 		defer s.stoppableListenerWaitGroup.Done()
+		if tls {
+			err = server.ServeTLS(s.stoppableListener, certFile, keyFile)
+			if err != stoppableListener.StoppedError {
+				log.Warnf("HTTP server stopped with error: %v\n", err)
+			} else {
+				log.Infof("Web server stopped on %s", addr)
+			}
+		} else {
+			err := server.Serve(s.stoppableListener)
+			if err != nil {
+				if err != stoppableListener.StoppedError {
+					log.Warnf("HTTP server stopped with error: %v\n", err)
+				} else {
+					log.Infof("Web server stopped on %s", addr)
+				}
+			}
+		}
+	}()
+
+	log.Infof("Web server listening on %s", addr)
+	return nil
+}
+
+func (s *Server) RunHTTPSRedirect(addr string, addrForRedirect string, readTimeout time.Duration, writeTimeout time.Duration, staticFileDir string) error {
+	if s.stoppableListener != nil {
+		log.Infof("Stopping Web Server\n")
+		s.stoppableListener.Stop()
+		s.stoppableListenerWaitGroup.Wait()
+	}
+	log.Infof("Starting Web Server\n")
+
+	var err error
+	var originalListener net.Listener
+	if originalListener, err = net.Listen("tcp", addr); err != nil {
+		return err
+	}
+	if s.stoppableListener, err = stoppableListener.New(originalListener); err != nil {
+		return err
+	}
+
+	sm := http.NewServeMux()
+	if err != nil {
+		return err
+	}
+	server := &http.Server{
+		Addr:           addr,
+		Handler:        sm,
+		ReadTimeout:    readTimeout,
+		WriteTimeout:   writeTimeout,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	s.addrToRedirect = addrForRedirect
+
+	s.stoppableListenerWaitGroup = sync.WaitGroup{}
+	s.stoppableListenerWaitGroup.Add(1)
+	go func() {
+		defer s.stoppableListenerWaitGroup.Done()
+		server.Handler = http.HandlerFunc(s.redirectTLS)
 		err := server.Serve(s.stoppableListener)
 		if err != nil {
 			if err != stoppableListener.StoppedError {
@@ -123,6 +183,11 @@ func (s *Server) Run(endpoints map[string]http.HandlerFunc, addr string, readTim
 
 	log.Infof("Web server listening on %s", addr)
 	return nil
+}
+
+func (s *Server) redirectTLS(w http.ResponseWriter, r *http.Request) {
+	host, _, _ := net.SplitHostPort(r.Host)
+	http.Redirect(w, r, "https://"+host+s.addrToRedirect+r.RequestURI, http.StatusMovedPermanently)
 }
 
 // ParametersStr takes the URL query parameters, and returns a string as used by the Traffic Monitor 1.0 endpoints "pp" key.
