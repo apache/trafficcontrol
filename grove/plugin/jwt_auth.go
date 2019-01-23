@@ -87,8 +87,9 @@ func jwtAuth(icfg interface{}, d OnRequestData) bool {
 	if claims, ok := token.Claims.(*jwt.MapClaims); ok {
 		for _, claimName := range jwtConfig.ExportClaims {
 			if value := (*claims)[claimName]; value != nil {
-				// What if value is not string ?
-				d.R.Header.Set(fmt.Sprintf("X-Claim-%s", strcase.ToCamel(claimName)), value.(string))
+				if valueString, ok := value.(string); ok {
+					d.R.Header.Set(fmt.Sprintf("X-Claim-%s", strcase.ToCamel(claimName)), valueString)
+				}
 			}
 		}
 	}
@@ -149,9 +150,9 @@ func jwtLoad(b json.RawMessage) interface{} {
 	jwtConfig := JwtConfig{}
 	err := json.Unmarshal(b, &jwtConfig)
 	if err != nil {
-		log.Errorln("JWT loading config, unmarshalling JSON: " + err.Error())
+		log.Errorln("JWT config loading error: " + err.Error())
 		return nil
 	}
-	log.Debugf("JWT config load success")
+	log.Debugf("JWT config loaded")
 	return &jwtConfig
 }
