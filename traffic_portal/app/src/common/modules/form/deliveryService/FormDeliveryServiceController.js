@@ -247,6 +247,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         }
     };
 
+    $scope.encodeRegex = function(consistentHashRegex) {
+        $scope.encodedRegex = encodeURIComponent(consistentHashRegex);
+    };
+
     $scope.viewTargets = function() {
         $location.path($location.path() + '/targets');
     };

@@ -1,0 +1,59 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
+            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{deliveryService.xmlId}}</a></li>
+            <li class="active">Consistent Hash Regex</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="dsConsistentHashRegexForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(dsConsistentHashRegexForm.pattern), 'has-feedback': hasError(dsConsistentHashRegexForm.pattern)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Pattern *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="pattern" type="text" class="form-control" ng-model="pattern" ng-maxlength="48" ng-pattern="/^\S*$/" required autofocus>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(dsConsistentHashRegexForm.requestPath), 'has-feedback': hasError(dsConsistentHashRegexForm.requestPath)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Request Path *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="requestPath" type="text" class="form-control" ng-model="requestPath" ng-maxlength="48" ng-pattern="//*//" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(dsConsistentHashRegexForm.requestPath, 'pattern')">Path Must Start With '/'</small>
+                    <span ng-show="hasError(dsConsistentHashRegexForm.requestPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Resulting Path</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="resultingPath" type="text" ng-disabled="true" class="form-control" ng-model="resultingPath" autofocus>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" ng-disabled="pattern == null || requestPath == null" ng-click="test(pattern, requestPath)">Test</button>
+            </div>
+        </form>
+    </div>
+</div>
