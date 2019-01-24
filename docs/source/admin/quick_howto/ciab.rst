@@ -323,3 +323,47 @@ Since ``docker-compose`` will randomly create a subnet and it has a chance to co
 	docker volume prune -f
 	mydc build
 	mydc up
+
+VNC Server
+----------
+This container provide an OpenVPN service.
+It could let user or developer easily access CIAB network.
+
+How to use it
+"""""""""""""
+#. It is recommended that this be done using a custom bash alias.
+
+    .. code-block:: shell
+        :caption: CIAB Startup with VPN
+
+        # From infrastructure/cdn-in-a-box
+        alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.vpn.yml"
+        mydc down -v
+        mydc build
+        mydc up
+
+#. All certificates, keys, and client configuration are stored at ``infrastruture/cdn-in-a-box/optional/vpn/vpnca``. You just simply change ``REALHOSTIP`` and ``REALPORT`` of ``client.ovpn`` to fit your environment, and then you can connect to this OpenVPN server by it.
+
+Private Subnet for Routing
+""""""""""""""""""""""""""
+Since ``docker-compose`` randomly create subnet, this container prepares 2 default private subnet for routing:
+
+* 172.16.127.0/255.255.240.0
+* 10.16.127.0/255.255.240.0
+
+The strategy of choosing default private subnet is comparing the subnet prefix.
+If the subnet prefix which ``docker-compose`` selected is 192. or 10.,
+this container goes to select 172.16.127.0/255.255.240.0 for its routing subnet.
+Otherwise, it selects 10.16.127.0/255.255.240.0.
+
+Of course, you can decide which routing subnet subnet by supply environment
+variable ``PRIVATE_NETWORK`` and ``PRIVATE_NETMASK``.
+
+Pushed Settings
+"""""""""""""""
+Pushed settings are shown as follows:
+
+* DNS
+* A routing rule for CIAB subnet
+
+.. note:: It will not change your default gateway.
