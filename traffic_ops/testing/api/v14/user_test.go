@@ -17,7 +17,6 @@ package v14
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -79,7 +78,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 	}
 	jsonBytes, err = json.Marshal(resp)
 	if err != nil {
-		fmt.Printf("coult not marshal struct to bytes: %v\n", err)
+		t.Errorf("coult not marshal struct to bytes: %v\n", err)
 	}
 	if bytes.Contains(jsonBytes, []byte("rolename")) {
 		t.Errorf("incorrect json was returned for PUT")
@@ -91,7 +90,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 	}
 	jsonBytes, err = json.Marshal(resp2)
 	if err != nil {
-		fmt.Printf("coult not marshal struct to bytes: %v\n", err)
+		t.Errorf("coult not marshal struct to bytes: %v\n", err)
 	}
 	if bytes.Contains(jsonBytes, []byte("roleName")) {
 		t.Errorf("incorrect json was returned for GET")
