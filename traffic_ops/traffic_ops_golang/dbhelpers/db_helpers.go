@@ -117,7 +117,7 @@ func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantCol
 	return where, queryValues
 }
 
-// GetPrivLevelFromRoleID returns the profile's name, whether a profile with ID exists, or any error.
+// GetPrivLevelFromRoleID returns the priv_level associated with a role, whether it exists, and any error.
 // This method exists on a temporary basis. After priv_level is fully deprecated and capabilities take over,
 // this method will not only no longer be needed, but the corresponding new privilege check should be done
 // via the primary database query for the users endpoint. The users json response will contain a list of

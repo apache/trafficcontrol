@@ -136,6 +136,7 @@ func (user *TOUser) Create() (error, error, int) {
 		return err, nil, http.StatusBadRequest
 	}
 
+	// make sure the user cannot create someone with a higher priv_level than themselves
 	if usrErr, sysErr, code := user.privCheck(); code != http.StatusOK {
 		return usrErr, sysErr, code
 	}
@@ -224,7 +225,7 @@ func (user *TOUser) Read() ([]interface{}, error, error, int) {
 		// role is a required field for the endpoint, but not for an item in the database
 		// I doubt a nil check is needed, but I'm including it just in case
 		if user.RoleName == nil {
-			return nil, nil, fmt.Errorf("role name is nil", err), http.StatusInternalServerError
+			return nil, nil, fmt.Errorf("role name is nil"), http.StatusInternalServerError
 		}
 		user.RoleNameGET = user.RoleName
 		user.RoleName = nil
@@ -236,13 +237,12 @@ func (user *TOUser) Read() ([]interface{}, error, error, int) {
 }
 
 func (user *TOUser) privCheck() (error, error, int) {
-	privLevel, _, err := dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx, *user.Role)
+	requestedPrivLevel, _, err := dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx, *user.Role)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
 
-	// what is the original error?
-	if user.ReqInfo.User.PrivLevel < privLevel {
+	if user.ReqInfo.User.PrivLevel < requestedPrivLevel {
 		return fmt.Errorf("user cannot update a user with a role more privileged than themselves"), nil, http.StatusForbidden
 	}
 
@@ -251,13 +251,12 @@ func (user *TOUser) privCheck() (error, error, int) {
 
 func (user *TOUser) Update() (error, error, int) {
 
-	// user is updating themselves
-	if user.ReqInfo.User.ID == *user.ID {
-		if user.ReqInfo.User.Role != *user.Role {
-			return fmt.Errorf("users cannot update their own role"), nil, http.StatusBadRequest
-		}
+	// make sure current user cannot update their own role to a new value
+	if user.ReqInfo.User.ID == *user.ID && user.ReqInfo.User.Role != *user.Role {
+		return fmt.Errorf("users cannot update their own role"), nil, http.StatusBadRequest
 	}
 
+	// make sure the user cannot update someone with a higher priv_level than themselves
 	if usrErr, sysErr, code := user.privCheck(); code != http.StatusOK {
 		return usrErr, sysErr, code
 	}
