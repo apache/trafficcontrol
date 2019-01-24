@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/dgrijalva/jwt-go"
@@ -47,6 +48,9 @@ func init() {
 }
 
 func jwtAuth(icfg interface{}, d OnRequestData) bool {
+	if d.R.Method == http.MethodOptions {
+		return false
+	}
 	jwtContext := (*d.Context).(JwtContext)
 	jwtConfig := icfg.(*JwtConfig)
 	tokenOnRequest, err := request.OAuth2Extractor.ExtractToken(d.R)
