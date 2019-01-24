@@ -60,7 +60,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 	blob := []byte(`
 	{
 		"username": "test_user",
-		"email": "cooldude6@comcast.net",
+		"email": "cooldude6@example.com",
 		"fullName": "full name is required",
 		"localPasswd": "better_twelve",
 		"confirmLocalPasswd": "better_twelve",
@@ -80,7 +80,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 	if err != nil {
 		t.Errorf("coult not marshal struct to bytes: %v\n", err)
 	}
-	if bytes.Contains(jsonBytes, []byte("rolename")) {
+	if !bytes.Contains(jsonBytes, []byte("roleName")) {
 		t.Errorf("incorrect json was returned for PUT")
 	}
 
@@ -92,7 +92,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 	if err != nil {
 		t.Errorf("coult not marshal struct to bytes: %v\n", err)
 	}
-	if bytes.Contains(jsonBytes, []byte("roleName")) {
+	if !bytes.Contains(jsonBytes, []byte("rolename")) {
 		t.Errorf("incorrect json was returned for GET")
 	}
 
@@ -136,7 +136,7 @@ func UserSelfUpdateTest(t *testing.T) {
 	user := resp[0]
 
 	fullName := "Oops-man"
-	email := "operator@comcast.net"
+	email := "operator@example.com"
 	user.FullName = &fullName
 	user.Email = &email
 

@@ -21,6 +21,7 @@ package user
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -225,7 +226,7 @@ func (user *TOUser) Read() ([]interface{}, error, error, int) {
 		// role is a required field for the endpoint, but not for an item in the database
 		// I doubt a nil check is needed, but I'm including it just in case
 		if user.RoleName == nil {
-			return nil, nil, fmt.Errorf("role name is nil"), http.StatusInternalServerError
+			return nil, nil, errors.New("role name is nil"), http.StatusInternalServerError
 		}
 		user.RoleNameGET = user.RoleName
 		user.RoleName = nil
