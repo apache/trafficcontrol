@@ -142,8 +142,6 @@ func ReadHandler(obj Reader) http.HandlerFunc {
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-
-// Take an actual object here..
 func UpdateHandler(obj Updater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)

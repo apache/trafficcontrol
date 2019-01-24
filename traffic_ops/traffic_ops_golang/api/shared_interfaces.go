@@ -23,7 +23,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
-// not sure if this will be needed after I'm done
 type CRUDer interface {
 	Create() (error, error, int)
 	Read() ([]interface{}, error, error, int)
