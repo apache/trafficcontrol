@@ -164,12 +164,19 @@ func (cg TOCacheGroup) Validate() error {
 	}
 
 	if cg.Fallbacks != nil {
+		isValid, err := cg.isAllowedToFallback(*cg.TypeID)
+		if err != nil {
+			return err
+		}
+		if !isValid {
+			return errors.New("the cache group " + *cg.Name + " is not allowed to have fallbacks.  It must be of type EDGE_LOC.")
+		}
+
 		for _, fallback := range *cg.Fallbacks {
-			isValid, err := cg.isValidCacheGroupFallback(fallback)
+			isValid, err = cg.isValidCacheGroupFallback(fallback)
 			if err != nil {
 				return err
 			}
-
 			if !isValid {
 				return errors.New("the cache group " + fallback + " is not valid as a fallback.  It must exist as a cache group and be of type EDGE_LOC.")
 			}
@@ -296,6 +303,23 @@ AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
 	err := cg.ReqInfo.Tx.Tx.QueryRow(query, fallbackName).Scan(&isValid)
+	if err != nil {
+		log.Errorf("received error: %++v from cachegroup fallback validation query execution", err)
+		return false, err
+	}
+	return isValid, nil
+}
+
+func (cg *TOCacheGroup) isAllowedToFallback(cacheGroupType int) (bool, error) {
+	var isValid bool
+	query := `SELECT(
+SELECT type.name 
+FROM type 
+WHERE type.id = $1 
+AND (type.name = 'EDGE_LOC')
+) IS NOT NULL;`
+
+	err := cg.ReqInfo.Tx.Tx.QueryRow(query, cacheGroupType).Scan(&isValid)
 	if err != nil {
 		log.Errorf("received error: %++v from cachegroup fallback validation query execution", err)
 		return false, err
@@ -597,6 +621,12 @@ LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
 LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
+	return query
+}
+
+// select type name so checks are based on name instead of id
+func selectTypeNameQuery() string {
+	query := `SELECT name FROM type WHERE id = $1;`
 	return query
 }
 

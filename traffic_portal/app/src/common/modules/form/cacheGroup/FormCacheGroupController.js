@@ -145,6 +145,17 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
         $scope.fallbackSelected = '';
     };
 
+    $scope.updateForNewType = function() {
+        // removes Cache Group fallbacks if type has changed and is no longer EDGE_LOC
+        if (!$scope.isEdgeLoc(cacheGroup.typeId)) {
+            let currentFallbacksCount = cacheGroup.fallbacks.length;
+            for (var i = 0; i < currentFallbacksCount; i++) {
+                // removes fallbacks at position 0 since array is changing every loop
+                $scope.removeFallback(cacheGroup.fallbacks[0]);
+            }
+        }
+    };
+
     $scope.save = function(cacheGroup) {
         $scope.setLocalizationMethods(cacheGroup);
         cacheGroupService.createCacheGroup(cacheGroup);
