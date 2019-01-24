@@ -43,10 +43,7 @@ import (
 	"github.com/apache/trafficcontrol/grove/web"
 )
 
-// Duplicating Hdr and ModHdrs here for now...
-// Seems cleaner than dragging it up from some arbitrary place in plugins
-
-const Version = "0.1"
+const Version = "0.2"
 const UserAgent = "grove-tc-cfg/" + Version
 const TrafficOpsTimeout = time.Second * 90
 const DefaultCertificateDir = "/etc/grove/ssl"
@@ -55,6 +52,14 @@ const GroveConfigPath = "/etc/grove/" + GroveConfigFile
 const ConfigHistory = "cfg_history/"
 const RemapHistory = "remap_history/"
 const GroveProfileType = "GROVE_PROFILE"
+
+// Exit codes are defined in the documentation, DO NOT change to iota, to avoid ambiguity.
+const (
+	ExitSuccess                 = 0
+	ExitError                   = 1
+	ExitErrorReloadingService   = 2
+	ExitErrorClearingUpdateFlag = 3
+)
 
 func AvailableStatuses() map[string]struct{} {
 	return map[string]struct{}{
@@ -185,6 +190,7 @@ func main() {
 	// api := flag.String("api", "1.2", "API version. Determines whether to use /api/1.3/configs/ or older, less efficient 1.2 APIs")
 	toInsecure := flag.Bool("insecure", false, "Whether to allow invalid certificates with Traffic Ops")
 	certDir := flag.String("certdir", DefaultCertificateDir, "Directory to save certificates to")
+	noServiceReload := flag.Bool("no-service-reload", false, "Whether to avoid trying to reload the Grove service")
 	flag.Parse()
 
 	if host == nil || *host == "" {
@@ -192,7 +198,7 @@ func main() {
 		h, err := os.Hostname()
 		if err != nil {
 			fmt.Println(time.Now().Format(time.RFC3339Nano) + err.Error() + " and 'host' is required, use '-host'")
-			os.Exit(1)
+			os.Exit(ExitError)
 		}
 		sl := strings.Split(h, ".")
 		*host = sl[0]
@@ -202,7 +208,7 @@ func main() {
 	toc, _, err := to.LoginWithAgent(*toURL, *toUser, *toPass, *toInsecure, UserAgent, useCache, TrafficOpsTimeout)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error connecting to Traffic Ops: " + err.Error())
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 
 	revalPendingStatus := false
@@ -211,10 +217,10 @@ func main() {
 		needsUpdate, revalPendingStatus, err = hasUpdatePending(toc, *host)
 		if err != nil {
 			fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error checking Traffic Ops update pending: " + err.Error())
-			os.Exit(1)
+			os.Exit(ExitError)
 		}
 		if !needsUpdate {
-			os.Exit(0) // if no error and no update necessary, return success and print nothing
+			os.Exit(ExitSuccess) // if no error and no update necessary, return success and print nothing
 		}
 	}
 
@@ -229,27 +235,27 @@ func main() {
 	serversArr, err := toc.Servers()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Servers: " + err.Error())
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 	servers = makeServersHostnameMap(serversArr)
 
 	hostServer, ok = servers[*host]
 	if !ok {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error: host '" + *host + "' not in Servers\n")
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 
 	profilesArr, _, err := toc.GetProfiles()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Profiles: " + err.Error())
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 	profiles = makeProfileNameMap(profilesArr)
 
 	hostProfile, ok = profiles[hostServer.Profile]
 	if !ok {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error: profile '" + hostServer.Profile + "' not in Profiles\n")
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 	// end of API 1.2 stuff
 
@@ -257,7 +263,7 @@ func main() {
 		updateRequired, cfg, err := createGroveCfg(toc, hostServer)
 		if err != nil {
 			fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting config rules for '" + GroveConfigPath + "' :" + err.Error())
-			os.Exit(1)
+			os.Exit(ExitError)
 		}
 		if updateRequired {
 			cfgBytes := []byte{}
@@ -268,11 +274,11 @@ func main() {
 			}
 			if err != nil {
 				fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error creating JSON Remap Rules: " + err.Error())
-				os.Exit(1)
+				os.Exit(ExitError)
 			}
 			if err := WriteAndBackup(GroveConfigPath, ConfigHistory, cfgBytes); err != nil {
 				fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error writing new config file: " + err.Error())
-				os.Exit(1)
+				os.Exit(ExitError)
 			}
 		}
 	} else {
@@ -287,13 +293,13 @@ func main() {
 	// }
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error creating rules: " + err.Error())
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 
 	jsonRules, err := remap.RemapRulesToJSON(rules)
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error creating JSON Remap Rules: " + err.Error())
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 
 	bts := []byte{}
@@ -305,7 +311,7 @@ func main() {
 
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error marshalling rules JSON: " + err.Error())
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 
 	// TODO add app/option to print config to stdout
@@ -313,27 +319,29 @@ func main() {
 	remapPath, err := GetRemapPath()
 	if err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting remap config path: " + err.Error())
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 
 	if err := WriteAndBackup(remapPath, RemapHistory, bts); err != nil {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error writing new config file: " + err.Error())
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 
-	if err := exec.Command("service", "grove", "reload").Run(); err != nil {
-		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error restarting grove service (but successfully updated config file): " + err.Error())
-		os.Exit(2)
+	if !*noServiceReload {
+		if err := exec.Command("service", "grove", "reload").Run(); err != nil {
+			fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error restarting grove service (but successfully updated config file): " + err.Error())
+			os.Exit(ExitErrorReloadingService)
+		}
 	}
 
 	if !*ignoreUpdateFlag {
 		if err := clearUpdatePending(toc, *host, revalPendingStatus); err != nil {
 			fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error clearing update pending flag in Traffic Ops (but successfully updated config): " + err.Error())
-			os.Exit(3)
+			os.Exit(ExitErrorClearingUpdateFlag)
 		}
 	}
 
-	os.Exit(0)
+	os.Exit(ExitSuccess)
 }
 
 func createGroveCfg(toc *to.Session, server tc.Server) (bool, config.Config, error) {
