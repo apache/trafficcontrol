@@ -15,6 +15,9 @@ package v14
 */
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -27,6 +30,7 @@ import (
 func TestUsers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Users}, func() {
 		UpdateTestUsers(t)
+		RolenameCapitalizationTest(t)
 		OpsUpdateAdminTest(t)
 		UserSelfUpdateTest(t)
 		UserUpdateOwnRoleTest(t)
@@ -42,10 +46,57 @@ func CreateTestUsers(t *testing.T) {
 
 		resp, _, err := TOSession.CreateUser(&user)
 		if err != nil {
-			t.Fatalf("could not CREATE user: %v\n", err)
+			t.Errorf("could not CREATE user: %v\n", err)
 		}
 		log.Debugln("Response: ", resp.Alerts)
 	}
+}
+
+func RolenameCapitalizationTest(t *testing.T) {
+
+	var err error
+	var jsonBytes []byte
+
+	user := tc.User{}
+	blob := []byte(`
+	{
+		"username": "test_user",
+		"email": "cooldude6@comcast.net",
+		"fullName": "full name is required",
+		"localPasswd": "better_twelve",
+		"confirmLocalPasswd": "better_twelve",
+		"role": 1,
+		"tenantId": 1
+	}`)
+	err = json.Unmarshal(blob, &user)
+	if err != nil {
+		t.Errorf("could not unmarshal json into struct: %v\n", err)
+	}
+
+	resp, _, err := TOSession.CreateUser(&user)
+	if err != nil {
+		t.Errorf("could not CREATE user: %v\n", err)
+	}
+	jsonBytes, err = json.Marshal(resp)
+	if err != nil {
+		fmt.Printf("coult not marshal struct to bytes: %v\n", err)
+	}
+	if bytes.Contains(jsonBytes, []byte("rolename")) {
+		t.Errorf("incorrect json was returned for PUT")
+	}
+
+	resp2, _, err := TOSession.GetUserByUsername(*user.Username)
+	if err != nil {
+		t.Errorf("could not GET user: %v\n", err)
+	}
+	jsonBytes, err = json.Marshal(resp2)
+	if err != nil {
+		fmt.Printf("coult not marshal struct to bytes: %v\n", err)
+	}
+	if bytes.Contains(jsonBytes, []byte("roleName")) {
+		t.Errorf("incorrect json was returned for GET")
+	}
+
 }
 
 func OpsUpdateAdminTest(t *testing.T) {
