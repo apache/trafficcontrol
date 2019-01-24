@@ -28,6 +28,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	"github.com/jmoiron/sqlx"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -53,42 +55,46 @@ func getTestASNs() []tc.ASNNullable {
 }
 
 func TestGetASNs(t *testing.T) {
-	/*
-		mockDB, mock, err := sqlmock.New()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer mockDB.Close()
 
-		db := sqlx.NewDb(mockDB, "sqlmock")
-		defer db.Close()
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
 
-		testCase := getTestASNs()
-		cols := test.ColsFromStructByTag("db", tc.ASNNullable{})
-		rows := sqlmock.NewRows(cols)
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
 
-		for _, ts := range testCase {
-			rows = rows.AddRow(
-				*ts.ASN,
-				*ts.Cachegroup,
-				*ts.CachegroupID,
-				*ts.ID,
-				*ts.LastUpdated,
-			)
-		}
-		mock.ExpectBegin()
-		mock.ExpectQuery("SELECT").WillReturnRows(rows)
-		mock.ExpectCommit()
-		reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	testCase := getTestASNs()
+	cols := test.ColsFromStructByTag("db", tc.ASNNullable{})
+	rows := sqlmock.NewRows(cols)
 
-		asns, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
-		if userErr != nil || sysErr != nil {
-			t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
-		}
+	for _, ts := range testCase {
+		rows = rows.AddRow(
+			*ts.ASN,
+			*ts.Cachegroup,
+			*ts.CachegroupID,
+			*ts.ID,
+			*ts.LastUpdated,
+		)
+	}
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
-		if len(asns) != 2 {
-			t.Errorf("asn.Read expected: len(asns) == 2, actual: %v", len(asns))
-		}*/
+	obj := TOASNV11{
+		api.APIInformer{&reqInfo},
+		tc.ASNNullable{},
+	}
+	asns, userErr, sysErr, _ := obj.Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
+	}
+
+	if len(asns) != 2 {
+		t.Errorf("asn.Read expected: len(asns) == 2, actual: %v", len(asns))
+	}
 
 }
 
@@ -115,8 +121,10 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	i := -99
-	asn := TOASNV11{nil, tc.ASNNullable{ASN: &i, CachegroupID: &i}}
-
+	asn := TOASNV11{
+		api.APIInformer{nil},
+		tc.ASNNullable{ASN: &i, CachegroupID: &i},
+	}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(asn.Validate())))
 	expected := util.JoinErrsStr([]error{
 		errors.New(`'asn' must be no less than 0`),

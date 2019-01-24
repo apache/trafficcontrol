@@ -38,10 +38,10 @@ import (
 )
 
 type TORole struct {
-	tc.Role
 	api.APIInformer `json:"-"`
-	LastUpdated     *tc.TimeNoMod   `json:"-"`
-	PQCapabilities  *pq.StringArray `json:"-" db:"capabilities"`
+	tc.Role
+	LastUpdated    *tc.TimeNoMod   `json:"-"`
+	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`
 }
 
 func (v *TORole) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
