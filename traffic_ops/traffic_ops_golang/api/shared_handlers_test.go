@@ -36,16 +36,11 @@ import (
 )
 
 type tester struct {
-	ID      int
-	userErr error //only for testing
-	sysErr  error //only for testing
-	errCode int   //only for testing
-}
-
-func GetTypeSingleton() func(apiInfo *APIInfo) CRUDer {
-	return func(apiInfo *APIInfo) CRUDer {
-		return &tester{}
-	}
+	ID          int
+	APIInformer `json:"-"`
+	userErr     error //only for testing
+	sysErr      error //only for testing
+	errCode     int   //only for testing
 }
 
 var cfg = config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}
@@ -134,9 +129,8 @@ func TestCreateHandler(t *testing.T) {
 	// Add our context to the request
 	r = r.WithContext(ctx)
 
-	typeRef := tester{ID: 1}
-
-	createFunc := CreateHandler(GetTypeSingleton())
+	typeRef := &tester{ID: 1}
+	createFunc := CreateHandler(typeRef)
 
 	//verifies we get the right changelog insertion
 	expectedMessage := Created + " " + typeRef.GetType() + ": " + typeRef.GetAuditName() + " keys: { id:1 }"
@@ -179,8 +173,7 @@ func TestReadHandler(t *testing.T) {
 
 	// Add our context to the request
 	r = r.WithContext(ctx)
-
-	readFunc := ReadHandler(GetTypeSingleton())
+	readFunc := ReadHandler(&tester{})
 
 	mock.ExpectBegin()
 	mock.ExpectCommit()
@@ -221,8 +214,8 @@ func TestUpdateHandler(t *testing.T) {
 	// Add our context to the request
 	r = r.WithContext(ctx)
 
-	typeRef := tester{ID: 1}
-	updateFunc := UpdateHandler(GetTypeSingleton())
+	typeRef := &tester{ID: 1}
+	updateFunc := UpdateHandler(typeRef)
 
 	//verifies we get the right changelog insertion
 	expectedMessage := Updated + " " + typeRef.GetType() + ": " + typeRef.GetAuditName() + " keys: { id:1 }"
@@ -240,45 +233,45 @@ func TestUpdateHandler(t *testing.T) {
 }
 
 func TestDeleteHandler(t *testing.T) {
-	/*
-		mockDB, mock, err := sqlmock.New()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer mockDB.Close()
 
-		db := sqlx.NewDb(mockDB, "sqlmock")
-		defer db.Close()
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
 
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest("", "", strings.NewReader(`{"ID":1}`))
-		if err != nil {
-			t.Error("Error creating new request")
-		}
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
 
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, auth.CurrentUserKey,
-			auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
-		ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
-		ctx = context.WithValue(ctx, DBContextKey, db)
-		ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
-		ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
-		// Add our context to the request
-		r = r.WithContext(ctx)
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("", "", strings.NewReader(`{"ID":1}`))
+	if err != nil {
+		t.Error("Error creating new request")
+	}
 
-		typeRef := tester{ID: 1}
-		deleteFunc := DeleteHandler(GetTypeSingleton())
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, auth.CurrentUserKey,
+		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
+	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
+	ctx = context.WithValue(ctx, DBContextKey, db)
+	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
+	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
+	// Add our context to the request
+	r = r.WithContext(ctx)
 
-		//verifies we get the right changelog insertion
-		expectedMessage := Deleted + " " + typeRef.GetType() + ": " + typeRef.GetAuditName() + " keys: { id:1 }"
-		mock.ExpectBegin()
-		mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
-		mock.ExpectCommit()
-		deleteFunc(w, r)
+	typeRef := &tester{ID: 1}
+	deleteFunc := DeleteHandler(typeRef)
 
-		//verifies the body is in the expected format
-		body := `{"alerts":[{"text":"tester was deleted.","level":"success"}]}`
-		if w.Body.String() != body {
-			t.Error("Expected body", body, "got", w.Body.String())
-		}*/
+	//verifies we get the right changelog insertion
+	expectedMessage := Deleted + " " + typeRef.GetType() + ": " + typeRef.GetAuditName() + " keys: { id:1 }"
+	mock.ExpectBegin()
+	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+	deleteFunc(w, r)
+
+	//verifies the body is in the expected format
+	body := `{"alerts":[{"text":"tester was deleted.","level":"success"}]}`
+	if w.Body.String() != body {
+		t.Error("Expected body", body, "got", w.Body.String())
+	}
 }

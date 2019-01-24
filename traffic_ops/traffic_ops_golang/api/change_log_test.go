@@ -30,14 +30,20 @@ import (
 )
 
 type testIdentifier struct {
+	ID int
 }
 
 func (i testIdentifier) GetKeyFieldsInfo() []KeyFieldInfo {
 	return []KeyFieldInfo{{"id", GetIntKey}}
 }
 
+func (i *testIdentifier) SetKeys(keys map[string]interface{}) {
+	id, _ := keys["id"].(int)
+	i.ID = id
+}
+
 func (i *testIdentifier) GetKeys() (map[string]interface{}, bool) {
-	return map[string]interface{}{"id": 1}, true
+	return map[string]interface{}{"id": i.ID}, true
 }
 
 func (i *testIdentifier) GetType() string {

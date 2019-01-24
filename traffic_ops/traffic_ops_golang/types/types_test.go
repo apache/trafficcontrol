@@ -29,6 +29,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	"github.com/jmoiron/sqlx"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func getTestTypes() []tc.TypeNullable {
@@ -56,43 +58,47 @@ func getTestTypes() []tc.TypeNullable {
 }
 
 func TestGetType(t *testing.T) {
-	/*
-		Will need to look how to remove this one differently
-		mockDB, mock, err := sqlmock.New()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer mockDB.Close()
 
-		db := sqlx.NewDb(mockDB, "sqlmock")
-		defer db.Close()
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
 
-		testCase := getTestTypes()
-		cols := test.ColsFromStructByTag("db", tc.TypeNullable{})
-		rows := sqlmock.NewRows(cols)
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
 
-		for _, ts := range testCase {
-			rows = rows.AddRow(
-				ts.ID,
-				ts.LastUpdated,
-				ts.Name,
-				ts.Description,
-				ts.UseInTable,
-			)
-		}
-		mock.ExpectBegin()
-		mock.ExpectQuery("SELECT").WillReturnRows(rows)
-		mock.ExpectCommit()
+	testCase := getTestTypes()
+	cols := test.ColsFromStructByTag("db", tc.TypeNullable{})
+	rows := sqlmock.NewRows(cols)
 
-		reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
-		types, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
-		if userErr != nil || sysErr != nil {
-			t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
-		}
+	for _, ts := range testCase {
+		rows = rows.AddRow(
+			ts.ID,
+			ts.LastUpdated,
+			ts.Name,
+			ts.Description,
+			ts.UseInTable,
+		)
+	}
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
 
-		if len(types) != 2 {
-			t.Errorf("type.Read expected: len(types) == 2, actual: %v", len(types))
-		}*/
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+
+	obj := TOType{
+		api.APIInformer{&reqInfo},
+		tc.TypeNullable{},
+	}
+	types, userErr, sysErr, _ := obj.Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
+	}
+
+	if len(types) != 2 {
+		t.Errorf("type.Read expected: len(types) == 2, actual: %v", len(types))
+	}
 
 }
 

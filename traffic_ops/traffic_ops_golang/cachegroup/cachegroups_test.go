@@ -211,17 +211,20 @@ func TestValidate(t *testing.T) {
 	ty := "EDGE_LOC"
 	ti := 6
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c := TOCacheGroup{ReqInfo: &reqInfo, CacheGroupNullable: tc.CacheGroupNullable{
-		ID:                  &id,
-		Name:                &nm,
-		ShortName:           &sn,
-		Latitude:            &la,
-		Longitude:           &lo,
-		LocalizationMethods: &lm,
-		Type:                &ty,
-		TypeID:              &ti,
-		LastUpdated:         &lu,
-	}}
+	c := TOCacheGroup{
+		api.APIInformer{&reqInfo},
+		tc.CacheGroupNullable{
+			ID:                  &id,
+			Name:                &nm,
+			ShortName:           &sn,
+			Latitude:            &la,
+			Longitude:           &lo,
+			LocalizationMethods: &lm,
+			Type:                &ty,
+			TypeID:              &ti,
+			LastUpdated:         &lu,
+		},
+	}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
 
 	expectedErrs := util.JoinErrsStr([]error{
@@ -245,17 +248,20 @@ func TestValidate(t *testing.T) {
 	la = 90.0
 	lo = 90.0
 	lm = []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ}
-	c = TOCacheGroup{ReqInfo: &reqInfo, CacheGroupNullable: tc.CacheGroupNullable{
-		ID:                  &id,
-		Name:                &nm,
-		ShortName:           &sn,
-		Latitude:            &la,
-		Longitude:           &lo,
-		LocalizationMethods: &lm,
-		Type:                &ty,
-		TypeID:              &ti,
-		LastUpdated:         &lu,
-	}}
+	c = TOCacheGroup{
+		api.APIInformer{&reqInfo},
+		tc.CacheGroupNullable{
+			ID:                  &id,
+			Name:                &nm,
+			ShortName:           &sn,
+			Latitude:            &la,
+			Longitude:           &lo,
+			LocalizationMethods: &lm,
+			Type:                &ty,
+			TypeID:              &ti,
+			LastUpdated:         &lu,
+		},
+	}
 	err = c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)

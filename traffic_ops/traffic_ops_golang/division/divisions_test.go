@@ -27,6 +27,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	"github.com/jmoiron/sqlx"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func getTestDivisions() []tc.Division {
@@ -46,39 +48,43 @@ func getTestDivisions() []tc.Division {
 }
 
 func TestGetDivisions(t *testing.T) {
-	/*
-		mockDB, mock, err := sqlmock.New()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer mockDB.Close()
 
-		db := sqlx.NewDb(mockDB, "sqlmock")
-		defer db.Close()
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
 
-		testCase := getTestDivisions()
-		cols := test.ColsFromStructByTag("db", tc.Division{})
-		rows := sqlmock.NewRows(cols)
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
 
-		for _, ts := range testCase {
-			rows = rows.AddRow(
-				ts.ID,
-				ts.LastUpdated,
-				ts.Name,
-			)
-		}
-		mock.ExpectBegin()
-		mock.ExpectQuery("SELECT").WillReturnRows(rows)
-		mock.ExpectCommit()
+	testCase := getTestDivisions()
+	cols := test.ColsFromStructByTag("db", tc.Division{})
+	rows := sqlmock.NewRows(cols)
 
-		reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
-		vals, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
-		if userErr != nil || sysErr != nil {
-			t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
-		}
-		if len(vals) != 2 {
-			t.Errorf("read expected: len(vals) == 1, actual: %v", len(vals))
-		}*/
+	for _, ts := range testCase {
+		rows = rows.AddRow(
+			ts.ID,
+			ts.LastUpdated,
+			ts.Name,
+		)
+	}
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	obj := TODivision{
+		api.APIInformer{&reqInfo},
+		tc.DivisionNullable{},
+	}
+	vals, userErr, sysErr, _ := obj.Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
+	}
+	if len(vals) != 2 {
+		t.Errorf("read expected: len(vals) == 1, actual: %v", len(vals))
+	}
 
 }
 

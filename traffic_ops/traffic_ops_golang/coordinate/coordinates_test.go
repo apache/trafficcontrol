@@ -30,6 +30,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	"github.com/jmoiron/sqlx"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func getTestCoordinates() []tc.Coordinate {
@@ -56,41 +58,45 @@ func getTestCoordinates() []tc.Coordinate {
 }
 
 func TestReadCoordinates(t *testing.T) {
-	/*
-		mockDB, mock, err := sqlmock.New()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer mockDB.Close()
 
-		db := sqlx.NewDb(mockDB, "sqlmock")
-		defer db.Close()
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
 
-		testCoords := getTestCoordinates()
-		cols := test.ColsFromStructByTag("db", tc.Coordinate{})
-		rows := sqlmock.NewRows(cols)
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
 
-		for _, ts := range testCoords {
-			rows = rows.AddRow(
-				ts.ID,
-				ts.Name,
-				ts.Latitude,
-				ts.Longitude,
-				ts.LastUpdated,
-			)
-		}
-		mock.ExpectBegin()
-		mock.ExpectQuery("SELECT").WillReturnRows(rows)
-		mock.ExpectCommit()
+	testCoords := getTestCoordinates()
+	cols := test.ColsFromStructByTag("db", tc.Coordinate{})
+	rows := sqlmock.NewRows(cols)
 
-		reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
-		coordinates, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
-		if userErr != nil || sysErr != nil {
-			t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
-		}
-		if len(coordinates) != 2 {
-			t.Errorf("coordinate.Read expected: len(coordinates) == 2, actual: %v", len(coordinates))
-		}*/
+	for _, ts := range testCoords {
+		rows = rows.AddRow(
+			ts.ID,
+			ts.Name,
+			ts.Latitude,
+			ts.Longitude,
+			ts.LastUpdated,
+		)
+	}
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
+	obj := TOCoordinate{
+		api.APIInformer{&reqInfo},
+		tc.CoordinateNullable{},
+	}
+	coordinates, userErr, sysErr, _ := obj.Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
+	}
+	if len(coordinates) != 2 {
+		t.Errorf("coordinate.Read expected: len(coordinates) == 2, actual: %v", len(coordinates))
+	}
 }
 
 func TestFuncs(t *testing.T) {
