@@ -36,7 +36,7 @@ import (
 )
 
 type TODeliveryServiceV12 struct {
-	api.APIInformer
+	api.APIInfoImpl
 	tc.DeliveryServiceNullableV12
 }
 

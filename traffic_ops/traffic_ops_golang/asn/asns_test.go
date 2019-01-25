@@ -84,7 +84,7 @@ func TestGetASNs(t *testing.T) {
 	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
 	obj := TOASNV11{
-		api.APIInformer{&reqInfo},
+		api.APIInfoImpl{&reqInfo},
 		tc.ASNNullable{},
 	}
 	asns, userErr, sysErr, _ := obj.Read()
@@ -122,7 +122,7 @@ func TestInterfaces(t *testing.T) {
 func TestValidate(t *testing.T) {
 	i := -99
 	asn := TOASNV11{
-		api.APIInformer{nil},
+		api.APIInfoImpl{nil},
 		tc.ASNNullable{ASN: &i, CachegroupID: &i},
 	}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(asn.Validate())))

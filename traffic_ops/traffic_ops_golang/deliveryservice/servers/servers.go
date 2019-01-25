@@ -44,7 +44,7 @@ import (
 
 // TODeliveryServiceRequest provides a type alias to define functions on
 type TODeliveryServiceServer struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.DeliveryServiceServer
 	TenantIDs pq.Int64Array `json:"-" db:"accessibleTenants"`
 }
@@ -492,7 +492,7 @@ func dssSelectQuery() string {
 }
 
 type TODSSDeliveryService struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.DeliveryServiceNullable
 }
 

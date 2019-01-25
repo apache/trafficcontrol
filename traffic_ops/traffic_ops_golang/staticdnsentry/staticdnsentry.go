@@ -32,7 +32,7 @@ import (
 )
 
 type TOStaticDNSEntry struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.StaticDNSEntryNullable
 }
 

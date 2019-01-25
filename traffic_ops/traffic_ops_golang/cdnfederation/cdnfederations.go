@@ -38,7 +38,7 @@ import (
 
 // we need a type alias to define functions on
 type TOCDNFederation struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.CDNFederation
 	TenantID *int `json:"-" db:"tenant_id"`
 }

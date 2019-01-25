@@ -34,7 +34,7 @@ import (
 
 //we need a type alias to define functions on
 type TODivision struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.DivisionNullable
 }
 

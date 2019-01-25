@@ -29,16 +29,16 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-// APIInformer implements APIInfo via the APIInfoer interface
-type APIInformer struct {
+// APIInfoImpl implements APIInfo via the APIInfoer interface
+type APIInfoImpl struct {
 	ReqInfo *APIInfo
 }
 
-func (val *APIInformer) SetInfo(inf *APIInfo) {
+func (val *APIInfoImpl) SetInfo(inf *APIInfo) {
 	val.ReqInfo = inf
 }
 
-func (val APIInformer) APIInfo() *APIInfo {
+func (val APIInfoImpl) APIInfo() *APIInfo {
 	return val.ReqInfo
 }
 

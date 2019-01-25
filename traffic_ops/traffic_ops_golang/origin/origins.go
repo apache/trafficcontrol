@@ -42,7 +42,7 @@ import (
 
 //we need a type alias to define functions on
 type TOOrigin struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.Origin
 }
 

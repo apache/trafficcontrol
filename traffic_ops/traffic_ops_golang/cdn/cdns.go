@@ -35,7 +35,7 @@ import (
 
 //we need a type alias to define functions on
 type TOCDN struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.CDNNullable
 }
 

@@ -33,7 +33,7 @@ import (
 
 //we need a type alias to define functions on
 type TOStatus struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.StatusNullable
 }
 

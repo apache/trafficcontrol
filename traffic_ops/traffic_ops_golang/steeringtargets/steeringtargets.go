@@ -36,7 +36,7 @@ import (
 )
 
 type TOSteeringTargetV11 struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.SteeringTargetNullable
 	DSTenantID  *int          `json:"-" db:"tenant"`
 	LastUpdated *tc.TimeNoMod `json:"-" db:"last_updated"`

@@ -33,7 +33,7 @@ import (
 
 //we need a type alias to define functions on
 type TOPhysLocation struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.PhysLocationNullable
 }
 

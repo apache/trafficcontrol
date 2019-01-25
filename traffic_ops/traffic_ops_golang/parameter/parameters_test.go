@@ -100,7 +100,7 @@ func TestGetParameters(t *testing.T) {
 		Params: map[string]string{"name": "1"},
 	}
 	obj := TOParameter{
-		api.APIInformer{&reqInfo},
+		api.APIInfoImpl{&reqInfo},
 		tc.ParameterNullable{},
 	}
 	pps, userErr, sysErr, _ := obj.Read()

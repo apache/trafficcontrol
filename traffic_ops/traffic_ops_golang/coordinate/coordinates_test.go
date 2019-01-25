@@ -87,7 +87,7 @@ func TestReadCoordinates(t *testing.T) {
 
 	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
 	obj := TOCoordinate{
-		api.APIInformer{&reqInfo},
+		api.APIInfoImpl{&reqInfo},
 		tc.CoordinateNullable{},
 	}
 	coordinates, userErr, sysErr, _ := obj.Read()

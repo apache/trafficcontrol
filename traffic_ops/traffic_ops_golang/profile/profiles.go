@@ -48,7 +48,7 @@ const (
 
 //we need a type alias to define functions on
 type TOProfile struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.ProfileNullable
 }
 

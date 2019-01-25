@@ -88,7 +88,7 @@ func TestGetType(t *testing.T) {
 	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
 	obj := TOType{
-		api.APIInformer{&reqInfo},
+		api.APIInfoImpl{&reqInfo},
 		tc.TypeNullable{},
 	}
 	types, userErr, sysErr, _ := obj.Read()
