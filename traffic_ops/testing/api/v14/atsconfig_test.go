@@ -17,34 +17,12 @@ package v14
 
 import (
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func TestATSConfigs(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	CreateTestServers(t)
-	CreateTestDeliveryServices(t)
-
-	GetTestATSConfigs(t)
-
-	DeleteTestDeliveryServices(t)
-	DeleteTestServers(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+		GetTestATSConfigs(t)
+	})
 }
 
 func GetTestATSConfigs(t *testing.T) {
@@ -61,24 +39,6 @@ func GetTestATSConfigs(t *testing.T) {
 		t.Fatalf("cannot GET Server '" + testServer.HostName + "', returned no servers\n")
 	}
 	server := serverList[0]
-
-	// profiles, _, err := TOSession.GetProfileByName(server.Profile)
-	// if err != nil {
-	// 	t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
-	// }
-	// if len(profiles) < 1 {
-	// 	t.Errorf("cannot GET Profile '"+server.Profile+"' by name: no profiles\n", err, resp)
-	// }
-	// profile := profiles[0]
-
-	// cdns, _, err := TOSession.GetCDNByName(server.CDN)
-	// if err != nil {
-	// 	t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
-	// }
-	// if len(profiles) < 1 {
-	// 	t.Errorf("cannot GET Profile '"+server.Profile+"' by name: no profiles\n", err, resp)
-	// }
-	// profile := profiles[0]
 
 	_, _, err = TOSession.GetATSServerConfigList(server.ID)
 	if err != nil {
@@ -119,5 +79,4 @@ func GetTestATSConfigs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Getting cdn by name '" + server.CDNName + "' config bg_fetch.config: " + err.Error() + "\n")
 	}
-	log.Debugln("GetTestATSConfigs() PASSED: ")
 }

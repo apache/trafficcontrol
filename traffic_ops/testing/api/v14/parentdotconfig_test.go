@@ -25,33 +25,11 @@ import (
 )
 
 func TestParentDotConfig(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	CreateTestServers(t)
-	CreateTestDeliveryServices(t)
-	CreateTestDeliveryServiceServers(t)
-
-	GetTestParentDotConfig(t)
-
-	DeleteTestDeliveryServiceServersCreated(t)
-	DeleteTestDeliveryServices(t)
-	DeleteTestServers(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+		defer DeleteTestDeliveryServiceServersCreated(t)
+		CreateTestDeliveryServiceServers(t)
+		GetTestParentDotConfig(t)
+	})
 }
 
 func GetTestParentDotConfig(t *testing.T) {
