@@ -163,7 +163,7 @@ func (cg TOCacheGroup) Validate() error {
 		return err
 	}
 
-	if cg.Fallbacks != nil {
+	if cg.Fallbacks != nil && len(*cg.Fallbacks) > 0 {
 		isValid, err := cg.isAllowedToFallback(*cg.TypeID)
 		if err != nil {
 			return err
