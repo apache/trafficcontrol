@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves the health of all Cache Groups for a given CDN.
+Retrieves the health of all :term:`Cache Group`\ s for a given CDN.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -39,14 +39,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroups:  An array of objects describing the health of each Cache Group
+:cachegroups:  An array of objects describing the health of each :term:`Cache Group`
 
-	:name:    The name of the Cache Group
-	:offline: The number of OFFLINE caches in the Cache Group
-	:online:  The number of ONLINE caches in the Cache Group
+	:name:    The name of the :term:`Cache Group`
+	:offline: The number of OFFLINE caches in the :term:`Cache Group`
+	:online:  The number of ONLINE caches in the :term:`Cache Group`
 
-:totalOffline: Total number of OFFLINE caches across all Cache Groups which are assigned to the CDN defined by the ``name`` request path parameter
-:totalOnline:  Total number of ONLINE caches across all Cache Groups which are assigned to the CDN defined by the ``name`` request path parameter
+:totalOffline: Total number of OFFLINE caches across all :term:`Cache Group`\ s which are assigned to the CDN defined by the ``name`` request path parameter
+:totalOnline:  Total number of ONLINE caches across all :term:`Cache Group`\ s which are assigned to the CDN defined by the ``name`` request path parameter
 
 .. code-block:: http
 	:caption: Response Example

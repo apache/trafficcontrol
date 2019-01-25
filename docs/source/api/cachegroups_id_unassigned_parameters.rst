@@ -18,7 +18,7 @@
 ********************************************
 ``cachegroups/{{id}}/unassigned_parameters``
 ********************************************
-Gets all the parameters NOT associated with a specific Cache Group
+Gets all the parameters NOT associated with a specific :term:`Cache Group`
 
 .. seealso:: :ref:`param-prof`
 
@@ -32,11 +32,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------------------+----------+-----------------------+
-	|       Name       | Required | Description           |
-	+==================+==========+=======================+
-	| ``id``           | yes      | Cache Group ID        |
-	+------------------+----------+-----------------------+
+	+------------------+----------+------------------------+
+	|       Name       | Required | Description            |
+	+==================+==========+========================+
+	| ``id``           | yes      | :term:`Cache Group` ID |
+	+------------------+----------+------------------------+
 
 
 Response Structure

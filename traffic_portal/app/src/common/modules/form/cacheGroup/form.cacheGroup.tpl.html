@@ -75,7 +75,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.type), 'has-feedback': hasError(cacheGroupForm.type)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="type" class="form-control" ng-model="cacheGroup.typeId" ng-options="type.id as type.name for type in types" required>
+                    <select name="type" class="form-control" ng-model="cacheGroup.typeId" ng-options="type.id as type.name for type in types" ng-change="updateForNewType()" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.type, 'required')">Required</small>
@@ -128,9 +128,28 @@ under the License.
                     <input type="checkbox" name="GeoEnabled" ng-model="localizationMethods.GEO"> Geo-IP Database</input>
                 </div>
             </div>
+            <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.fallbacks), 'has-feedback': hasError(cacheGroupForm.fallbacks)}" ng-hide="!isEdgeLoc(cacheGroup.typeId)">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Failover Cache Groups</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select name="fallbackOptions" class="form-control" ng-model="fallbackSelected" ng-options="cachegroup.group as cachegroup.group for cachegroup in cacheGroupFallbackOptions" ng-change="updateFallbacks(cacheGroup)">
+                        <option value="">Add Failover Cache Group...</option>
+                    </select>
+                    <div class="allFallbacks" id="allFallbacks">
+                        <div class="fallback" ng-repeat="fb in cacheGroup.fallbacks" dnd-enable="true" pageid="cacheGroupFallback">
+                            <i class="fa fa-ellipsis-v fallback-grip drop-child" aria-hidden="true"></i>
+                            <div class="fallback-list drop-child">{{ $index + 1 }}.&nbsp&nbsp&nbsp&nbsp&nbsp{{fb}}</div>
+                            <div class="fallback-delete drop-child fa fa-trash-o" align="right" ng-click="removeFallback(fb)">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="geoFallback">
+                        <input type="checkbox" ng-model="cacheGroup.fallbackToClosest"> Fallback to Geo Failover</input>
+                    </div>
+                </div>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(cacheGroup)">Delete</button>
-                <button type="button" class="btn btn-success" ng-disabled="cacheGroupForm.$pristine || cacheGroupForm.$invalid" ng-click="save(cacheGroup)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="(cacheGroupForm.$pristine || cacheGroupForm.$invalid) && !cacheGroupFallbackUpdated" ng-click="save(cacheGroup)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

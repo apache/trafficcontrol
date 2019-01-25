@@ -89,23 +89,23 @@ Parameters
 ----------
 Parameters and Profiles can be edited here. Hover over the tab to get the following options:
 
-+---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|        Option       |                                                                             Description                                                                             |
-+=====================+=====================================================================================================================================================================+
-| Global Profile      | The table of global parameters. See :ref:`param-prof`. This is where you Create/Read/Update/Delete parameters in the Global profile                                 |
-+---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| All Cache Groups    | The table of all parameters *that are assigned to a cachegroup* - this may be slow to pull up, as there can be thousands of parameters.                             |
-+---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| All Profiles        | The table of all parameters *that are assigned to a profile* - this may be slow to pull up, as there can be thousands of parameters.                                |
-+---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Select Profile      | Select the parameter list by profile first, then get a table of just the parameters for that profile.                                                               |
-+---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Export Profile      | Profiles can be exported from one Traffic Ops instance to another using 'Select Profile' and under the "Profile Details" dialog for the desired profile             |
-+---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Import Profile      | Profiles can be imported from one Traffic Ops instance to another using the button "Import Profile" after using the "Export Profile" feature                        |
-+---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Orphaned Parameters | A table of parameters that are not associated to any profile of cache group. These parameters either should be deleted or associated with a profile of cache group. |
-+---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|        Option               |                                                                             Description                                                                                             |
++=============================+=====================================================================================================================================================================================+
+| Global Profile              | The table of global parameters. See :ref:`param-prof`. This is where you Create/Read/Update/Delete parameters in the Global profile                                                 |
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| All :term:`Cache Group`\ s  | The table of all parameters *that are assigned to a cachegroup* - this may be slow to pull up, as there can be thousands of parameters.                                             |
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| All Profiles                | The table of all parameters *that are assigned to a profile* - this may be slow to pull up, as there can be thousands of parameters.                                                |
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Select Profile              | Select the parameter list by profile first, then get a table of just the parameters for that profile.                                                                               |
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Export Profile              | Profiles can be exported from one Traffic Ops instance to another using 'Select Profile' and under the "Profile Details" dialog for the desired profile                             |
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Import Profile              | Profiles can be imported from one Traffic Ops instance to another using the button "Import Profile" after using the "Export Profile" feature                                        |
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Orphaned Parameters         | A table of parameters that are not associated to any profile of :term:`Cache Group`. These parameters either should be deleted or associated with a profile of :term:`Cache Group`. |
++-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 Tools
 -----
@@ -132,29 +132,29 @@ Misc
 ----
 Miscellaneous editing options. Hover over this tab to get the following options:
 
-+--------------------+-------------------------------------------------------------------------------------------+
-|       Option       |                                        Description                                        |
-+====================+===========================================================================================+
-| CDNs               | Create/Read/Update/Delete CDNs                                                            |
-+--------------------+-------------------------------------------------------------------------------------------+
-| Cache Groups       | Create/Read/Update/Delete cache groups                                                    |
-+--------------------+-------------------------------------------------------------------------------------------+
-| Users              | Create/Read/Update/Delete users                                                           |
-+--------------------+-------------------------------------------------------------------------------------------+
-| Profiles           | Create/Read/Update/Delete profiles. See :ref:`working-with-profiles`                      |
-+--------------------+-------------------------------------------------------------------------------------------+
-| Networks(ASNs)     | Create/Read/Update/Delete Autonomous System Numbers See :ref:`asn-czf`                    |
-+--------------------+-------------------------------------------------------------------------------------------+
-| Hardware           | Get detailed hardware information (note: this should be moved to a Traffic Ops Extension) |
-+--------------------+-------------------------------------------------------------------------------------------+
-| Data Types         | Create/Read/Update/Delete data types                                                      |
-+--------------------+-------------------------------------------------------------------------------------------+
-| Divisions          | Create/Read/Update/Delete divisions                                                       |
-+--------------------+-------------------------------------------------------------------------------------------+
-| Regions            | Create/Read/Update/Delete regions                                                         |
-+--------------------+-------------------------------------------------------------------------------------------+
-| Physical Locations | Create/Read/Update/Delete locations                                                       |
-+--------------------+-------------------------------------------------------------------------------------------+
++------------------------------+-------------------------------------------------------------------------------------------+
+|       Option                 |                                        Description                                        |
++==============================+===========================================================================================+
+| CDNs                         | Create/Read/Update/Delete CDNs                                                            |
++------------------------------+-------------------------------------------------------------------------------------------+
+| :term:`Cache Group`\ s       | Create/Read/Update/Delete :term:`Cache Group`\ s                                          |
++------------------------------+-------------------------------------------------------------------------------------------+
+| Users                        | Create/Read/Update/Delete users                                                           |
++------------------------------+-------------------------------------------------------------------------------------------+
+| Profiles                     | Create/Read/Update/Delete profiles. See :ref:`working-with-profiles`                      |
++------------------------------+-------------------------------------------------------------------------------------------+
+| Networks(ASNs)               | Create/Read/Update/Delete Autonomous System Numbers See :ref:`asn-czf`                    |
++------------------------------+-------------------------------------------------------------------------------------------+
+| Hardware                     | Get detailed hardware information (note: this should be moved to a Traffic Ops Extension) |
++------------------------------+-------------------------------------------------------------------------------------------+
+| Data Types                   | Create/Read/Update/Delete data types                                                      |
++------------------------------+-------------------------------------------------------------------------------------------+
+| Divisions                    | Create/Read/Update/Delete divisions                                                       |
++------------------------------+-------------------------------------------------------------------------------------------+
+| Regions                      | Create/Read/Update/Delete regions                                                         |
++------------------------------+-------------------------------------------------------------------------------------------+
+| Physical Locations           | Create/Read/Update/Delete locations                                                       |
++------------------------------+-------------------------------------------------------------------------------------------+
 
 .. index::
 	Change Log
@@ -194,7 +194,7 @@ The Health table is the default landing screen for Traffic Ops, it displays the 
 
 
 :Profile:          the Profile of this server or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
-:Edge Cache Group: the edge cache group short name or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
+:Edge Cache Group: the edge :term:`Cache Group` short name or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
 :Host Name:        the host name of the server or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
 :Healthy:          indicates if this cache is healthy according to the Health Protocol. A row with ALL in any of the columns will always show a |checkmark|, this column is valid only for individual EDGE caches.
 :Admin:            shows the administrative status of the server.
@@ -394,7 +394,7 @@ The fields in the Delivery Service view are:
 |                                            | Ideally the number will reflect the amount of traffic. 1 = trial account with very little traffic, 2 = small production service. Add 1 more server for every 20 Gbps   |
 |                                            | of traffic you expect at peak. So 20 Gbps = 3, 40 Gbps = 4, 60 Gbps = 5                                                                                                |
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Initial Dispersion                         | Determines number of machines content will be placed on within a cache group. Setting too high will result in poor caching performance.                                |
+| Initial Dispersion                         | Determines number of machines content will be placed on within a :term:`Cache Group`. Setting too high will result in poor caching performance.                        |
 +--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Origin Server Base URL                     | The Origin Server’s base URL which includes the protocol (http or https). Example: ``http://movies.origin.com``                                                        |
 |                                            | Must be a domain only, no directories or IP addresses                                                                                                                  |
@@ -486,10 +486,10 @@ One of the most important settings when creating the delivery service is the sel
 |       Name      |                                                                                           Description                                                                                             |
 +=================+===================================================================================================================================================================================================+
 | HTTP            | HTTP Content Routing  - The Traffic Router DNS auth server returns its own IP address on DNS queries, and the client gets redirected to a specific cache                                          |
-|                 | in the nearest cache group using HTTP 302.  Use this for long sessions like HLS/HDS/Smooth live streaming, where a longer setup time is not a problem.                                            |
+|                 | in the nearest :term:`Cache Group` using HTTP 302.  Use this for long sessions like HLS/HDS/Smooth live streaming, where a longer setup time is not a problem.                                    |
 +-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | DNS             | DNS Content Routing - The Traffic Router DNS auth server returns an edge cache IP address to the client right away. The client will find the cache quickly                                        |
-|                 | but the Traffic Router can not route to a cache that already has this content in the cache group. Use this for smaller objects like web page images / objects.                                    |
+|                 | but the Traffic Router can not route to a cache that already has this content in the :term:`Cache Group`. Use this for smaller objects like web page images / objects.                            |
 +-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | HTTP_NO_CACHE   | HTTP Content Routing, but the caches will not actually cache the content, they act as just proxies. The MID tier is bypassed.                                                                     |
 +-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -924,7 +924,7 @@ Static DNS entries allow you to create other names *under* the delivery service 
 
 Server Assignments
 ------------------
-Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the cache group, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
+Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the :term:`Cache Group`, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
 
 
 .. _asn-czf:
@@ -972,7 +972,7 @@ The CZF is an input to the Traffic Control CDN, and as such does not get generat
 
 The script that generates the CZF file is not part of Traffic Control, since it is different for each situation.
 
-.. note:: The ``"coordinates"`` section is optional and may be used by Traffic Router for localization in the case of a CZF "hit" where the zone name does not map to a Cache Group name in Traffic Ops (i.e. Traffic Router will route to the closest Cache Group(s) geographically).
+.. note:: The ``"coordinates"`` section is optional and may be used by Traffic Router for localization in the case of a CZF "hit" where the zone name does not map to a :term:`Cache Group` name in Traffic Ops (i.e. Traffic Router will route to the closest :term:`Cache Group`\ (s) geographically).
 
 .. _deep-czf:
 
@@ -1023,7 +1023,7 @@ The Deep Coverage Zone File (DCZF) format is similar to the CZF format but adds 
 		}
 	}
 
-Each entry in the ``caches`` list is the hostname of an edge cache registered in Traffic Ops which will be used for "deep" caching in that Deep Coverage Zone. Unlike a regular CZF, coverage zones in the DCZF do not map to a Cache Group in Traffic Ops, so currently the deep coverage zone name only needs to be unique.
+Each entry in the ``caches`` list is the hostname of an edge cache registered in Traffic Ops which will be used for "deep" caching in that Deep Coverage Zone. Unlike a regular CZF, coverage zones in the DCZF do not map to a :term:`Cache Group` in Traffic Ops, so currently the deep coverage zone name only needs to be unique.
 
 If the Traffic Router gets a DCZF "hit" for a requested Delivery Service that has Deep Caching enabled, the client will be routed to an available "deep" cache from that zone's ``caches`` list.
 
@@ -1170,11 +1170,11 @@ Every 15 minutes the caches should run a *syncds* to get all changes needed from
 - regex_revalidate.config
 - ip_allow.config
 
-A cache will only get updated when the update flag is set for it. To set the update flag, use the *Queue Updates* menu - here you can schedule updates for a whole CDN or a cache group:
+A cache will only get updated when the update flag is set for it. To set the update flag, use the *Queue Updates* menu - here you can schedule updates for a whole CDN or a :term:`Cache Group`:
 
 #. Click **Tools > Queue Updates**.
 #. Select the CDN to queue updates for or select All.
-#. Select the cache group to queue updates for or select All.
+#. Select the :term:`Cache Group` to queue updates for or select All.
 #. Click the **Queue Updates** button.
 #. When the Queue Updates for this Server? (all) window opens, click **OK**.
 

@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Assigns a Cache Group to one or more Delivery Services
+Assigns a :term:`Cache Group` to one or more Delivery Services
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table::Request Path Parameters
 
-	+------+-------------------------------------------------------------------+
-	| Name |           Description                                             |
-	+======+===================================================================+
-	|  ID  | The integral, unique identifier of the Cache Group being assigned |
-	+------+-------------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------+
+	| Name |           Description                                                     |
+	+======+===========================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Cache Group` being assigned |
+	+------+---------------------------------------------------------------------------+
 
-:deliveryServices:  The integral, unique identifiers of the Delivery Services to which the Cache Group is being assigned
+:deliveryServices:  The integral, unique identifiers of the Delivery Services to which the :term:`Cache Group` is being assigned
 
 .. code-block:: http
 	:caption: Request Example
@@ -54,9 +54,9 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryServices: An array of *all* Delivery Services to which the Cache Group is assigned (**not** just the one(s) to which it was assigned via the request)
-:id:               The Cache Group's ID
-:serverNames:      An array of the (short) hostnames of all servers in the Cache Group
+:deliveryServices: An array of *all* Delivery Services to which the :term:`Cache Group` is assigned (**not** just the one(s) to which it was assigned via the request)
+:id:               The :term:`Cache Group`\ 's ID
+:serverNames:      An array of the (short) hostnames of all servers in the :term:`Cache Group`
 
 .. code-block:: http
 	:caption: Response Example

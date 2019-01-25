@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var FormNewCacheGroupController = function(cacheGroup, $scope, $controller, cacheGroupService) {
+var FormNewCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, $controller, cacheGroupService) {
 
     // extends the FormCacheGroupController to inherit common methods
-    angular.extend(this, $controller('FormCacheGroupController', { cacheGroup: cacheGroup, $scope: $scope }));
+    angular.extend(this, $controller('FormCacheGroupController', { cacheGroup: cacheGroup, types: types, cacheGroups: cacheGroups, $scope: $scope }));
 
     $scope.cacheGroupName = 'New';
 
@@ -36,5 +36,5 @@ var FormNewCacheGroupController = function(cacheGroup, $scope, $controller, cach
 
 };
 
-FormNewCacheGroupController.$inject = ['cacheGroup', '$scope', '$controller', 'cacheGroupService'];
+FormNewCacheGroupController.$inject = ['cacheGroup', 'types', 'cacheGroups', '$scope', '$controller', 'cacheGroupService'];
 module.exports = FormNewCacheGroupController;

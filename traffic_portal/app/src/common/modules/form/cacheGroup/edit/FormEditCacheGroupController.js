@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $uibModal, $anchorScroll, locationUtils, cacheGroupService) {
+var FormEditCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, $controller, $uibModal, $anchorScroll, locationUtils, cacheGroupService) {
 
     // extends the FormCacheGroupController to inherit common methods
-    angular.extend(this, $controller('FormCacheGroupController', { cacheGroup: cacheGroup, $scope: $scope }));
+    angular.extend(this, $controller('FormCacheGroupController', { cacheGroup: cacheGroup, types: types, cacheGroups: cacheGroups, $scope: $scope }));
 
     $scope.cacheGroupName = angular.copy(cacheGroup.name);
 
@@ -127,5 +127,5 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
 
 };
 
-FormEditCacheGroupController.$inject = ['cacheGroup', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'cacheGroupService'];
+FormEditCacheGroupController.$inject = ['cacheGroup', 'types', 'cacheGroups', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'cacheGroupService'];
 module.exports = FormEditCacheGroupController;

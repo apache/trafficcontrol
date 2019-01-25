@@ -28,3 +28,4 @@ Traffic Control is a complicated system, and documenting it is not trivial. Some
 	ds_requests
 	steering
 	ciab
+	cachegroup_fallback

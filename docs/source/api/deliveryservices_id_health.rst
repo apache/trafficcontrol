@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Retrieves the health of all Cache Groups assigned to a particular Delivery Service
+Retrieves the health of all :term:`Cache Group`\ s assigned to a particular Delivery Service
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_
@@ -33,20 +33,20 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+--------------------------------------------------------------------------------------------------+
-	| Name | Description                                                                                      |
-	+======+==================================================================================================+
-	| ID   | The integral, unique identifier of the Delivery service for which Cache Groups will be displayed |
-	+------+--------------------------------------------------------------------------------------------------+
+	+------+------------------------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                                |
+	+======+============================================================================================================+
+	| ID   | The integral, unique identifier of the Delivery service for which :term:`Cache Group`\ s will be displayed |
+	+------+------------------------------------------------------------------------------------------------------------+
 
 
 Response Structure
 ------------------
-:cachegroups: An array of objects that represent the health of each Cache Group assigned to this Delivery Service
+:cachegroups: An array of objects that represent the health of each :term:`Cache Group` assigned to this Delivery Service
 
-	:name:    The name of the Cache Group represented by this object
-	:offline: The number of offline cache servers within this Cache Group
-	:online:  The number of online cache servers within this Cache Group
+	:name:    The name of the :term:`Cache Group` represented by this object
+	:offline: The number of offline cache servers within this :term:`Cache Group`
+	:online:  The number of online cache servers within this :term:`Cache Group`
 
 :totalOffline: Total number of offline cache servers assigned to this Delivery Service
 :totalOnline:  Total number of online cache servers assigned to this Delivery Service
@@ -80,4 +80,4 @@ Response Structure
 		]
 	}}
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to the see Cache Groups associated with *any* Delivery Services, whereas any other user will only be able to see the Cache Groups associated with Delivery Services their Tenant is allowed to see.
+.. [1] Users with the roles "admin" and/or "operations" will be able to the see :term:`Cache Group`\ s associated with *any* Delivery Services, whereas any other user will only be able to see the :term:`Cache Group`\ s associated with Delivery Services their Tenant is allowed to see.

@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Extract information about parameters associated with Cache Groups
+Extract information about parameters associated with :term:`Cache Group`\ s
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -33,11 +33,11 @@ No available parameters
 
 Response Structure
 ------------------
-:cachegroupParameters: An array of identifying information for parameters assigned to Cache Group profiles
+:cachegroupParameters: An array of identifying information for parameters assigned to :term:`Cache Group` profiles
 
 	:parameter:    Numeric ID of the parameter
 	:last_updated: Date and time of last modification in ISO format
-	:cachegroup:   Name of the Cache Group
+	:cachegroup:   Name of the :term:`Cache Group`
 
 .. code-block:: http
 	:caption: Response Example
@@ -68,7 +68,7 @@ Response Structure
 
 ``POST``
 ========
-Assign parameter(s) to Cache Group(s).
+Assign parameter(s) to :term:`Cache Group`(s).
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -78,7 +78,7 @@ Request Structure
 -----------------
 The request data can take the form of either a single object or an array of one or more objects.
 
-:cacheGroupId: Integral, unique identifier for the Cache Group to which a parameter is being assigned
+:cacheGroupId: Integral, unique identifier for the :term:`Cache Group` to which a parameter is being assigned
 :parameterId:  Integral, unique identifier for the Parameter being assigned
 
 .. code-block:: http
@@ -101,7 +101,7 @@ Response Structure
 ------------------
 :parameter:    Numeric ID of the parameter
 :last_updated: Date and time of last modification in ISO format
-:cachegroup:   Name of the Cache Group
+:cachegroup:   Name of the :term:`Cache Group`
 
 .. code-block:: http
  	:caption: Response Example

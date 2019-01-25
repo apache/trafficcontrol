@@ -240,18 +240,18 @@ Below is a list of Traffic Server plug-ins that need to be configured in the par
 
 Below is a list of cache parameters for special configuration, which are unlikely to need changes, but may be useful in particular circumstances:
 
-+--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
-|           Name           |    Config File    |                                                       Description                                                       |
-+==========================+===================+=========================================================================================================================+
-| not_a_parent             | parent.config     | This is a boolean flag and is considered 'true' if it exists and has any value except 'false'.                          |
-|                          |                   | This prevents servers with this parameter in their profile from being inserted into the ``parent.config`` generated for |
-|                          |                   | servers with this server's Cache Group as a parent of their CacheGroup. This is primarily useful for when edge caches   |
-|                          |                   | are configured to have a Cache Group of other edge caches as parents (a highly unusual configuration), and it is        |
-|                          |                   | necessary to exclude some, but not all, edges in the parent Cache Group from the ``parent.config`` (for example,        |
-|                          |                   | because they lack necessary capabilities), but still have all edges in the same Cache Group in order to take traffic    |
-|                          |                   | from ordinary Delivery Services at that Cache Group's geographic location. Once again, this is a highly unusual         |
-|                          |                   | scenario, and under ordinary circumstances this parameter should not exist.                                             |
-+--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
++--------------------------+-------------------+---------------------------------------------------------------------------------------------------------------------------------+
+|           Name           |    Config File    |                                                       Description                                                               |
++==========================+===================+=================================================================================================================================+
+| not_a_parent             | parent.config     | This is a boolean flag and is considered 'true' if it exists and has any value except 'false'.                                  |
+|                          |                   | This prevents servers with this parameter in their profile from being inserted into the ``parent.config`` generated for servers |
+|                          |                   | with this server's :term:`Cache Group` as a parent of their :term:`Cache Group`. This is primarily useful for when edge caches  |
+|                          |                   | are configured to have a :term:`Cache Group` of other edge caches as parents (a highly unusual configuration), and it is        |
+|                          |                   | necessary to exclude some, but not all, edges in the parent :term:`Cache Group` from the ``parent.config`` (for example,        |
+|                          |                   | because they lack necessary capabilities), but still have all edges in the same :term:`Cache Group` in order to take traffic    |
+|                          |                   | from ordinary Delivery Services at that :term:`Cache Group`\ 's geographic location. Once again, this is a highly unusual       |
+|                          |                   | scenario, and under ordinary circumstances this parameter should not exist.                                                     |
++--------------------------+-------------------+---------------------------------------------------------------------------------------------------------------------------------+
 
 
 Regions, Locations and Cache Groups
@@ -266,7 +266,7 @@ All servers have to have a 'location', which is their physical location. Each lo
 
 To create these structures in Traffic Portal, first in enter your divisions under `Topology->Divisions`, then enter the regions in `Topology->Regions`, referencing the divisions entered and, finally, enter the physical locations in `Topology->Phys Locations`, referencing the regions entered.
 
-All servers also have to be part of a Cache Group. A Cache Group is a logical grouping of caches, that don't have to be in the same physical location (in fact, usually a cache group is spread across minimally 2 physical Locations for redundancy purposes), but share geographical coordinates for content routing purposes.
+All servers also have to be part of a :term:`Cache Group`. A :term:`Cache Group` is a logical grouping of caches, that don't have to be in the same physical location (in fact, usually a :term:`Cache Group` is spread across minimally 2 physical Locations for redundancy purposes), but share geographical coordinates for content routing purposes.
 
 
 

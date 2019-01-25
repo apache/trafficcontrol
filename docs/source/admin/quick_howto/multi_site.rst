@@ -21,7 +21,7 @@ Configure Multi-Site Origin
 
 The following steps will take you through the procedure of setting up a Multi-Site Origin (MSO).
 
-#. Create Cache Groups for the origin locations, and assign the appropriate parent-child relationship between the mid and origin Cache Groups. Each mid Cache Group can be assigned a primary and secondary origin parent Cache Group. When the mid cache parent configuration is generated, origins in the primary Cache Groups will be listed first, followed by origins in the secondary Cache Group. Origin servers assigned to the Delivery Service that are assigned to neither the primary nor secondary Cache Groups will be listed last.
+#. Create :term:`Cache Group`\ s for the origin locations, and assign the appropriate parent-child relationship between the mid and origin :term:`Cache Group`\ s. Each mid :term:`Cache Group` can be assigned a primary and secondary origin parent :term:`Cache Group`. When the mid cache parent configuration is generated, origins in the primary :term:`Cache Group`\ s will be listed first, followed by origins in the secondary :term:`Cache Group`. Origin servers assigned to the Delivery Service that are assigned to neither the primary nor secondary :term:`Cache Group`\ s will be listed last.
 
 	.. figure:: multi_site/00.png
 		:scale: 100%
@@ -55,7 +55,7 @@ The following steps will take you through the procedure of setting up a Multi-Si
 
 		- If there are multiple CDNs created on the same Traffic Ops, delivery services across different CDNs may have the same OSBU configured.
 		- If several delivery services in the same CDN have the same MSO algorithm configured, they may share the same OSBU.
-		- If delivery services are assigned with different MID cache groups respectively, they can share the same OSBU.
+		- If delivery services are assigned with different MID :term:`Cache Group`\ s respectively, they can share the same OSBU.
 		- This OSBU must be valid - ATS will perform a DNS lookup on this FQDN even if IPs, not DNS, are used in the parent.config.
 		- The OSBU entered as the "Origin Server Base URL" will be sent to the origins as a host header. All origins must be configured to respond to this host.
 

@@ -20,20 +20,20 @@ Running a Traffic Control CDN
 
 Cache Group
 -------------------
-  A cache group is a logical group of caches that Traffic Router tries to use as a combined cache. Traffic Router treats all servers in a cache group as though they are in the same physical location, though they are in fact only in the same region (network). A cache group has one single set of geographical coordinates even if the caches that make up the cache group are in different physical locations. The caches in a cache group are not aware of the other caches in the group - there is no clustering software or communications between caches in a cache group.
+  A :term:`Cache Group` is a logical group of caches that Traffic Router tries to use as a combined cache. Traffic Router treats all servers in a :term:`Cache Group` as though they are in the same physical location, though they are in fact only in the same region (network). A :term:`Cache Group` has one single set of geographical coordinates even if the caches that make up the :term:`Cache Group` are in different physical locations. The caches in a :term:`Cache Group` are not aware of the other caches in the group - there is no clustering software or communications between caches in a :term:`Cache Group`.
 
-  There are two types of cache groups: EDGE and MID. Traffic Control is a two tier system, where the clients get directed to the EDGE cache group. On cache miss, the cache in the EDGE cache group obtains content from a MID cache group, rather than the origin, which is shared with multiple EDGEs. EDGE cache groups are configured to have one single parent cache group.
+  There are two types of :term:`Cache Group`\ s: EDGE and MID. Traffic Control is a two tier system, where the clients get directed to the EDGE :term:`Cache Group`. On cache miss, the cache in the EDGE :term:`Cache Group` obtains content from a MID :term:`Cache Group`, rather than the origin, which is shared with multiple EDGEs. EDGE :term:`Cache Group`\ s are configured to have one single parent :term:`Cache Group`.
 
   ..  Note:: Often the EDGE to MID relationship is based on network distance, and does not necessarily match the geographic distance.
 
-  A cache group serves a particular part of the network as defined in the coverage zone file. See :ref:`asn-czf`.
+  A :term:`Cache Group` serves a particular part of the network as defined in the coverage zone file. See :ref:`asn-czf`.
 
   Consider the example CDN below:
 
   .. image:: cache_groups_1.png
 	:align: center
 
-  There are two MID tier cache groups, each assigned with three EDGEs. The lax, den and chi EDGE locations are configured with the West MID as their parent, and the nyc, phl, and hou EDGEs, are configured with the East MID as their parent. On a cache miss, the EDGEs use their assigned parent.
+  There are two MID tier :term:`Cache Group`\ s, each assigned with three EDGEs. The lax, den and chi EDGE locations are configured with the West MID as their parent, and the nyc, phl, and hou EDGEs, are configured with the East MID as their parent. On a cache miss, the EDGEs use their assigned parent.
 
 All caches (and other servers) are assigned a Profile in Traffic Ops.
 
@@ -65,10 +65,10 @@ Why is my CRConfig.json rejected?
 	* Add Physical Locations
 		You will need at least one.
 
-	* Add Mid tier Cache Groups
+	* Add Mid tier :term:`Cache Group`\ s
 		You will need at least one.
 
-	* Add Edge tier Cache Groups
+	* Add Edge tier :term:`Cache Group`\ s
 		You will need at least one.
 
 	* Add Traffic Monitors
