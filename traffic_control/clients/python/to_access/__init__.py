@@ -91,7 +91,7 @@ Arguments and Flags
 
 	Output the response status line and any and all response headers. (Default: false)
 
-.. option:: --to_host HOST
+.. option:: --to_url URL
 
 	The :abbr:`FQDN (Fully Qualified Domain Name)` and optionally the port and scheme of the Traffic
 	Ops server. This will override :envvar:`TO_URL`. The format is the same as for :envvar:`TO_URL`.
@@ -111,7 +111,7 @@ Environment Variables
 ---------------------
 If defined, :program:`toaccess` scripts will use these environment variables to define their
 connection to and authentication with the Traffic Ops server. Typically, setting these is easier
-than using the long options :option:`--to_host`, :option:`--to_user`, and :option:`--to_password` on
+than using the long options :option:`--to_url`, :option:`--to_user`, and :option:`--to_password` on
 every invocation.
 
 .. envvar:: TO_PASSWORD
@@ -126,7 +126,7 @@ every invocation.
 	typically this is unnecessary. Also notice that the port number may be specified, though again
 	this isn't usually required. All :program:`toaccess` scripts will assume that port 443 should be
 	used unless otherwise specified. They will further assume that the protocol is HTTPS unless
-	:envvar:`TO_URL` (or :option:`--to_host`) starts with ``http://``, in which case the default port
+	:envvar:`TO_URL` (or :option:`--to_url`) starts with ``http://``, in which case the default port
 	will also be set to 80 unless otherwise specified in the URL.
 
 .. envvar:: TO_USER
@@ -222,27 +222,27 @@ def parseArguments(program:str) -> typing.Tuple[TOSession,
 	parser = ArgumentParser(prog=program,
 	                        formatter_class=ArgumentDefaultsHelpFormatter,
 	                        description="A helper program for interfacing with the Traffic Ops API",
-	                        epilog="Typically, one will want to connect and authenticate by defining "\
-	                               "the 'TO_URL', 'TO_USER' and 'TO_PASSWORD' environment variables "\
-	                               "rather than (respectively) the '--to_host', '--to_user' and "\
-	                               "'--to_password' command-line flags. Those flags are only "\
-	                               "required when said environment variables are not defined.\n"\
-	                               "%(prog)s will exit with a success provided a response was "\
-	                               "received and the status code of said response was less than 400. "\
-	                               "The exit code will be 1 if command line arguments cannot be "\
-	                               "parsed or authentication with the Traffic Ops server fails. "\
-	                               "In the event of some unknown error occurring when waiting for a "\
-	                               "response, the exit code will be 2. If the server responds with "\
-	                               "a status code indicating a client or server error, that status "\
-	                               "code will be used as the exit code.")
+	                        epilog=("Typically, one will want to connect and authenticate by defining "
+	                               "the 'TO_URL', 'TO_USER' and 'TO_PASSWORD' environment variables "
+	                               "rather than (respectively) the '--to_url', '--to_user' and "
+	                               "'--to_password' command-line flags. Those flags are only "
+	                               "required when said environment variables are not defined.\n"
+	                               "%(prog)s will exit with a success provided a response was "
+	                               "received and the status code of said response was less than 400. "
+	                               "The exit code will be 1 if command line arguments cannot be "
+	                               "parsed or authentication with the Traffic Ops server fails. "
+	                               "In the event of some unknown error occurring when waiting for a "
+	                               "response, the exit code will be 2. If the server responds with "
+	                               "a status code indicating a client or server error, that status "
+	                               "code will be used as the exit code."))
 
-	parser.add_argument("--to_host",
+	parser.add_argument("--to_url",
 	                    type=str,
-	                    help="The fully qualified domain name of the Traffic Ops server. Overrides "\
-	                         "'$TO_URL'. The format for both the environment variable and the flag "\
-	                         "is '[scheme]hostname[:port]'. That is, ports should be specified here, "\
-	                         "and they need not start with 'http://' or 'https://'. HTTPS is the "\
-	                         "assumed protocol unless the scheme _is_ provided and is 'http://'.")
+	                    help=("The fully qualified domain name of the Traffic Ops server. Overrides "
+	                         "'$TO_URL'. The format for both the environment variable and the flag "
+	                         "is '[scheme]hostname[:port]'. That is, ports should be specified here, "
+	                         "and they need not start with 'http://' or 'https://'. HTTPS is the "
+	                         "assumed protocol unless the scheme _is_ provided and is 'http://'."))
 	parser.add_argument("--to_user",
 	                    type=str,
 	                    help="The username to use when connecting to Traffic Ops. Overrides '$TO_USER")
@@ -252,9 +252,9 @@ def parseArguments(program:str) -> typing.Tuple[TOSession,
 	parser.add_argument("-k", "--insecure", action="store_true", help="Do not verify SSL certificates")
 	parser.add_argument("-f", "--full",
 	                    action="store_true",
-	                    help="Also output HTTP request/response lines and headers, and request payload. "\
-	                         "This is equivalent to using '--request_headers', '--response_headers' "\
-	                         "and '--request_payload' at the same time.")
+	                    help=("Also output HTTP request/response lines and headers, and request payload. "
+	                         "This is equivalent to using '--request_headers', '--response_headers' "
+	                         "and '--request_payload' at the same time."))
 	parser.add_argument("--request_headers",
 	                    action="store_true",
 	                    help="Output request method line and headers")
@@ -273,12 +273,12 @@ def parseArguments(program:str) -> typing.Tuple[TOSession,
 	                    help="Specify the API version to request against")
 	parser.add_argument("-p", "--pretty",
 	                    action="store_true",
-	                    help="Pretty-print payloads as JSON. "\
-	                         "Note that this will make Content-Type headers \"wrong\", in general")
+	                    help=("Pretty-print payloads as JSON. "
+	                         "Note that this will make Content-Type headers \"wrong\", in general"))
 	parser.add_argument("PATH", help="The path to the resource being requested - omit '/api/1.x'")
 	parser.add_argument("DATA",
-	                    help="An optional data string to pass with the request. If this is a "\
-	                         "filename, the contents of the file will be sent instead.",
+	                    help=("An optional data string to pass with the request. If this is a "
+	                         "filename, the contents of the file will be sent instead."),
 	                    nargs='?')
 
 
@@ -288,7 +288,7 @@ def parseArguments(program:str) -> typing.Tuple[TOSession,
 		to_host = args.to_host if args.to_host else os.environ["TO_URL"]
 	except KeyError as e:
 		raise KeyError("Traffic Ops hostname not set! Set the TO_URL environment variable or use "\
-		               "'--to_host'.") from e
+		               "'--to_url'.") from e
 
 	useSSL = True
 	to_port = 443
@@ -357,15 +357,17 @@ def parseArguments(program:str) -> typing.Tuple[TOSession,
 	       args.pretty)
 
 
-def get():
+def get() -> int:
 	"""
 	Entry point for :program:`toget`
+
+	:returns: The program's exit code
 	"""
 	try:
 		s, path, data, full, raw, pretty = parseArguments("toget")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
-		exit(1)
+		return 1
 
 	try:
 		if raw:
@@ -382,21 +384,23 @@ def get():
 			r = e.resp
 		else:
 			print("Error occurred: ", e, file=sys.stderr)
-			exit(2)
+			return 2
 
 	output(r, pretty, *full)
 	# setCookie(s._session.cookies.get("mojolicious"))
-	exit(0 if r.status_code < 400 else r.status_code)
+	return 0 if r.status_code < 400 else r.status_code // 100
 
-def put():
+def put() -> int:
 	"""
 	Entry point for :program:`toput`
+
+	:returns: The program's exit code
 	"""
 	try:
 		s, path, data, full, raw, pretty = parseArguments("toput")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
-		exit(1)
+		return 1
 
 	try:
 		if raw:
@@ -413,21 +417,23 @@ def put():
 			r = e.resp
 		else:
 			print("Error occurred: ", e, file=sys.stderr)
-			exit(2)
+			return 2
 
 	output(r, pretty, *full)
 	# setCookie(s._session.cookies.get("mojolicious"))
-	exit(0 if r.status_code < 400 else r.status_code)
+	return 0 if r.status_code < 400 else r.status_code // 100
 
-def post():
+def post() -> int:
 	"""
 	Entry point for :program:`topost`
+
+	:returns: The program's exit code
 	"""
 	try:
 		s, path, data, full, raw, pretty = parseArguments("topost")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
-		exit(1)
+		return 1
 
 	try:
 		if raw:
@@ -444,21 +450,23 @@ def post():
 			r = e.resp
 		else:
 			print("Error occurred: ", e, file=sys.stderr)
-			exit(2)
+			return 2
 
 	output(r, pretty, *full)
 	# setCookie(s._session.cookies.get("mojolicious"))
-	exit(0 if r.status_code < 400 else r.status_code)
+	return 0 if r.status_code < 400 else r.status_code // 100
 
-def delete():
+def delete() -> int:
 	"""
 	Entry point for :program:`todelete`
+
+	:returns: The program's exit code
 	"""
 	try:
 		s, path, data, full, raw, pretty = parseArguments("todelete")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
-		exit(1)
+		return 1
 
 	try:
 		if raw:
@@ -475,15 +483,17 @@ def delete():
 			r = e.resp
 		else:
 			print("Error occurred: ", e, file=sys.stderr)
-			exit(2)
+			return 2
 
 	output(r, pretty, *full)
 	# setCookie(s._session.cookies.get("mojolicious"))
-	exit(0 if r.status_code < 400 else r.status_code)
+	return 0 if r.status_code < 400 else r.status_code // 100
 
-def options():
+def options() -> int:
 	"""
 	Entry point for :program:`tooptions`
+
+	:returns: The program's exit code
 	"""
 	from functools import partial
 
@@ -491,7 +501,7 @@ def options():
 		s, path, data, full, raw, pretty = parseArguments("tooptions")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
-		exit(1)
+		return 1
 
 	try:
 		if raw:
@@ -507,21 +517,23 @@ def options():
 			r = e.resp
 		else:
 			print("Error occurred: ", e, file=sys.stderr)
-			exit(2)
+			return 2
 
 	output(r, pretty, *full)
 	# setCookie(s._session.cookies.get("mojolicious"))
-	exit(0 if r.status_code < 400 else r.status_code)
+	return 0 if r.status_code < 400 else r.status_code // 100
 
-def head():
+def head() -> int:
 	"""
 	Entry point for :program:`tohead`
+
+	:returns: The program's exit code
 	"""
 	try:
 		s, path, data, full, raw, pretty = parseArguments("tohead")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
-		exit(1)
+		return 1
 
 	try:
 		if raw:
@@ -538,21 +550,23 @@ def head():
 			r = e.resp
 		else:
 			print("Error occurred: ", e, file=sys.stderr)
-			exit(2)
+			return 2
 
 	output(r, pretty, *full)
 	# setCookie(s._session.cookies.get("mojolicious"))
-	exit(0 if r.status_code < 400 else r.status_code)
+	return 0 if r.status_code < 400 else r.status_code // 100
 
-def patch():
+def patch() -> int:
 	"""
 	Entry point for :program:`topatch`
+
+	:returns: The program's exit code
 	"""
 	try:
 		s, path, data, full, raw, pretty = parseArguments("topatch")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
-		exit(1)
+		return 1
 
 	try:
 		if raw:
@@ -569,8 +583,8 @@ def patch():
 			r = e.resp
 		else:
 			print("Error occurred: ", e, file=sys.stderr)
-			exit(2)
+			return 2
 
 	output(r, pretty, *full)
 	# setCookie(s._session.cookies.get("mojolicious"))
-	exit(0 if r.status_code < 400 else r.status_code)
+	return 0 if r.status_code < 400 else r.status_code // 100
