@@ -21,6 +21,9 @@
 set -x
 . /to-access.sh
 
+set-dns.sh
+insert-self-into-dns.sh
+
 export TO_URL=https://$TO_FQDN:$TO_PORT
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
@@ -36,7 +39,7 @@ done
 source "$X509_CA_ENV_FILE"
  
 # Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
-cp "$X509_CA_CERT_FILE" /usr/local/share/ca-certificates
+cp "$X509_CA_CERT_FULL_CHAIN_FILE" /usr/local/share/ca-certificates
 update-ca-certificates
 
 # Traffic Ops must be accepting connections before enroller can start

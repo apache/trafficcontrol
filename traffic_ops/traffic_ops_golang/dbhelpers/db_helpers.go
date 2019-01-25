@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -154,7 +153,7 @@ func GetProfileIDFromName(name string, tx *sql.Tx) (int, bool, error) {
 }
 
 // Returns true if the cdn exists
-func CDNExists(cdnName string, tx *sqlx.Tx) (bool, error) {
+func CDNExists(cdnName string, tx *sql.Tx) (bool, error) {
 	var id int
 	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, cdnName).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {
@@ -163,4 +162,27 @@ func CDNExists(cdnName string, tx *sqlx.Tx) (bool, error) {
 		return false, errors.New("Error querying CDN name: " + err.Error())
 	}
 	return true, nil
+}
+
+func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying CDN ID: " + err.Error())
+	}
+	return tc.CDNName(name), true, nil
+}
+
+// GetCDNDomainFromName returns the domain, whether the cdn exists, and any error.
+func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) {
+	domain := ""
+	if err := tx.QueryRow(`SELECT domain_name FROM cdn WHERE name = $1`, cdnName).Scan(&domain); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("Error querying CDN name: " + err.Error())
+	}
+	return domain, true, nil
 }

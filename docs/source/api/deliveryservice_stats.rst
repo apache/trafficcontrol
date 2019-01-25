@@ -23,7 +23,7 @@
 
 .. versionadded:: 1.2
 
-.. warning:: This endpoint does **NOT** respect tenancy permissions!
+.. warning:: This endpoint does **NOT** respect tenancy permissions! The bug is tracked by `GitHub Issue #3187 <https://github.com/apache/trafficcontrol/issues/3187>`_.
 
 ``GET``
 =======

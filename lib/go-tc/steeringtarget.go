@@ -23,6 +23,8 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 type SteeringTarget struct {
@@ -32,7 +34,7 @@ type SteeringTarget struct {
 	TargetID          int                 `json:"targetId" db:"target"`
 	Type              string              `json:"type" db:"type"`      // TODO enum?
 	TypeID            int                 `json:"typeId" db:"type_id"` // TODO enum?
-	Value             int                 `json:"value" db:"value"`
+	Value             util.JSONIntStr     `json:"value" db:"value"`
 }
 
 type SteeringTargetNullable struct {
@@ -42,7 +44,7 @@ type SteeringTargetNullable struct {
 	TargetID          *uint64              `json:"targetId" db:"target"`
 	Type              *string              `json:"type" db:"type_name"` // TODO enum?
 	TypeID            *int                 `json:"typeId" db:"type_id"` // TODO enum?
-	Value             *uint64              `json:"value" db:"value"`
+	Value             *util.JSONIntStr     `json:"value" db:"value"`
 }
 
 func (st SteeringTargetNullable) Validate(tx *sql.Tx) error {

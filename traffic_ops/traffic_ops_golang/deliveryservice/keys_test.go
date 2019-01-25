@@ -227,7 +227,7 @@ func TestVerifyAndEncodeCertificate(t *testing.T) {
 
 	certs := strings.SplitAfter(dat, PemCertEndMarker)
 	length := len(certs) - 1
-	if length != 2 {
+	if length != 3 { // rootCA now included in certChain
 		t.Errorf("Test failure: expected 2 certs from verifyCertificate(), got: %d ", length)
 	}
 }

@@ -39,12 +39,24 @@ class _MetaPackage(type):
 
 		if DISTRO in {'fedora', 'centos', 'rhel'}:
 			concat = '-'
-			pack.checkInstallList = lambda x: [p for p in subprocess.Popen(["/bin/rpm", "-q", x.name], stdout=subprocess.PIPE).communicate()[0].decode().splitlines() if not p.endswith("is not installed")]
+			pack.checkInstallList = lambda x: [ p
+			                                    for p in
+			                                    subprocess.Popen(["/bin/rpm", "-q", x.name],
+			                                                     stdout=subprocess.PIPE)
+			                                              .communicate()[0].decode().splitlines()
+			                                    if not p.endswith("is not installed")]
 			pack.installArgs = ["/bin/yum", "install", "-y"]
 			pack.uninstallArgs = ["/bin/yum", "remove", "-y"]
+
 		elif DISTRO in {'ubuntu', 'linuxmint', 'debian'}:
 			concat = '='
-			pack.checkInstallList = lambda x: ["{1}={2}".format(*p.split()) for p in subprocess.Popen(["/usr/bin/dpkg", "-l", x.name], stdout=subprocess.PIPE).communicate()[0].decode().splitlines()[5:] if p]
+			pack.checkInstallList = lambda x: [ "{1}={2}".format(*p.split())
+			                                    for p in
+			                                    subprocess.Popen(["/usr/bin/dpkg", "-l", x.name],
+			                                                     stdout=subprocess.PIPE)
+			                                    .communicate()[0].decode().splitlines()[5:]
+			                                    if p ]
+
 			pack.installArgs = ["/usr/bin/apt-get", "install", "-y"]
 			pack.uninstallArgs = ["/usr/bin/apt-get", "purge", "-y"]
 
@@ -86,6 +98,12 @@ class Package(metaclass=_MetaPackage):
 
 		self.name = pkg["name"]
 		self.version = pkg["version"] if "version" in pkg else ""
+
+		# These are defined in the metaclass based on the host system's Linux distribution, but are
+		# specified here for the benefit of static analysis tools
+		self.checkInstallList = getattr(self, 'checkInstallList', lambda: ())
+		self.installArgs = getattr(self, 'installArgs', None)
+		self.uninstallArgs = getattr(self, 'uninstallArgs', None)
 
 	def __repr__(self) -> str:
 		"""

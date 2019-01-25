@@ -23,18 +23,10 @@ import (
 )
 
 func TestPhysLocations(t *testing.T) {
-
-	CreateTestCDNs(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	UpdateTestPhysLocations(t)
-	GetTestPhysLocations(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestCDNs(t)
-
+	WithObjs(t, []TCObj{CDNs, Parameters, Divisions, Regions, PhysLocations}, func() {
+		UpdateTestPhysLocations(t)
+		GetTestPhysLocations(t)
+	})
 }
 
 func CreateTestPhysLocations(t *testing.T) {

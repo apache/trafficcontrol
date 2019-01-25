@@ -1767,7 +1767,16 @@ sub regex_revalidate_dot_config {
 	my $max_hours = $max_days * 24;
 	my $min_hours = 1;
 
-	my $rs = $self->db->resultset('Job')->search( { start_time => \$interval }, { prefetch => 'job_deliveryservice' } );
+	my $date = Date::Manip::Date->new();
+
+	my $rs = $self->db->resultset('Job')->search(
+		{
+			start_time => \$interval,
+			"job_deliveryservice.cdn_id" => $cdn_obj->id,
+		},
+		{
+			prefetch => 'job_deliveryservice'
+		} );
 	while ( my $row = $rs->next ) {
 		next unless defined( $row->job_deliveryservice );
 
@@ -1787,7 +1796,6 @@ sub regex_revalidate_dot_config {
 			next;
 		}
 
-		my $date       = new Date::Manip::Date();
 		my $start_time = $row->start_time;
 		my $start_date = ParseDate($start_time);
 		my $end_date   = DateCalc( $start_date, ParseDateDelta( $ttl . ':00:00' ) );
@@ -1803,15 +1811,11 @@ sub regex_revalidate_dot_config {
 		}
 		my $asset_url = $row->asset_url;
 
-		my $job_cdn_id = $row->job_deliveryservice->cdn_id;
-		if ( $cdn_obj->id == $job_cdn_id ) {
-
-			# if there are multiple with same re, pick the longes lasting.
-			if ( !defined( $regex_time{ $row->asset_url } )
-				|| ( defined( $regex_time{ $row->asset_url } ) && $purge_end > $regex_time{ $row->asset_url } ) )
-			{
-				$regex_time{ $row->asset_url } = $purge_end;
-			}
+		# if there are multiple with same regex, pick the longest lasting.
+		if ( !defined( $regex_time{ $row->asset_url } )
+			|| ( defined( $regex_time{ $row->asset_url } ) && $purge_end > $regex_time{ $row->asset_url } ) )
+		{
+			$regex_time{ $row->asset_url } = $purge_end;
 		}
 	}
 

@@ -36,10 +36,13 @@ var UserController = function($scope, $state, $location, $uibModal, formUtils, l
     };
 
     var getTenants = function() {
-        tenantService.getTenants()
-            .then(function(result) {
-                $scope.tenants = result;
-                tenantUtils.addLevels($scope.tenants);
+        tenantService.getTenant(userModel.user.tenantId)
+            .then(function(tenant) {
+                tenantService.getTenants()
+                    .then(function(tenants) {
+                        $scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant.parentId, []);
+                        tenantUtils.addLevels($scope.tenants);
+                    });
             });
     };
 

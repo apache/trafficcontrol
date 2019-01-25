@@ -22,35 +22,10 @@ import (
 )
 
 func TestOrigins(t *testing.T) {
-	CreateTestCDNs(t)
-	defer DeleteTestCDNs(t)
-	CreateTestTypes(t)
-	defer DeleteTestTypes(t)
-	CreateTestTenants(t)
-	defer DeleteTestTenants(t)
-	CreateTestProfiles(t)
-	defer DeleteTestProfiles(t)
-	CreateTestStatuses(t)
-	defer DeleteTestStatuses(t)
-	CreateTestDivisions(t)
-	defer DeleteTestDivisions(t)
-	CreateTestRegions(t)
-	defer DeleteTestRegions(t)
-	CreateTestPhysLocations(t)
-	defer DeleteTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	defer DeleteTestCacheGroups(t)
-	CreateTestServers(t)
-	defer DeleteTestServers(t)
-	CreateTestDeliveryServices(t)
-	defer DeleteTestDeliveryServices(t)
-	CreateTestCoordinates(t)
-	defer DeleteTestCoordinates(t)
-
-	CreateTestOrigins(t)
-	defer DeleteTestOrigins(t)
-	UpdateTestOrigins(t)
-	GetTestOrigins(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, Coordinates, Origins}, func() {
+		UpdateTestOrigins(t)
+		GetTestOrigins(t)
+	})
 }
 
 func CreateTestOrigins(t *testing.T) {

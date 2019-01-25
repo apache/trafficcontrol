@@ -30,13 +30,7 @@ func GetTestDomains(t *testing.T) {
 }
 
 func TestDomains(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	GetTestDomains(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses}, func() {
+		GetTestDomains(t)
+	})
 }

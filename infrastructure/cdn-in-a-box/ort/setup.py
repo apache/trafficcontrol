@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-
-# Copyright 2018 Comcast Cable Communications Management, LLC
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
-# http://www.apache.org/licenses/LICENSE-2.0
-
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
 
 """
 The setuptools-based install script for Traffic Ops ORT
@@ -62,7 +60,7 @@ setup(
 	],
 	keywords='network connection configuration TrafficControl',
 	packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-	install_requires=['setuptools', 'typing', 'requests', 'urllib3', 'distro', 'psutil'],
+	install_requires=['setuptools', 'typing', 'requests', 'urllib3', 'distro', 'psutil', 'Apache-TrafficControl'],
 	# data_files=[('etc/crontab', ['traffic_ops_ort.crontab'])],
 	entry_points={
 		'console_scripts': [

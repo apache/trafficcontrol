@@ -29,9 +29,9 @@ import (
 )
 
 func TestLoginFail(t *testing.T) {
-	CreateTestCDNs(t)
-	PostTestLoginFail(t)
-	DeleteTestCDNs(t)
+	WithObjs(t, []TCObj{CDNs}, func() {
+		PostTestLoginFail(t)
+	})
 }
 
 func PostTestLoginFail(t *testing.T) {

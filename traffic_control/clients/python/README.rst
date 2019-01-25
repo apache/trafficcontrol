@@ -14,10 +14,10 @@ The official installation method is to use ``pip`` to install directly from from
 .. code-block:: shell
 	:caption: Install Using 'pip' From GitHub
 
-	pip install git+https://github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python/trafficops"
+	pip install git+https://github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python"
 
 	# or
-	# pip install git+ssh://git@github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python/trafficops"
+	# pip install "git+ssh://git@github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python"
 
 Local Installation
 ------------------

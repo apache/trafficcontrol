@@ -38,6 +38,9 @@ do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
+set-dns.sh
+insert-self-into-dns.sh
+
 source /to-access.sh
 
 # Wait on SSL certificate generation
@@ -51,7 +54,7 @@ done
 source $X509_CA_ENV_FILE
 
 # Trust the CIAB-CA at the System level
-cp $X509_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+cp $X509_CA_CERT_FULL_CHAIN_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
 
 # Enroll with traffic ops

@@ -22,20 +22,10 @@ import (
 )
 
 func TestDeliveryServiceRequestComments(t *testing.T) {
-
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestDeliveryServiceRequests(t)
-	CreateTestDeliveryServiceRequestComments(t)
-	UpdateTestDeliveryServiceRequestComments(t)
-	GetTestDeliveryServiceRequestComments(t)
-	DeleteTestDeliveryServiceRequestComments(t)
-	DeleteTestDeliveryServiceRequests(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
-
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServiceRequests, DeliveryServiceRequestComments}, func() {
+		UpdateTestDeliveryServiceRequestComments(t)
+		GetTestDeliveryServiceRequestComments(t)
+	})
 }
 
 func CreateTestDeliveryServiceRequestComments(t *testing.T) {

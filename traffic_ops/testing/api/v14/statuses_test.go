@@ -23,12 +23,10 @@ import (
 )
 
 func TestStatuses(t *testing.T) {
-
-	CreateTestStatuses(t)
-	UpdateTestStatuses(t)
-	GetTestStatuses(t)
-	DeleteTestStatuses(t)
-
+	WithObjs(t, []TCObj{Parameters, Statuses}, func() {
+		UpdateTestStatuses(t)
+		GetTestStatuses(t)
+	})
 }
 
 func CreateTestStatuses(t *testing.T) {

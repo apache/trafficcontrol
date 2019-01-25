@@ -17,6 +17,9 @@
 # under the License.
 NAME="Traffic Router Application"
 
+set-dns.sh
+insert-self-into-dns.sh
+
 # Global Vars for FQDNs, ports, etc
 source /to-access.sh
 
@@ -28,7 +31,7 @@ CATALINA_PID="$CATALINA_BASE/temp/tomcat.pid"
 
 CATALINA_OPTS="\
   -server -Xms2g -Xmx8g \
-  -Djava.library.path=$CATALINA_HOME/lib \
+  -Djava.library.path=/usr/lib64:$CATALINA_BASE/lib:$CATALINA_HOME/lib \
   -Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties \
   -Dorg.apache.catalina.connector.Response.ENFORCE_ENCODING_IN_GET_WRITER=false \
   -XX:+UseG1GC \
@@ -37,6 +40,7 @@ CATALINA_OPTS="\
 
 JAVA_HOME=/opt/java
 JAVA_OPTS="\
+  -Djava.library.path=/usr/lib64 \
   -Dcache.config.json.refresh.period=5000 \
   -Djava.awt.headless=true \
   -Djava.security.egd=file:/dev/./urandom"
@@ -61,10 +65,10 @@ done
 source $X509_CA_ENV_FILE
 
 # Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
-cp $X509_CA_CERT_FILE $CATALINA_BASE/conf
-cp $X509_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+cp $X509_CA_ROOT_CERT_FILE $CATALINA_BASE/conf
+cp $X509_CA_INTR_CERT_FILE $CATALINA_BASE/conf
+cp $X509_CA_CERT_FULL_CHAIN_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
-
 
 # Add traffic 
 for crtfile in $(find $CATALINA_BASE/conf -name \*.crt -type f) 
@@ -92,16 +96,16 @@ echo "traffic_ops.password=$TO_ADMIN_PASSWORD" >> $TO_PROPERTIES
 echo "traffic_monitor.bootstrap.hosts=$TM_FQDN:$TM_PORT;" >> $TM_PROPERTIES
 echo "traffic_monitor.properties.reload.period=60000" >> $TM_PROPERTIES
 
+# Enroll Traffic Router
+to-enroll tr || (while true; do echo "enroll failed."; sleep 3 ; done)
+
 # Wait for traffic monitor
 until nc $TM_FQDN $TM_PORT </dev/null >/dev/null 2>&1; do
   echo "Waiting for Traffic Monitor to start..."
   sleep 3
 done
 
-# Enroll Traffic Router
-to-enroll tr || (while true; do echo "enroll failed."; sleep 3 ; done)
-
 touch $LOGFILE $ACCESSLOG
-tail -F $CATALINA_OUT $CATALINA_LOG $LOGFILE $ACCESSLOG &  
+exec /opt/tomcat/bin/catalina.sh run &
 
-exec /opt/tomcat/bin/catalina.sh run 
+tail -F $CATALINA_OUT $CATALINA_LOG $LOGFILE $ACCESSLOG 

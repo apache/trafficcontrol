@@ -24,6 +24,10 @@ import os
 import logging
 import requests
 
+from trafficops.restapi import LoginError, OperationError
+
+from . import to_api
+
 #: A constant that holds the absolute path to the status file directory
 STATUS_FILE_DIR = "/opt/ort/status"
 
@@ -31,18 +35,20 @@ class ORTException(Exception):
 	"""Signifies an ORT related error"""
 	pass
 
-def syncDSState() -> bool:
+def syncDSState(api:to_api.API) -> bool:
 	"""
-	Queries Traffic Ops for the Delivery Service's sync state
+	Queries Traffic Ops for the :term:`Delivery Service`'s sync state
+
+	:param api: A :class:`traffic_ops_ort.to_api.API` object to use when interacting with Traffic Ops
 
 	:raises ORTException: when something goes wrong
 	:returns: whether or not an update is needed
 	"""
-	from . import to_api, configuration
+	from . import configuration
 	logging.info("starting syncDS state fetch")
 
 	try:
-		updateStatus = to_api.getUpdateStatus(configuration.HOSTNAME[0])[0]
+		updateStatus = api.getUpdateStatus(api.hostname)[0]
 	except (IndexError, ConnectionError, requests.exceptions.RequestException) as e:
 		logging.critical("Server configuration not found in Traffic Ops!")
 		raise ORTException from e
@@ -54,18 +60,20 @@ def syncDSState() -> bool:
 
 	return 'upd_pending' in updateStatus and updateStatus['upd_pending']
 
-def revalidateState() -> bool:
+def revalidateState(api:to_api.API) -> bool:
 	"""
 	Checks the revalidation status of this server in Traffic Ops
+
+	:param api: A :class:`traffic_ops_ort.to_api.API` object to use when interacting with Traffic Ops
 
 	:returns: whether or not this server has a revalidation pending
 	:raises ORTException:
 	"""
-	from . import to_api, configuration as conf
+	from . import configuration as conf
 	logging.info("starting revalidation state fetch")
 
 	try:
-		to_api.getUpdateStatus(conf.HOSTNAME[0])[0]
+		updateStatus = api.getUpdateStatus(api.hostname)
 	except (IndexError, ConnectionError, requests.exceptions.RequestException) as e:
 		logging.critical("Server configuration not found in Traffic Ops!")
 		raise ORTException from e
@@ -74,33 +82,36 @@ def revalidateState() -> bool:
 		raise ORTException from e
 
 	logging.debug("Retrieved raw revalidation status: %r", updateStatus)
-	if conf.WAIT_FOR_PARENTS and "parent_reval_pending" in updateStatus and updateStatus["parent_reval_pending"]:
+	if conf.WAIT_FOR_PARENTS and\
+	   "parent_reval_pending" in updateStatus and\
+	   updateStatus["parent_reval_pending"]:
 		logging.info("Parent revalidation is pending - waiting for parent")
 		return False
 
 	return "reval_pending" in updateStatus and updateStatus["reval_pending"]
 
-def deleteOldStatusFiles(myStatus:str):
+def deleteOldStatusFiles(myStatus:str, api:to_api.API):
 	"""
 	Attempts to delete any and all old status files
 
 	:param myStatus: the current status - files by this name will not be deleted
+	:param api: A :class:`traffic_ops_ort.to_api.API` object to use when interacting with Traffic Ops
 	:raises ConnectionError: if there's an issue retrieving a list of statuses from
 		Traffic Ops
 	:raises OSError: if a file cannot be deleted for any reason
 	"""
 	from .configuration import MODE, Modes
-	from . import to_api, utils
+	from . import utils
 
 	logging.info("Deleting old status files (those that are not %s)", myStatus)
 
 	doDeleteFiles = MODE is not Modes.REPORT
 
-	for status in to_api.getStatuses():
+	for status in api.get_statuses()[0]:
 
 		# Only the status name matters
 		try:
-			status = status["name"]
+			status = status.name
 		except KeyError as e:
 			logging.debug("Bad status object: %r", status)
 			logging.debug("Original error: %s", e, exc_info=True, stack_info=True)
@@ -117,18 +128,19 @@ def deleteOldStatusFiles(myStatus:str):
 				logging.warning("Deleting file '%s'!", fname)
 				os.remove(fname)
 
-def setStatusFile() -> bool:
+def setStatusFile(api:to_api.API) -> bool:
 	"""
 	Attempts to set the status file according to this server's reported status in Traffic Ops.
 
 	.. warning:: This will create the directory '/opt/ORTstatus' if it does not exist, and may
 		delete files there without warning!
 
+	:param api: A :class:`traffic_ops_ort.to_api.API` object to use when interacting with Traffic Ops
 	:returns: whether or not the status file could be set properly
 	"""
 	global STATUS_FILE_DIR
 	from .configuration import MODE, Modes
-	from . import to_api, utils
+	from . import utils
 	logging.info("Setting status file")
 
 	if not isinstance(MODE, Modes):
@@ -136,7 +148,7 @@ def setStatusFile() -> bool:
 		return False
 
 	try:
-		myStatus = to_api.getMyStatus()
+		myStatus = api.getMyStatus()
 	except ConnectionError as e:
 		logging.error("Failed to set status file - Traffic Ops connection failed")
 		return False
@@ -157,7 +169,7 @@ def setStatusFile() -> bool:
 				return False
 	else:
 		try:
-			deleteOldStatusFiles(myStatus)
+			deleteOldStatusFiles(myStatus, api)
 		except ConnectionError as e:
 			logging.error("Failed to delete old status files - Traffic Ops connection failed.")
 			logging.debug("%s", e, exc_info=True, stack_info=True)
@@ -183,17 +195,17 @@ def setStatusFile() -> bool:
 
 	return True
 
-def processPackages() -> bool:
+def processPackages(api:to_api.API) -> bool:
 	"""
 	Manages the packages that Traffic Ops reports are required for this server.
 
+	:param api: A :class:`traffic_ops_ort.to_api.API` object to use when interacting with Traffic Ops
 	:returns: whether or not the package processing was successfully completed
 	"""
-	from . import to_api
 	from .configuration import Modes, MODE
 
 	try:
-		myPackages = to_api.getMyPackages()
+		myPackages = api.getMyPackages()
 	except (ConnectionError, PermissionError) as e:
 		logging.error("Failed to fetch package list from Traffic Ops - %s", e)
 		logging.debug("%s", e, exc_info=True, stack_info=True)
@@ -211,20 +223,16 @@ def processPackages() -> bool:
 
 	return True
 
-def processServices() -> bool:
+def processServices(api:to_api.API) -> bool:
 	"""
 	Manages the running processes of the server, according to an ancient system known as 'chkconfig'
 
+	:param api: A :class:`traffic_ops_ort.to_api.API` object to use when interacting with Traffic Ops
 	:returns: whether or not the service processing was completed successfully
 	"""
 	from . import services
-	from .to_api import getMyChkconfig
 
-	chkconfig = getMyChkconfig()
-
-	logging.debug("/ort/<hostname>/chkconfig response: %r", chkconfig)
-
-	for item in chkconfig:
+	for item in api.getMyChkconfig():
 		logging.debug("Processing item %r", item)
 
 		if not services.setServiceStatus(item):
@@ -232,13 +240,14 @@ def processServices() -> bool:
 
 	return True
 
-def processConfigurationFiles() -> bool:
+def processConfigurationFiles(api:to_api.API) -> bool:
 	"""
 	Updates and backs up all of a server's configuration files.
 
+	:param api: A :class:`traffic_ops_ort.to_api.API` object to use when interacting with Traffic Ops
 	:returns: whether or not the configuration changes were successful
 	"""
-	from . import config_files, to_api, configuration
+	from . import config_files, configuration
 
 	try:
 		config_files.initBackupDir()
@@ -249,7 +258,7 @@ def processConfigurationFiles() -> bool:
 		return False
 
 	try:
-		myFiles = to_api.getMyConfigFiles()
+		myFiles = api.getMyConfigFiles()
 	except ConnectionError as e:
 		logging.error("Failed to fetch configuration files - Traffic Ops connection failed! %s",e)
 		logging.debug("%s", e, exc_info=True, stack_info=True)
@@ -263,7 +272,7 @@ def processConfigurationFiles() -> bool:
 		try:
 			file = config_files.ConfigFile(file)
 			logging.info("\n============ Processing File: %s ============", file.fname)
-			file.update()
+			file.update(api)
 			logging.info("\n============================================\n")
 
 		# A bad object could just reflect an inconsistent reply structure from the API, so BADASSes
@@ -289,12 +298,22 @@ def run() -> int:
 
 	:returns: an exit code for the script
 	"""
-	from . import configuration, to_api, utils, services
+	from . import configuration, utils, services
+
+	try:
+		api = to_api.API(configuration.USERNAME, configuration.PASSWORD, configuration.TO_HOST,
+		                 configuration.HOSTNAME[0], configuration.TO_PORT, configuration.VERIFY,
+		                 configuration.TO_USE_SSL)
+	except (LoginError, OperationError) as e:
+		logging.critical("Failed to authenticate with Traffic Ops")
+		logging.error(e)
+		logging.debug("%r", e, exc_info=True, stack_info=True)
+		return 1
 
 	# If this is just a revalidation, then we can exit if there's no revalidation pending
 	if configuration.MODE == configuration.Modes.REVALIDATE:
 		try:
-			updateRequired = revalidateState()
+			updateRequired = revalidateState(api)
 		except ORTException as e:
 			logging.debug("%r", e, exc_info=True, stack_info=True)
 			return 2
@@ -309,20 +328,20 @@ def run() -> int:
 	# changes
 	else:
 		try:
-			updateRequired = syncDSState()
+			updateRequired = syncDSState(api)
 		except ORTException as e:
 			logging.debug("%r", e, exc_info=True, stack_info=True)
 			return 2
 
 		# Bail on failures - unless this script is BADASS!
-		if not setStatusFile():
+		if not setStatusFile(api):
 			if configuration.MODE is not configuration.Modes.BADASS:
 				logging.critical("Failed to set status as specified by Traffic Ops")
 				return 2
 			logging.warning("Failed to set status but we're BADASS, so moving on.")
 
 		logging.info("\nProcessing Packages...")
-		if not processPackages():
+		if not processPackages(api):
 			logging.critical("Failed to process packages")
 			if configuration.MODE is not configuration.Modes.BADASS:
 				return 2
@@ -330,7 +349,7 @@ def run() -> int:
 		logging.info("Done.\n")
 
 		logging.info("\nProcessing Services...")
-		if not processServices():
+		if not processServices(api):
 			logging.critical("Failed to process services.")
 			if configuration.MODE is not configuration.Modes.BADASS:
 				return 2
@@ -340,7 +359,7 @@ def run() -> int:
 
 	# All modes process configuration files
 	logging.info("\nProcessing Configuration Files...")
-	if not processConfigurationFiles():
+	if not processConfigurationFiles(api):
 		logging.critical("Failed to process configuration files.")
 		return 2
 	logging.info("Done.\n")
@@ -350,7 +369,7 @@ def run() -> int:
 		   utils.getYesNoResponse("Update Traffic Ops?", default='Y'):
 
 			logging.info("\nUpdating Traffic Ops...")
-			to_api.updateTrafficOps()
+			api.updateTrafficOps()
 			logging.info("Done.\n")
 		else:
 			logging.warning("Traffic Ops was not notified of changes. You should do this manually.")

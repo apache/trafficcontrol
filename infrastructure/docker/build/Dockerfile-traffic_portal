@@ -48,9 +48,7 @@ RUN	yum -y install \
 		rh-ruby23-ruby-devel \
 		rh-ruby23-runygems
 
-RUN	. /opt/rh/rh-ruby23/enable && \
-	gem update --system --no-document && \
-	gem install rb-inotify && \
+RUN	gem install rb-inotify -v 0.9.10 && \
 	gem install compass && \
 	npm -g install bower grunt-cli
 

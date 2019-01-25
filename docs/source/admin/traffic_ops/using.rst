@@ -503,7 +503,8 @@ One of the most important settings when creating the delivery service is the sel
 +-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATNL, but the MID tier is bypassed.                                                                                                                        |
 +-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ANY_MAP         | ANY_MAP is not known to Traffic Router. For this deliveryservice, the "Raw remap text" field in the input form will be used as the remap line on the cache.                                       |
+| ANY_MAP         | ANY_MAP is not known to Traffic Router. For this Delivery Sevice, the "Raw Remap Text" field in the input form will be used as the remap line in the cache's :file:`remap.config`.                |
+|                 | For more information see `ANY_MAP Raw Remap Text`_                                                                                                                                                |
 +-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | STEERING        | The Delivery Service will be used to route to other delivery services. The target delivery services and the routing weights for those delivery services will be defined by an admin or steering   |
 |                 | user. For more information see the `steering feature <../traffic_router.html#steering-feature>`_ documentation                                                                                    |
@@ -541,6 +542,60 @@ The deliveryservice screen also allows you to set the DSCP value of traffic sent
 
 .. Note:: The DSCP setting in the UI is *only* for setting traffic towards the client, and gets applied *after* the initial TCP handshake is complete, and the HTTP request is received (before that the cache can't determine what deliveryservice this request is for, and what DSCP to apply), so the DSCP feature can not be used for security settings - the TCP SYN-ACK is not going to be DSCP marked.
 
+.. _raw-remap-text:
+
+ANY_MAP Raw Remap Text
+----------------------
+The Raw Remap Text may contain the following special strings that will be replaced by :program:`traffic_ops_ort` at :abbr:`ATS (Apache Traffic Server)` edge and mid levels in `remap.config <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_:
+
+.. table:: Traffic Ops ORT special strings
+
+	+---------------------+-------------------------------------------------+
+	| Traffic Ops Entry   | Gets Replaced with                              |
+	+=====================+=================================================+
+	| __CACHE_IPV4__      | The cache's IPv4 address                        |
+	+---------------------+-------------------------------------------------+
+	| __HOSTNAME__        | Short hostname (same as ``hostname -s``)        |
+	+---------------------+-------------------------------------------------+
+	| __FULL_HOSTNAME__   | Long hostname (same as :manpage:`hostname(1)`)  |
+	+---------------------+-------------------------------------------------+
+	| __SERVER_TCP_PORT__ | Server incoming TCP port number                 |
+	+---------------------+-------------------------------------------------+
+	| __RETURN__          | A newline                                       |
+	+---------------------+-------------------------------------------------+
+	| ##OVERRIDE##        | See below                                       |
+	+---------------------+-------------------------------------------------+
+
+ANY_MAP ##OVERRIDE##
+""""""""""""""""""""
+.. warning:: The ANY_MAP ``##OVERRIDE##`` special string is a temporary solution and will be deprecated once Delivery Service Versioning is implemented.
+
+A special ``##OVERRIDE##`` string has been added to allow an ANY_MAP rule to override another Delivery Service's remap rule, implemented by :program:`traffic_ops_ort`.  When present, the original Delivery Service remap rule is commented out with an ``##OVERRIDDEN##`` prefix and the ``##OVERRIDE##`` rule is activated in its place.
+
+:abbr:`ATS (Apache Traffic Server)` `remap.config <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_:
+
+.. code-block:: text
+	:caption: Delivery Service :file:`remap.config` line:
+
+	map http://from.com/ http://to.com/
+
+.. code-block:: text
+	:caption: ANY_MAP Raw Remap Text
+
+	##OVERRIDE## map http://from.com/ http://to.com/ thundering_herd_mitigation.so
+
+.. code-block:: text
+	:caption: :program:`traffic_ops_ort` post process :file:`remap.config` lines after merge:
+
+	##OVERRIDE##
+	map http://from.com/ http://to.com/ thundering_herd_mitigation.so
+	##OVERRIDDEN## map http://from.com/ http://to.com/
+
+The ANY_MAP ``##OVERRIDE##`` may be used to incrementally deploy plugins by assigning a subset of caches to the ANY_MAP ``##OVERRIDE##`` Delivery Service in addition to the original Delivery Service.  This allows Traffic Router to send traffic to edges based on the original Delivery Service but serve them using the ANY_MAP override Raw Remap Text.
+
+.. warning:: The from endpoint must exactly match for this to properly work (ie: trailing URL '/'), otherwise :abbr:`ATS (Apache Traffic Server)` may fail to initialize or reload while processing :file:`remap.config`.
+
+.. note:: Any of these ANY_MAP ``##OVERRIDE##`` rules **should** be documented in the comment fields of the original Delivery Service to assist with troubleshooting.
 
 .. index::
 	Token Based Authentication

@@ -78,8 +78,8 @@ if ( defined( $ARGV[2] ) ) {
 	else {
 		$traffic_ops_host = $ARGV[2];
 		$traffic_ops_host =~ s/\/*$//g;
-                # Stash to_url for later use...
-                $to_url = $traffic_ops_host;
+		# Stash to_url for later use...
+		$to_url = $traffic_ops_host;
 	}
 }
 else {
@@ -303,12 +303,12 @@ sub revalidate_while_sleeping {
 }
 
 sub os_version {
-  my $release = "UNKNOWN";
-  if (`uname -r` =~ m/.+(el\d)(?:\.\w+)*\.x86_64/)  {
-    $release = uc $1;
-  }
-  exists $supported_el_release{$release} ? return $release
-      : die("unsupported el_version: $release");
+	my $release = "UNKNOWN";
+	if (`uname -r` =~ m/.+(el\d)(?:\.\w+)*\.x86_64/)  {
+		$release = uc $1;
+	}
+	exists $supported_el_release{$release} ? return $release
+	    : die("unsupported el_version: $release");
 }
 
 sub usage {
@@ -375,6 +375,11 @@ sub process_cfg_file {
 		$result =~ s/__HOSTNAME__/$hostname_short/g;
 		$result =~ s/__FULL_HOSTNAME__/$hostname_full/g;
 		$result =~ s/\s*__RETURN__\s*/\n/g;
+	}
+
+	# Process ##OVERRIDE## remap rules (from anymap rawtext)
+	if ( $cfg_file eq "remap.config" ) {
+		$result = &adv_preprocessing_remap( \$result );
 	}
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
@@ -1105,6 +1110,7 @@ sub process_config_files {
 				|| $file =~ m/\.cer$/
 				|| $file =~ m/\.key$/
 				|| $file eq "logs_xml.config"
+				|| $file eq "logging.config"
 				|| $file eq "ssl_multicert.config" )
 			)
 		{
@@ -1620,11 +1626,11 @@ sub get_cookie {
 	}
 
 	my $url = $to_host . "/api/1.3/user/login";
-    	my $json = qq/{ "u": "$u", "p": "$p"}/;
-    	my $lwp = LWP::UserAgent->new;
-    	my $response = $lwp->post($url, Content => $json);
+	my $json = qq/{ "u": "$u", "p": "$p"}/;
+	my $lwp = LWP::UserAgent->new;
+	my $response = $lwp->post($url, Content => $json);
 
-    	&check_lwp_response_code($response, $FATAL);
+	&check_lwp_response_code($response, $FATAL);
 
 	my $cookie;
 	if ( $response->header('Set-Cookie') ) {
@@ -1794,8 +1800,8 @@ sub get_cfg_file_list {
 		$to_rev_proxy_url = $ort_ref->{'info'}->{'toRevProxyUrl'};
 		if ( $to_rev_proxy_url && $rev_proxy_disable == 0 ) {
 			$to_rev_proxy_url =~ s/\/*$//g;
-                        # Note: If traffic_ops_url is changing, would be suggested to get a new cookie.
-                        #       Secrets might not be the same on all Traffic Ops instance.
+			# Note: If traffic_ops_url is changing, would be suggested to get a new cookie.
+			#       Secrets might not be the same on all Traffic Ops instance.
 			$traffic_ops_host = $to_rev_proxy_url;
 			$rev_proxy_in_use = 1;
 			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Reverse Proxy URL from Traffic Ops: $to_rev_proxy_url\n");
@@ -2657,7 +2663,7 @@ sub open_file_get_contents {
 		chomp($line);
 		( $log_level >> $TRACE ) && print "TRACE Line from cfg file on disk:\t$line.\n";
 		if ( $line =~ m/^\#/ || $line =~ m/^$/ ) {
-			if ( ( $line !~ m/DO NOT EDIT - Generated for / && $line !~ m/$header_comment/ ) && $line !~ m/TRAFFIC OPS NOTE\:/ ) {
+			if ( ( $line !~ m/DO NOT EDIT - Generated for / && $line !~ m/$header_comment/ ) && ( $line !~ m/TRAFFIC OPS NOTE\:/ ) && ( $line !~ m/^##OVERRID.*##/ ) ) {
 				next;
 			}
 		}
@@ -2832,6 +2838,75 @@ sub backup_file {
 	}
 	return 0;
 
+}
+
+sub adv_preprocessing_remap {
+
+	my $buffer = ${ $_[0] };
+
+	( my @file_lines ) = split( /\n/, $buffer );
+
+	if ( 1 < $#file_lines ) { #header line is always present, so look for 2 lines or more
+		( $log_level >> $DEBUG ) && print "DEBUG Entering advanced pre-processing for remap.config.\n";
+		
+		# key on the FROM remap
+		my %override_hash=();
+
+		# sweep for override lines
+		foreach my $line (@file_lines) {
+			if ( $line =~ m/^##OVERRIDE##\s*/ ) {
+				my $newline = $line =~ s/^##OVERRIDE##\s*//r;
+				( my @fields ) = split( /\s+/, $newline, 4 );
+				# ensure <rule> <from> <to>
+				if ( 2 < $#fields ) {
+					$override_hash{$fields[1]}=1;
+				}
+			}
+		}
+
+		# handle override lines, etc
+		my $overrides = keys %override_hash;
+		if (0 < $overrides) {
+			( $log_level >> $INFO ) && print "INFO Entering ##OVERRIDE## processing for remap.config.\n";
+
+			my @out_lines;
+			my $lineno = 0;
+			my $cnt = 0;
+
+			foreach my $line (@file_lines) {
+				if ( $line =~ m/DO NOT EDIT - Generated for/ ) {
+					push( @out_lines, $line );
+				}
+				elsif ( $line =~ m/^##OVERRIDE##\s*/ ) {
+					$line =~ s/^##OVERRIDE##\s*//;
+					( $log_level >> $DEBUG ) && print "DEBUG new override line $lineno: \'$line\'\n";
+					push( @out_lines, "##OVERRIDE##" );
+					push( @out_lines, $line );
+				}
+				elsif ( $line !~ m/^\s*#/ ) {
+					( my @fields ) = split( /\s+/, $line, 4 );
+					# ensure <rule> <from> <to>
+					if ( 2 < $#fields && exists($override_hash{$fields[1]}) ) {
+						( $log_level >> $DEBUG ) && print "DEBUG old overriden line $lineno: \'$line\'\n";
+						$cnt++;
+						$line = "##OVERRIDDEN## " . $line;
+					}
+
+					push( @out_lines, $line );
+				}
+				else {
+					push( @out_lines, $line );
+				}
+
+				$lineno++;
+			}
+
+			( $log_level >> $WARN ) && print "WARN Overrode $cnt old remap rule(s) with $overrides new remap rule(s).\n";
+			$buffer = join( "\n", @out_lines ) . "\n";
+		}
+	}
+
+	return $buffer;
 }
 
 sub adv_processing_udev {

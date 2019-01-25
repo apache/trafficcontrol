@@ -23,12 +23,10 @@ import (
 )
 
 func TestDivisions(t *testing.T) {
-
-	CreateTestDivisions(t)
-	UpdateTestDivisions(t)
-	GetTestDivisions(t)
-	DeleteTestDivisions(t)
-
+	WithObjs(t, []TCObj{Parameters, Divisions}, func() {
+		UpdateTestDivisions(t)
+		GetTestDivisions(t)
+	})
 }
 
 func CreateTestDivisions(t *testing.T) {

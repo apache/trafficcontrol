@@ -27,6 +27,9 @@ LOGFILE="/var/log/traffic_portal/traffic_portal.log"
 MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
 
+set-dns.sh
+insert-self-into-dns.sh
+
 source /to-access.sh
 
 # Wait on SSL certificate generation
@@ -40,7 +43,7 @@ done
 source $X509_CA_ENV_FILE
 
 # Trust the CIAB-CA at the System level
-cp $X509_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+cp $X509_CA_CERT_FULL_CHAIN_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
 
 # Configuration of Traffic Portal

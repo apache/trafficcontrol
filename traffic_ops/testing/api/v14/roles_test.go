@@ -31,14 +31,14 @@ const (
 )
 
 func TestRoles(t *testing.T) {
-	CreateTestRoles(t)
-	UpdateTestRoles(t)
-	GetTestRoles(t)
-	DeleteTestRoles(t)
+	WithObjs(t, []TCObj{Parameters, Roles}, func() {
+		UpdateTestRoles(t)
+		GetTestRoles(t)
+	})
 }
 
 func CreateTestRoles(t *testing.T) {
-	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"role was created.","success"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"can not add non-existent capabilities: [invalid-capability]","error"}}}}
+	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"role was created.", "success"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"can not add non-existent capabilities: [invalid-capability]", "error"}}}}
 	for i, role := range testData.Roles {
 		var alerts tc.Alerts
 		alerts, _, status, err := TOSession.CreateRole(role)
@@ -56,7 +56,7 @@ func CreateTestRoles(t *testing.T) {
 
 func UpdateTestRoles(t *testing.T) {
 	log.Debugln("entered test")
-	log.Debugf("testData.Roles contains: %++v\n",testData.Roles)
+	log.Debugf("testData.Roles contains: %++v\n", testData.Roles)
 	firstRole := testData.Roles[0]
 	log.Debugln("got first role from slice")
 	// Retrieve the Role by role so we can get the id for the Update

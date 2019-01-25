@@ -23,12 +23,10 @@ import (
 )
 
 func TestTypes(t *testing.T) {
-
-	CreateTestTypes(t)
-	UpdateTestTypes(t)
-	GetTestTypes(t)
-	DeleteTestTypes(t)
-
+	WithObjs(t, []TCObj{Parameters, Types}, func() {
+		UpdateTestTypes(t)
+		GetTestTypes(t)
+	})
 }
 
 func CreateTestTypes(t *testing.T) {

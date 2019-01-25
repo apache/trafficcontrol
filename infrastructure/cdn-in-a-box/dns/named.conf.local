@@ -19,6 +19,7 @@ zone "ciab.test" {
   type master;
   file "/etc/bind/zone.ciab.test";
   forwarders {};
+  allow-update { key ciab.test.; };
 };
 
 zone "239.16.172.in-addr.arpa" IN {

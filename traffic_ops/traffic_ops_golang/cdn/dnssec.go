@@ -62,6 +62,15 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, "Successfully created dnssec keys for "+cdnName)
 }
 
+// DefaultDSTTL is the default DS Record TTL to use, if no CDN Snapshot exists, or if no tld.ttls.DS parameter exists.
+// This MUST be the same value as Traffic Router's default. Currently:
+// traffic_router/core/src/main/java/com/comcast/cdn/traffic_control/traffic_router/core/dns/SignatureManager.java:476
+// `final Long dsTtl = ZoneUtils.getLong(config.get("ttls"), "DS", 60);`.
+// If Traffic Router and Traffic Ops differ, and a user is using the default, errors may occur!
+// Users are advised to set the tld.ttls.DS CRConfig.json Parameter, so the default is not used!
+// Traffic Ops functions SHOULD warn whenever this default is used.
+const DefaultDSTTL = 60 * time.Second
+
 func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -79,14 +88,15 @@ func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	if !keysExist {
 		// TODO emulates Perl; change to error, 404?
-		api.WriteRespAlert(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ") // emulates Perl
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ", struct{}{}) // emulates Perl
 		return
 	}
 
 	dsTTL, err := GetDSRecordTTL(inf.Tx.Tx, cdnName)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DS Record TTL: "+err.Error()))
-		return
+		log.Errorln("Getting DNSSEC Keys: getting DS Record TTL from CRConfig Snapshot: " + err.Error())
+		log.Errorf("Getting DNSSEC Keys: getting DS Record TTL failed, using default %v. It is STRONGLY ADVISED to fix the error, and ensure a CRConfig Snapshot exists for the CDN, and a tld.ttls.DS CRConfig.json Parameter exists on a Router Profile on the CDN. Default DS Records may cause unexpected behavior or errors!\n", DefaultDSTTL)
+		dsTTL = DefaultDSTTL
 	}
 
 	keys, err := deliveryservice.MakeDNSSECKeysFromRiakKeys(riakKeys, dsTTL)
@@ -113,7 +123,7 @@ func GetDNSSECKeysV11(w http.ResponseWriter, r *http.Request) {
 	}
 	if !keysExist {
 		// TODO emulates Perl; change to error, 404?
-		api.WriteRespAlert(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ") // emulates Perl
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ", struct{}{}) // emulates Perl
 		return
 	}
 	api.WriteResp(w, r, riakKeys)
@@ -155,6 +165,7 @@ func generateStoreDNSSECKeys(
 	if !strings.HasSuffix(cdnDNSDomain, ".") {
 		cdnDNSDomain = cdnDNSDomain + "."
 	}
+	cdnDNSDomain = strings.ToLower(cdnDNSDomain)
 
 	inception := time.Now()
 	newCDNZSK, err := deliveryservice.GetDNSSECKeysV11(tc.DNSSECZSKType, cdnDNSDomain, ttl, inception, inception.Add(zExp), tc.DNSSECKeyStatusNew, time.Unix(effectiveDateUnix, 0), false)

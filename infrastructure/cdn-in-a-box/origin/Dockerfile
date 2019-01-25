@@ -23,7 +23,7 @@
 
 FROM alpine:latest
 
-RUN apk add --no-cache lighttpd bash curl
+RUN apk add --no-cache lighttpd bash curl bind-tools
 
 RUN rm /etc/lighttpd/lighttpd.conf
 RUN rm -rf /var/www/localhost/

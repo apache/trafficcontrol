@@ -24,21 +24,12 @@ import (
 )
 
 func TestProfiles(t *testing.T) {
-
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-
-	// attempt to create profiles with missing info
-	CreateBadProfiles(t)
-	CreateTestProfiles(t)
-	CreateTestParameters(t)
-	UpdateTestProfiles(t)
-	GetTestProfiles(t)
-	GetTestProfilesWithParameters(t)
-	DeleteTestParameters(t)
-	DeleteTestProfiles(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+	WithObjs(t, []TCObj{CDNs, Types, Profiles, Parameters}, func() {
+		CreateBadProfiles(t)
+		UpdateTestProfiles(t)
+		GetTestProfiles(t)
+		GetTestProfilesWithParameters(t)
+	})
 }
 
 // CreateBadProfiles ensures that profiles can't be created with bad values

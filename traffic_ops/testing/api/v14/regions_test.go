@@ -23,15 +23,11 @@ import (
 )
 
 func TestRegions(t *testing.T) {
-
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	UpdateTestRegions(t)
-	GetTestRegions(t)
-	GetTestRegionsByNamePath(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-
+	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
+		UpdateTestRegions(t)
+		GetTestRegions(t)
+		GetTestRegionsByNamePath(t)
+	})
 }
 
 func CreateTestRegions(t *testing.T) {

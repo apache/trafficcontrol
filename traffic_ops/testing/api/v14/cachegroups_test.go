@@ -25,13 +25,11 @@ import (
 )
 
 func TestCacheGroups(t *testing.T) {
-	CreateTestTypes(t)
-	CreateTestCacheGroups(t)
-	GetTestCacheGroups(t)
-	CheckCacheGroupsAuthentication(t)
-	UpdateTestCacheGroups(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestTypes(t)
+	WithObjs(t, []TCObj{Types, Parameters, CacheGroups}, func() {
+		GetTestCacheGroups(t)
+		CheckCacheGroupsAuthentication(t)
+		UpdateTestCacheGroups(t)
+	})
 }
 
 func CreateTestCacheGroups(t *testing.T) {

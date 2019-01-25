@@ -66,3 +66,12 @@ Flags:
 | `topass` | The Traffic Ops user password. |
 | `tourl` | The Traffic Ops URL, including the scheme and fully qualified domain name. |
 | `pretty` | Whether to pretty-print JSON |
+
+Exit Codes:
+
+| Code | Description |
+| --- | --- |
+| 0 | Success |
+| 1 | Error, see output for details |
+| 2 | Error reloading service |
+| 3 | Error clearing the server's update flag in Traffic Ops |

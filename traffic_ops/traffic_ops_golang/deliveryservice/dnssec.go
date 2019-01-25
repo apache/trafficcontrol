@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -112,7 +113,7 @@ func GetDNSSECKeysV11(keyType string, dsName string, ttl time.Duration, inceptio
 func genKeys(dsName string, ksk bool, ttl time.Duration, tld bool) (string, string, *tc.DNSSECKeyDSRecordV11, error) {
 	bits := 1024
 	flags := 256
-	algorithm := dns.RSASHA256 // 8 - http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
+	algorithm := dns.RSASHA1 // 5 - http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
 	protocol := 3
 
 	if ksk {
@@ -151,7 +152,7 @@ func genKeys(dsName string, ksk bool, ttl time.Duration, tld bool) (string, stri
 	if ksk && tld {
 		dsRecord := dnskey.ToDS(digestType)
 		if dsRecord == nil {
-			return "", "", nil, errors.New("creating DS record from DNSKEY record: " + err.Error())
+			return "", "", nil, fmt.Errorf("creating DS record from DNSKEY record: converting dnskey %++v to DS failed", dnskey)
 		}
 		keyDS = &tc.DNSSECKeyDSRecordV11{Algorithm: int64(dsRecord.Algorithm), DigestType: int64(dsRecord.DigestType), Digest: dsRecord.Digest}
 	}
@@ -176,6 +177,7 @@ func GetDSDomainName(dsExampleURLs []string) (string, error) {
 		return "", errors.New("malformed example URL, nothing after first dot")
 	}
 	dsName = dsName[firstDot+1:]
+	dsName = strings.ToLower(dsName)
 	return dsName, nil
 }
 

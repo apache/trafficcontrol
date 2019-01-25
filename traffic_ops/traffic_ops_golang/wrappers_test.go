@@ -83,6 +83,29 @@ func TestWrapHeaders(t *testing.T) {
 	}
 }
 
+// TestWrapPanicRecover checks that a recovered panic returns a 500
+func TestWrapPanicRecover(t *testing.T) {
+	f := wrapPanicRecover(func(w http.ResponseWriter, r *http.Request) {
+		var foo *string
+		bar := *foo // will throw nil dereference panic
+		w.Write([]byte(bar))
+	})
+	f = wrapHeaders(f)
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("", "/", nil)
+	if err != nil {
+		t.Error("Error creating new request")
+	}
+
+	// Call to wrap the panic recovery
+	f(w, r)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Error("expected panic recovery to return a 500, got", w.Code)
+	}
+}
+
 // TestGzip checks that if Accept-Encoding contains "gzip" that the body is indeed gzip'd
 func TestGzip(t *testing.T) {
 	body := "am I gzip'd?"

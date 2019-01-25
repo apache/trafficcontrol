@@ -28,7 +28,7 @@ EXPOSE 80
 ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-2.el7.x86_64.rpm /trafficserver.rpm
 ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-devel-7.1.4-2.el7.x86_64.rpm /trafficserver-devel.rpm
 
-RUN yum install -y kyotocabinet-libs epel-release initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel
+RUN yum install -y bind-utils kyotocabinet-libs epel-release initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel
 RUN yum install -y /trafficserver.rpm /trafficserver-devel.rpm jq python34-psutil python34-typing python34-setuptools python34-pip && yum clean all
 RUN pip3 install --upgrade pip && pip3 install requests urllib3 distro
 
@@ -49,9 +49,10 @@ RUN mkdir -p /var/trafficserver /opt/ort && \
 RUN setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_server && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_manager && setcap CAP_NET_BIND_SERVICE=+eip /bin/trafficserver && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_cop
 
 ADD infrastructure/cdn-in-a-box/ort /opt/ort/
+ADD traffic_control/clients/python /opt/Apache-TrafficControl/
 
-WORKDIR /opt/ort
+WORKDIR /opt
 
-RUN touch /var/log/ort.log && pip3 install . && cp traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
+RUN touch /var/log/ort.log && pip3 install ./Apache-TrafficControl && pip3 install ./ort && cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
 
 CMD exit

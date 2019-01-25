@@ -16,37 +16,16 @@ package v14
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func TestDeliveryServicesCachegroups(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	CreateTestServers(t)
-	CreateTestDeliveryServices(t)
-
-	CreateTestCachegroupsDeliveryServices(t)
-	DeleteTestCachegroupsDeliveryServices(t)
-
-	DeleteTestDeliveryServices(t)
-	DeleteTestServers(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+		CreateTestCachegroupsDeliveryServices(t)
+		DeleteTestCachegroupsDeliveryServices(t)
+	})
 }
 
 const TestEdgeServerCacheGroupName = "cachegroup1" // TODO this is the name hard-coded in the create servers test; change to be dynamic
@@ -122,7 +101,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 	log.Debugln("DeleteTestCachegroupsDeliveryServices")
 
-	dss, _, err := TOSession.GetDeliveryServiceServers()
+	dss, _, err := TOSession.GetDeliveryServiceServersN(1000000)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceServers: %v\n", err)
 	}

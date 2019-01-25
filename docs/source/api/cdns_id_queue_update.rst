@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-cdns-id-queue_update:
+.. _to-api-cdns-id-queue_update:
 
 ****************************
 ``cdns/{{ID}}/queue_update``

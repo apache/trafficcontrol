@@ -23,36 +23,11 @@ import (
 )
 
 func TestUsers(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestTenants(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	CreateTestDivisions(t)
-	CreateTestRegions(t)
-	CreateTestPhysLocations(t)
-	CreateTestCacheGroups(t)
-	CreateTestDeliveryServices(t)
-
-	CreateTestUsers(t)
-	UpdateTestUsers(t)
-	GetTestUsers(t)
-	GetTestUserCurrent(t)
-	//Delete will be new functionality to 1.4, ignore for now
-	//DeleteTestUsers(t)
-	ForceDeleteTestUsers(t)
-
-	DeleteTestDeliveryServices(t)
-	DeleteTestCacheGroups(t)
-	DeleteTestPhysLocations(t)
-	DeleteTestRegions(t)
-	DeleteTestDivisions(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTenants(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
-
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Users}, func() {
+		UpdateTestUsers(t)
+		GetTestUsers(t)
+		GetTestUserCurrent(t)
+	})
 }
 
 const SessionUserName = "admin" // TODO make dynamic?
@@ -61,11 +36,10 @@ func CreateTestUsers(t *testing.T) {
 	for _, user := range testData.Users {
 
 		resp, _, err := TOSession.CreateUser(&user)
-		log.Debugln("Response: ", resp.Alerts)
-
 		if err != nil {
-			t.Errorf("could not CREATE user: %v\n", err)
+			t.Fatalf("could not CREATE user: %v\n", err)
 		}
+		log.Debugln("Response: ", resp.Alerts)
 	}
 }
 

@@ -27,8 +27,11 @@ module.exports = angular.module('trafficPortal.private.tenants.list', [])
                         templateUrl: 'common/modules/table/tenants/table.tenants.tpl.html',
                         controller: 'TableTenantsController',
                         resolve: {
+                            currentUserTenant: function(tenantService, userModel) {
+                                return tenantService.getTenant(userModel.user.tenantId);
+                            },
                             tenants: function(tenantService) {
-                                return tenantService.getTenants();
+                                return tenantService.getTenants({ orderby: 'name' });
                             }
                         }
                     }

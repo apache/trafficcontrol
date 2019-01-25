@@ -60,13 +60,14 @@ class ConfigFile():
 		...             "scope": "servers"}))
 		ConfigFile(path='/path/to/test', URI='http://test', scope='servers')
 		"""
-		from .configuration import TO_URL
+		from .configuration import TO_HOST, TO_PORT, TO_USE_SSL
 
 		try:
 			self.fname = raw["fnameOnDisk"]
 			self.location = raw["location"]
 			if "apiUri" in raw:
-				self.URI = '/'.join((TO_URL, raw["apiUri"].lstrip('/')))
+				self.URI = "https://" if TO_USE_SSL else "http://"
+				self.URI = "%s%s:%d/%s" % (self.URI, TO_HOST, TO_PORT, raw["apiUri"].lstrip('/'))
 			else:
 				self.URI = raw["url"]
 			self.scope = raw["scope"]
@@ -88,42 +89,19 @@ class ConfigFile():
 		return "ConfigFile(path=%r, URI=%r, scope=%r)" %\
 		          (self.path, self.URI if self.URI else None, self.scope)
 
-	def __str__(self) -> str:
-		"""
-		Implements ``str(self)``
-
-		:returns: The contents of the file, fetched using :meth:`fetchContents` if necessary
-		"""
-		if self.contents:
-			return self.contents
-
-		try:
-			self.fetchContents()
-		except ConnectionError as e:
-			logging.debug("%s", e, exc_info=True, stack_info=True)
-
-		return self.contents
-
-	def fetchContents(self):
+	def fetchContents(self, api:'to_api.API'):
 		"""
 		Fetches the file contents from :attr:`URI` if possible. Sets :attr:`contents` when
 		successful.
 
+		:param api: A valid, authenticated API session for use when interacting with Traffic Ops
 		:raises ConnectionError: if something goes wrong fetching the file contents from Traffic
 			Ops
 		"""
-		from . import configuration as conf, utils
 		logging.info("Fetching file %s", self.fname)
 
 		try:
-			# You can't really check this any earlier, since even a 'url' field could, potentially,
-			# point at Traffic Ops
-			if self.URI.startswith(conf.TO_URL):
-				cookies = {conf.TO_COOKIE.name: conf.TO_COOKIE.value}
-			else:
-				cookies = None
-
-			self.contents = utils.getTextResponse(self.URI, cookies=cookies, verify=conf.VERIFY)
+			self.contents = api.getRaw(self.URI)
 		except ValueError as e:
 			raise ConnectionError from e
 
@@ -161,17 +139,19 @@ class ConfigFile():
 		logging.info("Backup File written")
 
 
-	def update(self):
+	def update(self, api:'to_api.API'):
 		"""
 		Updates the file if required, backing up as necessary
 
+		:param api: A valid, authenticated API session for use when interacting with Traffic Ops
 		:raises OSError: when reading/writing files fails for some reason
 		"""
 		from . import utils
 		from .configuration import MODE, Modes, SERVER_INFO
 		from .services import NEEDED_RELOADS, FILES_THAT_REQUIRE_RELOADS
 
-		finalContents = sanitizeContents(str(self))
+		self.fetchContents(api)
+		finalContents = sanitizeContents(self.contents)
 		# Ensure POSIX-compliant files
 		if not finalContents.endswith('\n'):
 			finalContents += '\n'
