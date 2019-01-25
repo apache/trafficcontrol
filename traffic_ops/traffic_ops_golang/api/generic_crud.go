@@ -29,19 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-// APIInfoImpl implements APIInfo via the APIInfoer interface
-type APIInfoImpl struct {
-	ReqInfo *APIInfo
-}
-
-func (val *APIInfoImpl) SetInfo(inf *APIInfo) {
-	val.ReqInfo = inf
-}
-
-func (val APIInfoImpl) APIInfo() *APIInfo {
-	return val.ReqInfo
-}
-
 type GenericCreator interface {
 	GetType() string
 	APIInfo() *APIInfo

@@ -48,8 +48,6 @@ const ConfigContextKey = "context"
 const ReqIDContextKey = "reqid"
 const APIRespWrittenKey = "respwritten"
 
-type CRUDFactory func(reqInfo *APIInfo) CRUDer
-
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
@@ -365,6 +363,19 @@ func (inf *APIInfo) Close() {
 	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
 		log.Errorln("committing transaction: " + err.Error())
 	}
+}
+
+// APIInfoImpl implements APIInfo via the APIInfoer interface
+type APIInfoImpl struct {
+	ReqInfo *APIInfo
+}
+
+func (val *APIInfoImpl) SetInfo(inf *APIInfo) {
+	val.ReqInfo = inf
+}
+
+func (val APIInfoImpl) APIInfo() *APIInfo {
+	return val.ReqInfo
 }
 
 // GetDB returns the database from the context. This should very rarely be needed, rather `NewInfo` should always be used to get a transaction, except in extenuating circumstances.
