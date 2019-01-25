@@ -99,7 +99,7 @@ func TestValidate(t *testing.T) {
 	n := "not_a_valid_role"
 	reqInfo := api.APIInfo{}
 	r := TORole{
-		APIInformer: api.APIInformer{&reqInfo},
+		APIInfoImpl: api.APIInfoImpl{&reqInfo},
 		Role:        tc.Role{Name: &n},
 	}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(r.Validate())))
@@ -115,7 +115,7 @@ func TestValidate(t *testing.T) {
 
 	//  name,  domainname both valid
 	r = TORole{
-		APIInformer: api.APIInformer{&reqInfo},
+		APIInfoImpl: api.APIInfoImpl{&reqInfo},
 		Role: tc.Role{
 			Name:        stringAddr("this is a valid name"),
 			Description: stringAddr("this is a description"),

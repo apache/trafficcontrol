@@ -34,7 +34,7 @@ import (
 
 //we need a type alias to define functions on
 type TOCoordinate struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.CoordinateNullable
 }
 

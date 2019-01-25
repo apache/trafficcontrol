@@ -37,7 +37,7 @@ import (
 
 type tester struct {
 	ID          int
-	APIInformer `json:"-"`
+	APIInfoImpl `json:"-"`
 	userErr     error //only for testing
 	sysErr      error //only for testing
 	errCode     int   //only for testing

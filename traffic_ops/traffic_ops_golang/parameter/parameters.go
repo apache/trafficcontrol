@@ -48,7 +48,7 @@ var (
 
 //we need a type alias to define functions on
 type TOParameter struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.ParameterNullable
 }
 

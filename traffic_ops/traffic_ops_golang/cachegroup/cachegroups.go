@@ -40,7 +40,7 @@ import (
 )
 
 type TOCacheGroup struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.CacheGroupNullable
 }
 

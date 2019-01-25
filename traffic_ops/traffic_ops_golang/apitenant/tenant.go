@@ -42,7 +42,7 @@ import (
 
 // TOTenant provides a local type against which to define methods
 type TOTenant struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.TenantNullable
 }
 

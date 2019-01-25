@@ -81,7 +81,7 @@ func TestGetProfileParameters(t *testing.T) {
 	txx := db.MustBegin()
 	reqInfo := api.APIInfo{Tx: txx, Params: map[string]string{"profile": "1"}}
 	obj := TOProfileParameter{
-		api.APIInformer{&reqInfo},
+		api.APIInfoImpl{&reqInfo},
 		tc.ProfileParameterNullable{},
 	}
 	pps, userErr, sysErr, _ := obj.Read()

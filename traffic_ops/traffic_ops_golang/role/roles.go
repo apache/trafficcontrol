@@ -38,7 +38,7 @@ import (
 )
 
 type TORole struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.Role
 	LastUpdated    *tc.TimeNoMod   `json:"-"`
 	PQCapabilities *pq.StringArray `json:"-" db:"capabilities"`

@@ -75,7 +75,7 @@ func TestGetDivisions(t *testing.T) {
 
 	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 	obj := TODivision{
-		api.APIInformer{&reqInfo},
+		api.APIInfoImpl{&reqInfo},
 		tc.DivisionNullable{},
 	}
 	vals, userErr, sysErr, _ := obj.Read()

@@ -40,7 +40,7 @@ const (
 
 //we need a type alias to define functions on
 type TOProfileParameter struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.ProfileParameterNullable
 }
 

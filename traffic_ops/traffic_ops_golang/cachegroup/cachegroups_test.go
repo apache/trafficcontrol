@@ -137,7 +137,12 @@ func TestReadCacheGroups(t *testing.T) {
 	mock.ExpectCommit()
 
 	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
-	cachegroups, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	obj := TOCacheGroup{
+		api.APIInfoImpl{&reqInfo},
+		tc.CacheGroupNullable{},
+	}
+	cachegroups, userErr, sysErr, _ := obj.Read()
+
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
@@ -212,7 +217,7 @@ func TestValidate(t *testing.T) {
 	ti := 6
 	lu := tc.TimeNoMod{Time: time.Now()}
 	c := TOCacheGroup{
-		api.APIInformer{&reqInfo},
+		api.APIInfoImpl{&reqInfo},
 		tc.CacheGroupNullable{
 			ID:                  &id,
 			Name:                &nm,
@@ -249,7 +254,7 @@ func TestValidate(t *testing.T) {
 	lo = 90.0
 	lm = []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ}
 	c = TOCacheGroup{
-		api.APIInformer{&reqInfo},
+		api.APIInfoImpl{&reqInfo},
 		tc.CacheGroupNullable{
 			ID:                  &id,
 			Name:                &nm,

@@ -38,7 +38,7 @@ import (
 
 // TODeliveryServiceRequest is the type alias to define functions on
 type TODeliveryServiceRequest struct {
-	api.APIInformer `json:"-"`
+	api.APIInfoImpl `json:"-"`
 	tc.DeliveryServiceRequestNullable
 }
 

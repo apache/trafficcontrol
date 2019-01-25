@@ -45,7 +45,7 @@ import (
 //we need a type alias to define functions on
 
 type TODeliveryServiceV13 struct {
-	api.APIInformer
+	api.APIInfoImpl
 	tc.DeliveryServiceNullable
 }
 
