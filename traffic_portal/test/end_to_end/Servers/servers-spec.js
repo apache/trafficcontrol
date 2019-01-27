@@ -38,13 +38,13 @@ describe('Traffic Portal Servers Test Suite', function() {
 	it('should go to the Servers page', function() {
 		console.log('Looading Configure/Servers');
 		browser.get(browser.baseUrl + "/#!/servers");
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/servers");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
     it('should open new Servers form page', function() {
 		console.log('Clicking on Create new server ' + mockVals.hostName);
 		browser.driver.findElement(by.name('createServersButton')).click();
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/servers/new");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/new");
     });
 
 	it('should fill out form, create button is enabled and submit', function () {
@@ -66,7 +66,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/servers");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
 	it('should verify the new Server and then update Server', function() {

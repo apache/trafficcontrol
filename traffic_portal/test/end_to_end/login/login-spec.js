@@ -17,7 +17,10 @@
  * under the License.
  */
 
+var cfunc = require('../common/commonFunctions.js');
+
 describe('Traffic Portal Login Test Suite', function() {
+  var commonFunctions = new cfunc();
 
     beforeEach(function() {
         browser.get(browser.baseUrl);
@@ -37,11 +40,11 @@ describe('Traffic Portal Login Test Suite', function() {
     });
 
 	it('should successfully login to Traffic Portal', function() {
-		console.log('Logging in to Traffic Portal');
+		console.log('Logging in to Traffic Portal "' + browser.baseUrl + '" with user "' + browser.params.adminUser + '"');
 		browser.driver.findElement(by.name('loginUsername')).sendKeys(browser.params.adminUser);
 		browser.driver.findElement(by.name('loginPass')).sendKeys(browser.params.adminPassword);
 		browser.driver.findElement(by.name('loginSubmit')).click();
 		browser.debugger();
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/");
 	});
 });

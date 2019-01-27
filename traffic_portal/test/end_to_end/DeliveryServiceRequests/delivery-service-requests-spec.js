@@ -37,7 +37,7 @@ describe('Traffic Portal Delivery Service Requests', function() {
 	it('should open ds services page and click button to create a new one', function() {
 		console.log('Opening delivery service requests page');
 		browser.get(browser.baseUrl + "/#!/delivery-services");
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/delivery-services");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
 	it('should create and select type of ds from the dropdown and confirm', function() {
@@ -54,7 +54,7 @@ describe('Traffic Portal Delivery Service Requests', function() {
 	it('should populate and submit the ds form', function() {
 		console.log('Filling out form for ' + mockVals.xmlId);
 		browser.sleep(250);
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/delivery-services/new?type=" + mockVals.dsType[1]);
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/new?type=" + mockVals.dsType[1]);
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		pageData.active.click();
 		pageData.active.sendKeys(mockVals.active);
@@ -83,7 +83,7 @@ describe('Traffic Portal Delivery Service Requests', function() {
 
 	it('should redirect to delivery-service-requests page', function() {
 		console.log('Backing out and verifying ' + mockVals.xmlId + ' exists');
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/delivery-service-requests");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-service-requests");
 	});
 
 	it('should open up and update the ds', function() {
@@ -144,6 +144,6 @@ describe('Traffic Portal Delivery Service Requests', function() {
 		pageData.deleteButton.click();
 		pageData.confirmWithNameInput.sendKeys(mockVals.xmlId + ' request');
 		pageData.deletePermanentlyButton.click();
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/delivery-service-requests");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-service-requests");
 	});
 });
