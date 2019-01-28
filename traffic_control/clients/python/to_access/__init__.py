@@ -155,7 +155,7 @@ logging.basicConfig(level=logging.CRITICAL+1)
 #: The full path to a file used to store the user's Mojolicious athentication cookie (currently unused)
 COOKIEFILE = "" #os.path.expanduser(os.path.join("~", ".to-auth.cookie"))
 
-def setCookie(cookie:str):
+def setCookie(cookie: str):
 	"""
 	Writes the passed cookie to the :data:`COOKIEFILE` file for later use.
 
@@ -166,8 +166,8 @@ def setCookie(cookie:str):
 	with open(COOKIEFILE, "w") as f:
 		f.write(cookie)
 
-def output(r:requests.Response, pretty:bool, reqHeader:bool, respHeader:bool, reqPayload:bool,
-           indent:typing.Union[int, str] = '\t'):
+def output(r: requests.Response, pretty: bool, reqHeader: bool, respHeader: bool, reqPayload: bool,
+           indent: typing.Union[int, str] = '\t'):
 	"""
 	Prints the passed response object in a format consistent with the other parameters.
 
@@ -204,12 +204,12 @@ def output(r:requests.Response, pretty:bool, reqHeader:bool, respHeader:bool, re
 		result = r.text
 	print(result)
 
-def parseArguments(program:str) -> typing.Tuple[TOSession,
-                                                str,
-                                                typing.Optional[bytes],
-                                                typing.Tuple[bool, bool, bool],
-                                                bool,
-                                                bool]:
+def parseArguments(program: str) -> typing.Tuple[TOSession,
+                                                 str,
+                                                 typing.Optional[bytes],
+                                                 typing.Tuple[bool, bool, bool],
+                                                 bool,
+                                                 bool]:
 	"""
 	A common-use function that parses the command line arguments.
 
