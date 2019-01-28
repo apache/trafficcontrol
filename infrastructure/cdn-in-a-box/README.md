@@ -154,7 +154,11 @@ show you the default UI for interacting with the CDN - Traffic Portal.
 > </div>
 >
 
+## Host Ports
 
+By default, `docker-compose.yml` does not expose ports to the host. This allows the host to be running other services on those ports, as well as allowing multiple CDN-in-a-Boxes to run on the same host, without port conflicts.
+
+To expose the ports of each service on the host, add the `docker-compose.expose-ports.yml` file. For example, `docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`.
 
 ## Common Pitfalls
 
