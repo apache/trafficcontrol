@@ -19,14 +19,15 @@
 Setuptools build/install script for the Python Traffic Control client
 """
 
-import sys
+import io
 import os
+import sys
 from setuptools import setup, find_packages
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 about = {}
-with open(os.path.join(HERE, 'trafficops', '__version__.py'), mode='r', encoding='utf-8') as f:
+with io.open(os.path.join(HERE, 'trafficops', '__version__.py'), mode='r', encoding='utf-8') as f:
 	exec(f.read(), about)
 
 with open(os.path.join(HERE, "README.rst")) as fd:
