@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
@@ -55,7 +56,17 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		req.EffectiveDateUnix = &now
 	}
 	cdnName := *req.Key
-	if err := generateStoreDNSSECKeys(inf.Tx.Tx, inf.Config, cdnName, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix)); err != nil {
+
+	cdnDomain, cdnExists, err := dbhelpers.GetCDNDomainFromName(inf.Tx.Tx, tc.CDNName(cdnName))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("create DNSSEC keys: getting CDN domain: "+err.Error()))
+		return
+	} else if !cdnExists {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("cdn '"+cdnName+"' not found"), nil)
+		return
+	}
+
+	if err := generateStoreDNSSECKeys(inf.Tx.Tx, inf.Config, cdnName, cdnDomain, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix)); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
 	}
@@ -141,6 +152,7 @@ func generateStoreDNSSECKeys(
 	tx *sql.Tx,
 	cfg *config.Config,
 	cdnName string,
+	cdnDomain string,
 	ttlSeconds uint64,
 	kExpDays uint64,
 	zExpDays uint64,
@@ -156,7 +168,7 @@ func generateStoreDNSSECKeys(
 		return errors.New("getting old dnssec keys: " + err.Error())
 	}
 
-	dses, cdnDomain, err := getCDNDeliveryServices(tx, cdnName)
+	dses, err := GetCDNDeliveryServices(tx, cdnName)
 	if err != nil {
 		return errors.New("getting cdn delivery services: " + err.Error())
 	}
@@ -245,7 +257,7 @@ type CDNDS struct {
 }
 
 // getCDNDeliveryServices returns basic data for the delivery services on the given CDN, as well as the CDN name, or any error.
-func getCDNDeliveryServices(tx *sql.Tx, cdn string) ([]CDNDS, string, error) {
+func GetCDNDeliveryServices(tx *sql.Tx, cdn string) ([]CDNDS, error) {
 	q := `
 SELECT ds.xml_id, ds.protocol, t.name as type, ds.routing_name, cdn.domain_name as cdn_domain
 FROM deliveryservice as ds
@@ -255,25 +267,24 @@ WHERE cdn.name = $1
 `
 	rows, err := tx.Query(q, cdn)
 	if err != nil {
-		return nil, "", errors.New("getting cdn delivery services: " + err.Error())
+		return nil, errors.New("getting cdn delivery services: " + err.Error())
 	}
 	defer rows.Close()
-	cdnDomain := ""
 	dses := []CDNDS{}
 	for rows.Next() {
 		ds := CDNDS{}
 		dsTypeStr := ""
-		if err := rows.Scan(&ds.Name, &ds.Protocol, &dsTypeStr, &ds.RoutingName, &cdnDomain); err != nil {
-			return nil, "", errors.New("scanning cdn delivery services: " + err.Error())
+		if err := rows.Scan(&ds.Name, &ds.Protocol, &dsTypeStr, &ds.RoutingName); err != nil {
+			return nil, errors.New("scanning cdn delivery services: " + err.Error())
 		}
 		dsType := tc.DSTypeFromString(dsTypeStr)
 		if dsType == tc.DSTypeInvalid {
-			return nil, "", errors.New("got invalid delivery service type '" + dsTypeStr + "'")
+			return nil, errors.New("got invalid delivery service type '" + dsTypeStr + "'")
 		}
 		ds.Type = dsType
 		dses = append(dses, ds)
 	}
-	return dses, cdnDomain, nil
+	return dses, nil
 }
 
 func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
