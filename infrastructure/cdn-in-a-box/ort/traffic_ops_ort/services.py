@@ -85,6 +85,19 @@ def reloadATSConfigs() -> bool:
 		return False
 	return True
 
+def restartATS() -> bool:
+	"""
+	A convenience function for calling :func:`setATSStatus` for restarts.
+
+	:returns: whether or not the restart was successful (or unnecessary)
+	"""
+	from .configuration import MODE, Modes
+	from .utils import getYesNoResponse as getYN
+
+	doRestart = MODE is Modes.BADASS or MODE is Modes.REPORT or (MODE is Modes.INTERACTIVE and
+	                                                             getYN("Restart ATS?", default='Y'))
+	return setATSStatus(True, restart=doRestart)
+
 #: A big ol' map of filenames to the services which require reloads when said files change
 FILES_THAT_REQUIRE_RELOADS = {"records.config":       reloadATSConfigs,
                               "remap.config":         reloadATSConfigs,
@@ -93,7 +106,10 @@ FILES_THAT_REQUIRE_RELOADS = {"records.config":       reloadATSConfigs,
                               "hosting.config":       reloadATSConfigs,
                               "astats.config":        reloadATSConfigs,
                               "logs_xml.config":      reloadATSConfigs,
-                              "ssl_multicert.config": reloadATSConfigs}
+                              "ssl_multicert.config": reloadATSConfigs,
+                              "plugin.config":        restartATS,
+                              "ntpd.conf":            lambda: restartService("ntpd"),
+                              "50-ats.rules":         restartATS}
 
 def doReloads() -> bool:
 	"""
@@ -102,6 +118,10 @@ def doReloads() -> bool:
 	:returns: whether or not the reloads/restarts went successfully
 	"""
 	global NEEDED_RELOADS
+
+	# If ATS is being restarted, configuration reloads will be implicit
+	if restartATS in NEEDED_RELOADS and reloadATSConfigs in NEEDED_RELOADS:
+		NEEDED_RELOADS.discard(reloadATSConfigs)
 
 	for reload in NEEDED_RELOADS:
 		try:
@@ -205,6 +225,39 @@ def setATSStatus(status:bool, restart:bool = False) -> bool:
 			return False
 	return True
 
+def restartService(service:str) -> bool:
+	"""
+	Restarts a generic systemd service
+
+	:param service: The name of the service to be restarted
+	:returns: Whether or not the restart was successful
+	"""
+	global HAS_SYSTEMD
+	from .utils import getYesNoResponse as getYN
+	from .configuration import MODE, Modes
+
+
+	if not HAS_SYSTEMD:
+		logging.warning("This system doesn't have systemd, services cannot be restarted")
+		return True
+
+	if MODE is not Modes.REPORT and (MODE is not Modes.INTERACTIVE or
+	                                 getYN("Restart %s?" % service, default='Y')):
+		logging.info("Restarting %s", service)
+		try:
+			sub = subprocess.Popen(["systemctl", "restart", service],
+			                       stdout=subprocess.PIPE,
+			                       stderr=subprocess.PIPE)
+			out, err = sub.communicate()
+			logging.debug("stdout: %s\nstderr: %s", out, err)
+		except (OSError, subprocess.CalledProcessError) as e:
+			logging.error("An error occurred when restarting %s: %s", service, e)
+			logging.debug("%r", e, exc_info=True, stack_info=True)
+			return False
+	return True
+
+
+
 def setServiceStatus(chkconfig:dict) -> bool:
 	"""
 	Sets the status of a service based on its 'chkconfig'.
@@ -226,7 +279,7 @@ def setServiceStatus(chkconfig:dict) -> bool:
 		return True
 
 	try:
-		status = "enable" if "on" in chkconfig.value else "disable"
+		status = "enable" if "on" in chkconfig["value"] else "disable"
 		service = chkconfig['name']
 	except KeyError as e:
 		logging.error("'%r' could not be parsed as a chkconfig object!", chkconfig)

@@ -13,24 +13,20 @@
 .. limitations under the License.
 ..
 
+*************************
 traffic\_ops\_ort package
-=========================
+*************************
+.. automodule:: traffic_ops_ort
+	:members:
+	:undoc-members:
+	:show-inheritance:
 
 Submodules
 ----------
-
 .. toctree::
 
-   traffic_ops_ort.configuration
-   traffic_ops_ort.main_routines
-   traffic_ops_ort.packaging
-   traffic_ops_ort.to_api
-   traffic_ops_ort.utils
-
-Module contents
----------------
-
-.. automodule:: traffic_ops_ort
-    :members:
-    :undoc-members:
-    :show-inheritance:
+	traffic_ops_ort.configuration
+	traffic_ops_ort.main_routines
+	traffic_ops_ort.packaging
+	traffic_ops_ort.to_api
+	traffic_ops_ort.utils

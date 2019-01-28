@@ -363,8 +363,8 @@ def run() -> int:
 	logging.info("Done.\n")
 
 	if updateRequired:
-		if configuration.MODE is not configuration.Modes.INTERACTIVE or\
-		   utils.getYesNoResponse("Update Traffic Ops?", default='Y'):
+		if (configuration.MODE is not configuration.Modes.INTERACTIVE or
+		   utils.getYesNoResponse("Update Traffic Ops?", default='Y')):
 
 			logging.info("\nUpdating Traffic Ops...")
 			api.updateTrafficOps()
@@ -372,9 +372,8 @@ def run() -> int:
 		else:
 			logging.warning("Traffic Ops was not notified of changes. You should do this manually.")
 
-		return 0
-
-	logging.info("Traffic Ops update not necessary")
+	else:
+		logging.info("Traffic Ops update not necessary")
 
 	if services.NEEDED_RELOADS and not services.doReloads():
 		logging.critical("Failed to reload all configuration changes")

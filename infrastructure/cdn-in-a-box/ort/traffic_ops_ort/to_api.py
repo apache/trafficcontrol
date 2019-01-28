@@ -121,7 +121,11 @@ class API(TOSession):
 		from . import configuration
 
 		logging.info("Fetching list of configuration files from Traffic Ops")
+
+		# The API function decorator confuses pylint into thinking this doesn't return
+		#pylint: disable=E1111
 		myFiles = self.get_server_config_files(host_name=self.hostname)
+		#pylint: enable=E1111
 
 		logging.debug("Raw response from Traffic Ops: %s", myFiles[1].text)
 		myFiles = myFiles[0]
@@ -199,7 +203,10 @@ class API(TOSession):
 		if host in self.CACHED_UPDATE_STATUS:
 			return self.CACHED_UPDATE_STATUS[host]
 
+		# The API function decorator confuses pylint into thinking this doesn't return
+		#pylint: disable=E1111
 		r = self.get_server_update_status(server_name=host)
+		#pylint: enable=E1111
 		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
 
 		self.CACHED_UPDATE_STATUS[host] = r[0]
@@ -222,7 +229,10 @@ class API(TOSession):
 
 		logging.info("Fetching server status from Traffic Ops")
 
+		# The API function decorator confuses pylint into thinking this doesn't return
+		#pylint: disable=E1111
 		r = self.get_servers(query_params={"hostName": self.hostname})
+		#pylint: enable=E1111
 
 		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
 

@@ -249,8 +249,8 @@ class ConfigFile():
 			r = api.get_cdn_ssl_keys(cdn_name=cdn)
 
 			if r[1].status_code != 200 and r[1].status_code != 204:
-				raise ValueError("Bad response code: %d - raw response: %s",
-				                               r[1].status_code,    r[1].text)
+				raise ValueError("Bad response code: %d - raw response: %s" %
+				                               (r[1].status_code,    r[1].text))
 		except (OperationError, InvalidJSONError, ValueError) as e:
 			logging.error("Invalid values encountered when communicating with Traffic Ops!")
 			logging.debug("%r", e, stack_info=True, exc_info=True)
