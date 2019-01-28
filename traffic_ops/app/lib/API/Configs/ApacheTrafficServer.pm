@@ -2671,6 +2671,27 @@ sub remap_dot_config {
 			if ( $ds->{range_request_handling} == RRH_CACHE_RANGE_REQUEST ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cache_range_requests.so";
 			}
+
+			#Add DS profile records.config entries as overrided ATS parameters
+			if ( defined( $ds->{'param'}->{'records.config'} ) ) {
+				foreach my $rc_entry ( keys %{ $ds->{'param'}->{'records.config'} } ) {
+					my @rec_params = split(' ', $rc_entry, 3);
+
+					#Check that the parameter name matches the records.config syntax
+					if ( $rec_params[0] eq 'CONFIG') {
+						my @rec_values = split(' ', $ds->{'param'}->{'records.config'}->{$rc_entry}, 3);
+
+						#Check parameter value matches records.config syntax
+						if ( {map{$_=>1}('INT','FLOAT','STRING')}->{$rec_values[0]}) {
+							$mid_remap{ $ds->{org} } .= " \@plugin=conf_remap.so \@pparam=" . $rec_params[1] . "=" . $rec_values[1];
+						} else {
+							$self->app->log->debug(" mid ds records.config entry did not match the known syntax for values");
+						}
+					} else {
+						$self->app->log->debug(" mid ds records.config entry did not match the known syntax for parameter names");
+					}
+				}
+			}		
 		}
 		foreach my $key ( keys %mid_remap ) {
 			my $remap_text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
@@ -2768,6 +2789,27 @@ sub build_remap_line {
 			$text .= " \@pparam=--" . $ck_entry . "=" . $remap->{'param'}->{'cachekey.config'}->{$ck_entry};
 		}
 	}
+
+	#Add DS profile records.config entries as overrided ATS parameters
+	if ( defined( $remap->{'param'}->{'records.config'} ) ) {
+		foreach my $rc_entry ( keys %{ $remap->{'param'}->{'records.config'} } ) {
+			my @rec_params = split(' ', $rc_entry, 3);
+
+			#Check that the parameter name matches the records.config syntax
+			if ( $rec_params[0] eq 'CONFIG') {
+				my @rec_values = split(' ', $remap->{'param'}->{'records.config'}->{$rc_entry}, 3);
+
+				#Check parameter value matches records.config syntax
+				if ( {map{$_=>1}('INT','FLOAT','STRING')}->{$rec_values[0]}) {
+					$text .= " \@plugin=conf_remap.so \@pparam=" . $rec_params[1] . "=" . $rec_values[1];
+				} else {
+					$self->app->log->debug(" ds records.config entry did not match the known syntax for values");
+				}
+			}  else {
+				$self->app->log->debug(" ds records.config entry did not match the known syntax for parameter names");
+			}
+		}
+	}	
 
 	# Note: should use full path here?
 	if ( defined( $remap->{regex_remap} ) && $remap->{regex_remap} ne "" ) {
