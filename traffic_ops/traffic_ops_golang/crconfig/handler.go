@@ -164,7 +164,7 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig and Monitor performed for "+cdn, inf.User, inf.Tx.Tx)
-	w.WriteHeader(http.StatusOK) // TODO change to 204 No Content in new version
+	api.WriteResp(w, r, "SUCCESS")
 }
 
 // SnapshotGUIHandler creates the CRConfig JSON and writes it to the snapshot table in the database. The response emulates the old Perl UI function. This should go away when the old Perl UI ceases to exist.
