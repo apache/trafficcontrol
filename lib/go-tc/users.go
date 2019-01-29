@@ -76,22 +76,12 @@ type commonUserFields struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
-// User fields in v14 have been updated to be nullable. omitempty is used to protect password data
+// User fields in v14 have been updated to be nullable
 type User struct {
 	Username         *string    `json:"username" db:"username"`
 	RegistrationSent *TimeNoMod `json:"registrationSent" db:"registration_sent"`
 	LocalPassword    *string    `json:"localPasswd,omitempty" db:"local_passwd"`
-
-	// Expected behavior of role names:
-	// GET users/:id and users/   returns 'rolename'   'roleName' is nil
-	// POST and PUT users/        returns 'roleName'   'rolename' is nil
-	// The json the user enters for POST and PUT at the moment only uses the numerical id of 'role',
-	// so the name conflict does not occur on entry. However, the user should be careful when reading
-	// back those values. This is a bug that has been kept to maintain the version promise and prevent
-	// clients from breaking (see #3219).
-	// This is tracked by: apache/trafficcontrol/issues/3220
-	RoleNameGET *string `json:"rolename,omitempty"`
-	RoleName    *string `json:"roleName,omitempty" db:"rolename"`
+	RoleName         *string    `json:"roleName,omitempty" db:"-"`
 	commonUserFields
 }
 

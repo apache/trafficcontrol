@@ -21,7 +21,6 @@ package user
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -194,43 +193,38 @@ func checkTenancy(tenantID *int, tenantIDs []int) bool {
 }
 
 // This is not using GenericRead because of this tenancy check. Maybe we can add tenancy functionality to the generic case?
-func (user *TOUser) Read() ([]interface{}, error, error, int) {
+func (this *TOUser) Read() ([]interface{}, error, error, int) {
 
-	var query string
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(user.APIInfo().Params, user.ParamColumns())
-
+	inf := this.APIInfo()
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(inf.Params, this.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
-	tenantIDs, err := tenant.GetUserTenantIDListTx(user.ReqInfo.Tx.Tx, user.ReqInfo.User.TenantID)
+	tenantIDs, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting tenant list for user: %v\n", err), http.StatusInternalServerError
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "u.tenant_id", tenantIDs)
 
-	query = user.SelectQuery() + where + orderBy
-	rows, err := user.ReqInfo.Tx.NamedQuery(query, queryValues)
+	query := this.SelectQuery() + where + orderBy
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, fmt.Errorf("querying users : %v", err), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
+	type UserGet struct {
+		RoleName *string `json:"rolename" db:"rolename"`
+		tc.User
+	}
+
+	user := &UserGet{}
 	users := []interface{}{}
 	for rows.Next() {
-
 		if err = rows.StructScan(user); err != nil {
 			return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError
 		}
-
-		// role is a required field for the endpoint, but not for an item in the database
-		// I doubt a nil check is needed, but I'm including it just in case
-		if user.RoleName == nil {
-			return nil, nil, errors.New("role name is nil"), http.StatusInternalServerError
-		}
-		user.RoleNameGET = user.RoleName
-		user.RoleName = nil
-
 		users = append(users, *user)
 	}
 
