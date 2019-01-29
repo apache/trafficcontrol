@@ -16,7 +16,8 @@ package v14
 
 import (
 	"bytes"
-	"encoding/json"
+	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -29,7 +30,7 @@ import (
 func TestUsers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Users}, func() {
 		UpdateTestUsers(t)
-		RolenameCapitalizationTest(t)
+		TestRolenameCapitalization(t)
 		OpsUpdateAdminTest(t)
 		UserSelfUpdateTest(t)
 		UserUpdateOwnRoleTest(t)
@@ -51,48 +52,60 @@ func CreateTestUsers(t *testing.T) {
 	}
 }
 
-func RolenameCapitalizationTest(t *testing.T) {
+func TestRolenameCapitalization(t *testing.T) {
 
-	var err error
-	var jsonBytes []byte
+	roles, _, _, err := TOSession.GetRoles()
+	if err != nil {
+		t.Errorf("could not get roles: %v", err)
+	}
+	if len(roles) == 0 {
+		t.Fatalf("there should be at least one role to test the user")
+	}
 
-	user := tc.User{}
-	blob := []byte(`
+	tenants, _, err := TOSession.Tenants()
+	if err != nil {
+		t.Errorf("could not get tenants: %v", err)
+	}
+	if len(tenants) == 0 {
+		t.Fatalf("there should be at least one tenant to test the user")
+	}
+
+	// this user never does anything, so the role and tenant aren't important
+	blob := fmt.Sprintf(`
 	{
 		"username": "test_user",
 		"email": "cooldude6@example.com",
 		"fullName": "full name is required",
 		"localPasswd": "better_twelve",
 		"confirmLocalPasswd": "better_twelve",
-		"role": 1,
-		"tenantId": 1
-	}`)
-	err = json.Unmarshal(blob, &user)
+		"role": %d,
+		"tenantId": %d 
+	}`, *roles[0].ID, tenants[0].ID)
+
+	reader := strings.NewReader(blob)
+	request, err := http.NewRequest("POST", fmt.Sprintf("%v/api/1.4/users", TOSession.URL), reader)
 	if err != nil {
-		t.Errorf("could not unmarshal json into struct: %v\n", err)
+		t.Errorf("could not make new request: %v\n", err)
+	}
+	resp, err := TOSession.Client.Do(request)
+	if err != nil {
+		t.Errorf("could not do request: %v\n", err)
 	}
 
-	resp, _, err := TOSession.CreateUser(&user)
-	if err != nil {
-		t.Errorf("could not CREATE user: %v\n", err)
-	}
-	jsonBytes, err = json.Marshal(resp)
-	if err != nil {
-		t.Errorf("coult not marshal struct to bytes: %v\n", err)
-	}
-	if !bytes.Contains(jsonBytes, []byte("roleName")) {
-		t.Errorf("incorrect json was returned for PUT")
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	strResp := buf.String()
+	if !strings.Contains(strResp, "roleName") {
+		t.Errorf("incorrect json was returned for POST")
 	}
 
-	resp2, _, err := TOSession.GetUserByUsername(*user.Username)
-	if err != nil {
-		t.Errorf("could not GET user: %v\n", err)
-	}
-	jsonBytes, err = json.Marshal(resp2)
-	if err != nil {
-		t.Errorf("coult not marshal struct to bytes: %v\n", err)
-	}
-	if !bytes.Contains(jsonBytes, []byte("rolename")) {
+	request, err = http.NewRequest("GET", fmt.Sprintf("%v/api/1.4/users?username=test_user", TOSession.URL), nil)
+	resp, err = TOSession.Client.Do(request)
+
+	buf = new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	strResp = buf.String()
+	if !strings.Contains(strResp, "rolename") {
 		t.Errorf("incorrect json was returned for GET")
 	}
 
