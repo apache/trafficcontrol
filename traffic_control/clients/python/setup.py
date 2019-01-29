@@ -37,7 +37,7 @@ with open(os.path.join(HERE, "README.rst")) as fd:
 	       author="Apache Software Foundation",
 	       author_email="dev@trafficcontrol.apache.org",
 	       description="Python API Client for Traffic Control",
-	       long_description=fd.read(),
+	       long_description='\n'.join((fd.read(), about["__doc__"])),
 	       url="http://trafficcontrol.apache.org/",
 	       license="http://www.apache.org/licenses/LICENSE-2.0",
 	       classifiers=[
@@ -48,6 +48,8 @@ with open(os.path.join(HERE, "README.rst")) as fd:
 	           'Operating System :: OS Independent',
 	           'Programming Language :: Python :: 2.7',
 	           'Programming Language :: Python :: 3',
+	           'Programming Language :: Python :: 3.4',
+	           'Programming Language :: Python :: 3.5',
 	           'Programming Language :: Python :: 3.6',
 	           'Programming Language :: Python :: 3.7',
 	           'Programming Language :: Python :: 3.8',
@@ -64,13 +66,20 @@ with open(os.path.join(HERE, "README.rst")) as fd:
 	       ],
 	       extras_require={
 	           "dev": [
-	               "pylint"
+	               "pylint>=2.0,<3.0"
 	           ]
-	       }
+	       },
+	       # This will only be enforced by pip versions >=9.0 (18.1 being current at the time of
+	       # this writing) - i.e. not the pip installed as python34-pip from elrepo on CentOS
+	       python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*'
 	)
 
-if ((sys.version_info[0] == 2 and sys.version_info < (2, 7))
-   or (sys.version_info[0] == 3 and sys.version_info < (3, 6))):
-	MSG = ('WARNING: This library may not work properly with Python {0}, '
-		   'as it is untested for this version.')
-	print(MSG.format(sys.version.split(' ', 1)[0]))
+pyversion = sys.version_info
+if pyversion.major < 3:
+	sys.stderr.write(
+		"Python 2 is deprecated, and will not be supported in version 2 of this package (by 2020)\n"
+	)
+elif pyversion.major == 3 and (pyversion.minor < 4 or pyversion.minor > 6):
+	MSG = ('WARNING: This library may not work properly with Python {0.major}.{0.minor}.{0.micro}, '
+	       'as it is untested for this version. (3.4 <= version <=3.6 recommended)\n')
+	sys.stderr.write(MSG.format(pyversion))
