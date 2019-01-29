@@ -2679,7 +2679,7 @@ sub remap_dot_config {
 
 					#Check that the parameter name matches the records.config syntax
 					if ( $rec_params[0] eq 'CONFIG') {
-						my @rec_values = split(' ', $ds->{'param'}->{'records.config'}->{$rc_entry}, 3);
+						my @rec_values = split(' ', $ds->{'param'}->{'records.config'}->{$rc_entry}, 2);
 
 						#Check parameter value matches records.config syntax
 						if ( {map{$_=>1}('INT','FLOAT','STRING')}->{$rec_values[0]}) {
@@ -2797,7 +2797,7 @@ sub build_remap_line {
 
 			#Check that the parameter name matches the records.config syntax
 			if ( $rec_params[0] eq 'CONFIG') {
-				my @rec_values = split(' ', $remap->{'param'}->{'records.config'}->{$rc_entry}, 3);
+				my @rec_values = split(' ', $remap->{'param'}->{'records.config'}->{$rc_entry}, 2);
 
 				#Check parameter value matches records.config syntax
 				if ( {map{$_=>1}('INT','FLOAT','STRING')}->{$rec_values[0]}) {
