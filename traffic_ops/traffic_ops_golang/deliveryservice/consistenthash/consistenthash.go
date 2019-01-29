@@ -21,12 +21,19 @@ package consistenthash
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
-	"net/http"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"strconv"
 	"io/ioutil"
+	"net/http"
+	"strconv"
 )
+
+type TRConsistentHashResult struct {
+	ResultingPathToConsistentHash string `json:"resultingPathToConsistentHash"`
+	ConsistentHashRegex           string `json:"consistentHashRegex"`
+	RequestPath                   string `json:"requestPath"`
+}
 
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"regex", "requestpath", "cdnid"}, []string{"cdnid"})
@@ -40,16 +47,19 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	requestPath := inf.Params["requestpath"]
 	cdnId := int64(inf.IntParams["cdnid"])
 
-	resultPath, err := getPatternBasedConsistentHash(inf.Tx.Tx, regex, requestPath, cdnId)
+	responseFromTR, err := getPatternBasedConsistentHash(inf.Tx.Tx, regex, requestPath, cdnId)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting pattern based consistent hash from Traffic Router: " + err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting pattern based consistent hash from Traffic Router: "+err.Error()))
 		return
 	}
 
-	api.WriteResp(w, r, resultPath)
+	consistentHashResult := TRConsistentHashResult{}
+	json.Unmarshal(responseFromTR, &consistentHashResult)
+
+	api.WriteResp(w, r, consistentHashResult)
 }
 
-func getPatternBasedConsistentHash(tx *sql.Tx, regex string, requestPath string, cdnId int64) ([]byte, error){
+func getPatternBasedConsistentHash(tx *sql.Tx, regex string, requestPath string, cdnId int64) ([]byte, error) {
 	q := `
 SELECT concat(server.host_name, '.', server.domain_name) AS fqdn,
    parameter.value AS apiport
