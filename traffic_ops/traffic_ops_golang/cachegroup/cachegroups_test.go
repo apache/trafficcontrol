@@ -57,6 +57,7 @@ func getTestCacheGroups() []tc.CacheGroup {
 			"cachegroup2",
 			"cachegroup3",
 		},
+		FallbackToClosest: true,
 	}
 	cgs = append(cgs, testCG1)
 
@@ -108,6 +109,7 @@ func TestReadCacheGroups(t *testing.T) {
 		"type_id",
 		"last_updated",
 		"fallbacks",
+		"fallbackToClosest",
 	})
 
 	for _, ts := range testCGs {
@@ -126,6 +128,7 @@ func TestReadCacheGroups(t *testing.T) {
 			ts.TypeID,
 			ts.LastUpdated,
 			[]byte("{cachegroup2,cachegroup3}"),
+			ts.FallbackToClosest,
 		)
 	}
 	mock.ExpectBegin()
