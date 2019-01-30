@@ -26,10 +26,13 @@
 # To start up CiaB with VNC optional container:
 # 
 # alias mydc="docker-compose "` \
-#  `"-f $PWD/docker-compose.yml "` \
+#   `"-f $PWD/docker-compose.yml "` \
 #   `"-f $PWD/docker-compose.expose-ports.yml "` \
 #   `"-f $PWD/optional/docker-compose.vnc.yml "` \
 #   `"-f $PWD/optional/docker-compose.vnc.expose-ports.yml "
+#
+# mydc rm -fv
+# mydc up
 #
 # Note that this setup is intended for testing and not for production use.
 #

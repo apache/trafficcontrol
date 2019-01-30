@@ -17,15 +17,19 @@
 #
 # Expose the VNC container on the host on port 5909
 #
-#      # From ./infrastructure/cdn-in-a-box
+# From ./infrastructure/cdn-in-a-box
 #
-#      alias mydc="docker-compose "` \
-#        `"-f $PWD/docker-compose.yml "` \
-#        `"-f $PWD/docker-compose.expose-ports.yml "` \
-#        `"-f $PWD/optional/docker-compose.vnc.yml "` \
-#        `"-f $PWD/optional/docker-compose.vnc.expose-ports.yml"
+# alias mydc="docker-compose "` \
+#   `"-f $PWD/docker-compose.yml "` \
+#   `"-f $PWD/docker-compose.expose-ports.yml "` \
+#   `"-f $PWD/optional/docker-compose.vnc.yml "` \
+#   `"-f $PWD/optional/docker-compose.vnc.expose-ports.yml"
 #
-#      mydc up
+# mydc rm -fv
+# mydc up
+#
+# Note that this setup is intended for testing and not for production use.
+#
 ---
 version: '2.1'
 

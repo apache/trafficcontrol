@@ -19,7 +19,7 @@
 
 ## CDN-In-A-Box Optional Container(s)
 
-Create an alias to utilize these container(s) with the core CDN-In-A-Box stack. Note, that the exposed port is omitted from the main docker-compose files and for each optional container to allow for concurrent CiaB instances to run on the same docker host. Ommitting the expose-ports.yml will result in the service container port(s) being randomly choosen.
+Create an alias to utilize these container(s) with the core CDN-In-A-Box stack. Note, that the exposed port(s) have been moved to an optional docker-compose file to allow for concurrent CiaB instances.
 
 From the top-level directory of `cdn-in-a-box` create the following alias:
 

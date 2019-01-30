@@ -17,16 +17,19 @@
 #
 # Expose the SocksProxy container on the host on port 9080
 #
-#      # From ./infrastructure/cdn-in-a-box
+# From ./infrastructure/cdn-in-a-box
 #
-#      alias mydc="docker-compose "` \
-#        `"-f $PWD/docker-compose.yml "` \
-#        `"-f $PWD/docker-compose.expose-ports.yml "` \
-#        `"-f $PWD/optional/docker-compose.socksproxy.yml "` \
-#        `"-f $PWD/optional/docker-compose.socksproxy.expose-ports.yml"
+# alias mydc="docker-compose "` \
+#   `"-f $PWD/docker-compose.yml "` \
+#   `"-f $PWD/docker-compose.expose-ports.yml "` \
+#   `"-f $PWD/optional/docker-compose.socksproxy.yml "` \
+#   `"-f $PWD/optional/docker-compose.socksproxy.expose-ports.yml"
 #
-#      mydc up
-
+# mydc rm -fv
+# mydc up
+#
+# Note that this setup is intended for testing and not for production use.
+#
 ---
 version: '2.1'
 
