@@ -18,10 +18,11 @@
  */
 
 var pd = require('./pageData.js');
+var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal CDNs Test Suite', function() {
-
 	var pageData = new pd();
+	var commonFunctions = new cfunc();
 	var myNewCDN = 'pTestCDN';
 	var myDomainName = 'ptest.com';
 	var mydnssec = 'true';
@@ -29,25 +30,25 @@ describe('Traffic Portal CDNs Test Suite', function() {
 	it('should go to the CDNs page', function() {
 		console.log("Go to the CDNs page");
 		browser.get(browser.baseUrl + "/#!/cdns");
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/cdns");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 
-    it('should open new CDN form page', function() {
-    	console.log("Open new CDN form page");
+	it('should open new CDN form page', function() {
+		console.log("Open new CDN form page");
 		browser.driver.findElement(by.name('createCdnButton')).click();
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/cdns/new");
-    });
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns/new");
+	});
 
 	it('should fill out form, create button is enabled and submit', function () {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.name.sendKeys(myNewCDN);
-		pageData.domainName.sendKeys(myDomainName);
 		pageData.dnssecEnabled.click();
 		pageData.dnssecEnabled.sendKeys(mydnssec);
+		pageData.name.sendKeys(myNewCDN);
+		pageData.domainName.sendKeys(myDomainName);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/cdns");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 
 	it('should verify the new CDN and then update CDN', function() {

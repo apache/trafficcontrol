@@ -17,31 +17,34 @@
  * under the License.
  */
 
+var cfunc = require('../common/commonFunctions.js');
+
 describe('Traffic Portal Login Test Suite', function() {
+	var commonFunctions = new cfunc();
 
-    beforeEach(function() {
-        browser.get(browser.baseUrl);
-        browser.wait(function() {
-		    return element(by.name('loginUsername')).isPresent();
-	    }, 5000);
-    });
+	beforeEach(function() {
+		browser.get(browser.baseUrl);
+		browser.wait(function() {
+			return element(by.name('loginUsername')).isPresent();
+		}, 5000);
+	});
 
-    it('should fail login to Traffic Portal with bad user', function() {
-        console.log('Negative login test');
-        browser.driver.findElement(by.name('loginUsername')).sendKeys('badUser');
-        browser.driver.findElement(by.name('loginPass')).sendKeys('badPassword');
-        browser.driver.findElement(by.name('loginSubmit')).click();
-        browser.sleep(250);
-        browser.debugger();
-        expect(browser.driver.findElement(by.css('div.ng-binding')).getText()).toEqual('Invalid username or password.');
-    });
+	it('should fail login to Traffic Portal with bad user', function() {
+		console.log('Negative login test');
+		browser.driver.findElement(by.name('loginUsername')).sendKeys('badUser');
+		browser.driver.findElement(by.name('loginPass')).sendKeys('badPassword');
+		browser.driver.findElement(by.name('loginSubmit')).click();
+		browser.sleep(250);
+		browser.debugger();
+		expect(browser.driver.findElement(by.css('div.ng-binding')).getText()).toEqual('Invalid username or password.');
+	});
 
 	it('should successfully login to Traffic Portal', function() {
-		console.log('Logging in to Traffic Portal');
+		console.log('Logging in to Traffic Portal "' + browser.baseUrl + '" with user "' + browser.params.adminUser + '"');
 		browser.driver.findElement(by.name('loginUsername')).sendKeys(browser.params.adminUser);
 		browser.driver.findElement(by.name('loginPass')).sendKeys(browser.params.adminPassword);
 		browser.driver.findElement(by.name('loginSubmit')).click();
 		browser.debugger();
-		expect(browser.getCurrentUrl()).toEqual(browser.baseUrl+"/#!/");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/");
 	});
 });
