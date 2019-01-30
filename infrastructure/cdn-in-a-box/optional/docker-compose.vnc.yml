@@ -21,15 +21,18 @@
 #
 #      cd trafficcontrol/infrastructure/cdn-in-a-box
 #
-# Adjust the settings in `variables.env` to suit your needs.
+# Add six character password variable, VNC_PASSWD, to the settings in `variables.env`.
 #
-#      docker-compose up -d
-#
-# The Traffic Ops Go API will then be available on https://localhost:6443,
-# the Perl API on https://localhost:60443, and the postgres database on localhost 5432.
+# To start up CiaB with VNC optional container:
+# 
+# alias mydc="docker-compose "` \
+#  `"-f $PWD/docker-compose.yml "` \
+#   `"-f $PWD/docker-compose.expose-ports.yml "` \
+#   `"-f $PWD/optional/docker-compose.vnc.yml "` \
+#   `"-f $PWD/optional/docker-compose.vnc.expose-ports.yml "
 #
 # Note that this setup is intended for testing and not for production use.
-
+#
 ---
 version: '2.1'
 
@@ -53,8 +56,6 @@ services:
       - variables.env
     hostname: vnc
     domainname: infra.ciab.test
-    ports:
-      - "5909:5909"
     volumes:
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
