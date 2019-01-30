@@ -34,6 +34,8 @@ Usage
 
 ``traffic_ops_ort [-h]``
 
+Arguments and Flags
+-------------------
 .. option:: -h, --help
 
 	Print usage information and exit
@@ -144,6 +146,24 @@ Usage
 	.. warning:: The first colon found in this string is considered the delimiter. There is no way
 		to escape the delimeter. This effectively means that usernames containing colons cannot be
 		used to authenticate with Traffic Ops, though passwords containing colons should be fine.
+
+Environment Variables
+---------------------
+.. envvar:: TO_URL
+
+	Should be set to the URL of a Traffic Ops server. This doesn't need to be a full URL, an
+	:abbr:`FQDN (Fully Qualified Domain Name)` will do just as well. It may also omit the port
+	number on which the Traffic Ops server listens for incoming connections - port 443 will be
+	assumed unless :envvar:`TO_URL` is prefixed by ``http://`` (case-insensitive), in which case
+	port 80 will be assumed.
+
+.. envvar:: TO_USER
+
+	The username to use when authenticating to the Traffic Ops server.
+
+.. envvar:: TO_PASSWORD
+
+	The password to use when authenticating to the Traffic Ops server.
 
 Module Contents
 ===============
