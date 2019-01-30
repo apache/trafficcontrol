@@ -23,9 +23,12 @@ It extends the class provided by the official Apache Traffic Control Client.
 import typing
 import logging
 
+import requests
 from trafficops.tosession import TOSession
+from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 
 from . import packaging
+from .configuration import Configuration
 
 class API(TOSession):
 	"""
@@ -37,33 +40,26 @@ class API(TOSession):
 	#: older ATC versions. Go figure.
 	VERSION = "1.4"
 
-	#: Caches update statuses mapped by hostnames
-	CACHED_UPDATE_STATUS = {}
-
-	def __init__(self, username:str, password:str, toHost:str, myHostname:str, port:int = 443,
-	                   verify:bool = True, useSSL:bool = True):
+	def __init__(self, conf:Configuration):
 		"""
 		This not only creates the API session, but log the user in immediately.
 
-		:param username: The name of the user as whom :term:`ORT` will authenticate with Traffic Ops
-		:param password: The password of Traffic Ops user ``username``
-		:param toHost: The :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Ops server
-		:param myHostname: The (short) hostname of **this** server
-		:param port: The port number on which Traffic Ops listens for incoming HTTP(S) requests
-		:param verify: If :const:`True` SSL certificates will be verifed, if :const:`False` they
-		               will not and warnings about unverified SSL certificates will be swallowed.
-		:param useSSL: If :const:`True` :term:`ORT` will attempt to communicate with Traffic Ops
-		               using SSL, if :const:`False` it will not. *This setting will be respected
-		               regardless of the passed port number!*
-		:raises trafficops.restapi.LoginError: when authentication with Traffic Ops fails
-		:raises trafficops.restapi.OperationError: when some anonymous error occurs communicating
-		                                           with the Traffic Ops server
+		:param conf: An object that represents the configuration of :program:`traffic_ops_ort`
+		:raises LoginError: when authentication with Traffic Ops fails
+		:raises OperationError: when some anonymous error occurs communicating with the Traffic Ops server
 		"""
-		super(API, self).__init__(host_ip=toHost, api_version=self.VERSION, host_port=port,
-		                          verify_cert=verify, ssl=useSSL)
-		self.login(username, password)
+		super(API, self).__init__(host_ip=conf.toHost, api_version=self.VERSION,
+		                          host_port=conf.toPort, verify_cert=conf.verify, ssl=conf.useSSL)
+		self.login(conf.username, conf.password)
 
-		self.hostname = myHostname
+		self.hostname = conf.shortHostname
+
+	def __enter__(self):
+		"""
+		Implements context-management for :class:`API` objects. Needs to override :class:`TOSession`
+		context-management because the connection is already established during initialization.
+		"""
+		return self
 
 	def getRaw(self, path:str) -> str:
 		"""
@@ -74,12 +70,17 @@ class API(TOSession):
 
 		:param path: The raw path on the Traffic Ops server
 		:returns: The API response payload
+		:raises ConnectionError: When something goes wrong communicating with the Traffic Ops server
 		"""
 
-		r = self._session.get(path)
+		try:
+			r = self._session.get(path)
+		except requests.exceptions.RequestException as e:
+			raise ConnectionError from e
 
 		if r.status_code != 200 and r.status_code != 204:
-			raise ValueError("request for '%s' appears to have failed; reason: %s" % (path, r.reason))
+			raise ConnectionError("request for '%s' appears to have failed; reason: %s" %
+			                                  (path,                             r.reason))
 
 		return r.text
 
@@ -89,7 +90,6 @@ class API(TOSession):
 
 		:returns: all of the packages which this system must have, according to Traffic Ops.
 		:raises ConnectionError: if fetching the package list fails
-		:raises ValueError: if the API endpoint returns a malformed response that can't be parsed
 		"""
 		logging.info("Fetching this server's package list from Traffic Ops")
 
@@ -104,52 +104,64 @@ class API(TOSession):
 
 		logging.debug("Raw package response: %s", myPackages[1].text)
 
-		return [packaging.Package(p) for p in myPackages[0]]
+		try:
+			return [packaging.Package(p) for p in myPackages[0]]
+		except ValueError:
+			raise ConnectionError
 
-	def getMyConfigFiles(self) -> typing.List[dict]:
+	def getMyConfigFiles(self, conf:Configuration) -> typing.List[dict]:
 		"""
 		Fetches configuration files constructed by Traffic Ops for this server
 
-		.. note:: This function will set the :data:`traffic_ops_ort.configuration.SERVER_INFO`
-			object to an instance of :class:`ServerInfo` with the provided information.
+		.. note:: This function will set the :attr:`serverInfo` attribute of the object passed as
+			the ``conf`` argument to an instance of :class:`ServerInfo` with the provided
+			information.
 
+		:param conf: An object that represents the configuration of :program:`traffic_ops_ort`
 		:returns: A list of constructed config file objects
 		:raises ConnectionError: when something goes wrong communicating with Traffic Ops
-		:raises ValueError: when a response was successfully obtained from the Traffic Ops API, but the
-			response could not successfully be parsed as JSON, or was missing information
 		"""
-		from . import configuration
-
 		logging.info("Fetching list of configuration files from Traffic Ops")
 
-		# The API function decorator confuses pylint into thinking this doesn't return
-		#pylint: disable=E1111
-		myFiles = self.get_server_config_files(host_name=self.hostname)
-		#pylint: enable=E1111
+		try:
+			# The API function decorator confuses pylint into thinking this doesn't return
+			#pylint: disable=E1111
+			myFiles = self.get_server_config_files(host_name=self.hostname)
+			#pylint: enable=E1111
+		except (InvalidJSONError,
+		        LoginError,
+		        OperationError,
+		        requests.exceptions.RequestException) as e:
+			raise ConnectionError("Failed to fetch configuration files from Traffic Ops") from e
 
 		logging.debug("Raw response from Traffic Ops: %s", myFiles[1].text)
 		myFiles = myFiles[0]
 
 		try:
-			configuration.SERVER_INFO = ServerInfo(myFiles.info)
+			conf.serverInfo = ServerInfo(myFiles.info)
+			# if there's a reverse proxy, switch urls.
+			if conf.serverInfo.toRevProxyUrl and not conf.rev_proxy_disable:
+				self._server_url = conf.serverInfo.toRevProxyUrl
+				self._api_base_url = urljoin(self._server_url, '/api/%s' % self.VERSION).rstrip('/') + '/'
 			return myFiles.configFiles
-		except (KeyError, AttributeError) as e:
-			raise ValueError from e
+		except (KeyError, AttributeError, ValueError) as e:
+			raise ConnectionError("Malformed response from Traffic Ops to update status request!") from e
 
-	def updateTrafficOps(self):
+	def updateTrafficOps(self, mode:Configuration.Modes):
 		"""
 		Updates Traffic Ops's knowledge of this server's update status.
+
+		:param mode: The current run-mode of :program:`traffic_ops_ort`
 		"""
-		from .configuration import MODE, Modes
 		from .utils import getYesNoResponse as getYN
 
-		if MODE is Modes.INTERACTIVE and not getYN("Update Traffic Ops?", default='Y'):
+		if mode is Configuration.Modes.INTERACTIVE and not getYN("Update Traffic Ops?", default='Y'):
 			logging.warning("Update will not be performed; you should clear updates manually")
 			return
 
 		logging.info("Updating Traffic Ops")
 
-		if MODE is Modes.REPORT:
+		if mode is Configuration.Modes.REPORT:
 			return
 
 		payload = {"updated": False, "reval_updated": False}
@@ -167,8 +179,6 @@ class API(TOSession):
 
 		:returns: An iterable list of 'chkconfig' entries
 		:raises ConnectionError: when something goes wrong communicating with Traffic Ops
-		:raises ValueError: when a response was successfully obtained from the Traffic Ops API, but the
-			response could not successfully be parsed as JSON, or was missing information
 		"""
 
 
@@ -180,36 +190,41 @@ class API(TOSession):
 		uri = "ort/%s/chkconfig" % self.hostname
 		logging.info("Fetching chkconfig from %s", uri)
 
-		r = self.get(uri)
-		self._api_base_url = tmp
+		try:
+			r = self.get(uri)
+		except (InvalidJSONError,
+		        OperationError,
+		        LoginError,
+		        requests.exceptions.RequestException) as e:
+			raise ConnectionError from e
+		finally:
+			self._api_base_url = tmp
+
 		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
 
 		return r[0]
 
-	def getUpdateStatus(self, host:str) -> dict:
+	def getMyUpdateStatus(self) -> dict:
 		"""
 		Gets the update status of a server.
 
-		.. note:: If the :data:`self.CACHED_UPDATE_STATUS` cached response is set, this function will
-			default to that object. If it is *not* set, then this function will set it.
-
-		:param host: The (short) hostname of the server to query
-		:raises PermissionError: if a new cookie is required, but fails to be aquired
+		:raises ConnectionError: if something goes wrong communicating with the server
 		:returns: An object representing the API's response
 		"""
+		logging.info("Fetching update status from Traffic Ops")
 
-		logging.info("Fetching update status for %s from Traffic Ops", host)
+		try:
+			# The API function decorator confuses pylint into thinking this doesn't return
+			#pylint: disable=E1111
+			r = self.get_server_update_status(server_name=self.hostname)
+			#pylint: enable=E1111
+		except (InvalidJSONError,
+		        LoginError,
+		        OperationError,
+		        requests.exceptions.RequestException) as e:
+			raise ConnectionError from e
 
-		if host in self.CACHED_UPDATE_STATUS:
-			return self.CACHED_UPDATE_STATUS[host]
-
-		# The API function decorator confuses pylint into thinking this doesn't return
-		#pylint: disable=E1111
-		r = self.get_server_update_status(server_name=host)
-		#pylint: enable=E1111
 		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
-
-		self.CACHED_UPDATE_STATUS[host] = r[0]
 
 		return r[0]
 
@@ -218,21 +233,21 @@ class API(TOSession):
 		Fetches the status of this server as set in Traffic Ops
 
 		:raises ConnectionError: if fetching the status fails
-		:raises ValueError: if the :data:`traffic_ops_ort.configuration.HOSTNAME` is not properly set,
-			or a weird value is stored in the global :data:`CACHED_UPDATE_STATUS` response cache.
 		:returns: the name of the status to which this server is set in the Traffic Ops configuration
 
-		.. note:: If the global :data:`CACHED_UPDATE_STATUS` cached response is set, this function will
-			default to the status provided by that object.
 		"""
-
-
 		logging.info("Fetching server status from Traffic Ops")
 
-		# The API function decorator confuses pylint into thinking this doesn't return
-		#pylint: disable=E1111
-		r = self.get_servers(query_params={"hostName": self.hostname})
-		#pylint: enable=E1111
+		try:
+			# The API function decorator confuses pylint into thinking this doesn't return
+			#pylint: disable=E1111
+			r = self.get_servers(query_params={"hostName": self.hostname})
+			#pylint: enable=E1111
+		except (InvalidJSONError,
+		        LoginError,
+		        OperationError,
+		        requests.exceptions.RequestException) as e:
+			raise ConnectionError from e
 
 		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
 
@@ -241,8 +256,7 @@ class API(TOSession):
 		try:
 			return r.status
 		except (IndexError, KeyError, AttributeError) as e:
-			logging.error("Malformed response from Traffic Ops to update status request!")
-			raise ConnectionError from e
+			raise ConnectionError("Malformed response from Traffic Ops to update status request!") from e
 
 #: Caches the names of statuses supported by Traffic Ops
 CACHED_STATUSES = []
@@ -309,13 +323,16 @@ class ServerInfo():
 		                       for a in dir(self)\
 		                       if not a.startswith('_')))
 
-	def sanitize(self, fmt:str) -> str:
+	def sanitize(self, fmt:str, hostname:typing.Tuple[str, str]) -> str:
 		"""
-		Implements ``str.format(self)``
+		Sanitizes an input string with the passed hostname information
+
+		:param fmt: The string to be sanitized
+		:param hostname: A tuple containing the short and full hostnames of the server
+		:returns: The string ``fmt`` after sanitization
 		"""
-		from .configuration import HOSTNAME
-		fmt = fmt.replace("__HOSTNAME__", HOSTNAME[0])
-		fmt = fmt.replace("__FULL_HOSTNAME__", HOSTNAME[1])
+		fmt = fmt.replace("__HOSTNAME__", hostname[0])
+		fmt = fmt.replace("__FULL_HOSTNAME__", hostname[1])
 		fmt = fmt.replace("__RETURN__", '\n')
 		fmt = fmt.replace("__CACHE_IPV4__", self.serverIpv4)
 

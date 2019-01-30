@@ -66,7 +66,7 @@ while [[ -z "$(testenrolled)" ]]; do
 done
 
 # Wait for SSL keys to exist
-until to-get "api/1.3/cdns/name/$CDN/sslkeys"; do
+until to-get "api/1.3/cdns/name/$CDN/sslkeys" && [[ "$(to-get api/1.3/cdns/name/$CDN/sslkeys)" != '{"response":[]}' ]]; do
 	echo 'waiting for SSL keys to exist'
 	sleep 3
 done
