@@ -31,7 +31,7 @@ services:
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/traffic_ops_integration_test/Dockerfile
-    env_file: 
+    env_file:
       - variables.env
     hostname: integration
     domainname: infra.ciab.test
@@ -39,8 +39,9 @@ services:
       - shared:/shared
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
-
+      - ../../junit:/junit
 volumes:
+  junit:
   shared:
     external: false
  
