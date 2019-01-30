@@ -23,8 +23,12 @@ It extends the class provided by the official Apache Traffic Control Client.
 import typing
 import logging
 
+<<<<<<< cae82dff75ed7d5a93b334961fe84993e703d1c3
 from requests.exceptions import RequestException
 from requests.compat import urljoin
+=======
+import requests
+>>>>>>> ORT.py now implements all the same command line flags as the Perl script
 from trafficops.tosession import TOSession
 from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 
