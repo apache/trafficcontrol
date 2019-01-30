@@ -41,11 +41,11 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
-    it('should open new Servers form page', function() {
+	it('should open new Servers form page', function() {
 		console.log('Clicking on Create new server ' + mockVals.hostName);
 		browser.driver.findElement(by.name('createServersButton')).click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/new");
-    });
+	});
 
 	it('should fill out form, create button is enabled and submit', function () {
 		console.log('Filling out Server form');

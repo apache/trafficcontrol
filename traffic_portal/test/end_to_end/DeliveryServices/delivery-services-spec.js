@@ -74,7 +74,6 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		console.log('Backing out and verifying ' + mockVals.xmlId + ' exists');
 		browser.get(browser.baseUrl + "/#!/delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
-
 	});
 
 	it('should update the ds', function() {
