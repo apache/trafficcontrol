@@ -2636,7 +2636,7 @@ sub remap_dot_config {
 	my $server_obj = shift;
 	my $data;
 	my @text_array;
-
+	my %ats_var_types = map { $_ => 1 } qw(INT FLOAT STRING);
 
 	my $pdata = $self->param_data( $server_obj, 'package' );
 	my $header = $self->header_comment( $server_obj->host_name );
@@ -2682,8 +2682,8 @@ sub remap_dot_config {
 						my @rec_values = split(' ', $ds->{'param'}->{'records.config'}->{$rc_entry}, 2);
 
 						#Check parameter value matches records.config syntax
-						if ( {map{$_=>1}('INT','FLOAT','STRING')}->{$rec_values[0]}) {
-							$mid_remap{ $ds->{org} } .= " \@plugin=conf_remap.so \@pparam=" . $rec_params[1] . "=" . $rec_values[1];
+						if ( $ats_var_types{$rec_values[0]}) {
+							$mid_remap{ $ds->{org} } .= ' @plugin=conf_remap.so @pparam=' . $rec_params[1] . '=' . $rec_values[1];
 						} else {
 							$self->app->log->debug(" mid ds records.config entry did not match the known syntax for values");
 						}
@@ -2738,7 +2738,7 @@ sub build_remap_line {
 	my $remap       = shift;
 	my $map_from    = shift;
 	my $map_to      = shift;
-
+	my %ats_var_types = map { $_ => 1 } qw(INT FLOAT STRING);
 
 
 	my $dscp      = $remap->{dscp};
@@ -2800,8 +2800,8 @@ sub build_remap_line {
 				my @rec_values = split(' ', $remap->{'param'}->{'records.config'}->{$rc_entry}, 2);
 
 				#Check parameter value matches records.config syntax
-				if ( {map{$_=>1}('INT','FLOAT','STRING')}->{$rec_values[0]}) {
-					$text .= " \@plugin=conf_remap.so \@pparam=" . $rec_params[1] . "=" . $rec_values[1];
+				if ( $ats_var_types{$rec_values[0]}) {
+					$text .= ' @plugin=conf_remap.so @pparam=' . $rec_params[1] . '=' . $rec_values[1];
 				} else {
 					$self->app->log->debug(" ds records.config entry did not match the known syntax for values");
 				}
