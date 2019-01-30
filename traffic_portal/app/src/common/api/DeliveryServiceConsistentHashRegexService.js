@@ -17,17 +17,27 @@
  * under the License.
  */
 
-var DeliveryServiceConsistentHashRegexService = function($http, locationUtils, messageModel, ENV) {
+var DeliveryServiceConsistentHashRegexService = function($http, $q, locationUtils, messageModel, ENV) {
 
 	this.getConsistentHashResult = function(regex, requestPath, cdnId) {
 
         var url = ENV.api['root'] + "consistenthash",
             params = {regex: regex, requestpath: requestPath, cdnid: cdnId};
 
-        return $http.get(url, { params: params });
+        var deferred = $q.defer();
+        return $http.post(url, params)
+            .then(
+                function(result) {
+                    deferred.resolve(result);
+                    return result.data;
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
 	};
 
 };
 
-DeliveryServiceConsistentHashRegexService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
+DeliveryServiceConsistentHashRegexService.$inject = ['$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceConsistentHashRegexService;

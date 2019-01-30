@@ -26,6 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
@@ -35,19 +36,27 @@ type TRConsistentHashResult struct {
 	RequestPath                   string `json:"requestPath"`
 }
 
-func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"regex", "requestpath", "cdnid"}, []string{"cdnid"})
+type TRConsistentHashRequest struct {
+	ConsistentHashRegex string `json:"regex"`
+	RequestPath         string `json:"requestpath"`
+	CdnID               int64  `json:"cdnid"`
+}
+
+func Post(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	regex := inf.Params["regex"]
-	requestPath := inf.Params["requestpath"]
-	cdnId := int64(inf.IntParams["cdnid"])
+	req := TRConsistentHashRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
 
-	responseFromTR, err := getPatternBasedConsistentHash(inf.Tx.Tx, regex, requestPath, cdnId)
+	responseFromTR, err := getPatternBasedConsistentHash(inf.Tx.Tx, req.ConsistentHashRegex, req.RequestPath, req.CdnID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting pattern based consistent hash from Traffic Router: "+err.Error()))
 		return
@@ -94,7 +103,7 @@ SELECT concat(server.host_name, '.', server.domain_name) AS fqdn,
 		return nil, errors.New("no parameter 'api.port' found for pattern based consistent hashing with cdn Id: " + strconv.FormatInt(cdnId, 10))
 	}
 
-	trafficRouterAPI := "http://" + trafficRouter + ":" + apiPort + "/crs/consistenthash/patternbased/regex?regex=" + regex + "&requestPath=" + requestPath
+	trafficRouterAPI := "http://" + trafficRouter + ":" + apiPort + "/crs/consistenthash/patternbased/regex?regex=" + url.QueryEscape(regex) + "&requestPath=" + url.QueryEscape(requestPath)
 
 	r, err := http.Get(trafficRouterAPI)
 	if err != nil {

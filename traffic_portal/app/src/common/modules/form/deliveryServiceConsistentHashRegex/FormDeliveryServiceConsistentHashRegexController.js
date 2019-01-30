@@ -31,8 +31,11 @@ var FormDeliveryServiceConsistentHashRegexController = function(deliveryService,
 
     $scope.test = function(pattern, requestPath, cdnId) {
         deliveryServiceConsistentHashRegexService.getConsistentHashResult(pattern, requestPath, cdnId).then(function (response) {
-            $scope.responseFromTR = response.data.response;
-            $scope.resultingPath = $scope.responseFromTR.resultingPathToConsistentHash;
+            if(response != null && response.response != null) {
+                $scope.resultingPath = response.response.resultingPathToConsistentHash;
+            } else {
+                $scope.resultingPath = "ERROR GETTING RESULT FROM TRAFFIC ROUTER";
+            }
         });
     };
 
