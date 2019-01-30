@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,14 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-############################################################
-# Dockerfile for trafficops db
-############################################################
+set-dns.sh
+insert-self-into-dns.sh
 
-FROM postgres:9.6.6
-
-ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-RUN apt-get update && apt-get install -y dnsutils net-tools
-COPY traffic_ops/initdb.d /docker-entrypoint-initdb.d
-COPY traffic_ops/run-db.sh /
-ENTRYPOINT /run-db.sh
+exec /docker-entrypoint.sh postgres

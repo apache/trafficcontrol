@@ -25,8 +25,11 @@ shared_dns_dir="/shared/dns"
 dns_key_file_name="K${domain}.private"
 
 my_host="$(hostname -s)"
-my_ip="$(dig +short ${my_host})" # TODO determine if this should be 'hostname -I'
-my_ip6="$(dig +short ${my_host} AAAA)"
+my_interface="$(ifconfig | egrep "^\w.+ " | grep -v lo | awk '{print $1}')"
+my_interface=${my_interface%":"}
+my_ip="$(ifconfig $my_interface | grep 'inet ' | awk '{print $2}')" # TODO determine if this should be 'hostname -I'
+my_ip=${my_ip#"addr:"}
+my_ip6="$(ifconfig $my_interface | egrep 'inet6 .+<global>' | awk '{print $2}')"
 
 full_sub_domain="infra.${domain}"
 my_fqdn="${my_host}.${full_sub_domain}"

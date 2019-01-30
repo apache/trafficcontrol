@@ -41,7 +41,6 @@ done
 
 set-dns.sh
 insert-self-into-dns.sh
-insert-db-into-dns.sh
 
 set-to-ips-from-dns.sh
 
