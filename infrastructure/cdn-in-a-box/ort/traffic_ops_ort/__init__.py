@@ -177,6 +177,7 @@ def doMain(args:argparse.Namespace) -> int:
 	except ValueError as e:
 		logging.critical(e)
 		logging.debug("%r", e, exc_info=True, stack_info=True)
+<<<<<<< c8d6ef9157e1d078478be6aec2827a52c3d7fb59
 		return 1
 
 	if conf.login_dispersion:
@@ -194,6 +195,25 @@ def doMain(args:argparse.Namespace) -> int:
 		logging.debug("%r", e, exc_info=True, stack_info=True)
 		return 1
 
+=======
+		return 1
+
+	if conf.login_dispersion:
+		disp = random.randint(0, conf.login_dispersion)
+		logging.info("Login dispersion is active - sleeping for %d seconds before continuing", disp)
+		time.sleep(disp)
+
+	try:
+		with to_api.API(conf) as api:
+			conf.api = api
+			return main_routines.run(conf)
+	except (LoginError, OperationError, InvalidJSONError, RequestException) as e:
+		logging.critical("Failed to connect and authenticate with the Traffic Ops server")
+		logging.error(e)
+		logging.debug("%r", e, exc_info=True, stack_info=True)
+		return 1
+
+>>>>>>> ORT.py now implements all the same command line flags as the Perl script
 def main():
 	"""
 	The ORT entrypoint, parses argv before handing it off to :func:`doMain`.
@@ -231,8 +251,12 @@ def main():
 	                    default=3)
 	parser.add_argument("--wait_for_parents",
 	                    help="do not update if parent_pending = 1 in the update json.",
+<<<<<<< c8d6ef9157e1d078478be6aec2827a52c3d7fb59
 	                    type=int,
 	                    default=1)
+=======
+	                    action="store_true")
+>>>>>>> ORT.py now implements all the same command line flags as the Perl script
 	parser.add_argument("--rev_proxy_disable",
 	                    help="bypass the reverse proxy even if one has been configured.",
 	                    action="store_true")
