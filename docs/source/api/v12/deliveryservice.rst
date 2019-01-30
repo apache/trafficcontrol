@@ -59,7 +59,7 @@ Delivery Service
   | ``anonymousBlockingEnabled`` | bool   | - true: enable blocking clients with anonymous ips                                                                                   |
   |                              |        | - false: disabled                                                                                                                    |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``cacheurl``                 | string | Cache URL rule to apply to this delivery service.                                                                                    |
+  | ``cacheurl``                 | string | Deprecated. Cache URL rule to apply to this delivery service.                                                                                    |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``ccrDnsTtl``                | int    | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                                         |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -305,7 +305,7 @@ Delivery Service
   | ``anonymousBlockingEnabled`` | bool   | - true: enable blocking clients with anonymous ips                                                                                   |
   |                              |        | - false: disabled                                                                                                                    |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``cacheurl``                 | string | Cache URL rule to apply to this delivery service.                                                                                    |
+  | ``cacheurl``                 | string | Deprecated. Cache URL rule to apply to this delivery service.                                                                                    |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``ccrDnsTtl``                | int    | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                                         |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2085,7 +2085,7 @@ URL Sig Keys
   | anonymousBlockingEnabled     | no       | - true: enable blocking clients with anonymous ips                                                      |
   |                              |          | - false: disabled                                                                                       |
   +------------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | cacheurl                     | no       | Cache URL rule to apply to this delivery service.                                                       |
+  | cacheurl                     | no       | Deprecated. Cache URL rule to apply to this delivery service.                                                       |
   +------------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | ccrDnsTtl                    | no       | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr.host.             |
   +------------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2264,7 +2264,7 @@ URL Sig Keys
   | ``anonymousBlockingEnabled`` | bool   | - true: enable blocking clients with anonymous ips                                                                                   |
   |                              |        | - false: disabled                                                                                                                    |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``cacheurl``                 | string | Cache URL rule to apply to this delivery service.                                                                                    |
+  | ``cacheurl``                 | string | Deprecated. Cache URL rule to apply to this delivery service.                                                                                    |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``ccrDnsTtl``                | int    | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                                         |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2517,7 +2517,7 @@ URL Sig Keys
   | anonymousBlockingEnabled | no       | - true: enable blocking clients with anonymous ips                                                      |
   |                          |          | - false: disabled                                                                                       |
   +--------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | cacheurl                 | no       | Cache URL rule to apply to this delivery service.                                                       |
+  | cacheurl                 | no       | Deprecated. Cache URL rule to apply to this delivery service.                                                       |
   +--------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | ccrDnsTtl                | no       | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr.host.             |
   +--------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2696,7 +2696,7 @@ URL Sig Keys
   | ``anonymousBlockingEnabled`` | bool   | - true: enable blocking clients with anonymous ips                                                                                   |
   |                              |        | - false: disabled                                                                                                                    |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``cacheurl``                 | string | Cache URL rule to apply to this delivery service.                                                                                    |
+  | ``cacheurl``                 | string | Deprecated. Cache URL rule to apply to this delivery service.                                                                                    |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``ccrDnsTtl``                | int    | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                                         |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2976,7 +2976,7 @@ URL Sig Keys
   | ``anonymousBlockingEnabled`` | bool   | - true: enable blocking clients with anonymous ips                                                                                   |
   |                              |        | - false: disabled                                                                                                                    |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``cacheurl``                 | string | Cache URL rule to apply to this delivery service.                                                                                    |
+  | ``cacheurl``                 | string | Deprecated. Cache URL rule to apply to this delivery service.                                                                                    |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``ccrDnsTtl``                | int    | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                                         |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
