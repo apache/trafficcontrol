@@ -28,7 +28,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
@@ -72,19 +74,42 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 		return nil, errors.New("getting cache data: " + err.Error())
 	}
 
-	for cdn, monitorFQDN := range monitors {
-		crStates, err := getCRStates(monitorFQDN, client)
-		// TODO on err, try another online monitor
-		if err != nil {
-			return nil, errors.New("getting CRStates for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
+	for cdn, monitorFQDNs := range monitors {
+		if len(monitorFQDNs) == 0 {
+			log.Warnln("getCachesStats: cdn '" + string(cdn) + "' has no online monitors, skipping!")
+			continue
 		}
-		cacheData = addHealth(cacheData, crStates)
 
-		cacheStats, err := getCacheStats(monitorFQDN, client)
-		if err != nil {
-			return nil, errors.New("getting CacheStats for CDN '" + string(cdn) + "' monitor '" + monitorFQDN + "': " + err.Error())
+		success := true
+		errs := []error{}
+		for _, monitorFQDN := range monitorFQDNs {
+			crStates, err := getCRStates(monitorFQDN, client)
+			// TODO on err, try another online monitor
+			if err != nil {
+				errs = append(errs, errors.New("getting CRStates for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+				continue
+			}
+
+			cacheStats, err := getCacheStats(monitorFQDN, client)
+			if err != nil {
+				errs = append(errs, errors.New("getting CacheStats for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
+				continue
+			}
+
+			cacheData = addHealth(cacheData, crStates)
+			cacheData = addStats(cacheData, cacheStats)
+			success = true
+			break
 		}
-		cacheData = addStats(cacheData, cacheStats)
+
+		if !success {
+			return nil, errors.New("getting cache stats from all monitors failed for cdn '" + string(cdn) + "': " + util.JoinErrs(errs).Error())
+		}
+
+		// if we succeeded, log the monitor failures but don't return them
+		for _, err := range errs {
+			log.Errorln(err.Error())
+		}
 	}
 	cacheData = addTotals(cacheData)
 	return cacheData, nil
@@ -262,7 +287,7 @@ func getMonitorForwardProxy(tx *sql.Tx) (string, error) {
 }
 
 // getCDNMonitors returns an FQDN, including port, of an online monitor for each CDN. If a CDN has no online monitors, that CDN will not have an entry in the map. If a CDN has multiple online monitors, an arbitrary one will be returned.
-func getCDNMonitorFQDNs(tx *sql.Tx) (map[tc.CDNName]string, error) {
+func getCDNMonitorFQDNs(tx *sql.Tx) (map[tc.CDNName][]string, error) {
 	qry := `
 SELECT
   s.host_name,
@@ -283,12 +308,12 @@ WHERE
 		return nil, errors.New("querying monitors: " + err.Error())
 	}
 	defer rows.Close()
-	monitors := map[tc.CDNName]string{}
+	monitors := map[tc.CDNName][]string{}
 	for rows.Next() {
 		host := ""
 		domain := ""
 		port := sql.NullInt64{}
-		cdn := ""
+		cdn := tc.CDNName("")
 		if err := rows.Scan(&host, &domain, &port, &cdn); err != nil {
 			return nil, errors.New("scanning monitors: " + err.Error())
 		}
@@ -296,7 +321,7 @@ WHERE
 		if port.Valid {
 			fqdn += ":" + strconv.FormatInt(port.Int64, 10)
 		}
-		monitors[tc.CDNName(cdn)] = fqdn
+		monitors[cdn] = append(monitors[cdn], fqdn)
 	}
 	return monitors, nil
 }
