@@ -38,8 +38,8 @@ services:
   # All other components access the database thru the Traffic Ops API
   db:
     build:
-      context: traffic_ops
-      dockerfile: Dockerfile-db
+      context: .
+      dockerfile: traffic_ops/Dockerfile-db
     hostname: db
     domainname: infra.ciab.test
     depends_on:
@@ -47,6 +47,8 @@ services:
     volumes:
       - /var/lib/postgresql/data
       - shared:/shared
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
     env_file:
       - variables.env
     # TODO: change to expose: "5432" to limit to containers
@@ -93,7 +95,6 @@ services:
       - ./traffic_ops/ca:/ca
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
-      - ./dns/insert-db-into-dns.sh:/usr/local/sbin/insert-db-into-dns.sh
       - ./traffic_ops/set-to-ips-from-dns.sh:/usr/local/sbin/set-to-ips-from-dns.sh
       - shared:/shared
 
