@@ -50,6 +50,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Monitor Client Update: Traffic Monitor is updated to use the Traffic Ops v13 client.
 - Removed previously deprecated `traffic_monitor_java`
 - Added `infrastructure/cdn-in-a-box` for Apachecon 2018 demonstration
+- The CacheURL Delivery service field is deprecated.  If you still need this functionality, you can create the configuration explicitly via the raw remap field.
 
 ## [2.2.0] - 2018-06-07
 ### Added
