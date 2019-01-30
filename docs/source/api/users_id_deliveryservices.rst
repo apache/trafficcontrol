@@ -50,7 +50,7 @@ Response Structure
 ------------------
 :active:                   ``true`` if the Delivery Service is active, ``false`` otherwise
 :anonymousBlockingEnabled: ``true`` if :ref:`Anonymous Blocking <anonymous_blocking-qht>` has been configured for the Delivery Service, ``false`` otherwise
-:cacheurl:                 A setting for a deprecated feature of now-unsupported Trafficserver versions
+:cacheurl:                 Deprecated. A setting for a deprecated feature of now-unsupported Trafficserver versions
 :ccrDnsTtl:                The Time To Live (TTL) of the DNS response for A or AAAA record queries requesting the IP address of the Traffic Router - named "ccrDnsTtl" for legacy reasons
 :cdnId:                    The integral, unique identifier of the CDN to which the Delivery Service belongs
 :cdnName:                  Name of the CDN to which the Delivery Service belongs
