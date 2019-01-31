@@ -136,6 +136,11 @@ func (user *TOUser) Create() (error, error, int) {
 		return err, nil, http.StatusBadRequest
 	}
 
+	// make sure the user cannot create someone with a higher priv_level than themselves
+	if usrErr, sysErr, code := user.privCheck(); code != http.StatusOK {
+		return usrErr, sysErr, code
+	}
+
 	// Convert password to SCRYPT
 	*user.LocalPassword, err = auth.DerivePassword(*user.LocalPassword)
 	if err != nil {
@@ -188,45 +193,67 @@ func checkTenancy(tenantID *int, tenantIDs []int) bool {
 }
 
 // This is not using GenericRead because of this tenancy check. Maybe we can add tenancy functionality to the generic case?
-func (user *TOUser) Read() ([]interface{}, error, error, int) {
+func (this *TOUser) Read() ([]interface{}, error, error, int) {
 
-	var query string
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(user.APIInfo().Params, user.ParamColumns())
-
+	inf := this.APIInfo()
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(inf.Params, this.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
-	tenantIDs, err := tenant.GetUserTenantIDListTx(user.ReqInfo.Tx.Tx, user.ReqInfo.User.TenantID)
+	tenantIDs, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting tenant list for user: %v\n", err), http.StatusInternalServerError
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "u.tenant_id", tenantIDs)
 
-	query = user.SelectQuery() + where + orderBy
-	rows, err := user.ReqInfo.Tx.NamedQuery(query, queryValues)
+	query := this.SelectQuery() + where + orderBy
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, fmt.Errorf("querying users : %v", err), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
+	type UserGet struct {
+		RoleName *string `json:"rolename" db:"rolename"`
+		tc.User
+	}
+
+	user := &UserGet{}
 	users := []interface{}{}
 	for rows.Next() {
-
 		if err = rows.StructScan(user); err != nil {
 			return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError
 		}
-
 		users = append(users, *user)
 	}
 
 	return users, nil, nil, http.StatusOK
 }
 
+func (user *TOUser) privCheck() (error, error, int) {
+	requestedPrivLevel, _, err := dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx, *user.Role)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	if user.ReqInfo.User.PrivLevel < requestedPrivLevel {
+		return fmt.Errorf("user cannot update a user with a role more privileged than themselves"), nil, http.StatusForbidden
+	}
+
+	return nil, nil, http.StatusOK
+}
+
 func (user *TOUser) Update() (error, error, int) {
 
-	if user.ReqInfo.User.ID == *user.ID && user.Role != nil {
+	// make sure current user cannot update their own role to a new value
+	if user.ReqInfo.User.ID == *user.ID && user.ReqInfo.User.Role != *user.Role {
 		return fmt.Errorf("users cannot update their own role"), nil, http.StatusBadRequest
+	}
+
+	// make sure the user cannot update someone with a higher priv_level than themselves
+	if usrErr, sysErr, code := user.privCheck(); code != http.StatusOK {
+		return usrErr, sysErr, code
 	}
 
 	if user.LocalPassword != nil {
@@ -238,10 +265,10 @@ func (user *TOUser) Update() (error, error, int) {
 	}
 
 	resultRows, err := user.ReqInfo.Tx.NamedQuery(user.UpdateQuery(), user)
-	defer resultRows.Close()
 	if err != nil {
 		return api.ParseDBError(err)
 	}
+	defer resultRows.Close()
 
 	var lastUpdated tc.TimeNoMod
 	var tenant string
@@ -254,6 +281,7 @@ func (user *TOUser) Update() (error, error, int) {
 			return nil, fmt.Errorf("could not scan lastUpdated from insert: %s\n", err), http.StatusInternalServerError
 		}
 	}
+
 	user.LastUpdated = &lastUpdated
 	user.Tenant = &tenant
 	user.RoleName = &rolename
@@ -269,8 +297,9 @@ func (user *TOUser) Update() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+// Delete is unimplemented, needed to satisfy CRUDer
 func (user *TOUser) Delete() (error, error, int) {
-	return api.GenericDelete(user)
+	return nil, nil, http.StatusNotImplemented
 }
 
 func (u *TOUser) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {

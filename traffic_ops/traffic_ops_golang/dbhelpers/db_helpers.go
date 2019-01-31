@@ -116,6 +116,27 @@ func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantCol
 	return where, queryValues
 }
 
+// GetPrivLevelFromRoleID returns the priv_level associated with a role, whether it exists, and any error.
+// This method exists on a temporary basis. After priv_level is fully deprecated and capabilities take over,
+// this method will not only no longer be needed, but the corresponding new privilege check should be done
+// via the primary database query for the users endpoint. The users json response will contain a list of
+// capabilities in the future, whereas now the users json response currently does not contain privLevel.
+// See the wiki page on the roles/capabilities as a system:
+// https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=68715910
+func GetPrivLevelFromRoleID(tx *sqlx.Tx, id int) (int, bool, error) {
+	var privLevel int
+	err := tx.QueryRow(`SELECT priv_level FROM role WHERE role.id = $1`, id).Scan(&privLevel)
+
+	if err == sql.ErrNoRows {
+		return 0, false, nil
+	}
+
+	if err != nil {
+		return 0, false, fmt.Errorf("getting priv_level from role: %v", err)
+	}
+	return privLevel, true, nil
+}
+
 // GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
 func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	name := tc.DeliveryServiceName("")

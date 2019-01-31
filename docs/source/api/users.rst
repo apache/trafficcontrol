@@ -200,7 +200,7 @@ Response Structure
 :publicSshKey:     The user's public key used for the SSH protocol
 :registrationSent: If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
 :role:             The integral, unique identifier of the highest-privilege role assigned to this user
-:rolename:         The name of the highest-privilege role assigned to this user
+:roleName:         The name of the highest-privilege role assigned to this user
 :stateOrProvince:  The name of the state or province where this user resides
 :tenant:           The name of the tenant to which this user belongs
 :tenantId:         The integral, unique identifier of the tenant to which this user belongs
@@ -255,23 +255,3 @@ Response Structure
 		"postalCode": null,
 		"gid": null
 	}}
-
-``PUT``
-=======
-.. caution:: Due to a regular expression error, this method of this endpoint is unavailable at the moment. The bug is tracked by `GitHub Issue #3117 <https://github.com/apache/trafficcontrol/issues/3117>`_.
-
-.. warning:: Users that login via LDAP pass-back cannot be modified
-
-Modifies a user.
-
-:Auth. Required: Yes
-:Roles Required: "admin" or "operations"
-:Response Type:  Object
-
-Request Structure
------------------
-TBD
-
-Response Structure
-------------------
-TBD
