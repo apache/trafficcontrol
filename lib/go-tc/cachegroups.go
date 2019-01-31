@@ -62,7 +62,7 @@ type CacheGroupNullable struct {
 	Name                        *string               `json:"name" db:"name"`
 	ShortName                   *string               `json:"shortName" db:"short_name"`
 	Latitude                    *float64              `json:"latitude" db:"latitude"`
-	Longitude                   *float64              `json:"longitude"db:"longitude"`
+	Longitude                   *float64              `json:"longitude" db:"longitude"`
 	ParentName                  *string               `json:"parentCachegroupName" db:"parent_cachegroup_name"`
 	ParentCachegroupID          *int                  `json:"parentCachegroupId" db:"parent_cachegroup_id"`
 	SecondaryParentName         *string               `json:"secondaryParentCachegroupName" db:"secondary_parent_cachegroup_name"`
