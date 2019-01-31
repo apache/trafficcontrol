@@ -105,7 +105,7 @@ type ProfileParametersByNamePost []ProfileParameterByNamePost
 func (pp *ProfileParametersByNamePost) UnmarshalJSON(bts []byte) error {
 	bts = bytes.TrimLeft(bts, " \n\t\r")
 	if len(bts) == 0 {
-		errors.New("no body")
+		return errors.New("no body")
 	}
 	if bts[0] == '[' {
 		ppArr := []ProfileParameterByNamePost{}
