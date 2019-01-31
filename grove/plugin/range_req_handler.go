@@ -204,7 +204,7 @@ func parseRange(rangeString string) (byteRange, error) {
 	} else {
 		start, err := strconv.ParseInt(parts[0], 10, 64)
 		if err != nil {
-			log.Errorf("Error converting rangeString start \"%\" to numbers\n", rangeString)
+			log.Errorf("Error converting rangeString start '%v' to numbers\n", rangeString)
 			return byteRange{}, err
 		}
 		bRange.Start = start
@@ -214,7 +214,7 @@ func parseRange(rangeString string) (byteRange, error) {
 	} else {
 		end, err := strconv.ParseInt(parts[1], 10, 64)
 		if err != nil {
-			log.Errorf("Error converting rangeString end \"%\" to numbers\n", rangeString)
+			log.Errorf("Error converting rangeString end '%v' to numbers\n", rangeString)
 			return byteRange{}, err
 		}
 		bRange.End = end
