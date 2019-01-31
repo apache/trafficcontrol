@@ -20,12 +20,8 @@ import (
 	"testing"
 )
 
-var codes []uint
-
-func init() {
-	codes = []uint{
-		0, 1, 2,
-	}
+var codes = []uint{
+	0, 1, 2,
 }
 
 func basicMatch(t *testing.T, err error, expected string) {
