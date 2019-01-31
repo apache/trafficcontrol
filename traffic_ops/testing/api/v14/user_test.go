@@ -30,7 +30,7 @@ import (
 func TestUsers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Users}, func() {
 		UpdateTestUsers(t)
-		TestRolenameCapitalization(t)
+		RolenameCapitalizationTest(t)
 		OpsUpdateAdminTest(t)
 		UserSelfUpdateTest(t)
 		UserUpdateOwnRoleTest(t)
@@ -52,7 +52,7 @@ func CreateTestUsers(t *testing.T) {
 	}
 }
 
-func TestRolenameCapitalization(t *testing.T) {
+func RolenameCapitalizationTest(t *testing.T) {
 
 	roles, _, _, err := TOSession.GetRoles()
 	if err != nil {
