@@ -471,3 +471,65 @@ Request Structure
 Response Structure
 ------------------
 TBD
+
+``/crs/consistenthash/patternbased/regex``
+==========================================
+The resulting path that will be used for consistent hashing when the given regex is applied to the given request path.
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| regex             | yes      | The (URI encoded) regular expression to be used to test pattern based consistent hashing                     |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| requestPath       | yes      | The (URI encoded) request path to use to test pattern based consistent hashing                               |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+Response Structure
+------------------
+TBD
+
+``/crs/consistenthash/patternbased/deliveryservice``
+====================================================
+The resulting path that will be used for consistent hashing for the given delivery service and the given request path.
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| requestPath       | yes      | The (URI encoded) request path to use to test pattern based consistent hashing                               |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+Response Structure
+------------------
+TBD
+
+``/crs/consistenthash/cache/coveragezone/steering``
+===================================================
+The resulting cache of the consistent hash using coverage zone for a given client IP, delivery service and, request path -- used to test cache selection for steering delivery services.
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| requestPath       | yes      | The (URI encoded) request path to use to test pattern based consistent hashing                               |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| ip                | yes      | The IP address of a potential client                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+Response Structure
+------------------
+TBD
