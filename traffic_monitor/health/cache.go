@@ -336,7 +336,7 @@ func getDeliveryServiceCachegroupAvailability(dsCacheStates map[tc.CacheName]tc.
 	for cache, available := range dsCacheStates {
 		cg, ok := serverCachegroups[cache]
 		if !ok {
-			log.Errorf("cache %v not found in cachegroups!")
+			log.Errorf("cache %v not found in cachegroups!\n", cache)
 			continue
 		}
 		if _, ok := cgAvail[cg]; !ok || available.IsAvailable {
