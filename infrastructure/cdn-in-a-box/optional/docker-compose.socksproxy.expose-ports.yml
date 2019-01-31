@@ -14,21 +14,16 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-# To use this compose you should first build Traffic Ops and then copy the RPM to :
 #
-# trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
+# Expose the SocksProxy container on the host on port 9080
 #
-#      cd trafficcontrol/infrastructure/cdn-in-a-box
+# From ./infrastructure/cdn-in-a-box
 #
-# Add six character password variable, VNC_PASSWD, to the settings in `variables.env`.
-#
-# To start up CiaB with VNC optional container:
-# 
 # alias mydc="docker-compose "` \
 #   `"-f $PWD/docker-compose.yml "` \
 #   `"-f $PWD/docker-compose.expose-ports.yml "` \
 #   `"-f $PWD/optional/docker-compose.socksproxy.yml "` \
-#   `"-f $PWD/optional/docker-compose.socksproxy.expose-ports.yml "
+#   `"-f $PWD/optional/docker-compose.socksproxy.expose-ports.yml"
 #
 # mydc rm -fv
 # mydc up
@@ -39,24 +34,6 @@
 version: '2.1'
 
 services:
-  # Optional Socks Proxy for docker hosts that have limited bridge/ipforwarding support.
   socksproxy:
-    build:
-      context: .
-      dockerfile: optional/socksproxy/Dockerfile
-    hostname: socksproxy
-    domainname: infra.ciab.test
-    volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
-      - shared:/shared
-    
-volumes:
-  schemas:
-    external: false
-  shared:
-    external: false
-  content:
-    external: false
-  ca:
-    external: false
+    ports:
+      - "9080:1080"

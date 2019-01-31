@@ -50,8 +50,6 @@ services:
     env_file:
       - variables.env
     # TODO: change to expose: "5432" to limit to containers
-    ports:
-      - "5432:5432"
 
   # trafficops runs only the Go version of Traffic Ops in a container.  All Traffic Ops API endpoints that have
   # been rewritten in Go will be handled here.  All that have not are passed to the trafficops-perl service
@@ -69,8 +67,6 @@ services:
       - variables.env
     hostname: trafficops
     image: trafficops-go
-    ports:
-      - "6443:443"
     volumes:
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
@@ -93,8 +89,6 @@ services:
     hostname: trafficops-perl
     image: trafficops-perl
     # TODO: change to expose: "60443" to limit to containers
-    ports:
-      - "60443:443"
     volumes:
       - ./traffic_ops/ca:/ca
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
@@ -118,8 +112,6 @@ services:
       - variables.env
     hostname: trafficportal
     image: trafficportal
-    ports:
-      - "443:443"
     volumes:
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
@@ -143,8 +135,6 @@ services:
       - variables.env
     hostname: trafficmonitor
     image: trafficmonitor
-    ports:
-      - "80:80"
 
   # trafficrouter routes clients to the most optimal cache
   trafficrouter:
@@ -160,11 +150,6 @@ services:
     env_file:
       - variables.env
     hostname: trafficrouter
-    ports:
-      - "3053:53"
-      - "3080:80"
-      - "3443:443"
-      - "3333:3333"
     volumes:
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
@@ -177,9 +162,6 @@ services:
       dockerfile: traffic_vault/Dockerfile
     depends_on:
       - enroller
-    ports:
-      - "8087:8087"
-      - "8098:8098"
     environment:
       - CLUSTER_NAME=trafficvault
     labels:
@@ -215,8 +197,6 @@ services:
     env_file:
       - variables.env
     hostname: edge
-    ports:
-      - "9000:80"
     volumes:
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
@@ -235,8 +215,6 @@ services:
     env_file:
       - variables.env
     hostname: mid
-    ports:
-      - "9100:80"
     volumes:
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
@@ -253,8 +231,6 @@ services:
     env_file:
       - variables.env
     hostname: origin
-    ports:
-      - "9200:80"
     volumes:
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
@@ -290,8 +266,6 @@ services:
       - shared:/shared
     hostname: dns
     domainname: infra.ciab.test
-    ports:
-      - "9353:53"
 
 volumes:
   schemas:
