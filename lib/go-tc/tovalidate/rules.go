@@ -158,5 +158,4 @@ func IsValidIPv6CIDROrAddress(value interface{}) error {
 	default:
 		return fmt.Errorf("IsValidIPv6CIDROrAddress validation failure: unknown type %T", value)
 	}
-	return errors.New("must be a valid IPv6 address or CIDR")
 }
