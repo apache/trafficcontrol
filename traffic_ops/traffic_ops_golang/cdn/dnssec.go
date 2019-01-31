@@ -259,7 +259,7 @@ type CDNDS struct {
 // getCDNDeliveryServices returns basic data for the delivery services on the given CDN, as well as the CDN name, or any error.
 func GetCDNDeliveryServices(tx *sql.Tx, cdn string) ([]CDNDS, error) {
 	q := `
-SELECT ds.xml_id, ds.protocol, t.name as type, ds.routing_name, cdn.domain_name as cdn_domain
+SELECT ds.xml_id, ds.protocol, t.name as type, ds.routing_name
 FROM deliveryservice as ds
 JOIN cdn ON ds.cdn_id = cdn.id
 JOIN type as t ON ds.type = t.id
