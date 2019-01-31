@@ -134,6 +134,10 @@ to-delete() {
 # Constructs a server's JSON definiton and places it into the enroller's structure for loading
 # args:
 #         serverType - the type of the server to be created; one of "edge", "mid", "tm"
+#         MY_CDN - the CDN name, default is "CDN-in-a-Box"
+#         MY_CACHE_GROUP - the cache group, default is "CDN_in_a_Box_Edge"
+#         MY_TCP_PORT - the tcp port, default is "80"
+#         MY_HTTPS_PORT - the tcp port, default is "443"
 to-enroll() {
 
 	# Force fflush() on /shared 
@@ -168,13 +172,31 @@ to-enroll() {
 	else
 		export MY_CDN="CDN-in-a-Box"
 	fi
+	if [[ ! -z "$3" ]]; then
+		export MY_CACHE_GROUP="$3"
+	else
+		export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
+	fi
+	if [[ ! -z "$4" ]]; then
+		export MY_TCP_PORT="$4"
+	else
+		export MY_TCP_PORT="80"
+	fi
+	if [[ ! -z "$5" ]]; then
+		export MY_HTTPS_PORT="$5"
+	else
+		export MY_HTTPS_PORT="443"
+	fi
 
 	export MY_NET_INTERFACE='eth0'
 	export MY_DOMAINNAME="$(dnsdomainname)"
-	export MY_IP="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 3)"
+	MY_IP="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 3)"
+	export MY_IP=${MY_IP#"addr:"}
 	export MY_GATEWAY="$(route -n | grep $MY_NET_INTERFACE | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
-	export MY_NETMASK="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 5)"
-	export MY_IP6_ADDRESS="$(ifconfig $MY_NET_INTERFACE | grep inet6 | grep global | awk '{ print $2 }')"
+	MY_NETMASK="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 5)"
+	export MY_NETMASK=${MY_NETMASK#"Mask:"}
+	MY_IP6_ADDRESS="$(ifconfig $MY_NET_INTERFACE | grep inet6 | grep -i global | sed 's/addr://' | awk '{ print $2 }')"
+	export MY_IP6_ADDRESS=${MY_IP6_ADDRESS%%/*}
 	export MY_IP6_GATEWAY="$(route -n6 | grep UG | awk '{print $2}')"
 
 	case "$serverType" in
@@ -182,71 +204,36 @@ to-enroll() {
 			export MY_TYPE="EDGE"
 			export MY_PROFILE="ATS_EDGE_TIER_CACHE"
 			export MY_STATUS="REPORTED"
-			if [[ ! -z "$3" ]]; then
-				export MY_CACHE_GROUP="$3"
-			else
-				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
-			fi
 			;;
 		"mid" )
 			export MY_TYPE="MID"
 			export MY_PROFILE="ATS_MID_TIER_CACHE"
 			export MY_STATUS="REPORTED"
-			if [[ ! -z "$3" ]]; then
-				export MY_CACHE_GROUP="$3"
-			else
-				export MY_CACHE_GROUP="CDN_in_a_Box_Mid"
-			fi
 			;;
 		"tm" )
 			export MY_TYPE="RASCAL"
 			export MY_PROFILE="RASCAL-Traffic_Monitor"
 			export MY_STATUS="ONLINE"
-			if [[ ! -z "$3" ]]; then
-				export MY_CACHE_GROUP="$3"
-			else
-				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
-			fi
 			;;
 		"to" )
 			export MY_TYPE="TRAFFIC_OPS"
 			export MY_PROFILE="TRAFFIC_OPS"
 			export MY_STATUS="ONLINE"
-			if [[ ! -z "$3" ]]; then
-				export MY_CACHE_GROUP="$3"
-			else
-				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
-			fi
 			;;
 		"tr" )
 			export MY_TYPE="CCR"
 			export MY_PROFILE="CCR_CIAB"
 			export MY_STATUS="ONLINE"
-			if [[ ! -z "$3" ]]; then
-				export MY_CACHE_GROUP="$3"
-			else
-				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
-			fi
 			;;
 		"tp" )
 			export MY_TYPE="TRAFFIC_PORTAL"
 			export MY_PROFILE="TRAFFIC_PORTAL"
 			export MY_STATUS="ONLINE"
-			if [[ ! -z "$3" ]]; then
-				export MY_CACHE_GROUP="$3"
-			else
-				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
-			fi
 			;;
 		"tv" )
 			export MY_TYPE="RIAK"
 			export MY_PROFILE="RIAK_ALL"
 			export MY_STATUS="ONLINE"
-			if [[ ! -z "$3" ]]; then
-				export MY_CACHE_GROUP="$3"
-			else
-				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
-			fi
 			;;
 		* )
 			echo "Usage: to-enroll SERVER_TYPE" >&2

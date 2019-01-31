@@ -15,6 +15,6 @@
   "cdnName": "$MY_CDN",
   "updPending": false,
   "status": "$MY_STATUS",
-  "tcpPort": 80,
-  "httpsPort": 443
+  "tcpPort": $MY_TCP_PORT,
+  "httpsPort": $MY_HTTPS_PORT
 }
