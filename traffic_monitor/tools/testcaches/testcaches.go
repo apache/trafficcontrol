@@ -53,12 +53,11 @@ func main() {
 	}
 
 	remaps := makeFakeRemaps(*numRemaps)
-	servers, err := fakesrvr.News(*portStart, *numPorts, remaps)
+	_, err := fakesrvr.News(*portStart, *numPorts, remaps)
 	if err != nil {
 		fmt.Println("Error making FakeServers: " + err.Error())
 		return
 	}
-	servers = servers // debug
 	for {
 		// TODO handle sighup to die
 		time.Sleep(time.Hour)
