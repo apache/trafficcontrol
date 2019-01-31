@@ -58,7 +58,7 @@ while [[ -z $found ]]; do
     found=$(to-get api/1.3/cdns?name="$CDN" | jq -r '.response[].name')
 done
 
-to-enroll mid $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
+to-enroll mid $CDN "CDN_in_a_Box_Mid" || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 while [[ -z "$(testenrolled)" ]]; do
 	echo "waiting on enrollment"
