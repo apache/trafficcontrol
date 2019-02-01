@@ -175,7 +175,9 @@ __author__  = "Brennan Fieck"
 import argparse
 import datetime
 import logging
+import os
 import random
+import sys
 import time
 
 from requests.exceptions import RequestException
@@ -214,9 +216,11 @@ def doMain(args:argparse.Namespace) -> int:
 		logging.debug("%r", e, exc_info=True, stack_info=True)
 		return 1
 
-def main():
+def main() -> int:
 	"""
 	The ORT entrypoint, parses argv before handing it off to :func:`doMain`.
+
+	:returns: An exit code for :program:`traffic_ops_ort`
 	"""
 	# I have no idea why, but the old ORT script does this on every run.
 	print(datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S UTC %Y"))
@@ -245,8 +249,7 @@ def main():
 	                    choices=logLevelsAllowed,
 	                    type=str)
 	parser.add_argument("-l", "--log_level",
-	                    help=("Sets the logging level. Should be one of (in order of increasing "
-	                          "verbosity) NONE, CRITICAL, ERROR, WARN, INFO, DEBUG"),
+	                    help="Sets the logging level. (Default: WARN)",
 	                    type=str,
 	                    choices=logLevelsAllowed,
 	                    default="WARN")
@@ -309,4 +312,46 @@ def main():
 	                    version="%(prog)s v"+__version__,
 	                    help="Print version information and exit.")
 
-	exit(doMain(parser.parse_args()))
+	args = parser.parse_args()
+
+	# New call signature
+	if None in args.legacy:
+		if any(args.legacy):
+			print("Legacy mode call signature cannot be partial!", file=sys.stderr)
+			print("(Hint: use -h/--help for usage)", file=sys.stderr)
+			return 1
+
+		try:
+			args.to_url = args.to_url if args.to_url else os.environ["TO_URL"]
+			args.to_password = args.to_password if args.to_password else os.environ["TO_PASSWORD"]
+			args.to_user = args.to_user if args.to_user else os.environ["TO_USER"]
+		except KeyError as e:
+			print("Neither option nor environment variable defined for %s!" % e.args[0],
+			      file=sys.stderr)
+			print("(Hint: use -h/--help for usage)", file=sys.stderr)
+			return 1
+
+		args.log_level = args.log_level if args.log_level else "WARN"
+
+	# Illegal mixed call signature
+	elif (args.to_url is not None or
+	      args.to_user is not None or
+	      args.log_level is not None or
+	      args.to_password is not None):
+
+		print("Do not mix legacy call signature with new-style call signature!", file=sys.stderr)
+		print("(Hint: use -h/--help for usage)", file=sys.stderr)
+		return 1
+
+	# Legacy call signature
+	else:
+		args.log_level, args.to_url, login = args.legacy
+		try:
+			args.to_user, args.to_password = login.split(':')
+		except ValueError:
+			print("Invalid Traffic_Ops_Login format! Should be 'username:password'",file=sys.stderr)
+			print("(Hint: use -h/--help for usage)", file=sys.stderr)
+			return 1
+
+
+	return doMain(args)

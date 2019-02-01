@@ -113,7 +113,7 @@ class Configuration():
 		self.rev_proxy_disable = args.rev_proxy_disable
 		self.verify = not args.insecure
 
-		setLogLevel(args.Log_Level)
+		setLogLevel(args.log_level)
 
 		logging.info("Distribution detected as: '%s'", DISTRO)
 
@@ -128,12 +128,8 @@ class Configuration():
 		self.tsroot = parseTSRoot(args.ts_root)
 		logging.info("ATS root installation directory set to '%s'", self.tsroot)
 
-		self.useSSL, self.toHost, self.toPort = parseTOURL(args.Traffic_Ops_URL, self.verify)
-
-		try:
-			self.username, self.password = args.Traffic_Ops_Login.split(':')
-		except ValueError as e:
-			raise ValueError("Invalid login information, should be like 'username:password'.") from e
+		self.useSSL, self.toHost, self.toPort = parseTOURL(args.to_url, self.verify)
+		self.username, self.password = args.to_user, args.to_password
 
 
 	@property
