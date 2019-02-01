@@ -123,7 +123,7 @@ func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantCol
 // capabilities in the future, whereas now the users json response currently does not contain privLevel.
 // See the wiki page on the roles/capabilities as a system:
 // https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=68715910
-func GetPrivLevelFromRoleID(tx *sqlx.Tx, id int) (int, bool, error) {
+func GetPrivLevelFromRoleID(tx *sql.Tx, id int) (int, bool, error) {
 	var privLevel int
 	err := tx.QueryRow(`SELECT priv_level FROM role WHERE role.id = $1`, id).Scan(&privLevel)
 

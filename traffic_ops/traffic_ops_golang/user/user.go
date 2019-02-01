@@ -232,7 +232,7 @@ func (this *TOUser) Read() ([]interface{}, error, error, int) {
 }
 
 func (user *TOUser) privCheck() (error, error, int) {
-	requestedPrivLevel, _, err := dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx, *user.Role)
+	requestedPrivLevel, _, err := dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx.Tx, *user.Role)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
