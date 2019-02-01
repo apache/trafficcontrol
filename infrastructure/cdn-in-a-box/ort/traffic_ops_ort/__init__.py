@@ -251,12 +251,8 @@ def main():
 	                    default=3)
 	parser.add_argument("--wait_for_parents",
 	                    help="do not update if parent_pending = 1 in the update json.",
-<<<<<<< c8d6ef9157e1d078478be6aec2827a52c3d7fb59
 	                    type=int,
 	                    default=1)
-=======
-	                    action="store_true")
->>>>>>> ORT.py now implements all the same command line flags as the Perl script
 	parser.add_argument("--rev_proxy_disable",
 	                    help="bypass the reverse proxy even if one has been configured.",
 	                    action="store_true")
