@@ -196,7 +196,7 @@ Arguments and Flags
 	:program:`traffic_ops_ort` cannot be run using the new call signature unless this value is
 	defined, either on the command line or in the execution environment.
 
-.. option:: -p PASSWORD, --password PASSWORD
+.. option:: -p PASSWORD, --to_password PASSWORD
 
 	Specifies the password of the user identified by :envvar:`TO_USER` (or
 	:option:`-u`/:option:`--to_user` if overridden) to use when authenticating to Traffic Ops. This

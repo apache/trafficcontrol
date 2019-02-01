@@ -13,10 +13,10 @@
 .. limitations under the License.
 ..
 
+******************************
 traffic\_ops\_ort.utils module
-==============================
-
+******************************
 .. automodule:: traffic_ops_ort.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
+	:members:
+	:undoc-members:
+	:show-inheritance:
