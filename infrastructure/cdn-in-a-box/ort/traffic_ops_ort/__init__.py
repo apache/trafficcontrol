@@ -74,7 +74,8 @@ Arguments and Flags
 
 .. option:: --dispersion DISP
 
-	Wait a random number between 0 and ``DISP`` seconds before starting. (Default: 300)
+	Wait a random number between 0 and ``DISP`` seconds before starting. This option *only* has any
+	effect if :option:`MODE` is ``SYNCDS``. (Default: 300)
 
 .. option:: --login_dispersion DISP
 
@@ -234,7 +235,7 @@ Module Contents
 ===============
 """
 
-__version__ = "0.0.5"
+__version__ = "0.1.0"
 __author__  = "Brennan Fieck"
 
 import argparse
