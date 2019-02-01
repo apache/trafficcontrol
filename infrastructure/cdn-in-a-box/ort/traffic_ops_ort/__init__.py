@@ -240,7 +240,7 @@ def main():
 	parser.add_argument("legacy",
 	                    help="ALL/TRACE, DEBUG, INFO, WARN, ERROR, FATAL/CRITICAL, NONE",
 	                    metavar="Log_Level",
-	                    nargs="*",
+	                    nargs="?",
 	                    action="append",
 	                    choices=logLevelsAllowed,
 	                    type=str)
@@ -253,7 +253,7 @@ def main():
 	parser.add_argument("legacy",
 	                    help="URL to Traffic Ops host. Example: https://trafficops.company.net",
 	                    metavar="Traffic_Ops_URL",
-	                    nargs="*",
+	                    nargs="?",
 	                    action="append",
 	                    type=str)
 	parser.add_argument("--to_url",
