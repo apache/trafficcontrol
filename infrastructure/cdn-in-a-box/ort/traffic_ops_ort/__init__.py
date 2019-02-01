@@ -251,8 +251,7 @@ def main() -> int:
 	parser.add_argument("-l", "--log_level",
 	                    help="Sets the logging level. (Default: WARN)",
 	                    type=str,
-	                    choices=logLevelsAllowed,
-	                    default="WARN")
+	                    choices=logLevelsAllowed)
 	parser.add_argument("legacy",
 	                    help="URL to Traffic Ops host. Example: https://trafficops.company.net",
 	                    metavar="Traffic_Ops_URL",
