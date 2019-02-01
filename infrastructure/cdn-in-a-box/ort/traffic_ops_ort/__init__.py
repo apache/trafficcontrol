@@ -197,7 +197,6 @@ def doMain(args:argparse.Namespace) -> int:
 	except ValueError as e:
 		logging.critical(e)
 		logging.debug("%r", e, exc_info=True, stack_info=True)
-<<<<<<< c8d6ef9157e1d078478be6aec2827a52c3d7fb59
 		return 1
 
 	if conf.login_dispersion:
@@ -215,25 +214,6 @@ def doMain(args:argparse.Namespace) -> int:
 		logging.debug("%r", e, exc_info=True, stack_info=True)
 		return 1
 
-=======
-		return 1
-
-	if conf.login_dispersion:
-		disp = random.randint(0, conf.login_dispersion)
-		logging.info("Login dispersion is active - sleeping for %d seconds before continuing", disp)
-		time.sleep(disp)
-
-	try:
-		with to_api.API(conf) as api:
-			conf.api = api
-			return main_routines.run(conf)
-	except (LoginError, OperationError, InvalidJSONError, RequestException) as e:
-		logging.critical("Failed to connect and authenticate with the Traffic Ops server")
-		logging.error(e)
-		logging.debug("%r", e, exc_info=True, stack_info=True)
-		return 1
-
->>>>>>> ORT.py now implements all the same command line flags as the Perl script
 def main():
 	"""
 	The ORT entrypoint, parses argv before handing it off to :func:`doMain`.
