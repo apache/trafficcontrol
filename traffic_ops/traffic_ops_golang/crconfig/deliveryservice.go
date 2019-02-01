@@ -173,11 +173,10 @@ WHERE
 	}
 	qry += `
 ORDER BY
-  d.xml_id,
-  d.last_updated,
-  t.last_updated,
-  p.last_updated
-DESC
+  d.xml_id DESC,
+  d.last_updated DESC,
+  t.last_updated DESC,
+  p.last_updated DESC
 ) v where deleted = false
 `
 	rows, err := tx.Query(qry, cdn)
@@ -496,14 +495,13 @@ WHERE
 	}
 	qry += `
 ORDER BY
-  e.host,
-  e.address,
-  e.deliveryservice,
-  e.cachegroup,
-  e.last_updated,
-  d.last_updated,
-  t.last_updated
-DESC
+  e.host DESC,
+  e.address DESC,
+  e.deliveryservice DESC,
+  e.cachegroup DESC,
+  e.last_updated DESC,
+  d.last_updated DESC,
+  t.last_updated DESC
 ) v where deleted = false
 `
 	rows, err := tx.Query(qry, cdn)
@@ -569,16 +567,15 @@ WHERE
 	}
 	qry += `
 ORDER BY
-  dsname,
-  pattern,
-  type,
-  set_number,
-  dr.last_updated,
-  dr.last_updated,
-  d.last_updated,
-  t.last_updated,
-  dt.last_updated
-DESC
+  dsname DESC,
+  pattern DESC,
+  type DESC,
+  set_number DESC,
+  dr.last_updated DESC,
+  dr.last_updated DESC,
+  d.last_updated DESC,
+  t.last_updated DESC,
+  dt.last_updated DESC
 ) v where deleted = false
 ORDER BY set_number ASC
 `
@@ -698,10 +695,9 @@ WHERE
 	}
 	qry += `
     ORDER BY
-      s.ip_address,
-      s.profile,
-      s.last_updated
-    DESC
+      s.ip_address DESC,
+      s.profile DESC,
+      s.last_updated DESC
     ) v where deleted = false
   )
 `
@@ -714,13 +710,12 @@ WHERE
 	}
 	qry += `
 ORDER BY
-  pa.name,
-  pa.value,
-  pr.name,
-  pr.last_updated,
-  pp.last_updated,
-  pa.last_updated
-DESC
+  pa.name DESC,
+  pa.value DESC,
+  pr.name DESC,
+  pr.last_updated DESC,
+  pp.last_updated DESC,
+  pa.last_updated DESC
 ) v where deleted = false
 `
 	rows, err := tx.Query(qry, cdn)

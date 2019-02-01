@@ -22,12 +22,10 @@ package monitoring
 import (
 	"database/sql"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 	"github.com/lib/pq"
 )
@@ -104,74 +102,58 @@ type DeliveryService struct {
 	TotalKBPSThreshold float64 `json:"totalKbpsThreshold"`
 }
 
-func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(GetMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"]))
-}
-
-func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
-	monitors, caches, routers, err := getMonitoringServers(tx, cdnName)
-	if err != nil {
+func GetMonitoringJSON(tx *sql.Tx, cdnName string, live bool) (*Monitoring, error) {
+	mn := &Monitoring{}
+	err := error(nil)
+	routers := []Router{}
+	if mn.TrafficMonitors, mn.TrafficServers, routers, err = getMonitoringServers(tx, cdnName, live); err != nil {
 		return nil, fmt.Errorf("error getting servers: %v", err)
 	}
-
-	cachegroups, err := getCachegroups(tx, cdnName)
-	if err != nil {
+	if mn.Cachegroups, err = getCachegroups(tx, cdnName, live); err != nil {
 		return nil, fmt.Errorf("error getting cachegroups: %v", err)
 	}
-
-	profiles, err := getProfiles(tx, caches, routers)
-	if err != nil {
+	if mn.Profiles, err = getProfiles(tx, cdnName, mn.TrafficServers, routers, live); err != nil {
 		return nil, fmt.Errorf("error getting profiles: %v", err)
 	}
-
-	deliveryServices, err := getDeliveryServices(tx, routers)
-	if err != nil {
+	if mn.DeliveryServices, err = getDeliveryServices(tx, routers, live); err != nil {
 		return nil, fmt.Errorf("error getting deliveryservices: %v", err)
 	}
-
-	config, err := getConfig(tx)
-	if err != nil {
+	if mn.Config, err = getConfig(tx, cdnName, live); err != nil {
 		return nil, fmt.Errorf("error getting config: %v", err)
 	}
-
-	return &Monitoring{
-		TrafficServers:   caches,
-		TrafficMonitors:  monitors,
-		Cachegroups:      cachegroups,
-		Profiles:         profiles,
-		DeliveryServices: deliveryServices,
-		Config:           config,
-	}, nil
+	return mn, nil
 }
 
-func getMonitoringServers(tx *sql.Tx, cdn string) ([]Monitor, []Cache, []Router, error) {
-	query := `SELECT
-me.host_name as hostName,
-CONCAT(me.host_name, '.', me.domain_name) as fqdn,
-status.name as status,
-cachegroup.name as cachegroup,
-me.tcp_port as port,
-me.ip_address as ip,
-me.ip6_address as ip6,
-profile.name as profile,
-me.interface_name as interfaceName,
-type.name as type,
-me.xmpp_id as hashID
-FROM server me
-JOIN type type ON type.id = me.type
-JOIN status status ON status.id = me.status
-JOIN cachegroup cachegroup ON cachegroup.id = me.cachegroup
-JOIN profile profile ON profile.id = me.profile
-JOIN cdn cdn ON cdn.id = me.cdn_id
-WHERE cdn.name = $1`
+func getMonitoringServers(tx *sql.Tx, cdn string, live bool) ([]Monitor, []Cache, []Router, error) {
+	with := ""
+	selectedColumns := `host_name, fqdn, status, cachegroup, port, ip, ip6, profile, interface_name, server_type, hash_id`
+	primaryKeys := `s.host_name`
+	selectBody := `
+  s.host_name,
+  CONCAT(s.host_name, '.', s.domain_name) fqdn,
+  st.name status,
+  cg.name cachegroup,
+  s.tcp_port port,
+  s.ip_address ip,
+  s.ip6_address ip6,
+  pr.name profile,
+  s.interface_name,
+  tp.name server_type,
+  s.xmpp_id hash_id,
+  s.deleted
+FROM
+  server_snapshot s
+  JOIN type_snapshot tp ON tp.id = s.type
+  JOIN status_snapshot st ON st.id = s.status
+  JOIN cachegroup_snapshot cg ON cg.id = s.cachegroup
+  JOIN profile_snapshot pr ON pr.id = s.profile
+  JOIN cdn_snapshot c ON c.id = s.cdn_id
+`
+	where := `c.name = (select v from cdn_name)`
+	tableAliases := []string{"s", "tp", "st", "cg", "pr", "c"}
+	qry := buildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases)
 
-	rows, err := tx.Query(query, cdn)
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -237,16 +219,26 @@ WHERE cdn.name = $1`
 	return monitors, caches, routers, nil
 }
 
-func getCachegroups(tx *sql.Tx, cdn string) ([]Cachegroup, error) {
-	query := `
-SELECT cg.name, co.latitude, co.longitude
-FROM cachegroup cg
-LEFT JOIN coordinate co ON co.id = cg.coordinate
-WHERE cg.id IN
-  (SELECT cachegroup FROM server WHERE server.cdn_id =
-    (SELECT id FROM cdn WHERE name = $1));`
+func getCachegroups(tx *sql.Tx, cdn string, live bool) ([]Cachegroup, error) {
+	with := ""
+	selectedColumns := "name, latitude, longitude"
+	primaryKeys := "cg.name"
+	selectBody := `
+  cg.name,
+  co.latitude,
+  co.longitude,
+  cg.deleted
+FROM
+  cachegroup_snapshot cg
+  LEFT JOIN coordinate_snapshot co ON co.id = cg.coordinate
+  JOIN server_snapshot s ON s.cachegroup = cg.id
+  JOIN cdn_snapshot c ON c.id = s.cdn_id
+`
+	where := `c.name = (select v from cdn_name)`
+	tableAliases := []string{"cg", "co", "s", "c"}
+	qry := buildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases)
 
-	rows, err := tx.Query(query, cdn)
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +263,24 @@ WHERE cg.id IN
 	return cachegroups, nil
 }
 
-func getProfiles(tx *sql.Tx, caches []Cache, routers []Router) ([]Profile, error) {
+func getProfiles(tx *sql.Tx, cdn string, caches []Cache, routers []Router, live bool) ([]Profile, error) {
+	with := ""
+	selectedColumns := `profile, name, value`
+	primaryKeys := "pr.name, pa.name, pa.value"
+	selectBody := `
+  pr.name as profile,
+  pa.name,
+  pa.value,
+  pa.deleted
+FROM
+  parameter_snapshot pa
+  JOIN profile_snapshot pr ON pr.name = ANY($2)
+  JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
+`
+	where := `pa.config_file = $3`
+	tableAliases := []string{`pa`, `pr`, `pp`}
+	qry := buildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases)
+
 	cacheProfileTypes := map[string]string{}
 	profiles := map[string]Profile{}
 	profileNames := []string{}
@@ -293,14 +302,7 @@ func getProfiles(tx *sql.Tx, caches []Cache, routers []Router) ([]Profile, error
 		}
 	}
 
-	query := `
-SELECT p.name as profile, pr.name, pr.value
-FROM parameter pr
-JOIN profile p ON p.name = ANY($1)
-JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
-WHERE pr.config_file = $2;
-`
-	rows, err := tx.Query(query, pq.Array(profileNames), CacheMonitorConfigFile)
+	rows, err := tx.Query(qry, cdn, pq.Array(profileNames), CacheMonitorConfigFile)
 	if err != nil {
 		return nil, err
 	}
@@ -337,20 +339,46 @@ WHERE pr.config_file = $2;
 	return profilesArr, nil
 }
 
-func getDeliveryServices(tx *sql.Tx, routers []Router) ([]DeliveryService, error) {
+func getDeliveryServices(tx *sql.Tx, routers []Router, live bool) ([]DeliveryService, error) {
 	profileNames := []string{}
 	for _, router := range routers {
 		profileNames = append(profileNames, router.Profile)
 	}
 
-	query := `
-SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps
-FROM deliveryservice ds
-JOIN profile profile ON profile.id = ds.profile
-WHERE profile.name = ANY($1)
-AND ds.active = true
+	qry := `
+SELECT
+  xml_id,
+  global_max_tps,
+  global_max_mbps,
+  ds_deleted
+FROM (
+SELECT DISTINCT ON (ds.xml_id)
+  ds.xml_id,
+  ds.global_max_tps,
+  ds.global_max_mbps,
+  ds.deleted as ds_deleted
+FROM
+  deliveryservice_snapshot ds
+  JOIN profile_snapshot pr ON pr.id = ds.profile
+  JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = ds.xml_id
+WHERE
+  pr.name = ANY($1)
+  AND ds.active = true
 `
-	rows, err := tx.Query(query, pq.Array(profileNames))
+	if !live {
+		qry += `
+  AND ds.last_updated <= dsn.time
+  AND pr.last_updated <= dsn.time
+`
+	}
+	qry += `
+ORDER BY
+  ds.xml_id DESC,
+  ds.last_updated DESC,
+  pr.last_updated DESC
+) s WHERE ds_deleted = false
+`
+	rows, err := tx.Query(qry, pq.Array(profileNames))
 	if err != nil {
 		return nil, err
 	}
@@ -375,17 +403,25 @@ AND ds.active = true
 	return dses, nil
 }
 
-func getConfig(tx *sql.Tx) (map[string]interface{}, error) {
+func getConfig(tx *sql.Tx, cdn string, live bool) (map[string]interface{}, error) {
+	with := ""
+	selectedColumns := `name, value`
+	primaryKeys := "pa.name, pa.value"
 	// TODO remove 'like' in query? Slow?
-	query := fmt.Sprintf(`
-SELECT pr.name, pr.value
-FROM parameter pr
-JOIN profile p ON p.name LIKE '%s%%'
-JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
-WHERE pr.config_file = '%s'
-`, tc.MonitorProfilePrefix, MonitorConfigFile)
+	selectBody := `
+  pa.name,
+  pa.value
+FROM
+  parameter_snapshot pa
+  JOIN profile_snapshot pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
+  JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
+`
+	where := `pa.config_file = '` + MonitorConfigFile + `'`
+	tableAliases := []string{`pa`, `pr`, `pp`}
+	qry := buildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases)
 
-	rows, err := tx.Query(query)
+	rows, err := tx.Query(qry, cdn)
+
 	if err != nil {
 		return nil, err
 	}
@@ -406,4 +442,212 @@ WHERE pr.config_file = '%s'
 		}
 	}
 	return cfg, nil
+}
+
+// buildSnapshotQuery builds a query to select the latest timestamp, from the query parts of an ordinary query.
+//
+// The live arg is whether to query the latest timestamp. If false, the latest up to the snapshot is queried.
+//
+// This is just a helper, there are things it can't do (e.g. order by), and it's fine not to use it, if it doesn't fit.
+//
+// Note this requires the cdn name (in order to get the snapshot time). This is queried as $1. Hence:
+// 1. The cdn name must be the first query parameter
+// 2. The cdn name is available to the selectBody via `(select v from cdn_name)`
+//
+// The with parameter is any with-statement query parts. This should be a complete "WITH" query part. This may be blank.
+// Examples:
+//    with := `WITH cdn_id AS (select id from cdn where name = 'foo')`
+//    with := `
+//    WITH one AS (select 1),
+//         two AS (select 2)
+//    `
+//
+// The selectColumns must be the names of columns selected by the parameter selectBody, separated by commas. This should not include the deleted column, which will always be false.
+// Example:
+//    selectColumns := `name, value`
+//
+// The primaryKeys must be the primary keys of the selected statement, including the table aliases used in the selectBody, separated by commas. Note this is not necessarily the primary key(s) of a single table, but rather the unique values of the select statement itself (in technical terms, the "candidate key"). For example, this may be the delivery service xml_id; but it may also be "profile.id, parameter.id, parameter.name".
+//  Examples:
+//    primaryKeys := `ds.xml_id`
+//    primaryKeys := `pr.name, pa.name, pa.value`
+//
+// The selectBody must be the select statement, including from and joins, including selecting the deleted column of the primary table, excluding the initial "select" keyword. A deleted column MUST be selected.
+// Example:
+//      pa.name,
+//      pa.value,
+//      pa.deleted
+//    FROM
+//      parameter pa
+//    JOIN
+//      profile pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
+//      JOIN profile_parameter pp ON pp.profile = pr.id and pp.parameter = pa.id
+//
+// The where is the where clause, including the "where" keyword. This may be blank.
+// Examples:
+//    where := `WHERE pa.config_file = '` + MonitorConfigFile + `'`
+//    where := `
+//    WHERE pa.config_file = 'CRConfig.json'
+//          AND pa.name = 'something'
+//    `
+//
+// The tableAliases is all table aliases (or names) used in the selectBody. For example, if the select body contains "FROM foo JOIN bar b on b.id = foo.bar", then tableAliases must be []string{"foo", "b"}.
+// Examples:
+//   tableAliases := []string{"pa", "pr"}
+//   tableAliases := []string{"s", "tp", "st", "cg", "pr", "cdn"}
+//
+//
+// All the tables selected, in the parameters selectBody and tableAliases, should be snapshot tables like deliveryservice_snapshot, not raw tables like "deliveryservice". The purpose of this function is to build a query to select the latest values, abstracting away the common boilerplate, and allowing callers to pass the query parts mostly unmodified from an ordinary "non-snapshot" query.
+//
+// To better explain its purpose with an example, it allows you to pass the query parts of a query such as:
+//
+//    SELECT
+//      pa.name,
+//      pa.value
+//    FROM
+//      parameter_snapshot pa
+//    JOIN
+//      profile_snapshot pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
+//      JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
+//    WHERE
+//      pa.config_file = '` + MonitorConfigFile + `'
+//
+// and construct the "select latest <= snapshot" query such as:
+//
+//    WITH cdn_name AS (
+//      SELECT $1::text as v
+//    ),
+//    snapshot_time AS (
+//      SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
+//    )
+//    SELECT
+//      name,
+//      value
+//    FROM (
+//    SELECT DISTINCT ON (pa.name, pa.value)
+//      pa.deleted,
+//      pp.deleted,
+//      pa.name,
+//      pa.value,
+//    FROM
+//      parameter_snapshot pa
+//    JOIN
+//      profile_snapshot pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
+//      JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
+//    WHERE
+//      pa.config_file = '` + MonitorConfigFile + `'
+//
+//      AND ds.last_updated <= (select v from snapshot_time)
+//      AND pr.last_updated <= (select v from snapshot_time)
+//
+//    ORDER BY
+//      pa.name,
+//      pa.value,
+//      pr.last_updated DESC,
+//      pp.last_updated DESC
+//    ) s WHERE
+//      pa.deleted = false
+//      AND pp.deleted = false
+//
+// While requiring only minimal changes to the original:
+// 1. Query parts must be separated out.
+// 2. Tables must be suffixed with '_snapshot', to select from the snapshot tables.
+// 3. The primary key of the select statement must be identified.
+//
+// The usage for the above example would be:
+//
+//    live := true
+//    with := ""
+//    selectedColumns := "name, value"
+//    primaryKeys := "pa.name, pa.value"
+//    selectBody := `
+//      pa.name,
+//      pa.value
+//    FROM
+//      parameter_snapshot pa
+//    JOIN
+//      profile_snapshot pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
+//      JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
+//    `
+//    where := `pa.config_file = '` + MonitorConfigFile + `'`
+//    tableAliases := []string{"pa", "pp"}
+//    qry := buildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases)
+//
+func buildSnapshotQuery(
+	live bool,
+	with string,
+	selectedColumns string,
+	primaryKeys string,
+	selectBody string,
+	where string,
+	tableAliases []string,
+) string {
+	qry := with
+
+	if !live {
+		if with == `` {
+			qry += `WITH `
+		} else {
+			qry += `, `
+		}
+		qry += `
+cdn_name AS (
+  SELECT $1::text as v
+),
+snapshot_time AS (
+  SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
+)
+`
+	}
+
+	if len(tableAliases) < 1 {
+		// this function is never useful with no tables, so this should never happen; but I loathe panics.
+		return `` // TODO log?
+	}
+	firstAlias := tableAliases[0]
+	restAliases := tableAliases[1:]
+
+	qry += ` SELECT ` + selectedColumns + `
+FROM (SELECT DISTINCT ON (` + primaryKeys + `)
+`
+
+	for _, alias := range tableAliases {
+		qry += alias + `.deleted as ` + alias + `_deleted,
+`
+	}
+
+	qry += selectBody
+	if where != "" {
+		qry += "WHERE " + where
+	}
+
+	if !live {
+		if where == `` {
+			qry += `
+WHERE `
+		} else {
+			qry += `
+ AND `
+		}
+		qry += firstAlias + `.last_updated <= (select v from snapshot_time)
+`
+		for _, alias := range restAliases {
+			qry += ` AND ` + alias + `.last_updated <= (select v from snapshot_time)
+`
+		}
+	}
+
+	qry += ` ORDER BY
+` + primaryKeys
+	for _, alias := range tableAliases {
+		qry += `, ` + alias + `.last_updated DESC
+`
+	}
+	qry += ` ) s WHERE ` + firstAlias + `_deleted = false
+`
+	for _, alias := range tableAliases {
+		qry += ` AND ` + alias + `_deleted = false
+`
+	}
+
+	return qry
 }

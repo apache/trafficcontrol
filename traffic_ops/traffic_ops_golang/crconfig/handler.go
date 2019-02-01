@@ -111,17 +111,15 @@ func SnapshotGetMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	snapshot, cdnExists, err := GetSnapshotMonitoring(inf.Tx.Tx, inf.Params["cdn"])
+	// TODO check CDN/snapshot existence, and return a helpful message?
+
+	live := false
+	monitoring, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"], live)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
 		return
 	}
-	if !cdnExists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
-		return
-	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write([]byte(`{"response":` + snapshot + `}`))
+	api.WriteResp(w, r, monitoring)
 }
 
 // SnapshotOldGetHandler gets and serves the CRConfig from the snapshot table, not wrapped in response to match the old non-API CRConfig-Snapshots endpoint
