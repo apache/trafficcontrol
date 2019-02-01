@@ -155,7 +155,7 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 // IsTenantAuthorized checks that the user is authorized for both the delivery service's existing tenant, and the new tenant they're changing it to (if different).
 
 func (ds *TODeliveryServiceV12) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
-	return isTenantAuthorized(user, ds.ReqInfo.Tx, &ds.DeliveryServiceNullableV12)
+	return isTenantAuthorized(user, ds.ReqInfo.Tx.Tx, &ds.DeliveryServiceNullableV12)
 }
 
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
@@ -171,8 +171,8 @@ func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV12) (*int, error) {
 	return existingID, err
 }
 
-func isTenantAuthorized(user *auth.CurrentUser, tx *sqlx.Tx, ds *tc.DeliveryServiceNullableV12) (bool, error) {
-	existingID, err := getTenantID(tx.Tx, ds)
+func isTenantAuthorized(user *auth.CurrentUser, tx *sql.Tx, ds *tc.DeliveryServiceNullableV12) (bool, error) {
+	existingID, err := getTenantID(tx, ds)
 	if err != nil {
 		return false, errors.New("getting tenant ID: " + err.Error())
 	}
@@ -180,7 +180,7 @@ func isTenantAuthorized(user *auth.CurrentUser, tx *sqlx.Tx, ds *tc.DeliveryServ
 		ds.TenantID = existingID
 	}
 	if existingID != nil && existingID != ds.TenantID {
-		userAuthorizedForExistingDSTenant, err := tenant.IsResourceAuthorizedToUserTx(*existingID, user, tx.Tx)
+		userAuthorizedForExistingDSTenant, err := tenant.IsResourceAuthorizedToUserTx(*existingID, user, tx)
 		if err != nil {
 			return false, errors.New("checking authorization for existing DS ID: " + err.Error())
 		}
@@ -189,7 +189,7 @@ func isTenantAuthorized(user *auth.CurrentUser, tx *sqlx.Tx, ds *tc.DeliveryServ
 		}
 	}
 	if ds.TenantID != nil {
-		userAuthorizedForNewDSTenant, err := tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, tx.Tx)
+		userAuthorizedForNewDSTenant, err := tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, tx)
 		if err != nil {
 			return false, errors.New("checking authorization for new DS ID: " + err.Error())
 		}
@@ -222,13 +222,6 @@ func CreateV12(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dsv13 := tc.NewDeliveryServiceNullableFromV12(ds)
-	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-		return
-	} else if !authorized {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-		return
-	}
 	dsv13, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, dsv13)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -317,13 +310,6 @@ func UpdateV12(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dsv13 := tc.NewDeliveryServiceNullableFromV12(ds)
-	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-		return
-	} else if !authorized {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-		return
-	}
 	dsv13, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &dsv13)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
