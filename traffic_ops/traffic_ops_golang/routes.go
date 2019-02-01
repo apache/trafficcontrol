@@ -162,10 +162,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//User: CRUD
 		//Incrementing version for users because change to Nullable struct.
-		{1.1, http.MethodGet, `users/?(\.json)?$`, api.ReadHandler(user.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `users/{id}$`, api.ReadHandler(user.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `users/{id}$`, api.UpdateHandler(user.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodPost, `users/?(\.json)?$`, api.CreateHandler(user.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodGet, `users/?(\.json)?$`, api.ReadHandler(user.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodGet, `users/{id}$`, api.ReadHandler(user.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodPut, `users/{id}$`, api.UpdateHandler(user.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodPost, `users/?(\.json)?$`, api.CreateHandler(user.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 
 		{1.1, http.MethodGet, `user/current/?(\.json)?$`, user.Current, auth.PrivLevelReadOnly, Authenticated, nil},
 
