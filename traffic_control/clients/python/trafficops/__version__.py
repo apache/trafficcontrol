@@ -18,13 +18,13 @@ Versioning
 The :mod:`trafficops.__version__` module contains only the :data:`__version__` "constant" which
 gives the version of this *Apache-TrafficControl package* and **not** the version of
 *Apache Traffic Control* for which it was made. The two are versioned separately, to allow the
-client to grow in a version-controlled manner despite the relatively slow release cadence of Apache
+client to grow in a version-controlled manner without being tied to the release cadence of Apache
 Traffic Control as a whole.
 
-We guarantee version 1.0 will work (in general) with Apache Traffic Control version 3.0 (release
-pending at the time of this writing). New functionality will be added as the :ref:`to-api` evolves,
-but changes to this client will remain non-breaking for existing code using it until the next major
-version is released.
+Version 1.0 is supported for use with Apache Traffic Control version 3.0 (release pending at the
+time of this writing). New functionality will be added as the :ref:`to-api` evolves, but changes to
+this client will remain non-breaking for existing code using it until the next major version is
+released.
 
 .. deprecated:: 1.0
 	The v1.0 release of this client deprecates support of Python2. Versions 2.0 and onward will
