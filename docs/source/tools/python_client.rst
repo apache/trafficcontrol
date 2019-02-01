@@ -22,27 +22,16 @@ Apache-TrafficControl Package
 Package Contents
 ================
 .. automodule:: trafficops
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-TOSession
----------
-.. automodule:: trafficops.tosession
 	:members:
 	:undoc-members:
 	:show-inheritance:
 
-RestAPI
--------
-.. automodule:: trafficops.restapi
-	:members:
-	:undoc-members:
-	:show-inheritance:
-
-Utils
------
 .. automodule:: trafficops.utils
+	:members:
+	:undoc-members:
+	:show-inheritance:
+
+.. automodule:: trafficops.__version__
 	:members:
 	:undoc-members:
 	:show-inheritance:
