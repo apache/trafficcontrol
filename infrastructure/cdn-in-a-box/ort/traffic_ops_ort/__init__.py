@@ -221,6 +221,12 @@ def main():
 	# I have no idea why, but the old ORT script does this on every run.
 	print(datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S UTC %Y"))
 
+	from .configuration import LogLevels
+	from .configuration.Configuration import Modes
+
+	runModesAllowed = {str(x) for x in Modes}.union({str(x).lower() for x in Modes})
+	logLevelsAllowed = {str(x) for x in LogLevels}.union({str(x).lower() for x in LogLevels})
+
 	parser = argparse.ArgumentParser(description="A Python-based TO_ORT implementation",
 	                                 epilog=("Note that passing a negative integer to options that "
 	                                         "expect integers will instead set them to zero."),
@@ -228,22 +234,26 @@ def main():
 
 	parser.add_argument("Mode",
 	                    help="REPORT: Do nothing, but print what would be done\n"\
-	                         "REPORT, INTERACTIVE, REVALIDATE, SYNCDS, BADASS")
-	parser.add_argument("Log_Level",
+	                         "REPORT, INTERACTIVE, REVALIDATE, SYNCDS, BADASS",
+	                    choices=runModesAllowed,
+	                    type=str)
+	parser.add_argument("legacy",
 	                    help="ALL/TRACE, DEBUG, INFO, WARN, ERROR, FATAL/CRITICAL, NONE",
-	                    dest="legacyArgs",
-	                    nargs="?",
+	                    metavar="Log_Level",
+	                    nargs="*",
 	                    action="append",
+	                    choices=logLevelsAllowed,
 	                    type=str)
 	parser.add_argument("-l", "--log_level",
 	                    help=("Sets the logging level. Should be one of (in order of increasing "
 	                          "verbosity) NONE, CRITICAL, ERROR, WARN, INFO, DEBUG"),
 	                    type=str,
+	                    choices=logLevelsAllowed,
 	                    default="WARN")
-	parser.add_argument("Traffic_Ops_URL",
+	parser.add_argument("legacy",
 	                    help="URL to Traffic Ops host. Example: https://trafficops.company.net",
-	                    dest="legacyArgs",
-	                    nargs="?",
+	                    metavar="Traffic_Ops_URL",
+	                    nargs="*",
 	                    action="append",
 	                    type=str)
 	parser.add_argument("--to_url",
@@ -252,9 +262,9 @@ def main():
 	                          " `https://trafficops.infra.ciab.test:443`. This overrides the TO_URL"
 	                          " environment variable"),
 	                    type=str)
-	parser.add_argument("Traffic_Ops_Login",
+	parser.add_argument("legacy",
 	                    help="Example: 'username:password'",
-	                    dest="legacyArgs",
+	                    metavar="Traffic_Ops_Login",
 	                    nargs="?",
 	                    action="append",
 	                    type=str)
