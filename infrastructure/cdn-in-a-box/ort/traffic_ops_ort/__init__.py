@@ -28,11 +28,35 @@ This package provides an executable script named :program:`traffic_ops_ort`
 
 Usage
 =====
-``traffic_ops_ort [-k] [--dispersion DISP] [--login_dispersion DISP] [--retries RETRIES] [--wait_for_parents INT] [--rev_proxy_disable] [--ts-root PATH] MODE LOG_LEVEL TO_URL LOGIN``
+There are two main ways to invoke :program:`traffic_ops_ort`. The first method uses what's referred
+to as the "legacy call signature" and is meant to match the Perl command line arguments.
 
-``traffic_ops_ort [-v]``
+.. code-block:: text
+	:caption: Legacy Call Signature
 
-``traffic_ops_ort [-h]``
+	traffic_ops_ort [-k] [-h] [-v] [--dispersion DISP] [--login_dispersion DISP]
+	         [--retries RETRIES] [--wait_for_parents INT] [--rev_proxy_disable]
+	         [--ts_root PATH] MODE LOG_LEVEL TO_URL LOGIN``
+
+The second method - called the "new call signature" - aims to reduce the complexity of the
+:term:`ORT` command line. Rather than require a URL and "login string" for connecting and
+authenticating with the Traffic Ops server, these pieces of information are optional and may be
+provided by the :option:`--to_url`, :option:`-u`/:option:`--to_user`, and
+:option:`-p`/:option:`--password` options, respectively. If they are NOT provided, then their values
+will be obtained from the :envvar:`TO_URL`, :envvar:`TO_USER`, and :envvar:`TO_PASSWORD` environment
+variables, respectively. Note that :program:`traffic_ops_ort` cannot be run using the new call
+signature without providing a definition for each of these, either on the command line or in the
+execution environment.
+
+.. code-block:: text
+	:caption: New call signature
+
+	traffic_ops_ort [-k] [-h] [-v] [--dispersion DISP] [--login_dispersion DISP]
+	     [--retries RETRIES] [--wait_for_parents INT] [--rev_proxy_disable]
+	     [--ts_root PATH] [-l LOG_LEVEL] [-u USER] [-p PASSWORD] [--to_url URL] MODE
+
+These two call signatures should not be mixed, and :program:`traffic_ops_ort` will exit with an
+error if they are.
 
 Arguments and Flags
 -------------------
@@ -101,9 +125,11 @@ Arguments and Flags
 		when possible. This will install packages, enable/disable system services, and will start or
 		restart Apache Traffic Server as necessary.
 
-.. option:: LOG_LEVEL
+.. option:: LOG_LEVEL, -l LOG_LEVEL, --log_level LOG_LEVEL
 
-	Sets the verbosity of output provided by :program:`traffic_ops_ort`. Must be one of:
+	Sets the verbosity of output provided by :program:`traffic_ops_ort`. This argument is positional
+	in the legacy call signature, but optional in the new call signature, wherein it has a default
+	value of "WARN". Must be one of (case-insensitive):
 
 	NONE
 		Will output nothing, not even fatal errors.
@@ -133,19 +159,50 @@ Arguments and Flags
 
 	.. note:: All logging is sent to STDERR. INTERACTIVE :option:`MODE` prompts are printed to STDOUT
 
-.. option:: TO_URL
+.. option:: TO_URL, --to_url TO_URL
 
-	This must be the full URL that refers to the Traffic Ops server, including schema and port
-	number (if needed). E.g. ``https://trafficops.infra.ciab.test:443``.
+	This must be at minimum an :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the
+	Traffic Ops server, but may optionally include the schema and/or port number. E.g.
+	``https://trafficops.infra.ciab.test:443``, ``https://trafficops.infra.ciab.test``,
+	``trafficops.infra.ciab.test:443``, and ``trafficops.infra.ciab.test`` are all acceptable, and
+	in fact are all equivalent. When given a value without a schema, HTTPS will be the assumed
+	protocol, and when a port number is not present, 443 will be assumed except in the case that
+	the schema *is* provided and is ``http://`` (case-insensitive) in which case 80 will be assumed.
+
+	This argument is positional in the legacy call signature, but is optional in the new call
+	signature. When the new call signature is used and this option is not present on the command
+	line, its value will be obtained from :envvar:`TO_URL`. Note that :program:`traffic_ops_ort`
+	cannot be run using the new call signature unless this value is defined, either on the command
+	line or in the execution environment.
 
 .. option:: LOGIN
 
 	The information used to authenticate with Traffic Ops. This must consist of a username and a
-	password, delimited by a colon (``:``). E.g. ``admin:twelve``.
+	password, delimited by a colon (``:``). E.g. ``admin:twelve``. This argument is not used in the
+	new call signature, instead :option:`-u`/:option:`--to_user` and
+	:option:`-p`/:option:`--to_password` are used to separately set the authentication user and
+	password, respectively.
 
 	.. warning:: The first colon found in this string is considered the delimiter. There is no way
 		to escape the delimeter. This effectively means that usernames containing colons cannot be
 		used to authenticate with Traffic Ops, though passwords containing colons should be fine.
+
+.. option:: -u USER, --to_user USER
+
+	Specifies the username of the user as whom to authenticate when connecting to Traffic Ops. This
+	option is only available using the new call signature. If not provided when using said new call
+	signature, the value will be obtained from the :envvar:`TO_USER` environment variable. Note that
+	:program:`traffic_ops_ort` cannot be run using the new call signature unless this value is
+	defined, either on the command line or in the execution environment.
+
+.. option:: -p PASSWORD, --password PASSWORD
+
+	Specifies the password of the user identified by :envvar:`TO_USER` (or
+	:option:`-u`/:option:`--to_user` if overridden) to use when authenticating to Traffic Ops. This
+	option is only available using the new call signature. If not provided when using said new call
+	signature, the value will be obtained from the :envvar:`TO_PASSWORD`  environment variable. Note
+	that :program:`traffic_ops_ort` cannot be run using the new call signature unless this value is
+	defined, either on the command line or in the execution environment.
 
 Environment Variables
 ---------------------
@@ -155,15 +212,23 @@ Environment Variables
 	:abbr:`FQDN (Fully Qualified Domain Name)` will do just as well. It may also omit the port
 	number on which the Traffic Ops server listens for incoming connections - port 443 will be
 	assumed unless :envvar:`TO_URL` is prefixed by ``http://`` (case-insensitive), in which case
-	port 80 will be assumed.
+	port 80 will be assumed. The value of this environment variable will only be considered if
+	:program:`traffic_ops_ort` was invoked using the new call signature, which allows it to be
+	overridden on the command line by the value of :option:`--to_url`.
 
 .. envvar:: TO_USER
 
-	The username to use when authenticating to the Traffic Ops server.
+	The username to use when authenticating to the Traffic Ops server. The value of this environment
+	variable will only be considered if :program:`traffic_ops_ort` was invoked using the new call
+	signature, which allows it to be overridden on the command line by the value of
+	:option:`-u`/:option:`--to_user`.
 
 .. envvar:: TO_PASSWORD
 
-	The password to use when authenticating to the Traffic Ops server.
+	The password to use when authenticating to the Traffic Ops server. The value of this environment
+	variable will only be considered if :program:`traffic_ops_ort` was invoked using the new call
+	signature, which allows it to be overridden on the command line by the value of
+	:option:`-p`/:option:`--to_password`.
 
 Module Contents
 ===============
@@ -216,12 +281,27 @@ def doMain(args:argparse.Namespace) -> int:
 		logging.debug("%r", e, exc_info=True, stack_info=True)
 		return 1
 
+_EPILOG = """traffic_ops_ort supports two calling conventions, one is intended to be fully
+compatible with the Perl implementation, while the other is intended to be an improvement over the
+former. Essentially this means that either the `Log_Level`, `Traffic_Ops_URL` and
+`Traffic_Ops_Login`` must all be given, or none of them. If none of them are given, the log level
+will be determined by the `-l`/`--log_level` option, the Traffic Ops server URL will be constructed
+from the information available in the `TO_URL` environment and/or the `--to_url` option, the
+Traffic Ops user will be determined from the information available in the `TO_USER` environment
+variable and/or the `-u`/`--to_user` option, and the Traffic Ops user's password will be determined
+from the information available in the `TO_PASSWORD` environment variable and/or the
+`-p`/`--to_password` option.
+""".replace('\n', ' ') + "\n\n" + ("Note that passing a negative integer to options that expect "
+                                   "integers will instead set them zero.")
+
 def main() -> int:
 	"""
 	The ORT entrypoint, parses argv before handing it off to :func:`doMain`.
 
 	:returns: An exit code for :program:`traffic_ops_ort`
 	"""
+	global _EPILOG
+
 	# I have no idea why, but the old ORT script does this on every run.
 	print(datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S UTC %Y"))
 
@@ -232,8 +312,7 @@ def main() -> int:
 	logLevelsAllowed = {str(x) for x in LogLevels}.union({str(x).lower() for x in LogLevels})
 
 	parser = argparse.ArgumentParser(description="A Python-based TO_ORT implementation",
-	                                 epilog=("Note that passing a negative integer to options that "
-	                                         "expect integers will instead set them to zero."),
+	                                 epilog=_EPILOG,
 	                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 	parser.add_argument("Mode",
