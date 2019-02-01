@@ -231,12 +231,41 @@ def main():
 	                         "REPORT, INTERACTIVE, REVALIDATE, SYNCDS, BADASS")
 	parser.add_argument("Log_Level",
 	                    help="ALL/TRACE, DEBUG, INFO, WARN, ERROR, FATAL/CRITICAL, NONE",
+	                    dest="legacyArgs",
+	                    nargs="?",
+	                    action="append",
 	                    type=str)
+	parser.add_argument("-l", "--log_level",
+	                    help=("Sets the logging level. Should be one of (in order of increasing "
+	                          "verbosity) NONE, CRITICAL, ERROR, WARN, INFO, DEBUG"),
+	                    type=str,
+	                    default="WARN")
 	parser.add_argument("Traffic_Ops_URL",
 	                    help="URL to Traffic Ops host. Example: https://trafficops.company.net",
+	                    dest="legacyArgs",
+	                    nargs="?",
+	                    action="append",
+	                    type=str)
+	parser.add_argument("--to_url",
+	                    help=("A URL or hostname - optionally with a port specification - that "
+	                          "points to a Traffic Ops server. e.g. `trafficops.infra.ciab.test` or"
+	                          " `https://trafficops.infra.ciab.test:443`. This overrides the TO_URL"
+	                          " environment variable"),
 	                    type=str)
 	parser.add_argument("Traffic_Ops_Login",
-	                    help="Example: 'username:password'")
+	                    help="Example: 'username:password'",
+	                    dest="legacyArgs",
+	                    nargs="?",
+	                    action="append",
+	                    type=str)
+	parser.add_argument("-u", "--to_user",
+	                    help=("The username to use when authenticating to the Traffic Ops server. "
+	                          "This overrides the TO_USER environment variable."),
+	                    type=str)
+	parser.add_argument("-p", "--to_password",
+	                    help=("The password to use when authenticating to the Traffic Ops server. "
+	                          "This overrides the TO_PASSWORD environment variable."),
+	                    type=str)
 	parser.add_argument("--dispersion",
 	                    help="wait a random number between 0 and <dispersion> before starting.",
 	                    type=int,
