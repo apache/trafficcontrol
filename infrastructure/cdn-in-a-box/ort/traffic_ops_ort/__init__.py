@@ -221,10 +221,10 @@ def main():
 	# I have no idea why, but the old ORT script does this on every run.
 	print(datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S UTC %Y"))
 
-	from .configuration import LogLevels
-	from .configuration.Configuration import Modes
+	from .configuration import LogLevels, Configuration
 
-	runModesAllowed = {str(x) for x in Modes}.union({str(x).lower() for x in Modes})
+	runModesAllowed = {str(x) for x in Configuration.Modes}.union(
+	                  {str(x).lower() for x in Configuration.Modes})
 	logLevelsAllowed = {str(x) for x in LogLevels}.union({str(x).lower() for x in LogLevels})
 
 	parser = argparse.ArgumentParser(description="A Python-based TO_ORT implementation",
