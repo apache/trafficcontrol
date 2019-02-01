@@ -131,19 +131,55 @@ every invocation.
 
 .. envvar:: TO_USER
 
-	The name of the user as whom to connect to the Traffic Ops server.
+	The name of the user as whom to connect to the Traffic Ops server. Overriden by
+	:option:`--to_user`.
+
+Exit Codes
+----------
+The exit code of a :program:`toaccess` script can sometimes be used by the caller to determine what
+the result of calling the script was without needing to parse the output. The exit codes used are:
+
+0
+	The command executed successfully, and the result is on STDOUT.
+1
+	Typically this exit code means that an error was encountered when parsing positional command
+	line arguments. However, this is also the exit code used by most Python interpreters to signal
+	an unhandled exception.
+2
+	Signifies a runtime error that caused the request to fail - this is **not** generally indicative
+	of an HTTP client or server error, but rather an underlying issue connecting to or
+	authenticating with Traffic Ops. This is distinct from an exit code of ``32`` in that the
+	*format* of the arguments was correct, but there was some problem with the *value*. For example,
+	passing ``https://test:`` to :option:`--to_url` will cause an exit code of ``2``, not ``32``.
+4
+	An HTTP client error occurred. The HTTP stack will be printed to stdout as indicated by other
+	options - meaning by default it will only print the response payload if one was given, but will
+	respect options like e.g. :option:`--request_payload` as well as
+	:option:`-p`/:option:`--pretty`.
+5
+	An HTTP server error occurred. The HTTP stack will be printed to stdout as indicated by other
+	options - meaning by default it will only print the response payload if one was given, but will
+	respect options like e.g. :option:`--request_payload` as well as
+	:option:`-p`/:option:`--pretty`.
+32
+	This is the error code emitted by Python's :mod:`argparse` module when the passed arguments
+	could not be parsed successfully.
+
+.. note:: The way exit codes ``4`` and ``5`` are implemented is by returning the status code of the
+	HTTP request divided by 100 whenever it is at least 400. This means that if the Traffic Ops
+	server ever started returning e.g. 700 status codes, the exit code of the script would be 7.
+
 
 Module Reference
 ================
 
 """
+from __future__ import print_function, raise_from
+
 import json
 import logging
 import os
 import sys
-import typing
-
-import requests
 
 from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 from trafficops.tosession import TOSession
@@ -155,7 +191,7 @@ logging.basicConfig(level=logging.CRITICAL+1)
 #: The full path to a file used to store the user's Mojolicious athentication cookie (currently unused)
 COOKIEFILE = "" #os.path.expanduser(os.path.join("~", ".to-auth.cookie"))
 
-def setCookie(cookie: str):
+def set_cookie(cookie):
 	"""
 	Writes the passed cookie to the :data:`COOKIEFILE` file for later use.
 
@@ -166,8 +202,7 @@ def setCookie(cookie: str):
 	with open(COOKIEFILE, "w") as f:
 		f.write(cookie)
 
-def output(r: requests.Response, pretty: bool, reqHeader: bool, respHeader: bool, reqPayload: bool,
-           indent: typing.Union[int, str] = '\t'):
+def output(r, pretty, request_header, response_header, request_payload, indent = '\t'):
 	"""
 	Prints the passed response object in a format consistent with the other parameters.
 
@@ -178,20 +213,20 @@ def output(r: requests.Response, pretty: bool, reqHeader: bool, respHeader: bool
 	:param reqPayload: If :const:`True`, print the request payload
 	:param indent: An optional number of spaces for pretty-printing indentation (default is the tab character)
 	"""
-	if reqHeader:
+	if request_header:
 		print(r.request.method, r.request.path_url, "HTTP/1.1")
 		for h,v in r.request.headers.items():
 			print("%s:" % h, v)
 		print()
 
-	if reqPayload and r.request.body:
+	if request_payload and r.request.body:
 		try:
 			result = r.request.body if not pretty else json.dumps(json.loads(r.request.body))
 		except ValueError:
 			result = r.request.body
 		print(result, end="\n\n")
 
-	if respHeader:
+	if response_header:
 		print("HTTP/1.1", r.status_code, end="")
 		print(" "+r.reason if r.reason else "")
 		for h,v in r.headers.items():
@@ -204,12 +239,7 @@ def output(r: requests.Response, pretty: bool, reqHeader: bool, respHeader: bool
 		result = r.text
 	print(result)
 
-def parseArguments(program: str) -> typing.Tuple[TOSession,
-                                                 str,
-                                                 typing.Optional[bytes],
-                                                 typing.Tuple[bool, bool, bool],
-                                                 bool,
-                                                 bool]:
+def parse_arguments(program):
 	"""
 	A common-use function that parses the command line arguments.
 
@@ -357,14 +387,14 @@ def parseArguments(program: str) -> typing.Tuple[TOSession,
 	       args.pretty)
 
 
-def get() -> int:
+def get():
 	"""
 	Entry point for :program:`toget`
 
 	:returns: The program's exit code
 	"""
 	try:
-		s, path, data, full, raw, pretty = parseArguments("toget")
+		s, path, data, full, raw, pretty = parse_arguments("toget")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
 		return 1
@@ -387,17 +417,17 @@ def get() -> int:
 			return 2
 
 	output(r, pretty, *full)
-	# setCookie(s._session.cookies.get("mojolicious"))
+	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
-def put() -> int:
+def put():
 	"""
 	Entry point for :program:`toput`
 
 	:returns: The program's exit code
 	"""
 	try:
-		s, path, data, full, raw, pretty = parseArguments("toput")
+		s, path, data, full, raw, pretty = parse_arguments("toput")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
 		return 1
@@ -411,7 +441,7 @@ def put() -> int:
 		elif data is not None:
 			r = s.put(path, data=data)[1]
 		else:
-			r = s.put(path)
+			r = s.put(path)[1]
 	except (OperationError, InvalidJSONError) as e:
 		if e.resp is not None:
 			r = e.resp
@@ -420,17 +450,17 @@ def put() -> int:
 			return 2
 
 	output(r, pretty, *full)
-	# setCookie(s._session.cookies.get("mojolicious"))
+	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
-def post() -> int:
+def post():
 	"""
 	Entry point for :program:`topost`
 
 	:returns: The program's exit code
 	"""
 	try:
-		s, path, data, full, raw, pretty = parseArguments("topost")
+		s, path, data, full, raw, pretty = parse_arguments("topost")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
 		return 1
@@ -444,7 +474,7 @@ def post() -> int:
 		elif data is not None:
 			r = s.post(path, data=data)[1]
 		else:
-			r = s.post(path)
+			r = s.post(path)[1]
 	except (OperationError, InvalidJSONError) as e:
 		if e.resp is not None:
 			r = e.resp
@@ -453,17 +483,17 @@ def post() -> int:
 			return 2
 
 	output(r, pretty, *full)
-	# setCookie(s._session.cookies.get("mojolicious"))
+	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
-def delete() -> int:
+def delete():
 	"""
 	Entry point for :program:`todelete`
 
 	:returns: The program's exit code
 	"""
 	try:
-		s, path, data, full, raw, pretty = parseArguments("todelete")
+		s, path, data, full, raw, pretty = parse_arguments("todelete")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
 		return 1
@@ -477,7 +507,7 @@ def delete() -> int:
 		elif data is not None:
 			r = s.delete(path, data=data)[1]
 		else:
-			r = s.delete(path)
+			r = s.delete(path)[1]
 	except (OperationError, InvalidJSONError) as e:
 		if e.resp is not None:
 			r = e.resp
@@ -486,10 +516,10 @@ def delete() -> int:
 			return 2
 
 	output(r, pretty, *full)
-	# setCookie(s._session.cookies.get("mojolicious"))
+	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
-def options() -> int:
+def options():
 	"""
 	Entry point for :program:`tooptions`
 
@@ -498,7 +528,7 @@ def options() -> int:
 	from functools import partial
 
 	try:
-		s, path, data, full, raw, pretty = parseArguments("tooptions")
+		s, path, data, full, raw, pretty = parse_arguments("tooptions")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
 		return 1
@@ -511,7 +541,7 @@ def options() -> int:
 		elif data is not None:
 			r = s.options(path, data=data)[1]
 		else:
-			r = s.options(path)
+			r = s.options(path)[1]
 	except (OperationError, InvalidJSONError) as e:
 		if e.resp is not None:
 			r = e.resp
@@ -520,17 +550,17 @@ def options() -> int:
 			return 2
 
 	output(r, pretty, *full)
-	# setCookie(s._session.cookies.get("mojolicious"))
+	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
-def head() -> int:
+def head():
 	"""
 	Entry point for :program:`tohead`
 
 	:returns: The program's exit code
 	"""
 	try:
-		s, path, data, full, raw, pretty = parseArguments("tohead")
+		s, path, data, full, raw, pretty = parse_arguments("tohead")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
 		return 1
@@ -544,7 +574,7 @@ def head() -> int:
 		elif data is not None:
 			r = s.head(path, data=data)[1]
 		else:
-			r = s.head(path)
+			r = s.head(path)[1]
 	except (OperationError, InvalidJSONError) as e:
 		if e.resp is not None:
 			r = e.resp
@@ -553,17 +583,17 @@ def head() -> int:
 			return 2
 
 	output(r, pretty, *full)
-	# setCookie(s._session.cookies.get("mojolicious"))
+	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
-def patch() -> int:
+def patch():
 	"""
 	Entry point for :program:`topatch`
 
 	:returns: The program's exit code
 	"""
 	try:
-		s, path, data, full, raw, pretty = parseArguments("topatch")
+		s, path, data, full, raw, pretty = parse_arguments("topatch")
 	except (PermissionError, KeyError) as e:
 		print(e, file=sys.stderr)
 		return 1
@@ -577,7 +607,7 @@ def patch() -> int:
 		elif data is not None:
 			r = s.patch(path, data=data)[1]
 		else:
-			r = s.patch(path)
+			r = s.patch(path)[1]
 	except (OperationError, InvalidJSONError) as e:
 		if e.resp is not None:
 			r = e.resp
@@ -586,5 +616,5 @@ def patch() -> int:
 			return 2
 
 	output(r, pretty, *full)
-	# setCookie(s._session.cookies.get("mojolicious"))
+	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
