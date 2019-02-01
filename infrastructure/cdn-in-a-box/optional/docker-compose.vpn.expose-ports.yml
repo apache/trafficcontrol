@@ -15,19 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+# Expose the OpenVPN container on the host on port 44443
+#
 # This container provide an OpenVPN service.
 # It could let user or developer easily access CIAB network.
-#
-# To start up CiaB with OpenVPN optional container:
-#
-# alias mydc="docker-compose "` \
-#   `"-f $PWD/docker-compose.yml "` \
-#   `"-f $PWD/docker-compose.expose-ports.yml "` \
-#   `"-f $PWD/optional/docker-compose.vpn.yml "` \
-#   `"-f $PWD/optional/docker-compose.vpn.expose-ports.yml "
-#
-# mydc rm -fv
-# mydc up
 #
 # All certificates, keys, and client configuration are stored
 # at infrastruture/cdn-in-a-box/optional/vpn/vpnca
@@ -40,24 +31,5 @@ version: '2.1'
 
 services:
   vpn:
-    build:
-      context: .
-      dockerfile: optional/vpn/Dockerfile
-    hostname: vpn
-    domainname: infra.ciab.test
-    privileged: true
-    depends_on:
-      - dns
-    env_file:
-      - variables.env
-    volumes:
-      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
-      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
-      - ./optional/vpn/vpnca:/vpnca
-      - shared:/shared
-
-volumes:
-  schemas:
-    external: false
-  shared:
-    external: false
+    ports:
+      - "44443:443"
