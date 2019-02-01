@@ -337,7 +337,7 @@ How to use it
         :caption: CIAB Startup with VPN
 
         # From infrastructure/cdn-in-a-box
-        alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.vpn.yml"
+        alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/docker-compose.expose-ports.yml -f $PWD/optional/docker-compose.vpn.yml -f $PWD/optional/docker-compose.vpn.expose-ports.yml"
         mydc down -v
         mydc build
         mydc up
