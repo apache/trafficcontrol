@@ -90,29 +90,15 @@ func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	cdnName := inf.Params["name"]
-
-	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(cdnName, inf.Tx.Tx, inf.Config.RiakAuthOptions)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
+	cdnName := tc.CDNName(inf.Params["name"])
+	keys, userErr, sysErr, errCode := getDNSSECKeys(inf, cdnName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	if !keysExist {
+	if keys == nil {
 		// TODO emulates Perl; change to error, 404?
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ", struct{}{}) // emulates Perl
-		return
-	}
-
-	dsTTL, err := GetDSRecordTTL(inf.Tx.Tx, cdnName)
-	if err != nil {
-		log.Errorln("Getting DNSSEC Keys: getting DS Record TTL from CRConfig Snapshot: " + err.Error())
-		log.Errorf("Getting DNSSEC Keys: getting DS Record TTL failed, using default %v. It is STRONGLY ADVISED to fix the error, and ensure a CRConfig Snapshot exists for the CDN, and a tld.ttls.DS CRConfig.json Parameter exists on a Router Profile on the CDN. Default DS Records may cause unexpected behavior or errors!\n", DefaultDSTTL)
-		dsTTL = DefaultDSTTL
-	}
-
-	keys, err := deliveryservice.MakeDNSSECKeysFromRiakKeys(riakKeys, dsTTL)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys object from Riak keys: "+err.Error()))
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, " - Dnssec keys for "+string(cdnName)+" could not be found. ", struct{}{}) // emulates Perl
 		return
 	}
 	api.WriteResp(w, r, keys)
@@ -126,24 +112,49 @@ func GetDNSSECKeysV11(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	cdnName := inf.Params["name"]
-	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(cdnName, inf.Tx.Tx, inf.Config.RiakAuthOptions)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
+	cdnName := tc.CDNName(inf.Params["name"])
+	keys, userErr, sysErr, errCode := getDNSSECKeys(inf, cdnName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	if !keysExist {
-		// TODO emulates Perl; change to error, 404?
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ", struct{}{}) // emulates Perl
+	if keys == nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, " - Dnssec keys for "+string(cdnName)+" could not be found. ", struct{}{}) // emulates Perl
 		return
 	}
-	api.WriteResp(w, r, riakKeys)
+	api.WriteResp(w, r, keys.ToV11())
 }
 
-func GetDSRecordTTL(tx *sql.Tx, cdn string) (time.Duration, error) {
+// getDNSSECKeys returns the DNSSECKeys for cdn from Riak, any user error, any system error, and the HTTP code in the event of an error.
+// Note if no keys are found, nil DNSSECKeys are returned with no error.
+func getDNSSECKeys(inf *api.APIInfo, cdn tc.CDNName) (tc.DNSSECKeys, error, error, int) {
+	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(string(cdn), inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	if err != nil {
+		return nil, nil, errors.New("getting DNSSEC CDN keys: " + err.Error()), http.StatusInternalServerError
+	}
+	if !keysExist {
+		return nil, nil, nil, http.StatusOK
+	}
+
+	dsTTL, err := GetDSRecordTTL(inf.Tx.Tx, cdn)
+	if err != nil {
+		log.Errorln("Getting DNSSEC Keys: getting DS Record TTL from CRConfig Snapshot: " + err.Error())
+		log.Errorf("Getting DNSSEC Keys: getting DS Record TTL failed, using default %v. It is STRONGLY ADVISED to fix the error, and ensure a CRConfig Snapshot exists for the CDN, and a tld.ttls.DS CRConfig.json Parameter exists on a Router Profile on the CDN. Default DS Records may cause unexpected behavior or errors!\n", DefaultDSTTL)
+		dsTTL = DefaultDSTTL
+	}
+
+	keys, err := deliveryservice.MakeDNSSECKeysFromRiakKeys(riakKeys, dsTTL)
+	if err != nil {
+		return nil, nil, errors.New("creating DNSSEC keys object from Riak keys: " + err.Error()), http.StatusInternalServerError
+	}
+
+	return keys, nil, nil, http.StatusOK
+}
+
+func GetDSRecordTTL(tx *sql.Tx, cdn tc.CDNName) (time.Duration, error) {
 	ttlSeconds := 0
 	if err := tx.QueryRow(`SELECT JSON_EXTRACT_PATH_TEXT(crconfig, 'config', 'ttls', 'DS') FROM snapshot WHERE cdn = $1`, cdn).Scan(&ttlSeconds); err != nil {
-		return 0, errors.New("getting cdn '" + cdn + "' DS Record TTL from CRConfig: " + err.Error())
+		return 0, errors.New("getting cdn '" + string(cdn) + "' DS Record TTL from CRConfig: " + err.Error())
 	}
 	return time.Duration(ttlSeconds) * time.Second, nil
 }
