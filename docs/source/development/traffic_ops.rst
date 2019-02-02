@@ -155,7 +155,9 @@ Perl Formatting Conventions
 
 Database Management
 ===================
-The ``app/db/admin`` binary is for use in managing the Traffic Ops database tables. This essentially serves as a front-end for `Goose <https://bitbucket.org/liamstask/goose/>`_ Below is an example of its usage.
+The :file:`traffic_ops/app/db/admin` binary is for use in managing the Traffic Ops database tables. This essentially serves as a front-end for `Goose <https://bitbucket.org/liamstask/goose/>`_ Below is an example of its usage.
+
+.. note:: This binary replaces the :file:`traffic_ops/app/db/admin.pl` script, which supports exactly the same set of operations, command line arguments/flags and features as the new binary. Support for the :file:`traffic_ops/app/db/admin.pl` script is officially deprecated at the time of this writing, and it will be removed entirely in the next major release of Traffic Control.
 
 .. note:: For proper resolution of configuration and SOL statement files, it's recommended that this binary be run from the ``app`` directory
 
@@ -169,6 +171,8 @@ Options:
 
 Commands:
 
+check
+	Checks the database for data sets known to cause undefined or bad behavior. Currently, this only checks for Delivery Services sharing origin :abbr:`FQDN (Fully Qualified Domain Name)`\ s.
 createdb
 	Creates the database for the current environment
 create_user
@@ -182,9 +186,9 @@ drop
 drop_user
 	Drops the user defined for the current environment
 load_schema
-	Sets up the database for the current environment according to the SQL statements in ``app/db/create_tables.sql``
+	Sets up the database for the current environment according to the SQL statements in ``app/db/create_tables.sql`` and checks the resulting database for data sets known to cause undefined or bad behavior.
 migrate
-	Runs a migration on the database for the current environment
+	Runs a migration on the database for the current environment and prints the results (if any) of a check for data sets known to cause undefined or bad behavior.
 patch
 	Patches the database for the current environment using the SQL statements from the ``app/db/patches.sql``
 redo
@@ -198,9 +202,9 @@ seed
 show_users
 	Displays a list of all users registered with the PostgreSQL server
 status
-	Prints the status of all migrations
+	Prints the status of all migrations and the results (if any) of a check for data sets known to cause undefined or bad behavior.
 upgrade
-	Performs a migration on the database for the current environment, then seeds it and patches it using the SQL statements from the ``app/db/patches.sql`` file
+	Performs a migration on the database for the current environment, then seeds it and patches it using the SQL statements from the ``app/db/patches.sql`` file before finally running a check for data sets known to cause undefined or bad behavior.
 
 .. code-block:: bash
 	:caption: Example Usage
