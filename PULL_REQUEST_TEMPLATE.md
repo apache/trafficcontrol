@@ -24,7 +24,7 @@ Fixes #(replace_this_text_with_issue_number)
 
 #### Check all that apply
 
-- [ ] This PR includes tests. 
+- [ ] This PR includes tests
 - [ ] This PR includes documentation updates
 - [ ] This PR includes an update to CHANGELOG.md
 - [ ] This PR includes all required license headers
