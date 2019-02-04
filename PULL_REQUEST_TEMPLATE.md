@@ -18,7 +18,7 @@ Fixes #(replace_this_text_with_issue_number)
 - [ ] Traffic Vault
 - [ ] Other _________
 
-#### What is the best way to verify this PR? Please include steps or tests. 
+#### What is the best way to verify this PR? Please include manual steps or automated tests. 
 #### (If no tests are part of this PR, please provide explanation as to why no tests are included.)
 
 
