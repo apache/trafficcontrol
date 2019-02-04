@@ -1,6 +1,8 @@
-#### What does this PR do?
+#### Which issue is fixed by this PR? If not related to an existing issue, what does this PR do?
 
-Fixes #(issue_number)
+Fixes #(replace_this_text_with_issue_number) 
+
+
 
 #### Which TC components are affected by this PR?
 
@@ -16,12 +18,13 @@ Fixes #(issue_number)
 - [ ] Traffic Vault
 - [ ] Other _________
 
-#### What is the best way to verify this PR?
+#### What is the best way to verify this PR? Please include steps or tests. 
+#### (If no tests are part of this PR, please provide explanation as to why no tests are included.)
 
 
 #### Check all that apply
 
-- [ ] This PR includes tests
+- [ ] This PR includes tests. 
 - [ ] This PR includes documentation updates
 - [ ] This PR includes an update to CHANGELOG.md
 - [ ] This PR includes all required license headers
