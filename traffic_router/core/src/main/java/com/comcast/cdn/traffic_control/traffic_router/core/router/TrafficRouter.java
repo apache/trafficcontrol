@@ -568,19 +568,24 @@ public class TrafficRouter {
 	}
 
 	public String buildPatternBasedHashString(final String regex, final String requestPath) {
-		final Pattern pattern = Pattern.compile(regex);
-		final Matcher matcher = pattern.matcher(requestPath);
+		try {
+			final Pattern pattern = Pattern.compile(regex);
+			final Matcher matcher = pattern.matcher(requestPath);
 
-		final StringBuilder sb = new StringBuilder();
-		if (matcher.find() && matcher.groupCount() > 0) {
-			for (int i=1; i<=matcher.groupCount(); i++) {
-				final String text = matcher.group(i);
-				sb.append(text);
+			final StringBuilder sb = new StringBuilder();
+			if (matcher.find() && matcher.groupCount() > 0) {
+				for (int i = 1; i <= matcher.groupCount(); i++) {
+					final String text = matcher.group(i);
+					sb.append(text);
+				}
+				return sb.toString();
+			} else {
+				return requestPath;
 			}
-			return sb.toString();
-		} else {
+		} catch (final Exception e) {
 			return requestPath;
 		}
+
 	}
 
 	@SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.NPathComplexity" })
