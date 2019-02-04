@@ -572,7 +572,7 @@ public class TrafficRouter {
 		final Matcher matcher = pattern.matcher(requestPath);
 
 		final StringBuilder sb = new StringBuilder();
-		if (matcher.find()) {
+		if (matcher.find() && matcher.groupCount() > 0) {
 			for (int i=1; i<=matcher.groupCount(); i++) {
 				final String text = matcher.group(i);
 				sb.append(text);
