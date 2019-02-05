@@ -574,7 +574,7 @@ WHERE c.name = $` + strconv.Itoa(len(qryArgs)+1) + `
 func getCDNNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	// TODO change to use snapshot tables
 	name := ""
-	if err := tx.QueryRow(`select name from cdn where id = $1`, id).Scan(&name); err != nil {
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
 			return "", false, nil
 		}
