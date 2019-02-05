@@ -55,7 +55,7 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 	monitors := map[string]tc.CRConfigMonitor{}
 	for host, s := range allServers {
 		switch {
-		case *s.ServerType == RouterTypeName:
+		case *s.ServerType == tc.RouterTypeName:
 			status := tc.CRConfigRouterStatus(*s.ServerStatus)
 			routers[host] = tc.CRConfigRouter{
 				APIPort:      s.APIPort,
@@ -68,7 +68,7 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 				Profile:      s.Profile,
 				ServerStatus: &status,
 			}
-		case *s.ServerType == MonitorTypeName:
+		case *s.ServerType == tc.MonitorTypeName:
 			monitors[host] = tc.CRConfigMonitor{
 				FQDN:         s.Fqdn,
 				HTTPSPort:    s.HttpsPort,
@@ -79,7 +79,7 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 				Profile:      s.Profile,
 				ServerStatus: s.ServerStatus,
 			}
-		case strings.HasPrefix(*s.ServerType, EdgeTypePrefix) || strings.HasPrefix(*s.ServerType, MidTypePrefix):
+		case strings.HasPrefix(*s.ServerType, tc.EdgeTypePrefix) || strings.HasPrefix(*s.ServerType, tc.MidTypePrefix):
 			if s.RoutingDisabled == 0 {
 				s.CRConfigTrafficOpsServer.DeliveryServices = serverDSes[tc.CacheName(host)]
 			}

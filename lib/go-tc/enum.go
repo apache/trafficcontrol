@@ -64,6 +64,12 @@ const (
 	CacheTypeInvalid = CacheType("")
 )
 
+const MonitorTypeName = "RASCAL"
+const MonitorProfilePrefix = "RASCAL"
+const RouterTypeName = "CCR"
+const EdgeTypePrefix = "EDGE"
+const MidTypePrefix = "MID"
+
 func (c CacheName) String() string {
 	return string(c)
 }
