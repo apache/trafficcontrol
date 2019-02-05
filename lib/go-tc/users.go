@@ -1,5 +1,7 @@
 package tc
 
+import util "github.com/apache/trafficcontrol/lib/go-util"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -54,24 +56,24 @@ type UserV13 struct {
 // commonUserFields is unexported, but its contents are still visible when it is embedded
 // LastUpdated is a new field for some structs
 type commonUserFields struct {
-	AddressLine1    *string `json:"addressLine1" db:"address_line1"`
-	AddressLine2    *string `json:"addressLine2" db:"address_line2"`
-	City            *string `json:"city" db:"city"`
-	Company         *string `json:"company" db:"company"`
-	Country         *string `json:"country" db:"country"`
-	Email           *string `json:"email" db:"email"`
-	FullName        *string `json:"fullName" db:"full_name"`
-	GID             *int    `json:"gid"`
-	ID              *int    `json:"id" db:"id"`
-	NewUser         *bool   `json:"newUser" db:"new_user"`
-	PhoneNumber     *string `json:"phoneNumber" db:"phone_number"`
-	PostalCode      *string `json:"postalCode" db:"postal_code"`
-	PublicSSHKey    *string `json:"publicSshKey" db:"public_ssh_key"`
-	Role            *int    `json:"role" db:"role"`
-	StateOrProvince *string `json:"stateOrProvince" db:"state_or_province"`
-	Tenant          *string `json:"tenant"`
-	TenantID        *int    `json:"tenantId" db:"tenant_id"`
-	UID             *int    `json:"uid"`
+	AddressLine1    *string          `json:"addressLine1" db:"address_line1"`
+	AddressLine2    *string          `json:"addressLine2" db:"address_line2"`
+	City            *string          `json:"city" db:"city"`
+	Company         *string          `json:"company" db:"company"`
+	Country         *string          `json:"country" db:"country"`
+	Email           *string          `json:"email" db:"email"`
+	FullName        *string          `json:"fullName" db:"full_name"`
+	GID             *int             `json:"gid"`
+	ID              *int             `json:"id" db:"id"`
+	NewUser         *bool            `json:"newUser" db:"new_user"`
+	PhoneNumber     *string          `json:"phoneNumber" db:"phone_number"`
+	PostalCode      *string          `json:"postalCode" db:"postal_code"`
+	PublicSSHKey    *string          `json:"publicSshKey" db:"public_ssh_key"`
+	Role            *util.JSONIntStr `json:"role" db:"role"`
+	StateOrProvince *string          `json:"stateOrProvince" db:"state_or_province"`
+	Tenant          *string          `json:"tenant"`
+	TenantID        *util.JSONIntStr `json:"tenantId" db:"tenant_id"`
+	UID             *int             `json:"uid"`
 	//Username        *string    `json:"username" db:"username"`  //not including major change due to naming incompatibility
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }

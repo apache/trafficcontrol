@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	util "github.com/apache/trafficcontrol/lib/go-util"
 )
 
 // Users gets an array of Users.
@@ -78,6 +79,7 @@ func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
 
 // CreateUser creates a user
 func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, error) {
+
 	if user.TenantID == nil && user.Tenant != nil {
 		tenant, _, err := to.TenantByName(*user.Tenant)
 		if err != nil {
@@ -89,7 +91,8 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
-		user.TenantID = &tenant.ID
+		tmp := util.JSONIntStr(tenant.ID)
+		user.TenantID = &tmp
 	}
 
 	if user.RoleName != nil && *user.RoleName != "" {
@@ -103,7 +106,8 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, er
 		if err != nil {
 			return nil, ReqInf{}, err
 		}
-		user.Role = roles[0].ID
+		tmp := util.JSONIntStr(*roles[0].ID)
+		user.Role = &tmp
 	}
 
 	var remoteAddr net.Addr
