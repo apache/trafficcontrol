@@ -170,42 +170,6 @@ func TestCompileRoutes(t *testing.T) {
 			t.Errorf("%s %s: expected params %v, got %v", rt.Method, rt.Path, rt.Params, params)
 		}
 	}
-
-	//t.Errorf("compiledRoutes: %++v", compiledRoutes)
-}
-
-func TestRegisterRoutes(t *testing.T) {
-	url, err := url.Parse("https://to.test")
-	if err != nil {
-		t.Error("error parsing test url")
-	}
-	cfg := config.Config{URL: url, Secrets: []string{"s3cr34$"}}
-	err = RegisterRoutes(ServerData{Config: cfg})
-	if err != nil {
-		t.Error("error registering routes")
-	}
-
-	d := http.DefaultServeMux
-
-	type testRoute struct {
-		method  string
-		route   string
-		pattern string
-	}
-	testRoutes := []testRoute{
-		{"GET", "api/1.3/about", "/api/1.3/about"},
-		{"GET", "/blorf/api/1.3/about", "/api/1.3/about"},
-	}
-
-	for _, tr := range testRoutes {
-		r, err := http.NewRequest(tr.method, tr.route, nil)
-		if err != nil {
-			t.Error("Error creating new request")
-		}
-		_, pattern := d.Handler(r)
-		fmt.Printf("handler for %s is %s -- expected %s\n", tr.route, pattern, tr.pattern)
-	}
-
 }
 
 func TestCreateRouteMap(t *testing.T) {
