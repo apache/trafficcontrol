@@ -48,8 +48,22 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cdnRegenerateKSKForm.effectiveDate), 'has-feedback': hasError(cdnRegenerateKSKForm.effectiveDate)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Effective Date (UTC) *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="effectiveDate" type="text" class="form-control" ng-model="kskRequest.effectiveDate" required autofocus>
+                    <input class="form-control"
+                           placeholder="Select a date..."
+                           moment-picker="kskRequest.effectiveDate"
+                           format="YYYY-MM-DD HH:mm:ss"
+                           start-view="month"
+                           today="true"
+                           name="effectiveDate"
+                           type="text"
+                           ng-model="kskRequest.effectiveDate"
+                           ng-model-options="{ updateOn: 'blur' }"
+                           ng-pattern="/^[0-9\:\-\ ]+$/"
+                           change="ctrl.zeroSeconds()"
+                           required
+                           autofocus>
                     <small class="input-error" ng-show="hasPropertyError(cdnRegenerateKSKForm.effectiveDate, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(cdnGenerateDnssecKeysForm.effectiveDate, 'pattern')">Invalid date format (YYYY-MM-DD HH:mm:ss)</small>
                     <span ng-show="hasError(cdnRegenerateKSKForm.effectiveDate)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>

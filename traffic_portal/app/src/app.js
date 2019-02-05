@@ -39,6 +39,7 @@ var trafficPortal = angular.module('trafficPortal', [
         'angular-jwt',
         'chart.js',
         'angular-loading-bar',
+        'moment-picker',
 
         // public modules
         require('./modules/public').name,
@@ -411,7 +412,12 @@ var trafficPortal = angular.module('trafficPortal', [
 
     ], App)
 
-        .config(function($stateProvider, $logProvider, $controllerProvider, RestangularProvider, ENV) {
+        .config(function($stateProvider, $logProvider, $controllerProvider, RestangularProvider, momentPickerProvider, ENV) {
+
+            momentPickerProvider.options({
+                minutesStep: 1,
+                maxView: 'hour'
+            });
 
             RestangularProvider.setBaseUrl(ENV.api['root']);
 

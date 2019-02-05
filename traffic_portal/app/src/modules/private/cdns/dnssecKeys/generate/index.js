@@ -25,7 +25,7 @@ module.exports = angular.module('trafficPortal.private.cdns.dnssecKeys.generate'
 				views: {
 					cdnDnssecKeysContent: {
 						templateUrl: 'common/modules/form/cdnDnssecKeys/generate/form.GenerateCdnDnssecKeys.tpl.html',
-						controller: 'FormGenerateCdnDnssecKeysController',
+						controller: 'FormGenerateCdnDnssecKeysController as ctrl',
 						resolve: {
 							cdn: function($stateParams, cdnService) {
 								return cdnService.getCDN($stateParams.cdnId);
