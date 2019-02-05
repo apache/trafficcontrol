@@ -27,3 +27,4 @@ Introduces the Traffic Control architecture, components, and their integration.
 	traffic_monitor
 	traffic_stats
 	traffic_vault
+	delivery_services

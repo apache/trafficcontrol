@@ -143,6 +143,8 @@ Services
 
 	Table of Delivery Service Requests
 
+.. _tp-services-delivery-service:
+
 Delivery Service
 -----------------
 This page contains a table displaying all :term:`Delivery Service`\ s visible to the user. Each entry in this table has the following fields:
