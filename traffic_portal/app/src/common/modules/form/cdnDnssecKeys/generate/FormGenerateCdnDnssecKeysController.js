@@ -33,7 +33,9 @@ var FormGenerateCdnDnssecKeysController = function(cdn, dnssecKeysRequest, $scop
 
 	var ctrl = this;
 	ctrl.zeroSeconds = function () {
-		$scope.dnssecKeysRequest.effectiveDate = $scope.dnssecKeysRequest.effectiveDate.set({ 'seconds' : 0, });
+		if ($scope.dnssecKeysRequest.effectiveDate) {
+			$scope.dnssecKeysRequest.effectiveDate = $scope.dnssecKeysRequest.effectiveDate.set({ 'seconds' : 0, });
+		}
 	};
 	$scope.dnssecKeysRequest.effectiveDate = moment().utc();
 	ctrl.zeroSeconds();

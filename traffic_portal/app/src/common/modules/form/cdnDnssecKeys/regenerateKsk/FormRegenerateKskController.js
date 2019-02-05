@@ -37,7 +37,9 @@ var FormRegenerateKskController = function(cdn, dnssecKeysRequest, $scope, $loca
 
 	var ctrl = this;
 	ctrl.zeroSeconds = function () {
-		$scope.kskRequest.effectiveDate = $scope.kskRequest.effectiveDate.set({ 'seconds' : 0, });
+		if ($scope.kskRequest.effectiveDate) {
+			$scope.kskRequest.effectiveDate = $scope.kskRequest.effectiveDate.set({ 'seconds' : 0, });
+		}
 	};
 	$scope.kskRequest.effectiveDate = moment().utc();
 	ctrl.zeroSeconds();
