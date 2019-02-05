@@ -38,8 +38,8 @@ func TestErrorCode(t *testing.T) {
 	// assert error code works
 	expected := 12
 	err := NewError(expected, "this works")
-	if err.ErrorCode() != expected {
-		t.Errorf("\nexpected: %d\nactual: %d\n\n", expected, err.ErrorCode())
+	if err.Code() != expected {
+		t.Errorf("\nexpected: %d\nactual: %d\n\n", expected, err.Code())
 	}
 
 	// test prepending errors and retaining the original error
@@ -63,19 +63,19 @@ func TestErrorContextPanicMode(t *testing.T) {
 }
 
 func TestErrorContextMapping(t *testing.T) {
-	var err ErrorCoder
+	var err Error
 	var cxt *ErrorContext
 
 	cxt = NewErrorContext("mapping test", codes)
 
-	mapErr := cxt.AddMapping(0, "test error")
+	mapErr := cxt.SetDefaultMessageForCode(0, "test error")
 	if mapErr != nil {
 		t.Errorf("mapping error code 0 incorrectly returned an error")
 	}
 	err = cxt.NewError(0)
 	basicMatch(t, err, "test error")
 
-	mapErr = cxt.AddMapping(3, "invalid error code")
+	mapErr = cxt.SetDefaultMessageForCode(3, "invalid error code")
 	if mapErr == nil {
 		t.Errorf("mapping error code 3 should have created an error")
 	}
@@ -84,28 +84,28 @@ func TestErrorContextMapping(t *testing.T) {
 // goes over internal errors
 func TestErrorContextMisc(t *testing.T) {
 
-	var err ErrorCoder
+	var err Error
 	var cxt *ErrorContext
 
 	cxt = NewErrorContext("bad input", codes)
 
 	err = cxt.NewError(0)
-	if err.ErrorCode() == 0 { // BAD_MAP_LOOKUP
+	if err.Code() == 0 { // BadMsgLookup
 		t.Errorf("default mapping for error code 0 should not exist yet")
 	}
 
 	err = cxt.NewError(0, fmt.Errorf("not a fmt string"))
-	if err.ErrorCode() == 0 { // BAD_FMT_STRING
+	if err.Code() == 0 { // BadFmtString
 		t.Errorf("non-string type should not have been interpreted as a string")
 	}
 
-	mapErr := cxt.AddMapping(0, "give default")
-	if mapErr == nil { // BAD_INIT_TIMING
+	mapErr := cxt.SetDefaultMessageForCode(0, "give default")
+	if mapErr == nil { // BadInitOrder
 		t.Errorf("should have gotten error for attempting to modify error context after using initial configuration")
 	}
 
 	panicErr := cxt.TurnPanicOn()
-	if panicErr == nil { // BAD_INIT_TIMING
+	if panicErr == nil { // BadInitOrder
 		t.Errorf("should not be able to turn panic on after attempting to create errors with error context")
 	}
 
@@ -114,21 +114,21 @@ func TestErrorContextMisc(t *testing.T) {
 		0: "zero default",
 		1: "one default",
 	}
-	cxt.AddMap(cxtMap)
+	cxt.AddDefaultErrorMessages(cxtMap)
 
-	mapErr = cxt.AddMapping(0, "second zero default")
-	if mapErr == nil { // BAD_DUP_MAPPING
+	mapErr = cxt.SetDefaultMessageForCode(0, "second zero default")
+	if mapErr == nil { // BadDupMessage
 		t.Errorf("should have gotten error for duplicate mapping")
 	}
 
-	mapErr = cxt.AddMapping(3, "bad err code")
-	if mapErr == nil { // BAD_MAP_CREATE
+	mapErr = cxt.SetDefaultMessageForCode(3, "bad err code")
+	if mapErr == nil { // BadErrorCode
 		t.Errorf("should have gotten error for bad error code in map function")
 	}
 }
 
 func TestErrorContext(t *testing.T) {
-	var err ErrorCoder
+	var err Error
 	var cxt *ErrorContext
 
 	cxt = NewErrorContext("basic test", codes)
@@ -145,7 +145,7 @@ func TestErrorContext(t *testing.T) {
 	basicMatch(t, err, "arg is awesome")
 
 	err = cxt.NewError(3, "invalid error code")
-	if err.ErrorCode() != BAD_ERROR_CODE {
+	if err.Code() != int(BadErrorCode) {
 		t.Errorf("sucessfully made an error with a code that the context shouldn't know")
 	}
 
