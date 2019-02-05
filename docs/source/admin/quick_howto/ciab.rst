@@ -344,6 +344,24 @@ How to use it
 
 #. All certificates, keys, and client configuration are stored at ``infrastruture/cdn-in-a-box/optional/vpn/vpnca``. You just simply change ``REALHOSTIP`` and ``REALPORT`` of ``client.ovpn`` to fit your environment, and then you can connect to this OpenVPN server by it.
 
+The proposed VPN client
+"""""""""""""""""""""""
+On Linux, you could choose ``openvpn``. Take ubuntu/debian as an example, you can install it by the following instructions.
+
+.. code-block:: shell
+    :caption: Install openvpn on ubuntu/debian
+
+    apt-get update && apt-get install -y openvpn
+
+On OSX, it only works with brew installed openvpn client, not the *OpenVPN GUI client*. You can install it by the following instruction.
+
+.. code-block:: shell
+    :caption: Install openvpn on OSX
+
+    brew install openvpn
+
+If you want a GUI version of VPN client, you can choose `Tunnelblick <https://tunnelblick.net/>`_.
+
 Private Subnet for Routing
 """"""""""""""""""""""""""
 Since ``docker-compose`` randomly create subnet, this container prepares 2 default private subnet for routing:
@@ -366,4 +384,4 @@ Pushed settings are shown as follows:
 * DNS
 * A routing rule for CIAB subnet
 
-.. note:: It will not change your default gateway.
+.. note:: It will not change your default gateway. That means apart from CIAB traffic and DNS request, all other traffic goes out standard interface bound to the default gateway.
