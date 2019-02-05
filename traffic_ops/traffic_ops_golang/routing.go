@@ -38,7 +38,7 @@ import (
 )
 
 // RoutePrefix ...
-const RoutePrefix = "api" // TODO config?
+const RoutePrefix = "^api" // TODO config?
 
 // Middleware ...
 type Middleware func(handlerFunc http.HandlerFunc) http.HandlerFunc

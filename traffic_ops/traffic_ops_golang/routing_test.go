@@ -21,6 +21,8 @@ package main
 
 import (
 	"net/http"
+	"net/url"
+	"reflect"
 	"testing"
 
 	"fmt"
@@ -30,11 +32,181 @@ import (
 	"net/http/httptest"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
 type key int
 
 const AuthWasCalled key = iota
+
+type routeTest struct {
+	Method      string
+	Path        string
+	ExpectMatch bool
+	Params      map[string]string
+}
+
+// TODO: This should be expanded to include POST/PUT/DELETE and other params
+var testRoutes = []routeTest{
+	routeTest{
+		Method:      `GET`,
+		Path:        `api/1.1/cdns`,
+		ExpectMatch: true,
+		Params:      map[string]string{},
+	},
+	routeTest{
+		Method:      `POST`,
+		Path:        `api/1.4/users/login`,
+		ExpectMatch: false,
+		Params:      map[string]string{},
+	},
+	routeTest{
+		Method:      `POST`,
+		Path:        `api/1.1/cdns`,
+		ExpectMatch: true,
+		Params:      map[string]string{},
+	},
+	routeTest{
+		Method:      `POST`,
+		Path:        `api/1.1/users`,
+		ExpectMatch: true,
+		Params:      map[string]string{},
+	},
+	routeTest{
+		Method:      `PUT`,
+		Path:        `api/1.1/deliveryservices/3`,
+		ExpectMatch: true,
+		Params:      map[string]string{"id": "3"},
+	},
+	routeTest{
+		Method:      `DELETE`,
+		Path:        `api/1.1/servers/777`,
+		ExpectMatch: true,
+		Params:      map[string]string{"id": "777"},
+	},
+	routeTest{
+		Method:      `GET`,
+		Path:        `api/1.4/cdns/1`,
+		ExpectMatch: true,
+		Params:      map[string]string{"id": "1"},
+	},
+	routeTest{
+		Method:      `GET`,
+		Path:        `api/1.4/notatypeweknowabout`,
+		ExpectMatch: false,
+		Params:      map[string]string{},
+	},
+	routeTest{
+		Method:      `GET`,
+		Path:        `api/1.3/asns.json`,
+		ExpectMatch: true,
+		Params:      map[string]string{},
+	},
+	routeTest{
+		Method:      `GET`,
+		Path:        `api/99999.99999/cdns`,
+		ExpectMatch: false,
+		Params:      map[string]string{},
+	},
+	routeTest{
+		Method:      `GET`,
+		Path:        `blahblah/api/1.2/cdns`,
+		ExpectMatch: false,
+		Params:      map[string]string{},
+	},
+	routeTest{
+		Method:      `GET`,
+		Path:        `internal/api/1.2/federations.json`,
+		ExpectMatch: false,
+		Params:      map[string]string{},
+	},
+}
+
+func TestCompileRoutes(t *testing.T) {
+	url, err := url.Parse("https://to.test")
+	if err != nil {
+		t.Error("error parsing test url")
+	}
+	d := ServerData{Config: config.Config{URL: url, Secrets: []string{"n0SeCr3t$"}}}
+	// TODO: not currently checking rawRoutes or catchall
+	routeSlice, _ /*rawRoutes*/, _ /*catchall*/, err := Routes(d)
+	if err != nil {
+		t.Error("error fetching routes: ", err.Error())
+	}
+
+	authBase := AuthBase{secret: d.Secrets[0], override: nil}
+	routes, versions := CreateRouteMap(routeSlice, nil, authBase, 1)
+	if len(routes) == 0 {
+		t.Error("no routes handler defined")
+	}
+	if len(versions) == 0 {
+		t.Error("no versions defined")
+	}
+	compiledRoutes := CompileRoutes(routes)
+
+	for _, rt := range testRoutes {
+		t.Logf("testing path %s %s", rt.Method, rt.Path)
+		var found bool
+		params := map[string]string{}
+		for _, compiledRoute := range compiledRoutes[rt.Method] {
+			match := compiledRoute.Regex.FindStringSubmatch(rt.Path)
+			if len(match) == 0 {
+				continue
+			}
+			found = true
+			for i, v := range compiledRoute.Params {
+				params[v] = match[i+1]
+			}
+		}
+		if found != rt.ExpectMatch {
+			if rt.ExpectMatch {
+				t.Errorf("expected %s %s to have a route match", rt.Method, rt.Path)
+			} else {
+				t.Errorf("expected %s %s to have no route match", rt.Method, rt.Path)
+			}
+			continue
+		}
+		if !reflect.DeepEqual(params, rt.Params) {
+			t.Errorf("%s %s: expected params %v, got %v", rt.Method, rt.Path, rt.Params, params)
+		}
+	}
+
+	//t.Errorf("compiledRoutes: %++v", compiledRoutes)
+}
+
+func TestRegisterRoutes(t *testing.T) {
+	url, err := url.Parse("https://to.test")
+	if err != nil {
+		t.Error("error parsing test url")
+	}
+	cfg := config.Config{URL: url, Secrets: []string{"s3cr34$"}}
+	err = RegisterRoutes(ServerData{Config: cfg})
+	if err != nil {
+		t.Error("error registering routes")
+	}
+
+	d := http.DefaultServeMux
+
+	type testRoute struct {
+		method  string
+		route   string
+		pattern string
+	}
+	testRoutes := []testRoute{
+		{"GET", "api/1.3/about", "/api/1.3/about"},
+		{"GET", "/blorf/api/1.3/about", "/api/1.3/about"},
+	}
+
+	for _, tr := range testRoutes {
+		r, err := http.NewRequest(tr.method, tr.route, nil)
+		if err != nil {
+			t.Error("Error creating new request")
+		}
+		_, pattern := d.Handler(r)
+		fmt.Printf("handler for %s is %s -- expected %s\n", tr.route, pattern, tr.pattern)
+	}
+
+}
 
 func TestCreateRouteMap(t *testing.T) {
 	authBase := AuthBase{"secret", func(handlerFunc http.HandlerFunc) http.HandlerFunc {
