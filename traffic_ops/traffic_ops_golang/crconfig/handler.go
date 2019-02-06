@@ -76,6 +76,14 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	cdn := inf.Params["cdn"]
 
+	if notModified, snapshotTime := IsNotModified(r, tc.CDNName(cdn), inf.Tx.Tx); notModified {
+		AddModifiedHdrs(w, snapshotTime)
+		code := http.StatusNotModified
+		w.WriteHeader(code)
+		w.Write([]byte(http.StatusText(code)))
+		return
+	}
+
 	liveData := false
 
 	if cdnExists, err := dbhelpers.CDNExists(inf.Tx.Tx, cdn); err != nil {
@@ -92,14 +100,18 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	snapshot, err := json.Marshal(crc)
+	snapshotTime, ok, err := GetCRConfigSnapshotTime(inf.Tx.Tx, tc.CDNName(cdn))
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("marshalling snapshot: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		return
+	} else if !ok {
+		log.Errorln("GetCRConfigSnapshotTime returned !ok, but crconfig.Make was successful! Should never happen! Returning 404 to client!")
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
 		return
 	}
 
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write([]byte(`{"response":` + string(snapshot) + `}`))
+	AddModifiedHdrs(w, snapshotTime)
+	api.WriteResp(w, r, crc)
 }
 
 // SnapshotGetMonitoringHandler gets and serves the CRConfig from the snapshot table.
@@ -192,18 +204,6 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		cdn = name
 	}
-
-	// crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
-	// if err != nil {
-	// 	api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-	// 	return
-	// }
-
-	// monitoringJSON, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, cdn)
-	// if err != nil {
-	// 	api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" getting monitoring.json data: "+err.Error()))
-	// 	return
-	// }
 
 	if ok, err := dbhelpers.CDNExists(inf.Tx.Tx, string(cdn)); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" checking CDN existence: "+err.Error()))

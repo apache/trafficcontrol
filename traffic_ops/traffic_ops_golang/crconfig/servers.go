@@ -24,9 +24,12 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
+	"github.com/lib/pq"
 )
 
 const RouterTypeName = "CCR"
@@ -548,15 +551,18 @@ DESC
 // `
 // }
 
-// getCDNInfoSnapshotted returns the CDN domain, and whether DNSSec is enabled, from the _snapshot tables.
+// getCDNInfo returns the CDN domain, whether DNSSec is enabled, and the snapshot time, from the _snapshot tables.
 // The live argument is whether to get the latest data, not the snapshot time. Note this still queries the snapshot tables, so live calls must be preceded by populating the snapshot tables, e.g. with UpdateSnapshotTables.
+// If live is true, the returned snapshot time will be now.
 func getCDNInfo(tx *sql.Tx, cdn string, live bool) (string, bool, error) {
 	qryArgs := []interface{}{}
 	withCDNSnapshotTimeQueryPart, qryArgs := WithCDNSnapshotTime(cdn, live, qryArgs)
 	qry := `
 WITH ` + withCDNSnapshotTimeQueryPart + `,
  ` + CDNTable.WithLatest() + `
-SELECT domain_name, dnssec_enabled
+SELECT
+  domain_name,
+  dnssec_enabled
 FROM ` + CDNTable.SnapshotLatestTable() + ` c
 WHERE c.name = $` + strconv.Itoa(len(qryArgs)+1) + `
 `
@@ -603,4 +609,34 @@ func allServersToServerIDNames(servers map[string]ServerUnion) map[int]string {
 		serverIDNames[server.ID] = serverName
 	}
 	return serverIDNames
+}
+
+// GetCRconfigSnapshotTime returns the latest time of the CRConfig snapshot, whether any snapshots were found, and any error.
+// Note this is the max of the CDN's snapshot and the snapshots of all delivery services on that CDN.
+func GetCRConfigSnapshotTime(tx *sql.Tx, cdnName tc.CDNName) (time.Time, bool, error) {
+	qry := `
+WITH cdn_name AS (
+  SELECT $1::text AS v
+)
+SELECT MAX(time) FROM (
+SELECT
+  MAX(time) as time
+FROM
+  deliveryservice_snapshots dsn
+  JOIN deliveryservice ds ON ds.xml_id = dsn.deliveryservice
+  JOIN cdn c ON c.id = ds.cdn_id
+WHERE
+  c.name = (select v from cdn_name)
+UNION ALL
+SELECT time FROM snapshot WHERE cdn = (select v from cdn_name)
+) t
+`
+	t := pq.NullTime{}
+	if err := tx.QueryRow(qry, cdnName).Scan(&t); err != nil {
+		if err == sql.ErrNoRows {
+			return time.Time{}, false, nil
+		}
+		return time.Time{}, false, errors.New("Error querying CDN snapshot time: " + err.Error())
+	}
+	return t.Time, t.Valid, nil
 }

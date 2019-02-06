@@ -29,7 +29,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// Make creates and returns the CRConfig from the database. If live, use latest data; otherwise, use the latest data up to the snapshot times.
+// Make creates and returns the CRConfig from the database, the snapshot time, and any error. If live, use latest data; otherwise, use the latest data up to the snapshot times.
+// If live, the returned snapshot time will be now.
 func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReqHost bool, emulateOldPath bool, live bool) (*tc.CRConfig, error) {
 	crc := tc.CRConfig{}
 	err := error(nil)

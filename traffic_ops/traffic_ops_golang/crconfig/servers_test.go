@@ -378,7 +378,7 @@ func TestGetCDNInfo(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actualDomain, actualDNSSECEnabled, err := getCDNInfo(tx, cdn, true)
+	actualDomain, actualDNSSECEnabled, _, err := getCDNInfo(tx, cdn, true)
 	if err != nil {
 		t.Fatalf("getCDNInfo expected: nil error, actual: %v", err)
 	}
