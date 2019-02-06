@@ -22,6 +22,7 @@ package manager
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -267,8 +268,13 @@ func monitorConfigListen(
 				log.Infof("health.polling.type for '%v' is empty, using default '%v'", srv.HostName, pollType)
 			}
 
+			port := ""
+			if srv.Port != 0 {
+				port = ":" + strconv.Itoa(srv.Port)
+			}
+
 			r := strings.NewReplacer(
-				"${hostname}", srv.IP,
+				"${hostname}", srv.IP+port,
 				"${interface_name}", srv.InterfaceName,
 				"application=plugin.remap", "application=system",
 				"application=", "application=system",
