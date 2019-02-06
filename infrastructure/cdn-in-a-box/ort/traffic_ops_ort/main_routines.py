@@ -22,6 +22,8 @@ and performs a variety of operations based on the run mode.
 
 import os
 import logging
+import random
+import time
 
 from .configuration import Configuration
 from .utils import getYesNoResponse as getYN
@@ -51,9 +53,8 @@ def syncDSState(conf:Configuration) -> bool:
 	if not 'upd_pending' in updateStatus and updateStatus['upd_pending']:
 		return False
 
-	disp = conf.dispersion
-	if conf.mode is Configuration.Modes.SYNCDS and disp:
-		import time
+	if conf.mode is Configuration.Modes.SYNCDS and conf.dispersion:
+		disp = random.randint(0, conf.dispersion)
 		logging.info("Dispersion is set. Will sleep for %d seconds before continuing", disp)
 		time.sleep(disp)
 
