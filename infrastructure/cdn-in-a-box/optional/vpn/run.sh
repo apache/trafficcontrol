@@ -22,7 +22,7 @@ insert-self-into-dns.sh
 set -x
 set -e
 
-INTERFACE=$(ls -I lo /sys/class/net)
+INTERFACE=$(find /sys/class/net -type l '!' -name lo -exec basename '{}' \;)
 NETWORK=$(route |grep -v default |grep $INTERFACE |awk '{print $1}')
 NETMASK=$(route |grep -v default |grep $INTERFACE |awk '{print $3}')
 DNSADDR=$(dig +short dns)
@@ -35,6 +35,8 @@ if [[ -z "$PRIVATE_NETWORK" ]] || [[ -z "$PRIVATE_NETMASK" ]]; then
   fi
   PRIVATE_NETMASK="255.255.255.240"
 fi
+
+
 
 # Check if vpn ca existed
 if [ ! -f "/vpnca/completed" ]; then
@@ -77,6 +79,13 @@ $(cat /vpnca/tls.key)
 </tls-auth>
 EOF
   touch /vpnca/completed
+
+  # Update the permissions to be read/write for all
+  find /vpnca -type d -exec chmod a+rwx '{}' \;
+  find /vpnca -type f -exec chmod a+rw '{}' \;
+
+  # Update the ownership to be nobody:nogroup
+  chown -R nobody:nogroup /vpnca
 fi
 
 echo 1 > /proc/sys/net/ipv4/ip_forward
