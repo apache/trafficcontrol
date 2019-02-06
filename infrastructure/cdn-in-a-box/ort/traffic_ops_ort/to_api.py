@@ -23,7 +23,8 @@ It extends the class provided by the official Apache Traffic Control Client.
 import typing
 import logging
 
-import requests
+from requests.exceptions import RequestException
+from requests.compat import urljoin
 from trafficops.tosession import TOSession
 from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 
@@ -51,12 +52,14 @@ class API(TOSession):
 		super(API, self).__init__(host_ip=conf.toHost, api_version=self.VERSION,
 		                          host_port=conf.toPort, verify_cert=conf.verify, ssl=conf.useSSL)
 
-		for r in conf.retries:
+		self.retries = conf.retries
+
+		for r in range(self.retries):
 			try:
 				logging.info("login attempt #%d", r)
 				self.login(conf.username, conf.password)
 				break
-			except LoginError, OperationError, InvalidJSONError as e:
+			except (LoginError, OperationError, InvalidJSONError, RequestException) as e:
 				logging.debug("login failure: %r", e, stack_info=True, exc_info=True)
 		else:
 			raise LoginError("Failed to log in to Traffic Ops, retries exceeded.")
@@ -81,11 +84,14 @@ class API(TOSession):
 		:returns: The API response payload
 		:raises ConnectionError: When something goes wrong communicating with the Traffic Ops server
 		"""
-
-		try:
-			r = self._session.get(path)
-		except requests.exceptions.RequestException as e:
-			raise ConnectionError from e
+		for _ in range(self.retries):
+			try:
+				r = self._session.get(path)
+				break
+			except (LoginError, OperationError, InvalidJSONError, RequestException) as e:
+				logging.debug("API failure: %r", e, stack_info=True, exc_info=True)
+		else:
+			raise ConnectionError("Failed to get a valid response from Traffic Ops for %s" % path)
 
 		if r.status_code != 200 and r.status_code != 204:
 			raise ConnectionError("request for '%s' appears to have failed; reason: %s" %
@@ -103,12 +109,20 @@ class API(TOSession):
 		logging.info("Fetching this server's package list from Traffic Ops")
 
 		# Ah, read-only properties that gut functionality, my favorite.
-		from requests.compat import urljoin
 		tmp = self.api_base_url
 		self._api_base_url = urljoin(self._server_url, '/').rstrip('/') + '/'
 
 		packagesPath = '/'.join(("ort", self.hostname, "packages"))
-		myPackages = self.get(packagesPath)
+		for _ in range(self.retries):
+			try:
+				myPackages = self.get(packagesPath)
+				break
+			except (LoginError, OperationError, InvalidJSONError, RequestException) as e:
+				logging.debug("package fetch failure: %r", e, stack_info=True, exc_info=True)
+		else:
+			self._api_base_url = tmp
+			raise ConnectionError("Failed to get a response for packages")
+
 		self._api_base_url = tmp
 
 		logging.debug("Raw package response: %s", myPackages[1].text)
@@ -131,17 +145,17 @@ class API(TOSession):
 		:raises ConnectionError: when something goes wrong communicating with Traffic Ops
 		"""
 		logging.info("Fetching list of configuration files from Traffic Ops")
-
-		try:
-			# The API function decorator confuses pylint into thinking this doesn't return
-			#pylint: disable=E1111
-			myFiles = self.get_server_config_files(host_name=self.hostname)
-			#pylint: enable=E1111
-		except (InvalidJSONError,
-		        LoginError,
-		        OperationError,
-		        requests.exceptions.RequestException) as e:
-			raise ConnectionError("Failed to fetch configuration files from Traffic Ops") from e
+		for _ in range(self.retries):
+			try:
+				# The API function decorator confuses pylint into thinking this doesn't return
+				#pylint: disable=E1111
+				myFiles = self.get_server_config_files(host_name=self.hostname)
+				#pylint: enable=E1111
+				break
+			except (InvalidJSONError, LoginError, OperationError, RequestException) as e:
+				logging.debug("config file fetch failure: %r", e, exc_info=True, stack_info=True)
+		else:
+			raise ConnectionError("Failed to fetch configuration files from Traffic Ops")
 
 		logging.debug("Raw response from Traffic Ops: %s", myFiles[1].text)
 		myFiles = myFiles[0]
@@ -174,10 +188,18 @@ class API(TOSession):
 			return
 
 		payload = {"updated": False, "reval_updated": False}
-		response = self._session.post('/'.join((self._server_url.rstrip('/'),
-		                                        "update",
-		                                        self.hostname)
-		                             ), data=payload)
+
+		for _ in range(self.retries):
+			try:
+				response = self._session.post('/'.join((self._server_url.rstrip('/'),
+				                                        "update",
+				                                        self.hostname)
+				                             ), data=payload)
+				break
+			except (LoginError, InvalidJSONError, OperationError, RequestException) as e:
+				logging.debug("TO update failure: %r", e, exc_info=True, stack_info=True)
+		else:
+			raise ConnectionError("Failed to update Traffic Ops - connection was lost")
 
 		if response.text:
 			logging.info("Traffic Ops response: %s", response.text)
@@ -192,22 +214,23 @@ class API(TOSession):
 
 
 		# Ah, read-only properties that gut functionality, my favorite.
-		from requests.compat import urljoin
 		tmp = self.api_base_url
 		self._api_base_url = urljoin(self._server_url, '/').rstrip('/') + '/'
 
 		uri = "ort/%s/chkconfig" % self.hostname
 		logging.info("Fetching chkconfig from %s", uri)
 
-		try:
-			r = self.get(uri)
-		except (InvalidJSONError,
-		        OperationError,
-		        LoginError,
-		        requests.exceptions.RequestException) as e:
-			raise ConnectionError from e
-		finally:
+		for _ in range(self.retries):
+			try:
+				r = self.get(uri)
+				break
+			except (InvalidJSONError, OperationError, LoginError, RequestException) as e:
+				logging.debug("chkconfig fetch failure: %r", e, exc_info=True, stack_info=True)
+		else:
 			self._api_base_url = tmp
+			raise ConnectionError("Failed to fetch 'chkconfig' from Traffic Ops - connection lost")
+
+		self._api_base_url = tmp
 
 		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
 
@@ -221,17 +244,17 @@ class API(TOSession):
 		:returns: An object representing the API's response
 		"""
 		logging.info("Fetching update status from Traffic Ops")
-
-		try:
-			# The API function decorator confuses pylint into thinking this doesn't return
-			#pylint: disable=E1111
-			r = self.get_server_update_status(server_name=self.hostname)
-			#pylint: enable=E1111
-		except (InvalidJSONError,
-		        LoginError,
-		        OperationError,
-		        requests.exceptions.RequestException) as e:
-			raise ConnectionError from e
+		for _ in range(self.retries):
+			try:
+				# The API function decorator confuses pylint into thinking this doesn't return
+				#pylint: disable=E1111
+				r = self.get_server_update_status(server_name=self.hostname)
+				#pylint: enable=E1111
+				break
+			except (InvalidJSONError, LoginError, OperationError, RequestException) as e:
+				logging.debug("update status fetch failure: %r", e, exc_info=True, stack_info=True)
+		else:
+			raise ConnectionError("Failed to fetch update status - connection was lost")
 
 		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
 
@@ -247,16 +270,17 @@ class API(TOSession):
 		"""
 		logging.info("Fetching server status from Traffic Ops")
 
-		try:
-			# The API function decorator confuses pylint into thinking this doesn't return
-			#pylint: disable=E1111
-			r = self.get_servers(query_params={"hostName": self.hostname})
-			#pylint: enable=E1111
-		except (InvalidJSONError,
-		        LoginError,
-		        OperationError,
-		        requests.exceptions.RequestException) as e:
-			raise ConnectionError from e
+		for _ in range(self.retries):
+			try:
+				# The API function decorator confuses pylint into thinking this doesn't return
+				#pylint: disable=E1111
+				r = self.get_servers(query_params={"hostName": self.hostname})
+				#pylint: enable=E1111
+				break
+			except (InvalidJSONError, LoginError, OperationError,RequestException) as e:
+				logging.debug("status fetch failure: %r", e, exc_info=True, stack_info=True)
+		else:
+			raise ConnectionError("Failed to fetch server status - connection was lost")
 
 		logging.debug("Raw response from Traffic Ops: %s", r[1].text)
 
