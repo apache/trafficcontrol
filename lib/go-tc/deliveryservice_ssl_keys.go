@@ -224,6 +224,25 @@ type DNSSECKeyDSRecordV11 struct {
 	Digest     string `json:"digest"`
 }
 
+func (keys *DNSSECKeys) ToV11() DNSSECKeysV11 {
+	v11 := DNSSECKeysV11{}
+	for keyName, keySet := range *keys {
+		v11[keyName] = keySet.ToV11()
+	}
+	return v11
+}
+
+func (set *DNSSECKeySet) ToV11() DNSSECKeySetV11 {
+	v11 := DNSSECKeySetV11{}
+	for _, zsk := range set.ZSK {
+		v11.ZSK = append(v11.ZSK, zsk.DNSSECKeyV11)
+	}
+	for _, ksk := range set.KSK {
+		v11.KSK = append(v11.KSK, ksk.DNSSECKeyV11)
+	}
+	return v11
+}
+
 // CDNDNSSECGenerateReqDate is the date accepted by CDNDNSSECGenerateReq.
 // This will unmarshal a UNIX epoch integer, a RFC3339 string, the old format string used by Perl '2018-08-21+14:26:06', and the old format string sent by the Portal '2018-08-21 14:14:42'.
 // This exists to fix a critical bug, see https://github.com/apache/trafficcontrol/issues/2723 - it SHOULD NOT be used by any other endpoint.
