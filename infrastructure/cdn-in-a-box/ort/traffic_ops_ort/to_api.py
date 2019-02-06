@@ -50,7 +50,15 @@ class API(TOSession):
 		"""
 		super(API, self).__init__(host_ip=conf.toHost, api_version=self.VERSION,
 		                          host_port=conf.toPort, verify_cert=conf.verify, ssl=conf.useSSL)
-		self.login(conf.username, conf.password)
+
+		for r in conf.retries:
+			try:
+				self.login(conf.username, conf.password)
+				break
+			except LoginError, OperationError, InvalidJSONError as e:
+				logging.debug("login failure: %r", e, stack_info=True, exc_info=True)
+		else:
+			raise LoginError("Failed to log in to Traffic Ops, retries exceeded.")
 
 		self.hostname = conf.shortHostname
 
