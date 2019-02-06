@@ -53,6 +53,7 @@ class API(TOSession):
 
 		for r in conf.retries:
 			try:
+				logging.info("login attempt #%d", r)
 				self.login(conf.username, conf.password)
 				break
 			except LoginError, OperationError, InvalidJSONError as e:
