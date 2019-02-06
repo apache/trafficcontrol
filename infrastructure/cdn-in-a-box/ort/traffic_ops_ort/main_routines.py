@@ -190,7 +190,7 @@ def processPackages(conf:Configuration) -> bool:
 		return False
 
 	for package in myPackages:
-		if package.install():
+		if package.install(conf):
 			if conf.mode is not Configuration.Modes.BADASS:
 				return False
 			logging.warning("Failed to install %s, but we're BADASS, so moving on!", package)
