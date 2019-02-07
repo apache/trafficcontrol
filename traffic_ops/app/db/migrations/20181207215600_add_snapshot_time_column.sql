@@ -17,6 +17,8 @@ ALTER TABLE snapshot ADD COLUMN time timestamp with time zone NOT NULL DEFAULT n
 
 CREATE TABLE deliveryservice_snapshots (deliveryservice text PRIMARY KEY NOT NULL, time timestamp with time zone NOT NULL, last_updated timestamp with time zone NOT NULL DEFAULT now());
 
+INSERT INTO deliveryservice_snapshots (deliveryservice, time) SELECT ds.xml_id as deliveryservice, sn.time FROM deliveryservice ds JOIN cdn c ON c.id = ds.cdn_id JOIN snapshot sn ON sn.cdn = c.name;
+
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_snapshots FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 -- +goose Down
