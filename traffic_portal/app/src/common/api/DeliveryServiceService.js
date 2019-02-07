@@ -81,6 +81,7 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
         return deferred.promise;
     };
 
+
     this.getServerCapabilities = function(id) {
         return $http.get(ENV.api['root'] + 'deliveryservices_required_capabilities', { params: { deliveryServiceID: id } }).then(
             function (result) {
@@ -118,6 +119,21 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
                 throw err;
             }
         );
+    };
+
+    this.snapshotDeliveryService = function(ds) {
+        var request = $q.defer();
+        $http.post(ENV.api['root'] + "deliveryservices/" + ds.xmlId + "/snapshot")
+            .then(
+                function(response) {
+                    request.resolve(response);
+                },
+                function(fault) {
+                    request.reject(fault);
+                }
+            );
+
+        return request.promise;
     };
 
     this.getServerDeliveryServices = function(serverId) {

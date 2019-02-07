@@ -21,6 +21,7 @@ CREATE INDEX idx_k_cachegroup_snapshot_last_updated_idx ON cachegroup_snapshot U
 
 CREATE TABLE cachegroup_fallbacks_snapshot ( LIKE cachegroup_fallbacks );
 ALTER TABLE  cachegroup_fallbacks_snapshot ADD COLUMN deleted boolean NOT NULL default false;
+ALTER TABLE  cachegroup_fallbacks_snapshot ADD COLUMN last_updated timestamp with time zone NOT NULL default now();
 ALTER TABLE  cachegroup_fallbacks_snapshot ADD PRIMARY KEY (primary_cg, backup_cg, last_updated);
 CREATE INDEX idx_k_cachegroup_fallbacks_snapshot_deleted_idx ON cachegroup_fallbacks_snapshot USING btree (deleted);
 CREATE INDEX idx_k_cachegroup_fallbacks_snapshot_last_updated_idx ON cachegroup_fallbacks_snapshot USING btree (last_updated);

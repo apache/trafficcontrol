@@ -907,6 +907,7 @@ under the License.
             </fieldset>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-if="!settings.isNew" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
+                <button type="button" class="btn btn-snapshot" ng-disabled="!deliveryServiceForm.$pristine" ng-click="snapshot(deliveryService)">{{settings.snapshotLabel}}</button>
                 <button class="btn btn-success" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
                 <button class="btn btn-primary" ng-if="settings.isRequest && fulfillable()" ng-disabled="deliveryServiceForm.$invalid" ng-click="fulfillRequest(deliveryService)">Fulfill Request</button>
             </div>
