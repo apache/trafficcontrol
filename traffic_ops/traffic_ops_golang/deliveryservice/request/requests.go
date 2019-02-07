@@ -102,17 +102,11 @@ func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(req.APIInfo().Tx.Tx)
+	tenantIDs, err := tenant.GetUserTenantIDListTx(req.APIInfo().Tx.Tx, req.APIInfo().User.TenantID)
 	if err != nil {
-		return nil, nil, errors.New("dsr checking tenancy enabled: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("dsr getting tenant list: " + err.Error()), http.StatusInternalServerError
 	}
-	if tenancyEnabled {
-		tenantIDs, err := tenant.GetUserTenantIDListTx(req.APIInfo().Tx.Tx, req.APIInfo().User.TenantID)
-		if err != nil {
-			return nil, nil, errors.New("dsr getting tenant list: " + err.Error()), http.StatusInternalServerError
-		}
-		where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
-	}
+	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
 
 	query := selectDeliveryServiceRequestsQuery() + where + orderBy
 	log.Debugln("Query is ", query)

@@ -72,7 +72,6 @@ func (ds *TODeliveryServiceV12) GetType() string {
 }
 
 // getDSTenantIDByID returns the tenant ID, whether the delivery service exists, and any error.
-// Note the id may be nil, even if true is returned, if the delivery service exists but its tenant_id field is null.
 func getDSTenantIDByID(tx *sql.Tx, id int) (*int, bool, error) {
 	tenantID := (*int)(nil)
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, id).Scan(&tenantID); err != nil {
@@ -85,7 +84,6 @@ func getDSTenantIDByID(tx *sql.Tx, id int) (*int, bool, error) {
 }
 
 // GetDSTenantIDByIDTx returns the tenant ID, whether the delivery service exists, and any error.
-// Note the id may be nil, even if true is returned, if the delivery service exists but its tenant_id field is null.
 func GetDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 	tenantID := (*int)(nil)
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, id).Scan(&tenantID); err != nil {
@@ -98,7 +96,6 @@ func GetDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 }
 
 // getDSTenantIDByName returns the tenant ID, whether the delivery service exists, and any error.
-// Note the id may be nil, even if true is returned, if the delivery service exists but its tenant_id field is null.
 func getDSTenantIDByName(tx *sql.Tx, name string) (*int, bool, error) {
 	tenantID := (*int)(nil)
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where xml_id = $1`, name).Scan(&tenantID); err != nil {
@@ -111,7 +108,6 @@ func getDSTenantIDByName(tx *sql.Tx, name string) (*int, bool, error) {
 }
 
 // GetDSTenantIDByNameTx returns the tenant ID, whether the delivery service exists, and any error.
-// Note the id may be nil, even if true is returned, if the delivery service exists but its tenant_id field is null.
 func GetDSTenantIDByNameTx(tx *sql.Tx, ds tc.DeliveryServiceName) (*int, bool, error) {
 	tenantID := (*int)(nil)
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where xml_id = $1`, ds).Scan(&tenantID); err != nil {

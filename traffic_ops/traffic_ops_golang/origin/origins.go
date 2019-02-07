@@ -103,35 +103,30 @@ func (origin *TOOrigin) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
 }
 
-// GetTenantID returns a pointer to the Origin's tenant ID from the Tx and any error encountered
-func (origin *TOOrigin) GetTenantID(tx *sqlx.Tx) (*int, error) {
+// GetTenantID returns a pointer to the Origin's tenant ID from the Tx, whether or not the Origin exists, and any error encountered
+func (origin *TOOrigin) GetTenantID(tx *sqlx.Tx) (*int, bool, error) {
 	if origin.ID != nil {
 		var tenantID *int
 		if err := tx.QueryRow(`SELECT tenant FROM origin where id = $1`, *origin.ID).Scan(&tenantID); err != nil {
 			if err == sql.ErrNoRows {
-				return nil, nil
+				return nil, false, nil
 			}
-			return nil, fmt.Errorf("querying tenant ID for origin ID '%v': %v", *origin.ID, err)
+			return nil, false, fmt.Errorf("querying tenant ID for origin ID '%v': %v", *origin.ID, err)
 		}
-		return tenantID, nil
+		return tenantID, true, nil
 	}
-	return nil, nil
+	return nil, false, nil
 }
 
 func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
-	currentTenantID, err := origin.GetTenantID(origin.ReqInfo.Tx)
+	currentTenantID, originExists, err := origin.GetTenantID(origin.ReqInfo.Tx)
+	if !originExists {
+		return true, nil
+	}
 	if err != nil {
 		return false, err
 	}
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx.Tx)
-	if err != nil {
-		return false, err
-	}
-	if currentTenantID != nil && tenancyEnabled {
-		return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx.Tx)
-	}
-
-	return true, nil
+	return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx.Tx)
 }
 
 func (origin *TOOrigin) Read() ([]interface{}, error, error, int) {
@@ -235,41 +230,31 @@ LEFT JOIN tenant t ON o.tenant = t.id`
 }
 
 func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *auth.CurrentUser) (error, tc.ApiErrorType) {
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(tx.Tx)
-	if err != nil {
-		return errors.New("Error checking if tenancy enabled."), tc.SystemError
+	if originTenantID == nil {
+		return tc.NilTenantError, tc.ForbiddenError
 	}
-	if tenancyEnabled {
-		if originTenantID == nil {
-			return tc.NilTenantError, tc.ForbiddenError
-		}
-		authorized, err := tenant.IsResourceAuthorizedToUserTx(*originTenantID, user, tx.Tx)
-		if err != nil {
-			return err, tc.SystemError
-		}
-		if !authorized {
-			return tc.TenantUserNotAuthError, tc.ForbiddenError
-		}
+	authorized, err := tenant.IsResourceAuthorizedToUserTx(*originTenantID, user, tx.Tx)
+	if err != nil {
+		return err, tc.SystemError
+	}
+	if !authorized {
+		return tc.TenantUserNotAuthError, tc.ForbiddenError
+	}
 
-		if deliveryserviceID != nil {
-			var deliveryserviceTenantID *int
-			if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, *deliveryserviceID).Scan(&deliveryserviceTenantID); err != nil {
-				if err == sql.ErrNoRows {
-					return errors.New("checking tenancy: requested delivery service does not exist"), tc.DataConflictError
-				}
-				log.Errorf("could not get tenant_id from deliveryservice %d: %++v\n", *deliveryserviceID, err)
-				return err, tc.SystemError
-			}
-			if deliveryserviceTenantID != nil {
-				authorized, err := tenant.IsResourceAuthorizedToUserTx(*deliveryserviceTenantID, user, tx.Tx)
-				if err != nil {
-					return err, tc.SystemError
-				}
-				if !authorized {
-					return tc.TenantDSUserNotAuthError, tc.ForbiddenError
-				}
-			}
+	var deliveryserviceTenantID int
+	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, *deliveryserviceID).Scan(&deliveryserviceTenantID); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("checking tenancy: requested delivery service does not exist"), tc.DataConflictError
 		}
+		log.Errorf("could not get tenant_id from deliveryservice %d: %++v\n", *deliveryserviceID, err)
+		return err, tc.SystemError
+	}
+	authorized, err = tenant.IsResourceAuthorizedToUserTx(deliveryserviceTenantID, user, tx.Tx)
+	if err != nil {
+		return err, tc.SystemError
+	}
+	if !authorized {
+		return tc.TenantDSUserNotAuthError, tc.ForbiddenError
 	}
 	return nil, tc.NoError
 }

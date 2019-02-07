@@ -81,14 +81,6 @@ func Check(user *auth.CurrentUser, XMLID string, tx *sql.Tx) (error, error, int)
 
 // CheckID checks that the given user has access to the given delivery service. Returns a user error, a system error, and an HTTP error code. If both the user and system error are nil, the error code should be ignored.
 func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
-	ok, err := IsTenancyEnabledTx(tx)
-	if err != nil {
-		return nil, errors.New("checking tenancy enabled: " + err.Error()), http.StatusInternalServerError
-	}
-	if !ok {
-		return nil, nil, http.StatusOK
-	}
-
 	dsTenantID, ok, err := getDSTenantIDByIDTx(tx, dsID)
 	if err != nil {
 		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
@@ -111,9 +103,6 @@ func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 }
 
 // GetUserTenantListTx returns a Tenant list that the specified user has access to.
-// NOTE: This method does not use the use_tenancy parameter and if this method is being used
-// to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
-// and should be used for this purpose in most cases.
 func GetUserTenantListTx(user auth.CurrentUser, tx *sql.Tx) ([]tc.TenantNullable, error) {
 	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id, last_updated FROM tenant WHERE id = $1
 	UNION SELECT t.id, t.name, t.active, t.parent_id, t.last_updated  FROM tenant t JOIN q ON q.id = t.parent_id)
@@ -176,19 +165,7 @@ SELECT id FROM user_tenant_children;
 	return tenants, nil
 }
 
-// IsTenancyEnabledTx returns true if tenancy is enabled or false otherwise
-func IsTenancyEnabledTx(tx *sql.Tx) (bool, error) {
-	query := `SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY`
-	useTenancy := false
-	err := tx.QueryRow(query).Scan(&useTenancy)
-	if err != nil {
-		return false, errors.New("checking if tenancy is enabled: " + err.Error())
-	}
-	return useTenancy, nil
-}
-
 // IsResourceAuthorizedToUserTx returns a boolean value describing if the user has access to the provided resource tenant id and an error
-// If use_tenancy is set to false (0 in the db) this method will return true allowing access.
 // If the user tenant is inactive (or any of its parent tenants are inactive), false will be returned.
 func IsResourceAuthorizedToUserTx(resourceTenantID int, user *auth.CurrentUser, tx *sql.Tx) (bool, error) {
 	query := `
@@ -204,50 +181,32 @@ q AS (
   SELECT id, active FROM tenant WHERE id = (select v from user_tenant_id)
   UNION
   SELECT t.id, t.active FROM TENANT t JOIN q ON q.id = t.parent_id
-),
-tenancy AS (
-  SELECT
-    COALESCE(value::boolean,FALSE) AS value
-  FROM
-    parameter
-  WHERE
-    name = 'use_tenancy'
-    AND config_file = 'global'
-  UNION ALL SELECT FALSE
-  FETCH FIRST 1 ROW ONLY
 )
 SELECT
   id,
-  (select bool_and(active) from user_tenant_parents) as active,
-  tenancy.value AS use_tenancy
+  (select bool_and(active) from user_tenant_parents) as active
 FROM
-  tenancy,
   q
 WHERE
   id = (select v from resource_tenant_id)
-UNION ALL SELECT -1, false, tenancy.value AS use_tenancy FROM tenancy
+UNION ALL SELECT -1, false
 FETCH FIRST 1 ROW ONLY;
 `
 
 	var tenantID int
 	var active bool
-	var useTenancy bool
 
 	log.Debugln("\nQuery: ", query)
-	err := tx.QueryRow(query, user.TenantID, resourceTenantID).Scan(&tenantID, &active, &useTenancy)
+	err := tx.QueryRow(query, user.TenantID, resourceTenantID).Scan(&tenantID, &active)
 
 	switch {
 	case err != nil:
 		log.Errorf("Error checking user tenant %v access on resourceTenant  %v: %v", user.TenantID, resourceTenantID, err.Error())
 		return false, err
 	default:
-		if !useTenancy {
-			return true, nil
-		}
 		if active && tenantID == resourceTenantID {
 			return true, nil
 		} else {
-			fmt.Printf("default")
 			return false, nil
 		}
 	}
@@ -265,42 +224,4 @@ func getDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 		return nil, false, fmt.Errorf("querying tenant ID for delivery service ID '%v': %v", id, err)
 	}
 	return tenantID, true, nil
-}
-
-type Tenanter interface {
-	TenantID() *int
-	Name() string
-	GetType() string
-}
-
-// FilterAuthorized takes a slice of objects, and returns only the objects the given user is authorized for.
-func FilterAuthorized(objs []Tenanter, user *auth.CurrentUser, tx *sql.Tx) ([]interface{}, error) {
-	tenancyEnabled, err := IsTenancyEnabledTx(tx)
-	if err != nil {
-		return nil, errors.New("Error checking if tenancy enabled.")
-	}
-	if !tenancyEnabled {
-		newObjs := []interface{}{}
-		for _, obj := range objs {
-			newObjs = append(newObjs, obj)
-		}
-		return newObjs, nil
-	}
-
-	newObjs := []interface{}{}
-	for _, obj := range objs {
-		if obj.TenantID() == nil {
-			return nil, fmt.Errorf("FilterAuthorized for %T %s %s: no tenant ID", obj, obj.Name(), obj.GetType())
-		}
-		// TODO add/use a helper func to make a single SQL call, for performance
-		ok, err := IsResourceAuthorizedToUserTx(*obj.TenantID(), user, tx)
-		if err != nil {
-			return nil, fmt.Errorf("FilterAuthorized for %T %s %s: no tenant ID", obj, obj.Name(), obj.GetType())
-		}
-		if !ok {
-			continue
-		}
-		newObjs = append(newObjs, obj)
-	}
-	return newObjs, nil
 }

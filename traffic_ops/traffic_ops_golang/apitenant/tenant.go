@@ -124,20 +124,7 @@ func (tn *TOTenant) Create() (error, error, int) { return api.GenericCreate(tn) 
 
 func (ten *TOTenant) Read() ([]interface{}, error, error, int) {
 	if ten.APIInfo().User.TenantID == auth.TenantIDInvalid {
-		// NOTE: work around issue where user has no tenancy assigned.  If tenancy turned off, there
-		// should be no tenancy restrictions.  This should be removed once tenant_id NOT NULL constraints
-		// are in place
-		enabled, err := tenant.IsTenancyEnabledTx(ten.APIInfo().Tx.Tx)
-		if err != nil {
-			return nil, nil, errors.New("tenant checking tenancy: " + err.Error()), http.StatusInternalServerError
-		}
-
-		if enabled {
-			// tenancy enabled, but user doesn't belong to one -- return empty list
-			return nil, nil, nil, http.StatusOK
-		}
-		// give it the root tenant -- since tenancy turned off,  does not matter what it is
-		ten.APIInfo().User.TenantID = 1
+		return nil, nil, nil, http.StatusOK
 	}
 
 	tenants, userErr, sysErr, errCode := api.GenericRead(ten)
