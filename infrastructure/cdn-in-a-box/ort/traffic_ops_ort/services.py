@@ -28,7 +28,13 @@ import logging
 import os
 import subprocess
 import typing
+
+from functools import partial
+
 import psutil
+
+from .configuration import Configuration
+from .utils import getYesNoResponse as getYN
 
 #: Holds the list of reloads needed due to configuration file changes
 NEEDED_RELOADS = set()
@@ -43,34 +49,33 @@ except subprocess.CalledProcessError:
 else:
 	HAS_SYSTEMD = True
 
-def reloadATSConfigs() -> bool:
+def reloadATSConfigs(conf:Configuration) -> bool:
 	"""
 	This function will reload configuration files for the Apache Trafficserver caching HTTP
 	proxy. It does this by calling ``traffic_ctl config reload`
 
+	:param conf: An object representing the configuration of :program:`traffic_ops_ort`
 	:returns: whether or not the reload succeeded (as indicated by the exit code of
 		``traffic_ctl``)
 	:raises OSError: when something goes wrong executing the child process
 	"""
-	from .configuration import MODE, Modes, TS_ROOT
-	from .utils import getYesNoResponse as getYN
-
 	# First of all, ATS must be running for this to work
-	if not setATSStatus(True):
+	if not setATSStatus(True, conf):
 		logging.error("Cannot reload configs, ATS not running!")
 		return False
 
-	cmd = [os.path.join(TS_ROOT, "bin", "traffic_ctl"), "config", "reload"]
+	cmd = [os.path.join(conf.tsroot, "bin", "traffic_ctl"), "config", "reload"]
 	cmdStr = ' '.join(cmd)
 
-	if MODE is Modes.INTERACTIVE and not getYN("Run command '%s' to reload configuration?",cmdStr):
+	if ( conf.mode is Configuration.Modes.INTERACTIVE and
+	     not getYN("Run command '%s' to reload configuration?" % cmdStr, default='Y')):
 		logging.warning("Configuration will not be reloaded for Apache Trafficserver!")
 		logging.warning("Changes will NOT be applied!")
 		return True
 
 	logging.info("Apache Trafficserver configuration reload will be done via: %s", cmdStr)
 
-	if MODE is Modes.REPORT:
+	if conf.mode is Configuration.Modes.REPORT:
 		return True
 
 	sub = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -85,18 +90,50 @@ def reloadATSConfigs() -> bool:
 		return False
 	return True
 
-def restartATS() -> bool:
+def restartATS(conf:Configuration) -> bool:
 	"""
 	A convenience function for calling :func:`setATSStatus` for restarts.
 
+	:param conf: An object representing the configuration of :program:`traffic_ops_ort`
 	:returns: whether or not the restart was successful (or unnecessary)
 	"""
-	from .configuration import MODE, Modes
-	from .utils import getYesNoResponse as getYN
 
-	doRestart = MODE is Modes.BADASS or MODE is Modes.REPORT or (MODE is Modes.INTERACTIVE and
-	                                                             getYN("Restart ATS?", default='Y'))
-	return setATSStatus(True, restart=doRestart)
+	doRestart = ( conf.mode is Configuration.Modes.BADASS or
+	              conf.mode is Configuration.Modes.REPORT or
+	              ( conf.mode is Configuration.Modes.INTERACTIVE and
+	                getYN("Restart ATS?", default='Y')))
+
+	return setATSStatus(True, conf, restart=doRestart)
+
+
+def restartService(service:str, conf:Configuration) -> bool:
+	"""
+	Restarts a generic systemd service
+
+	:param service: The name of the service to be restarted
+	:param conf: An object representing the configuration of :program:`traffic_ops_ort`
+	:returns: Whether or not the restart was successful
+	"""
+	global HAS_SYSTEMD
+
+	if not HAS_SYSTEMD:
+		logging.warning("This system doesn't have systemd, services cannot be restarted")
+		return True
+
+	if conf.mode is not Configuration.Modes.REPORT and (
+	   conf.mode is not Configuration.Modes.INTERACTIVE or getYN("Restart %s?" % service, 'Y')):
+		logging.info("Restarting %s", service)
+		try:
+			sub = subprocess.Popen(["systemctl", "restart", service],
+			                       stdout=subprocess.PIPE,
+			                       stderr=subprocess.PIPE)
+			out, err = sub.communicate()
+			logging.debug("stdout: %s\nstderr: %s", out, err)
+		except (OSError, subprocess.CalledProcessError) as e:
+			logging.error("An error occurred when restarting %s: %s", service, e)
+			logging.debug("%r", e, exc_info=True, stack_info=True)
+			return False
+	return True
 
 #: A big ol' map of filenames to the services which require reloads when said files change
 FILES_THAT_REQUIRE_RELOADS = {"records.config":       reloadATSConfigs,
@@ -108,13 +145,14 @@ FILES_THAT_REQUIRE_RELOADS = {"records.config":       reloadATSConfigs,
                               "logs_xml.config":      reloadATSConfigs,
                               "ssl_multicert.config": reloadATSConfigs,
                               "plugin.config":        restartATS,
-                              "ntpd.conf":            lambda: restartService("ntpd"),
+                              "ntpd.conf":            partial(restartService, "ntpd"),
                               "50-ats.rules":         restartATS}
 
-def doReloads() -> bool:
+def doReloads(conf:Configuration) -> bool:
 	"""
 	Performs all necessary service restarts/configuration reloads
 
+	:param conf: An object representing the configuration of :program:`traffic_ops_ort`
 	:returns: whether or not the reloads/restarts went successfully
 	"""
 	global NEEDED_RELOADS
@@ -125,7 +163,7 @@ def doReloads() -> bool:
 
 	for reload in NEEDED_RELOADS:
 		try:
-			if not reload():
+			if not reload(conf):
 				return False
 		except OSError as e:
 			logging.error("An error occurred when reloading service configuration files: %s",e)
@@ -158,7 +196,7 @@ def getProcessesIfRunning(name:str) -> typing.Optional[psutil.Process]:
 
 	return None
 
-def setATSStatus(status:bool, restart:bool = False) -> bool:
+def setATSStatus(status:bool, conf:Configuration, restart:bool = False) -> bool:
 	"""
 	Sets the status of the system's ATS process.
 
@@ -170,9 +208,6 @@ def setATSStatus(status:bool, restart:bool = False) -> bool:
 	:returns: whether or not the status setting was successful (or unnecessary)
 	:raises OSError: when there is a problem executing the subprocess
 	"""
-	from .configuration import MODE, Modes, TS_ROOT
-	from .utils import getYesNoResponse as getYN
-
 	existingProcess = getProcessesIfRunning("[TS_MAIN]")
 
 	# ATS is not running
@@ -205,14 +240,15 @@ def setATSStatus(status:bool, restart:bool = False) -> bool:
 		logging.info("ATS already running - nothing to do")
 		return True
 
-	tsexe = os.path.join(TS_ROOT, "bin", "trafficserver")
-	if MODE is Modes.INTERACTIVE and not getYN("Run command '%s %s'?" % (tsexe, arg)):
+	tsexe = os.path.join(conf.tsroot, "bin", "trafficserver")
+	if ( conf.mode is Configuration.Modes.INTERACTIVE and
+	     not getYN("Run command '%s %s'?" % (tsexe, arg))):
 		logging.warning("ATS status will not be set - Traffic Ops may not expect this!")
 		return True
 
 	logging.info("ATS status will be set using: %s %s", tsexe, arg)
 
-	if MODE is not Modes.REPORT:
+	if conf.mode is not Configuration.Modes.REPORT:
 
 		sub = subprocess.Popen([tsexe, arg], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = sub.communicate()
@@ -225,58 +261,18 @@ def setATSStatus(status:bool, restart:bool = False) -> bool:
 			return False
 	return True
 
-def restartService(service:str) -> bool:
-	"""
-	Restarts a generic systemd service
-
-	:param service: The name of the service to be restarted
-	:returns: Whether or not the restart was successful
-	"""
-	global HAS_SYSTEMD
-	from .utils import getYesNoResponse as getYN
-	from .configuration import MODE, Modes
-
-
-	if not HAS_SYSTEMD:
-		logging.warning("This system doesn't have systemd, services cannot be restarted")
-		return True
-
-	if MODE is not Modes.REPORT and (MODE is not Modes.INTERACTIVE or
-	                                 getYN("Restart %s?" % service, default='Y')):
-		logging.info("Restarting %s", service)
-		try:
-			sub = subprocess.Popen(["systemctl", "restart", service],
-			                       stdout=subprocess.PIPE,
-			                       stderr=subprocess.PIPE)
-			out, err = sub.communicate()
-			logging.debug("stdout: %s\nstderr: %s", out, err)
-		except (OSError, subprocess.CalledProcessError) as e:
-			logging.error("An error occurred when restarting %s: %s", service, e)
-			logging.debug("%r", e, exc_info=True, stack_info=True)
-			return False
-	return True
-
-
-
-def setServiceStatus(chkconfig:dict) -> bool:
+def setServiceStatus(chkconfig:dict, mode:Configuration.Modes) -> bool:
 	"""
 	Sets the status of a service based on its 'chkconfig'.
 	A 'chkconfig' consists of a list of run-levels with either 'on' or 'off' as values.
 	This allowed specifying what run-levels needed a service. It's now totally deprecated,
 	but the Traffic Ops back-end doesn't know that yet...
 
-	.. warning:: This function currently ONLY checks for 'trafficserver' chkconfigs.
-
 	:param chkconfig: A single chkconfig
+	:param mode: The current run-mode
 	:returns: whether or not the service's status was set successfully
 	"""
 	global HAS_SYSTEMD
-	from .utils import getYesNoResponse as getYN
-	from .configuration import MODE, Modes
-
-	if not HAS_SYSTEMD:
-		logging.warning("This system doesn't have systemd, services cannot be enabled/disabled")
-		return True
 
 	try:
 		status = "enable" if "on" in chkconfig["value"] else "disable"
@@ -286,13 +282,14 @@ def setServiceStatus(chkconfig:dict) -> bool:
 		logging.debug("%s", e, exc_info=True, stack_info=True)
 		return False
 
-	if MODE is Modes.INTERACTIVE and not getYN("%s %s?" % (service, status), default='Y'):
+	if (mode is Configuration.Modes.INTERACTIVE and
+	    not getYN("%s %s?" % (service, status), default='Y')):
 		logging.warning("%s will not be %sd - some things may break!", service, status)
 		return True
 
 	logging.info("%s will be %sd", service, status)
 
-	if MODE is not Modes.REPORT:
+	if mode is not Configuration.Modes.REPORT:
 		try:
 			sub = subprocess.Popen(["systemctl", status, service],
 			                       stdout=subprocess.PIPE,

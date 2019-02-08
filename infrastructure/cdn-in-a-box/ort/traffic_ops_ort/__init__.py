@@ -28,7 +28,7 @@ This package provides an executable script named :program:`traffic_ops_ort`
 
 Usage
 =====
-``traffic_ops_ort [-k] [--dispersion DISP] [--login_dispersion DISP] [--retries RETRIES] [--wait_for_parents] [--rev_proxy_disabled] [--ts-root PATH] MODE LOG_LEVEL TO_URL LOGIN``
+``traffic_ops_ort [-k] [--dispersion DISP] [--login_dispersion DISP] [--retries RETRIES] [--wait_for_parents INT] [--rev_proxy_disable] [--ts-root PATH] MODE LOG_LEVEL TO_URL LOGIN``
 
 ``traffic_ops_ort [-v]``
 
@@ -50,36 +50,24 @@ Usage
 
 	Wait a random number between 0 and ``DISP`` seconds before starting. (Default: 300)
 
-	.. caution:: This option is not implemented yet; it has no effect and even the default is not
-		used.
-
 .. option:: --login_dispersion DISP
 
 	Wait a random number between 0 and ``DISP`` seconds before authenticating with Traffic Ops.
 	(Default: 0)
 
-	.. caution:: This option is not implemented yet; it has no effect.
-
 .. option:: --retries RETRIES
 
 	If connection to Traffic Ops fails, retry ``RETRIES`` times before giving up (Default: 3).
 
-	.. caution:: This option is not implemented yet; it has no effect and even the default is not
-		used.
+.. option:: --wait_for_parents INT
 
-.. option:: --wait_for_parents
+	If ``INT`` is anything but 0, do not apply updates if parents of this server have pending
+	updates. This option requires an integer argument for legacy compatibility reasons; 0 is
+	considered ``False``, anything else is ``True``. (Default: 1)
 
-	Do not apply updates if parents of this server have pending updates.
-
-	.. caution:: This option is not implemented yet; it has no effect and currently the default
-		behavior is to wait for parents regardless of the presence - or lack thereof - of this option
-
-.. option:: --rev_prox_disabled
+.. option:: --rev_prox_disable
 
 	Make requests directly to the Traffic Ops server, bypassing a reverse proxy if one exists.
-
-	.. caution:: This option is not implemented yet; :mod:`traffic_ops_ort` will make requests
-		directly to the provided :option:`TO_URL`
 
 .. option:: --ts_root PATH
 
@@ -161,13 +149,17 @@ Module Contents
 ===============
 """
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 __author__  = "Brennan Fieck"
 
 import argparse
 import datetime
-import sys
 import logging
+import random
+import time
+
+from requests.exceptions import RequestException
+from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 
 def doMain(args:argparse.Namespace) -> int:
 	"""
@@ -177,48 +169,30 @@ def doMain(args:argparse.Namespace) -> int:
 	:returns: an exit code for the script.
 	:raises AttributeError: when the namespace is missing required arguments
 	"""
-	from . import configuration
+	from . import configuration, main_routines, to_api
+	random.seed(time.time())
 
-	if not configuration.setLogLevel(args.Log_Level):
-		print("Unrecognized log level:", args.Log_Level, file=sys.stderr)
+	try:
+		conf = configuration.Configuration(args)
+	except ValueError as e:
+		logging.critical(e)
+		logging.debug("%r", e, exc_info=True, stack_info=True)
 		return 1
 
-	logging.info("Distribution detected as: '%s'", configuration.DISTRO)
-	logging.info("Hostname detected as: '%s'", configuration.HOSTNAME[1])
+	if conf.login_dispersion:
+		disp = random.randint(0, conf.login_dispersion)
+		logging.info("Login dispersion is active - sleeping for %d seconds before continuing", disp)
+		time.sleep(disp)
 
-	if not configuration.setMode(args.Mode):
-		logging.critical("Unrecognized Mode: %s", args.Mode)
+	try:
+		with to_api.API(conf) as api:
+			conf.api = api
+			return main_routines.run(conf)
+	except (LoginError, OperationError, InvalidJSONError, RequestException) as e:
+		logging.critical("Failed to connect and authenticate with the Traffic Ops server")
+		logging.error(e)
+		logging.debug("%r", e, exc_info=True, stack_info=True)
 		return 1
-
-	logging.info("Running in %s mode", configuration.MODE)
-
-	if not configuration.setTSRoot(args.ts_root):
-		logging.critical("Failed to set TS_ROOT, seemingly invalid path: '%s'", args.ts_root)
-		return 1
-
-	logging.info("ATS root installation directory set to: '%s'", configuration.TS_ROOT)
-
-	configuration.VERIFY = not args.insecure
-
-	if not configuration.setTOURL(args.Traffic_Ops_URL):
-		logging.critical("Malformed or invalid Traffic_Ops_URL: '%s'", args.Traffic_Ops_URL)
-		return 1
-
-	logging.info("Traffic Ops URL 'https://%s:%d' set and verified",
-	                    configuration.TO_HOST, configuration.TO_PORT)
-
-	if not configuration.setTOCredentials(args.Traffic_Ops_Login):
-		logging.critical("Traffic Ops login credentials invalid or incorrect.")
-		return 1
-
-	#logging.info("Got TO Cookie - valid until %s",
-	#             datetime.datetime.fromtimestamp(configuration.TO_COOKIE.expires))
-
-	configuration.WAIT_FOR_PARENTS = args.wait_for_parents
-
-	from . import main_routines
-
-	return main_routines.run()
 
 def main():
 	"""
@@ -228,11 +202,13 @@ def main():
 	print(datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S UTC %Y"))
 
 	parser = argparse.ArgumentParser(description="A Python-based TO_ORT implementation",
+	                                 epilog=("Note that passing a negative integer to options that "
+	                                         "expect integers will instead set them to zero."),
 	                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 	parser.add_argument("Mode",
 	                    help="REPORT: Do nothing, but print what would be done\n"\
-	                         "")
+	                         "REPORT, INTERACTIVE, REVALIDATE, SYNCDS, BADASS")
 	parser.add_argument("Log_Level",
 	                    help="ALL/TRACE, DEBUG, INFO, WARN, ERROR, FATAL/CRITICAL, NONE",
 	                    type=str)
@@ -255,8 +231,9 @@ def main():
 	                    default=3)
 	parser.add_argument("--wait_for_parents",
 	                    help="do not update if parent_pending = 1 in the update json.",
-	                    action="store_true")
-	parser.add_argument("--rev_proxy_disabled",
+	                    type=int,
+	                    default=1)
+	parser.add_argument("--rev_proxy_disable",
 	                    help="bypass the reverse proxy even if one has been configured.",
 	                    action="store_true")
 	parser.add_argument("--ts_root",
