@@ -48,6 +48,35 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetCRConfig CreateParameter error expected: nil, actual: " + err.Error())
 	}
+
+	// create an ANY_MAP DS assignment to verify that it doesn't show up in the CRConfig
+	servers, _, err := TOSession.GetServers()
+	if err != nil {
+		t.Errorf("GetServers err expected nil, actual %+v", err)
+	}
+	serverID := 0
+	for _, server := range servers {
+		if server.Type == "EDGE" && server.CDNName == "cdn1" {
+			serverID = server.ID
+			break
+		}
+	}
+	if serverID == 0 {
+		t.Errorf("GetServers expected EDGE server in cdn1, actual: %+v", servers)
+	}
+	res, _, err := TOSession.GetDeliveryServiceByXMLID("anymap-ds")
+	if err != nil {
+		t.Errorf("GetDeliveryServiceByXMLID err expected nil, actual %+v", err)
+	}
+	if len(res) != 1 {
+		t.Errorf("GetDeliveryServiceByXMLID expected 1 DS, actual 0")
+	}
+	anymapDSID := res[0].ID
+	_, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
+	if err != nil {
+		t.Errorf("POST delivery service servers: %v\n", err)
+	}
+
 	_, err = TOSession.SnapshotCRConfig(cdn)
 	if err != nil {
 		t.Errorf("SnapshotCRConfig err expected nil, actual %+v", err)
@@ -63,6 +92,20 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 
 	if len(crc.DeliveryServices) == 0 {
 		t.Errorf("GetCRConfig len(crc.DeliveryServices) expected: >0, actual: 0")
+	}
+
+	// verify no ANY_MAP delivery services are in the CRConfig
+	for ds := range crc.DeliveryServices {
+		if ds == "anymap-ds" {
+			t.Errorf("found ANY_MAP delivery service in CRConfig deliveryServices")
+		}
+	}
+	for server := range crc.ContentServers {
+		for ds := range crc.ContentServers[server].DeliveryServices {
+			if ds == "anymap-ds" {
+				t.Errorf("found ANY_MAP delivery service in contentServers deliveryServices mapping")
+			}
+		}
 	}
 
 	if crc.Stats.TMPath == nil {
