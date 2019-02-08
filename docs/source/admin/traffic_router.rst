@@ -606,7 +606,7 @@ Pattern Based Consistent Hashing Feature
 
 Overview
 --------
-Pattern based consistent hashing is a feature to modify the request path given to Traffic Router's consistent hasher for Cache selection (and Delivery Service selection for Steering Delivery Services) using a regex. This new regex field 'Consistent Hash Regex' uses a per-Delivery Service basis and is given to Traffic Router via the CRConfig. The purpose of this feature is to increase cache efficiency by directing requests for the same asset, but with varying request paths, to the same cache.
+Pattern based consistent hashing is a feature to modify the request path given to Traffic Router's consistent hasher for Cache selection (and Delivery Service selection for Steering Delivery Services) using a regex. This new regex field 'Consistent Hash Regex' is applied on a per-Delivery Service basis and is given to Traffic Router via the CRConfig. The purpose of this feature is to increase cache efficiency by directing requests for the same asset, but with varying request paths, to the same cache.
 
 .. Note:: Pattern Based Consistent Hashing is only available for HTTP and Steering Delivery Services
 
@@ -614,6 +614,8 @@ How it Works
 ------------
 
 With Pattern Based Consistent Hashing, a regex (Consistent Hash Regex) is applied to the request path to extract matching elements to build a new string to pass to the consistent hasher. i.e.: using the Consistent Hash Regex ``/.*?(/.*?/).*?(m3u8)`` given the request paths ``/test/path/asset.m3u8`` and ``/other/path/asset.m3u8`` the resulting path to hash will be ``/path/m3u8``
+
+.. Note:: See Oracle's documentation for the java.util.regex.Pattern implementation in java: https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
 
 HTTP
 	When routing requests for an HTTP Delivery Service, Traffic Router compiles a list of eligible caches and uses consistent hashing on the request path to select one. With Pattern Based Consistent Hashing, the request path is rebuilt prior to consistent hashing for Cache Selection.
