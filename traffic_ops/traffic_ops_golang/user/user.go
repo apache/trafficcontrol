@@ -221,7 +221,7 @@ func (this *TOUser) Read() ([]interface{}, error, error, int) {
 }
 
 func (user *TOUser) privCheck() (error, error, int) {
-	requestedPrivLevel, _, err := dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx.Tx, int(*user.Role))
+	requestedPrivLevel, _, err := dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx.Tx, *user.Role)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
@@ -236,7 +236,7 @@ func (user *TOUser) privCheck() (error, error, int) {
 func (user *TOUser) Update() (error, error, int) {
 
 	// make sure current user cannot update their own role to a new value
-	if user.ReqInfo.User.ID == *user.ID && user.ReqInfo.User.Role != int(*user.Role) {
+	if user.ReqInfo.User.ID == *user.ID && user.ReqInfo.User.Role != *user.Role {
 		return fmt.Errorf("users cannot update their own role"), nil, http.StatusBadRequest
 	}
 
@@ -323,7 +323,7 @@ func (u *TOUser) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 	if u.TenantID != nil { // new tenant id (only on create or udpate)
 
 		//log.Debugf("%d with tenancy %d trying to access %d", user.ID, user.TenantID, *u.TenantID)
-		authorized, err := tenant.IsResourceAuthorizedToUserTx(int(*u.TenantID), user, tx)
+		authorized, err := tenant.IsResourceAuthorizedToUserTx(*u.TenantID, user, tx)
 		if err != nil {
 			return false, err
 		}
