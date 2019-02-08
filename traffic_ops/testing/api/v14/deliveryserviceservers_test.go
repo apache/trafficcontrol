@@ -17,19 +17,56 @@ package v14
 
 import (
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func TestDeliveryServiceServers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
-		DeleteTestDeliveryServiceServers(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, DeliveryServiceServers}, func() {
 	})
 }
 
-func DeleteTestDeliveryServiceServers(t *testing.T) {
-	log.Debugln("DeleteTestDeliveryServiceServers")
+func CreateTestDeliveryServiceServers(t *testing.T) {
+	dses, _, err := TOSession.GetDeliveryServices()
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServices: %v\n", err)
+	}
+	if len(dses) < 1 {
+		t.Errorf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
+	}
 
+	servers, _, err := TOSession.GetServers()
+	if err != nil {
+		t.Errorf("cannot GET Servers: %v\n", err)
+	}
+	if len(servers) < 1 {
+		t.Errorf("GET Servers returned no dses, must have at least 1 to test ds-servers")
+	}
+	server := servers[0]
+
+	for _, ds := range dses {
+		_, err = TOSession.CreateDeliveryServiceServers(ds.ID, []int{server.ID}, true)
+		if err != nil {
+			t.Errorf("POST delivery service servers: %v\n", err)
+		}
+	}
+
+	dsServers, _, err := TOSession.GetDeliveryServiceServers()
+	if err != nil {
+		t.Errorf("GET delivery service servers: %v\n", err)
+	}
+
+	found := false
+	for _, dss := range dsServers.Response {
+		if *dss.Server == server.ID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("POST delivery service servers returned success, but ds-server not in GET")
+	}
+}
+
+func DeleteTestDeliveryServiceServers(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v\n", err)
@@ -48,25 +85,9 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 	server := servers[0]
 
-	_, err = TOSession.CreateDeliveryServiceServers(ds.ID, []int{server.ID}, true)
-	if err != nil {
-		t.Errorf("POST delivery service servers: %v\n", err)
-	}
-
 	dsServers, _, err := TOSession.GetDeliveryServiceServers()
 	if err != nil {
 		t.Errorf("GET delivery service servers: %v\n", err)
-	}
-
-	found := false
-	for _, dss := range dsServers.Response {
-		if *dss.DeliveryService == ds.ID && *dss.Server == server.ID {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("POST delivery service servers returned success, but ds-server not in GET")
 	}
 
 	if _, _, err := TOSession.DeleteDeliveryServiceServer(ds.ID, server.ID); err != nil {
@@ -78,7 +99,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Errorf("GET delivery service servers: %v\n", err)
 	}
 
-	found = false
+	found := false
 	for _, dss := range dsServers.Response {
 		if *dss.DeliveryService == ds.ID && *dss.Server == server.ID {
 			found = true
