@@ -16,9 +16,10 @@ package v14
 */
 
 import (
+	"testing"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"testing"
 )
 
 func TestDeliveryServiceMatches(t *testing.T) {
@@ -40,6 +41,9 @@ func GetTestDeliveryServiceMatches(t *testing.T) {
 	}
 
 	for _, ds := range testData.DeliveryServices {
+		if ds.Type == tc.DSTypeAnyMap {
+			continue // ANY_MAP DSes don't require matchLists
+		}
 		if _, ok := dsMatchMap[tc.DeliveryServiceName(ds.XMLID)]; !ok {
 			t.Errorf("GET DeliveryService matches missing: %v\n", ds.XMLID)
 		}
