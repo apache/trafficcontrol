@@ -22,6 +22,7 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -190,10 +191,12 @@ select s.host_name, ds.xml_id
 from deliveryservice_server as dss
 inner join server as s on dss.server = s.id
 inner join deliveryservice as ds on ds.id = dss.deliveryservice
+inner join type as dt on dt.id = ds.type
 inner join profile as p on p.id = s.profile
 inner join status as st ON st.id = s.status
 where ds.cdn_id = (select id from cdn where name = $1)
-and ds.active = true
+and ds.active = true` +
+		fmt.Sprintf(" and dt.name != '%s' ", tc.DSTypeAnyMap) + `
 and p.routing_disabled = false
 and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 `
@@ -235,7 +238,8 @@ inner join deliveryservice_regex as dsr on dsr.regex = r.id
 inner join deliveryservice as ds on ds.id = dsr.deliveryservice
 inner join type as dt on dt.id = ds.type
 where ds.cdn_id = (select id from cdn where name = $1)
-and ds.active = true
+and ds.active = true` +
+		fmt.Sprintf(" and dt.name != '%s' ", tc.DSTypeAnyMap) + `
 and rt.name = 'HOST_REGEXP'
 order by dsr.set_number asc
 `
