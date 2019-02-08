@@ -50,7 +50,14 @@ def syncDSState(conf:Configuration) -> bool:
 
 	logging.debug("Retrieved raw update status: %r", updateStatus)
 
-	if not 'upd_pending' in updateStatus and updateStatus['upd_pending']:
+	if 'upd_pending' not in updateStatus:
+		raise ConnectionError("Malformed API response doesn't indicate if updates are pending!")
+
+	if not updateStatus['upd_pending']:
+		return False
+
+	if conf.wait_for_parents and 'parent_pending' in updateStatus and updateStatus["parent_pending"]:
+		logging.warning("One or more parents still have updates pending, waiting for parents.")
 		return False
 
 	if conf.mode is Configuration.Modes.SYNCDS and conf.dispersion:
