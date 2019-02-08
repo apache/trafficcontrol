@@ -237,6 +237,7 @@ inner join type as dt on dt.id = ds.type
 where ds.cdn_id = (select id from cdn where name = $1)
 and ds.active = true
 and rt.name = 'HOST_REGEXP'
+and ds.type <> (select id from type where name = '` + string(tc.DSTypeAnyMap) + `')
 order by dsr.set_number asc
 `
 	rows, err := tx.Query(q, cdn)
