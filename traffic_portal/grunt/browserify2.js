@@ -40,7 +40,6 @@ module.exports = {
                                 'angular-ui-router/release/angular-ui-router.min.js',
                                 'bootstrap-sass/assets/javascripts/bootstrap.min.js',
                                 'es5-shim/es5-shim.min.js',
-	                            'jquery/dist/jquery.js',
                                 'json3/lib/json3.min.js',
                                 'restangular/dist/restangular.min.js'
                             ]
@@ -101,7 +100,6 @@ module.exports = {
                                 '@uirouter/angularjs/release/angular-ui-router.js',
                                 'bootstrap-sass/assets/javascripts/bootstrap.js',
                                 'es5-shim/es5-shim.js',
-	                            'jquery/dist/jquery.js',
                                 'json3/lib/json3.js',
                                 'restangular/dist/restangular.js'
                             ]
