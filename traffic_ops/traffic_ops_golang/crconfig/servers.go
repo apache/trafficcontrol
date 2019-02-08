@@ -551,10 +551,11 @@ DESC
 // `
 // }
 
-// getCDNInfo returns the CDN domain, whether DNSSec is enabled, and the snapshot time, from the _snapshot tables.
+// getCDNInfo returns the CDN domain, whether DNSSec is enabled, and whether the CDN has a snapshot, from the _snapshot tables.
+// If the CDN has no snapshot, the domain will be blank and DNSSEC enabled will be false.
 // The live argument is whether to get the latest data, not the snapshot time. Note this still queries the snapshot tables, so live calls must be preceded by populating the snapshot tables, e.g. with UpdateSnapshotTables.
 // If live is true, the returned snapshot time will be now.
-func getCDNInfo(tx *sql.Tx, cdn string, live bool) (string, bool, error) {
+func getCDNSnapshotInfo(tx *sql.Tx, cdn string, live bool) (string, bool, bool, error) {
 	qryArgs := []interface{}{}
 	withCDNSnapshotTimeQueryPart, qryArgs := WithCDNSnapshotTime(cdn, live, qryArgs)
 	qry := `
@@ -571,9 +572,12 @@ WHERE c.name = $` + strconv.Itoa(len(qryArgs)+1) + `
 	domain := ""
 	dnssec := false
 	if err := tx.QueryRow(qry, qryArgs...).Scan(&domain, &dnssec); err != nil {
-		return "", false, errors.New("querying CDN domain name: " + err.Error())
+		if err == sql.ErrNoRows {
+			return "", false, false, nil
+		}
+		return "", false, false, errors.New("querying CDN domain name: " + err.Error())
 	}
-	return domain, dnssec, nil
+	return domain, dnssec, true, nil
 }
 
 // getCDNNameFromID returns the CDN name given the ID, false if the no CDN with the given ID exists, and an error if the database query fails.

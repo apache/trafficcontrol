@@ -56,11 +56,17 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	liveData := true
 
 	start := time.Now()
-	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath, liveData)
+	crConfig, snapshotExists, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath, liveData)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
+	if !snapshotExists {
+		log.Errorln("Live CRConfig returned snapshotExists=false - should never happen! Returning {} to client!\n")
+		api.WriteResp(w, r, struct{}{}) // emulates Perl
+		return
+	}
+
 	log.Infof("CRConfig time to generate: %+v\n", time.Since(start))
 	api.WriteResp(w, r, crConfig)
 }
@@ -94,9 +100,13 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	crc, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath, liveData)
+	crc, snapshotExists, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath, liveData)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		return
+	}
+	if !snapshotExists {
+		api.WriteResp(w, r, struct{}{}) // emulates Perl
 		return
 	}
 
@@ -155,9 +165,13 @@ func SnapshotOldGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	crc, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath, liveData)
+	crc, snapshotExists, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath, liveData)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		return
+	}
+	if !snapshotExists {
+		api.WriteResp(w, r, struct{}{}) // emulates Perl
 		return
 	}
 
