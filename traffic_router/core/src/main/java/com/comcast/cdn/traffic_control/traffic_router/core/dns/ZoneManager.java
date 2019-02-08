@@ -620,6 +620,10 @@ public class ZoneManager extends Resolver {
 		for (final Cache c : data.getCacheMap().values()) {
 			for (final DeliveryServiceReference dsr : c.getDeliveryServices()) {
 				final DeliveryService ds = data.getDeliveryService(dsr.getDeliveryServiceId());
+				if (ds == null) {
+					LOGGER.warn("Content server " + c.getFqdn() + " has delivery service " + dsr.getDeliveryServiceId() + " assigned, but the delivery service was not found. Skipping.");
+					continue;
+				}
 				final String fqdn = dsr.getFqdn();
 				final String[] parts = fqdn.split("\\.", 2);
 				final String host = parts[0];
