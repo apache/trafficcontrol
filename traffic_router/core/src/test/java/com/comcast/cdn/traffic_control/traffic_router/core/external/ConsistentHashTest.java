@@ -17,6 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.external;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -287,7 +288,7 @@ public class ConsistentHashTest {
 
 			resp = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
 
-			assertThat(resp.get("resultingPathToConsistentHash").asText(),equalTo(resultingPathToConsistentHash));
+			assertThat(JsonUtils.optString(resp, "resultingPathToConsistentHash"),equalTo(resultingPathToConsistentHash));
 		} finally {
 			if (response != null) response.close();
 		}

@@ -98,6 +98,13 @@ public class ConsistentHashController {
 	ResponseEntity<Map<String, String>> testPatternBasedRegex(@RequestParam(name = "regex") final String regex,
 										 @RequestParam(name = "requestPath") final String requestPath) {
 
+		// limit length of requestPath to protect against evil regexes
+		if (requestPath != null && requestPath.length() > 28) {
+			final Map<String, String> map = new HashMap<String, String>();
+			map.put("Bad Input", "Request Path length is restricted by API to 28 characters");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+		}
+
 		final String pathToHash = trafficRouterManager.getTrafficRouter().buildPatternBasedHashString(regex, requestPath);
 
 		if (pathToHash == null) {

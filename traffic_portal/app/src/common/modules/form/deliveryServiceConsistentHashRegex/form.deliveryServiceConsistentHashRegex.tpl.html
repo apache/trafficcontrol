@@ -22,7 +22,7 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
             <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{deliveryService.xmlId}}</a></li>
-            <li class="active">Consistent Hash Regex</li>
+            <li class="active">Consistent Hash Regex Test Tool</li>
         </ol>
         <div class="clearfix"></div>
     </div>
@@ -38,8 +38,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsConsistentHashRegexForm.requestPath), 'has-feedback': hasError(dsConsistentHashRegexForm.requestPath)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Request Path *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="requestPath" type="text" class="form-control" ng-model="requestPath" ng-maxlength="48" ng-pattern="//*//" required autofocus>
+                    <input name="requestPath" type="text" class="form-control" ng-model="requestPath" ng-maxlength="27" ng-pattern="//*//" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsConsistentHashRegexForm.requestPath, 'pattern')">Path Must Start With '/'</small>
+                    <small class="input-error" ng-show="hasPropertyError(dsConsistentHashRegexForm.requestPath, 'maxlength')">Too Long - Request Path length is restricted by test tool</small>
                     <span ng-show="hasError(dsConsistentHashRegexForm.requestPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
