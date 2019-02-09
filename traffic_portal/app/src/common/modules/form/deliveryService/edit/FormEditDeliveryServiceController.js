@@ -231,7 +231,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 	};
 
 	$scope.snapshot = function(deliveryService) {
-		deliveryServiceService.updateDeliveryService(deliveryService).
+		deliveryServiceService.snapshotDeliveryService(deliveryService).
 			then(
 				function() {
 					$state.reload(); // reloads all the resolves for the view
