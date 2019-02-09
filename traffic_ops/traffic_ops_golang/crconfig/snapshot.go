@@ -36,7 +36,7 @@ func Snapshot(tx *sql.Tx, cdn tc.CDNName) error {
 
 	// TODO remove crconfig column, or at least not-null.
 	qry := `
-INSERT INTO snapshot (cdn, crconfig, time) VALUES ($1, '', now())
+INSERT INTO snapshot (cdn, crconfig, monitoring, time) VALUES ($1, '{}', '{}', now())
 ON CONFLICT(cdn) DO UPDATE SET time=now()
 `
 	if _, err := tx.Exec(qry, cdn); err != nil {

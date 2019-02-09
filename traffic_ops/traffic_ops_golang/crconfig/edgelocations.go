@@ -55,11 +55,10 @@ WHERE
 	}
 	qry += `
 ORDER BY
-  cgf.primary_cg,
-  cg.name,
-  cgf.last_updated,
-  cg.last_updated
-DESC
+  cgf.primary_cg DESC,
+  cg.name DESC,
+  cgf.last_updated DESC,
+  cg.last_updated DESC
 ) v where deleted = false
 ORDER BY set_order ASC
 `
@@ -126,10 +125,9 @@ SELECT DISTINCT ON (cg.name)
     FROM cachegroup_localization_method_snapshot cgl
     WHERE cachegroup = cg.id AND cgl.last_updated <= (select v from snapshot_time)
     ORDER BY
-      cgl.cachegroup,
-      cgl.method,
-      cgl.last_updated
-    DESC
+      cgl.cachegroup DESC,
+      cgl.method DESC,
+      cgl.last_updated DESC
     ) v WHERE deleted = false
   ),
 	cg.deleted
@@ -155,13 +153,12 @@ WHERE
 	}
 	qry += `
 ORDER BY
-  cg.name,
-  cg.last_updated,
-  co.last_updated,
-  s.last_updated,
-  t.last_updated,
-  st.last_updated
-DESC
+  cg.name DESC,
+  cg.last_updated DESC,
+  co.last_updated DESC,
+  s.last_updated DESC,
+  t.last_updated DESC,
+  st.last_updated DESC
 ) v where deleted = false
 `
 	// TODO pass edge type prefix, router type name

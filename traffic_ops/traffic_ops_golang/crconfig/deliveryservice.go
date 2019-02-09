@@ -157,8 +157,12 @@ SELECT DISTINCT ON (d.xml_id)
 FROM
   deliveryservice_snapshot d
   JOIN type_snapshot t ON t.id = d.type
-  LEFT OUTER JOIN profile_snapshot p ON p.id = d.profile
   JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = d.xml_id
+  LEFT OUTER JOIN profile_snapshot p ON p.id = d.profile `
+	if !live {
+		qry += ` AND p.last_updated <= dsn.time `
+	}
+	qry += `
 WHERE
   d.cdn_id = (select id from cdn_snapshot c where c.name = $1 and c.last_updated <= dsn.time)
   AND d.active = true
@@ -168,7 +172,6 @@ WHERE
 		qry += `
   AND d.last_updated <= dsn.time
   AND t.last_updated <= dsn.time
-  AND p.last_updated <= dsn.time
 `
 	}
 	qry += `

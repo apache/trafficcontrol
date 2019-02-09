@@ -486,7 +486,7 @@ func UpdateDSDSSSnapshot(tx *sql.Tx, ds tc.DeliveryServiceName) error {
 	}
 
 	qry, qryArgs = InsertDSDSSDeletedSnapshotQuery(ds)
-	if _, err := tx.Exec(qry, qryArgs); err != nil {
+	if _, err := tx.Exec(qry, qryArgs...); err != nil {
 		return errors.New("inserting  ds '" + string(ds) + "' dss deleted rows into snapshot (query: QQ" + qry + "QQ): " + err.Error())
 	}
 
@@ -514,7 +514,7 @@ func DSDSSWithLatest(ds tc.DeliveryServiceName, qryArgs []interface{}) (string, 
 	return t.SnapshotLatestTable() + ` AS (
   SELECT DISTINCT ON (` + t.PK + `) *
   FROM "` + t.SnapshotTable() + `" dsssnap
-  WHERE dsssnap.deliveryservice = (select id from deliveryservice where xml_id = $` + strconv.Itoa(len(qryArgs)+1) + `
+  WHERE dsssnap.deliveryservice = (select id from deliveryservice where xml_id = $` + strconv.Itoa(len(qryArgs)+1) + `)
   ORDER BY ` + t.PK + `, last_updated DESC
 )
 `, append(qryArgs, ds)
@@ -534,7 +534,7 @@ INSERT INTO "` + t.SnapshotTable() + `" (
 ) SELECT
 ` + t.Columns + `, now() as last_updated, true as deleted
 FROM "` + t.SnapshotLatestTable() + `" dssl
-WHERE dssl.deliveryservice = (SELECT id FROM deliveryservice WHERE xml_id = $` + strconv.Itoa(len(qryArgs)+1) + `
+WHERE dssl.deliveryservice = (SELECT id FROM deliveryservice WHERE xml_id = $` + strconv.Itoa(len(qryArgs)+1) + `)
   AND (` + t.PK + `) NOT IN (
     SELECT ` + t.PK + ` FROM ` + t.Table + `
   )

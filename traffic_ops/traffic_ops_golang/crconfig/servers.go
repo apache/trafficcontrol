@@ -175,13 +175,12 @@ WHERE
 	}
 	qry += `
 ORDER BY
-  s.host_name,
-  s.last_updated,
-  cg.last_updated,
-  t.last_updated,
-  p.last_updated,
-  st.last_updated
-DESC
+  s.host_name DESC,
+  s.last_updated DESC,
+  cg.last_updated DESC,
+  t.last_updated DESC,
+  p.last_updated DESC,
+  st.last_updated DESC
 ) s WHERE s.deleted = false
 `
 	rows, err := tx.Query(qry, cdn)
@@ -267,6 +266,7 @@ FROM
   deliveryservice_server_snapshot dss
   JOIN server_snapshot s ON dss.server = s.id
   JOIN deliveryservice_snapshot ds ON ds.id = dss.deliveryservice
+  JOIN type_snapshot dt ON dt.id = ds.type
   JOIN profile_snapshot p ON p.id = s.profile
   JOIN status_snapshot st ON st.id = s.status
   JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = ds.xml_id
@@ -274,6 +274,7 @@ FROM
 WHERE
   ds.cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= dsn.time)
   AND ds.active = true
+  AND dt.name != '` + string(tc.DSTypeAnyMap) + `'
   AND p.routing_disabled = false
   AND (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 	AND dt.name <> '` + string(tc.DSTypeAnyMap) + `'
@@ -290,15 +291,14 @@ WHERE
 	}
 	qry += `
 ORDER BY
-  dss.server,
-  dss.deliveryservice,
-  ds.last_updated,
-  dt.last_updated,
-  dss.last_updated,
-  s.last_updated,
-  p.last_updated,
-  st.last_updated
-DESC
+  dss.server DESC,
+  dss.deliveryservice DESC,
+  ds.last_updated DESC,
+  dt.last_updated DESC,
+  dss.last_updated DESC,
+  s.last_updated DESC,
+  p.last_updated DESC,
+  st.last_updated DESC
 ) dss WHERE dss.deleted = false
 `
 	rows, err := tx.Query(qry, cdn)
@@ -356,6 +356,7 @@ FROM
 WHERE
   ds.cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= dsn.time)
   AND ds.active = true
+  AND dt.name != '` + string(tc.DSTypeAnyMap) + `'
   AND rt.name = 'HOST_REGEXP'
 	AND dt.name <> '` + string(tc.DSTypeAnyMap) + `'
 `
@@ -370,16 +371,15 @@ WHERE
 	}
 	qry += `
 ORDER BY
-  ds.xml_id,
-  dt.name,
-  ds.routing_name,
-  r.pattern,
-  r.last_updated,
-  rt.last_updated,
-  dsr.last_updated,
-  ds.last_updated,
-  dt.last_updated
-DESC
+  ds.xml_id DESC,
+  dt.name DESC,
+  ds.routing_name DESC,
+  r.pattern DESC,
+  r.last_updated DESC,
+  rt.last_updated DESC,
+  dsr.last_updated DESC,
+  ds.last_updated DESC,
+  dt.last_updated DESC
 ) s where deleted = false
 ORDER BY set_number ASC
 `
@@ -492,13 +492,12 @@ WHERE
 	}
 	qry += `
 ORDER BY
-  s.host_name,
-  p.name,
-  s.last_updated,
-  pp.last_updated,
-  p.last_updated,
-  st.last_updated
-DESC
+  s.host_name DESC,
+  p.name DESC,
+  s.last_updated DESC,
+  pp.last_updated DESC,
+  p.last_updated DESC,
+  st.last_updated DESC
 ) s WHERE server_deleted = false
 `
 	rows, err := tx.Query(qry, cdn)
