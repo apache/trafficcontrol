@@ -2,8 +2,6 @@
 
 Fixes #(replace_this_text_with_issue_number) 
 
-
-
 ## Which TC components are affected by this PR?
 
 - [ ] Documentation
@@ -18,7 +16,8 @@ Fixes #(replace_this_text_with_issue_number)
 - [ ] Traffic Vault
 - [ ] Other _________
 
-## What is the best way to verify this PR? Please include manual steps or automated tests. (If no tests are part of this PR, please provide explanation as to why no tests are included.)
+## What is the best way to verify this PR? Please include manual steps or automated tests. 
+### (If no tests are part of this PR, please provide explanation as to why no tests are included.)
 
 
 ## Check all that apply
@@ -32,7 +31,7 @@ Fixes #(replace_this_text_with_issue_number)
 
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
-   ## or more contributor license agreements.  See the NOTICE file
+    or more contributor license agreements.  See the NOTICE file
     distributed with this work for additional information
     regarding copyright ownership.  The ASF licenses this file
     to you under the Apache License, Version 2.0 (the
