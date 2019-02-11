@@ -54,7 +54,7 @@ Response Structure
 :cacheurl:                 A setting for a deprecated feature of now-unsupported Trafficserver versions
 
 	.. deprecated:: ATCv3.0
-	This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
+		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
 :ccrDnsTtl:                The Time To Live (TTL) of the DNS response for A or AAAA record queries requesting the IP address of the Traffic Router - named "ccrDnsTtl" for legacy reasons
 :cdnId:                    The integral, unique identifier of the CDN to which the Delivery Service belongs
@@ -292,7 +292,7 @@ Request Structure
 :cacheurl:                 An optional setting for a deprecated feature of now-unsupported Trafficserver versions (read: "Don't use this")
 
 	.. deprecated:: ATCv3.0
-	This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
+		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
 :ccrDnsTtl:                The Time To Live (TTL) in seconds of the DNS response for A or AAAA record queries requesting the IP address of the Traffic Router - named "ccrDnsTtl" for legacy reasons
 :cdnId:                    The integral, unique identifier for the CDN to which this Delivery Service shall be assigned
@@ -471,7 +471,7 @@ Response Structure
 :cacheurl:                 A setting for a deprecated feature of now-unsupported Trafficserver versions
 
 	.. deprecated:: ATCv3.0
-	This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
+		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
 :ccrDnsTtl:                The Time To Live (TTL) of the DNS response for A or AAAA record queries requesting the IP address of the Traffic Router - named "ccrDnsTtl" for legacy reasons
 :cdnId:                    The integral, unique identifier of the CDN to which the Delivery Service belongs
