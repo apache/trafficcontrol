@@ -308,7 +308,7 @@ and d.active = true
 			}
 		}
 
-		if consistentHashRegex.String != "" {
+		if consistentHashRegex.Valid && consistentHashRegex.String != "" {
 			ds.ConsistentHashRegex = &consistentHashRegex.String
 		}
 

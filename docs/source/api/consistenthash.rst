@@ -15,13 +15,13 @@
 
 .. _to-api-consistenthash:
 
-***************
+******************
 ``consistenthash``
-***************
+******************
 Test pattern based consistent hashing for a Delivery Service using a regex and a request path
 
 ``POST``
-=======
+========
 Queries database for an active Traffic Router on a given CDN and sends GET request to get the resulting path to consistent hash with a given regex and request path.
 
 :Auth. Required: Yes
@@ -31,7 +31,7 @@ Queries database for an active Traffic Router on a given CDN and sends GET reque
 Request Structure
 -----------------
 :regex:       The regex to apply to the request path to get a resulting path that will be used for consistent hashing
-:requestpath: The request path to use to test the regex against
+:requestpath: The request path to use to test the regular expression against
 :cdnid:       The unique identifier of a CDN that will be used to query for an active Traffic Router
 
 Response Structure
