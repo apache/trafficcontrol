@@ -23,8 +23,9 @@ It extends the class provided by the official Apache Traffic Control Client.
 import typing
 import logging
 
-from requests.exceptions import RequestException
 from requests.compat import urljoin
+from requests.exceptions import RequestException
+
 from trafficops.tosession import TOSession
 from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 

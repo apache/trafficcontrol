@@ -72,7 +72,7 @@ until to-get "api/1.3/cdns/name/$CDN/sslkeys" && [[ "$(to-get api/1.3/cdns/name/
 done
 
 # Leaves the container hanging open in the event of a failure for debugging purposes
-traffic_ops_ort -k BADASS ALL "https://$TO_FQDN:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; }
+traffic_ops_ort -kl ALL BADASS || { echo "Failed"; }
 
 envsubst < "/etc/cron.d/traffic_ops_ort-cron-template" > "/var/spool/cron/root" && rm -f "/etc/cron.d/traffic_ops_ort-cron-template"
 crontab "/var/spool/cron/root"
