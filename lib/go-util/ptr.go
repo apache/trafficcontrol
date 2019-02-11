@@ -27,6 +27,10 @@ func IntPtr(i int) *int {
 	return &i
 }
 
+func UintPtr(u uint) *uint {
+	return &u
+}
+
 func Int64Ptr(i int64) *int64 {
 	return &i
 }

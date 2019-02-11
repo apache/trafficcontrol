@@ -34,14 +34,15 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/basho/riak-go-client"
 )
 
 const (
-	RiakPort = 8087
-	TimeOut  = time.Second * 5
-
+	// DefaultRiakPort is the port RIAK is listening on, if no port is configured.
+	DefaultRiakPort                    = uint(8087)
+	TimeOut                            = time.Second * 5
 	DefaultHealthCheckInterval         = time.Second * 5
 	DefaultMaxCommandExecutionAttempts = 5
 )
@@ -221,7 +222,8 @@ type ServerAddr struct {
 	Port string
 }
 
-func GetRiakServers(tx *sql.Tx) ([]ServerAddr, error) {
+// GetRiakServers returns the riak servers from the database. The riakPort may be nil, in which case the default port is returned.
+func GetRiakServers(tx *sql.Tx, riakPort *uint) ([]ServerAddr, error) {
 	rows, err := tx.Query(`
 SELECT CONCAT(s.host_name, '.', s.domain_name) FROM server s
 JOIN type t ON s.type = t.id
@@ -233,7 +235,10 @@ WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
 	}
 	defer rows.Close()
 	servers := []ServerAddr{}
-	portStr := strconv.Itoa(RiakPort)
+	if riakPort == nil {
+		riakPort = util.UintPtr(DefaultRiakPort)
+	}
+	portStr := strconv.Itoa(int(*riakPort))
 	for rows.Next() {
 		s := ServerAddr{Port: portStr}
 		if err := rows.Scan(&s.FQDN); err != nil {
@@ -285,15 +290,14 @@ func GetRiakStorageCluster(servers []ServerAddr, authOptions *riak.AuthOptions) 
 	return RiakStorageCluster{Cluster: cluster}, nil
 }
 
-func GetPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster, error) {
-
+func GetPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions, riakPort *uint) (StorageCluster, error) {
 	clusterMutex.Lock()
 	defer clusterMutex.Unlock()
 
 	tryLoad := false
 
 	// should we try to reload the cluster?
-	newservers, err := GetRiakServers(tx)
+	newservers, err := GetRiakServers(tx, riakPort)
 
 	if err == nil {
 		if 0 < len(newservers) {
@@ -344,8 +348,8 @@ func GetPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster
 	return RiakStorageCluster{Cluster: cluster}, nil
 }
 
-func WithCluster(tx *sql.Tx, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
-	cluster, err := GetPooledCluster(tx, authOpts)
+func WithCluster(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, f func(StorageCluster) error) error {
+	cluster, err := GetPooledCluster(tx, authOpts, riakPort)
 	if err != nil {
 		return errors.New("getting riak pooled cluster: " + err.Error())
 	}

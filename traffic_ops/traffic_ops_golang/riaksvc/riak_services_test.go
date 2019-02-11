@@ -161,12 +161,12 @@ func TestGetRiakCluster(t *testing.T) {
 	defer tx.Commit()
 
 	mock.ExpectQuery("SELECT").WillReturnError(errors.New("foo"))
-	if _, err := GetRiakServers(tx); err == nil {
+	if _, err := GetRiakServers(tx, nil); err == nil {
 		t.Errorf("expected an error retrieving nil servers.")
 	}
 
 	mock.ExpectQuery("SELECT").WillReturnRows(rows1)
-	servers, err := GetRiakServers(tx)
+	servers, err := GetRiakServers(tx, nil)
 	if err != nil {
 		t.Errorf("expected to receive servers: %v", err)
 	}
@@ -188,7 +188,7 @@ func TestGetRiakCluster(t *testing.T) {
 	rows2 := sqlmock.NewRows([]string{"s.host_name", "s.domain_name"})
 	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
 
-	if _, err := GetPooledCluster(tx, &authOptions); err == nil {
+	if _, err := GetPooledCluster(tx, &authOptions, nil); err == nil {
 		t.Errorf("expected an error due to no available riak servers.")
 	}
 }
