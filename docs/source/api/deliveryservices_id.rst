@@ -64,6 +64,10 @@ Response Structure
 :active:                   ``true`` if the Delivery Service is active, ``false`` otherwise
 :anonymousBlockingEnabled: ``true`` if :ref:`Anonymous Blocking <anonymous_blocking-qht>` has been configured for the Delivery Service, ``false`` otherwise
 :cacheurl:                 A setting for a deprecated feature of now-unsupported Trafficserver versions
+
+	.. deprecated:: ATCv3.0
+		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
+
 :ccrDnsTtl:                The Time To Live (TTL) of the DNS response for A or AAAA record queries requesting the IP address of the Traffic Router - named "ccrDnsTtl" for legacy reasons
 :cdnId:                    The integral, unique identifier of the CDN to which the Delivery Service belongs
 :cdnName:                  Name of the CDN to which the Delivery Service belongs
@@ -310,6 +314,10 @@ Request Structure
 :active:                   If ``true``, the Delivery Service will immediately become active and serves traffic
 :anonymousBlockingEnabled: An optional field which, if defined and ``true`` will cause :ref:`Anonymous Blocking <anonymous_blocking-qht>` to be used with the new Delivery Service
 :cacheurl:                 An optional setting for a deprecated feature of now-unsupported Trafficserver versions (read: "Don't use this")
+
+	.. deprecated:: ATCv3.0
+		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
+
 :ccrDnsTtl:                The Time To Live (TTL) in seconds of the DNS response for A or AAAA record queries requesting the IP address of the Traffic Router - named "ccrDnsTtl" for legacy reasons
 :cdnId:                    The integral, unique identifier for the CDN to which this Delivery Service shall be assigned
 :checkPath:                The path portion of the URL which will be used to check connections to this Delivery Service's origin server
