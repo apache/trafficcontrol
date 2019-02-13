@@ -20,6 +20,7 @@ package ds
  */
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -159,6 +160,10 @@ const BytesPerKilobit = 125
 // Note this mutates lastData, adding the new stat to it.
 // Also note that lastData may be mutated, even if an error occurs. Specifically, if the new stat is less than the last stat, it will still be set, so that the per-second stats will be properly computed on the next poll.
 func addLastStat(lastData *dsdata.LastStatData, newStat int64, newStatTime time.Time) error {
+	if lastData == nil {
+		return errors.New("nil lastData")
+	}
+
 	if lastData.Time == newStatTime {
 		return nil // TODO fix callers to not pass the same stat twice
 	}
@@ -199,6 +204,14 @@ func addLastStats(lastData *dsdata.LastStatsData, newStats *dsdata.StatCacheStat
 // addLastStatsToStatCacheStats adds the given LastStatsData to the given StatCacheStats.
 // Note s is mutated, with l being added to it.
 func addLastStatsToStatCacheStats(s *dsdata.StatCacheStats, l *dsdata.LastStatsData) {
+	if s == nil {
+		log.Errorln("ds.addLastStatsToStatCacheStats got nil StatCacheStats - skipping!")
+		return
+	}
+	if l == nil {
+		log.Errorln("ds.addLastStatsToStatCacheStats got nil LastStatsData - skipping!")
+		return
+	}
 	s.Kbps.Value = l.Bytes.PerSec / BytesPerKilobit
 	s.Tps2xx.Value = l.Status2xx.PerSec
 	s.Tps3xx.Value = l.Status3xx.PerSec
@@ -255,6 +268,11 @@ func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName
 		lastStats.DeliveryServices[dsName] = lastStat
 	}
 	for cacheName, cacheStats := range stat.Caches {
+		if cacheStats == nil {
+			log.Errorln("ds.addDSPerSecStats - stat.Caches[" + cacheName + "] exists, but unexpected nil! Setting new!")
+			stat.Caches[cacheName] = &dsdata.StatCacheStats{}
+		}
+
 		lastStatCache := lastStat.Caches[cacheName]
 		if lastStatCache == nil {
 			lastStatCache = &dsdata.LastStatsData{}
@@ -272,9 +290,23 @@ func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName
 	addLastDSStatTotals(lastStat, stat.CommonStats.CachesReporting, serverCachegroups, serverTypes)
 
 	for cacheGroup, cacheGroupStat := range lastStat.CacheGroups {
+		if cacheGroupStat == nil {
+			log.Errorln("ds.addDSPerSecStats - lastStats.DeliveryServices[" + string(dsName) + "].CacheGroups[" + string(cacheGroup) + "] exists, but unexpected nil! Setting new!")
+			lastStat.CacheGroups[cacheGroup] = &dsdata.LastStatsData{}
+		}
+		if stat.CacheGroups[cacheGroup] == nil {
+			stat.CacheGroups[cacheGroup] = &dsdata.StatCacheStats{}
+		}
 		addLastStatsToStatCacheStats(stat.CacheGroups[cacheGroup], cacheGroupStat)
 	}
 	for cacheType, cacheTypeStat := range lastStat.Type {
+		if cacheTypeStat == nil {
+			log.Errorln("ds.addDSPerSecStats - lastStat.DeliveryServices[" + string(dsName) + "].Type[" + string(cacheType) + "] exists, but unexpected nil! Setting new!")
+			lastStat.Type[cacheType] = &dsdata.LastStatsData{}
+		}
+		if stat.Types[cacheType] == nil {
+			stat.Types[cacheType] = &dsdata.StatCacheStats{}
+		}
 		addLastStatsToStatCacheStats(stat.Types[cacheType], cacheTypeStat)
 	}
 	addLastStatsToStatCacheStats(&stat.TotalStats, &lastStat.Total)
