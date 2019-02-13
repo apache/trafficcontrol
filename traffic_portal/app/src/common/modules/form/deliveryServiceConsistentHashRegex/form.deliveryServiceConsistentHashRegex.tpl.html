@@ -38,7 +38,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsConsistentHashRegexForm.requestPath), 'has-feedback': hasError(dsConsistentHashRegexForm.requestPath)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Request Path *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="requestPath" type="text" class="form-control" ng-model="requestPath" ng-maxlength="27" ng-pattern="//*//" required autofocus>
+                    <input name="requestPath" type="text" class="form-control" ng-model="requestPath" ng-maxlength="27" ng-pattern="/^\/*//" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsConsistentHashRegexForm.requestPath, 'pattern')">Path Must Start With '/'</small>
                     <small class="input-error" ng-show="hasPropertyError(dsConsistentHashRegexForm.requestPath, 'maxlength')">Too Long - Request Path length is restricted by test tool</small>
                     <span ng-show="hasError(dsConsistentHashRegexForm.requestPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -53,7 +53,7 @@ under the License.
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" ng-disabled="pattern == null || requestPath == null" ng-click="test(pattern, requestPath, deliveryService.cdnId)">Test</button>
+                <button type="button" class="btn btn-success" ng-disabled="dsConsistentHashRegexForm.$invalid" ng-click="test(pattern, requestPath, deliveryService.cdnId)">Test</button>
             </div>
         </form>
     </div>
