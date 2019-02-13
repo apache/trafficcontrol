@@ -37,7 +37,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.5/consistenthash HTTP/2
+	POST /api/1.5/consistenthash HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.54.0
 	Accept: */*
@@ -56,7 +56,7 @@ Response Structure
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/2 200
+	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
