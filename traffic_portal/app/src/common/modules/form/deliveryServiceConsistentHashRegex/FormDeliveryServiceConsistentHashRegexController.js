@@ -17,26 +17,26 @@
  * under the License.
  */
 
-var FormDeliveryServiceConsistentHashRegexController = function(deliveryService, consistentHashRegex, $scope, formUtils, locationUtils, deliveryServiceConsistentHashRegexService) {
+var FormDeliveryServiceConsistentHashRegexController = function (deliveryService, consistentHashRegex, $scope, formUtils, locationUtils, deliveryServiceConsistentHashRegexService) {
 
-	$scope.deliveryService = deliveryService;
+    $scope.deliveryService = deliveryService;
 
-	$scope.pattern = consistentHashRegex;
+    $scope.pattern = consistentHashRegex;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = locationUtils.navigateToPath;
 
-	$scope.hasError = formUtils.hasError;
+    $scope.hasError = formUtils.hasError;
 
-	$scope.hasPropertyError = formUtils.hasPropertyError;
+    $scope.hasPropertyError = formUtils.hasPropertyError;
 
-    $scope.test = function(pattern, requestPath, cdnId) {
-        deliveryServiceConsistentHashRegexService.getConsistentHashResult(pattern, requestPath, cdnId).then(function (response) {
-            if(response != null && response.response != null) {
+    $scope.test = function (pattern, requestPath, cdnId) {
+        deliveryServiceConsistentHashRegexService.getConsistentHashResult(pattern, requestPath, cdnId).then(
+            function (response) {
                 $scope.resultingPath = response.response.resultingPathToConsistentHash;
-            } else {
+            },
+            function (response) {
                 $scope.resultingPath = "ERROR GETTING RESULT FROM TRAFFIC ROUTER";
-            }
-        });
+            });
     };
 
 };
