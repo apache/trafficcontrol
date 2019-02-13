@@ -18,7 +18,7 @@
 ******************
 ``consistenthash``
 ******************
-Test pattern based consistent hashing for a Delivery Service using a regex and a request path
+Test Pattern-Based Consistent Hashing for a Delivery Service using a regular expression and a request path
 
 ``POST``
 ========
@@ -34,17 +34,42 @@ Request Structure
 :requestpath: The request path to use to test the regular expression against
 :cdnid:       The unique identifier of a CDN that will be used to query for an active Traffic Router
 
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/1.5/consistenthash HTTP/2
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.54.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 80
+	Content-Type: application/x-www-form-urlencoded
+
+	{"regex":"/.*?(/.*?/).*?(m3u8)","requestpath":"/test/path/asset.m3u8","cdnid":2}
+
 Response Structure
 ------------------
 :resultingPathToConsistentHash: The resulting path that Traffic Router will use for consistent hashing
 :consistentHashRegex:           The regex used by Traffic Router derived from POST 'regex' parameter
 :requestPath:                   The request path used by Traffic Router to test regex against
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
+	HTTP/2 200
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: QMDFOnUfqH4TcZ4YnUQyqnXDier0YiUMIfwBGDcT7ySjw9uASBGsLQW35lpnKFi4as0vYlHuSSGpe4hHGsladQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Tue, 12 Feb 2019 21:32:05 GMT
+	Content-Length: 142
+
 	{ "response": {
-		"resultingPathToConsistentHash": "/path/mpd",
-		"consistentHashRegex": "/.*?(/.*?/).*?(mpd)",
-		"requestPath": "/test/path/asset.mpd"
+		"resultingPathToConsistentHash":"/path/m3u8",
+		"consistentHashRegex":"/.*?(/.*?/).*?(m3u8)",
+		"requestPath":"/test/path/asset.m3u8"
 	}}

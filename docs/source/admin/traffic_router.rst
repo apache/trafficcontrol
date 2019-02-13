@@ -601,33 +601,33 @@ The following is an example of the command line parameters set in :file:`/opt/tr
 	-XX:+UnlockExperimentalVMOptions \
 	-XX:InitiatingHeapOccupancyPercent=30"
 
-Pattern Based Consistent Hashing Feature
+Pattern-Based Consistent Hashing Feature
 ========================================
 
 Overview
 --------
-Pattern-Based Consistent Hashing is a feature to modify the request path given to Traffic Router's consistent hasher for Cache selection (and :term:`Delivery Service` selection for Steering Delivery Services) using a regular expression. This new regular expression field 'Consistent Hash Regex' is applied on a per-Delivery Service basis and is given to Traffic Router via the CRConfig. The purpose of this feature is to increase cache efficiency by directing requests for the same asset, but with varying request paths, to the same Cache.
+Pattern-Based Consistent Hashing is a feature to modify the request path given to Traffic Router's consistent hasher for Cache selection (and :term:`Delivery Service` selection for Steering Delivery Services) using a regular expression. This new regular expression field 'Consistent Hash Regex' is applied on a per-Delivery Service basis and is given to Traffic Router via the CDN Snapshot. The purpose of this feature is to increase cache efficiency by directing requests for the same asset, but with varying request paths, to the same Cache.
 
-.. Note:: Pattern Based Consistent Hashing is only available for HTTP and Steering Delivery Services
+.. Note:: Pattern-Based Consistent Hashing is only available for HTTP and Steering Delivery Services
 
 How it Works
 ------------
 
-With Pattern Based Consistent Hashing, a regular expression (Consistent Hash Regex) is applied to the request path to extract matching elements to build a new string to pass to the consistent hasher. i.e.: using the Consistent Hash Regex :regexp:`/.*?(/.*?/).*?(m3u8) given the request paths ``/test/path/asset.m3u8`` and ``/other/path/asset.m3u8`` the resulting path to hash will be ``/path/m3u8``
+With Pattern-Based Consistent Hashing, a regular expression (Consistent Hash Regex) is applied to the request path to extract matching elements to build a new string to pass to the consistent hasher. i.e.: using the Consistent Hash Regex :regexp:`/.*?(/.*?/).*?(m3u8)` given the request paths ``/test/path/asset.m3u8`` and ``/other/path/asset.m3u8`` the resulting path to hash will be ``/path/m3u8``
 
 .. seealso:: See Oracle's `documentation for the java.util.regex.Pattern <https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html>`_ implementation in Java.
 
 HTTP
-	When routing requests for an HTTP Delivery Service, Traffic Router compiles a list of eligible caches and uses consistent hashing on the request path to select one. With Pattern Based Consistent Hashing, the request path is rebuilt prior to consistent hashing for Cache Selection.
+	When routing requests for an HTTP Delivery Service, Traffic Router compiles a list of eligible caches and uses consistent hashing on the request path to select one. With Pattern-Based Consistent Hashing, the request path is rebuilt prior to consistent hashing for Cache Selection.
 Steering
-	For a Steering Delivery Service, Traffic Router uses consistent hashing on the request path to select a Target Delivery Service. In the case of Pattern Based Consistent Hashing, the request path is rebuilt using the Consistent Hash Regex assigned to the Steering Delivery Service prior to consistent hashing. Then, the Target Delivery Service inherits the Consistent Hash Regex from the Steering Delivery Service and uses it for Cache selection.
+	For a Steering Delivery Service, Traffic Router uses consistent hashing on the request path to select a Target Delivery Service. In the case of Pattern-Based Consistent Hashing, the request path is rebuilt using the Consistent Hash Regex assigned to the Steering Delivery Service prior to consistent hashing. Then, the Target Delivery Service inherits the Consistent Hash Regex from the Steering Delivery Service and uses it for Cache selection.
 
-Testing Pattern Based Consistent Hashing
+Testing Pattern-Based Consistent Hashing
 ----------------------------------------
 In order to test this feature without affecting the delivery of traffic through a CDN, there are several test tools in place.
 
 Traffic Router API
-	Several Traffic Router endpoints have been added to test regular expression application against a request path, Cache selection, and Delivery Service selection using Pattern Based Consistent Hashing. For more information see the :ref:`Traffic Router API documentation <tr-api>`.
+	Several Traffic Router endpoints have been added to test regular expression application against a request path, Cache selection, and Delivery Service selection using Pattern-Based Consistent Hashing. For more information see the :ref:`Traffic Router API documentation <tr-api>`.
 Traffic Ops API
 	A Traffic Ops endpoint has been added that will proxy request data through to one of the Traffic Router endpoints in order to test regular expression application against a request path. For more information see the :ref:`Traffic Ops API documentation <to-api-consistenthash>`.
 Traffic Portal Test Tool

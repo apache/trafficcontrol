@@ -30,18 +30,22 @@ import (
 	"strconv"
 )
 
+// struct for the response object from Traffic Router
 type TRConsistentHashResult struct {
 	ResultingPathToConsistentHash string `json:"resultingPathToConsistentHash"`
 	ConsistentHashRegex           string `json:"consistentHashRegex"`
 	RequestPath                   string `json:"requestPath"`
 }
 
+// struct for the incoming request object
 type TRConsistentHashRequest struct {
 	ConsistentHashRegex string `json:"regex"`
 	RequestPath         string `json:"requestpath"`
 	CdnID               int64  `json:"cdnid"`
 }
 
+// endpoint to test Traffic Router's Pattern-Based Consistent Hashing feature
+// /api/1.5/consistenthash
 func Post(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -68,6 +72,9 @@ func Post(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, consistentHashResult)
 }
 
+// queries database for active Traffic Router on the CDN specified by cdnId
+// passes regex and requestPath to the Traffic Router via API request,
+// and returns the response
 func getPatternBasedConsistentHash(tx *sql.Tx, regex string, requestPath string, cdnId int64) ([]byte, error) {
 	q := `
 SELECT concat(server.host_name, '.', server.domain_name) AS fqdn,
