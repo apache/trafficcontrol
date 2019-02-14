@@ -19,7 +19,7 @@ Traffic Portal
 
 Introduction
 ============
-Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the Traffic Ops API. Traffic Portal is the official replacement for the legacy Traffic Ops UI.
+Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the :ref:`to-api`. Traffic Portal is the official replacement for the legacy Traffic Ops UI.
 
 Software Requirements
 =====================
@@ -36,7 +36,7 @@ To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly us
 
 Traffic Portal Project Tree Overview
 =====================================
-	* **traffic_control/traffic_portal/app/src** - contains HTML, JavaScript and Sass source files.
+* **traffic_control/traffic_portal/app/src** - contains HTML, JavaScript and :abbr:`SCSS (Sassy CSS)` source files.
 
 Installing The Traffic Portal Developer Environment
 ===================================================

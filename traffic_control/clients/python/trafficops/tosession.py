@@ -108,7 +108,7 @@ class TOSession(RestApiSession):
 
 	:meth:`get_types` calls endpoint :ref:`to-api-types`, optionally with query parameters e.g. ``get_foo_data(id=45, query_params={'sort': 'asc'})`` calls endpoint ``GET api/1.x/foo/45?sort=asc`` (presumably)
 
-	:meth:`cdns_queue_update` calls endpoint :ref:`to-api-cdns-name-queue_update`, with an ID path parameter and a JSON payload e.g. ``cdns_queue_update(id=1, data={'action': 'queue'})``
+	:meth:`cdns_queue_update` calls endpoint :ref:`to-api-cdns-id-queue_update`, with an ID path parameter and a JSON payload e.g. ``cdns_queue_update(id=1, data={'action': 'queue'})``
 
 	.. note:: Only a small subset of the API endpoints are implemented. More can be implemented as needed.
 	"""
@@ -646,11 +646,11 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request(u'get', u'cdns/usage', (u'1.2', u'1.3',))
+	@api_request(u'get', u'cdns/usage/overview', (u'1.2', u'1.3',))
 	def get_cdns_usage(self):
 		"""
 		Retrieves the high-level CDN usage metrics.
-		:ref:`to-api-cdns-usage`
+		:ref:`to-api-cdns-usage-overview`
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -1451,21 +1451,6 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request(u'delete', u'federation_resolvers/{federation_id:d}/deliveryservices/'
-	                        u'{delivery_service_id:d}', (u'1.2', u'1.3'))
-	def remove_delivery_service_from_federation(self, federation_resolver_id=None,
-	                                            delivery_service_id=None):
-		"""
-		Removes a delivery service from a federation.
-		:ref:`to-api-federation_resolvers-id-deliveryservices-dsid`
-		:param federation_id: The federation id
-		:type federation_id: int
-		:param federation_id: The delivery service id
-		:type federation_id: int
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
 	#
 	# Federation Federation Resolver
 	#
@@ -2174,7 +2159,7 @@ class TOSession(RestApiSession):
 	def get_server_update_status(self, server_name=None):
 		"""
 		Gets the current update status of a server named ``server_name``.
-		:ref:`to-api-servers-name-update_status`
+		:ref:`to-api-servers-hostname-update_status`
 		:param server_name: The (short) hostname of the server for which the update status will be fetched
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]

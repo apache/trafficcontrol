@@ -31,29 +31,29 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
-	|        Name       | Required | Description                                                                                                                        |
-	+===================+==========+====================================================================================================================================+
-	|      address      | no       | Return only static DNS entries that operate on this address/Canonical Name (CNAME)                                                 |
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
-	|     cachegroup    | no       | Return only static DNS entries assigned to this Cache Group                                                                        |
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
-	|    cachegroupId   | no       | Return only static DNS entries assigned to the Cache Group identified by this integral, unique identifier                          |
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
-	|  deliveryservice  | no       | Return only static DNS entries that apply within the domain of the Delivery Service with this 'xml_id'                             |
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
-	| deliveryserviceId | no       | Return only static DNS entries that apply within the domain of the Delivery Service identified by this integral, unique identifier |
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
-	|       host        | no       | Return only static DNS entries that resolve this Fully Qualified Domain Name (FQDN)                                                |
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
-	|        id         | no       | Return only the static DNS entry with this integral, unique identifier                                                             |
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
-	|       ttl         | no       | Return only static DNS entries with this Time To Live (TTL)                                                                        |
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
-	|       type        | no       | Return only static DNS entries of this type                                                                                        |
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
-	|      typeId       | no       | Return only static DNS entries of the type identified by this integral, unique identifier                                          |
-	+-------------------+----------+------------------------------------------------------------------------------------------------------------------------------------+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	|        Name       | Required | Description                                                                                                                                |
+	+===================+==========+============================================================================================================================================+
+	|      address      | no       | Return only static DNS entries that operate on this address/:abbr:`CNAME (Canonical Name)`                                                 |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	|     cachegroup    | no       | Return only static DNS entries assigned to this :term:`Cache Group`                                                                        |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	|    cachegroupId   | no       | Return only static DNS entries assigned to the :term:`Cache Group` identified by this integral, unique identifier                          |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	|  deliveryservice  | no       | Return only static DNS entries that apply within the domain of the :term:`Delivery Service` with this 'xml_id'                             |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| deliveryserviceId | no       | Return only static DNS entries that apply within the domain of the :term:`Delivery Service` identified by this integral, unique identifier |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	|       host        | no       | Return only static DNS entries that resolve this :abbr:`FQDN (Fully Qualified Domain Name)`                                                |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	|        id         | no       | Return only the static DNS entry with this integral, unique identifier                                                                     |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	|       ttl         | no       | Return only static DNS entries with this :abbr:`TTL (Time To Live)`                                                                        |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	|       type        | no       | Return only static DNS entries of this type                                                                                                |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	|      typeId       | no       | Return only static DNS entries of the type identified by this integral, unique identifier                                                  |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -75,8 +75,8 @@ Response Structure
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
-:deliveryservice:   The name of a Delivery Service under the domain of which this static DNS entry shall be active
-:deliveryserviceId: The integral, unique identifier of a Delivery Service under the domain of which this static DNS entry shall be active
+:deliveryservice:   The name of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
+:deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
 :id:                An integral, unique identifier for this static DNS entry
 :ttl:               The Time To Live (TTL) of this static DNS entry in seconds
@@ -131,7 +131,7 @@ Request Structure
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
-:deliveryserviceId: The integral, unique identifier of a Delivery Service under the domain of which this static DNS entry shall be active
+:deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
 :ttl:               The Time To Live (TTL) of this static DNS entry in seconds
 :typeId:            The integral, unique identifier of the type of this static DNS entry
@@ -166,8 +166,8 @@ Response Structure
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
-:deliveryservice:   The name of a Delivery Service under the domain of which this static DNS entry shall be active
-:deliveryserviceId: The integral, unique identifier of a Delivery Service under the domain of which this static DNS entry shall be active
+:deliveryservice:   The name of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
+:deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
 :id:                An integral, unique identifier for this static DNS entry
 :ttl:               The Time To Live (TTL) of this static DNS entry in seconds
@@ -234,7 +234,7 @@ Request Structure
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
-:deliveryserviceId: The integral, unique identifier of a Delivery Service under the domain of which this static DNS entry shall be active
+:deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
 :ttl:               The Time To Live (TTL) of this static DNS entry in seconds
 :typeId:            The integral, unique identifier of the type of this static DNS entry
@@ -269,8 +269,8 @@ Response Structure
 
 	.. note:: This field has no effect, and is not used by any part of Traffic Control. It exists for legacy compatibility reasons.
 
-:deliveryservice:   The name of a Delivery Service under the domain of which this static DNS entry shall be active
-:deliveryserviceId: The integral, unique identifier of a Delivery Service under the domain of which this static DNS entry shall be active
+:deliveryservice:   The name of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
+:deliveryserviceId: The integral, unique identifier of a :term:`Delivery Service` under the domain of which this static DNS entry shall be active
 :host:              If ``typeId`` identifies a ``CNAME`` type record, this is an alias for the CNAME of the server, otherwise it is the Fully Qualified Domain Name (FQDN) which shall resolve to ``address``
 :id:                An integral, unique identifier for this static DNS entry
 :ttl:               The Time To Live (TTL) of this static DNS entry in seconds

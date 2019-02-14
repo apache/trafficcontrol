@@ -13,73 +13,54 @@
 .. limitations under the License.
 ..
 
-.. _tc-tr:
+.. _tr-overview:
 
 **************
 Traffic Router
 **************
-Traffic Router's function is to send clients to the most optimal cache. 'Optimal' in this case is based on a number of factors:
+Traffic Router's function is to send clients to the most optimal :term:`cache server`. 'Optimal' in this case is based on a number of factors:
 
-* Distance between the cache and the client (not necessarily measured in meters, but quite often in layer 3 network hops). Less network distance between the client and cache yields better performance, and lower network load. Traffic Router helps clients connect to the best performing cache for their location at the lowest network cost.
+* Distance between the :term:`cache server` and the client (not necessarily measured in physical distance, but quite often in layer 3 network hops). Less network distance between the client and :term:`cache server` yields better performance and lower network load. Traffic Router helps clients connect to the best-performing :term:`cache server` for their location at the lowest network cost.
 
-* Availability of caches and health / load on the caches. A common issue in Internet and television distribution scenarios is having many clients attempting to retrieve the same content at the same time. Traffic Router helps clients route around overloaded or down caches.
+* Availability of :term:`cache server`\ s and the system processing/network load on the :term:`cache server`\ s. A common issue in Internet and television distribution scenarios is having many clients attempting to retrieve the same content at the same time. Traffic Router helps clients route around overloaded or purposely disabled :term:`cache server`\ s.
 
-* Availability of content on a particular cache. Reusing of content through cache HITs is the most important performance gain a CDN can offer. Traffic Router sends clients to the cache that is most likely to already have the desired content.
+* Availability of content on a particular :term:`cache server`. Reusing of content through "cache hits" is the most important performance gain a CDN can offer. Traffic Router sends clients to the :term:`cache server` that is most likely to already have the desired content.
 
-Traffic routing options are often configured at the Delivery Service level.
-
-.. _ds:
-
-Delivery Service
-================
-As discussed in the basic concepts section, the EDGE caches are configured as reverse proxies, and the Traffic Control CDN looks from the outside as a very large reverse proxy. Delivery Services are often referred to a reverse proxy remap rule. In most cases, a Delivery Service is a one to one mapping to a FQDN that is used as a hostname to deliver the content. Many options and settings regarding how to optimize the content delivery, which is configurable on a Delivery Service basis. Some examples of these Delivery Service settings are:
-
-* Cache in RAM, cache on disk, or do not cache at all.
-* Use DNS or HTTP Content routing (see below).
-* Limits on transactions per second and bandwidth.
-* Protocol (HTTP or HTTPS).
-* Token based authentication settings.
-* Header rewrite rules.
-
-Since Traffic Control version 2.1 Delivery Services can optionally be linked to a :ref:`profile`, and have parameters associated with them. The first feature that uses Delivery Service parameters is the :ref:`multi-site-origin` configuration. Delivery Services are also for use in allowing multi-tenants to coexist in the Traffic Control CDN without interfering with each other, and to keep information about their content separated.
-
-.. _localization:
-
-Localization
-============
-Traffic Router uses a JSON input file called the *coverage zone map* to determine what *Cache Group* is closest to the client. If the client IP address is not in this coverage zone map, it falls back to geographic mapping, using a GeoIP2 database to find the client's location, and the geographic coordinates from Traffic Ops for the Cache Group. Traffic Router is inserted into the HTTP retrieval process by making it DNS authoritative for the domain of the CDN delivery service. In the example of the reverse proxy, the client was given the ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` URL. In a Traffic Control CDN, URLs start with a routing name, which is configurable per-Delivery Service, e.g. ``http://foo.mydeliveryservice.cdn.com/fun/example.html`` with the chosen routing name ``foo``.
+Traffic routing options are often configured at the :term:`Delivery Service` level.
 
 .. _dns-cr:
 
 DNS Content Routing
 ===================
-For a DNS Delivery Service the client might receive a URL such as ``http://foo.dsname.cdn.com/fun/example.html``. When the Local Domain Name Server (LDNS) server is resolving this ``foo.dsname.cdn.com`` hostname to an IP address, it ends at Traffic Router because it is the authoritative DNS server for ``cdn.com`` and the domains below it, and subsequently responds with a list of IP addresses from the eligible caches based on the location of the LDNS server. When responding, Traffic Router does not know the actual client IP address or the path that the client is going to request. The decision on what cache IP address (or list of cache IP addresses) to return is solely based on the location of the LDNS server and the health of the caches. The client then connects to port 80 on the cache, and sends the ``Host: foo.dsname.cdn.com`` header. The configuration of the cache includes the remap rule ``http://foo.dsname.cdn.com http://origin.dsname.com`` to map the routed name to an origin hostname.
+For a DNS :term:`Delivery Service` the client might receive a URL such as ``http://video.demo1.mycdn.ciab.test/``. When the :abbr:`LDNS (Local Domain Name Server)` is resolving this ``video.demo1.mycdn.ciab.test`` hostname to an IP address, it ends at Traffic Router because it is the authoritative DNS server for ``mycdn.ciab.test`` and the domains below it, and subsequently responds with a list of IP addresses from the eligible :term:`cache server`\ s based on the location of the :abbr:`LDNS (Local Domain Name Server)`. When responding, Traffic Router does not know the actual client IP address or the path that the client is going to request. The decision on what :term:`cache server` IP address (or list of :term:`cache server` IP addresses) to return is solely based on the location of the :abbr:`LDNS (Local Domain Name Server)` and the health of the :term:`cache server`\ s. The client then connects to port 80 (HTTP) or port 443 (HTTPS) on the :term:`cache server`, and sends the ``Host: video.demo1.mycdn.ciab.test`` header. The configuration of the :term:`cache server` includes the "remap rule" ``http://video.demo1.mycdn.ciab.test http://origin.infra.ciab.test`` to map the routed name to an :term:`origin` hostname.
 
 .. _http-cr:
 
 HTTP Content Routing
 ====================
-For an HTTP Delivery Service the client might receive a URL such as ``http://bar.dsname.cdn.com/fun/example.html``. The LDNS server resolves this ``bar.dsname.cdn.com`` to an IP address, but in this case Traffic Router returns its own IP address. The client opens a connection to port 80 on the Traffic Router's IP address, and sends:
+For an HTTP :term:`Delivery Service` the client might receive a URL such as ``http://video.demo1.mycdn.ciab.test/``. The :abbr:`LDNS (Local Domain Name Server)` resolves this ``video.demo1.mycdn.ciab.test`` to an IP address, but in this case Traffic Router returns its own IP address. The client opens a connection to port 80 (HTTP) or port 443 (HTTPS) on the Traffic Router's IP address, and sends its request.
 
 .. code-block:: http
+	:caption: Example Client Request to Traffic Router
 
-	GET /fun/example.html HTTP/1.1
-	Host: bar.dsname.cdn.com
+	GET / HTTP/1.1
+	Host: video.demo1.mycdn.ciab.test
+	Accept: */*
 
-Traffic Router uses an HTTP ``302 FOUND`` response to redirect the client to the best cache. For example:
+Traffic Router uses an HTTP ``302 Found`` response to redirect the client to the best :term:`cache server`.
 
 .. code-block:: http
+	:caption: Traffic Router Redirect to Edge-tier :term:`Cache Server`
 
-	HTTP/1.1 302 Moved Temporarily
-	Server: Apache-Coyote/1.1
-	Location: http://atsec-nyc-02.dsname.cdn.com/fun/example.html
+	HTTP/1.1 302 Found
+	Location: http://edge.demo1.mycdn.ciab.test/
 	Content-Length: 0
 	Date: Tue, 13 Jan 2015 20:01:41 GMT
 
-The information Traffic Router can consider when selecting a cache in this case is much better:
+The information Traffic Router can consider when selecting a :term:`cache server` in this case is much better:
 
-* The client's IP address (the other side of the socket).
+* The client's IP address.
 * The URL path the client is requesting, excluding query string.
-* All HTTP 1.1 headers.
+* All HTTP/1.1 headers.
 
-The client follows the redirect and performs a DNS request for the IP address for ``atsec-nyc-02.dsname.cdn.com``, and normal HTTP steps follow, except the sending of the Host: header when connected to the cache is ``Host: atsec-nyc-02.dsname.cdn``, and the configuration of the cache includes the remap rule (e.g.``http://atsec-nyc-02.dsname.cdn http://origin.dsname.com``). Traffic Router sends all requests for the same path in a delivery service to the same cache in a cache group using consistent hashing, in this case all caches in a cache group are not carrying the same content, and there is a much larger combined cache in the cache group. In many cases DNS content routing is the best possible option, especially in cases where the client is receiving small objects from the CDN like images and web pages. Traffic Router is redundant and horizontally scalable by adding more instances into the DNS hierarchy using NS records.
+The client follows the redirect and performs a DNS request for the IP address for ``edge.demo1.mycdn.ciab.test``, and normal HTTP steps follow, except the sending of the Host: header when connected to the cache is ``Host: edge.demo1.mycdn.ciab.test``, and the configuration of the :term:`cache server` includes the "remap rule" (e.g.``http://edge.demo1.mycdn.ciab.test http://origin.infra.ciab.test``). Traffic Router sends all requests for the same path in a :term:`Delivery Service` to the same :term:`cache server` in a :term:`Cache Group` using consistent hashing, in this case all :term:`cache server`\ s in a :term:`Cache Group` are not carrying the same content, and there is a much larger combined cache in the :term:`Cache Group`. In many cases DNS content routing is the best possible option, especially in cases where the client is receiving small objects from the CDN like images and web pages. Traffic Router is redundant and horizontally scalable by adding more instances into the DNS hierarchy using NS records.

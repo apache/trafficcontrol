@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Allows a user to copy URL signing keys from a specified Delivery Service to another Delivery Service.
+Allows a user to copy URL signing keys from a specified :term:`Delivery Service` to another :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------------+-----------------------------------------------------------------------+
-	|    Name         |              Description                                              |
-	+=================+=======================================================================+
-	| xml_id          | The 'xml_id' of the Delivery Service *to* which keys will be copied   |
-	+-----------------+-----------------------------------------------------------------------+
-	| copyFrom_xml_id | The 'xml_id' of the Delivery Service *from* which keys will be copied |
-	+-----------------+-----------------------------------------------------------------------+
+	+-----------------+-------------------------------------------------------------------------------+
+	|    Name         |              Description                                                      |
+	+=================+===============================================================================+
+	| xml_id          | The 'xml_id' of the :term:`Delivery Service` *to* which keys will be copied   |
+	+-----------------+-------------------------------------------------------------------------------+
+	| copyFrom_xml_id | The 'xml_id' of the :term:`Delivery Service` *from* which keys will be copied |
+	+-----------------+-------------------------------------------------------------------------------+
 
 Response Structure
 ------------------

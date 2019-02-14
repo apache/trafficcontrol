@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Returns SSL certificates for all Delivery Services that are a part of the CDN.
+Returns SSL certificates for all :term:`Delivery Service`\ s that are a part of the CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -39,12 +39,12 @@ Request Structure
 
 Response Structure
 ------------------
-:certificate: An object representing The SSL keys used for the Delivery Service identified by ``deliveryservice``
+:certificate: An object representing The SSL keys used for the :term:`Delivery Service` identified by ``deliveryservice``
 
 	:key: Base 64-encoded private key for SSL certificate
 	:crt: Base 64-encoded SSL certificate
 
-:deliveryservice: The ``xml_id`` of the Delivery Service using the SSL key within ``certificate``
+:deliveryservice: The ``xml_id`` of the :term:`Delivery Service` using the SSL key within ``certificate``
 
 .. code-block:: json
 	:caption: Response Example

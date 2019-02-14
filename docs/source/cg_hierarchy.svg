@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="121.01843mm" width="308.45898mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 1092.9649 428.80547">
+	<defs>
+		<marker id="b" refY="0" refX="0" overflow="visible" orient="auto">
+			<path d="m0 0 5-5-17.5 5 17.5 5-5-5z" fill-rule="evenodd" transform="matrix(-.8 0 0 -.8 -10 0)" stroke="#000" stroke-width="1pt"/>
+		</marker>
+		<marker id="f" refY="0" refX="0" orient="auto" overflow="visible">
+			<path d="m0 0 5-5-17.5 5 17.5 5-5-5z" fill-rule="evenodd" transform="matrix(-.8 0 0 -.8 -10 0)" stroke="#000" stroke-width="1pt"/>
+		</marker>
+		<marker id="d" refY="0" refX="0" orient="auto" overflow="visible">
+			<path d="m0 0 5-5-17.5 5 17.5 5-5-5z" fill-rule="evenodd" transform="matrix(-.8 0 0 -.8 -10 0)" stroke="#000" stroke-width="1pt"/>
+		</marker>
+		<marker id="c" refY="0" refX="0" orient="auto" overflow="visible">
+			<path d="m0 0 5-5-17.5 5 17.5 5-5-5z" fill-rule="evenodd" transform="matrix(-.8 0 0 -.8 -10 0)" stroke="#000" stroke-width="1pt"/>
+		</marker>
+		<marker id="e" refY="0" refX="0" orient="auto" overflow="visible">
+			<path d="m0 0 5-5-17.5 5 17.5 5-5-5z" fill-rule="evenodd" transform="matrix(-.8 0 0 -.8 -10 0)" stroke="#000" stroke-width="1pt"/>
+		</marker>
+		<marker id="a" refY="0" refX="0" overflow="visible" orient="auto">
+			<path d="m0 0 5-5-17.5 5 17.5 5-5-5z" fill-rule="evenodd" transform="matrix(-.8 0 0 -.8 -10 0)" stroke="#000" stroke-width="1pt"/>
+		</marker>
+	</defs>
+	<g transform="translate(134.84529,-50.806033)">
+		<g transform="translate(-1.1785049,2.8553925)">
+			<rect stroke-linejoin="round" height="83.856514" width="218.17503" stroke="#000" y="240.19261" x="19.201855" stroke-width="1.00790882" fill="#0ff"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="266.46353" x="38.72028" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="266.46353" x="38.72028">Mid-tier Cache Group &quot;West&quot;</tspan></text>
+		</g>
+		<g transform="translate(123.89427,4.3945192e-8)">
+			<rect stroke-linejoin="round" height="83.856514" width="218.17503" stroke="#000" y="243.048" x="463.18164" stroke-width="1.00790882" fill="#0ff"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="266.46353" x="484.56775" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="266.46353" x="484.56775">Mid-tier Cache Group &quot;East&quot;</tspan></text>
+		</g>
+		<g>
+			<rect stroke-linejoin="round" height="83.811264" width="238.33284" stroke="#000" y="395.27365" x="-134.31871" stroke-width="1.05315781" fill="#0f0"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="417.98648" x="-126.15693" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="417.98648" x="-126.15693">Edge-tier Cache Group &quot;Northwest&quot;</tspan></text>
+		</g>
+		<g transform="translate(281.82241,-108.08633)">
+			<rect stroke-linejoin="round" height="83.811264" width="238.33284" stroke="#000" y="503.35999" x="-131.61481" stroke-width="1.05315781" fill="#0f0"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="526.07281" x="-124.13662" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="526.07281" x="-124.13662">Edge-tier Cache Group &quot;Southwest&quot;</tspan></text>
+		</g>
+		<g transform="translate(361.63461,-118.1879)">
+			<rect stroke-linejoin="round" height="83.811264" width="238.33284" stroke="#000" y="513.46155" x="357.62558" stroke-width="1.05315781" fill="#0f0"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="536.17438" x="367.06909" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="536.17438" x="367.06909">Edge-tier Cache Group &quot;Northeast&quot;</tspan></text>
+		</g>
+		<g transform="translate(750.88007,-49.497498)">
+			<rect stroke-linejoin="round" height="83.811264" width="238.33284" stroke="#000" y="444.77115" x="-316.14618" stroke-width="1.05315781" fill="#0f0"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="467.48398" x="-307.38626" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="467.48398" x="-307.38626">Edge-tier Cache Group &quot;Southeast&quot;</tspan></text>
+		</g>
+		<g transform="translate(82.810028)">
+			<rect stroke-linejoin="round" height="61.619305" width="179.80716" stroke="#000" y="51.301033" x="238.92357" stroke-width=".99000001" fill="#f55"/>
+			<text style="word-spacing:0px;letter-spacing:0px" line-height="125%" font-size="12.5px" y="72.514236" x="310.11682" font-family="sans-serif" xml:space="preserve" fill="#000000"><tspan y="72.514236" x="310.11682">Origin</tspan></text>
+		</g>
+		<g stroke="#000" stroke-width="1px" fill="none">
+			<path marker-end="url(#f)" d="m-19.285714 395.21935 116.817643-67.4447"/>
+			<path marker-end="url(#d)" d="m273.21478 395.60877-116.81764-67.4447"/>
+			<path marker-end="url(#e)" d="m550.03547 394.7431 116.81764-67.4447"/>
+			<path marker-end="url(#c)" d="m842.53596 395.13252-116.81764-67.4447"/>
+			<path marker-end="url(#b)" d="m125.35714 242.71935 223.54772-129.06534"/>
+			<path marker-end="url(#a)" d="m697.57981 242.71934-223.54772-129.06533"/>
+		</g>
+	</g>
+</svg>

@@ -44,7 +44,7 @@ traffic_ops/ - The root of the Traffic Ops project
 
 	- app/ - Holds most of the Perl code base
 
-		- bin/ - Directory for scripts, cronjobs, etc
+		- bin/ - Directory for scripts, :manpage:`cron(8)` jobs, etc
 		- conf/
 
 			- development/ - Development (local) specific configuration files.
@@ -58,9 +58,9 @@ traffic_ops/ - The root of the Traffic Ops project
 
 		- lib/
 
-			- API/ - Mojo Controllers for the /API area of the application.
-			- Common/ - Common Code between both the API and UI areas.
-			- Extensions/ - Contains Data Source Extensions
+			- API/ - Mojolicious Controllers for the :ref:`to-api`
+			- Common/ - Common Code between both the :ref:`to-api` and the deprecated Traffic Ops UI
+			- Extensions/ - Contains :ref:`to-datasource-ext`
 			- Fixtures/ - Test Case fixture data for the 'to_test' database.
 
 				- Integration/ - Integration Tests.
@@ -71,7 +71,7 @@ traffic_ops/ - The root of the Traffic Ops project
 				- /Result - DBIx ORM related files.
 
 			- /Test - Common Test.
-			- UI/ - Mojolicious Controllers for the Traffic Ops UI itself.
+			- UI/ - Mojolicious Controllers for the deprecated Traffic Ops UI.
 			- Utils/
 
 				- Helper/ - Common utilities for the Traffic Ops application.
@@ -83,29 +83,29 @@ traffic_ops/ - The root of the Traffic Ops project
 		 - images/ - Images
 		 - js/ - Javascripts
 
-		- script/ - Mojo Bootstrap scripts.
+		- script/ - Mojolicious Bootstrap scripts.
 		- t/ - Unit Tests for the UI.
 
 		 - api/ - Unit Tests for the API.
 
 		- t_integration/ - High level tests for Integration level testing.
-		- templates/ - Mojo Embedded Perl (``*.ep``) files for the UI.
+		- templates/ - Mojolicious Embedded Perl (``*.ep``) files for the UI.
 
 	- bin/ - holds executables related to Traffic Ops, but not actually a part of the Traffic Ops server's operation
 	- build/ - contains files that are responsible for packaging Traffic Ops into an RPM file
 	- client/ - API endpoints handled by Go
 	- client_tests/ - lol
-	- doc/ - contains only a coverage-zone.json example (?) file
+	- doc/ - contains only a :file:`coverage-zone.json` example (?) file
 	- etc/ - configuration files needed for the Traffic Ops server
 
-		- cron.d/ - holds specifications for Cron jobs that need to be run periodically on Traffic Ops servers
-		- init.d/ - contains the old initscripts-based job control for traffic ops
-		- logrotate.d/ - specifications for the Linux ``logrotate`` utility for Traffic Ops log files
+		- cron.d/ - holds specifications for :manpage:`cron(8)` jobs that need to be run periodically on Traffic Ops servers
+		- init.d/ - contains the old initscripts-based job control for Traffic Ops
+		- logrotate.d/ - specifications for the Linux :manpage:`logrotate(8)` utility for Traffic Ops log files
 		- profile.d/traffic_ops.sh - sets up common environment variables for working with Traffic Ops
 
 	- experimental/ - includes all kinds of prototype and/or abandoned tools and extensions
 
-		- ats_config/ - an attempt to provide an easier method of obtaining and/or writing configuration files for Apache Trafficserver cache servers
+		- ats_config/ - an attempt to provide an easier method of obtaining and/or writing configuration files for :abbr:`ATS (Apache Traffic Server)` :term:`cache server`\ s
 		- auth/ - a simple authentication server that mimics the authentication process of Traffic Ops, and provides a detailed view of a logged-in user's permissions and capabilities
 		- goto/ - an Angular (1.x) web page backed by a Go server that provides a ReST API interface for mySQL servers
 		- postgrest/ - originally probably going to be a web server that provides a ReST API for postgreSQL servers, this only contains a simple - albeit unfinished - Docker container specification for running postgreSQL client tools and/or server(s)
@@ -121,7 +121,7 @@ traffic_ops/ - The root of the Traffic Ops project
 		- etc/ - this directory left empty; it's used to contain post-installation extensions and resources
 		- lib/ - contains libraries used by the various installation binaries
 
-	- testing/ - holds utilities for testing the Traffic Ops API, as well as comparing two separate API instances (for e.g. comparing a new build to a known-to-work build)
+	- testing/ - holds utilities for testing the :ref:`to-api`, as well as comparing two separate API instances (for e.g. comparing a new build to a known-to-work build)
 	- traffic_ops_golang/ - has all of the functionality that has been re-written from Perl into Go
 	- vendor/ - contains "vendored" packages from third party sources
 
@@ -129,8 +129,8 @@ Perl Formatting Conventions
 ===========================
 `Perltidy <http://perltidy.sourceforge.net/>`_ is for use in code formatting.
 
-.. code-block:: perl
-	:caption: Example Perltidy Configuration (usually in ``~/.perltidyrc``)
+.. code-block:: text
+	:caption: Example Perltidy Configuration (usually in :file:`~/.perltidyrc`)
 
 	-l=156
 	-et=4
@@ -152,64 +152,80 @@ Perl Formatting Conventions
 	-wrs=\"= + - / * .\"
 	-wbb="% + - * / x != == >= <= =~ < > | & **= += *= &= <<= &&= -= /= |= + >>= ||= .= %= ^= x="
 
+.. _database-management:
 
-Database Management
-===================
-The ``app/db/admin`` binary is for use in managing the Traffic Ops database tables. This essentially serves as a front-end for `Goose <https://bitbucket.org/liamstask/goose/>`_ Below is an example of its usage.
+.. program:: admin
+
+app/db/admin
+============
+The :program:`app/db/admin` binary is for use in managing the Traffic Ops database tables. This essentially serves as a front-end for `Goose <https://bitbucket.org/liamstask/goose/>`_.
 
 .. note:: For proper resolution of configuration and SOL statement files, it's recommended that this binary be run from the ``app`` directory
 
+Usage
+-----
 ``db/admin [options] command``
 
-Options:
+Options and Arguments
+---------------------
+.. option:: --env ENVIRONMENT
 
---env     An environment specification. One of ``development``, ``integration``, ``production``, or ``test``. Default is ``development``.
+	An optional environment specification that causes the database configuration to be read out of the corresponding section of the :file:`app/db/dbconf.yml` configuration file. One of:
 
-.. note:: The ``$MOJO_MODE`` environment variable is set to the value of the environment
+	- development
+	- integration
+	- production
+	- test
 
-Commands:
+	(Default: ``development``)
 
-createdb
-	Creates the database for the current environment
-create_user
-	Creates the user defined for the current environment
-dbversion
-	Displays the database version that results from the current sequence of migrations
-down
-	Rolls back a single migration from the current version
-drop
-	Drops the database for the current environment
-drop_user
-	Drops the user defined for the current environment
-load_schema
-	Sets up the database for the current environment according to the SQL statements in ``app/db/create_tables.sql``
-migrate
-	Runs a migration on the database for the current environment
-patch
-	Patches the database for the current environment using the SQL statements from the ``app/db/patches.sql``
-redo
-	Rolls back the most recently applied migration, then run it again
-reset
-	Creates the user defined for the current environment, drops the database for the current environment, creates a new one, loads the schema into it, and runs a single migration on it
-reverse_schema
-	Reverse engineers the ``app/lib/Schema/Result/*`` files from the environment database
-seed
-	Executes the SQL statements from the ``app/db/seeds.sql`` file for loading static data
-show_users
-	Displays a list of all users registered with the PostgreSQL server
-status
-	Prints the status of all migrations
-upgrade
-	Performs a migration on the database for the current environment, then seeds it and patches it using the SQL statements from the ``app/db/patches.sql`` file
+.. envvar:: MOJO_MODE
+
+	:program:`admin` sets this to the value of the environment as specified by :option:`--env` (Default: ``development``)
+
+.. option:: command
+
+	The :option;`command` specifies the operation to be performed on the database. It must be one of:
+
+	createdb
+		Creates the database for the current environment
+	create_user
+		Creates the user defined for the current environment
+	dbversion
+		Displays the database version that results from the current sequence of migrations
+	down
+		Rolls back a single migration from the current version
+	drop
+		Drops the database for the current environment
+	drop_user
+		Drops the user defined for the current environment
+	load_schema
+		Sets up the database for the current environment according to the SQL statements in ``app/db/create_tables.sql``
+	migrate
+		Runs a migration on the database for the current environment
+	patch
+		Patches the database for the current environment using the SQL statements from the ``app/db/patches.sql``
+	redo
+		Rolls back the most recently applied migration, then run it again
+	reset
+		Creates the user defined for the current environment, drops the database for the current environment, creates a new one, loads the schema into it, and runs a single migration on it
+	reverse_schema
+		Reverse engineers the ``app/lib/Schema/Result/*`` files from the environment database
+	seed
+		Executes the SQL statements from the ``app/db/seeds.sql`` file for loading static data
+	show_users
+		Displays a list of all users registered with the PostgreSQL server
+	status
+		Prints the status of all migrations
+	upgrade
+		Performs a migration on the database for the current environment, then seeds it and patches it using the SQL statements from the ``app/db/patches.sql`` file
 
 .. code-block:: bash
 	:caption: Example Usage
 
 	db/admin --env=test reset
 
-The environments are defined in the ``app/db/dbconf.yml`` file, and the name of the database generated will be the name of the environment for which it was created.
-
-
+The environments are defined in the :file:`app/db/dbconf.yml` file, and the name of the database generated will be the name of the environment for which it was created.
 
 Installing The Developer Environment
 ====================================
@@ -229,23 +245,16 @@ To install the Traffic Ops Developer environment:
 	.. seealso:: `PostgreSQL instructions on setting up a database <https://wiki.postgresql.org/wiki/First_steps>`_.
 
 
-#. Use the ``reset`` and ``upgrade`` commands of the ``admin`` binary (see `Database Management`_ for usage) to set up the traffic_ops database(s).
+#. Use the ``reset`` and ``upgrade`` :option:`command`\ s of :program:`admin` (see :ref:`database-management` for usage) to set up the ``traffic_ops`` database(s).
+#. (Optional) To load the 'KableTown' example/testing data set into the tables, use the :file:`app/bin/db/setup_kabletown.pl` script.
 
-	.. code-block:: shell
-		:caption: Example Usage
-
-		db/admin --env=development reset && db/admin --env=development upgrade
-
-#. (Optional) To load the 'KableTown' example/testing data set into the tables, use the ``setup_kabletown.pl`` script located in ``app/bin/db/``.
-
-	.. note:: To ensure proper paths to Perl libraries and resource files, the ``setup_kabletown.pl`` should be run from within the ``app/`` directory.
+	.. note:: To ensure proper paths to Perl libraries and resource files, ``setup_kabletown.pl`` should be run from within the ``app/`` directory.
 
 #. Run the ``postinstall`` script, located in ``install/bin/``
 
 #. To start Traffic Ops, use the ``start.pl`` script located in the ``app/bin`` directory. If the server starts successfully, the STDOUT of the process should contain the line ``[<date and time>] [INFO] Listening at "http://*:3000"``, followed by the line ``Server available at http://127.0.0.1:3000`` (using default settings for port number and listening address, and where ``<date and time>`` is an actual date and time in ISO format).
 
 	.. note:: To ensure proper paths to Perl libraries and resource files, the ``start.pl`` script should be run from within the ``app/`` directory.
-
 
 #. Using a web browser, navigate to the given address: ``http://127.0.0.1:3000``
 #. A prompt for login credentials should appear. Assuming default settings are used, the initial login credentials will be
@@ -264,14 +273,14 @@ Use `prove <http://perldoc.perl.org/prove.html>`_ (should be installed with Perl
 - To run the Unit Tests: ``prove -qrp  app/t/``
 - To run the Integration Tests: ``prove -qrp app/t_integration/``
 
-.. note:: As progress continues on moving Traffic Ops to run entirely in Go, the number of passing tests has increased. This means that the tests are not a reliable way to test Traffic Ops, as they are expected to fail more and more as functionality is stripped from the Perl codebase.
+.. note:: As progress continues on moving Traffic Ops to run entirely in Go, the number of passing tests has steadily decreased. This means that the tests are not a reliable way to test Traffic Ops, as they are expected to fail more and more as functionality is stripped from the Perl codebase.
 
 The KableTown CDN example
 -------------------------
 The integration tests will load an example CDN with most of the features of Traffic Control being used. This is mostly for testing purposes, but can also be used as an example of how to configure certain features. To load the KableTown CDN example and access it:
 
 #. Be sure the integration tests have been run
-#. Start the Traffic Ops server. The ``MOJO_MODE`` environment variable should be set to the name of the environment that has been loaded.
+#. Start the Traffic Ops server. The :envvar:`MOJO_MODE` environment variable should be set to the name of the environment that has been loaded.
 
 	.. code-block:: bash
 		:caption: Example Startup
@@ -289,12 +298,12 @@ The integration tests will load an example CDN with most of the features of Traf
 
 Extensions
 ==========
-Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a custom manner. There are three types of extensions:
+Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a customizable manner. There are two types of extensions:
 
-Check Extensions
-	These allow you to add custom checks to the "Monitor"->"Cache Checks" view.
+:ref:`to-check-ext`
+	These allow you to add custom checks to the :menuselection:`Monitor --> Cache Checks` view.
 
-Data Source Extensions
+:ref:`to-datasource-ext`
 	These allow you to add statistic sources for the graph views and APIs.
 
 Extensions are managed using the ``$TO_HOME/bin/extensions`` command line script
@@ -304,14 +313,14 @@ Extensions are managed using the ``$TO_HOME/bin/extensions`` command line script
 
 Extensions at Runtime
 ---------------------
-The search path for Data Source Extensions depends on the configuration of the ``PERL5LIB`` environment variable, which is pre-configured in the Traffic Ops start scripts. All Check Extensions must be located in ``$TO_HOME/bin/checks``
+The search path for :ref:`to-datasource-ext` depends on the configuration of the ``PERL5LIB`` environment variable, which is pre-configured in the Traffic Ops start scripts. All :ref:`to-check-ext` must be located in ``$TO_HOME/bin/checks``
 
 	.. code-block:: bash
 		:caption: Example ``PERL5LIB`` Configuration
 
 		export PERL5LIB=/opt/traffic_ops_extensions/private/lib/Extensions:/opt/traffic_ops/app/lib/Extensions/TrafficStats
 
-To prevent Data Source Extension namespace collisions within Traffic Ops all Data Source Extensions should follow the package naming convention '``Extensions::<ExtensionName>``'
+To prevent :ref:`to-datasource-ext` namespace collisions within Traffic Ops all :ref:`to-datasource-ext` should follow the package naming convention '``Extensions::<ExtensionName>``'
 
 ``TrafficOpsRoutes.pm``
 -----------------------
@@ -320,4 +329,4 @@ Traffic Ops accesses each extension through the addition of a URL route as a cus
 
 Development Configuration
 --------------------------
-To incorporate any custom Data Source Extensions during development set your ``PERL5LIB`` environment variable with any number of colon-separated directories with the understanding that the ``PERL5LIB`` search order is from left to right through this list. Once Perl locates your custom route or Perl package/class it 'pins' on that class or Mojolicious Route and doesn't look any further, which allows for the developer to override Traffic Ops functionality.
+To incorporate any custom :ref:`to-datasource-ext` during development set your ``PERL5LIB`` environment variable with any number of colon-separated directories with the understanding that the ``PERL5LIB`` search order is from left to right through this list. Once Perl locates your custom route or Perl package/class it 'pins' on that class or Mojolicious Route and doesn't look any further, which allows for the developer to override Traffic Ops functionality.

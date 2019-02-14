@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Retrieves the health of all :term:`Cache Group`\ s assigned to a particular Delivery Service
+Retrieves the health of all :term:`Cache Group`\ s assigned to a particular :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_
@@ -42,14 +42,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroups: An array of objects that represent the health of each :term:`Cache Group` assigned to this Delivery Service
+:cachegroups: An array of objects that represent the health of each :term:`Cache Group` assigned to this :term:`Delivery Service`
 
 	:name:    The name of the :term:`Cache Group` represented by this object
-	:offline: The number of offline cache servers within this :term:`Cache Group`
-	:online:  The number of online cache servers within this :term:`Cache Group`
+	:offline: The number of offline :term:`cache server`\ s within this :term:`Cache Group`
+	:online:  The number of online :term:`cache server`\ s within this :term:`Cache Group`
 
-:totalOffline: Total number of offline cache servers assigned to this Delivery Service
-:totalOnline:  Total number of online cache servers assigned to this Delivery Service
+:totalOffline: Total number of offline :term:`cache server`\ s assigned to this :term:`Delivery Service`
+:totalOnline:  Total number of online :term:`cache server`\ s assigned to this :term:`Delivery Service`
 
 .. code-block:: http
 	:caption: Response Example
@@ -80,4 +80,4 @@ Response Structure
 		]
 	}}
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to the see :term:`Cache Group`\ s associated with *any* Delivery Services, whereas any other user will only be able to see the :term:`Cache Group`\ s associated with Delivery Services their Tenant is allowed to see.
+.. [1] Users with the roles "admin" and/or "operations" will be able to the see :term:`Cache Group`\ s associated with *any* :term:`Delivery Service`\ s, whereas any other user will only be able to see the :term:`Cache Group`\ s associated with :term:`Delivery Service`\ s their Tenant is allowed to see.

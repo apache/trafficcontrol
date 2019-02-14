@@ -33,7 +33,7 @@ No parameters available.
 
 Response Structure
 ------------------
-:deliveryService: The ``xml_id`` that uniquely identifies the Delivery Service that uses the federation mappings in ``mappings``
+:deliveryService: The ``xml_id`` that uniquely identifies the :term:`Delivery Service` that uses the federation mappings in ``mappings``
 :mappings:        An array of objects that represent the mapping of a federation's Canonical Name (CNAME) to one or more resolvers
 
 	:cname:    The actual CNAME used by the federation
@@ -77,9 +77,9 @@ Response Structure
 
 ``POST``
 ========
-Allows a user to create federation resolvers for Delivery Services, providing the Delivery Service is within a CDN that has some associated federation.
+Allows a user to create federation resolvers for :term:`Delivery Service`\ s, providing the :term:`Delivery Service` is within a CDN that has some associated federation.
 
-.. warning:: Confusingly, this endpoint does **not** create a new federation; to do that, the :ref:`to-api-cdns-name-federations` endpoint must be used. Furthermore, the federation must properly be assigned to a Delivery Service using the :ref:`to-api-federations-id-deliveryservices` and assigned to the user creating resolvers using :ref:`to-api-federations-id-users`.
+.. warning:: Confusingly, this endpoint does **not** create a new federation; to do that, the :ref:`to-api-cdns-name-federations` endpoint must be used. Furthermore, the federation must properly be assigned to a :term:`Delivery Service` using the :ref:`to-api-federations-id-deliveryservices` and assigned to the user creating resolvers using :ref:`to-api-federations-id-users`.
 
 .. seealso:: The :ref:`to-api-federations-id-federation_resolvers` endpoint duplicates this functionality.
 
@@ -89,13 +89,13 @@ Allows a user to create federation resolvers for Delivery Services, providing th
 
 Request Structure
 -----------------
-:federations: The top-level key that must exist - an array of objects that each describe a set of resolvers for a Delivery Service's federation
+:federations: The top-level key that must exist - an array of objects that each describe a set of resolvers for a :term:`Delivery Service`'s federation
 
-	:deliveryService: The 'xml_id' of the Delivery Service which will use the federation resolvers specified in ``mappings``
+	:deliveryService: The 'xml_id' of the :term:`Delivery Service` which will use the federation resolvers specified in ``mappings``
 	:mappings:        An object containing two arrays of IP addresses to use as federation resolvers
 
-		:resolve4: An array of IPv4 addresses that can resolve the Delivery Service's federation
-		:resolve6: An array of IPv6 addresses that can resolve the Delivery Service's federation
+		:resolve4: An array of IPv4 addresses that can resolve the :term:`Delivery Service`'s federation
+		:resolve6: An array of IPv6 addresses that can resolve the :term:`Delivery Service`'s federation
 
 .. code-block:: http
 	:caption: Request Example
@@ -174,7 +174,7 @@ Response Structure
 
 ``PUT``
 =======
-Replaces **all** federations associated with a user's Delivery Service(s) with those defined inside the request payload.
+Replaces **all** federations associated with a user's :term:`Delivery Service`\ (s) with those defined inside the request payload.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
@@ -182,13 +182,13 @@ Replaces **all** federations associated with a user's Delivery Service(s) with t
 
 Request Structure
 -----------------
-:federations: The top-level key that must exist - an array of objects that each describe a set of resolvers for a Delivery Service's federation
+:federations: The top-level key that must exist - an array of objects that each describe a set of resolvers for a :term:`Delivery Service`'s federation
 
-	:deliveryService: The 'xml_id' of the Delivery Service which will use the federation resolvers specified in ``mappings``
+	:deliveryService: The 'xml_id' of the :term:`Delivery Service` which will use the federation resolvers specified in ``mappings``
 	:mappings:        An object containing two arrays of IP addresses to use as federation resolvers
 
-		:resolve4: An array of IPv4 addresses that can resolve the Delivery Service's federation
-		:resolve6: An array of IPv6 addresses that can resolve the Delivery Service's federation
+		:resolve4: An array of IPv4 addresses that can resolve the :term:`Delivery Service`'s federation
+		:resolve6: An array of IPv6 addresses that can resolve the :term:`Delivery Service`'s federation
 
 .. code-block:: http
 	:caption: Request Example

@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves routing regular expressions for a specific Delivery Service.
+Retrieves routing regular expressions for a specific :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------------------+
-	| Name |                Description                                              |
-	+======+=========================================================================+
-	|  ID  | The integral, unique identifier of the Delivery Service being inspected |
-	+------+-------------------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------------+
+	| Name |                Description                                                      |
+	+======+=================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service` being inspected |
+	+------+---------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -52,7 +52,7 @@ Response Structure
 :pattern:   The actual regular expression - ``\``\ s are escaped
 :setNumber: The order in which the regular expression is evaluated against requests
 :type:      The integral, unique identifier of the type of this regular expression
-:typeName:  The type of regular expression - determines that against which it will be evaluated
+:typeName:  The :term:`Type` of regular expression - determines that against which it will be evaluated
 
 .. code-block:: http
 	:caption: Response Example
@@ -79,11 +79,11 @@ Response Structure
 		}
 	]}
 
-.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by Delivery Services their tenant has permissions to see.
+.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to see.
 
 ``POST``
 ========
-Creates a routing regular expression for a Delivery Service.
+Creates a routing regular expression for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [2]_
@@ -93,11 +93,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------------------+
-	| Name |                Description                                              |
-	+======+=========================================================================+
-	|  ID  | The integral, unique identifier of the Delivery Service being inspected |
-	+------+-------------------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------------+
+	| Name |                Description                                                      |
+	+======+=================================================================================+
+	|  ID  | The integral, unique identifier of the :term:`Delivery Service` being inspected |
+	+------+---------------------------------------------------------------------------------+
 
 :pattern: The actual regular expression
 
@@ -161,4 +161,4 @@ Response Structure
 	}}
 
 
-.. [2] If tenancy is used, then users (regardless of role) will only be able to edit the routing regular expressions used by Delivery Services their tenant has permissions to edit. Assuming tenancy is satisfied, a routing regular expression can only be created by a user with the "admin" or "operations" role.
+.. [2] If tenancy is used, then users (regardless of role) will only be able to edit the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to edit. Assuming tenancy is satisfied, a routing regular expression can only be created by a user with the "admin" or "operations" role.

@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieve information about the assignment of servers to Delivery Services
+Retrieve information about the assignment of servers to :term:`Delivery Service`\ s
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
@@ -59,11 +59,11 @@ Unlike most API endpoints, this will return a JSON response body containing both
 
 :limit:    The maximum size of the ``response`` array, also indicative of the number of results per page using the pagination requested by the query parameters (if any) - this should be the same as the ``limit`` query parameter (if given)
 :orderby:  A string that names the field by which the elements of the ``response`` array are ordered - should be the same as the ``orderby`` request query parameter (if given)
-:response: An array of objects, each of which represents a server's Delivery Service assignment
+:response: An array of objects, each of which represents a server's :term:`Delivery Service` assignment
 
-	:deliveryService: The integral, unique identifier of the Delivery Service to which the server identified by ``server`` is assigned
-	:lastUpdated:     The date and time at which the server's assignment to a Delivery Service was last updated
-	:server:          The integral, unique identifier of a server which is assigned to the Delivery Service identified by ``deliveryService``
+	:deliveryService: The integral, unique identifier of the :term:`Delivery Service` to which the server identified by ``server`` is assigned
+	:lastUpdated:     The date and time at which the server's assignment to a :term:`Delivery Service` was last updated
+	:server:          The integral, unique identifier of a server which is assigned to the :term:`Delivery Service` identified by ``deliveryService``
 
 :size: The page number - if pagination was requested in the query parameters, else ``0`` to indicate no pagination - of the results represented by the ``response`` array. This is named "size" for legacy reasons
 
@@ -99,7 +99,7 @@ Unlike most API endpoints, this will return a JSON response body containing both
 
 ``POST``
 ========
-Assign a set of one or more servers to a Delivery Service
+Assign a set of one or more servers to a :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [2]_
@@ -107,9 +107,9 @@ Assign a set of one or more servers to a Delivery Service
 
 Request Structure
 -----------------
-:deliveryService: The integral, unique identifier of the Delivery Service to which the servers identified in the ``servers`` array will be assigned
+:deliveryService: The integral, unique identifier of the :term:`Delivery Service` to which the servers identified in the ``servers`` array will be assigned
 :replace:         If ``true``, any existing assignments for a server identified in the ``servers`` array will be overwritten by this request
-:servers:         An array of integral, unique identifiers for servers which are to be assigned to the Delivery Service identified by ``deliveryService``
+:servers:         An array of integral, unique identifiers for servers which are to be assigned to the :term:`Delivery Service` identified by ``deliveryService``
 
 .. code-block:: http
 	:caption: Request Example
@@ -126,9 +126,9 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryService: The integral, unique identifier of the Delivery Service to which the servers identified by the elements of the ``servers`` array have been assigned
+:deliveryService: The integral, unique identifier of the :term:`Delivery Service` to which the servers identified by the elements of the ``servers`` array have been assigned
 :replace:         If ``true``, any existing assignments for a server identified in the ``servers`` array have been overwritten by this request
-:servers:         An array of integral, unique identifiers for servers which have been assigned to the Delivery Service identified by ``deliveryService``
+:servers:         An array of integral, unique identifiers for servers which have been assigned to the :term:`Delivery Service` identified by ``deliveryService``
 
 .. code-block:: http
 	:caption: Response Example
@@ -158,4 +158,4 @@ Response Structure
 	}}
 
 
-.. [2] Users with the "admin" or "operations" roles will be able to modify ALL server-to-Delivery-Service assignments, whereas all other users can only assign servers to the Delivery Services their Tenant has permissions to edit.
+.. [2] Users with the "admin" or "operations" roles will be able to modify ALL server-to-Delivery-Service assignments, whereas all other users can only assign servers to the :term:`Delivery Service`\ s their Tenant has permissions to edit.

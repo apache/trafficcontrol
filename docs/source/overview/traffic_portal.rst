@@ -13,19 +13,18 @@
 .. limitations under the License.
 ..
 
-.. index::
-	Traffic Portal - Overview
+.. _tp-overview:
 
+**************
 Traffic Portal
-==============
+**************
+Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the :ref:`to-api`. It is the official replacement for the legacy :ref:`to-overview` UI.
 
-Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the Traffic Ops API. It is the official replacement for the legacy Traffic Ops UI.
+Features
+========
+- CDN Monitoring
+- CDN Administration
+- :term:`Delivery Service` Configuration
+- :term:`Cache Server` Maintenance
 
-Features include:
-
-	- CDN Monitoring
-	- CDN Administration
-	- Delivery Service Configuration
-	- Cache Maintenance
-
-See :ref:`usingtrafficportal`
+.. seealso:: See :ref:`usingtrafficportal` for an overview of the Traffic Portal UI.

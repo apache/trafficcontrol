@@ -27,7 +27,7 @@
 
 ``GET``
 =======
-Retrieves time-aggregated statistics on a specific Delivery Service.
+Retrieves time-aggregated statistics on a specific :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -40,20 +40,20 @@ Request Structure
 	+----------------------+----------+--------------------------------------------------------------------------------------------------------------------+
 	|    Name              | Required |              Description                                                                                           |
 	+======================+==========+====================================================================================================================+
-	| deliveryServiceName  | yes      | The name of the Delivery Service for which statistics will be aggregated                                           |
+	| deliveryServiceName  | yes      | The name of the :term:`Delivery Service` for which statistics will be aggregated                                   |
 	+----------------------+----------+--------------------------------------------------------------------------------------------------------------------+
 	| metricType           | yes      | The metric type being reported - one of:                                                                           |
 	|                      |          |                                                                                                                    |
 	|                      |          | kbps                                                                                                               |
-	|                      |          |   The total traffic rate in kilobytes per second served by the Delivery Service                                    |
+	|                      |          |   The total traffic rate in kilobytes per second served by the :term:`Delivery Service`                            |
 	|                      |          | out_bytes                                                                                                          |
-	|                      |          |   The total number of bytes sent out to clients through the Delivery Service                                       |
+	|                      |          |   The total number of bytes sent out to clients through the :term:`Delivery Service`                               |
 	|                      |          | status_4xx                                                                                                         |
 	|                      |          |   The amount of requests that were serviced with 400-499 HTTP status codes                                         |
 	|                      |          | status_5xx                                                                                                         |
 	|                      |          |   The amount of requests that were serviced with 500-599 HTTP status codes                                         |
 	|                      |          | tps_total                                                                                                          |
-	|                      |          |   The total traffic rate in transactions per second served by the Delivery Service                                 |
+	|                      |          |   The total traffic rate in transactions per second served by the :term:`Delivery Service`                         |
 	|                      |          | tps_2xx                                                                                                            |
 	|                      |          |   The total traffic rate in transactions per second serviced with 200-299 HTTP status codes                        |
 	|                      |          | tps_3xx                                                                                                            |

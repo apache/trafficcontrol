@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Retrieves properties of Edge-Tier servers eligible for assignment to a particular Delivery Service.
+Retrieves properties of Edge-Tier servers eligible for assignment to a particular :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_
@@ -139,5 +139,5 @@ Response Structure
 		}
 	]}
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to the see servers not eligible for assignment to *any* given Delivery Service, whereas any other user will only be able to see the servers not eligible for assignment to a Delivery Service their Tenant is allowed to see. For this particular endpoint,
+.. [1] Users with the roles "admin" and/or "operations" will be able to the see servers not eligible for assignment to *any* given :term:`Delivery Service`, whereas any other user will only be able to see the servers not eligible for assignment to a :term:`Delivery Service` their Tenant is allowed to see. For this particular endpoint,
 .. [2] See `the Wikipedia article on Out-of-Band Management <https://en.wikipedia.org/wiki/Out-of-band_management>`_ for more information.

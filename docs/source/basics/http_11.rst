@@ -13,40 +13,32 @@
 .. limitations under the License.
 ..
 
-.. index::
-	http/1.1
-	HTTP
-
+********
 HTTP/1.1
-========
-For a comprehensive look at Traffic Control, it is important to understand basic HTTP/1.1 protocol operations and how caches function. The example below illustrates the fulfillment of an HTTP/1.1 request in a situation without CDN or proxy, followed by viewing the changes after inserting different types of (caching) proxies. Several of the examples below are simplified for clarification of the essentials.
+********
+For a comprehensive look at Traffic Control, it is important to understand basic HTTP/1.1 protocol operations and how :term:`cache server`\ s function.
 
-For complete details on HTTP/1.1 see :rfc:`2616`.
+.. seealso:: For complete details on HTTP/1.1 see :rfc:`2616`.
 
-Below are the steps of a client retrieving the URL ``http://www.origin.com/foo/bar/fun.html`` using HTTP/1.1 without proxies:
+What follows is a sequence of events that take place when a client requests content from an HTTP/1.1-compliant server.
 
-1. The client sends a request to the Local DNS (LDNS) server to resolve the name ``www.origin.com`` to an IPv4 address.
+#. The client sends a request to the :abbr:`LDNS (Local DNS)` server to resolve the name ``www.origin.com`` to an IP address, then sends an HTTP request to that IP.
 
-2. If the LDNS does not have this name (IPv4 mapping cached), it sends DNS requests to the ., .com, and .origin.com authoritative servers until it receives a response with the address for ``www.origin.com``. Per the DNS SPEC, this response has a Time To Live (TTL), which indicates how long this mapping can be cached at the LDNS server. In the example, the IP address found by the LDNS server for www.origin.com is 44.33.22.11.
-
-	.. Note:: While longer DNS TTLs of a day (86400 seconds) or more are quite common in other use cases, in CDN use cases DNS TTLs are often below a minute.
-
-3. The client opens a TCP connection from a random port locally to port 80 (the HTTP default) on 44.33.22.11, and sends this (showing the minimum HTTP 1.1 request, typically there are additional headers):
+	.. Note:: A DNS response is accompanied by a :abbr:`TTL (Time To Live)` which indicates for how long a name resolution should be considered valid. While longer DNS :abbr:`TTL (Time To Live)`\ s of a day (86400 seconds) or more are quite common in other use cases, in CDN use-cases DNS :abbr:`TTL (Time To Live)`\ s are often below a minute.
 
 	.. code-block:: http
+		:caption: A Client Request for ``/foo/bar/fun.html`` from ``www.origin.com``
 
 		GET /foo/bar/fun.html HTTP/1.1
 		Host: www.origin.com
 
-4. The server at ``www.origin.com`` looks up the Host: header to match that to a configuration section, usually referred to as a virtual host section. If the Host: header and configuration section match, the search continues for the content of the path ``/foo/bar/fun.html``, in the example, this is a file that contains ``<!DOCTYPE html><html><body>This is a fun file</body></html>``, so the server responds with the following:
+#. The server at ``www.origin.com`` looks up the content of the path ``/foo/bar/fun.html`` and sends it in a response to the client.
 
 	.. code-block:: http
+		:caption: Server Response
 
 		HTTP/1.1 200 OK
 		Content-Type: text/html; charset=UTF-8
 		Content-Length: 45
 
 		<!DOCTYPE html><html><body>This is a fun file</body></html>
-
-
- At this point, HTTP transaction is complete.

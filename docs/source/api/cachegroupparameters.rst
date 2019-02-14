@@ -68,7 +68,7 @@ Response Structure
 
 ``POST``
 ========
-Assign parameter(s) to :term:`Cache Group`(s).
+Assign parameter(s) to :term:`Cache Group`\ (s).
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"

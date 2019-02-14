@@ -34,14 +34,11 @@ Build Using ``pkg``
 ===================
 This is the easiest way to build all the components of Traffic Control; all requirements are automatically loaded into the image used to build each component.
 
-
 Requirements
 ------------
+- `Docker <https://docs.docker.com/engine/installation/>`_
+- `Docker Compose <https://docs.docker.com/compose/install/>`_\ [1]_
 
--  `Docker <https://docs.docker.com/engine/installation/>`_
--  `Docker Compose <https://docs.docker.com/compose/install/>`_\ [1]_
-
-.. [1] This is optional, but recommended. If a ``docker-compose`` executable is not available the ``pkg`` script will automatically download and run it using a container. This is noticeably slower than running it natively.
 
 Usage
 -----
@@ -68,10 +65,10 @@ If present, ``projects`` should be one or more project names. When no specific p
 - traffic_stats_build\ [2]_
 - weasel
 
+Output :file:`{component}-{version}.rpm` files, build logs and source tarballs will be output to the ``dist/`` directory at the root of the Traffic Control repository directory.
+
+.. [1] This is optional, but recommended. If a ``docker-compose`` executable is not available the ``pkg`` script will automatically download and run it using a container. This is noticeably slower than running it natively.
 .. [2] This is a default project, which will be built if ``pkg`` is run with no ``projects`` argument
-
-
-Output ``*.rpm`` files, build logs and source tarballs will be output to the ``dist`` directory at the root of the Traffic Control repository directory.
 
 .. _build-with-dc:
 

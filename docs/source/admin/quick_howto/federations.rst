@@ -19,7 +19,7 @@
 Configure Federations
 *********************
 
-#. Create a user with a federations role ('User Admin' -> 'Users' -> '+' button).  This user will need the ability to:
+#. Create a user with a federations role (:menuselection:`User Admin --> Users --> '+' button`). This user will need the ability to:
 
 	- Create/edit/delete federations
 	- Add IPV4 resolvers
@@ -29,21 +29,21 @@ Configure Federations
 		:scale: 100%
 		:align: center
 
-#. As a user with administrative priveleges, create a Federation Mapping by going to 'Services' -> 'Delivery Services' -> 'Federations' under 'More' and then clicking 'Add Federation Mapping'
+#. As a user with administrative privileges, create a Federation Mapping by going to :menuselection:`Services --> :term:`Delivery Service`\ s --> More --> Federations` and then clicking :guilabel:`Add Federation Mapping`.
 
-#. Choose the Delivery Service to which the federation will be mapped and assign it to the Federation-role user; click Add.
+#. Choose the :term:`Delivery Service` to which the federation will be mapped and assign it to the Federation-role user; click :guilabel:`Add`.
 
 	.. figure:: federations/02.png
 		:scale: 100%
 		:align: center
 
-#. After the Federation is added, Traffic Ops will display the Federation. Changes can be made at this time or the Federation can be deleted. Notice that no resolvers have been added to the fedeation yet. This can only be done by the Federation-role user to whom the Fedarated Delivery Service was assigned. If no further action is necessary, the Close button will close the window and display the list of all Federations.
+#. After the Federation is added, Traffic Ops will display the Federation. Changes can be made at this time or the Federation can be deleted. Notice that no resolvers have been added to the Federation yet. This can only be done by the Federation-role user to whom the Federated :term:`Delivery Service` was assigned. If no further action is necessary, the :guilabel:`Close` button will close the window and display the list of all Federations.
 
 	.. figure:: federations/03.png
 		:scale: 100%
 		:align: center
 
-#. The federation user logs into either the Traffic Ops API or the Traffic Portal UI and stores the Mojolicious cookie.  The Mojolicious cookie can be obtained manually using the debug tools on a web browser or via a command line utility like cURL.
+#. The federation user logs into either the Traffic Ops API or the Traffic Portal UI and stores the Mojolicious cookie. The Mojolicious cookie can be obtained manually using the debug tools on a web browser or via a command line utility like :manpage:`curl(1)`.
 
 	.. code-block:: shell
 		:caption: Example cURL Command
@@ -108,7 +108,7 @@ Configure Federations
 		:scale: 100%
 		:align: center
 
-Any requests made from a client that resolves to one of the federation resolvers will now be given a CNAME from Traffic Router.
+Any requests made from a client that resolves to one of the federation resolvers will now be given a :abbr:`CNAME (Canonical Name)` Record from Traffic Router.
 
 	.. code-block:: shell
 		:caption: Example DNS request (via ``dig``)

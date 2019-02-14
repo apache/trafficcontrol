@@ -106,7 +106,7 @@ Response Structure
 	:zonemanager.cache.maintenance.interval: A configuration option for the ZoneManager Java class of Traffic Router
 	:zonemanager.threadpool.scale:           A configuration option for the ZoneManager Java class of Traffic Router
 
-:contentRouters: An object containing keys which are the (short) hostnames of the Traffic Routers that serve requests for Delivery Services in this CDN
+:contentRouters: An object containing keys which are the (short) hostnames of the Traffic Routers that serve requests for :term:`Delivery Service`\ s in this CDN
 
 	:api.port:  A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router
 	:fqdn:      This Traffic Router's Fully Qualified Domain Name (FQDN)
@@ -120,61 +120,61 @@ Response Structure
 
 		.. seealso:: :ref:`health-proto`
 
-:contentServers: An object containing keys which are the (short) hostnames of the Edge-Tier cache servers in the CDN; the values corresponding to those keys are routing information for said servers
+:contentServers: An object containing keys which are the (short) hostnames of the Edge-Tier :term:`cache server` s in the CDN; the values corresponding to those keys are routing information for said servers
 
 	:cacheGroup:       The name of the Cache Group to which the server belongs
-	:deliveryServices: An object containing keys which are the names of Delivery Services to which this cache server is assigned; the values corresponding to those keys are arrays of FQDNs that resolve to this cache server
+	:deliveryServices: An object containing keys which are the names of :term:`Delivery Service`\ s to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of FQDNs that resolve to this :term:`cache server`
 
-		.. note:: Only Edge-tier cache servers can be assigned to a Delivery SErvice, and therefore this field will only be present when ``type`` is ``"EDGE"``.
+		.. note:: Only Edge-tier :term:`cache server` s can be assigned to a Delivery SErvice, and therefore this field will only be present when ``type`` is ``"EDGE"``.
 
 	:fqdn:            The server's Fully Qualified Domain Name (FQDN)
 	:hashCount:       The number of servers to be placed into a single "hash ring" in Traffic Router
 	:hashId:          A unique string to be used as the key for hashing servers - as of version 3.0.0 of Traffic Control, this is always the same as the server's (short) hostname and only still exists for legacy compatibility reasons
-	:httpsPort:       The port on which the cache server listens for incoming HTTPS requests
-	:interfaceName:   The name of the main network interface device used by this cache server
+	:httpsPort:       The port on which the :term:`cache server` listens for incoming HTTPS requests
+	:interfaceName:   The name of the main network interface device used by this :term:`cache server`
 	:ip6:             The server's IPv6 address
 	:ip:              The server's IPv4 address
 	:locationId:      This field is exactly the same as ``cacheGroup`` and only exists for legacy compatibility reasons
-	:port:            The port on which this cache server listens for incoming HTTP requests
-	:profile:         The name of the profile used by the cache server
-	:routingDisabled: An integer representing the boolean concept of whether or not Traffic Routers should route client traffic this cache server; one of:
+	:port:            The port on which this :term:`cache server` listens for incoming HTTP requests
+	:profile:         The name of the profile used by the :term:`cache server`
+	:routingDisabled: An integer representing the boolean concept of whether or not Traffic Routers should route client traffic this :term:`cache server`; one of:
 
 		0
 			Do not route traffic to this server
 		1
 			Route traffic to this server normally
 
-	:status: This cache server's status
+	:status: This :term:`cache server`'s status
 
 		.. seealso:: :ref:`health-proto`
 
-	:type: The type of this cache server; one of:
+	:type: The type of this :term:`cache server`; one of:
 
 		EDGE
-			This is an Edge-tier cache server
+			This is an Edge-tier :term:`cache server`
 		MID
-			This is a Mid-tier cache server
+			This is a Mid-tier :term:`cache server`
 
-:deliveryServices: An object containing keys which are the 'xml_id's of all of the Delivery Services within the CDN
+:deliveryServices: An object containing keys which are the 'xml_id's of all of the :term:`Delivery Service`\ s within the CDN
 
-	:anonymousBlockingEnabled: A string containing a boolean that tells whether or not Anonymized IP Addresses are blocked by this Delivery Service; one of:
+	:anonymousBlockingEnabled: A string containing a boolean that tells whether or not Anonymized IP Addresses are blocked by this :term:`Delivery Service`; one of:
 
 		"true"
-			Anonymized IP addresses are blocked by this Delivery Service
+			Anonymized IP addresses are blocked by this :term:`Delivery Service`
 		"false"
-			Anonymized IP addresses are not blocked by this Delivery Service
+			Anonymized IP addresses are not blocked by this :term:`Delivery Service`
 
 		.. seealso:: :ref:`anonymous_blocking-qht`
 
-	:coverageZoneOnly: A string containing a boolean that tells whether or not this Delivery Service routes traffic based only on its Coverage Zone file
-	:deepCachingType:  A string that tells when Deep Caching is used by this Delivery Service; one of:
+	:coverageZoneOnly: A string containing a boolean that tells whether or not this :term:`Delivery Service` routes traffic based only on its Coverage Zone file
+	:deepCachingType:  A string that tells when Deep Caching is used by this :term:`Delivery Service`; one of:
 
 		"ALWAYS"
-			Deep Caching is always used by this Delivery Service
+			Deep Caching is always used by this :term:`Delivery Service`
 		"NEVER"
-			Deep Caching is never used by this Delivery Service
+			Deep Caching is never used by this :term:`Delivery Service`
 
-	:dispersion: An object describing the "dispersion" - or number of caches within a single Cache Group across which the same content is spread - within the Delivery Service
+	:dispersion: An object describing the "dispersion" - or number of caches within a single Cache Group across which the same content is spread - within the :term:`Delivery Service`
 
 		:limit: The maximum number of caches in which the response to a single request URL will be stored
 
@@ -187,38 +187,38 @@ Response Structure
 			"true"
 				Caches will be chosen at random
 
-	:domains:             An array of domains served by this Delivery Service
+	:domains:             An array of domains served by this :term:`Delivery Service`
 	:geolocationProvider: The name of a provider for IP-to-geographic-location mapping services - currently the only valid value is ``"maxmindGeolocationService"``
-	:ip6RoutingEnabled:   A string containing a boolean that tells whether IPv6 traffic can be routed on this Delivery Service; one of:
+	:ip6RoutingEnabled:   A string containing a boolean that tells whether IPv6 traffic can be routed on this :term:`Delivery Service`; one of:
 
 		"false"
-			IPv6 traffic will not be routed by this Delivery Service
+			IPv6 traffic will not be routed by this :term:`Delivery Service`
 		"true"
-			IPv6 traffic will be routed by this Delivery Service
+			IPv6 traffic will be routed by this :term:`Delivery Service`
 
-	:matchList: An array of methods used by Traffic Router to determine whether or not a request can be serviced by this Delivery Service
+	:matchList: An array of methods used by Traffic Router to determine whether or not a request can be serviced by this :term:`Delivery Service`
 
 		:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
 		:setNumber: An integral, unique identifier for the set of types to which the ``type`` field belongs
-		:type:      The type of match performed using ``pattern`` to determine whether or not to use this Delivery Service
+		:type:      The type of match performed using ``pattern`` to determine whether or not to use this :term:`Delivery Service`
 
 			HOST_REGEXP
-				Use the Delivery Service if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request\ [1]_
+				Use the :term:`Delivery Service` if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request\ [1]_
 			HEADER_REGEXP
-				Use the Delivery Service if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [1]_
+				Use the :term:`Delivery Service` if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [1]_
 			PATH_REGEXP
-				Use the Delivery Service if ``pattern`` matches the request path of this Delivery Service's URL
+				Use the :term:`Delivery Service` if ``pattern`` matches the request path of this :term:`Delivery Service`'s URL
 			STEERING_REGEXP
-				Use the Delivery Service if ``pattern`` matches the ``xml_id`` of one of this Delivery Service's "Steering" target Delivery Services
+				Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Service`\ s
 
 	:missLocation: An object representing the default geographic coordinates to use for a client when lookup of their IP has failed in both the Coverage Zone file(s) and the IP-to-geographic-location database
 
 		:lat:  Geographic latitude
 		:long: Geographic longitude
 
-	:protocol: An object that describes how the Delivery Service ought to handle HTTP requests both with and without TLS encryption
+	:protocol: An object that describes how the :term:`Delivery Service` ought to handle HTTP requests both with and without TLS encryption
 
-		:acceptHttps: A string containing a boolean that tells whether HTTPS requests should be normally serviced by this Delivery Service; one of:
+		:acceptHttps: A string containing a boolean that tells whether HTTPS requests should be normally serviced by this :term:`Delivery Service`; one of:
 
 			"false"
 				Refuse to service HTTPS requests
@@ -232,17 +232,17 @@ Response Structure
 			"true"
 				Respond to HTTP requests with instructions to use HTTPS instead
 
-	:regionalGeoBlocking: A string containing a boolean that tells whether Regional Geographic Blocking is enabled on this Delivery Service; one of:
+	:regionalGeoBlocking: A string containing a boolean that tells whether Regional Geographic Blocking is enabled on this :term:`Delivery Service`; one of:
 
 		"false"
-			Regional Geographic Blocking is not used by this Delivery Service
+			Regional Geographic Blocking is not used by this :term:`Delivery Service`
 		"true"
-			Regional Geographic Blocking is used by this Delivery Service
+			Regional Geographic Blocking is used by this :term:`Delivery Service`
 
 		.. seealso:: :ref:`regionalgeo-qht`
 
-	:routingName: The highest-level part of the FQDNs serviced by this Delivery Service
-	:soa:         An object defining the Start of Authority (SOA) record for the Delivery Service's TLDs (defined in ``domains``)
+	:routingName: The highest-level part of the FQDNs serviced by this :term:`Delivery Service`
+	:soa:         An object defining the Start of Authority (SOA) record for the :term:`Delivery Service`'s TLDs (defined in ``domains``)
 
 		:admin: The name of the administrator for this zone - i.e. the RNAME
 
@@ -257,12 +257,12 @@ Response Structure
 
 		.. seealso:: `The Wikipedia page on Start of Authority records <https://en.wikipedia.org/wiki/SOA_record>`_.
 
-	:sslEnabled: A string containing a boolean that tells whether this Delivery Service uses SSL; one of:
+	:sslEnabled: A string containing a boolean that tells whether this :term:`Delivery Service` uses SSL; one of:
 
 		"false"
-			SSL is not used by this Delivery Service
+			SSL is not used by this :term:`Delivery Service`
 		"true"
-			SSL is used by this Delivery Service
+			SSL is used by this :term:`Delivery Service`
 
 	:ttls: An object that contains keys which are types of DNS records that have values which are strings containing integers that specify the time for which a response to the specific type of record request should remain valid
 
@@ -537,4 +537,4 @@ Response Structure
 		}
 	}}
 
-.. [1] These only apply to HTTP-routed Delivery Services
+.. [1] These only apply to HTTP-routed :term:`Delivery Service`\ s

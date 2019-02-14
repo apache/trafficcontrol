@@ -13,9 +13,9 @@
 .. limitations under the License.
 ..
 
+**********
 CDN Basics
 **********
-
 Traffic Control is a CDN control plane, see the topics below to familiarize yourself with the basic concepts of a CDN.
 
 .. toctree::
@@ -23,7 +23,4 @@ Traffic Control is a CDN control plane, see the topics below to familiarize your
 
 	content_delivery_networks
 	http_11
-	caching_proxies
 	cache_revalidation
-
-

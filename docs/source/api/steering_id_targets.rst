@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Get all targets for a steering Delivery Service.
+Get all targets for a steering :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,19 +31,19 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+--------------------------------------------------------------------------------------------------+
-	| Name |                Description                                                                       |
-	+======+==================================================================================================+
-	|  ID  | The integral, unique identifier of a steering Delivery Service for which targets shall be listed |
-	+------+--------------------------------------------------------------------------------------------------+
+	+------+----------------------------------------------------------------------------------------------------------+
+	| Name |                Description                                                                               |
+	+======+==========================================================================================================+
+	|  ID  | The integral, unique identifier of a steering :term:`Delivery Service` for which targets shall be listed |
+	+------+----------------------------------------------------------------------------------------------------------+
 
 .. table:: Request Query Parameters
 
-	+--------+-----------------------------------------------------------------------------------------------------------------+
-	|  Name  | Description                                                                                                     |
-	+========+=================================================================================================================+
-	| target | Return only the target mappings that target the Delivery Service identified by this integral, unique identifier |
-	+--------+-----------------------------------------------------------------------------------------------------------------+
+	+--------+-------------------------------------------------------------------------------------------------------------------------+
+	|  Name  | Description                                                                                                             |
+	+========+=========================================================================================================================+
+	| target | Return only the target mappings that target the :term:`Delivery Service` identified by this integral, unique identifier |
+	+--------+-------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Structure
@@ -56,12 +56,12 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryService:   The 'xml_id' of the steering Delivery Service
-:deliveryServiceId: An integral, unique identifier for the steering Delivery Service
-:target:            The 'xml_id' of this target Delivery Service
-:targetId:          An integral, unique identifier for this target Delivery Service
-:type:              The routing type of this target Delivery Service
-:typeId:            An integral, unique identifier for the routing type of this target Delivery Service
+:deliveryService:   The 'xml_id' of the steering :term:`Delivery Service`
+:deliveryServiceId: An integral, unique identifier for the steering :term:`Delivery Service`
+:target:            The 'xml_id' of this target :term:`Delivery Service`
+:targetId:          An integral, unique identifier for this target :term:`Delivery Service`
+:type:              The routing type of this target :term:`Delivery Service`
+:typeId:            An integral, unique identifier for the routing type of this target :term:`Delivery Service`
 :value:             The 'weight' attributed to this steering target
 
 .. code-block:: http
@@ -103,15 +103,15 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------------------------------------------+
-	| Name |                Description                                                                      |
-	+======+=================================================================================================+
-	|  ID  | The integral, unique identifier of a steering Delivery Service to which a target shall be added |
-	+------+-------------------------------------------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------------------------------------+
+	| Name |                Description                                                                              |
+	+======+=========================================================================================================+
+	|  ID  | The integral, unique identifier of a steering :term:`Delivery Service` to which a target shall be added |
+	+------+---------------------------------------------------------------------------------------------------------+
 
-:targetId: The integral, unique identifier of a Delivery Service which shall be a new steering target for the Delivery Service identified by the ``ID`` path parameter
-:typeId:   The integral, unique identifier of the routing type of the new target Delivery Service
-:value:    The 'weight' which shall be attributed to the new target Delivery Service
+:targetId: The integral, unique identifier of a :term:`Delivery Service` which shall be a new steering target for the :term:`Delivery Service` identified by the ``ID`` path parameter
+:typeId:   The integral, unique identifier of the routing type of the new target :term:`Delivery Service`
+:value:    The 'weight' which shall be attributed to the new target :term:`Delivery Service`
 
 .. code-block:: http
 	:caption: Request Example
@@ -132,12 +132,12 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryService:   The 'xml_id' of the steering Delivery Service
-:deliveryServiceId: An integral, unique identifier for the steering Delivery Service
-:target:            The 'xml_id' of the newly added target Delivery Service
-:targetId:          An integral, unique identifier for the newly added target Delivery Service
-:type:              The routing type of the newly added target Delivery Service
-:typeId:            An integral, unique identifier for the routing type of the newly added target Delivery Service
+:deliveryService:   The 'xml_id' of the steering :term:`Delivery Service`
+:deliveryServiceId: An integral, unique identifier for the steering :term:`Delivery Service`
+:target:            The 'xml_id' of the newly added target :term:`Delivery Service`
+:targetId:          An integral, unique identifier for the newly added target :term:`Delivery Service`
+:type:              The routing type of the newly added target :term:`Delivery Service`
+:typeId:            An integral, unique identifier for the routing type of the newly added target :term:`Delivery Service`
 :value:             The 'weight' attributed to the new steering target
 
 .. code-block:: http

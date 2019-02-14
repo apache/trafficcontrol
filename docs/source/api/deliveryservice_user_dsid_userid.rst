@@ -21,7 +21,7 @@
 
 ``DELETE``
 ==========
-Removes a Delivery Service from a user.
+Removes a :term:`Delivery Service` from a user.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+--------+---------------------------------------------------------------------------------------------------------------------------------+
-	| Name   | Description                                                                                                                     |
-	+========+=================================================================================================================================+
-	| dsId   | An integral, unique identifier for the Delivery Service which should no longer be assigned to the user identified by ``userID`` |
-	+--------+---------------------------------------------------------------------------------------------------------------------------------+
-	| userId | An integral, unique identifier for the user to whom the Delivery Service identified by ``dsID`` should no longer be assigned    |
-	+--------+---------------------------------------------------------------------------------------------------------------------------------+
+	+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| Name   | Description                                                                                                                             |
+	+========+=========================================================================================================================================+
+	| dsId   | An integral, unique identifier for the :term:`Delivery Service` which should no longer be assigned to the user identified by ``userID`` |
+	+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| userId | An integral, unique identifier for the user to whom the :term:`Delivery Service` identified by ``dsID`` should no longer be assigned    |
+	+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------

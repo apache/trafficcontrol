@@ -29,7 +29,6 @@ Traffic Portal is the official Traffic Control UI. Traffic Portal typically runs
 
 Dashboard
 =========
-
 The Dashboard is the default landing page for Traffic Portal. It provides a real-time view into the main performance indicators of the CDNs managed by Traffic Control. It also displays various statistics about the overall health of your CDN.
 
 Current Bandwidth
@@ -39,28 +38,29 @@ Current Connections
 	The current number of connections to all of your CDNs.
 
 Healthy Caches
-	Displays the number of healthy caches across all CDNs.  Click the link to view the healthy caches on the cache stats page.
+	Displays the number of healthy caches across all CDNs. Click the link to view the healthy caches on the cache stats page.
 
 Unhealthy Caches
-	Displays the number of unhealthy caches across all CDNs.  Click the link to view the unhealthy caches on the cache stats page.
+	Displays the number of unhealthy caches across all CDNs. Click the link to view the unhealthy caches on the cache stats page.
 
 Online Caches
-	Displays the number of cache servers with ONLINE status. Traffic Monitor will not monitor the state of ONLINE servers. For more information, see :ref:`health-proto`.
+	Displays the number of :term:`cache server` s with ONLINE status. Traffic Monitor will not monitor the state of ONLINE servers [1]_.
 
 Reported Caches
-	Displays the number of cache servers with REPORTED status. For more information, see :ref:`health-proto`.
+	Displays the number of :term:`cache server` s with REPORTED status [1]_.
 
 Offline Caches
-	Displays the number of cache servers with OFFLINE status. For more information, see :ref:`health-proto`.
+	Displays the number of :term:`cache server` s with OFFLINE status [1]_.
 
 Admin Down Caches
-	Displays the number of caches with ADMIN_DOWN status. For more information, see :ref:`health-proto`.
+	Displays the number of caches with ADMIN_DOWN status [1]_.
 
-Each component of this view is updated on the intervals defined in the ``tp.domain.com/traffic_portal_properties.json`` configuration file.
+Each component of this view is updated on the intervals defined in the :file:`traffic_portal_properties.json` configuration file.
+
+.. [1] For more information, see :ref:`health-proto`.
 
 CDNs
 ====
-
 A table of CDNs with the following columns:
 
 :Name:           The name of the CDN
@@ -77,14 +77,13 @@ CDN management includes the ability to (where applicable):
 - create a CDN snapshot
 - manage a CDN's DNSSEC keys
 - manage a CDN's federations
-- view Delivery Services of a CDN
+- view :term:`Delivery Service`\ s of a CDN
 - view CDN profiles
 - view servers within a CDN
 
 Monitor
 =======
-
-The 'Monitor' section of Traffic Portal is used to display statistics regarding the various cache servers within all CDNs visible to the user. It retrieves this information through the Traffic Ops API from Traffic Monitor instances.
+The :guilabel:`Monitor` section of Traffic Portal is used to display statistics regarding the various :term:`cache server` s within all CDNs visible to the user. It retrieves this information through the Traffic Ops API from Traffic Monitor instances.
 
 .. figure:: ./images/tp_menu_monitor.png
 	:align: center
@@ -95,42 +94,46 @@ The 'Monitor' section of Traffic Portal is used to display statistics regarding 
 
 Cache Checks
 ------------
-A real-time view into the status of each cache.
-
-The cache checks page is intended to give an overview of the caches managed by Traffic Control as well as their status.
+A real-time view into the status of each cache. The :menuselection:`Monitor --> Cache Checks` page is intended to give an overview of the caches managed by Traffic Control as well as their status.
 
 :Hostname: Cache host name
 :Profile:  The name of the profile applied to the cache
 :Status:   The status of the cache (one of: ONLINE, REPORTED, ADMIN_DOWN, OFFLINE)
-:UPD:      Configuration updates pending for an EDGE or MID
+
+	.. seealso:: :ref:`health-proto`
+
+:UPD:      Configuration updates pending for an Edge-tier or Mid-tier :term:`cache server`
 :RVL:      Content invalidation requests are pending for this server and/or its parent(s)
-:ILO:      Ping the iLO interface for EDGE or MID servers
-:10G:      Ping the IPv4 address of the EDGE or MID servers
+:ILO:      Ping the iLO interface for Edge-tier or Mid-tier :term:`cache server` s
+:10G:      Ping the IPv4 address of the Edge-tier or Mid-tier :term:`cache server` s
 :FQDN:     DNS check that matches what the DNS servers responds with compared to what Traffic Ops has
-:DSCP:     Checks the DSCP value of packets from the EDGE server to the Traffic Ops server
-:10G6:     Ping the IPv6 address of the EDGE or MID servers
-:MTU:      Ping the EDGE or MID using the configured MTU from Traffic Ops
-:RTR:      Content Router checks. Checks the health of the Content Routers. Checks the health of the caches using the Content Routers
+:DSCP:     Checks the :abbr:`DSCP (Differentiated Services Code Point)` value of packets from the Edge-tier :term:`cache server` to the Traffic Ops server
+:10G6:     Ping the IPv6 address of the Edge-tier or Mid-tier :term:`cache server` s
+:MTU:      Ping the Edge-tier or Mid-tier using the configured :abbr:`MTU (Maximum Transmission Unit)` from Traffic Ops
+:RTR:      Content Router checks. Checks the health of the Traffic Router servers. Also checks the health of the :term:`cache server` s using the Traffic Routers
 :CHR:      Cache Hit Ratio percent
 :CDU:      Total Cache Disk Usage percent
-:ORT:      Operational Readiness Test - uses the ORT script on the EDGE and MID servers to determine if the configuration in Traffic Ops matches the configuration on the EDGE or MID. The user that this script runs as must have an SSH key on the EDGE servers.
+:ORT:      Operational Readiness Test - uses the :term:`ORT` script on the Edge-tier and Mid-tier :term:`cache server` s to determine if the configuration in Traffic Ops matches the configuration on the Edge-tier or Mid-tier. The user as whom this script runs must have an SSH key on the Edge-tier servers.
 
 
 Cache Stats
 -----------
-A table showing the results of the periodic check extension scripts that are run. These can be grouped by :term:`Cache Group` and/or Profile.
+A table showing the results of the periodic :ref:`to-check-ext` that are run. These can be grouped by :term:`Cache Group` and/or :term:`Profile`.
 
-:Profile:     Name of the profile applied to the Edge-tier or Mid-tier cache server
-:Host:        'ALL' for entries grouped by :term:`Cache Group`, or the hostname of a particular cache server
+:Profile:     Name of the :term:`Profile` applied to the Edge-tier or Mid-tier :term:`cache server`
+:Host:        'ALL' for entries grouped by :term:`Cache Group`, or the hostname of a particular :term:`cache server`
 :Cache Group: Name of the :term:`Cache Group` to which this server belongs, or the name of the :term:`Cache Group` that is grouped for entries grouped by :term:`Cache Group`
-:Healthy:     True/False as determined by Traffic Monitor (See :ref:`health-proto`)
-:Status:      Status of the cache or :term:`Cache Group`
-:Connections: Number of connections to this cache server or :term:`Cache Group`
-:MbpsOut:     Data flow outward (toward client) in Megabits per second
+:Healthy:     True/False as determined by Traffic Monitor
+
+	.. seealso:: :ref:`health-proto`
+
+:Status:      Status of the :term:`cache server` or :term:`Cache Group`
+:Connections: Number of connections to this :term:`cache server` or :term:`Cache Group`
+:MbpsOut:     Data flow rate outward from the CDN (toward client) in Megabits per second
 
 Services
 ========
-'Services' groups the functionality to modify Delivery Services - for those users with the necessary permissions - or make Requests for such changes - for uses without necessary permissions.
+:guilabel:`Services` groups the functionality to modify :term:`Delivery Service`\ s - for those users with the necessary permissions - or make Requests for such changes - for uses without necessary permissions.
 
 .. figure:: images/tp_table_ds_requests.png
 	:align: center
@@ -138,19 +141,19 @@ Services
 
 	Table of Delivery Service Requests
 
-Delivery Services
+Delivery Service
 -----------------
-This page contains a table displaying all Delivery Services visible to the user. Each entry in this table has the following fields:
+This page contains a table displaying all :term:`Delivery Service`\ s visible to the user. Each entry in this table has the following fields:
 
-:Key (XML ID): A unique string that identifies this Delivery Service
-:Tenant: The tenant to which the Delivery Service is assigned
-:Origin: The Origin Server's base URL. This includes the protocol (HTTP or HTTPS). Example: ``http://movies.origin.com``
-:Active: When this is set to 'false', Traffic Router will not serve DNS or HTTP responses for this Delivery Service
-:Type: The type of content routing this Delivery Service will use
+:Key (XML ID): A unique string that identifies this :term:`Delivery Service`
+:Tenant:       The tenant to which the :term:`Delivery Service` is assigned
+:Origin:       The Origin Server's base URL. This includes the protocol (HTTP or HTTPS). Example: ``http://movies.origin.com``
+:Active:       When this is set to 'false', Traffic Router will not serve DNS or HTTP responses for this :term:`Delivery Service`
+:Type:         The type of content routing this :term:`Delivery Service` will use
 
 	.. seealso:: :ref:`ds-types`
 
-:Protocol: The protocol which which this Delivery Service serves clients. Its value is one of:
+:Protocol: The protocol which which this :term:`Delivery Service`\ serves clients. Its value is one of:
 
 	HTTP
 		Only insecure requests will be serviced
@@ -161,45 +164,45 @@ This page contains a table displaying all Delivery Services visible to the user.
 	HTTP to HTTPS
 		Insecure requests will be redirected to secure locations and secure requests are serviced normally
 
-:CDN: The CDN to which the Delivery Service belongs
-:IPv6 Enabled: When set to 'true', the Traffic Router will respond to AAAA DNS requests for the routed name of this Delivery Service, Otherwise, only A records will be served
-:DSCP: The Differentiated Services Code Point (DSCP) value with which to mark IP packets sent to the client
-:Signing Algorithm: See :ref:`signed-urls`
-:Query String Handling: Describes how the Delivery Service treats query strings. It has one of the following possible values:
+:CDN:                   The CDN to which the :term:`Delivery Service` belongs
+:IPv6 Enabled:          When set to 'true', the Traffic Router will respond to AAAA DNS requests for the routed name of this :term:`Delivery Service`, Otherwise, only A records will be served
+:DSCP:                  The :abbr:`DSCP (Differentiated Services Code Point)` value with which to mark IP packets sent to the client
+:Signing Algorithm:     See :ref:`signed-urls`
+:Query String Handling: Describes how the :term:`Delivery Service` treats query strings. It has one of the following possible values:
 
 	USE
-		The query string will be used in the Apache Traffic Server (ATS) 'cache key' and is passed in requests to the origin (each unique query string is treated as a unique URL)
+		The query string will be used in the :abbr:`ATS (Apache Traffic Server)` `'cache key' <https://docs.trafficserver.apache.org/en/7.1.x/appendices/glossary.en.html#term-cache-key>`_ and is passed in requests to the origin (each unique query string is treated as a unique URL)
 	IGNORE
-		The query string will *not* be used in the ATS 'cache key', but *will* be passed in requests to the origin
+		The query string will *not* be used in the :abbr:`ATS (Apache Traffic Server)` `'cache key' <https://docs.trafficserver.apache.org/en/7.1.x/appendices/glossary.en.html#term-cache-key>`_, but *will* be passed in requests to the origin
 	DROP
-		The query string is stripped from the request URL at the Edge-tier cache, and so is not used in the ATS 'cache key', and is not passed in requests to the origin
+		The query string is stripped from the request URL at the Edge-tier cache, and so is not used in the :abbr:`ATS (Apache Traffic Server)` `'cache key' <https://docs.trafficserver.apache.org/en/7.1.x/appendices/glossary.en.html#term-cache-key>`_, and is not passed in requests to the origin
 
 	.. seealso:: :ref:`qstring-handling`
 
-:Last Updated: Timestamp when the Delivery Service was last updated.                                                                 |
+:Last Updated: The time at which the :term:`Delivery Service` was last updated
 
-Delivery Service management includes the ability to (where applicable):
+:term:`Delivery Service` management includes the ability to (where applicable):
 
-- create a new Delivery Service
-- clone an existing Delivery Service
-- update an existing Delivery Service
-- delete an existing Delivery Service
-- compare Delivery Services
-- manage Delivery Service SSL keys
-- manage Delivery Service URL signature keys
-- manage Delivery Service URI signing keys
-- view and assign Delivery Service servers
-- create, update and delete Delivery Service regular expressions
-- view and create Delivery Service invalidate content jobs
+- create a new :term:`Delivery Service`
+- clone an existing :term:`Delivery Service`
+- update an existing :term:`Delivery Service`
+- delete an existing :term:`Delivery Service`
+- compare :term:`Delivery Service`\ s
+- manage :term:`Delivery Service` SSL keys
+- manage :term:`Delivery Service` URL signature keys
+- manage :term:`Delivery Service` URI signing keys
+- view and assign :term:`Delivery Service`\ servers
+- create, update and delete :term:`Delivery Service` regular expressions
+- view and create :term:`Delivery Service` invalidate content jobs
 - manage steering targets
 
 Delivery Service Requests
 -------------------------
-If enabled in the ``tp.domain.com/traffic_portal_properties.json``, all Delivery Service changes (create, update and delete) are captured as a Delivery Service Request and must be reviewed before fulfillment/deployment.
+If enabled in the :file:`traffic_portal_properties.json` configuration file, all :term:`Delivery Service` changes (create, update and delete) are captured as a Delivery Service Request and must be reviewed before fulfillment/deployment.
 
-:Delivery Service: A unique string that identifies the Delivery Service that with which the request is associated. This unique string is also known (and ofter referred to within documentation and source code) as a 'Delivery Service key' or 'XML ID'.                                                  |
-:Type: The type of Delivery Service Request: 'create', 'update', or 'delete' according to what was requested
-:Status: The status of the Delivery Service Request. Has the following possible values:
+:term:`Delivery Service`: A unique string that identifies the :term:`Delivery Service` with which the request is associated. This unique string is also known (and ofter referred to within documentation and source code) as a :term:`Delivery Service` key' or 'XML ID'/'xml_id'/'xmlid'
+:Type:             The type of Delivery Service Request: 'create', 'update', or 'delete' according to what was requested
+:Status:           The status of the Delivery Service Request. Has the following possible values:
 
 	draft
 		The Delivery Service Request is *not* ready for review and fulfillment
@@ -212,11 +215,11 @@ If enabled in the ``tp.domain.com/traffic_portal_properties.json``, all Delivery
 	complete
 		The Delivery Service Request has been fulfilled and the changes have been deployed
 
-:Author: The user responsible for creating the Delivery Service Request
-:Assignee: The user responsible for fulfilling the Delivery Service Request. Currently, the operations role or above is required to assign Delivery Service Requests
+:Author:         The user responsible for creating the Delivery Service Request
+:Assignee:       The user responsible for fulfilling the Delivery Service Request. Currently, the operations role or above is required to assign Delivery Service Requests
 :Last Edited By: The last user to edit the Delivery Service Request
-:Created: Relative time indicating when the Delivery Service Request was created
-:Actions: Actions that can be performed on a Delivery Service Request. The following actions are provided:
+:Created:        Relative time indicating when the Delivery Service Request was created
+:Actions:        Actions that can be performed on a Delivery Service Request. The following actions are provided:
 
 	fulfill
 		Implement the changes captured in the Delivery Service Request
@@ -225,22 +228,22 @@ If enabled in the ``tp.domain.com/traffic_portal_properties.json``, all Delivery
 	delete
 		Delete the Delivery Service Request
 
-Delivery service request management includes the ability to (where applicable):
+Delivery Service Request management includes the ability to (where applicable):
 
-- create a new delivery service request
-- update an existing delivery service request
-- delete an existing delivery service request
-- update the status of a delivery service request
-- assign a delivery service request
-- reject a delivery service request
-- fulfill a delivery service request
-- complete a delivery service request
+- create a new Delivery Service Request
+- update an existing Delivery Service Request
+- delete an existing Delivery Service Request
+- update the status of a Delivery Service Request
+- assign a Delivery Service Request
+- reject a Delivery Service Request
+- fulfill a Delivery Service Request
+- complete a Delivery Service Request
 
 .. seealso:: :ref:`ds_requests`
 
 Configure
 =========
-Interfaces for managing the various components of Traffic Control and how they interact are grouped under 'Configure'.
+Interfaces for managing the various components of Traffic Control and how they interact are grouped under :guilabel:`Configure`.
 
 .. figure:: ./images/tp_menu_configure.png
 	:align: center
@@ -248,21 +251,26 @@ Interfaces for managing the various components of Traffic Control and how they i
 
 	The 'Configure' Menu
 
+.. _tp-servers-page:
+
 Servers
 -------
-A table of all servers (of all kinds) across all Delivery Services visible to the user, with functionality to create, update, and delete them. It has the following columns:
+A table of all servers (of all kinds) across all :term:`Delivery Service`\ s and CDNs visible to the user. It has the following columns:
 
-:UPD: 'true' when updates to the server's configuration are pending, 'false' otherwise
-:Host: The hostname of the server
-:Domain: The server's domain. (The FQDN of the server is given by 'Host.Domain')
-:IP: The server's IPv4 address
-:IPv6: The server's IPv6 address
-:Status: The server's status (see :ref:`health-proto`)
-:Type: The type of server e.g. EDGE for an Edge-tier cache
-:Profile: The name of the server's profile
-:CDN: The name of the CDN to which this server is assigned (if any)
+:UPD:    'true' when updates to the server's configuration are pending, 'false' otherwise
+:Host:   The hostname of the server
+:Domain: The server's domain. (The :abbr:`FQDN (Fully Qualified Domain Name)` of the server is given by 'Host.Domain')
+:IP:     The server's IPv4 address
+:IPv6:   The server's IPv6 address
+:Status: The server's status
+
+	.. seealso:: :ref:`health-proto`
+
+:Type:        The type of server e.g. EDGE for an Edge-tier :term:`cache server`
+:Profile:     The name of the server's :term:`Profile`
+:CDN:         The name of the CDN to which this server is assigned (if any)
 :Cache Group: The name of the :term:`Cache Group` to which this server belongs
-:ILO: If not empty, this is the IPv4 address of the server's Integrated Lights-Out (ILO) interface
+:ILO:         If not empty, this is the IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` interface
 
 	.. seealso:: `Hewlett Packard ILO Wikipedia Page <https://en.wikipedia.org/wiki/HP_Integrated_Lights-Out>`_
 
@@ -273,94 +281,90 @@ Server management includes the ability to (where applicable):
 - delete an existing server
 - queue/clear updates on a server
 - update server status
-- view server delivery services
+- view server :term:`Delivery Service`\ s
 - view server configuration files
-- clone delivery service assignments
-- assign delivery services to server
+- clone :term:`Delivery Service` assignments
+- assign :term:`Delivery Service`\ s to server
 
+.. _tp-profiles-page:
 
 Profiles
 --------
-A table of all profiles. From here you can see parameters, servers and Delivery Services assigned to each profile, as well as the ability to create, update, delete, import and export profiles.
-Each entry in the table has these fields:
+A table of all :term:`Profile`\ s. From here you can see :term:`Parameter`\ s, servers and :term:`Delivery Service`\ s assigned to each :term:`Profile`. Each entry in the table has these fields:
 
-:Name:             The name of the profile
-:Type:             The type of this profile, which indicates the kinds of objects to which the profile may be assigned
-:Routing Disabled: For profiles applied to cache servers (Edge-tier or Mid-tier) this indicates that Traffic Router will refuse to provide routes to these machines
-:Description:      A user-defined description of the profile, typically indicating its purpose
-:CDN:              The CDN to which this profile is restricted. To use the same profile across multiple CDNs, clone the profile and change the clone's CDN field.
+:Name:             The name of the :term:`Profile`
+:Type:             The type of this :term:`Profile`, which indicates the kinds of objects to which the :term:`Profile` may be assigned
+:Routing Disabled: For :term:`Profile`\ s applied to :term:`cache server` s (Edge-tier or Mid-tier) this indicates that Traffic Router will refuse to provide routes to these machines
+:Description:      A user-defined description of the :term:`Profile`, typically indicating its purpose
+:CDN:              The CDN to which this :term:`Profile` is restricted. To use the same :term:`Profile` across multiple CDNs, clone the :term:`Profile` and change the clone's CDN field.
 
-Profile management includes the ability to (where applicable):
+:term:`Profile` management includes the ability to (where applicable):
 
-- create a new profile
-- update an existing profile
-- delete an existing profile
-- clone a profile
-- export a profile
-- view profile parameters
-- view profile delivery services
-- view profile servers
+- create a new :term:`Profile`
+- update an existing :term:`Profile`
+- delete an existing :term:`Profile`
+- clone a :term:`Profile`
+- export a :term:`Profile`
+- view :term:`Profile` :term:`Parameter`\ s
+- view :term:`Profile` :term:`Delivery Service`\ s
+- view :term:`Profile` servers
 
 .. seealso:: :ref:`working-with-profiles`
 
-
 Parameters
 ----------
-Allows for the creation, update, and deletion of parameters, as well as modification of their assignment to servers and Delivery Services.
-This page displays a table of parameters with the following columns:
+This page displays a table of :term:`Parameter`\ s from all :term:`Profile`\ s with the following columns:
 
-:Name:        The name of the parameter
-:Config File: The configuration file where this parameter is stored, possibly the special value ``location``, indicating that this parameter actually names the location of a configuration file rather than its contents, or ``package`` to indicate that this parameter specifies a package to be installed rather than anything to do with configuration files
-:Value:       The value of the parameter. The meaning of this depends on the value of 'Config File'
-:Secure:      When this is 'true', a user requesting to see this parameter will see the value ``********`` instead of its actual value if the user's permission level isn't 'admin'
-:Profiles:    The number of profiles currently using this parameter
+:Name:        The name of the :term:`Parameter`
+:Config File: The configuration file where this :term:`Parameter` is stored, possibly the special value ``location``, indicating that this :term:`Parameter` actually names the location of a configuration file rather than its contents, or ``package`` to indicate that this :term:`Parameter` specifies a package to be installed rather than anything to do with configuration files
+:Value:       The value of the :term:`Parameter`. The meaning of this depends on the value of 'Config File'
+:Secure:      When this is 'true', a user requesting to see this :term:`Parameter` will see the value ``********`` instead of its actual value if the user's permission role isn't 'admin'
+:Profiles:    The number of :term:`Profile`\ s currently using this :term:`Parameter`
 
-Parameter management includes the ability to (where applicable):
+:term:`Parameter` management includes the ability to (where applicable):
 
-- create a new parameter
-- update an existing parameter
-- delete an existing parameter
-- view parameter profiles
-
+- create a new :term:`Parameter`
+- update an existing :term:`Parameter`
+- delete an existing :term:`Parameter`
+- view :term:`Parameter` :term:`Profile`\ s
+- manage assignments of a :term:`Parameter` to one or more :term:`Profile`\ s and/or :term:`Delivery Service`\ s
 
 .. _tp-configure-types:
 
 Types
 -----
-'Types' groups Delivery Services, servers and :term:`Cache Group`\ s for various purposes. Each entry in the table shown on this page has the following fields:
+:term:`Type`\ s group :term:`Delivery Service`\ s, servers and :term:`Cache Group`\ s for various purposes. Each entry in the table shown on this page has the following fields:
 
-:Name:         The name of the Type
-:Use In Table: States the use of this Type, e.g. ``server`` indicates this is a Type assigned to servers
-:Description:  A short, usually user-defined, description of the Type
+:Name:         The name of the :term:`Type`
+:Use In Table: States the use of this :term:`Type`, e.g. ``server`` indicates this is a :term:`Type` assigned to servers
+:Description:  A short, usually user-defined, description of the :term:`Type`
 
-Type management includes the ability to (where applicable):
+:term:`Type` management includes the ability to (where applicable):
 
-- create a new type
-- update an existing type
-- delete an existing type
-- view delivery services assigned to a type
-- view servers assigned to a type
-- view :term:`Cache Group`\ s assigned to a type
-
+- create a new :term:`Type`
+- update an existing :term:`Type`
+- delete an existing :term:`Type`
+- view :term:`Delivery Service`\ s assigned to a :term:`Type`
+- view servers assigned to a :term:`Type`
+- view :term:`Cache Group`\ s assigned to a :term:`Type`
 
 Statuses
 --------
-A table of all possible server statuses, with the ability to create, update, and delete statuses. This page shows a table of statuses with the following columns:
+This page shows a table of :term:`Status`\ es with the following columns:
 
-:Name:        The name of this status
-:Description: A short, usually user-defined, description of this status
+:Name:        The name of this :term:`Status`
+:Description: A short, usually user-defined, description of this :term:`Status`
 
-Status management includes the ability to (where applicable):
+:term:`Status` management includes the ability to (where applicable):
 
-- create a new status
-- update an existing status
-- delete an existing status
-- view status servers
-
+- create a new :term:`Status`
+- update an existing :term:`Status`
+- delete an existing :term:`Status`
+- view :term:`Status`\ es
 
 Topology
 ========
-'Topology' groups views and functionality that deal with how CDNs and their Traffic Control components are grouped and distributed, both on a logical level as well as a physical level.
+:guilabel:`Topology` groups views and functionality that deal with how CDNs and their Traffic Control components are grouped and distributed, both on a logical level as well as a physical level.
 
 .. figure:: ./images/tp_menu_topology.png
 	:align: center
@@ -371,14 +375,13 @@ Topology
 
 Cache Groups
 ------------
-':term:`Cache Group`\ s' are sets of cache servers, typically grouped by geographic proximity. This menu allows user to add or remove caches from :term:`Cache Group`\ s as well as creating, updating and deleting :term:`Cache Group`\ s themselves. Each entry in the table of :term:`Cache Group`\ s on this page has the following fields:
+This page is a table of :term:`Cache Group`\ s, each entry of which has the following fields:
 
-:Name:                  The full name of this :term:`Cache Group`
-:Short Name:            A shorter, more human-friendly name for this :term:`Cache Group`
-:Type:                  The Type of this Cache Group (see :ref:`tp-configure-types`)
-:Latitude:              A geographic latitude assigned to this :term:`Cache Group`
-:Longitude:             A geographic longitude assigned to this :term:`Cache Group`
-:Failover Cache Groups: A list of :term:`Cache Group`\ s to fallback to in case of failure. Fallback to Geo Failover allows fallback geographically in case of failure.
+:Name:       The full name of this :term:`Cache Group`
+:Short Name: A shorter, more human-friendly name for this :term:`Cache Group`
+:Type:       The :term:`Type` of this :term:`Cache Group`
+:Latitude:   A geographic latitude assigned to this :term:`Cache Group`
+:Longitude:  A geographic longitude assigned to this :term:`Cache Group`
 
 :term:`Cache Group` management includes the ability to (where applicable):
 
@@ -386,14 +389,16 @@ Cache Groups
 - update an existing :term:`Cache Group`
 - delete an existing :term:`Cache Group`
 - queue/clear updates for all servers in a :term:`Cache Group`
-- view :term:`Cache Group` ASNs
-- view and assign :term:`Cache Group` parameters
-- view :term:`Cache Group` servers
+- view :term:`Cache Group` :abbr:`ASN (Autonomous System Number)`\ s
 
+	.. seealso:: `The Wikipedia page on Autonomous System Numbers <https://en.wikipedia.org/wiki/Autonomous_System_Number>`_
+
+- view and assign :term:`Cache Group` :term:`Parameter`\ s
+- view :term:`Cache Group` servers
 
 Coordinates
 -----------
-'Coordinates' allows a label to be given to a set of geographic coordinates for ease of use. Each entry in the table on this page has the following fields:
+:menuselection:`Topology --> Coordinates` allows a label to be given to a set of geographic coordinates for ease of use. Each entry in the table on this page has the following fields:
 
 :Name:      The name of this coordinate pair
 :Latitude:  The geographic latitude part of the coordinate pair
@@ -405,68 +410,69 @@ Coordination management includes the ability to (where applicable):
 - update an existing coordinate pair
 - delete an existing coordinate pair
 
-
 Phys Locations
 --------------
-A table of physical locations which may be assigned to servers and :term:`Cache Group`\ s, typically for the purpose of optimizing client routing. Here they can be created, updated deleted and assigned. Each entry has the following columns:
+A table of :term:`Physical Location`\ s which may be assigned to servers and :term:`Cache Group`\ s, typically for the purpose of optimizing client routing. Each entry has the following columns:
 
-:Name:       The full name of the physical location
-:Short Name: A shorter, more human-friendly name for this physical location
-:Address:    The location's street address (street number and name)
-:City:       The city within which the location resides
-:State:      The state within which the location's city lies
-:Region:     The Region to which this physical location has been assigned
+:Name:       The full name of the :term:`Physical Location`
+:Short Name: A shorter, more human-friendly name for this :term:`Physical Location`
+:Address:    The :term:`Physical Location`'s street address (street number and name)
+:City:       The city within which the :term:`Physical Location` resides
+:State:      The state within which the :term:`Physical Location`'s city lies
+:Region:     The :term:`Region` to which this :term:`Physical Location` has been assigned
 
-Physical location management includes the ability to (where applicable):
+:term:`Physical Location` management includes the ability to (where applicable):
 
-- create a new physical location
-- update an existing physical location
-- delete an existing physical location
-- view physical location servers
-
+- create a new :term:`Physical Location`
+- update an existing :term:`Physical Location`
+- delete an existing :term:`Physical Location`
+- view :term:`Physical Location` servers
 
 Divisions
 ---------
-Here Divisions may be created and deleted, and their constituent Regions may be viewed. Each entry in the table on this page has the following fields:
+Each entry in the table of :term:`Division`\ s on this page has the following fields:
 
-:Name: The name of the Division
+:Name: The name of the :term:`Division`
 
-Division management includes the ability to (where applicable):
+:term:`Division` management includes the ability to (where applicable):
 
+- create a new :term:`Division`
+- delete an existing :term:`Division`
+- modify an existing :term:`Division`
+- view :term:`Region`\ s within a :term:`Division`
 
 Regions
 -------
-Regions are groups of :term:`Cache Group`\ s, and are themselves grouped into Divisions. Each entry in the table on this page has the following fields:
+Each entry in the table of :term:`Region`\ s on this page has the following fields:
 
-:Name:     The name of this Region
-:Division: The Division to which this Region is assigned
+:Name:     The name of this :term:`Region`
+:Division: The :term:`Division` to which this :term:`Region` is assigned
 
-Region management includes the ability to (where applicable):
+:term:`Region` management includes the ability to (where applicable):
 
-- create a new Region
-- update an existing Region
-- delete an existing Region
-- view Region physical locations
-
+- create a new :term:`Region`
+- update an existing :term:`Region`
+- delete an existing :term:`Region`
+- view :term:`Physical Location`\ s within a :term:`Region`
 
 ASNs
 ----
-Manage Autonomous System Numbers (ASNs). Each entry in the table on this page has the following fields:
+Manage :abbr:`ASN (Autonomous System Number)`\ s. Each entry in the table on this page has the following fields:
 
-:ASN:         The actual ASN
-:Cache Group: The :term:`Cache Group` to which this ASN is assigned
+:ASN:         The actual :abbr:`ASN (Autonomous System Number)`
+:Cache Group: The :term:`Cache Group` to which this :abbr:`ASN (Autonomous System Number)` is assigned
 
-ASN management includes the ability to (where applicable):
+:abbr:`ASN (Autonomous System Number)` management includes the ability to (where applicable):
 
-- create a new ASN
-- update an existing ASN
-- delete an existing ASN
+- create a new :abbr:`ASN (Autonomous System Number)`
+- update an existing :abbr:`ASN (Autonomous System Number)`
+- delete an existing :abbr:`ASN (Autonomous System Number)`
 
 .. seealso:: `Autonomous System (Internet) Wikipedia Page <https://en.wikipedia.org/wiki/Autonomous_system_(Internet)>`_
 
-
 Tools
 =====
+:guilabel:`Tools` contains various tools that don't directly relate to manipulating Traffic Control components or their groupings.
 
 .. figure:: ./images/tp_menu_tools.png
 	:align: center
@@ -474,15 +480,13 @@ Tools
 
 	The 'Tools' Menu
 
-'Tools' contains various tools that don't directly relate to manipulating Traffic Control components or their groupings.
-
 Invalidate Content
 ------------------
-Here, specific assets can be invalidated in all caches of a Delivery Service, forcing content to be updated from the origin. Specifically, this *doesn't* mean that cache servers will immediately remove items from their caches, but rather will fetch new copies whenever a request is made matching the 'Asset URL' regular expression. This behavior persists until the Invalidate Content Job's Time To Live (TTL) expires. Each entry in the table on this page has the following fields:
+Here, specific assets can be invalidated in all caches of a :term:`Delivery Service`, forcing content to be updated from the origin. Specifically, this *doesn't* mean that :term:`cache server` s will immediately remove items from their caches, but rather will fetch new copies whenever a request is made matching the 'Asset URL' regular expression. This behavior persists until the Invalidate Content Job's :abbr:`TTL (Time To Live)` expires. Each entry in the table on this page has the following fields:
 
-:Delivery Service: The Delivery Service to which to apply this Invalidate Content Job
+:term:`Delivery Service`: The :term:`Delivery Service` to which to apply this Invalidate Content Job
 :Asset URL:        A URL or regular expression which describes the asset(s) to be invalidated
-:Parameters:       So far, the only use for this is setting a TTL over which the Invalidate Content Job shall remain active
+:Parameters:       So far, the only use for this is setting a :abbr:`TTL (Time To Live)` over which the Invalidate Content Job shall remain active
 :Start:            An effective start time until which the job is delayed
 :Created By:       The user name of the person who created this Invalidate Content Job
 
@@ -497,7 +501,7 @@ Generates a boot-able system image for any of the servers in the Servers table (
 Copy Server Attributes From
 	Optional. This option lets the user choose a server from the Traffic Ops database and will auto-fill the other fields as much as possible based on that server's properties
 OS Version
-	This list is populated by modifying the ``osversions.cfg`` file on the Traffic Ops server. This file maps OS names to the name of a directory under ``app/public/iso/`` directory within the Traffic Ops install directory
+	This list is populated by modifying the :file:`osversions.cfg` file on the Traffic Ops server. This file maps OS names to the name of a directory under ``app/public/iso/`` directory within the Traffic Ops install directory
 Hostname
 	The desired hostname of the resultant system
 Domain
@@ -513,7 +517,7 @@ DHCP
 			The system's network gateway's IPv4 Address
 
 Network MTU
-	The system's network's Maximum Transmission Unit (MTU). Despite being a text field, this can only be 1500 or 9000 - it should almost always be 1500
+	The system's network's :abbr:`MTU (Maximum Transmission Unit)`. Despite being a text field, this can only be 1500 or 9000 - it should almost always be 1500
 
 		.. seealso:: `The Maximum transmission unit Wikipedia Page <https://en.wikipedia.org/wiki/Maximum_transmission_unit>`_
 
@@ -524,17 +528,15 @@ Root Password
 Confirm Root Password
 	Repeat the 'Root Password' to be sure it's right
 Interface Name
-	Optional. The name of the resultant system's network interface. Typical values are bond0, eth4, etc. If bond0 is entered, a Link Aggregation Control Protocol bonding configuration will be written
+	Optional. The name of the resultant system's network interface. Typical values are ``bond0``, ``eth4``, etc. If ``bond0`` is entered, a Link Aggregation Control Protocol bonding configuration will be written
 
 		.. seealso:: `The Link aggregation Wikipedia Page <https://en.wikipedia.org/wiki/Link_aggregation>`_
 
 Stream ISO
 	If this is 'yes', then the download will start immediately as the ISO is written directly to the socket connection to Traffic Ops. If this is 'no', then the download will begin only *after* the ISO has finished being generated. For almost all use cases, this should be 'yes'.
 
-
 User Admin
 ==========
-
 This section offers administrative functionality for users and their permissions.
 
 .. figure:: ./images/tp_menu_user_admin.png
@@ -550,47 +552,46 @@ This page lists all the users that are visible to the user (so, for 'admin' user
 :Full Name: The user's full, real name
 :Username:  The user's username
 :Email:     The user's email address
-:Tenant:    The user's Tenant
-:Role:      The user's Role
+:Tenant:    The user's :term:`Tenant`
+:Role:      The user's :term:`Role`
 
 User management includes the ability to (where applicable):
 
 - register a new user
 - create a new user
 - update an existing user
-- view delivery services visible to a user
-
+- view :term:`Delivery Service`\ s visible to a user
 
 Tenants
 -------
-A 'Tenant' essentially groups users with the Delivery Services about which they're allowed to know. Each entry in the table on this page has the following entries:
+Each entry in the table of :term:`Tenant`\ s on this page has the following entries:
 
-:Name:   The name of the Tenant
-:Active: If 'true' users of this Tenant group are allowed to login and have active Delivery Services
-:Parent: The parent of this Tenant. The default is the 'root' Tenant, which has no users.
+:Name:   The name of the :term:`Tenant`
+:Active: If 'true' users of this :term:`Tenant` group are allowed to login and have active :term:`Delivery Service`\ s
+:Parent: The parent of this :term:`Tenant`. The default is the 'root' :term:`Tenant`, which has no users.
 
-Tenant management includes the ability to (where applicable):
+:term:`Tenant` management includes the ability to (where applicable):
 
-- create a new tenant
-- update an existing tenant
-- delete an existing tenant
-- view users assigned to a tenant
-- view delivery services assigned to a tenant
+- create a new :term:`Tenant`
+- update an existing :term:`Tenant`
+- delete an existing :term:`Tenant`
+- view users assigned to a :term:`Tenant`
+- view :term:`Delivery Service`\ s assigned to a :term:`Tenant`
 
 Roles
 -----
-'Roles' grant a user permissions to do certain things. Each entry in the table on this page has the following fields:
+Each entry in the table of :term:`Role`\ s on this page has the following fields:
 
-:Name:            The name of the role
-:Privilege Level: The privilege level of this role. This is a whole number that actually controls what a user is allowed to do. Higher numbers correspond to higher permission levels
-:Description:     A short description of the role and what it is allowed to do
+:Name:            The name of the :term:`Role`
+:Privilege Level: The privilege level of this :term:`Role`. This is a whole number that actually controls what a user is allowed to do. Higher numbers correspond to higher permission levels
+:Description:     A short description of the :term:`Role` and what it is allowed to do
 
 Role management includes the ability to (where applicable):
 
-- view all roles
-- create new roles
+- view all :term:`Role`\ s
+- create new :term:`Role`
 
-.. note:: Roles cannot be deleted through the Traffic Portal UI
+.. note:: :term:`Role`\ s cannot be deleted through the Traffic Portal UI
 
 Other
 =====
@@ -608,4 +609,4 @@ This is just a link to `the Traffic Control Documentation <https://trafficcontro
 
 Custom Menu Items
 -----------------
-This section is configurable in the ``tp.domain.com/traffic_portal_properties.json`` configuration file, in the ``customMenu`` section.
+This section is configurable in the :file:`traffic_portal_properties.json` configuration file, in the ``customMenu`` section.

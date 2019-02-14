@@ -84,7 +84,7 @@ FAQ
 .. toctree::
    :maxdepth: 3
 
-   faq/index
+   faq
 
 Indices and Tables
 ==================

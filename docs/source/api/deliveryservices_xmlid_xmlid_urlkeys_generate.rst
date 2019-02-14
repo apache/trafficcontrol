@@ -23,7 +23,7 @@
 
 ``POST``
 ========
-Generates URL signing keys for a Delivery Service
+Generates URL signing keys for a :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -33,11 +33,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+--------+----------------------------------------------+
-	|  Name  |              Description                     |
-	+========+==============================================+
-	| xml_id | The 'xml_id' of the desired Delivery Service |
-	+--------+----------------------------------------------+
+	+--------+------------------------------------------------------+
+	|  Name  |              Description                             |
+	+========+======================================================+
+	| xml_id | The 'xml_id' of the desired :term:`Delivery Service` |
+	+--------+------------------------------------------------------+
 
 Response Structure
 ------------------

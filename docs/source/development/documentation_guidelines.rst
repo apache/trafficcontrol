@@ -30,29 +30,44 @@ Writing
 =======
 When writing documentation, the most important things to remember are:
 
-- Spell Check. Most text editors have this built in (e.g. "F6" in Sublime Text) or have plugins that will do this for you.
+- Spell Check. Most text editors have this built in (e.g. :kbd:`F6` in Sublime Text) or have plugins that will do this for you.
 - Proof-Read. Spell-checkers won't catch grammatical errors or poor wording, so it's very important to actually proof-read all documentation *before* submitting it in a Pull Request.
-- Make Sure the Documentation Actually Builds. Please actually verify the documentation not only builds, but builds *correctly*. That means there probably shouldn't be any warnings, no malformed tables etc. and it also means that new documentation is actually accessible once built. It's not enough to create a new ``.rst`` file, that file must actually be linked to from some other, already included document. Some warnings may be considered acceptable, but do be prepared to defend them.
+- Make Sure the Documentation Actually Builds. Please actually verify the documentation not only builds, but builds *correctly*. That means there probably shouldn't be any warnings, no malformed tables etc. and it also means that new documentation is actually accessible once built. It's not enough to create a new :file:`{something}.rst` file, that file must actually be linked to from some other, already included document. Some warnings may be considered acceptable, but do be prepared to defend them.
 - Traffic Ops UI is Dead. Do not ever create documentation that references or includes images of the Traffic Ops UI. That is officially dead now, and if the documentation being created is best made with references to a user-friendly UI, such references, examples and/or images should all be to/of Traffic Portal.
 
 Formatting
 ----------
-Whenever possible, avoid specifying manual line breaks, except as required by :abbr:`RST (reStructuredText)` syntax. Extremely long lines will be wrapped by the user-agent, compiler, or output format as necessary. A single blank line may be used to separate paragraphs. This means that the 'flow break' character should never need to be used, i.e. no line in the documentation should ever match the regular expression ``^\|$``.
+Whenever possible, avoid specifying manual line breaks, except as required by :abbr:`RST (reStructuredText)` syntax. Extremely long lines will be wrapped by the user-agent, compiler, or output format as necessary. A single blank line may be used to separate paragraphs. This means that the 'flow break' character should never need to be used, i.e. no line in the documentation should ever match the regular expression :regexp:`^\\|$`.
 
 Abbreviations
 """""""""""""
-When using an abbreviation, acronym or initialism for the first time on a page, it **must** be named fully and followed by the abbreviation in parentheses e.g. "Fully Qualified Domain Name (FQDN)". Strictly speaking, the *best* way to create an abbreviation is to always fully name it in parentheses immediately following the abbreviation using the ``:abbr:`` :abbr:`RST (reStructuredText)` text role e.g. ``:abbr:`FQDN (Fully Qualified Domain Name)```, but it's not reasonable to expect that of everyone. Some abbreviations can be assumed to be understood by the documentation's target audience, and do not need full naming; they are:
+When using an abbreviation, acronym or initialism for the first time on a page, it **must** be named fully and followed by the abbreviation in parentheses e.g. "Fully Qualified Domain Name (FQDN)". Strictly speaking, the *best* way to create an abbreviation is to always fully name it in parentheses immediately following the abbreviation using the ``:abbr:`` :abbr:`RST (reStructuredText)` text role e.g. ``:abbr:`FQDN (Fully Qualified Domain Name)```, but it's not reasonable to expect that of everyone. Some abbreviations can be assumed to be understood by the documentation's target audience, and do not need full naming; they are general, basic networking and computing terms including (though not strictly limited to):
 
+- API
+- CSS
 - DNS
+- HTML
 - HTTP
 - HTTPS
 - IP/IPv4/IPv6
+- ISO
+- JPG
+- JSON
+- PDF
+- PNG
+- RPM
+- SQL
+- SSL
+- SVG
 - TCP
+- TLS
 - UDP
 - URL
 - URI
+- XML
+- YAML
 
-Please do **not** abbreviate Traffic Control terms e.g. Cache Group, Delivery Service. See `Terms`_ for the proper way to use these terms.
+Please do **not** abbreviate Traffic Control terms e.g. :term:`Cache Group`, :term:`Delivery Service`. See `Terms`_ for the proper way to use these terms.
 
 Floating Objects
 """"""""""""""""
@@ -78,7 +93,7 @@ Do not ever use the double-colon (``::`` ) directive to mark a section of text a
 
 Tables
 ''''''
-Tables should be included in ``.. table`` directive bodies, **never** as a floating, block-quoted tabular environment. This ensures that all tables will be captioned, which makes their purpose clear and makes them directly link-able in the output as well as includes them in table listings. Tables should avoid wrapping lines until they reach 215 characters in width in the source :abbr:`reStructuredText` document (including indention which should be counted as 4 characters per TAB). No table may ever exceed 215 characters in width. Tables should, in general be left-aligned (which is the default configuration). For the usage or command-line flags or options of a utility, use an "option list" instead of a table.
+Tables should be included in ``.. table`` directive bodies, **never** as a floating, block-quoted tabular environment. This ensures that all tables will be captioned, which makes their purpose clear and makes them directly link-able in the output as well as includes them in table listings. Tables should avoid wrapping lines until they reach 215 characters in width in the source :abbr:`reStructuredText` document (including indention which should be counted as 4 characters per TAB). No table may ever exceed 215 characters in width. Tables should, in general be left-aligned (which is the default configuration). For the usage or command-line flags or options of a utility, use an "option list" or the ``.. program`` and ``.. option`` directives instead of a table.
 
 Indentation
 """""""""""
@@ -153,8 +168,8 @@ Section headings should *always* follow this order exactly, and **never** skip l
 
 Terms
 """""
-Please always spell out the entire name of any Traffic Control terms used in the definition. For example, a collection of cache servers associated with a certain physical location is called a "Cache Group", not a "CG", "cachegroup", "cache location" etc. A subdomain and collection of cache servers responsible collectively for routing traffic to a specific origin is called a "Delivery Service", not a "DS", "deliveryservice" etc. Similarly, always use *full* permissions role names e.g. "operations" not "oper". This will ensure the :ref:`glossary` is actually helpful. To link a term to the glossary, use the ``:term:`` role. This should be done for virtually every use of a Traffic Control term, e.g. ``:term:`Cache Group``` will render as: :term:`Cache Group`.
-Generally speaking, be wary of using the word "cache". To most people that means the *actual* cache on a hard disk somewhere. This word is frequently confused with "cache server", which - when accurate - is always preferred over "cache".
+Please always spell out the entire name of any Traffic Control terms used in the definition. For example, a collection of :term:`cache server`\ s associated with a certain physical location is called a "Cache Group", not a "CG", "cachegroup", "cache location" etc. A subdomain and collection of :term:`cache server`\ s responsible collectively for routing traffic to a specific origin is called a :term:`Delivery Service`", not a "DS", "deliveryservice" etc. Similarly, always use *full* permissions role names e.g. "operations" not "oper". This will ensure the :ref:`glossary` is actually helpful. To link a term to the glossary, use the ``:term:`` role. This should be done for virtually every use of a Traffic Control term, e.g. ``:term:`Cache Group``` will render as: :term:`Cache Group`.
+Generally speaking, be wary of using the word "cache". To most people that means the *actual* cache on a hard disk somewhere. This word is frequently confused with " :term:`cache server`", which - when accurate - is always preferred over "cache".
 
 Documenting API Routes
 ----------------------
@@ -166,7 +181,7 @@ The "Response Example" must **always** exist. "TODO" is **not** an acceptable Re
 
 - The ``Host`` header ought to reflect the actual hostname of the Traffic Ops server - which should be "trafficops.infra.ciab.test" for the CDN in a Box environment. This can be polluted when requests are made to a remotely running CDN in a Box on a different server.
 - The "mojolicious" cookie is extremely long and potentially insecure to publicly show. As such, a placeholder should be used for its value, preferably "...".
-- The ``Content-Type`` header sent by ``cURL`` (and possibly others) is always ``application/x-www-form-urlencoded`` regardless of the actual content. Virtually all payloads accepted by the API must be JSON, so this should be modified to reflect that e.g. ``application/json``.
+- The ``Content-Type`` header sent by :manpage:`curl(1)` (and possibly others) is always ``application/x-www-form-urlencoded`` regardless of the actual content (unless overridden). Virtually all payloads accepted by the API must be JSON, so this should be modified to reflect that when appropriate e.g. ``application/json``.
 - API output is often beautified by inserting line breaks and indentation, which will make the ``Content-Length`` header (if any) incorrect. Don't worry about fixing that - just try to leave the output as close as possible to what will actually be returned by leaving it the way it is.
 
 File names should reflect the request path of the endpoint, e.g. a file for an endpoint of the Traffic Ops API ``/api/1.7/foo/{{fooID}}/bar/{{barID}}`` should be named ``foo_fooID_bar_barID.rst``. Similarly, reference labels linking to the document title for API route pages should follow the convention: ``<component>-api-<path>`` in all lowercase where ``<component>`` is an abbreviated Traffic Control component name e.g. ``to`` and ``<path>`` is the request path e.g. ``foo_bar``. So a label for an endpoint of the Traffic Ops API at ``/api/1.7/foo_bar/{{ID}}`` should be ``to-api-foo_bar-id``.

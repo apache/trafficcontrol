@@ -21,7 +21,7 @@
 
 ``DELETE``
 ==========
-Removes a Delivery Service from a federation. A Delivery Service cannot be removed from a federation if it is the only Delivery Service assigned to said federation
+Removes a :term:`Delivery Service` from a federation. A :term:`Delivery Service` cannot be removed from a federation if it is the only :term:`Delivery Service` assigned to said federation
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+--------------------------------------------------------------------------------------------------------------------------+
-	| Name | Description                                                                                                              |
-	+======+==========================================================================================================================+
-	|  ID  | The integral, unique identifier of the federation from which the Delivery Service identified by ``dsID`` will be removed |
-	+------+--------------------------------------------------------------------------------------------------------------------------+
-	| dsID | The integral, unique identifier of the Delivery Service which will be removed from the federation identified by ``ID``   |
-	+------+--------------------------------------------------------------------------------------------------------------------------+
+	+------+----------------------------------------------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                                                      |
+	+======+==================================================================================================================================+
+	|  ID  | The integral, unique identifier of the federation from which the :term:`Delivery Service` identified by ``dsID`` will be removed |
+	+------+----------------------------------------------------------------------------------------------------------------------------------+
+	| dsID | The integral, unique identifier of the :term:`Delivery Service` which will be removed from the federation identified by ``ID``   |
+	+------+----------------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

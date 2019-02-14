@@ -66,7 +66,7 @@ Response Structure
 		This field still exists, but has no purpose as all assets are now treated as remote files; i.e. it will always be ``"file"``.
 
 :createdBy:       The username of the user who initiated the job
-:deliveryService: The 'xml_id' that uniquely identifies the Delivery Service on which this job operates
+:deliveryService: The 'xml_id' that uniquely identifies the :term:`Delivery Service` on which this job operates
 :enteredTime:     The date and time at which the job was created, in ISO format
 :id:              An integral, unique identifier for this job
 :keyword:         A keyword that represents the operation being performed by the job:
@@ -127,11 +127,11 @@ Creates a new content revalidation job.
 
 Request Structure
 -----------------
-:dsId: The integral, unique identifier of the Delivery Service on which the revalidation job shall operate
+:dsId: The integral, unique identifier of the :term:`Delivery Service` on which the revalidation job shall operate
 
 :regex: This should be a `PCRE <http://www.pcre.org/>`_-compatible regular expression for the path to match for forcing the revalidation
 
-	.. warning:: This is concatenated directly to the origin URL of the Delivery Service identified by ``dsId`` to make the full regular expression. Thus it is not necessary to restate the URL but it should be noted that if the origin URL does not end with a backslash (``/``) then this should begin with an escaped backslash to ensure proper behavior (otherwise it will match against FQDNs, which leads to undefined behavior in Traffic Control).
+	.. warning:: This is concatenated directly to the origin URL of the :term:`Delivery Service` identified by ``dsId`` to make the full regular expression. Thus it is not necessary to restate the URL but it should be noted that if the origin URL does not end with a backslash (``/``) then this should begin with an escaped backslash to ensure proper behavior (otherwise it will match against FQDNs, which leads to undefined behavior in Traffic Control).
 
 	.. note:: Be careful to only match on the content that must be removed - revalidation is an expensive operation for many origins, and a simple ``/.*`` can cause an overload in requests to the origin.
 
@@ -186,4 +186,4 @@ Response Structure
 		}
 	]}
 
-.. [1] A role is only required if tenancy is not used; if tenancy is used by Traffic Control, then the user will be able to create the content revalidation job on Delivery Services scoped to his or her tenancy regardless of role. This means that **even read-only users can create content invalidation jobs for Delivery Services scoped to their tenancy**. This behavior is considered a bug, and it is tracked by `GitHub Issue #3116 <https://github.com/apache/trafficcontrol/issues/3116>`_.
+.. [1] A role is only required if tenancy is not used; if tenancy is used by Traffic Control, then the user will be able to create the content revalidation job on :term:`Delivery Service`\ s scoped to his or her tenancy regardless of role. This means that **even read-only users can create content invalidation jobs for :term:`Delivery Service`\ s scoped to their tenancy**. This behavior is considered a bug, and it is tracked by `GitHub Issue #3116 <https://github.com/apache/trafficcontrol/issues/3116>`_.

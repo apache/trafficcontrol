@@ -18,7 +18,7 @@
 ************
 CDN in a Box
 ************
-"CDN in a Box" is a name given to the time-honored tradition of new Traffic Control developers/potential users attempting to set up their own miniature CDN to just see how it all fits together. Historically, this has been a nightmare of digging through leftover ``virsh`` scripts and manually configuring pretty hefty networking changes (don't even get me started on DNS) and just generally having a bad time. For a few years now, different people had made it to various stages of merging the project into Docker for ease of networking, but certain constraints hampered progress - until now. The project has finally reached a working state, and now getting a mock/test CDN running can be a very simple task (albeit rather time-consuming).
+"CDN in a Box" is a name given to the time-honored tradition of new Traffic Control developers/potential users attempting to set up their own, miniature CDN to just see how it all fits together. Historically, this has been a nightmare of digging through leftover ``virsh`` scripts and manually configuring pretty hefty networking changes (don't even get me started on DNS) and just generally having a bad time. For a few years now, different people had made it to various stages of merging the project into Docker for ease of networking, but certain constraints hampered progress - until now. The project has finally reached a working state, and now getting a mock/test CDN running can be a very simple task (albeit rather time-consuming).
 
 Getting Started
 ===============
@@ -29,21 +29,20 @@ Because it runs in Docker, the only true prerequisites are:
 
 Building
 --------
-The CDN in a Box directory is found within the Traffic Control repository at ``infrastructure/cdn-in-a-box/``. CDN in a Box relies on the presence of pre-built RPM files for the following Traffic Control components:
+The CDN in a Box directory is found within the Traffic Control repository at :file:`infrastructure/cdn-in-a-box/`. CDN in a Box relies on the presence of pre-built :file:`{component}.rpm` files for the following Traffic Control components:
 
-* Traffic Monitor - at ``infrastructure/cdn-in-a-box/traffic_monitor/traffic_monitor.rpm``
-* Traffic Ops - at ``infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm``
-* Traffic Portal - at ``infrastructure/cdn-in-a-box/traffic_portal/traffic_portal.rpm``
-* Traffic Router - at ``infrastructure/cdn-in-a-box/traffic_router/traffic_router.rpm`` - also requires an Apache Tomcat RPM at ``infrastructure/cdn-in-a-box/traffic_router/tomcat.rpm``
+* Traffic Monitor - at :file:`infrastructure/cdn-in-a-box/traffic_monitor/traffic_monitor.rpm`
+* Traffic Ops - at :file:`infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm`
+* Traffic Portal - at :file:`infrastructure/cdn-in-a-box/traffic_portal/traffic_portal.rpm`
+* Traffic Router - at :file:`infrastructure/cdn-in-a-box/traffic_router/traffic_router.rpm` - also requires an Apache Tomcat RPM at :file:`infrastructure/cdn-in-a-box/traffic_router/tomcat.rpm`
 
 .. note:: These can also be specified via the ``RPM`` variable to a direct Docker build of the component - with the exception of Traffic Router, which instead accepts ``JDK8_RPM`` to specify a Java Development Kit RPM,  ``TRAFFIC_ROUTER_RPM`` to specify a Traffic Router RPM, and  ``TOMCAT_RPM`` to specify an Apache Tomcat RPM.
 
-These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the ``infrastructure/cdn-in-a-box/Makefile`` file contains recipes to build all of these - simply run ``make``\ [2]_ from the ``infrastructure/cdn-in-a-box/`` directory.
-Once all RPM dependencies have been satisfied, run ``docker-compose build`` from the ``infrastructure/cdn-in-a-box/`` directory to construct the images needed to run CDN in a Box.
+These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)`\ [2]_ from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
 
 Usage
 -----
-In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with ``-d``  to run without binding to the terminal - from the ``infrastructure/cdn-in-a-box/`` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the containers are exposed locally to the host on specific ports. These are configured within the ``infrastructure/cdn-in-a-box/docker-compose.yml`` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
+In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the containers are exposed locally to the host on specific ports. These are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
 
 .. _ciab-service-info:
 .. table:: Service Info
@@ -77,7 +76,7 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 
 .. seealso:: :ref:`tr-api` and :ref:`tm-api`
 
-While the components may be interacted with by the host using these ports, the true operation of the CDN can only truly be seen from within the Docker network. To see the CDN in action, connect to a container within the CDN in a Box project and use cURL to request the URL ``http://video.demo1.mycdn.ciab.test`` which will be resolved by the DNS container to the IP of the Traffic Router, which will provide a ``302 FOUND`` response pointing to the Edge-Tier cache. A typical choice for this is the "enroller" service, which has a very nuanced purpose not discussed here but already has the ``curl`` command line tool installed. For a more user-friendly interface into the CDN network, see `VNC Server`_.
+While the components may be interacted with by the host using these ports, the true operation of the CDN can only truly be seen from within the Docker network. To see the CDN in action, connect to a container within the CDN in a Box project and use cURL to request the URL ``http://video.demo1.mycdn.ciab.test`` which will be resolved by the DNS container to the IP of the Traffic Router, which will provide a ``302 FOUND`` response pointing to the Edge-Tier cache. A typical choice for this is the "enroller" service, which has a very nuanced purpose not discussed here but already has the :manpage:`curl(1)` command line tool installed. For a more user-friendly interface into the CDN network, see `VNC Server`_.
 
 .. code-block:: shell
 	:caption: Example Command to See the CDN in Action
@@ -93,7 +92,7 @@ variables.env
 	:start-line: 16
 	:tab-width: 4
 
-.. note:: While these port settings can be changed without hampering the function of the CDN in a Box system, note that changing a port without also changing the matching port-mapping in ``infrastructure/cdn-in-a-box/docker-compose.yml`` for the affected service *will* make it unreachable from the host.
+.. note:: While these port settings can be changed without hampering the function of the CDN in a Box system, note that changing a port without also changing the matching port-mapping in :file:`infrastructure/cdn-in-a-box/docker-compose.yml` for the affected service *will* make it unreachable from the host.
 
 .. [1] It is perfectly possible to build and run all containers without Docker Compose, but it's not recommended and not covered in this guide.
 .. [2] Consider ``make -j`` to build quickly, if your computer can handle multiple builds at once.
@@ -101,72 +100,73 @@ variables.env
 
 X.509 SSL/TLS Certificates
 ==========================
-All components in Apache Traffic Control utilize SSL/TLS secure communications by default. For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Root Certificate Authority (CA) is generated at the first initial startup. An X.509 Intermediate Certificate Authority (CA) is also generated and signed by the Root CA.  Additional wildcard certificates are generated/signed by the Intermediate CA for each container service and demo1, demo2, and demo3 delivery services. All certificates and keys are stored in the ``ca`` host volume which is located at ``infrastruture/cdn-in-a-box/traffic_ops/ca`` [4]_.
+All components in Apache Traffic Control utilize SSL/TLS secure communications by default. For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Root :abbr:`CA (Certificate Authority)` is generated at the first initial startup. An X.509 Intermediate :abbr:`CA (Certificate Authority)` is also generated and signed by the Root :abbr:`CA (Certificate Authority)`. Additional "wildcard" certificates are generated/signed by the Intermediate :abbr:`CA (Certificate Authority)` for each container service and demo1, demo2, and demo3 :term:`Delivery Service`\ s. All certificates and keys are stored in the ``ca`` host volume which is located at :file:`infrastruture/cdn-in-a-box/traffic_ops/ca`\ [4]_.
 
 .. _ciab-x509-certificate-list:
 .. table:: Self-Signed X.509 Certificate List
 
-	+---------------------------+-------------------------------------------+------------------------------+
-	| Filename                  | Description                               | X.509 CN/SAN                 |
-	+===========================+===========================================+==============================+
-	| CIAB-CA-root.crt          | Shared Root CA Certificate                | N/A                          |
-	+---------------------------+-------------------------------------------+------------------------------+
-	| CIAB-CA-intr.crt          | Shared Intermediate CA Certificate        | N/A                          |
-	+---------------------------+-------------------------------------------+------------------------------+
-	| CIAB-CA-fullchain.crt     | Shared CA Certificate Chain Bundle [5]_   | N/A                          |
-	+---------------------------+-------------------------------------------+------------------------------+
-	| infra.ciab.test.crt       | Infrastruture Certificate                 | \*.infra.ciab.test           |
-	+---------------------------+-------------------------------------------+------------------------------+
-	| demo1.mycdn.ciab.test.crt | Demo1 Delivery Service Certificate        | \*.demo1.mycdn.ciab.test     |
-	+---------------------------+-------------------------------------------+------------------------------+
-	| demo2.mycdn.ciab.test.crt | Demo2 Delivery Service Certificate        | \*.demo2.mycdn.ciab.test     |
-	+---------------------------+-------------------------------------------+------------------------------+
-	| demo3.mycdn.ciab.test.crt | Demo3 Delivery Service Certificate        | \*.demo3.mycdn.ciab.test     |
-	+---------------------------+-------------------------------------------+------------------------------+
+	+---------------------------+--------------------------------------------------------------------------+----------------------------------------+
+	| Filename                  | Description                                                              | X.509 CN/SAN                           |
+	+===========================+==========================================================================+========================================+
+	| CIAB-CA-root.crt          | Shared Root :abbr:`CA (Certificate Authority)` Certificate               | N/A                                    |
+	+---------------------------+--------------------------------------------------------------------------+----------------------------------------+
+	| CIAB-CA-intr.crt          | Shared Intermediate :abbr:`CA (Certificate Authority)` Certificate       | N/A                                    |
+	+---------------------------+--------------------------------------------------------------------------+----------------------------------------+
+	| CIAB-CA-fullchain.crt     | Shared :abbr:`CA (Certificate Authority)` Certificate Chain Bundle\ [5]_ | N/A                                    |
+	+---------------------------+--------------------------------------------------------------------------+----------------------------------------+
+	| infra.ciab.test.crt       | Infrastruture Certificate                                                | :file:`{prefix}.infra.ciab.test`       |
+	+---------------------------+--------------------------------------------------------------------------+----------------------------------------+
+	| demo1.mycdn.ciab.test.crt | Demo1 :term:`Delivery Service` Certificate                               | :file:`{prefix}.demo1.mycdn.ciab.test` |
+	+---------------------------+--------------------------------------------------------------------------+----------------------------------------+
+	| demo2.mycdn.ciab.test.crt | Demo2 :term:`Delivery Service` Certificate                               | :file:`{prefix}.demo2.mycdn.ciab.test` |
+	+---------------------------+--------------------------------------------------------------------------+----------------------------------------+
+	| demo3.mycdn.ciab.test.crt | Demo3 :term:`Delivery Service` Certificate                               | :file:`{prefix}.demo3.mycdn.ciab.test` |
+	+---------------------------+--------------------------------------------------------------------------+----------------------------------------+
 
 .. [4] The ``ca`` volume is not purged with normal ``docker volume`` commands. This feature is by design to allow the existing shared SSL certificate to be trusted at the system level across restarts. To re-generate all SSL certificates and keys, remove the ``infrastructure/cdn-in-a-box/traffic_ops/ca`` directory before startup.
-.. [5] The full chain bundle is a file that contains both the Root and Intermediate CA certificates.
+.. [5] The full chain bundle is a file that contains both the Root and Intermediate :abbr:`CA (Certificate Authority)` certificates.
 
-Trusting the CA
----------------
-For developer and testing use-cases, it may be necessary to have full x509 CA validation by HTTPS clients [6]_ [7]_. For x509 validation to work properly, the self-signed x509 CA certificate must be trusted either at the system level or by the client application itself. Procedures to import and trust the CA x.509 certificate are outlined below [8]_.
+Trusting the Certificate Authority
+----------------------------------
+For developer and testing use-cases, it may be necessary to have full x509 :abbr:`CA (Certificate Authority)` validation by HTTPS clients\ [6]_\ [7]_. For x509 validation to work properly, the self-signed x509 :abbr:`CA (Certificate Authority)` certificate must be trusted either at the system level or by the client application itself.
 
-Importing the CA Certificate on OSX
------------------------------------
-#. Copy the CIAB root and intermediate CA certificates from ``infrastructure/cdn-in-a-box/traffic_ops/ca`` to the Mac.
-#. Double-click the CIAB CA certificate to open it in Keychain Access.
-#. The CIAB root CA certificate appears in login.
-#. Copy the CIAB root CA certificate to System.
-#. Open the CIAB root CA certificate, expand Trust, select Use System Defaults, and save your changes.
-#. Reopen the CIAB root CA certificate, expand Trust, select Always Trust, and save your changes.
-#. Delete the CIAB root CA certificate from login.
-#. Repeat the last six steps to import the Intermediate CA Certificate
+.. note:: HTTP Client applications such as Google Chrome, Firefox, :manpage:`curl(1)`, and :manpage:`wget(1)` can also be individually configured to trust the :abbr:`CA (Certificate Authority)` certificate. Review each program's respective documentation for instructions.
+
+Importing the :abbr:`CA (Certificate Authority)` Certificate on OSX
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+#. Copy the CIAB root and intermediate :abbr:`CA (Certificate Authority)` certificates from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/` to the Mac.
+#. Double-click the CIAB root :abbr:`CA (Certificate Authority)` certificate to open it in Keychain Access.
+#. The CIAB root :abbr:`CA (Certificate Authority)` certificate appears in login.
+#. Copy the CIAB root :abbr:`CA (Certificate Authority)` certificate to System.
+#. Open the CIAB root :abbr:`CA (Certificate Authority)` certificate, expand :guilabel:`Trust`, select :guilabel:`Use System Defaults`, and save your changes.
+#. Reopen the CIAB root :abbr:`CA (Certificate Authority)` certificate, expand :guilabel:`Trust, select :guilabel:`Always Trust`, and save your changes.
+#. Delete the CIAB root :abbr:`CA (Certificate Authority)` certificate from login.
+#. Repeat the previous steps with the Intermediate :abbr:`CA (Certificate Authority)` certificate to import it as well
 #. Restart all HTTPS clients (browsers, etc).
 
-Importing the CA certificate on Windows
----------------------------------------
-#. Copy the CIAB root and intermediate CA certificate from ``infrastructure/cdn-in-a-box/traffic_ops/ca`` to Windows filesystem.
+Importing the :abbr:`CA (Certificate Authority)` certificate on Windows
+-----------------------------------------------------------------------
+#. Copy the CIAB root :abbr:`CA (Certificate Authority)` and intermediate :abbr:`CA (Certificate Authority)` certificates from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/` to Windows filesystem.
 #. As Administrator, start the Microsoft Management Console.
 #. Add the Certificates snap-in for the computer account and manage certificates for the local computer.
-#. Import the CIAB root CA certificate into Trusted Root Certification Authorities > Certificates.
-#. Import the CIAB intermediate CA certificate into Trusted Root Certification Authorities > Certificates.
+#. Import the CIAB root :abbr:`CA (Certificate Authority)` certificate into :menuselection:`Trusted Root Certification Authorities --> Certificates`.
+#. Import the CIAB intermediate :abbr:`CA (Certificate Authority)` certificate into :menuselection:`Trusted Root Certification Authorities --> Certificates`.
 #. Restart all HTTPS clients (browsers, etc).
 
-Importing the CA certificate on Linux/Centos7
----------------------------------------------
-#. Copy the CIAB full chain CA certificate bundle from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt`` to path ``/etc/pki/ca-trust/source/anchors``.
-#. Run ``update-ca-trust-extract`` as the root user.
+Importing the :abbr:`CA (Certificate Authority)` certificate on Linux/Centos7
+-----------------------------------------------------------------------------
+#. Copy the CIAB full chain :abbr:`CA (Certificate Authority)` certificate bundle from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt` to path :file:`/etc/pki/ca-trust/source/anchors/`.
+#. Run ``update-ca-trust-extract`` as the root user or with :manpage:`sudo(8)`.
 #. Restart all HTTPS clients (browsers, etc).
 
-Importing the CA certificate on Linux/Ubuntu
---------------------------------------------
-#. Copy the CIAB full chain CA certificate bundle from ``infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt`` to path ``/usr/local/share/ca-certificates``.
-#. Run ``update-ca-certificates`` as the root user.
+Importing the :abbr:`CA (Certificate Authority)` certificate on Linux/Ubuntu
+----------------------------------------------------------------------------
+#. Copy the CIAB full chain :abbr:`CA (Certificate Authority)` certificate bundle from :file:`infrastructure/cdn-in-a-box/traffic_ops/ca/CIAB-CA-fullchain.crt` to path :file:`/usr/local/share/ca-certificates/`.
+#. Run ``update-ca-certificates`` as the root user or with :manpage:`sudo(8)`.
 #. Restart all HTTPS clients (browsers, etc).
 
-.. [6] All containers within CDN-in-a-Box start up with the self-signed CA already trusted.
-.. [7] The demo1 Delivery Service X509 certificate is automatically imported into traffic vault on startup.
-.. [8] HTTP Client applications such as Google Chrome, Firefox, curl, and wget can also be individually configured to trust the CA certificate. Each application procedure can be found quickly online via Google.
+.. [6] All containers within CDN-in-a-Box start up with the self-signed :abbr:`CA (Certificate Authority)` already trusted.
+.. [7] The 'demo1' :term:`Delivery Service` X509 certificate is automatically imported into Traffic Vault on startup.
 
 Advanced Usage
 ==============
@@ -174,20 +174,35 @@ This section will be amended as functionality is added to the CDN in a Box proje
 
 The Enroller
 ------------
-The "enroller" provides an efficient way for Traffic Ops to be populated with data as CDN in a Box starts up. It connects to Traffic Ops as the admin user and processes files places in the docker volume shared between the containers. The enroller watches each directory within the ``/shared/enroller`` directory for new ``.json`` files to be created there. These files must follow the format outlined in the API guide for the ``POST`` method for each data type,  (e.g. for a ``tenant``, follow the guidelines for ``POST api/1.4/regions``). Of note,  the ``enroller`` does not require fields that reference database ids for other objects within the database.
+The "enroller" began as an efficient way for Traffic Ops to be populated with data as CDN in a Box starts up. It connects to Traffic Ops as the "admin" user and processes files places in the docker volume shared between the containers. The enroller watches each directory within the ``/shared/enroller`` directory for new :file:`{filename}.json` files to be created there. These files must follow the format outlined in the API guide for the ``POST`` method for each data type,  (e.g. for a ``tenant``, follow the guidelines for ``POST api/1.4/regions``). Of note, the ``enroller`` does not require fields that reference database ids for other objects within the database.
 
-The enroller runs within CDN in a Box using the ``-dir <dir>`` switch which provides the above behavior. It can also be run using the ``-http :<port>`` switch to instead have it listen on the indicated port. In this case, it accepts only POST requests with the JSON provided using the POST JSON method, e.g. ``curl -X POST https://enroller/api/1.4/regions -d @newregion.json``.  CDN in a Box does not currently use this method, but may be modified in the future to avoid using the shared volume approach.
+.. program::enroller
+
+.. option:: --dir directory
+
+	Base directory to watch for data. Mutually exclusive with :option:`--http`\ .
+
+.. option:: --http port
+
+	Act as an HTTP server for ``POST`` requests on this port. Mutually exclusive with :option:`--dir`\ .
+
+.. option:: --started filename
+
+	The name of a file which will be created in the :option:`--dir` directory when given, indicating service was started (default: "enroller-started").
+
+
+The enroller runs within CDN in a Box using :option:`--dir` which provides the above behavior. It can also be run using :option:`--http` to instead have it listen on the indicated port. In this case, it accepts only ``POST`` requests with the JSON provided in the request payload, e.g. ``curl -X POST https://enroller/api/1.4/regions -d @newregion.json``. CDN in a Box does not currently use this method, but may be modified in the future to avoid using the shared volume approach.
 
 Auto Snapshot/Queue-Updates
 ---------------------------
-An automatic snapshot of the current Traffic Ops CDN configuration/toplogy will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled.  To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [9]_.  The snapshot and queue-updates actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled.  The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (snapshot and queue-updates) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [10]_.
+An automatic snapshot of the current Traffic Ops CDN configuration/toplogy will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled.  To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [8]_.  The snapshot and queue-updates actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled.  The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (snapshot and queue-updates) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [9]_.
 
-.. [9] Automatic Snapshot/Queue-Updates is enabled by default in `variables.env`_.
-.. [10] Server poll interval and delay action wait are defaulted to a value of 2 seconds.
+.. [8] Automatic Snapshot/Queue-Updates is enabled by default in :file:`infrastructure/cdn-in-a-box/variables.env`.
+.. [9] Server poll interval and delay action wait are defaulted to a value of 2 seconds.
 
 Mock Origin Service
 -------------------
-The default "origin" service container provides a basic static file HTTP server as the central respository for content. Additional files can be added to the origin root content directory located at ``infrastructure/cdn-in-a-box/origin/content``. To request content directly from the origin directly and bypass the CDN:
+The default "origin" service container provides a basic static file HTTP server as the central repository for content. Additional files can be added to the origin root content directory located at :file:`infrastructure/cdn-in-a-box/origin/content`. To request content directly from the origin directly and bypass the CDN:
 
 * Origin Service URL: http://origin.infra.ciab.test/index.html
 * Docker Host: http://localhost:9200/index.html
@@ -199,16 +214,16 @@ Optional Containers
 
 All optional containers that are not part of the core CDN-in-a-Box stack are located in the ``infrastructure/cdn-in-a-box/optional`` directory.
 
-.. code-block:: shell
-
-	infrastructure/cdn-in-a-box/optional/docker-compose.$NAME.yml
-	infrastructure/cdn-in-a-box/optional/$NAME/Dockerfile
+- :file:`infrastructure/cdn-in-a-box/optional/docker-compose.{NAME}.yml`
+- :file:`infrastructure/cdn-in-a-box/optional/{NAME}/Dockerfile`
 
 Multiple optional containers may be combined by using a shell alias:
 
 .. code-block:: shell
+	:caption: Starting Optional Containers with an Alias
 
 	# From the infrastructure/cdn-in-a-box directory
+	# (Assuming the names of the optional services are stored in the `NAME1` and `NAME2` environment variables)
 	alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.$NAME1.yml -f  $PWD/optional/docker-compose.$NAME2.yml"
 	docker volume prune -f
 	mydc build
@@ -216,10 +231,10 @@ Multiple optional containers may be combined by using a shell alias:
 
 VNC Server
 ----------
-The TightVNC optional container provides a basic lightweight window manager (fluxbox), Firefox browser, xterm, and a few other utilities within the CDN-In-A-Box tcnet bridge network. This can be very helpful for quick demonstrations of CDN-in-a-Box that require the use of real container network FQDNs and full X.509 validation.
+The TightVNC optional container provides a basic lightweight window manager (fluxbox), Firefox browser, xterm, and a few other utilities within the CDN-In-A-Box "tcnet" bridge network. This can be very helpful for quick demonstrations of CDN-in-a-Box that require the use of real container network :abbr:`FQDN (Fully Qualified Domain Name)`\ s and full X.509 validation.
 
 #. Download and install a VNC client. TightVNC client is preferred as it supports window resizing, host-to-vnc copy/pasting, and optimized frame buffer compression.
-#. Set your VNC console password by adding the ``VNC_PASSWD`` environment variable to ``infrastructure/cdn-in-a-box/varibles.env``. The password needs to be at least six characters long. The default password is randomized for security.
+#. Set your VNC console password by adding the ``VNC_PASSWD`` environment variable to :file:`infrastructure/cdn-in-a-box/varibles.env`. The password needs to be at least six characters long. The default password is randomized for security.
 #. Start up CDN-in-a-Box stack. It is recommended that this be done using a custom bash alias
 
 	.. code-block:: shell
@@ -241,11 +256,11 @@ Socks Proxy
 -----------
 Dante's socks proxy is an optional container that can be used to provide browsers and other clients the ability to resolve DNS queries and network connectivity directly on the tcnet bridged interface. This is very helpful when running the CDN-In-A-Box stack on OSX/Windows docker host that lacks network bridge/IP-forward support. Below is the basic procedure to enable the Socks Proxy support for CDN-in-a-Box:
 
-#. Start the CDN-in-a-Box stack at least once so that the x.509 self-signed certificate authority (CA) is created.
-#. On the host, import and Trust the CA for your target OS. See `Trusting the CA`_
-#. On the host, using either Firefox or Chrome, download the FoxyProxy Standard browser plugin which enables dynamic proxy support via URL regular expression
-#. Once FoxyProxy is installed, click the Fox icon on the upper right hand of the browser window, select 'Options'
-#. Once in Options Dialog, Click 'Add New Proxy' and navigate to the General tab:
+#. Start the CDN-in-a-Box stack at least once so that the x.509 self-signed :abbr:`CA (Certificate Authority)` is created.
+#. On the host, import and Trust the :abbr:`CA (Certificate Authority)` for your target Operating System. See `Trusting the Certificate Authority`_
+#. On the host, using either Firefox or Chrome, download the `FoxyProxy browser plugin <https://getfoxyproxy.org/>`_ which enables dynamic proxy support via URL regular expression
+#. Once FoxyProxy is installed, click the Fox icon on the upper right hand of the browser window, select :guilabel:`Options`
+#. Once in Options Dialog, Click :guilabel:`Add New Proxy` and navigate to the General tab:
 #. Fill in the General tab according to the table
 
 	.. table:: General Tab Values
@@ -280,21 +295,21 @@ Dante's socks proxy is an optional container that can be used to provide browser
 
 	.. table:: URL Patters Tab Values
 
-		+--------------+--------------+
-		| Name         |        Value |
-		+==============+==============+
-		| Pattern Name | CIAB Pattern |
-		+--------------+--------------+
-		| URL Pattern  |   \*.test/\* |
-		+--------------+--------------+
-		| Whitelist    |     selected |
-		+--------------+--------------+
-		| Wildcards    |     selected |
-		+--------------+--------------+
+		+--------------+-----------------------+
+		| Name         |                 Value |
+		+==============+=======================+
+		| Pattern Name |          CIAB Pattern |
+		+--------------+-----------------------+
+		| URL Pattern  |  :regexp:`\*.test/\*` |
+		+--------------+-----------------------+
+		| Whitelist    |              selected |
+		+--------------+-----------------------+
+		| Wildcards    |              selected |
+		+--------------+-----------------------+
 
-#. Enable dynamic 'pre-defined and patterns' mode by clicking the fox icon in the upper right of the browser. This mode only forwards URLs that match the wildcard ``\*.test/\*`` to the Socks V5 proxy.
+#. Enable dynamic 'pre-defined and patterns' mode by clicking the fox icon in the upper right of the browser. This mode only forwards URLs that match the wildcard :regexp:`\*.test/\*` to the Socks V5 proxy.
 
-10. On the docker host start up CDN-in-a-Box stack. It is recommended that this be done using a custom bash alias
+#. On the docker host start up CDN-in-a-Box stack. It is recommended that this be done using a custom bash alias
 
 	.. code-block:: shell
 		:caption: CIAB Startup Using Bash Alias
@@ -307,7 +322,7 @@ Dante's socks proxy is an optional container that can be used to provide browser
 		mydc rm -fv
 		mydc up
 
-#. Once the CDN-in-a-box stack has started, use the aforementioned browser to access traffic portal via the socks proxy on the docker host.
+#. Once the CDN-in-a-box stack has started, use the aforementioned browser to access Traffic Portal via the socks proxy on the docker host.
 
 .. seealso:: `The official Docker Compose documentation CLI reference <https://docs.docker.com/compose/reference/>`_ for complete instructions on how to pass service definition files to the ``docker-compose`` executable.
 
@@ -324,10 +339,9 @@ Since ``docker-compose`` will randomly create a subnet and it has a chance to co
 	mydc build
 	mydc up
 
-VNC Server
+VPN Server
 ----------
-This container provide an OpenVPN service.
-It could let user or developer easily access CIAB network.
+This container provides an OpenVPN service. It's primary use is to allow users and developers to easily access CIAB network.
 
 How to use it
 """""""""""""
@@ -342,46 +356,42 @@ How to use it
         mydc build
         mydc up
 
-#. All certificates, keys, and client configuration are stored at ``infrastruture/cdn-in-a-box/optional/vpn/vpnca``. You just simply change ``REALHOSTIP`` and ``REALPORT`` of ``client.ovpn`` to fit your environment, and then you can connect to this OpenVPN server by it.
+#. All certificates, keys, and client configuration are stored at ``infrastruture/cdn-in-a-box/optional/vpn/vpnca``. You just simply change ``REALHOSTIP`` and ``REALPORT`` of ``client.ovpn`` to fit your environment, and then you can use it to connect to this OpenVPN server.
 
 The proposed VPN client
 """""""""""""""""""""""
-On Linux, you could choose ``openvpn``. Take ubuntu/debian as an example, you can install it by the following instructions.
+On Linux, we suggest ``openvpn``. On most Linux distributions, this will also be the name of the package that provides it.
 
 .. code-block:: shell
     :caption: Install openvpn on ubuntu/debian
 
     apt-get update && apt-get install -y openvpn
 
-On OSX, it only works with brew installed openvpn client, not the *OpenVPN GUI client*. You can install it by the following instruction.
+On OSX, it only works with brew installed openvpn client, not the *OpenVPN GUI client*.
 
 .. code-block:: shell
     :caption: Install openvpn on OSX
 
     brew install openvpn
 
-If you want a GUI version of VPN client, you can choose `Tunnelblick <https://tunnelblick.net/>`_.
+If you want a GUI version of VPN client, we recommend `Tunnelblick <https://tunnelblick.net/>`_.
 
 Private Subnet for Routing
 """"""""""""""""""""""""""
-Since ``docker-compose`` randomly create subnet, this container prepares 2 default private subnet for routing:
+Since ``docker-compose`` randomly creates a subnet, this container prepares 2 default private subnets for routing:
 
 * 172.16.127.0/255.255.240.0
 * 10.16.127.0/255.255.240.0
 
-The strategy of choosing default private subnet is comparing the subnet prefix.
-If the subnet prefix which ``docker-compose`` selected is 192. or 10.,
-this container goes to select 172.16.127.0/255.255.240.0 for its routing subnet.
-Otherwise, it selects 10.16.127.0/255.255.240.0.
+The subnet that will be used is determined automatically based on the subnet prefix. If the subnet prefix which ``docker-compose`` selected is ``192.`` or ``10.``, this container will select 172.16.127.0/255.255.240.0 for its routing subnet. Otherwise, it selects 10.16.127.0/255.255.240.0.
 
-Of course, you can decide which routing subnet subnet by supply environment
-variable ``PRIVATE_NETWORK`` and ``PRIVATE_NETMASK``.
+Of course, you can decide which routing subnet subnet by supplying the environment variables ``PRIVATE_NETWORK`` and ``PRIVATE_NETMASK``.
 
 Pushed Settings
 """""""""""""""
 Pushed settings are shown as follows:
 
 * DNS
-* A routing rule for CIAB subnet
+* A routing rule for the ``CIAB`` subnet
 
-.. note:: It will not change your default gateway. That means apart from CIAB traffic and DNS request, all other traffic goes out standard interface bound to the default gateway.
+.. note:: It will not change your default gateway. That means apart from CDN in a Box traffic and DNS requests, all other traffic will use the standard interface bound to the default gateway.

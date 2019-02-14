@@ -21,7 +21,7 @@ Configure Anonymous Blocking
 
 .. Note:: Anonymous Blocking is only supported for HTTP delivery services. You will need access to a database that provides anonymous IP statistics (`Maxmind's database <https://www.maxmind.com/en/solutions/geoip2-enterprise-product-suite/anonymous-ip-database>`_ is recommended, as this functionality was built specifically to work with it.)
 
-#. Prepare the Anonymous Blocking configuration file. Anonymous Blocking uses a configuration file in JSON format to define blocking rules for Delivery Services. The file needs to be put on an HTTP server accessible to Traffic Router.
+#. Prepare the Anonymous Blocking configuration file. Anonymous Blocking uses a configuration file in JSON format to define blocking rules for :term:`Delivery Service`\ s. The file needs to be put on an HTTP server accessible to Traffic Router.
 
 	.. code-block:: json
 		:caption: Example Configuration JSON
@@ -43,11 +43,11 @@ Configure Anonymous Blocking
 		}
 
 	anonymousIp
-		Contains the types of IPs which can be checked against the Anonymous IP Database. There are 4 types of IPs which can be checked: VPNs, Hosting Providers, Public Proxies, and Tor Exit Nodes. Each type of IP can be enabled or disabled. If the value is true, IPs matching this type will be blocked when the feature is enabled in the Delivery Service. If the value is false, IPs which match this type will not be blocked. If an IP matches more than 1 type and any type is enabled, the IP will be blocked.
+		Contains the types of IPs which can be checked against the Anonymous IP Database. There are 4 types of IPs which can be checked: :abbr:`VPN (Virtual Private Network)`\ s, Hosting Providers, Public Proxies, and :abbr:`TOR (The Onion Ring)` "Exit Nodes". Each type of IP can be enabled or disabled. If the value is true, IPs matching this type will be blocked when the feature is enabled in the :term:`Delivery Service`. If the value is false, IPs which match this type will not be blocked. If an IP matches more than 1 type and any type is enabled, the IP will be blocked.
 	redirectUrl
-		The URL that will be returned to the blocked clients. Without a redirectUrl, the clients will receive an HTTP response code ``403 Forbidden``. With a redirectUrl, the clients will be redirected with an HTTP response code ``302 Found``.
+		The URL that will be returned to the blocked clients. Without a :dfn:`redirectUrl`, the clients will receive an HTTP response code ``403 Forbidden``. With a :dfn:`redirectUrl`, the clients will be redirected with an HTTP response code ``302 Found``.
 	ipWhiteList
-		An optional element. It includes a list of Classless Inter-Domain Routing (CIDR) blocks indicating the IPv4 and IPv6 subnets that are allowed by the rule. If this list exists and the value is not ``null``, client IPs will be matched against the CIDR list, and if there is any match, the request will be allowed. If there is no match in the white list, further anonymous blocking logic will continue.
+		An optional element. It includes a list of :abbr:`CIDR (Classless Inter-Domain Routing)` blocks indicating the IPv4 and IPv6 subnets that are allowed by the rule. If this list exists and the value is not ``null``, client IPs will be matched against the :abbr:`CIDR (Classless Inter-Domain Routing)` list, and if there is any match, the request will be allowed. If there is no match in the white list, further anonymous blocking logic will continue.
 
 
 #. Add the following three Anonymous Blocking parameters in Traffic Portal into CRConfig.json:
@@ -63,13 +63,13 @@ Configure Anonymous Blocking
 		:scale: 100%
 		:align: center
 
-#. Enable Anonmyous Blocking for a Delivery Service
+#. Enable Anonmyous Blocking for a :term:`Delivery Service`
 
 	.. figure:: anonymous_blocking/02.png
 		:scale: 100%
 		:align: center
 
-#. Go to Tools->Snapshot CRConfig, perform “Diff CRConfig” and click "Write CRConfig".
+#. Go to :menuselection:`Tools --> Snapshot CRConfig`, perform :guilabel:`Diff CRConfig` and click :guilabel:`Write CRConfig`.
 
 	.. figure:: regionalgeo/03.png
 		:scale: 70%

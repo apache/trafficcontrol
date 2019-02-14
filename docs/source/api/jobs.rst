@@ -33,15 +33,15 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+--------+----------+--------------------------------------------------------------------------------------------------------------+
-	|  Name  | Required | Description                                                                                                  |
-	+========+==========+==============================================================================================================+
-	|  dsId  | no       | Return only invalidation jobs pending on the Delivery Service identified by this integral, unique identifier |
-	+--------+----------+--------------------------------------------------------------------------------------------------------------+
-	| userId | no       | Return only invalidation jobs created by the user identified by this integral, unique identifier             |
-	+--------+----------+--------------------------------------------------------------------------------------------------------------+
+	+--------+----------+----------------------------------------------------------------------------------------------------------------------+
+	|  Name  | Required | Description                                                                                                          |
+	+========+==========+======================================================================================================================+
+	|  dsId  | no       | Return only invalidation jobs pending on the :term:`Delivery Service` identified by this integral, unique identifier |
+	+--------+----------+----------------------------------------------------------------------------------------------------------------------+
+	| userId | no       | Return only invalidation jobs created by the user identified by this integral, unique identifier                     |
+	+--------+----------+----------------------------------------------------------------------------------------------------------------------+
 
-.. note:: If the ``dsId`` parameter is given, an error will be returned if the thereby identified Delivery Service is not visible to the logged-in user's Tenant
+.. note:: If the ``dsId`` parameter is given, an error will be returned if the thereby identified :term:`Delivery Service` is not visible to the logged-in user's Tenant
 
 .. code-block:: http
 	:caption: Request Example
@@ -56,7 +56,7 @@ Response Structure
 ------------------
 :assetUrl:        A regular expression - matching URLs will be operated upon according to ``keyword``
 :createdBy:       The username of the user who initiated the job
-:deliveryService: The 'xml_id' that uniquely identifies the Delivery Service on which this job operates
+:deliveryService: The 'xml_id' that uniquely identifies the :term:`Delivery Service` on which this job operates
 :id:              An integral, unique identifier for this job
 :keyword:         A keyword that represents the operation being performed by the job:
 

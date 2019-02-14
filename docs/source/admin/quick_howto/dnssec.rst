@@ -23,9 +23,9 @@ Configure DNSSEC
 
 .. Note:: In order for Traffic Ops to successfully store keys in Traffic Vault, at least one Riak Server needs to be configured in Traffic Ops. See the `Traffic Vault admin page <../traffic_vault.html>`_ for more information.
 
-.. Note:: Currently DNSSEC is only supported for DNS delivery services.
+.. Note:: Currently :abbr:`DNSSEC (DNS Security Extensions)` is only supported for DNS :term:`Delivery Service`\ s.
 
-#. Go to 'CDNs' and click on the desired CDN.
+#. Go to :guilabel:`CDNs` and click on the desired CDN.
 
 	.. figure:: dnssec/00.png
 		:width: 60%
@@ -34,7 +34,7 @@ Configure DNSSEC
 
 		CDNs Page
 
-#. Click on 'Manage DNSSEC Keys' under the 'More' drop-down menu.
+#. Click on :menuselection:`More --> Manage DNSSEC Keys`.
 
 	.. figure:: dnssec/01.png
 		:width: 60%
@@ -43,7 +43,7 @@ Configure DNSSEC
 
 		CDN Details Page
 
-#. Click on the 'Generate DNSSEC Keys' button.
+#. Click on the :guilabel:`Generate DNSSEC Keys` button.
 
 	.. figure:: dnssec/02.png
 		:width: 60%
@@ -61,9 +61,9 @@ Configure DNSSEC
 
 		Confirmation Modal
 
-#. Input the required information (reasonable defaults should be generated for you). When done, click on the green 'Generate' button.:
+#. Input the required information (reasonable defaults should be generated for you). When done, click on the green :guilabel:`Generate` button.
 
-	.. note:: Depending upon the number of Delivery Services in the CDN, generating DNSSEC keys may take several seconds.
+	.. note:: Depending upon the number of :term:`Delivery Service`\ s in the CDN, generating DNSSEC keys may take several seconds.
 
 	.. figure:: dnssec/04.png
 		:width: 50%
@@ -72,7 +72,7 @@ Configure DNSSEC
 
 		DNSSEC Key Generation Page
 
-#. You will be prompted to confirm the changes by typing the name of the CDN into a text box. After doing so, click on the red 'Confirm' button.
+#. You will be prompted to confirm the changes by typing the name of the CDN into a text box. After doing so, click on the red :guilabel:`Confirm` button.
 
 	.. figure:: dnssec/05.png
 		:width: 30%
@@ -82,9 +82,9 @@ Configure DNSSEC
 		DNSSEC Key Change Confirmation
 
 
-#. In order for DNSSEC to work properly, the DS Record information needs to be added to the parent zone of the CDN's domain (e.g. If the CDN's domain is 'ciab.cdn.local' the parent zone is 'cdn.local'). If you control your parent zone you can enter this information yourself, otherwise you will need to work with your DNS team to get the DS Record added to the parent zone.
+#. In order for :abbr:`DNSSEC (DNS Security Extensions)` to work properly, the :abbr:`DS (Delegation of Signing)` Record information needs to be added to the parent zone of the CDN's domain (e.g. If the CDN's domain is 'ciab.cdn.local' the parent zone is 'cdn.local'). If you control your parent zone you can enter this information yourself, otherwise you will need to work with your DNS team to get the :abbr:`DS (Delegation of Signing)` Record added to the parent zone.
 
-#. Once DS Record information has been added to the parent zone, DNSSEC needs to be activated for the CDN so that Traffic Router will sign responses. Go back to the CDN details page for this CDN, and set the 'DNSSEC Enabled' field to 'true', then click the green 'Update' button.
+#. Once :abbr:`DS (Delegation of Signing)` Record information has been added to the parent zone, DNSSEC needs to be activated for the CDN so that Traffic Router will sign responses. Go back to the CDN details page for this CDN, and set the 'DNSSEC Enabled' field to 'true', then click the green :guilabel:`Update` button.
 
 	.. figure:: dnssec/06.png
 		:width: 60%
@@ -93,6 +93,6 @@ Configure DNSSEC
 
 		Change 'DNSSEC Enabled' to 'true'
 
-#. DNSSEC should now be active on your CDN and Traffic Router should be signing responses. This should be tested e.g. with this ``dig`` command: ``dig edge.cdn.local. +dnssec``.
+#. :abbr:`DNSSEC (DNS Security Extensions)` should now be active on your CDN and Traffic Router should be signing responses. This should be tested e.g. with this :manpage:`dig(1)` command: ``dig edge.cdn.local. +dnssec``.
 
-#. When KSK expiration is approaching (default 365 days), it is necessary to manually generate a new KSK for the TLD (Top Level Domain) and add the DS Record to the parent zone. In order to avoid signing errors, it is suggested that an effective date is chosen which allows time for the DS Record to be added to the parent zone before the new KSK becomes active.
+#. When :abbr:`KSK (Key-Signing Key)` expiration is approaching (default 365 days), it is necessary to manually generate a new :abbr:`KSK (Key Signing Key)` for the :abbr:`TLD (Top Level Domain)` and add the :abbr:`DS (Delegation of Signing)` Record to the parent zone. In order to avoid signing errors, it is suggested that an effective date is chosen which allows time for the :abbr:`DS (Delegation of Signing)` Record to be added to the parent zone before the new :abbr:`KSK (Key-Signing Key)` becomes active.
