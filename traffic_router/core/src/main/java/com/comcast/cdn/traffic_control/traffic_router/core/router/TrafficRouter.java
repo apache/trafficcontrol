@@ -562,9 +562,8 @@ public class TrafficRouter {
 	public String buildPatternBasedHashString(final DeliveryService deliveryService, final String requestPath) {
 		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty() && !requestPath.isEmpty()) {
 			return buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), requestPath);
-		} else {
-			return requestPath;
 		}
+		return requestPath;
 	}
 
 	public String buildPatternBasedHashString(final String regex, final String requestPath) {
@@ -579,9 +578,8 @@ public class TrafficRouter {
 					sb.append(text);
 				}
 				return sb.toString();
-			} else {
-				return requestPath;
 			}
+			return requestPath;
 		} catch (final Exception e) {
 			return requestPath;
 		}

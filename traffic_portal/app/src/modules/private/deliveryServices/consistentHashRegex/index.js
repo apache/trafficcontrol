@@ -18,25 +18,25 @@
  */
 
 module.exports = angular.module('trafficPortal.private.deliveryServices.consistentHashRegex', [])
-	.config(function($stateProvider, $urlRouterProvider) {
-		$stateProvider
-			.state('trafficPortal.private.deliveryServices.consistentHashRegex', {
-				url: '/{deliveryServiceId}/consistent-hash?pattern',
-				views: {
-					deliveryServicesContent: {
-						templateUrl: 'common/modules/form/deliveryServiceConsistentHashRegex/form.deliveryServiceConsistentHashRegex.tpl.html',
-						controller: 'FormDeliveryServiceConsistentHashRegexController',
+    .config(function ($stateProvider, $urlRouterProvider) {
+        $stateProvider
+            .state('trafficPortal.private.deliveryServices.consistentHashRegex', {
+                url: '/{deliveryServiceId}/consistent-hash?pattern',
+                views: {
+                    deliveryServicesContent: {
+                        templateUrl: 'common/modules/form/deliveryServiceConsistentHashRegex/form.deliveryServiceConsistentHashRegex.tpl.html',
+                        controller: 'FormDeliveryServiceConsistentHashRegexController',
                         resolve: {
-                            deliveryService: function($stateParams, deliveryServiceService) {
+                            deliveryService: function ($stateParams, deliveryServiceService) {
                                 return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
                             },
-                            consistentHashRegex: function($stateParams) {
-                            	return $stateParams.pattern;
+                            consistentHashRegex: function ($stateParams) {
+                                return $stateParams.pattern;
                             }
                         }
-					}
-				}
-			})
-		;
-		$urlRouterProvider.otherwise('/');
-	});
+                    }
+                }
+            })
+        ;
+        $urlRouterProvider.otherwise('/');
+    });

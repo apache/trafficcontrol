@@ -22,7 +22,7 @@ var DeliveryServiceConsistentHashRegexService = function ($http, $q, locationUti
     this.getConsistentHashResult = function (regex, requestPath, cdnId) {
 
         var url = ENV.api['root'] + "consistenthash",
-            params = {regex: regex, requestpath: requestPath, cdnid: cdnId};
+            params = {regex: regex, requestPath: requestPath, cdnId: cdnId};
 
         var deferred = $q.defer();
         $http.post(url, params)

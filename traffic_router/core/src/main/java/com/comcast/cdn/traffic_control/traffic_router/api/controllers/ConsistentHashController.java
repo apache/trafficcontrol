@@ -34,12 +34,17 @@ import java.util.Map;
 public class ConsistentHashController {
 	@Autowired
 	TrafficRouterManager trafficRouterManager;
+	final static int MAX_REQUEST_PATH_LENGTH = 28;
+	final static String RESULTING_PATH_TO_HASH = "resultingPathToConsistentHash";
+	final static String REQUEST_PATH = "requestPath";
+	final static String CONSISTENT_HASH_REGEX = "consistentHashRegex";
+	final static String DELIVERY_SERVICE_ID = "deliveryServiceId";
 
 	@RequestMapping(value = "/cache/coveragezone")
 	public @ResponseBody
 	ResponseEntity hashCoverageZoneCache(@RequestParam(name="ip") final String ip,
-	                                @RequestParam(name = "deliveryServiceId") final String deliveryServiceId,
-	                                @RequestParam(name = "requestPath") final String requestPath) {
+	                                @RequestParam(name = DELIVERY_SERVICE_ID) final String deliveryServiceId,
+	                                @RequestParam(name = REQUEST_PATH) final String requestPath) {
 
 		final Cache cache = trafficRouterManager.getTrafficRouter().consistentHashForCoverageZone(ip, deliveryServiceId, requestPath);
 
@@ -53,8 +58,8 @@ public class ConsistentHashController {
 	@RequestMapping(value = "/cache/deep/coveragezone")
 	public @ResponseBody
 	ResponseEntity hashCoverageZoneDeepCache(@RequestParam(name="ip") final String ip,
-										 @RequestParam(name = "deliveryServiceId") final String deliveryServiceId,
-										 @RequestParam(name = "requestPath") final String requestPath) {
+										 @RequestParam(name = DELIVERY_SERVICE_ID) final String deliveryServiceId,
+										 @RequestParam(name = REQUEST_PATH) final String requestPath) {
 
 		final Cache cache = trafficRouterManager.getTrafficRouter().consistentHashForCoverageZone(ip, deliveryServiceId, requestPath, true);
 
@@ -68,8 +73,8 @@ public class ConsistentHashController {
 	@RequestMapping(value = "/cache/geolocation")
 	public @ResponseBody
 	ResponseEntity hashGeolocatedCache(@RequestParam(name="ip") final String ip,
-	                                @RequestParam(name = "deliveryServiceId") final String deliveryServiceId,
-	                                @RequestParam(name = "requestPath") final String requestPath) {
+	                                @RequestParam(name = DELIVERY_SERVICE_ID) final String deliveryServiceId,
+	                                @RequestParam(name = REQUEST_PATH) final String requestPath) {
 		final Cache cache = trafficRouterManager.getTrafficRouter().consistentHashForGeolocation(ip, deliveryServiceId, requestPath);
 
 		if (cache == null) {
@@ -81,8 +86,8 @@ public class ConsistentHashController {
 
 	@RequestMapping(value = "/deliveryservice")
 	public @ResponseBody
-	ResponseEntity hashDeliveryService(@RequestParam(name = "deliveryServiceId") final String deliveryServiceId,
-	                                   @RequestParam(name = "requestPath") final String requestPath) {
+	ResponseEntity hashDeliveryService(@RequestParam(name = DELIVERY_SERVICE_ID) final String deliveryServiceId,
+	                                   @RequestParam(name = REQUEST_PATH) final String requestPath) {
 
 		final DeliveryService deliveryService = trafficRouterManager.getTrafficRouter().consistentHashDeliveryService(deliveryServiceId, requestPath);
 
@@ -96,12 +101,12 @@ public class ConsistentHashController {
 	@RequestMapping(value = "/patternbased/regex")
 	public @ResponseBody
 	ResponseEntity<Map<String, String>> testPatternBasedRegex(@RequestParam(name = "regex") final String regex,
-										 @RequestParam(name = "requestPath") final String requestPath) {
+										 @RequestParam(name = REQUEST_PATH) final String requestPath) {
 
 		// limit length of requestPath to protect against evil regexes
-		if (requestPath != null && requestPath.length() > 28) {
+		if (requestPath != null && requestPath.length() > MAX_REQUEST_PATH_LENGTH) {
 			final Map<String, String> map = new HashMap<String, String>();
-			map.put("Bad Input", "Request Path length is restricted by API to 28 characters");
+			map.put("Bad Input", "Request Path length is restricted by API to " + MAX_REQUEST_PATH_LENGTH + " characters");
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
 		}
 
@@ -112,16 +117,16 @@ public class ConsistentHashController {
 		}
 
 		final Map<String, String> map = new HashMap<String, String>();
-		map.put("requestPath", requestPath);
-		map.put("consistentHashRegex", regex);
-		map.put("resultingPathToConsistentHash", pathToHash);
+		map.put(REQUEST_PATH, requestPath);
+		map.put(CONSISTENT_HASH_REGEX, regex);
+		map.put(RESULTING_PATH_TO_HASH, pathToHash);
 		return ResponseEntity.ok(map);
 	}
 
 	@RequestMapping(value = "/patternbased/deliveryservice")
 	public @ResponseBody
-	ResponseEntity<Map<String, String>> testPatternBasedDeliveryService(@RequestParam(name = "deliveryServiceId") final String deliveryServiceId,
-																		@RequestParam(name = "requestPath") final String requestPath) {
+	ResponseEntity<Map<String, String>> testPatternBasedDeliveryService(@RequestParam(name = DELIVERY_SERVICE_ID) final String deliveryServiceId,
+																		@RequestParam(name = REQUEST_PATH) final String requestPath) {
 
 		final String pathToHash = trafficRouterManager.getTrafficRouter().buildPatternBasedHashStringDeliveryService(deliveryServiceId, requestPath);
 
@@ -130,17 +135,17 @@ public class ConsistentHashController {
 		}
 
 		final Map<String, String> map = new HashMap<String, String>();
-		map.put("requestPath", requestPath);
-		map.put("deliveryServiceId", deliveryServiceId);
-		map.put("resultingPathToConsistentHash", pathToHash);
+		map.put(REQUEST_PATH, requestPath);
+		map.put(DELIVERY_SERVICE_ID, deliveryServiceId);
+		map.put(RESULTING_PATH_TO_HASH, pathToHash);
 		return ResponseEntity.ok(map);
 	}
 
 	@RequestMapping(value = "/cache/coveragezone/steering")
 	public @ResponseBody
 	ResponseEntity hashSteeringCoverageZoneCache(@RequestParam(name="ip") final String ip,
-										 @RequestParam(name = "deliveryServiceId") final String deliveryServiceId,
-										 @RequestParam(name = "requestPath") final String requestPath) {
+										 @RequestParam(name = DELIVERY_SERVICE_ID) final String deliveryServiceId,
+										 @RequestParam(name = REQUEST_PATH) final String requestPath) {
 
 		final Cache cache = trafficRouterManager.getTrafficRouter().consistentHashSteeringForCoverageZone(ip, deliveryServiceId, requestPath);
 
