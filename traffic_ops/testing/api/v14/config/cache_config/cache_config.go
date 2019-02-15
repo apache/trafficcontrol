@@ -4,9 +4,14 @@ import (
 	"regexp"
 	"strings"
 
+	. "github.com/apache/trafficcontrol/traffic_ops/testing/api/v14/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/go-ozzo/ozzo-validation/is"
 )
+
+// Kindof an alias. I should change it back later
+// maybe this would be fine if I wasn't already using the dot import
+var cxt = ErrorContext
 
 func parseCacheConfig(config string) test.Error {
 	lines := strings.Split(config, "\n")
@@ -24,6 +29,8 @@ func parseCacheConfig(config string) test.Error {
 	return nil
 }
 
+type parser func(string, string) test.Error
+
 func parsePrimaryDestinations(lhs string, rhs string) test.Error {
 
 	switch lhs {
@@ -32,24 +39,24 @@ func parsePrimaryDestinations(lhs string, rhs string) test.Error {
 		fallthrough
 	case "dest_host":
 		if err := is.Host.Validate(rhs); err != nil {
-			return ErrorContext.NewError(InvalidHost, "\"%s\" %v", rhs, err)
+			return cxt.NewError(InvalidHost, "\"%s\" %v", rhs, err)
 		}
 	case "dest_ip":
 		if err := is.IP.Validate(rhs); err != nil {
-			return ErrorContext.NewError(InvalidIP, "\"%s\" %v", rhs, err)
+			return cxt.NewError(InvalidIP, "\"%s\" %v", rhs, err)
 		}
 	case "host_regex":
 		// only makes sure the regex compiles, not that the regex generates valid hosts
 		if _, err := regexp.Compile(rhs); err != nil {
-			return ErrorContext.NewError(InvalidHostRegex, "%v", err)
+			return cxt.NewError(InvalidRegex, "%v", err)
 		}
 	case "url_regex":
 		// only makes sure the regex compiles, not that the regex generates valid urls
 		if _, err := regexp.Compile(rhs); err != nil {
-			return ErrorContext.NewError(InvalidURLRegex, "%v", err)
+			return cxt.NewError(InvalidRegex, "%v", err)
 		}
 	default:
-		return ErrorContext.NewError(InvalidDestinationLabel)
+		return cxt.NewError(InvalidLabel)
 	}
 
 	return nil
@@ -60,26 +67,26 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 	switch lhs {
 	case "port":
 		if err := is.Port.Validate(rhs); err != nil {
-			return ErrorContext.AddErrorCode(InvalidPort, err)
+			return cxt.AddErrorCode(InvalidPort, err)
 		}
 	case "scheme":
 		if rhs != "http" && rhs != "https" {
-			return ErrorContext.NewError(InvalidScheme)
+			return cxt.NewError(InvalidHTTPScheme)
 		}
 	case "prefix":
 		// idk what validation to do on this
 		// does a path prefix contain '/' at the start of it?
+		// ignore for now..
+		//	Same cross platform problem as below?
 	case "suffix":
 		// examples: gif jpeg
-		// should I do a lookup of particular suffixes, or should I allow everything?
-		// I think xxx.1 is a valid file name
-		// what restrictions are there?
-		// should I use an official validation package?
+		// pure syntax: xxx.1 is a valid file name
+		//	I doubt there is anything in a validation package for this.
+		//	Even if there was, it would be silly since different platforms
+		//	have difference specifications for file suffixes.
 	case "method":
 		// assuming all methods are valid
-		// RFC link?
-		// assuming both all uppercase and all lowercase should be valid
-		// TODO convert to lowercase
+		// RFC 2616-9 for list of all methods
 		switch rhs {
 		case "get":
 		case "put":
@@ -91,25 +98,26 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 		case "connect":
 		case "patch":
 		default:
-			return ErrorContext.NewError(InvalidMethod, "invalid method \"%v\"", rhs)
+			return cxt.NewError(InvalidMethod, "invalid method \"%v\"", rhs)
 		}
 
 	case "time":
+		// Invalid24HrTimeRange
 		// example: 08:00-14:00
 		// time range using 24-hour clock
 		// I think it is shown how to parse this in ATS? or was that for pin-in-cache?
 
 	case "src_ip":
 		if err := is.IP.Validate(rhs); err != nil {
-			return ErrorContext.AddErrorCode(InvalidSrcIP, err)
+			return cxt.AddErrorCode(InvalidIP, err)
 		}
 	case "internal":
 		if rhs != "true" && rhs != "false" {
-			return ErrorContext.NewError(0, "internal label must have a value of 'true' or 'false'")
+			return cxt.NewError(InvalidBool)
 		}
 
 	default:
-		return ErrorContext.NewError(InvalidSpecifierLabel)
+		return cxt.NewError(InvalidLabel)
 	}
 
 	return nil
@@ -121,14 +129,30 @@ func parseActions(lhs string, rhs string) test.Error {
 	// traffic_ctl gives us an error for THIS
 	// it kinda makes sense since it is easy to verify..
 	case "action":
-		// can only be one of 'never-cache', 'ignore-no-cache', 'ignore-client-no-cache', 'ignore-server-no-cache'
+		// is the RHS case sensitive?
+		switch rhs {
+		case "never-cache":
+		case "ignore-no-cache":
+		case "ignore-client-no-cache":
+		case "ignore-server-no-cache":
+		default:
+			return cxt.NewError(InvalidAction)
+		}
+
 	case "cache-responses-to-cookies":
-		// can only be one of 0, 1, 2, 3, or 4
-	case "pin-in-cache": //1d4h (time format)
-	case "revalidate": //time format
-	case "ttl-in-cache": // I ASSUME the order matters. I can double check in the source code. I found it once before. Look at note sheet.
+		digit := rhs[0]
+		if digit < '0' || '4' > digit || len(rhs) > 1 {
+			cxt.NewError(InvalidCacheResponseType)
+		}
+
+	// I assume the order matters. I can double check. Look at notes.
+	// All of these are time formats (eg. 1d4h)
+	case "pin-in-cache":
+		// cxt.NewError(InvalidHDMSTimeFmt)
+	case "revalidate":
+	case "ttl-in-cache":
 	default:
-		return ErrorContext.NewError(InvalidAction)
+		return cxt.NewError(InvalidLabel)
 	}
 
 	return nil
@@ -136,21 +160,12 @@ func parseActions(lhs string, rhs string) test.Error {
 
 func parseCacheConfigRule(rule string) test.Error {
 
+	var primaryDestination bool
 	var match []string
 	var err test.Error
 
-	// Basically need to ensure there is at least 1 of the first 5 and not 2 of the second blob
-	var label = map[string]int{
-
-		// consider dropping
-		// consider using for better error message
-		"dest_domain": 0,
-		"dest_host":   0,
-		"dest_ip":     0,
-		"host_regex":  0,
-		"url_regex":   0,
-
-		// count for individual items cannot be 2
+	// no individual secondary specifier label can be used twice
+	var count = map[string]int{
 		"port":     0,
 		"scheme":   0,
 		"prefix":   0,
@@ -160,30 +175,49 @@ func parseCacheConfigRule(rule string) test.Error {
 		"src_ip":   0,
 		"internal": 0,
 	}
-	// map parseXxx to "internal" and other keys..
 
+	// Does ATS also delimit with tabs?
 	assignments := strings.Split(rule, " ")
 	last := len(assignments) - 1
 	if last < 1 {
-		return ErrorContext.NewError(NotEnoughAssignments)
+		return cxt.NewError(NotEnoughAssignments)
 	}
 
+	// neither the rhs or lhs can contain any whitespace
 	assignment := regexp.MustCompile(`([a-z_\d]+)=(\S+)`)
-
 	for _, elem := range assignments {
 		match = assignment.FindStringSubmatch(elem)
 		if match == nil {
-			return ErrorContext.NewError(BadAssignmentMatch, "could not match assignment: \"%v\"", elem)
+			return cxt.NewError(BadAssignmentMatch, "could not match assignment: \"%v\"", elem)
 		}
 
-		// not sure if this is safe
-		label[match[1]]++
-
-		//if err = parsePrimaryDestinations(match[1], match[2]); err != nil {
-		//if err = parseActions(match[1], match[2]); err != nil {
 		// convert lhs to lowercase
-		if err = parseSecondarySpecifiers(match[1], match[2]); err != nil {
+		err = parsePrimaryDestinations(match[1], match[2])
+		if err != nil && err.Code() != InvalidLabel {
+			return err.Prepend("coult not parse primary destination from (%s): ", match[0])
+		} else if primaryDestination {
+			return cxt.NewError(ExcessLabel, "too many primary destinations")
+		} else {
+			primaryDestination = true
+		}
+
+		err = parseSecondarySpecifiers(match[1], match[2])
+		if err != nil && err.Code() != InvalidLabel {
 			return err.Prepend("could not parse secondary specifiers from (%s): ", match[0])
+		} else {
+			count[match[1]]++
+			if count[match[1]] == 2 {
+				return cxt.NewError(ExcessLabel, "the label \"%s\" can only be used once per rule", match[1])
+			}
+		}
+
+		err = parseActions(match[1], match[2])
+		if err != nil && err.Code() != InvalidLabel {
+			return err.Prepend("could not parse action from (%s): ", match[0])
+		}
+
+		if err != nil && err.Code() == InvalidLabel {
+			return err.Prepend("unknown label: ")
 		}
 	}
 
