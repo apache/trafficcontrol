@@ -398,3 +398,10 @@ func randStr() string {
 	}
 	return s
 }
+
+func TestAddLastStatsToStatCacheStatsNilVals(t *testing.T) {
+	// test that addLastStatsToStatCacheStats doesn't panic with nil values
+	addLastStatsToStatCacheStats(nil, nil)
+	addLastStatsToStatCacheStats(&dsdata.StatCacheStats{}, nil)
+	addLastStatsToStatCacheStats(nil, &dsdata.LastStatsData{})
+}
