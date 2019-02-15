@@ -126,6 +126,9 @@ SELECT concat(server.host_name, '.', server.domain_name) AS fqdn,
 	defer r.Body.Close()
 
 	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.New("failed to read body: " + err.Error())
+	}
 
 	return body, nil
 }

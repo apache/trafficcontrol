@@ -18,7 +18,7 @@
 ******************
 ``consistenthash``
 ******************
-Test Pattern-Based Consistent Hashing for a Delivery Service using a regular expression and a request path
+Test Pattern-Based Consistent Hashing for a :term:`Delivery Service` using a regular expression and a request path
 
 ``POST``
 ========
