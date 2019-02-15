@@ -488,9 +488,29 @@ Request Structure
 	| requestPath       | yes      | The (URI encoded) request path to use to test pattern based consistent hashing                               |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /crs/consistenthash/patternbased/regex?regex=%2F.*%3F%28%2F.*%3F%2F%29.*%3F%28%5C.m3u8%29&requestPath=%2Ftext1234%2Fname%2Fasset.m3u8 HTTP/1.1
+	Host: localhost:3333
+	User-Agent: curl/7.54.0
+	Accept: */*
+
 Response Structure
 ------------------
-TBD
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200
+	Content-Type: application/json;charset=UTF-8
+	Transfer-Encoding: chunked
+	Date: Fri, 15 Feb 2019 22:06:53 GMT
+
+	{
+	"resultingPathToConsistentHash":"/name/.m3u8",
+	"consistentHashRegex":"/.*?(/.*?/).*?(\\.m3u8)",
+	"requestPath":"/text1234/name/asset.m3u8"
+	}
 
 ``/crs/consistenthash/patternbased/deliveryservice``
 ====================================================
@@ -508,9 +528,29 @@ Request Structure
 	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /crs/consistenthash/patternbased/deliveryservice?deliveryServiceId=asdf&requestPath=%2Fsometext1234%2Fstream_name%2Fasset_name.m3u8 HTTP/1.1
+	Host: localhost:3333
+	User-Agent: curl/7.54.0
+	Accept: */*
+
 Response Structure
 ------------------
-TBD
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200
+	Content-Type: application/json;charset=UTF-8
+	Transfer-Encoding: chunked
+	Date: Fri, 15 Feb 2019 22:12:38 GMT
+
+	{
+	"resultingPathToConsistentHash":"/sometext1234/stream_name/asset_name.m3u8",
+	"deliveryServiceId":"asdf",
+	"requestPath":"/sometext1234/stream_name/asset_name.m3u8"
+	}
 
 ``/crs/consistenthash/cache/coveragezone/steering``
 ===================================================
