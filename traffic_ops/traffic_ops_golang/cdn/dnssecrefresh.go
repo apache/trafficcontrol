@@ -45,17 +45,21 @@ func RefreshDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		noTx := (*sql.Tx)(nil) // make a variable instead of passing nil directly, to reduce copy-paste errors
 		if err != nil {
 			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("RefresHDNSSECKeys getting db from context: "+err.Error()))
+			unsetInDNSSECKeyRefresh()
 			return
 		}
 		cfg, err := api.GetConfig(r.Context())
 		if err != nil {
 			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("RefresHDNSSECKeys getting config from context: "+err.Error()))
+			unsetInDNSSECKeyRefresh()
 			return
 		}
 
 		tx, err := db.Begin()
 		if err != nil {
 			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("RefresHDNSSECKeys beginning tx: "+err.Error()))
+			unsetInDNSSECKeyRefresh()
+			return
 		}
 		go doDNSSECKeyRefresh(tx, cfg) // doDNSSECKeyRefresh takes ownership of tx and MUST close it.
 	} else {

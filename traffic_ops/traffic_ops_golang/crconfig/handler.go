@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
 )
 
@@ -127,6 +128,12 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	db, err := api.GetDB(r.Context())
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("SnapshotHandler getting db from context: "+err.Error()))
+		return
+	}
+
 	cdn, ok := inf.Params["cdn"]
 	if !ok {
 		id, ok := inf.IntParams["id"]
@@ -163,6 +170,11 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, tc.CDNName(cdn)); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snapshotting CRConfig and Monitoring: starting old certificate deletion job: "+err.Error()))
+		return
+	}
+
 	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig and Monitor performed for "+cdn, inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "SUCCESS")
 }
@@ -176,13 +188,21 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
+	db, err := api.GetDB(r.Context())
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("SnapshotHandler getting db from context: "+err.Error()))
+		return
+	}
+
+	cdn := inf.Params["cdn"]
+
+	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
 	if err != nil {
 		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
 		return
 	}
 
-	tm, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"])
+	tm, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, cdn)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" getting monitoring.json data: "+err.Error()))
 		return
@@ -192,7 +212,13 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+inf.Params["cdn"], inf.User, inf.Tx.Tx)
+
+	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, tc.CDNName(cdn)); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" old snapshotting CRConfig and Monitoring: starting old certificate deletion job: "+err.Error()))
+		return
+	}
+
+	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, inf.User, inf.Tx.Tx)
 	http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Successfully wrote the CRConfig.json!"), http.StatusFound)
 }
 
