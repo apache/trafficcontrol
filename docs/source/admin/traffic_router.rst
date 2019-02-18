@@ -606,6 +606,9 @@ The following is an example of the command line parameters set in :file:`/opt/tr
 Pattern-Based Consistent Hashing Feature
 ========================================
 
+.. versionadded:: 3.1
+	Traffic Router now has the ability to influence consisting hashing using a regular expression on a per-HTTP :term:`Delivery Service` basis.
+
 Overview
 --------
 Pattern-Based Consistent Hashing is a feature to modify the request path given to Traffic Router's consistent hasher for Cache selection (and :term:`Delivery Service` selection for Steering Delivery Services) using a regular expression. This new regular expression field 'Consistent Hash Regex' is applied on a per-Delivery Service basis and is given to Traffic Router via the CDN :term:`Snapshot`. The purpose of this feature is to increase cache efficiency by directing requests for the same asset, but with varying request paths, to the same Cache.
