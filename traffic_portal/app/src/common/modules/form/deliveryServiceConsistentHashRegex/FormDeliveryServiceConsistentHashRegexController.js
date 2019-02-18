@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceConsistentHashRegexController = function (deliveryService, consistentHashRegex, $scope, formUtils, locationUtils, deliveryServiceConsistentHashRegexService) {
+var FormDeliveryServiceConsistentHashRegexController = function (deliveryService, consistentHashRegex, $scope, formUtils, locationUtils, deliveryServiceService) {
 
     $scope.deliveryService = deliveryService;
 
@@ -30,7 +30,7 @@ var FormDeliveryServiceConsistentHashRegexController = function (deliveryService
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
     $scope.test = function (pattern, requestPath, cdnId) {
-        deliveryServiceConsistentHashRegexService.getConsistentHashResult(pattern, requestPath, cdnId).then(
+        deliveryServiceService.getConsistentHashResult(pattern, requestPath, cdnId).then(
             function (response) {
                 $scope.resultingPath = response.response.resultingPathToConsistentHash;
             },
@@ -41,5 +41,5 @@ var FormDeliveryServiceConsistentHashRegexController = function (deliveryService
 
 };
 
-FormDeliveryServiceConsistentHashRegexController.$inject = ['deliveryService', 'consistentHashRegex', '$scope', 'formUtils', 'locationUtils', 'deliveryServiceConsistentHashRegexService'];
+FormDeliveryServiceConsistentHashRegexController.$inject = ['deliveryService', 'consistentHashRegex', '$scope', 'formUtils', 'locationUtils', 'deliveryServiceService'];
 module.exports = FormDeliveryServiceConsistentHashRegexController;

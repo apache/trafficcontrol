@@ -601,6 +601,8 @@ The following is an example of the command line parameters set in :file:`/opt/tr
 	-XX:+UnlockExperimentalVMOptions \
 	-XX:InitiatingHeapOccupancyPercent=30"
 
+.. _pattern-based-consistenthash:
+
 Pattern-Based Consistent Hashing Feature
 ========================================
 

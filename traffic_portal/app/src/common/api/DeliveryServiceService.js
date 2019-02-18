@@ -158,6 +158,25 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
             );
     };
 
+    this.getConsistentHashResult = function (regex, requestPath, cdnId) {
+
+        var url = ENV.api['root'] + "consistenthash",
+            params = {regex: regex, requestPath: requestPath, cdnId: cdnId};
+
+        var deferred = $q.defer();
+        $http.post(url, params)
+            .then(
+                function (result) {
+                    deferred.resolve(result.data);
+                },
+                function (fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                    deferred.reject(fault);
+                }
+            );
+
+        return deferred.promise;
+    };
 
 };
 
