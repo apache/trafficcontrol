@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DeliveryServiceStatsService = function($http, $q, ENV) {
+var DeliveryServiceStatsService = function($http, $q, ENV, messageModel) {
 
 	this.getBPS = function(xmlId, start, end) {
 		var request = $q.defer();
@@ -31,6 +31,7 @@ var DeliveryServiceStatsService = function($http, $q, ENV) {
 					request.resolve(result.data.response);
 				},
 				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
 					request.reject();
 				}
 			);
@@ -50,6 +51,7 @@ var DeliveryServiceStatsService = function($http, $q, ENV) {
 					request.resolve(result.data.response);
 				},
 				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
 					request.reject();
 				}
 			);
@@ -69,6 +71,7 @@ var DeliveryServiceStatsService = function($http, $q, ENV) {
 					request.resolve(result.data.response);
 				},
 				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
 					request.reject();
 				}
 			);
@@ -78,5 +81,5 @@ var DeliveryServiceStatsService = function($http, $q, ENV) {
 
 };
 
-DeliveryServiceStatsService.$inject = ['$http', '$q', 'ENV'];
+DeliveryServiceStatsService.$inject = ['$http', '$q', 'ENV', 'messageModel'];
 module.exports = DeliveryServiceStatsService;

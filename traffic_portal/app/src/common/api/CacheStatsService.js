@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var CacheStatsService = function($http, $q, httpService, ENV) {
+var CacheStatsService = function($http, $q, httpService, ENV, messageModel) {
 
 	this.getBandwidth = function(cdnName, start, end) {
 		var request = $q.defer();
@@ -31,6 +31,7 @@ var CacheStatsService = function($http, $q, httpService, ENV) {
 					request.resolve(result.data.response);
 				},
 				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
 					request.reject();
 				}
 			);
@@ -50,6 +51,7 @@ var CacheStatsService = function($http, $q, httpService, ENV) {
 					request.resolve(result.data.response);
 				},
 				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
 					request.reject();
 				}
 			);
@@ -59,5 +61,5 @@ var CacheStatsService = function($http, $q, httpService, ENV) {
 
 };
 
-CacheStatsService.$inject = ['$http', '$q', 'httpService', 'ENV'];
+CacheStatsService.$inject = ['$http', '$q', 'httpService', 'ENV', 'messageModel'];
 module.exports = CacheStatsService;
