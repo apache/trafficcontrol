@@ -87,4 +87,9 @@ public class RouterNioEndpoint extends NioEndpoint {
             createSSLContext(sslHostConfig);
         }
     }
+
+    @Override
+    protected SSLHostConfig getSSLHostConfig(final String sniHostName) {
+        return super.getSSLHostConfig(sniHostName.toLowerCase());
+    }
 }

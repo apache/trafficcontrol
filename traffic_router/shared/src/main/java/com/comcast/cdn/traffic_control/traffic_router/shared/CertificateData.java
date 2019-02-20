@@ -49,8 +49,12 @@ public class CertificateData {
 		return hostname;
 	}
 
+	public String alias() {
+		return getHostname().replaceFirst("\\*\\.", "");
+	}
+
 	public void setHostname(final String hostname) {
-		this.hostname = hostname;
+		this.hostname = hostname.toLowerCase();
 	}
 
 	@SuppressWarnings("PMD.IfStmtsMustUseBraces")
