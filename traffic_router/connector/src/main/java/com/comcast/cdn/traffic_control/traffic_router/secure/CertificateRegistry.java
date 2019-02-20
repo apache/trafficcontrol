@@ -17,12 +17,12 @@ package com.comcast.cdn.traffic_control.traffic_router.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterNioEndpoint;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.log4j.Logger;
 
 public class CertificateRegistry {
 	private static final Logger log = Logger.getLogger(CertificateRegistry.class);
@@ -61,6 +61,7 @@ public class CertificateRegistry {
 		private static final CertificateRegistry DELIVERY_SERVICE_CERTIFICATES = new CertificateRegistry();
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity"})
 	synchronized public void importCertificateDataList(final List<CertificateData> certificateDataList) {
 		final Map<String, HandshakeData> changes = new HashMap<>();
 		final Map<String, HandshakeData> master = new HashMap<>();
@@ -68,34 +69,43 @@ public class CertificateRegistry {
 		// find CertificateData which has changed
 		for (final CertificateData certificateData : certificateDataList) {
 			try {
-			final HandshakeData handshakeData = certificateDataConverter.toHandshakeData(certificateData);
-			final String alias = handshakeData.getHostname().replaceFirst("\\*\\.", "");
-			master.put(alias, handshakeData);
+				final String alias = certificateData.alias();
 
-			if (certificateData.equals(previousData.get(certificateData.getHostname()))) {
-				continue;
-			}
-			changes.put(alias, handshakeData);
-			log.warn("Imported handshake data with alias " + alias);
-		} catch (Exception e) {
+				if (!master.containsKey(alias)) {
+					final HandshakeData handshakeData = certificateDataConverter.toHandshakeData(certificateData);
+					master.put(alias, handshakeData);
+					if (!certificateData.equals(previousData.get(alias))) {
+						changes.put(alias, handshakeData);
+						log.warn("Imported handshake data with alias " + alias);
+					}
+				}
+				else {
+					log.error("An TLS certificate already exists in the registry for host: "+alias+" There can be " +
+							"only one!" );
+				}
+			} catch (Exception e) {
 				log.error("Failed to import certificate data for delivery service: '" + certificateData.getDeliveryservice() + "', hostname: '" + certificateData.getHostname() + "'");
 			}
 		}
 
 		// find CertificateData which has been removed
-		for (final String hostname : previousData.keySet())
+		for (final String alias : previousData.keySet())
 		{
-			if (!master.containsKey(hostname.replaceFirst("\\*\\.", "")) && sslEndpoint != null)
+			if (!master.containsKey(alias) && sslEndpoint != null)
 			{
-					sslEndpoint.removeSslHostConfig(hostname);
-				    log.warn("Removed handshake data with hostname " + hostname);
+				final String hostname = previousData.get(alias).getHostname();
+				sslEndpoint.removeSslHostConfig(hostname);
+			    log.warn("Removed handshake data with hostname " + hostname);
 			}
 		}
 
 		// store the result for the next import
 		previousData.clear();
 		for (final CertificateData certificateData : certificateDataList) {
-			previousData.put(certificateData.getHostname(), certificateData);
+			final String alias = certificateData.alias();
+			if (!previousData.containsKey(alias)) {
+				previousData.put(alias, certificateData);
+			}
 		}
 
 		handshakeDataMap = master;
