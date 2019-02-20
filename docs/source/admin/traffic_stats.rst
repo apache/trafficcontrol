@@ -133,7 +133,7 @@ To configure Traffic Portal to use Grafana Dashboards, you need to enter the fol
 	+---------------------------+----------------------------------------------------------------------------------------------------+
 	| cachegroup_graph_url      | ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``                        |
 	+---------------------------+----------------------------------------------------------------------------------------------------+
-	| deliveryservice_graph_url | ``https://<grafanaHost>/dashboard/script/traffic_ops_devliveryservice.js?which=``                  |
+	| deliveryservice_graph_url | ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``                   |
 	+---------------------------+----------------------------------------------------------------------------------------------------+
 	| server_graph_url          | ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``                            |
 	+---------------------------+----------------------------------------------------------------------------------------------------+

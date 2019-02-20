@@ -34,57 +34,76 @@ set -m
 envvars=( TO_HOST TO_PORT INFLUXDB_HOST)
 for v in $envvars
 do
-	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+  if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
+
+set-dns.sh
+insert-self-into-dns.sh
 
 source /to-access.sh
 
 # Wait on SSL certificate generation
-until [ -f "$CERT_DONE_FILE" ] 
+until [ -f "$X509_CA_DONE_FILE" ]
 do
   echo "Waiting on Shared SSL certificate generation"
   sleep 3
 done
 
 # Source the CIAB-CA shared SSL environment
-source $CERT_ENV_FILE
+source $X509_CA_ENV_FILE
 
 # Trust the CIAB-CA at the System level
-cp $CERT_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+cp $X509_CA_CERT_FULL_CHAIN_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
 
 # Enroll with traffic ops
 CDN=CDN-in-a-Box
 TO_URL="https://$TO_FQDN:$TO_PORT"
-to-enroll ts $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
+TSCONF=/opt/traffic_stats/conf/traffic_stats.cfg
+to-enroll ts ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 while ! to-ping 2>/dev/null; do
-	echo "waiting for trafficops ($TO_URL)..."
-	sleep 3
+  echo "waiting for trafficops ($TO_URL)..."
+  sleep 3
 done
 
+cat <<-EOF >$TSCONF
+{
+	"toUser": "$TO_ADMIN_USER",
+	"toPasswd": "$TO_ADMIN_PASSWORD",
+	"toUrl": "$TO_URL",
+	"influxUser": "$INFLUXDB_ADMIN_USER",
+	"influxPassword": "$INFLUXDB_ADMIN_PASSWORD",
+	"pollingInterval": 10,
+	"publishingInterval": 30,
+	"maxPublishSize": 10000,
+	"statusToMon": "ONLINE",
+	"seelogConfig": "/opt/traffic_stats/conf/traffic_stats_seelog.xml",
+	"dailySummaryPollingInterval": 300,
+	"cacheRetentionPolicy": "daily",
+	"dsRetentionPolicy": "daily",
+	"dailySummaryRetentionPolicy": "indefinite",
+    "influxUrls": ["http://$INFLUXDB_HOST:$INFLUXDB_PORT"]
+}
+EOF
 
-export TO_USER=$TO_ADMIN_USER
-export TO_PASSWORD=$TO_ADMIN_PASSWORD
+touch /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
 
-# There's a race condition with setting the TM credentials and TO actually creating
-# the TM user
-until to-get "api/1.3/users?username=$TS_USER" 2>/dev/null | jq -c -e '.response[].username|length'; do
-	echo "waiting for TS_USER creation..."
-	sleep 3
+# Wait for influxdb
+until nc $INFLUXDB_HOST $INFLUXDB_PORT </dev/null >/dev/null 2>&1; do
+  echo "Waiting for influxdb to start..."
+  sleep 3
 done
 
-# now that TS_USER is available,  use that for all further operations
-export TO_USER="$TS_USER"
-export TO_PASSWORD="$TS_PASSWORD"
+/opt/traffic_stats/influxdb_tools/create_ts_databases -user $INFLUXDB_ADMIN_USER -password $INFLUXDB_ADMIN_PASSWORD -url http://$INFLUXDB_HOST:$INFLUXDB_PORT -replication 1
 
-export TO_USER=$TO_ADMIN_USER
-export TO_PASSWORD=$TO_ADMIN_PASSWORD
-envsubst </opt/traffic_stats/conf/traffic_stats.cfg.tmpl >/opt/traffic_stats/conf/traffic_stats.cfg
+# Wait for traffic monitor
+until nc $TM_FQDN $TM_PORT </dev/null >/dev/null 2>&1; do
+  echo "Waiting for Traffic Monitor to start..."
+  sleep 3
+done
 
-touch /opt/traffic_stats/var/log/traffic_stats.log
+/opt/traffic_stats/bin/traffic_stats -cfg $TSCONF &
 
-cd /opt/traffic_stats
-/opt/traffic_stats/bin/traffic_stats -cfg /opt/traffic_stats/conf/traffic_stats.cfg || tail -f /dev/null
-disown
-exec tail -f /opt/traffic_stats/var/log/traffic_stats.log
+exec tail -f /opt/traffic_stats/var/log/traffic_stats/traffic_stats.log
+

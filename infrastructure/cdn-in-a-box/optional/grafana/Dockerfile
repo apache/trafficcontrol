@@ -14,33 +14,27 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-############################################################
-# Dockerfile to build Traffic Stats container images
-# Based on CentOS
-############################################################
 
-FROM centos:7
+FROM grafana/grafana:5.4.3
 
-# Default values for RPM -- override with `docker build --build-arg RPM=...'
+USER root
 ARG TRAFFIC_TS_RPM=traffic_stats/traffic_stats.rpm
-ADD $TRAFFIC_TS_RPM /
 
-RUN yum install -y epel-release && \
-    yum install -y /$(basename $TRAFFIC_TS_RPM) \
-        jq \
-        nmap-ncat \
-        iproute \
-        net-tools \
-        gettext \
-        bind-utils \
-        openssl \
-        initscripts && \
-    rm /$(basename $TRAFFIC_TS_RPM) && \
-    yum clean all
+RUN apt-get update && apt-get install -y dnsutils net-tools vim tree procps gettext-base curl p7zip-full sudo libcap2-bin
 
 ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
-    traffic_stats/run.sh \
+    optional/grafana/run-grafana.sh \
+    optional/grafana/datasources.yml.template \
+    $TRAFFIC_TS_RPM \
     /
 
-ENTRYPOINT /run.sh
+RUN cd ~ \
+    && 7z x /traffic_stats.rpm \
+    && 7z e traffic_stats-*.cpio *.js -r \
+    && mv *.js /usr/share/grafana/public/dashboards \
+    && rm /traffic_stats.rpm \
+    && rm ~/traffic_stats-*.cpio
+
+ENTRYPOINT [ "/run-grafana.sh" ]
+EXPOSE 443

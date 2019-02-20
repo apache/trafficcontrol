@@ -156,29 +156,37 @@ services:
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
-  # trafficstats routes clients to the most optimal cache
+  # trafficstats collect traffic information
   trafficstats:
     build:
       context: .
       dockerfile: traffic_stats/Dockerfile
-      args:
-        RPM: traffic_stats/traffic_stats.rpm
     depends_on:
       - enroller
-    domainname: cdn.local
+      - influxdb
+    domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: trafficstats
-    networks:
-      tcnet:
-        ipv4_address: 172.16.239.70
-        ipv6_address: "fc01:9400:1000:8::70"
     volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
   influxdb:
-    image: influxdb
+    build:
+      context: .
+      dockerfile: traffic_stats/Dockerfile-influxdb
+    hostname: influxdb
+    domainname: infra.ciab.test
+    depends_on:
+      - dns
+    env_file:
+      - variables.env
+    volumes:
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
+      - shared:/shared
 
   # trafficvault runs a riak container to store private keys
   trafficvault:
@@ -200,7 +208,6 @@ services:
     env_file:
       - variables.env
     hostname: trafficvault
-
 
   # Apache Traffic Server (ATS) caches defined here
   # base image from which all other caches inherit (builds and installs ATS+plugins)

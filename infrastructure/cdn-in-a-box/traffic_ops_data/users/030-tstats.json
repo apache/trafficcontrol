@@ -1,6 +1,6 @@
 {
   "email": "$TS_EMAIL",
-  "fullName": "Traffic Vault",
+  "fullName": "Traffic Stats",
   "localPasswd": "$TS_PASSWORD",
   "confirmLocalPasswd": "$TS_PASSWORD",
   "rolename": "operations",
