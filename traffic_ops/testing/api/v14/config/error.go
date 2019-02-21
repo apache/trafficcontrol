@@ -10,24 +10,6 @@ const (
 	MissingLabel
 )
 
-// RFC stuff vs non-RFC stuff
-//const (
-//	InvalidHTTPScheme
-//	InvalidHost
-//	InvalidIP
-//	InvalidMethod
-//	InvalidPort
-//)
-//
-//const (
-//	InvalidAction = iota + 20
-//	InvalidBool
-//	InvalidCacheResponseType
-//	InvalidRegex
-//	InvalidTimeFormatHDMS
-//	InvalidTimeRange24Hr
-//)
-
 const (
 	InvalidAction = iota + 20
 	InvalidBool

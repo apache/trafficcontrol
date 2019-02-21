@@ -159,7 +159,8 @@ func parseActions(lhs string, rhs string) test.Error {
 
 func parseCacheConfigRule(rule string) test.Error {
 
-	var primaryDestination bool
+	var destination bool
+	var action bool
 	var match []string
 	var err test.Error
 
@@ -181,29 +182,20 @@ func parseCacheConfigRule(rule string) test.Error {
 		return cxt.NewError(NotEnoughAssignments)
 	}
 
-	// Looks like A-Z isn't even recognized by the regex, and
-	// I don't convert the original to lowercase.
-	// 1) Does case matter anywhere?
-	//	- try UPPER action
-	//				HTTP
-	//				TimeFormat
-	//				Internal
-	//strings.ToLower(
-
 	// neither the rhs or lhs can contain any whitespace
 	assignment := regexp.MustCompile(`([a-z_\d]+)=(\S+)`)
 	for _, elem := range assignments {
-		match = assignment.FindStringSubmatch(elem)
+		match = assignment.FindStringSubmatch(strings.ToLower(elem))
 		if match == nil {
 			return cxt.NewError(BadAssignmentMatch, "could not match assignment: \"%v\"", elem)
 		}
 
 		err = parsePrimaryDestinations(match[1], match[2])
 		if err == nil {
-			if primaryDestination {
-				return cxt.NewError(ExcessLabel, "too many primary destinations")
+			if destination {
+				return cxt.NewError(ExcessLabel, "too many primary destination labels")
 			} else {
-				primaryDestination = true
+				destination = true
 				continue
 			}
 		}
@@ -225,6 +217,7 @@ func parseCacheConfigRule(rule string) test.Error {
 
 		err = parseActions(match[1], match[2])
 		if err == nil {
+			action = true
 			continue
 		}
 
@@ -236,8 +229,12 @@ func parseCacheConfigRule(rule string) test.Error {
 
 	}
 
-	if !primaryDestination {
+	if !destination {
 		return cxt.NewError(MissingLabel, "missing primary destination label")
+	}
+
+	if !action {
+		return cxt.NewError(MissingLabel, "missing action lablel")
 	}
 
 	return nil
