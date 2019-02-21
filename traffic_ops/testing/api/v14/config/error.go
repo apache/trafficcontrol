@@ -38,7 +38,7 @@ const (
 	InvalidMethod
 	InvalidPort
 	InvalidRegex
-	InvalidTimeFormatHDMS
+	InvalidTimeFormatDHMS
 	InvalidTimeRange24Hr
 )
 
@@ -60,7 +60,7 @@ func init() {
 		InvalidMethod,
 		InvalidPort,
 		InvalidRegex,
-		InvalidTimeFormatHDMS,
+		InvalidTimeFormatDHMS,
 		InvalidTimeRange24Hr,
 	}
 

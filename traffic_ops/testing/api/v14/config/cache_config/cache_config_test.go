@@ -1,121 +1,97 @@
 package cache_config
 
 import (
-	"fmt"
 	"testing"
 
 	. "github.com/apache/trafficcontrol/traffic_ops/testing/api/v14/config"
 )
 
-func TestCommonNegative(t *testing.T) {
-
+var commonNegativeTests = []NegativeTest{
+	{
+		"empty",
+		"",
+		NotEnoughAssignments,
+	},
+	{
+		"short length",
+		"foo1=foo",
+		NotEnoughAssignments,
+	},
+	{
+		"empty assignment",
+		"dest_domain= foo1=foo",
+		BadAssignmentMatch,
+	},
+	{
+		"missing equals in assignment",
+		"dest_domain foo1=foo",
+		BadAssignmentMatch,
+	},
+	{
+		"more than one primary destination",
+		"dest_domain=example dest_domain=example",
+		ExcessLabel,
+	},
+	{
+		"using a secondary specifier twice",
+		"dest_domain=example scheme=http scheme=https",
+		ExcessLabel,
+	},
+	{
+		"missing primary destination label",
+		"port=80 method=get time=08:00-14:00",
+		MissingLabel,
+	},
+	{
+		"unknown primary field",
+		"foo1=foo foo2=foo foo3=foo",
+		InvalidLabel,
+	},
 }
 
-func TestPrimaryNegative(t *testing.T) {
+//{
+//	"bad regex",
+//	"url_regex=(example.com/articles/popular.* foo2=foo",
+//	InvalidRegex,
+//},
+//{
+//	"bad hostname",
+//	"dest_domain=my%20bad%20domain.com foo1=foo",
+//	InvalidHost,
+//},
+//{
+//	"bad ip",
+//	"dest_ip=bad_ip foo1=foo",
+//	InvalidIP, //host..
+//},
 
-}
+func NegativeCacheConfigTests(t *testing.T) {
 
-func TestSecondaryNegative(t *testing.T) {
-
-}
-
-func TestActionNegative(t *testing.T) {
-
-}
-
-func TestNegativeCacheConfig(t *testing.T) {
-	TestCommonNegative(t)
-	TestPrimaryNegative(t)
-	TestSecondaryNegative(t)
-	TestActionNegative(t)
-}
-
-func TestPrimaryPositive(t *testing.T) {
-
-}
-
-func TestSecondaryPositive(t *testing.T) {
-
-}
-
-func TestActionPositive(t *testing.T) {
-
-}
-
-// PositiveNegative // multiline negative
-// PositivePositive // multiline positive
-func TestPositiveCacheConfig(t *testing.T) {
-	TestPrimaryPositive(t)
-	TestSecondaryPositive(t)
-	TestActionPositive(t)
-}
-
-func TestCacheConfig(t *testing.T) {
-
-	// verbose prints error messages even if the test passes
-	// I need to figure out how to want to fail a test in the TO environment
-	verbose := false
-
-	// note: a config with empty lines should pass..
-	// the whole config shouldn't be empty though
-	var tests = []NegativeTest{
-		{
-			"empty",
-			"",
-			NotEnoughAssignments,
-		},
-		{
-			"short length",
-			"foo1=foo",
-			NotEnoughAssignments,
-		},
-		{
-			"empty assignment",
-			"dest_domain= foo1=foo",
-			BadAssignmentMatch,
-		},
-		{
-			"missing equals in assignment",
-			"dest_domain foo1=foo",
-			BadAssignmentMatch,
-		},
-
-		// primary destination
-
-		{
-			"unknown primary field",
-			"foo1=foo foo2=foo foo3=foo",
-			InvalidLabel,
-		},
-		{
-			"bad regex",
-			"url_regex=(example.com/articles/popular.* foo2=foo",
-			InvalidRegex,
-		},
-		{
-			"bad hostname",
-			"dest_domain=my%20bad%20domain.com foo1=foo",
-			InvalidHost,
-		},
-		{
-			"bad ip",
-			"dest_ip=bad_ip foo1=foo",
-			InvalidIP, //host..
-		},
-	}
+	tests := commonNegativeTests
 
 	for _, test := range tests {
 		actual := parseCacheConfig(test.Config)
-		if verbose || actual.Code() != test.Expected {
-			fmt.Println(actual)
-			//fmt.Printf("config: \"%v\"\nexpected: %v\nactual: %v\n\n", test.config, test.expected, actual)
+		if actual == nil || actual.Code() != test.Expected {
+			t.Errorf("config: \"%v\"\nexpected: %v\nactual: %v\n\n", test.Config, test.Expected, actual)
 		}
 	}
+}
+
+// multiline negative
+// multiline positive
+// note: a config with empty lines should pass..
+// the whole config shouldn't be empty though
+func PositiveCacheConfigTests(t *testing.T) {
 
 }
 
+func TestCacheConfig(t *testing.T) {
+	NegativeCacheConfigTests(t)
+	PositiveCacheConfigTests(t)
+}
+
 /*
-	var positiveTests = []struct {
+	var positivesTest = []struct {
 		coverage string
 		config   string
 	}{
@@ -127,7 +103,7 @@ func TestCacheConfig(t *testing.T) {
 		},
 	}
 
-	for _, negTest := range positiveTests {
+	for _, negTest := range positivesTest {
 		_ = parseCacheConfig(negTest.config)
 		//fmt.Printf("config: \n%v\nerror: %v\n\n", test.config, err)
 	}*/

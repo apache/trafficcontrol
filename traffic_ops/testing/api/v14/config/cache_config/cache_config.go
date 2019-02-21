@@ -76,7 +76,7 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 	case "prefix":
 		// idk what validation to do on this
 		// does a path prefix contain '/' at the start of it?
-		// ignore for now..
+		// ignore..
 		//	Same cross platform problem as below?
 	case "suffix":
 		// examples: gif jpeg
@@ -102,11 +102,9 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 		}
 
 	case "time":
-		// Invalid24HrTimeRange
-		// example: 08:00-14:00
-		// time range using 24-hour clock
-		// I think it is shown how to parse this in ATS? or was that for pin-in-cache?
-
+		if err := Validate24HrTimeRange(rhs); err != nil {
+			return cxt.AddErrorCode(InvalidTimeRange24Hr, err)
+		}
 	case "src_ip":
 		if err := is.IP.Validate(rhs); err != nil {
 			return cxt.AddErrorCode(InvalidIP, err)
@@ -126,10 +124,7 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 func parseActions(lhs string, rhs string) test.Error {
 
 	switch lhs {
-	// traffic_ctl gives us an error for THIS
-	// it kinda makes sense since it is easy to verify..
 	case "action":
-		// is the RHS case sensitive?
 		switch rhs {
 		case "never-cache":
 		case "ignore-no-cache":
@@ -145,12 +140,16 @@ func parseActions(lhs string, rhs string) test.Error {
 			cxt.NewError(InvalidCacheResponseType)
 		}
 
-	// I assume the order matters. I can double check. Look at notes.
-	// All of these are time formats (eg. 1d4h)
+	// All of these are time formats
 	case "pin-in-cache":
-		// cxt.NewError(InvalidHDMSTimeFmt)
+		fallthrough
 	case "revalidate":
+		fallthrough
 	case "ttl-in-cache":
+		err := ValidateDHMSTimeFormat(rhs)
+		if err != nil {
+			return cxt.AddErrorCode(InvalidTimeFormatDHMS, err)
+		}
 	default:
 		return cxt.NewError(InvalidLabel)
 	}
@@ -176,12 +175,20 @@ func parseCacheConfigRule(rule string) test.Error {
 		"internal": 0,
 	}
 
-	// Does ATS also delimit with tabs?
 	assignments := strings.Split(rule, " ")
 	last := len(assignments) - 1
 	if last < 1 {
 		return cxt.NewError(NotEnoughAssignments)
 	}
+
+	// Looks like A-Z isn't even recognized by the regex, and
+	// I don't convert the original to lowercase.
+	// 1) Does case matter anywhere?
+	//	- try UPPER action
+	//				HTTP
+	//				TimeFormat
+	//				Internal
+	//strings.ToLower(
 
 	// neither the rhs or lhs can contain any whitespace
 	assignment := regexp.MustCompile(`([a-z_\d]+)=(\S+)`)
@@ -191,34 +198,46 @@ func parseCacheConfigRule(rule string) test.Error {
 			return cxt.NewError(BadAssignmentMatch, "could not match assignment: \"%v\"", elem)
 		}
 
-		// convert lhs to lowercase
 		err = parsePrimaryDestinations(match[1], match[2])
-		if err != nil && err.Code() != InvalidLabel {
+		if err == nil {
+			if primaryDestination {
+				return cxt.NewError(ExcessLabel, "too many primary destinations")
+			} else {
+				primaryDestination = true
+				continue
+			}
+		}
+		if err.Code() != InvalidLabel {
 			return err.Prepend("coult not parse primary destination from (%s): ", match[0])
-		} else if primaryDestination {
-			return cxt.NewError(ExcessLabel, "too many primary destinations")
-		} else {
-			primaryDestination = true
 		}
 
 		err = parseSecondarySpecifiers(match[1], match[2])
-		if err != nil && err.Code() != InvalidLabel {
-			return err.Prepend("could not parse secondary specifiers from (%s): ", match[0])
-		} else {
+		if err == nil {
 			count[match[1]]++
 			if count[match[1]] == 2 {
 				return cxt.NewError(ExcessLabel, "the label \"%s\" can only be used once per rule", match[1])
 			}
+			continue
+		}
+		if err.Code() != InvalidLabel {
+			return err.Prepend("could not parse secondary specifiers from (%s): ", match[0])
 		}
 
 		err = parseActions(match[1], match[2])
-		if err != nil && err.Code() != InvalidLabel {
+		if err == nil {
+			continue
+		}
+
+		if err.Code() == InvalidLabel {
+			return err
+		} else {
 			return err.Prepend("could not parse action from (%s): ", match[0])
 		}
 
-		if err != nil && err.Code() == InvalidLabel {
-			return err.Prepend("unknown label: ")
-		}
+	}
+
+	if !primaryDestination {
+		return cxt.NewError(MissingLabel, "missing primary destination label")
 	}
 
 	return nil
