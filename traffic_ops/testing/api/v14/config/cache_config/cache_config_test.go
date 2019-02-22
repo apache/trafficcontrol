@@ -1,17 +1,13 @@
 package cache_config
 
 import (
+	"fmt"
 	"testing"
 
 	. "github.com/apache/trafficcontrol/traffic_ops/testing/api/v14/config"
 )
 
 var commonNegativeTests = []NegativeTest{
-	{
-		"empty",
-		"",
-		NotEnoughAssignments,
-	},
 	{
 		"short length",
 		"foo1=foo",
@@ -33,7 +29,7 @@ var commonNegativeTests = []NegativeTest{
 		ExcessLabel,
 	},
 	{
-		"using a secondary specifier twice",
+		"using a single secondary specifier twice",
 		"dest_domain=example scheme=http scheme=https",
 		ExcessLabel,
 	},
@@ -49,65 +45,146 @@ var commonNegativeTests = []NegativeTest{
 	},
 }
 
-//{
-//	"bad regex",
-//	"url_regex=(example.com/articles/popular.* foo2=foo",
-//	InvalidRegex,
-//},
-//{
-//	"bad hostname",
-//	"dest_domain=my%20bad%20domain.com foo1=foo",
-//	InvalidHost,
-//},
-//{
-//	"bad ip",
-//	"dest_ip=bad_ip foo1=foo",
-//	InvalidIP, //host..
-//},
+var primaryDestinationNegativeTests = []NegativeTest{
+	{
+		"bad url regex",
+		"url_regex=(example.com/.* foo2=foo",
+		InvalidRegex,
+	},
+	{
+		"bad host regex",
+		"host_regex=(example.* foo2=foo",
+		InvalidRegex,
+	},
+	{
+		"bad hostname",
+		"dest_domain=my%20bad%20domain.com foo1=foo",
+		InvalidHost,
+	},
+	{
+		"bad ip",
+		"dest_ip=bad_ip foo1=foo",
+		InvalidIP,
+	},
+}
 
-func NegativeCacheConfigTests(t *testing.T) {
+var secondarySpecifierNegativeTests = []NegativeTest{
+	{
+		"bad port",
+		"dest_domain=example port=90009000",
+		InvalidPort,
+	},
+	{
+		"bad scheme",
+		"dest_domain=example scheme=httpz",
+		InvalidHTTPScheme,
+	},
+	{
+		"bad method",
+		"dest_domain=example method=xxx",
+		InvalidMethod,
+	},
+	{
+		"bad time range",
+		"dest_domain=example time=16:00",
+		InvalidTimeRange24Hr,
+	},
+	{
+		"bad src ip",
+		"dest_domain=example src_ip=bad_ip",
+		InvalidIP,
+	},
+	{
+		"bad boolean value",
+		"dest_domain=example internal=xxx",
+		InvalidBool,
+	},
+}
 
-	tests := commonNegativeTests
+var actionNegativeTests = []NegativeTest{
+	{
+		"bad action value",
+		"dest_domain=example action=xxx",
+		InvalidAction,
+	},
+	{
+		"bad cache-responses-to-cookies",
+		"dest_domain=example cache-responses-to-cookies=42",
+		InvalidCacheCookieResponse,
+	},
+	{
+		"bad time format",
+		"dest_domain=example pin-in-cache=xxx",
+		InvalidTimeFormatDHMS,
+	},
+	{
+		"missing action label",
+		"dest_domain=example scheme=http",
+		MissingLabel,
+	},
+}
 
+var positiveTests = []PositiveTest{
+	{
+		"empty config",
+		"",
+	},
+	{
+		"empty multiline config",
+		"\n",
+	},
+	{
+		"empty config with whitespace",
+		"\t ",
+	},
+	{
+		"config returned from traffic ops",
+		"dest_domain=origin.infra.ciab.test port=80 scheme=http action=never-cache",
+	},
+	{
+		"multiline config with empty line",
+		fmt.Sprintf("%s\n\n%s",
+			"dest_domain=example.com suffix=js revalidate=1d",
+			"dest_domain=example.com prefix=foo suffix=js revalidate=7d"),
+	},
+	{
+		"many empty lines in config",
+		fmt.Sprintf("\n%s\n\n%s",
+			"dest_domain=example.com suffix=js revalidate=1d\n",
+			"dest_domain=example.com prefix=foo suffix=js revalidate=7d\n"),
+	},
+}
+
+func negativeTestDriver(tests []NegativeTest, t *testing.T) {
 	for _, test := range tests {
 		actual := parseCacheConfig(test.Config)
 		if actual == nil || actual.Code() != test.Expected {
-			t.Errorf("config: \"%v\"\nexpected: %v\nactual: %v\n\n", test.Config, test.Expected, actual)
+			t.Errorf(`
+  config: "%v"
+  returned error: "%v"
+  error should be related to: %v`, test.Config, actual, test.Description)
 		}
 	}
 }
 
-// multiline negative
-// multiline positive
-// note: a config with empty lines should pass..
-// the whole config shouldn't be empty though
-func PositiveCacheConfigTests(t *testing.T) {
-
-}
-
 func TestCacheConfig(t *testing.T) {
-	NegativeCacheConfigTests(t)
-	PositiveCacheConfigTests(t)
-}
 
-/*
-	var positivesTest = []struct {
-		coverage string
-		config   string
-	}{
-		{
-			"dest_domain (primary) suffix (secondary) revalidate (action)",
-			fmt.Sprintf("%s\n%s",
-				"dest_domain=example.com suffix=js revalidate=1d",
-				"dest_domain=example.com prefix=foo suffix=js revalidate=7d"),
-		},
+	// Negative Tests
+	negativeTestDriver(commonNegativeTests, t)
+	negativeTestDriver(primaryDestinationNegativeTests, t)
+	negativeTestDriver(secondarySpecifierNegativeTests, t)
+	negativeTestDriver(actionNegativeTests, t)
+
+	// Positive Tests
+	for _, test := range positiveTests {
+		actual := parseCacheConfig(test.Config)
+		if actual != nil {
+			t.Errorf(`
+  config: "%v"
+  returned error: "%v"
+  error should be nil
+  description: %v`, test.Config, actual, test.Description)
+		}
+
 	}
-
-	for _, negTest := range positivesTest {
-		_ = parseCacheConfig(negTest.config)
-		//fmt.Printf("config: \n%v\nerror: %v\n\n", test.config, err)
-	}*/
-//badSecondaryField := "foo1=foo foo2=foo foo3=foo"
-//badActionField :=
-//noSecondary := "foo1=foo foo2=foo" // should be made as valid
-//ex3 := `url_regex=example.com/game/.* pin-in-cache=1h`
+}

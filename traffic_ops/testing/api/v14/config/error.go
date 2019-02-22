@@ -13,7 +13,7 @@ const (
 const (
 	InvalidAction = iota + 20
 	InvalidBool
-	InvalidCacheResponseType
+	InvalidCacheCookieResponse
 	InvalidHTTPScheme
 	InvalidHost
 	InvalidIP
@@ -35,7 +35,7 @@ func init() {
 		MissingLabel,
 		InvalidAction,
 		InvalidBool,
-		InvalidCacheResponseType,
+		InvalidCacheCookieResponse,
 		InvalidHTTPScheme,
 		InvalidHost,
 		InvalidIP,
@@ -48,14 +48,18 @@ func init() {
 
 	ErrorContext = test.NewErrorContext("cache config", iterableErrorCodes)
 
-	ErrorContext.SetDefaultMessageForCode(
-		InvalidLabel, "invalid label")
-	ErrorContext.SetDefaultMessageForCode(
-		NotEnoughAssignments, "not enough assignments in rule")
-	ErrorContext.SetDefaultMessageForCode(
-		InvalidHTTPScheme, "invalid scheme (must be either http or https)")
-	ErrorContext.SetDefaultMessageForCode(
-		InvalidBool, "label must have a value of 'true' or 'false'")
+	ErrorContext.SetDefaultMessageForCode(InvalidLabel,
+		"invalid label")
+	ErrorContext.SetDefaultMessageForCode(InvalidAction,
+		"invalid action")
+	ErrorContext.SetDefaultMessageForCode(NotEnoughAssignments,
+		"not enough assignments in rule")
+	ErrorContext.SetDefaultMessageForCode(InvalidHTTPScheme,
+		"invalid scheme (must be either http or https)")
+	ErrorContext.SetDefaultMessageForCode(InvalidBool,
+		"label must have a value of 'true' or 'false'")
+	ErrorContext.SetDefaultMessageForCode(InvalidCacheCookieResponse,
+		"Value for cache-responses-to-cookies must be an integer in the range 0..4")
 
 	ErrorContext.TurnPanicOn()
 }

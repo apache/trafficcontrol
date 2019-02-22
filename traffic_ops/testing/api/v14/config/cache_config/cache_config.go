@@ -23,9 +23,10 @@ func parseCacheConfig(config string) test.Error {
 	for i, ln := range lines {
 		err := parseCacheConfigRule(ln)
 		if err != nil {
-			return err.Prepend("error on line %d: %v", i+1)
+			return err.Prepend("error on line %d: ", i+1)
 		}
 	}
+
 	return nil
 }
 
@@ -137,7 +138,7 @@ func parseActions(lhs string, rhs string) test.Error {
 	case "cache-responses-to-cookies":
 		digit := rhs[0]
 		if digit < '0' || '4' > digit || len(rhs) > 1 {
-			cxt.NewError(InvalidCacheResponseType)
+			return cxt.NewError(InvalidCacheCookieResponse)
 		}
 
 	// All of these are time formats
@@ -176,6 +177,10 @@ func parseCacheConfigRule(rule string) test.Error {
 		"internal": 0,
 	}
 
+	if strings.Trim(rule, "\t ") == "" {
+		return nil
+	}
+
 	assignments := strings.Split(rule, " ")
 	last := len(assignments) - 1
 	if last < 1 {
@@ -183,7 +188,7 @@ func parseCacheConfigRule(rule string) test.Error {
 	}
 
 	// neither the rhs or lhs can contain any whitespace
-	assignment := regexp.MustCompile(`([a-z_\d]+)=(\S+)`)
+	assignment := regexp.MustCompile(`([a-z_\-\d]+)=(\S+)`)
 	for _, elem := range assignments {
 		match = assignment.FindStringSubmatch(strings.ToLower(elem))
 		if match == nil {
