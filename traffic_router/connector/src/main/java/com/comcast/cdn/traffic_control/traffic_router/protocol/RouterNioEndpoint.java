@@ -19,6 +19,7 @@ import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateRegistry
 import com.comcast.cdn.traffic_control.traffic_router.secure.HandshakeData;
 import com.comcast.cdn.traffic_control.traffic_router.secure.KeyManager;
 import org.apache.log4j.Logger;
+//import org.apache.tomcat.util.modeler.Registry;
 import org.apache.tomcat.util.modeler.Registry;
 import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SSLHostConfig;
@@ -94,7 +95,7 @@ public class RouterNioEndpoint extends NioEndpoint {
         return super.getSSLHostConfig(sniHostName.toLowerCase());
     }
 
-    /*private void unregisterJmx(final SSLHostConfig sslHostConfig) {
+    private void unregisterJmx(final SSLHostConfig sslHostConfig) {
         final Registry registry = Registry.getRegistry(null, null);
         registry.unregisterComponent(sslHostConfig.getObjectName());
         for (final SSLHostConfigCertificate sslHostConfigCert : sslHostConfig.getCertificates()) {
@@ -117,5 +118,5 @@ public class RouterNioEndpoint extends NioEndpoint {
         if (previous != null) {
             unregisterJmx(previous);
         }
-    }*/
+    }
 }
