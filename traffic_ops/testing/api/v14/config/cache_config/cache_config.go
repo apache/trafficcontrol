@@ -9,10 +9,6 @@ import (
 	"github.com/go-ozzo/ozzo-validation/is"
 )
 
-// Kindof an alias. I should change it back later
-// maybe this would be fine if I wasn't already using the dot import
-var cxt = ErrorContext
-
 func parseCacheConfig(config string) test.Error {
 	lines := strings.Split(config, "\n")
 
@@ -40,24 +36,24 @@ func parsePrimaryDestinations(lhs string, rhs string) test.Error {
 		fallthrough
 	case "dest_host":
 		if err := is.Host.Validate(rhs); err != nil {
-			return cxt.NewError(InvalidHost, "\"%s\" %v", rhs, err)
+			return ErrorContext.NewError(InvalidHost, `"%s" %v`, rhs, err)
 		}
 	case "dest_ip":
 		if err := is.IP.Validate(rhs); err != nil {
-			return cxt.NewError(InvalidIP, "\"%s\" %v", rhs, err)
+			return ErrorContext.NewError(InvalidIP, `"%s" %v`, rhs, err)
 		}
 	case "host_regex":
 		// only makes sure the regex compiles, not that the regex generates valid hosts
 		if _, err := regexp.Compile(rhs); err != nil {
-			return cxt.NewError(InvalidRegex, "%v", err)
+			return ErrorContext.NewError(InvalidRegex, "%v", err)
 		}
 	case "url_regex":
 		// only makes sure the regex compiles, not that the regex generates valid urls
 		if _, err := regexp.Compile(rhs); err != nil {
-			return cxt.NewError(InvalidRegex, "%v", err)
+			return ErrorContext.NewError(InvalidRegex, "%v", err)
 		}
 	default:
-		return cxt.NewError(InvalidLabel)
+		return ErrorContext.NewError(InvalidLabel)
 	}
 
 	return nil
@@ -68,11 +64,11 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 	switch lhs {
 	case "port":
 		if err := is.Port.Validate(rhs); err != nil {
-			return cxt.AddErrorCode(InvalidPort, err)
+			return ErrorContext.AddErrorCode(InvalidPort, err)
 		}
 	case "scheme":
 		if rhs != "http" && rhs != "https" {
-			return cxt.NewError(InvalidHTTPScheme)
+			return ErrorContext.NewError(InvalidHTTPScheme)
 		}
 	case "prefix":
 		// idk what validation to do on this
@@ -99,24 +95,24 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 		case "connect":
 		case "patch":
 		default:
-			return cxt.NewError(InvalidMethod, "invalid method \"%v\"", rhs)
+			return ErrorContext.NewError(InvalidMethod, `invalid method "%v"`, rhs)
 		}
 
 	case "time":
 		if err := Validate24HrTimeRange(rhs); err != nil {
-			return cxt.AddErrorCode(InvalidTimeRange24Hr, err)
+			return ErrorContext.AddErrorCode(InvalidTimeRange24Hr, err)
 		}
 	case "src_ip":
 		if err := is.IP.Validate(rhs); err != nil {
-			return cxt.AddErrorCode(InvalidIP, err)
+			return ErrorContext.AddErrorCode(InvalidIP, err)
 		}
 	case "internal":
 		if rhs != "true" && rhs != "false" {
-			return cxt.NewError(InvalidBool)
+			return ErrorContext.NewError(InvalidBool)
 		}
 
 	default:
-		return cxt.NewError(InvalidLabel)
+		return ErrorContext.NewError(InvalidLabel)
 	}
 
 	return nil
@@ -132,13 +128,13 @@ func parseActions(lhs string, rhs string) test.Error {
 		case "ignore-client-no-cache":
 		case "ignore-server-no-cache":
 		default:
-			return cxt.NewError(InvalidAction)
+			return ErrorContext.NewError(InvalidAction)
 		}
 
 	case "cache-responses-to-cookies":
 		digit := rhs[0]
 		if digit < '0' || '4' > digit || len(rhs) > 1 {
-			return cxt.NewError(InvalidCacheCookieResponse)
+			return ErrorContext.NewError(InvalidCacheCookieResponse)
 		}
 
 	// All of these are time formats
@@ -149,10 +145,10 @@ func parseActions(lhs string, rhs string) test.Error {
 	case "ttl-in-cache":
 		err := ValidateDHMSTimeFormat(rhs)
 		if err != nil {
-			return cxt.AddErrorCode(InvalidTimeFormatDHMS, err)
+			return ErrorContext.AddErrorCode(InvalidTimeFormatDHMS, err)
 		}
 	default:
-		return cxt.NewError(InvalidLabel)
+		return ErrorContext.NewError(InvalidLabel)
 	}
 
 	return nil
@@ -181,10 +177,10 @@ func parseCacheConfigRule(rule string) test.Error {
 		return nil
 	}
 
-	assignments := strings.Split(rule, " ")
+	assignments := strings.Fields(rule)
 	last := len(assignments) - 1
 	if last < 1 {
-		return cxt.NewError(NotEnoughAssignments)
+		return ErrorContext.NewError(NotEnoughAssignments)
 	}
 
 	// neither the rhs or lhs can contain any whitespace
@@ -192,32 +188,31 @@ func parseCacheConfigRule(rule string) test.Error {
 	for _, elem := range assignments {
 		match = assignment.FindStringSubmatch(strings.ToLower(elem))
 		if match == nil {
-			return cxt.NewError(BadAssignmentMatch, "could not match assignment: \"%v\"", elem)
+			return ErrorContext.NewError(BadAssignmentMatch, `could not match assignment: "%v"`, elem)
 		}
 
 		err = parsePrimaryDestinations(match[1], match[2])
 		if err == nil {
 			if destination {
-				return cxt.NewError(ExcessLabel, "too many primary destination labels")
+				return ErrorContext.NewError(ExcessLabel, "too many primary destination labels")
 			} else {
 				destination = true
 				continue
 			}
 		}
 		if err.Code() != InvalidLabel {
-			return err.Prepend("coult not parse primary destination from (%s): ", match[0])
+			return err.Prepend(`coult not parse primary destination from "%s": `, match[0])
 		}
 
 		err = parseSecondarySpecifiers(match[1], match[2])
 		if err == nil {
-			count[match[1]]++
-			if count[match[1]] == 2 {
-				return cxt.NewError(ExcessLabel, "the label \"%s\" can only be used once per rule", match[1])
+			if count[match[1]]++; count[match[1]] == 2 {
+				return ErrorContext.NewError(ExcessLabel, `the label "%s" can only be used once per rule`, match[1])
 			}
 			continue
 		}
 		if err.Code() != InvalidLabel {
-			return err.Prepend("could not parse secondary specifiers from (%s): ", match[0])
+			return err.Prepend(`could not parse secondary specifier from "%s": `, match[0])
 		}
 
 		err = parseActions(match[1], match[2])
@@ -229,17 +224,17 @@ func parseCacheConfigRule(rule string) test.Error {
 		if err.Code() == InvalidLabel {
 			return err
 		} else {
-			return err.Prepend("could not parse action from (%s): ", match[0])
+			return err.Prepend(`could not parse action from "%s": `, match[0])
 		}
 
 	}
 
 	if !destination {
-		return cxt.NewError(MissingLabel, "missing primary destination label")
+		return ErrorContext.NewError(MissingLabel, "missing primary destination label")
 	}
 
 	if !action {
-		return cxt.NewError(MissingLabel, "missing action lablel")
+		return ErrorContext.NewError(MissingLabel, "missing action lablel")
 	}
 
 	return nil

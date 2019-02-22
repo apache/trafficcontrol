@@ -16,40 +16,50 @@ func Validate24HrTimeRange(rng string) error {
 		return fmt.Errorf("string %v is not a range", rng)
 	}
 
-	_, err := time.Parse(MilitaryTimeFmt, match[1])
+	t1, err := time.Parse(MilitaryTimeFmt, match[1])
 	if err != nil {
 		return fmt.Errorf("time range must be a 24Hr format")
 	}
 
-	_, err = time.Parse(MilitaryTimeFmt, match[2])
+	t2, err := time.Parse(MilitaryTimeFmt, match[2])
 	if err != nil {
 		return fmt.Errorf("time range must be a 24Hr format")
+	}
+
+	if t1.String() > t2.String() {
+		return fmt.Errorf("first time should be smaller than the second")
 	}
 
 	return nil
 }
 
-// 1) order matters
-// 2) maximum values?
 func ValidateDHMSTimeFormat(time string) error {
 
 	if time == "" {
 		return fmt.Errorf("time string cannot be empty")
 	}
-	timeFormat := regexp.MustCompile(`^(\d+d)?(\d+h)?(\d+m)?(\d+s)?$`)
-	match := timeFormat.FindStringSubmatch(time)
+
+	dhms := regexp.MustCompile(`(\d+)([dhms])(\S*)`)
+	match := dhms.FindStringSubmatch(time)
+
 	if match == nil {
-		return fmt.Errorf("time format must match sequences of digits followed by units, where time units are: d, h, m, or s\n")
+		return fmt.Errorf("invalid time format")
 	}
 
-	for i := 1; i < len(match); i++ {
-		last := len(match[i]) - 1
-		if last == -1 {
-			continue
-		}
-		if _, err := strconv.Atoi(match[i][:last]); err != nil {
+	var count = map[string]int{
+		"d": 0,
+		"h": 0,
+		"m": 0,
+		"s": 0,
+	}
+	for match != nil {
+		if _, err := strconv.Atoi(match[1]); err != nil {
 			return err
 		}
+		if count[match[2]]++; count[match[2]] == 2 {
+			return fmt.Errorf("%s unit specified multiple times", match[2])
+		}
+		match = dhms.FindStringSubmatch(match[3])
 	}
 
 	return nil

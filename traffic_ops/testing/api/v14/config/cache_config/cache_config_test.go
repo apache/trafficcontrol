@@ -9,7 +9,7 @@ import (
 
 var commonNegativeTests = []NegativeTest{
 	{
-		"short length",
+		"too few assignments",
 		"foo1=foo",
 		NotEnoughAssignments,
 	},
@@ -41,6 +41,13 @@ var commonNegativeTests = []NegativeTest{
 	{
 		"unknown primary field",
 		"foo1=foo foo2=foo foo3=foo",
+		InvalidLabel,
+	},
+	{
+		"good first line, but bad second",
+		fmt.Sprintf("%s\n\n%s",
+			"dest_domain=example.com suffix=js revalidate=1d",
+			"foo1=foo foo2=foo foo3=foo"),
 		InvalidLabel,
 	},
 }
@@ -138,8 +145,16 @@ var positiveTests = []PositiveTest{
 		"\t ",
 	},
 	{
-		"config returned from traffic ops",
+		"normal config returned from traffic ops",
 		"dest_domain=origin.infra.ciab.test port=80 scheme=http action=never-cache",
+	},
+	{
+		"tab-delimitted config",
+		"dest_domain=origin.infra.ciab.test\tport=80\tscheme=http\taction=never-cache",
+	},
+	{
+		"multi-space delimitted config",
+		"dest_domain=origin.infra.ciab.test  port=80  scheme=http  action=never-cache",
 	},
 	{
 		"multiline config with empty line",
