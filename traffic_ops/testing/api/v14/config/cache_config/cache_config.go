@@ -187,7 +187,8 @@ func parseCacheConfigRule(rule string) test.Error {
 		"internal": 0,
 	}
 
-	if strings.Trim(rule, "\t ") == "" {
+	rule = strings.Trim(rule, "\t ")
+	if rule == "" || strings.HasPrefix(rule, "#") {
 		return nil
 	}
 
