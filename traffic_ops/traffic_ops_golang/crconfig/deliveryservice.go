@@ -28,6 +28,8 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+
 	"github.com/lib/pq"
 )
 
@@ -91,8 +93,8 @@ func makeDSes(tx *sql.Tx, cdn string, domain string, live bool) (map[string]tc.C
 	}
 
 	// TODO fix cdn_id subquery to get distinct latest
-	qry := `
-SELECT
+	with := ""
+	selectedColumns := `
   xml_id,
   miss_lat,
   miss_long,
@@ -121,8 +123,10 @@ SELECT
   anonymous_blocking_enabled,
 	consistent_hash_regex,
 	query_keys
-FROM (
-SELECT DISTINCT ON (d.xml_id)
+`
+
+	primaryKeys := `d.xml_id`
+	selectBody := `
   d.xml_id,
   d.miss_lat,
   d.miss_long,
@@ -153,35 +157,26 @@ SELECT DISTINCT ON (d.xml_id)
 	(SELECT ARRAY_AGG(name ORDER BY name)
 		FROM deliveryservice_consistent_hash_query_param
 		WHERE deliveryservice_id = d.id) AS query_keys, -- TODO change to a join, for readability?
-  d.deleted
+  d.active,
+  d.cdn_id,
+  dsn.time as ds_snapshot_time
 FROM
   deliveryservice_snapshot d
   JOIN type_snapshot t ON t.id = d.type
+  LEFT JOIN profile_snapshot p ON p.id = d.profile
   JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = d.xml_id
-  LEFT OUTER JOIN profile_snapshot p ON p.id = d.profile `
-	if !live {
-		qry += ` AND p.last_updated <= dsn.time `
-	}
-	qry += `
-WHERE
-  d.cdn_id = (select id from cdn_snapshot c where c.name = $1 and c.last_updated <= dsn.time)
-  AND d.active = true
-  AND t.name != '` + string(tc.DSTypeAnyMap) + `'
 `
-	if !live {
-		qry += `
-  AND d.last_updated <= dsn.time
-  AND t.last_updated <= dsn.time
+	where := `
+  cdn_id = (SELECT id FROM cdn_snapshot c WHERE c.name = (select v from cdn_name) AND c.last_updated <= ds_snapshot_time)
+  AND active = true
+  AND type != '` + string(tc.DSTypeAnyMap) + `'
 `
-	}
-	qry += `
-ORDER BY
-  d.xml_id DESC,
-  d.last_updated DESC,
-  t.last_updated DESC,
-  p.last_updated DESC
-) v where deleted = false
-`
+	tableAliases := []string{"d", "t", "p"}
+	nullTables := map[string]struct{}{"p": {}}
+	qry := dbhelpers.BuildDSSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nullTables)
+
+	// log.Errorln("DEBUG makeDSess qry QQQ" + qry + "QQQ")
+
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, errors.New("querying deliveryservices: " + err.Error())
@@ -468,45 +463,30 @@ ORDER BY
 func getStaticDNSEntries(tx *sql.Tx, cdn string, live bool) (map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, error) {
 	entries := map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry{}
 
-	qry := `
-WITH cdn_name AS (
-  SELECT $1::text as v
-)
-SELECT ds, name, ttl, value, type FROM (
-SELECT DISTINCT ON (e.host, e.address, e.deliveryservice, e.cachegroup)
+	with := ""
+	selectedColumns := `ds, name, ttl, value, type`
+	primaryKeys := `e.host, e.address, e.deliveryservice, e.cachegroup`
+	selectBody := `
   d.xml_id as ds,
   e.host as name,
   e.ttl,
   e.address as value,
   t.name as type,
-  e.deleted
+  d.cdn_id,
+  d.active as ds_active,
+  dsn.time as ds_snapshot_time
 FROM
   staticdnsentry_snapshot e
   JOIN deliveryservice_snapshot d on d.id = e.deliveryservice
   JOIN type_snapshot t on t.id = e.type
   JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = d.xml_id
-WHERE
-  d.cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= dsn.time)
-  AND d.active = true
 `
-	if !live {
-		qry += `
-  AND e.last_updated <= dsn.time
-  AND d.last_updated <= dsn.time
-  AND t.last_updated <= dsn.time
+	where := `
+  cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= ds_snapshot_time)
+  AND ds_active = true
 `
-	}
-	qry += `
-ORDER BY
-  e.host DESC,
-  e.address DESC,
-  e.deliveryservice DESC,
-  e.cachegroup DESC,
-  e.last_updated DESC,
-  d.last_updated DESC,
-  t.last_updated DESC
-) v where deleted = false
-`
+	tableAliases := []string{"e", "d", "t"}
+	qry := dbhelpers.BuildDSSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, errors.New("querying static DNS entries: " + err.Error())
@@ -539,15 +519,19 @@ func getDSRegexesDomains(tx *sql.Tx, cdn string, domain string, live bool) (map[
 	dsmatchsets := map[string][]*tc.MatchSet{}
 	domains := map[string][]string{}
 	patternToHostReplacer := strings.NewReplacer(`\`, ``, `.*`, ``, `.`, ``)
-	qry := `
-SELECT pattern, type, dstype, set_number, dsname FROM (
-SELECT DISTINCT ON (dsname, pattern, type, set_number)
+
+	with := ""
+	selectedColumns := `pattern, type, dstype, set_number, dsname`
+	primaryKeys := `dsname, pattern, type, set_number`
+	selectBody := `
   r.pattern,
   t.name as type,
   dt.name as dstype,
   COALESCE(dr.set_number, 0) as set_number,
   d.xml_id as dsname,
-  r.deleted
+  d.active as ds_active,
+  d.cdn_id,
+  dsn.time as ds_snapshot_time
 FROM
   regex_snapshot as r
   JOIN deliveryservice_regex_snapshot dr on r.id = dr.regex
@@ -555,33 +539,14 @@ FROM
   JOIN type_snapshot t on t.id = r.type
   JOIN type_snapshot dt on dt.id = d.type
   JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = d.xml_id
-WHERE
-  d.cdn_id = (select id from cdn_snapshot c where c.name = $1 and c.last_updated <= dsn.time)
-  AND d.active = true
 `
-	if !live {
-		qry += `
-  AND r.last_updated <= dsn.time
-  AND dr.last_updated <= dsn.time
-  AND d.last_updated <= dsn.time
-  AND t.last_updated <= dsn.time
-  AND dt.last_updated <= dsn.time
+	where := `
+  cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= ds_snapshot_time)
+  AND ds_active = true
 `
-	}
-	qry += `
-ORDER BY
-  dsname DESC,
-  pattern DESC,
-  type DESC,
-  set_number DESC,
-  dr.last_updated DESC,
-  dr.last_updated DESC,
-  d.last_updated DESC,
-  t.last_updated DESC,
-  dt.last_updated DESC
-) v where deleted = false
-ORDER BY set_number ASC
-`
+	tableAliases := []string{"r", "dr", "d", "t", "dt"}
+	qry := dbhelpers.BuildDSSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
+
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, nil, errors.New("querying deliveryservices: " + err.Error())
@@ -665,62 +630,45 @@ func getDSParams(serverParams map[string]map[string]string) (map[string]string, 
 
 // getDSProfileParams returns a map[dsname]map[paramname]paramvalue
 func getServerProfileParams(tx *sql.Tx, cdn string, live bool) (map[string]map[string]string, error) {
-	qry := `
-WITH cdn_name AS (
-  SELECT $1::text as v
-),
-snapshot_time AS (
-  SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
-)
-SELECT name, value, profile FROM (
-SELECT DISTINCT ON (pa.name, pa.value, pr.name)
+	with := ""
+	selectedColumns := `name, value, profile`
+	primaryKeys := `pa.name, pa.value, pr.name`
+	selectBody := `
+  pr.id as profile_id,
   pa.name,
   pa.value,
-  pr.name as profile,
-  pa.deleted
+  pr.name as profile
 FROM
   profile_snapshot pr
   JOIN profile_parameter_snapshot as pp on pp.profile = pr.id
   JOIN parameter_snapshot pa on pa.id = pp.parameter
-WHERE
-  pr.id in (
+`
+	where := `
+  profile_id in (
     SELECT DISTINCT(profile) FROM (
     SELECT DISTINCT ON (s.ip_address, profile)
       s.profile,
-      s.deleted
+      s.cdn_id
     FROM
       server_snapshot s
-    WHERE
-      s.cdn_id = (SELECT id FROM cdn_snapshot c WHERE c.name = (SELECT v from cdn_name) AND c.last_updated <= (SELECT v from snapshot_time))
 `
 	if !live {
-		qry += `AND s.last_updated <= (SELECT v from snapshot_time)`
+		where += `
+    WHERE s.last_updated <= (SELECT v from snapshot_time)`
 	}
-	qry += `
+	where += `
     ORDER BY
       s.ip_address DESC,
       s.profile DESC,
       s.last_updated DESC
-    ) v where deleted = false
+    ) v
+    WHERE
+      cdn_id = (SELECT id FROM cdn_snapshot c WHERE c.name = (SELECT v from cdn_name) AND c.last_updated <= (SELECT v from snapshot_time))
   )
 `
-	if !live {
-		qry += `
-  AND pr.last_updated <= (SELECT v from snapshot_time)
-  AND pp.last_updated <= (SELECT v from snapshot_time)
-  AND pa.last_updated <= (SELECT v from snapshot_time)
-`
-	}
-	qry += `
-ORDER BY
-  pa.name DESC,
-  pa.value DESC,
-  pr.name DESC,
-  pr.last_updated DESC,
-  pp.last_updated DESC,
-  pa.last_updated DESC
-) v where deleted = false
-`
+	tableAliases := []string{"pr", "pp", "pa"}
+	qry := dbhelpers.BuildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
+
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, errors.New("querying deliveryservices: " + err.Error())

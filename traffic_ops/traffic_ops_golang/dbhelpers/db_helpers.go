@@ -28,6 +28,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/lib/pq"
 )
@@ -525,4 +526,368 @@ func DSExists(tx *sql.Tx, ds tc.DeliveryServiceName) (bool, error) {
 		return false, errors.New("querying delivery service existence: " + err.Error())
 	}
 	return count > 0, nil
+}
+
+// buildSnapshotQuery builds a query to select the latest timestamp, from the query parts of an ordinary query.
+//
+// The live arg is whether to query the latest timestamp. If false, the latest up to the snapshot is queried.
+//
+// This is just a helper, there are things it can't do (e.g. order by), and it's fine not to use it, if it doesn't fit.
+//
+// Note this requires the cdn name (in order to get the snapshot time). This is queried as $1. Hence:
+// 1. The cdn name must be the first query parameter
+// 2. The cdn name is available to the selectBody via `(select v from cdn_name)`
+// 2. The snapshot time is available to the selectBody via `(select v from snapshot_time)`
+//
+// The with parameter is any with-statement query parts. This should be a complete "WITH" query part. This may be blank.
+// Examples:
+//    with := `WITH cdn_id AS (select id from cdn where name = 'foo')`
+//    with := `
+//    WITH one AS (select 1),
+//         two AS (select 2)
+//    `
+//
+// The selectColumns must be the names of columns selected by the parameter selectBody, separated by commas. This should not include the deleted column, which will always be false.
+// Example:
+//    selectColumns := `name, value`
+//
+// The primaryKeys must be the primary keys of the selected statement, including the table aliases used in the selectBody, separated by commas. Note this is not necessarily the primary key(s) of a single table, but rather the unique values of the select statement itself (in technical terms, the "candidate key"). For example, this may be the delivery service xml_id; but it may also be "profile.id, parameter.id, parameter.name".
+//  Examples:
+//    primaryKeys := `ds.xml_id`
+//    primaryKeys := `pr.name, pa.name, pa.value`
+//
+// The selectBody must be the select statement, including from and joins, including selecting the deleted column of the primary table, excluding the initial "select" keyword. A deleted column MUST be selected.
+// Example:
+//      pa.name,
+//      pa.value,
+//      pa.deleted
+//    FROM
+//      parameter pa
+//    JOIN
+//      profile pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
+//      JOIN profile_parameter pp ON pp.profile = pr.id and pp.parameter = pa.id
+//
+// The where is the where clause, including the "where" keyword. This may be blank.
+// The columns in the where clause must be in the selectBody, as their selected names, not using their table aliases.
+// For example, if the selectBody includes "s.xmpp_id hash_id,", then the where must check "hash_id == 'foo'" and not "s.xmpp_id = 'foo'".
+// Or, if the selectBody includes "s.xmpp_id,", then the where must check "xmpp_id == 'foo'" and not "s.xmpp_id = 'foo'".
+// The where may also include an ORDER BY query part.
+//
+// Examples:
+//    where := `WHERE pa.config_file = '` + MonitorConfigFile + `'`
+//    where := `
+//    WHERE pa.config_file = 'CRConfig.json'
+//          AND pa.name = 'something'
+//    `
+//
+// The tableAliases is all table aliases (or names) used in the selectBody. For example, if the select body contains "FROM foo JOIN bar b on b.id = foo.bar", then tableAliases must be []string{"foo", "b"}.
+//
+// Examples:
+//   tableAliases := []string{"pa", "pr"}
+//   tableAliases := []string{"s", "tp", "st", "cg", "pr", "cdn"}
+//
+// The nullableTables is a set of tables which may be null, typically selected in the selectBody as a left join. The builder needs to know these, so it can select "updated < snapshot OR p is null" to avoid excluding rows where that table has no key.
+// This may be nil. Most queries won't have nullable foreign keys and left joins. An example of one that does is the delivery service profile.
+//
+// All the tables selected, in the parameters selectBody and tableAliases, should be snapshot tables like deliveryservice_snapshot, not raw tables like "deliveryservice". The purpose of this function is to build a query to select the latest values, abstracting away the common boilerplate, and allowing callers to pass the query parts mostly unmodified from an ordinary "non-snapshot" query.
+//
+// To better explain its purpose with an example, it allows you to pass the query parts of a query such as:
+//
+//    SELECT
+//      pa.name,
+//      pa.value
+//    FROM
+//      parameter_snapshot pa
+//    JOIN
+//      profile_snapshot pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
+//      JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
+//    WHERE
+//      pa.config_file = '` + MonitorConfigFile + `'
+//
+// and construct the "select latest <= snapshot" query such as:
+//
+//    WITH cdn_name AS (
+//      SELECT $1::text as v
+//    ),
+//    snapshot_time AS (
+//      SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
+//    )
+//    SELECT
+//      name,
+//      value
+//    FROM (
+//    SELECT DISTINCT ON (pa.name, pa.value)
+//      pa.deleted,
+//      pp.deleted,
+//      pa.name,
+//      pa.value,
+//    FROM
+//      parameter_snapshot pa
+//    JOIN
+//      profile_snapshot pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
+//      JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
+//    WHERE
+//      pa.config_file = '` + MonitorConfigFile + `'
+//
+//      AND ds.last_updated <= (select v from snapshot_time)
+//      AND pr.last_updated <= (select v from snapshot_time)
+//
+//    ORDER BY
+//      pa.name,
+//      pa.value,
+//      pr.last_updated DESC,
+//      pp.last_updated DESC
+//    ) s WHERE
+//      pa.deleted = false
+//      AND pp.deleted = false
+//
+// While requiring only minimal changes to the original:
+// 1. Query parts must be separated out.
+// 2. Tables must be suffixed with '_snapshot', to select from the snapshot tables.
+// 3. The primary key of the select statement must be identified.
+//
+// The usage for the above example would be:
+//
+//    live := true
+//    with := ""
+//    selectedColumns := "name, value"
+//    primaryKeys := "pa.name, pa.value"
+//    selectBody := `
+//      pa.name,
+//      pa.value
+//    FROM
+//      parameter_snapshot pa
+//    JOIN
+//      profile_snapshot pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
+//      JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
+//    `
+//    where := `config_file = '` + MonitorConfigFile + `'`
+//    tableAliases := []string{"pa", "pp"}
+//    qry := buildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases)
+//
+func BuildSnapshotQuery(
+	live bool,
+	with string,
+	selectedColumns string,
+	primaryKeys string,
+	selectBody string,
+	where string,
+	tableAliases []string,
+	nullableTableAliases map[string]struct{},
+) string {
+	qry := with
+	if with == `` {
+		qry += `WITH `
+	} else {
+		qry += `, `
+	}
+	qry += `
+cdn_name AS (
+  SELECT $1::text as v
+),
+snapshot_time AS (
+  SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
+)
+`
+
+	if len(tableAliases) < 1 {
+		// this function is never useful with no tables, so this should never happen; but I loathe panics.
+		return `` // TODO log?
+	}
+
+	qry += `SELECT
+` + selectedColumns + `
+FROM (
+SELECT DISTINCT ON (` + primaryKeys + `)`
+
+	for _, alias := range tableAliases {
+		qry += `
+` + alias + `.deleted as ` + alias + `_deleted,`
+	}
+	qry += `
+` + selectBody
+
+	if !live {
+		qry += `
+WHERE
+`
+		makeLastUpdated := func(tableAlias string) string {
+			if _, ok := nullableTableAliases[tableAlias]; !ok {
+				return `  ` + tableAlias + `.last_updated <= (select v from snapshot_time)
+`
+			} else {
+				return `  (` + tableAlias + `.last_updated <= (select v from snapshot_time) OR ` + tableAlias + `.last_updated IS NULL)
+`
+			}
+		}
+		qry += strings.Join(util.MapStr(tableAliases, makeLastUpdated), ` AND `)
+	}
+
+	qry += `ORDER BY
+  ` + primaryKeys + ",\n"
+	makeLastUpdatedOrderBy := func(t string) string { return t + `.last_updated DESC` }
+	qry += strings.Join(util.MapStr(tableAliases, makeLastUpdatedOrderBy), ",\n")
+
+	qry += `
+) q WHERE `
+	deletedFalse := func(t string) string {
+		if _, ok := nullableTableAliases[t]; !ok {
+			return t + `_deleted = false`
+		} else {
+			return `(` + t + `_deleted = false OR ` + t + `_deleted IS NULL)`
+		}
+	}
+	qry += strings.Join(util.MapStr(tableAliases, deletedFalse), ` AND `)
+
+	if where != `` {
+		qry += `  AND ` + where
+	}
+
+	return qry
+}
+
+// BuildDSSnapshotQuery is like BuildSnapshotQuery, but for deliveryservice_snapshots.
+// All snapshot times will be queried up to the deliveryservice_snapshots time, rather than the cdn snapshot time.
+//
+// Unlike BuildSnapshotQuery, this does not provide a "snapshot_time" cdn snapshot time table. The delivery service snapshot time should be used instead.
+//
+// The selectBody must include a join on the deliveryservice_snapshots table, with the alias "dsn".
+// Example:
+//
+//  selectBody := `
+//    ds.xml_id,
+//    ds.deleted
+//   FROM
+//    deliveryservice_snapshot ds
+//    JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = ds.xml_id
+//  `
+//
+// The tableAliases must exclude the deliveryservice_snapshots table. The tableAliases are used to add deleted and last_updated columns, and order by them; hence, it doesn't make sense to include the snapshot or deliveryservice_snapshots table, for the argument's purpose.
+//
+// The nullableTableAliases is a set of table aliases which may be null, typically from a LEFT JOIN.
+// This may be nil, and will be for most queries. An example of a query which isn't, is the deliveryservice profiles.
+//
+func BuildDSSnapshotQuery(
+	live bool,
+	with string,
+	selectedColumns string,
+	primaryKeys string,
+	selectBody string,
+	where string,
+	tableAliases []string,
+	nullableTableAliases map[string]struct{},
+) string {
+	qry := with
+	if with == `` {
+		qry += `WITH `
+	} else {
+		qry += `, `
+	}
+	qry += `
+cdn_name AS (
+  SELECT $1::text as v
+)
+`
+
+	qry += `SELECT
+` + selectedColumns + `
+FROM (
+SELECT DISTINCT ON (` + primaryKeys + `)`
+
+	for _, alias := range tableAliases {
+		qry += `
+` + alias + `.deleted as ` + alias + `_deleted,`
+	}
+	qry += `
+` + selectBody
+
+	if !live {
+		qry += `
+WHERE
+`
+		makeLastUpdated := func(tableAlias string) string {
+			if _, ok := nullableTableAliases[tableAlias]; !ok {
+				return `  ` + tableAlias + `.last_updated <= dsn.time
+`
+			} else {
+				return `  (` + tableAlias + `.last_updated <= dsn.time OR ` + tableAlias + `.last_updated IS NULL)
+`
+			}
+		}
+		qry += strings.Join(util.MapStr(tableAliases, makeLastUpdated), ` AND `)
+	}
+
+	qry += `ORDER BY
+  ` + primaryKeys
+	for _, alias := range tableAliases {
+		qry += `,
+  ` + alias + `.last_updated DESC`
+	}
+
+	qry += `
+) q WHERE `
+	deletedFalse := func(t string) string {
+		if _, ok := nullableTableAliases[t]; !ok {
+			return t + `_deleted = false`
+		} else {
+			return `(` + t + `_deleted = false OR ` + t + `_deleted IS NULL)`
+		}
+	}
+	qry += strings.Join(util.MapStr(tableAliases, deletedFalse), `
+  AND `)
+
+	if where != `` {
+		qry += `
+AND ` + where
+	}
+	return qry
+}
+
+func BuildSnapshotQuery2(
+	live bool,
+	with string,
+	selectedColumns string,
+	primaryKeys string,
+	selectBody string,
+	where string,
+	tableAliases []string,
+	nullableTableAliases map[string]struct{},
+) string {
+	return with + `
+` + util.StrIfElse(with == ``, `WITH `, `, `) + `
+cdn_name AS (
+  SELECT $1::text as v
+),
+snapshot_time AS (
+  SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
+)
+SELECT
+` + selectedColumns + `
+FROM (
+SELECT DISTINCT ON (` + primaryKeys + `)
+` + strings.Join(util.MapStr(tableAliases, func(t string) string { return t + `.deleted as ` + t + `_deleted,` }), ",\n") + `,
+` + selectBody + `
+` + util.StrIf(!live, `
+WHERE
+`+strings.Join(util.MapStr(tableAliases, func(tableAlias string) string {
+		if _, ok := nullableTableAliases[tableAlias]; !ok {
+			return `  ` + tableAlias + `.last_updated <= (select v from snapshot_time)
+`
+		} else {
+			return `  (` + tableAlias + `.last_updated <= (select v from snapshot_time) OR ` + tableAlias + `.last_updated IS NULL)
+`
+		}
+	}), ` AND `)) + `
+ORDER BY
+  ` + primaryKeys + `,
+` + strings.Join(util.MapStr(tableAliases, func(t string) string { return t + `.last_updated DESC` }), ",\n") + `
+) q WHERE
+` + strings.Join(util.MapStr(tableAliases, func(t string) string {
+		if _, ok := nullableTableAliases[t]; !ok {
+			return t + `_deleted = false`
+		} else {
+			return `(` + t + `_deleted = false OR ` + t + `_deleted IS NULL)`
+		}
+	}), ` AND `) + `
+` + util.StrIf(where != ``, `  AND `+where)
 }

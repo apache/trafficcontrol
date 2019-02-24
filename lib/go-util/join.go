@@ -73,3 +73,30 @@ func JoinErrsSep(errs []error, separator string) error {
 func CamelToSnakeCase(s string) string {
 	return strings.ToLower(regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(s, "${1}_${2}"))
 }
+
+// MapStr calls f on every member of strs, and returns the result.
+func MapStr(strs []string, f func(s string) string) []string {
+	newStrs := []string{}
+	for _, str := range strs {
+		newStrs = append(newStrs, f(str))
+	}
+	return newStrs
+}
+
+// StrIf returns s if b, else "".
+// This is designed for string building and templating.
+func StrIf(b bool, s string) string {
+	if b {
+		return s
+	}
+	return ""
+}
+
+// StrIfElse returns a if cond, else b.
+// This is designed for string building and templating.
+func StrIfElse(cond bool, a string, b string) string {
+	if cond {
+		return a
+	}
+	return b
+}

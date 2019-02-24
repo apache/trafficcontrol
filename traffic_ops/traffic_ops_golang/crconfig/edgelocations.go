@@ -24,6 +24,7 @@ import (
 	"errors"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
 	"github.com/lib/pq"
 )
 
@@ -109,7 +110,7 @@ SELECT
   fallback_to_closest,
   localization_methods
 FROM (
-SELECT DISTINCT ON (cg.name)
+SELECT DISTINCT ON (cg.name, t.name)
   cg.name,
   cg.id,
   t.name as type,
@@ -154,6 +155,7 @@ WHERE
 	qry += `
 ORDER BY
   cg.name DESC,
+  t.name DESC,
   cg.last_updated DESC,
   co.last_updated DESC,
   s.last_updated DESC,
