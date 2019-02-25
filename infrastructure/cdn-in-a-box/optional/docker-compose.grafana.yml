@@ -15,10 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# This container provide an OpenVPN service.
-# It could let user or developer easily access CIAB network.
-#
-# To start up CiaB with OpenVPN optional container:
+# This container provide a Grafana service.
+# To start up CiaB with optional Grafana container:
 #
 # alias mydc="docker-compose "` \
 #   `"-f $PWD/docker-compose.yml "` \

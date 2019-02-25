@@ -245,6 +245,11 @@ to-enroll() {
 			export MY_PROFILE="INFLUXDB"
 			export MY_STATUS="ONLINE"
 			;;
+		"grafana" )
+			export MY_TYPE="GRAFANA"
+			export MY_PROFILE="GRAFANA"
+			export MY_STATUS="ONLINE"
+			;;
 		* )
 			echo "Usage: to-enroll SERVER_TYPE" >&2
 			echo "(SERVER_TYPE must be a recognized server type)" >&2

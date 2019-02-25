@@ -15,52 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# This compose file will expose the ports of each service on the host.
-#
-#      docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up
-#
+# Expose the Grafana container on the host on port 3000
 
 ---
 version: '2.1'
 
 services:
-  db:
+  grafana:
     ports:
-      - "5432:5432"
-  trafficops:
-    ports:
-      - "6443:443"
-  trafficops-perl:
-    ports:
-      - "60443:443"
-  trafficportal:
-    ports:
-      - "443:443"
-  trafficmonitor:
-    ports:
-      - "80:80"
-  trafficrouter:
-    ports:
-      - "3053:53"
-      - "3080:80"
-      - "3443:443"
-      - "3333:3333"
-  influxdb:
-    ports:
-      - "8086:8086"
-  trafficvault:
-    ports:
-      - "8087:8087"
-      - "8098:8098"
-  edge:
-    ports:
-      - "9000:80"
-  mid:
-    ports:
-      - "9100:80"
-  origin:
-    ports:
-      - "9200:80"
-  dns:
-    ports:
-      - "9353:53"
+      - "3000:443"

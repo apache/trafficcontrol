@@ -39,10 +39,18 @@ source "$X509_CA_ENV_FILE"
 cp "$X509_CA_CERT_FULL_CHAIN_FILE" /usr/local/share/ca-certificates
 update-ca-certificates
 
+# Traffic Ops must be accepting connections before enroller can start
+until nc -z $TO_FQDN $TO_PORT </dev/null >/dev/null && to-ping; do
+  echo "Waiting for $TO_URL"
+  sleep 5
+done
+
+to-enroll grafana ALL "" "$GRAFANA_PORT" "$GRAFANA_PORT" || (while true; do echo "enroll failed."; sleep 3 ; done)
+
 export GF_SECURITY_ADMIN_USER=$GRAFANA_ADMIN_USER
 export GF_SECURITY_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD
 export GF_SERVER_PROTOCOL="https"
-export GF_SERVER_HTTP_PORT="443"
+export GF_SERVER_HTTP_PORT=$GRAFANA_PORT
 export GF_SERVER_CERT_FILE=$X509_INFRA_CERT_FILE
 export GF_SERVER_CERT_KEY=$X509_INFRA_KEY_FILE
 envsubst < "/datasources.yml.template" > "$GF_PATHS_PROVISIONING/datasources/datasources.yml"

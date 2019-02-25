@@ -1,0 +1,7 @@
+{
+  "cdnName": "ALL",
+  "description": "Grafana profile",
+  "name": "GRAFANA",
+  "routingDisabled": false,
+  "type": "UNK_PROFILE"
+}

@@ -20,7 +20,9 @@ FROM grafana/grafana:5.4.3
 USER root
 ARG TRAFFIC_TS_RPM=traffic_stats/traffic_stats.rpm
 
-RUN apt-get update && apt-get install -y dnsutils net-tools vim tree procps gettext-base curl p7zip-full sudo libcap2-bin
+RUN apt-get update && \
+    apt-get install -y dnsutils net-tools vim tree procps gettext-base curl p7zip-full sudo libcap2-bin netcat && \
+    rm -rf /var/lib/apt/lists/*
 
 ADD enroller/server_template.json \
     traffic_ops/to-access.sh \

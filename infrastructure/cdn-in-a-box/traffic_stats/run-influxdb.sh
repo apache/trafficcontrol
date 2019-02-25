@@ -25,10 +25,6 @@ insert-self-into-dns.sh
 
 source /to-access.sh
 
-export TO_URL=https://$TO_FQDN:$TO_PORT
-export TO_USER=$TO_ADMIN_USER
-export TO_PASSWORD=$TO_ADMIN_PASSWORD
-
 # Wait on SSL certificate generation
 until [ -f "$X509_CA_DONE_FILE" ]
 do
