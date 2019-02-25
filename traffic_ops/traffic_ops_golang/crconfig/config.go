@@ -92,6 +92,7 @@ type CRConfigConfigParameter struct {
 func getConfigParams(tx *sql.Tx, cdn string, live bool) ([]CRConfigConfigParameter, error) {
 	// TODO change to []struct{string,string} ? Speed might matter.
 	qryArgs := []interface{}{}
+	// TODO change to use dbhelpers.BuildSnapshotQuery
 	withCDNSnapshotTimeQueryPart, qryArgs := WithCDNSnapshotTime(cdn, live, qryArgs)
 	qry := `
 WITH ` + withCDNSnapshotTimeQueryPart + `,

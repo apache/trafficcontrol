@@ -23,22 +23,20 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
 
 // getCachegroupFallbacks returns a map[primaryCacheGroupID][]fallbackCacheGroupName.
 func getCachegroupFallbacks(tx *sql.Tx, cdn string, live bool) (map[int][]string, error) {
-	qry := `
-WITH cdn_name AS (
-  SELECT $1::text as v
-),
-snapshot_time AS (
-  SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
-)
-SELECT primary_cg, backup_cg FROM (
-SELECT DISTINCT ON (cgf.primary_cg, cg.name)
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `primary_cg, backup_cg`,
+		PrimaryKeys:     `cgf.primary_cg, cg.name`,
+		SelectBody: `
   cgf.primary_cg as primary_cg,
   cg.name as backup_cg,
   cgf.set_order,
@@ -46,25 +44,14 @@ SELECT DISTINCT ON (cgf.primary_cg, cg.name)
 FROM
   cachegroup_fallbacks_snapshot cgf
   JOIN cachegroup_snapshot cg ON cgf.backup_cg = cg.id
-`
-	if !live {
-		qry += `
-WHERE
-  cgf.last_updated <= (select v from snapshot_time)
-  AND cg.last_updated <= (select v from snapshot_time)
-`
-	}
-	qry += `
-ORDER BY
-  cgf.primary_cg DESC,
-  cg.name DESC,
-  cgf.last_updated DESC,
-  cg.last_updated DESC
-) v where deleted = false
-ORDER BY set_order ASC
-`
+`,
+		Where:        `true ORDER BY set_order ASC`, // true, because the builder expects a where clause
+		TableAliases: []string{"cgf", "cg"},
+	})
+
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
+		log.Errorln("getCachegroupFallbacks qry QQ" + qry + "QQ")
 		return nil, errors.New("Error retrieving from cachegroup_fallbacks: " + err.Error())
 	}
 	defer rows.Close()
@@ -94,26 +81,15 @@ func makeLocations(tx *sql.Tx, cdn string, live bool) (map[string]tc.CRConfigLat
 	}
 
 	// TODO test whether it's faster to do a single query, joining lat/lon into servers
-	qry := `
-WITH cdn_name AS (
-  SELECT $1::text as v
-),
-snapshot_time AS (
-  SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
-)
-SELECT
-  name,
-  id,
-  type,
-  latitude,
-  longitude,
-  fallback_to_closest,
-  localization_methods
-FROM (
-SELECT DISTINCT ON (cg.name, t.name)
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `  name, id, server_type, latitude, longitude, fallback_to_closest, localization_methods`,
+		PrimaryKeys:     `cg.name, t.name`,
+		SelectBody: `
   cg.name,
   cg.id,
-  t.name as type,
+  t.name as server_type,
+  st.name as server_status,
   co.latitude,
   co.longitude,
   COALESCE(cg.fallback_to_closest, TRUE) as fallback_to_closest,
@@ -131,41 +107,26 @@ SELECT DISTINCT ON (cg.name, t.name)
       cgl.last_updated DESC
     ) v WHERE deleted = false
   ),
-	cg.deleted
+  s.cdn_id
 FROM
   cachegroup_snapshot cg
   LEFT JOIN coordinate_snapshot co ON co.id = cg.coordinate
   JOIN server_snapshot s ON s.cachegroup = cg.id
   JOIN type_snapshot t ON t.id = s.type
   JOIN status_snapshot st ON st.id = s.status
-WHERE
-  s.cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= (select v from snapshot_time))
-  AND (t.name like 'EDGE%' or t.name = 'CCR')
-  AND (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
-`
-	if !live {
-		qry += `
-  AND cg.last_updated <= (select v from snapshot_time)
-  AND co.last_updated <= (select v from snapshot_time)
-  AND s.last_updated <= (select v from snapshot_time)
-  AND t.last_updated <= (select v from snapshot_time)
-  AND st.last_updated <= (select v from snapshot_time)
-`
-	}
-	qry += `
-ORDER BY
-  cg.name DESC,
-  t.name DESC,
-  cg.last_updated DESC,
-  co.last_updated DESC,
-  s.last_updated DESC,
-  t.last_updated DESC,
-  st.last_updated DESC
-) v where deleted = false
-`
+`,
+		Where: `
+  cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= (select v from snapshot_time))
+  AND (server_type like 'EDGE%' or server_type = 'CCR')
+  AND (server_status = 'REPORTED' or server_status = 'ONLINE' or server_status = 'ADMIN_DOWN')`,
+		TableAliases:         []string{"cg", "co", "s", "t", "st"},
+		NullableTableAliases: map[string]bool{"co": true},
+	})
+
 	// TODO pass edge type prefix, router type name
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
+		log.Errorln("makeLocations qry QQ" + qry + "QQ")
 		return nil, nil, errors.New("Error querying cachegroups: " + err.Error())
 	}
 	defer rows.Close()

@@ -116,10 +116,11 @@ func getAllServers(tx *sql.Tx, cdn string, live bool) (map[string]ServerUnion, e
 	}
 
 	// TODO select deliveryservices as array?
-	with := ""
-	selectedColumns := `host_name, cachegroup, fqdn, hashid, https_port, interface_name, ip_address, ip6_address, tcp_port, profile_name, routing_disabled, status, type, id`
-	primaryKeys := `s.host_name`
-	selectBody := `
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `host_name, cachegroup, fqdn, hashid, https_port, interface_name, ip_address, ip6_address, tcp_port, profile_name, routing_disabled, status, type, id`,
+		PrimaryKeys:     `s.host_name`,
+		SelectBody: `
   s.host_name,
   cg.name as cachegroup,
   concat(s.host_name, '.', s.domain_name) as fqdn,
@@ -142,15 +143,15 @@ FROM
   JOIN type_snapshot t ON t.id = s.type
   JOIN profile_snapshot p ON p.id = s.profile
   JOIN status_snapshot st ON st.id = s.status
-`
-	where := `
-  cdn_id = (SELECT id FROM cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= (select v from snapshot_time))
-  AND (status = 'REPORTED' or status = 'ONLINE' or status = 'ADMIN_DOWN')
-`
-	tableAliases := []string{"s", "cg", "t", "p", "st"}
-	qry := dbhelpers.BuildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
+`,
+		Where: `cdn_id = (SELECT id FROM cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= (select v from snapshot_time))
+  AND (status = 'REPORTED' or status = 'ONLINE' or status = 'ADMIN_DOWN')`,
+		TableAliases: []string{"s", "cg", "t", "p", "st"},
+	})
+
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
+		log.Errorln("getAllServers qry QQ" + qry + "QQ")
 		return nil, errors.New("querying servers: " + err.Error())
 	}
 	defer rows.Close()
@@ -222,10 +223,11 @@ FROM
 
 // getServerDSNames returns a map[serverID]dsID
 func getServerDSNames(tx *sql.Tx, cdn string, live bool) (map[int][]int, error) {
-	with := ""
-	selectedColumns := `server, deliveryservice`
-	primaryKeys := `dss.server, dss.deliveryservice`
-	selectBody := `
+	qry := dbhelpers.BuildDSSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `server, deliveryservice`,
+		PrimaryKeys:     `dss.server, dss.deliveryservice`,
+		SelectBody: `
   dss.server,
   dss.deliveryservice,
   ds.cdn_id,
@@ -242,16 +244,16 @@ FROM
   JOIN profile_snapshot p ON p.id = s.profile
   JOIN status_snapshot st ON st.id = s.status
   JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = ds.xml_id
-`
-	where := `
+`,
+		Where: `
   cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= ds_snapshot_time)
   AND ds_active = true
   AND ds_type <> '` + string(tc.DSTypeAnyMap) + `'
   AND profile_routing_disabled = false
   AND (server_status = 'REPORTED' or server_status = 'ONLINE' or server_status = 'ADMIN_DOWN')
-`
-	tableAliases := []string{"s", "ds", "dt", "p", "st"}
-	qry := dbhelpers.BuildDSSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
+`,
+		TableAliases: []string{"dss", "s", "ds", "dt", "p", "st"},
+	})
 
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
@@ -285,10 +287,11 @@ func getServerDSes(tx *sql.Tx, cdn string, domain string, serverIDNames map[int]
 		return nil, errors.New("getting server deliveryservice names: " + err.Error())
 	}
 
-	with := ""
-	selectedColumns := `ds_id, ds, ds_type, routing_name, pattern`
-	primaryKeys := `ds.xml_id, dt.name, ds.routing_name, r.pattern`
-	selectBody := `
+	qry := dbhelpers.BuildDSSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `ds_id, ds, ds_type, routing_name, pattern`,
+		PrimaryKeys:     `ds.xml_id, dt.name, ds.routing_name, r.pattern`,
+		SelectBody: `
   ds.id as ds_id,
   ds.xml_id as ds,
   dt.name as ds_type,
@@ -306,16 +309,16 @@ FROM
   JOIN deliveryservice_snapshot ds on ds.id = dsr.deliveryservice
   JOIN type_snapshot dt on dt.id = ds.type
   JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = ds.xml_id
-`
-	where := `
+`,
+		Where: `
   cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= ds_snapshot_time)
   AND ds_active = true
   AND ds_type != '` + string(tc.DSTypeAnyMap) + `'
   AND ds_regex_type = 'HOST_REGEXP'
 ORDER BY set_number ASC
-`
-	tableAliases := []string{"r", "rt", "dsr", "ds", "dt"}
-	qry := dbhelpers.BuildDSSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
+`,
+		TableAliases: []string{"r", "rt", "dsr", "ds", "dt"},
+	})
 
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
@@ -390,10 +393,11 @@ type ServerParams struct {
 func getServerParams(tx *sql.Tx, cdn string, live bool) (map[string]ServerParams, error) {
 	params := map[string]ServerParams{}
 
-	with := ""
-	selectedColumns := `server_name, param_name, param_val`
-	primaryKeys := `s.host_name, p.name`
-	selectBody := `
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `server_name, param_name, param_val`,
+		PrimaryKeys:     `s.host_name, p.name`,
+		SelectBody: `
   s.host_name as server_name,
   p.name as param_name,
   p.value as param_val,
@@ -406,18 +410,18 @@ FROM
   LEFT JOIN profile_parameter_snapshot pp ON pp.profile = s.profile
   LEFT JOIN parameter_snapshot p ON p.id = pp.parameter
   JOIN status_snapshot st ON st.id = s.status
-`
-	where := `
-  cdn_id = (SELECT id FROM cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= (select v from snapshot_time))
+`,
+		Where: `cdn_id = (SELECT id FROM cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= (select v from snapshot_time))
   AND ((param_config_file = 'CRConfig.json' AND (param_name = 'weight' OR param_name = 'weightMultiplier'))
-       OR (p.name = 'api.port') OR (p.name = 'secure.api.port'))
-  AND (server_status = 'REPORTED' or server_status = 'ONLINE' or server_status = 'ADMIN_DOWN')
-`
-	tableAliases := []string{"s", "pp", "p", "st"}
-	qry := dbhelpers.BuildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
+    OR (p.name = 'api.port') OR (p.name = 'secure.api.port'))
+  AND (server_status = 'REPORTED' or server_status = 'ONLINE' or server_status = 'ADMIN_DOWN')`,
+		TableAliases:         []string{"s", "pp", "p", "st"},
+		NullableTableAliases: map[string]bool{"pp": true, "p": true},
+	})
 
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
+		log.Errorln("getServerParams qry QQ" + qry + "QQ")
 		return nil, errors.New("querying server parameters: " + err.Error())
 	}
 	defer rows.Close()

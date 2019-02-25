@@ -126,10 +126,11 @@ func GetMonitoringJSON(tx *sql.Tx, cdnName string, live bool) (*Monitoring, erro
 }
 
 func getMonitoringServers(tx *sql.Tx, cdn string, live bool) ([]Monitor, []Cache, []Router, error) {
-	with := ""
-	selectedColumns := `host_name, fqdn, status, cachegroup, port, ip, ip6, profile, interface_name, server_type, hash_id`
-	primaryKeys := `s.host_name`
-	selectBody := `
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `host_name, fqdn, status, cachegroup, port, ip, ip6, profile, interface_name, server_type, hash_id`,
+		PrimaryKeys:     `s.host_name`,
+		SelectBody: `
   s.host_name,
   CONCAT(s.host_name, '.', s.domain_name) fqdn,
   st.name status,
@@ -150,10 +151,10 @@ FROM
   JOIN cachegroup_snapshot cg ON cg.id = s.cachegroup
   JOIN profile_snapshot pr ON pr.id = s.profile
   JOIN cdn_snapshot c ON c.id = s.cdn_id
-`
-	where := `cdn_snapshot_name = (select v from cdn_name)`
-	tableAliases := []string{"s", "tp", "st", "cg", "pr", "c"}
-	qry := dbhelpers.BuildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
+`,
+		Where:        `cdn_snapshot_name = (select v from cdn_name)`,
+		TableAliases: []string{"s", "tp", "st", "cg", "pr", "c"},
+	})
 
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
@@ -222,10 +223,11 @@ FROM
 }
 
 func getCachegroups(tx *sql.Tx, cdn string, live bool) ([]Cachegroup, error) {
-	with := ""
-	selectedColumns := "name, latitude, longitude"
-	primaryKeys := "cg.name"
-	selectBody := `
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `name, latitude, longitude`,
+		PrimaryKeys:     `cg.name`,
+		SelectBody: `
   cg.name,
   co.latitude,
   co.longitude,
@@ -236,10 +238,11 @@ FROM
   LEFT JOIN coordinate_snapshot co ON co.id = cg.coordinate
   JOIN server_snapshot s ON s.cachegroup = cg.id
   JOIN cdn_snapshot c ON c.id = s.cdn_id
-`
-	where := `cdn_snapshot_name = (select v from cdn_name)`
-	tableAliases := []string{"cg", "co", "s", "c"}
-	qry := dbhelpers.BuildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
+`,
+		Where:                `cdn_snapshot_name = (select v from cdn_name)`,
+		TableAliases:         []string{"cg", "co", "s", "c"},
+		NullableTableAliases: map[string]bool{"co": true},
+	})
 
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
@@ -267,10 +270,11 @@ FROM
 }
 
 func getProfiles(tx *sql.Tx, cdn string, caches []Cache, routers []Router, live bool) ([]Profile, error) {
-	with := ""
-	selectedColumns := `profile, name, value`
-	primaryKeys := "pr.name, pa.name, pa.value"
-	selectBody := `
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `profile, name, value`,
+		PrimaryKeys:     `pr.name, pa.name, pa.value`,
+		SelectBody: `
   pr.name as profile,
   pa.name,
   pa.value,
@@ -280,10 +284,10 @@ FROM
   parameter_snapshot pa
   JOIN profile_snapshot pr ON pr.name = ANY($2)
   JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
-`
-	where := `config_file = $3`
-	tableAliases := []string{`pa`, `pr`, `pp`}
-	qry := dbhelpers.BuildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
+`,
+		Where:        `config_file = $3`,
+		TableAliases: []string{`pa`, `pr`, `pp`},
+	})
 
 	cacheProfileTypes := map[string]string{}
 	profiles := map[string]Profile{}
@@ -408,11 +412,12 @@ ORDER BY
 }
 
 func getConfig(tx *sql.Tx, cdn string, live bool) (map[string]interface{}, error) {
-	with := ""
-	selectedColumns := `name, value`
-	primaryKeys := "pa.name, pa.value"
 	// TODO remove 'like' in query? Slow?
-	selectBody := `
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `name, value`,
+		PrimaryKeys:     `pa.name, pa.value`,
+		SelectBody: `
   pa.name,
   pa.value,
   pa.config_file
@@ -420,20 +425,18 @@ FROM
   parameter_snapshot pa
   JOIN profile_snapshot pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
   JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
-`
-	where := `config_file = '` + MonitorConfigFile + `'`
-	tableAliases := []string{`pa`, `pr`, `pp`}
-	qry := dbhelpers.BuildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases, nil)
+`,
+		Where:        `config_file = '` + MonitorConfigFile + `'`,
+		TableAliases: []string{`pa`, `pr`, `pp`},
+	})
 
 	rows, err := tx.Query(qry, cdn)
-
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	cfg := map[string]interface{}{}
-
 	for rows.Next() {
 		var name sql.NullString
 		var val sql.NullString

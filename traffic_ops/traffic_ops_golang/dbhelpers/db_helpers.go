@@ -20,15 +20,16 @@ package dbhelpers
  */
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/lib/pq"
 )
@@ -528,7 +529,18 @@ func DSExists(tx *sql.Tx, ds tc.DeliveryServiceName) (bool, error) {
 	return count > 0, nil
 }
 
-// buildSnapshotQuery builds a query to select the latest timestamp, from the query parts of an ordinary query.
+type SnapshotQuery struct {
+	Live                 bool
+	With                 string
+	SelectedColumns      string
+	PrimaryKeys          string
+	SelectBody           string
+	Where                string
+	TableAliases         []string
+	NullableTableAliases map[string]bool
+}
+
+// BuildSnapshotQuery builds a query to select the latest timestamp, from the query parts of an ordinary query.
 //
 // The live arg is whether to query the latest timestamp. If false, the latest up to the snapshot is queried.
 //
@@ -665,86 +677,56 @@ func DSExists(tx *sql.Tx, ds tc.DeliveryServiceName) (bool, error) {
 //    tableAliases := []string{"pa", "pp"}
 //    qry := buildSnapshotQuery(live, with, selectedColumns, primaryKeys, selectBody, where, tableAliases)
 //
-func BuildSnapshotQuery(
-	live bool,
-	with string,
-	selectedColumns string,
-	primaryKeys string,
-	selectBody string,
-	where string,
-	tableAliases []string,
-	nullableTableAliases map[string]struct{},
-) string {
-	qry := with
-	if with == `` {
-		qry += `WITH `
-	} else {
-		qry += `, `
+func BuildSnapshotQuery(qry SnapshotQuery) string {
+	buf := &bytes.Buffer{}
+	if err := snapshotQueryTemplate.Execute(buf, qry); err != nil {
+		return "ERROR: " + err.Error()
 	}
-	qry += `
+	return buf.String()
+}
+
+const snapshotQueryTemplateText = `
+{{$nullableTableAliases := .NullableTableAliases}}
+
+{{if not .With }}WITH{{else}} {{.With}}, {{end}}
 cdn_name AS (
   SELECT $1::text as v
 ),
 snapshot_time AS (
   SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
 )
-`
-
-	if len(tableAliases) < 1 {
-		// this function is never useful with no tables, so this should never happen; but I loathe panics.
-		return `` // TODO log?
-	}
-
-	qry += `SELECT
-` + selectedColumns + `
+SELECT
+{{.SelectedColumns}}
 FROM (
-SELECT DISTINCT ON (` + primaryKeys + `)`
-
-	for _, alias := range tableAliases {
-		qry += `
-` + alias + `.deleted as ` + alias + `_deleted,`
-	}
-	qry += `
-` + selectBody
-
-	if !live {
-		qry += `
+SELECT DISTINCT ON ( {{.PrimaryKeys}} )
+{{- range .TableAliases }} {{.}}.deleted as {{.}}_deleted,
+{{end}}
+{{- .SelectBody}}
+{{- if not .Live }}
 WHERE
+  {{- range .TableAliases }}
+    {{- if not (index $nullableTableAliases .) }} {{/* DEBUG remove not */}}
+      {{.}}.last_updated <= (select v from snapshot_time) AND
+    {{- else}}
+      ({{.}}.last_updated <= (select v from snapshot_time) OR {{.}}.last_updated IS NULL) AND
+    {{- end}}
+  {{- end}}
+  true {{/* for the trailing 'AND' - TODO fix to omit the final 'AND' */}}
+{{end}}
+ORDER BY {{.PrimaryKeys}}
+{{range .TableAliases }} ,{{.}}.last_updated DESC {{end}}
+) q WHERE
+{{- range .TableAliases }}
+  {{- if not (index $nullableTableAliases .) }}
+    {{.}}_deleted = false AND
+  {{- else}}
+    ({{.}}_deleted = false OR {{.}}_deleted IS NULL) AND
+  {{- end}}
+{{- end}}
+{{if .Where }} {{.Where}} {{else}} true {{end}} {{/* 'true' for the trailing 'AND' - TODO fix to omit the final 'AND' */}}
 `
-		makeLastUpdated := func(tableAlias string) string {
-			if _, ok := nullableTableAliases[tableAlias]; !ok {
-				return `  ` + tableAlias + `.last_updated <= (select v from snapshot_time)
-`
-			} else {
-				return `  (` + tableAlias + `.last_updated <= (select v from snapshot_time) OR ` + tableAlias + `.last_updated IS NULL)
-`
-			}
-		}
-		qry += strings.Join(util.MapStr(tableAliases, makeLastUpdated), ` AND `)
-	}
 
-	qry += `ORDER BY
-  ` + primaryKeys + ",\n"
-	makeLastUpdatedOrderBy := func(t string) string { return t + `.last_updated DESC` }
-	qry += strings.Join(util.MapStr(tableAliases, makeLastUpdatedOrderBy), ",\n")
-
-	qry += `
-) q WHERE `
-	deletedFalse := func(t string) string {
-		if _, ok := nullableTableAliases[t]; !ok {
-			return t + `_deleted = false`
-		} else {
-			return `(` + t + `_deleted = false OR ` + t + `_deleted IS NULL)`
-		}
-	}
-	qry += strings.Join(util.MapStr(tableAliases, deletedFalse), ` AND `)
-
-	if where != `` {
-		qry += `  AND ` + where
-	}
-
-	return qry
-}
+var snapshotQueryTemplate = template.Must(template.New("snapshot-query").Parse(snapshotQueryTemplateText)).Option("missingkey=zero")
 
 // BuildDSSnapshotQuery is like BuildSnapshotQuery, but for deliveryservice_snapshots.
 // All snapshot times will be queried up to the deliveryservice_snapshots time, rather than the cdn snapshot time.
@@ -767,127 +749,50 @@ WHERE
 // The nullableTableAliases is a set of table aliases which may be null, typically from a LEFT JOIN.
 // This may be nil, and will be for most queries. An example of a query which isn't, is the deliveryservice profiles.
 //
-func BuildDSSnapshotQuery(
-	live bool,
-	with string,
-	selectedColumns string,
-	primaryKeys string,
-	selectBody string,
-	where string,
-	tableAliases []string,
-	nullableTableAliases map[string]struct{},
-) string {
-	qry := with
-	if with == `` {
-		qry += `WITH `
-	} else {
-		qry += `, `
+func BuildDSSnapshotQuery(qry SnapshotQuery) string {
+	buf := &bytes.Buffer{}
+	if err := dsSnapshotQueryTemplate.Execute(buf, qry); err != nil {
+		return "ERROR: " + err.Error()
 	}
-	qry += `
-cdn_name AS (
-  SELECT $1::text as v
-)
-`
-
-	qry += `SELECT
-` + selectedColumns + `
-FROM (
-SELECT DISTINCT ON (` + primaryKeys + `)`
-
-	for _, alias := range tableAliases {
-		qry += `
-` + alias + `.deleted as ` + alias + `_deleted,`
-	}
-	qry += `
-` + selectBody
-
-	if !live {
-		qry += `
-WHERE
-`
-		makeLastUpdated := func(tableAlias string) string {
-			if _, ok := nullableTableAliases[tableAlias]; !ok {
-				return `  ` + tableAlias + `.last_updated <= dsn.time
-`
-			} else {
-				return `  (` + tableAlias + `.last_updated <= dsn.time OR ` + tableAlias + `.last_updated IS NULL)
-`
-			}
-		}
-		qry += strings.Join(util.MapStr(tableAliases, makeLastUpdated), ` AND `)
-	}
-
-	qry += `ORDER BY
-  ` + primaryKeys
-	for _, alias := range tableAliases {
-		qry += `,
-  ` + alias + `.last_updated DESC`
-	}
-
-	qry += `
-) q WHERE `
-	deletedFalse := func(t string) string {
-		if _, ok := nullableTableAliases[t]; !ok {
-			return t + `_deleted = false`
-		} else {
-			return `(` + t + `_deleted = false OR ` + t + `_deleted IS NULL)`
-		}
-	}
-	qry += strings.Join(util.MapStr(tableAliases, deletedFalse), `
-  AND `)
-
-	if where != `` {
-		qry += `
-AND ` + where
-	}
-	return qry
+	return buf.String()
 }
 
-func BuildSnapshotQuery2(
-	live bool,
-	with string,
-	selectedColumns string,
-	primaryKeys string,
-	selectBody string,
-	where string,
-	tableAliases []string,
-	nullableTableAliases map[string]struct{},
-) string {
-	return with + `
-` + util.StrIfElse(with == ``, `WITH `, `, `) + `
+const dsSnapshotQueryTemplateText = `
+{{$nullableTableAliases := .NullableTableAliases}}
+
+{{if not .With }}WITH{{else}} {{.With}}, {{end}}
 cdn_name AS (
   SELECT $1::text as v
-),
-snapshot_time AS (
-  SELECT time as v FROM snapshot sn where sn.cdn = (SELECT v from cdn_name)
 )
 SELECT
-` + selectedColumns + `
+{{.SelectedColumns}}
 FROM (
-SELECT DISTINCT ON (` + primaryKeys + `)
-` + strings.Join(util.MapStr(tableAliases, func(t string) string { return t + `.deleted as ` + t + `_deleted,` }), ",\n") + `,
-` + selectBody + `
-` + util.StrIf(!live, `
+SELECT DISTINCT ON ( {{.PrimaryKeys}} )
+{{- range .TableAliases }} {{.}}.deleted as {{.}}_deleted,
+{{end}}
+{{- .SelectBody}}
+{{- if not .Live }}
 WHERE
-`+strings.Join(util.MapStr(tableAliases, func(tableAlias string) string {
-		if _, ok := nullableTableAliases[tableAlias]; !ok {
-			return `  ` + tableAlias + `.last_updated <= (select v from snapshot_time)
-`
-		} else {
-			return `  (` + tableAlias + `.last_updated <= (select v from snapshot_time) OR ` + tableAlias + `.last_updated IS NULL)
-`
-		}
-	}), ` AND `)) + `
-ORDER BY
-  ` + primaryKeys + `,
-` + strings.Join(util.MapStr(tableAliases, func(t string) string { return t + `.last_updated DESC` }), ",\n") + `
+  {{- range .TableAliases }}
+    {{- if not (index $nullableTableAliases .) }} {{/* DEBUG remove not */}}
+      {{.}}.last_updated <= dsn.time AND
+    {{- else}}
+      ({{.}}.last_updated <= dsn.time OR {{.}}.last_updated IS NULL) AND
+    {{- end}}
+  {{- end}}
+  true {{/* for the trailing 'AND' - TODO fix to omit the final 'AND' */}}
+{{end}}
+ORDER BY {{.PrimaryKeys}}
+{{range .TableAliases }} ,{{.}}.last_updated DESC {{end}}
 ) q WHERE
-` + strings.Join(util.MapStr(tableAliases, func(t string) string {
-		if _, ok := nullableTableAliases[t]; !ok {
-			return t + `_deleted = false`
-		} else {
-			return `(` + t + `_deleted = false OR ` + t + `_deleted IS NULL)`
-		}
-	}), ` AND `) + `
-` + util.StrIf(where != ``, `  AND `+where)
-}
+{{- range .TableAliases }}
+  {{- if not (index $nullableTableAliases .) }}
+    {{.}}_deleted = false AND
+  {{- else}}
+    ({{.}}_deleted = false OR {{.}}_deleted IS NULL) AND
+  {{- end}}
+{{- end}}
+{{if .Where }} {{.Where}} {{else}} true {{end}} {{/* 'true' for the trailing 'AND' - TODO fix to omit the final 'AND' */}}
+`
+
+var dsSnapshotQueryTemplate = template.Must(template.New("ds-snapshot-query").Parse(dsSnapshotQueryTemplateText)).Option("missingkey=zero")
