@@ -1504,7 +1504,8 @@ sub logging_dot_yaml {
 					$text .= "  rolling_size_mb: ". $log_object_rolling_size_mb . "\n";
 				}
 			}
-			if ( length($log_object_filters) > 0 ) {			
+			if ( length($log_object_filters) > 0 ) {	
+				$log_object_filters =~ s/\v//g;		
 				$text .= "  filters: [" . $log_object_filters . "]";
 			}
 		}
