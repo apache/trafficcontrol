@@ -1,5 +1,5 @@
 {
-  "name":"Traffic Portal",
+  "name": "traffic-portal-angular7",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -7,7 +7,11 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "compile:server": "webpack --config webpack.server.config.js --progress --colors",
+    "serve:ssr": "node dist/server",
+    "build:ssr": "npm run build:client-and-server-bundles && npm run compile:server",
+    "build:client-and-server-bundles": "ng build --prod && ng run traffic-portal-angular7:server:production && cp -f ../misc/logos/ATC-SVG.svg dist/browser/"
   },
   "private": true,
   "dependencies": {
@@ -16,10 +20,15 @@
     "@angular/compiler": "~7.1.0",
     "@angular/core": "~7.1.0",
     "@angular/forms": "~7.1.0",
+    "@angular/http": "~7.1.0",
     "@angular/platform-browser": "~7.1.0",
     "@angular/platform-browser-dynamic": "~7.1.0",
+    "@angular/platform-server": "~7.1.0",
     "@angular/router": "~7.1.0",
+    "@nguniversal/express-engine": "^7.1.0",
+    "@nguniversal/module-map-ngfactory-loader": "0.0.0",
     "core-js": "^2.5.4",
+    "express": "^4.15.2",
     "rxjs": "~6.3.3",
     "tslib": "^1.9.0",
     "zone.js": "~0.8.26"
@@ -41,8 +50,10 @@
     "karma-jasmine": "~1.1.2",
     "karma-jasmine-html-reporter": "^0.2.2",
     "protractor": "~5.4.0",
+    "ts-loader": "^5.2.0",
     "ts-node": "~7.0.0",
     "tslint": "~5.11.0",
-    "typescript": "~3.1.6"
+    "typescript": "~3.1.6",
+    "webpack-cli": "^3.1.0"
   }
 }

@@ -1,10 +1,9 @@
 /*
-*
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
 *
-*     http://www.apache.org/licenses/LICENSE-2.0
+*      http://www.apache.org/licenses/LICENSE-2.0
 *
 * Unless required by applicable law or agreed to in writing, software
 * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,19 +12,12 @@
 * limitations under the License.
 */
 
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { enableProdMode } from '@angular/core';
 
-import { AppComponent } from './app.component';
+import { environment } from './environments/environment';
 
-@NgModule({
-	declarations: [
-		AppComponent,
-	],
-	imports: [
-		BrowserModule.withServerTransition({ appId: 'serverApp' })
-	],
-	providers: [],
-	bootstrap: [AppComponent]
-})
-export class AppModule { }
+if (environment.production) {
+	enableProdMode();
+}
+
+export { AppServerModule } from './app/app.server.module';

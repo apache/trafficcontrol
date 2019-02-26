@@ -13,19 +13,17 @@
 * limitations under the License.
 */
 
-import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { ServerModule } from '@angular/platform-server';
 
+import { AppModule } from './app.module';
 import { AppComponent } from './app.component';
 
 @NgModule({
-	declarations: [
-		AppComponent,
-	],
 	imports: [
-		BrowserModule.withServerTransition({ appId: 'serverApp' })
+		AppModule,
+		ServerModule,
 	],
-	providers: [],
-	bootstrap: [AppComponent]
+	bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppServerModule {}
