@@ -130,6 +130,8 @@ public class NameServer {
 				}
 			}
 			if ((ipaddr!= null) && (isEcsEnable())) {
+				builder.client(ipaddr);
+
 				LOGGER.debug("DNS: Using Client IP Address from ECS Option" + ipaddr.getHostAddress() + "/" 
 						+ nmask);
 				lookup(qname, qtype, ipaddr, response, flags, dnssecRequest, builder);
