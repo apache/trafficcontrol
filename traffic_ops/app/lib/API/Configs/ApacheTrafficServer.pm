@@ -1432,9 +1432,8 @@ sub logging_dot_yaml {
 
 	my $data = $self->profile_param_data( $profile_obj->id, "logging.yaml" );
 
-	# This is an YAML file, so we need to massage the header a bit for YAML commenting.
-	my $text = "# " . $self->header_comment( $profile_obj->name );
-	$text =~ s/# //;
+	# This is an YAML file, the default comment works.
+	my $text = $self->header_comment( $profile_obj->name );
 	$text =~ s/\n//;
 
 	my $max_log_objects = 10;
@@ -1505,7 +1504,7 @@ sub logging_dot_yaml {
 					$text .= "  rolling_size_mb: ". $log_object_rolling_size_mb . "\n";
 				}
 			}
-			if ( length($log_object_filters) > 0 ) {				
+			if ( length($log_object_filters) > 0 ) {			
 				$text .= "  filters: [" . $log_object_filters . "]";
 			}
 		}
