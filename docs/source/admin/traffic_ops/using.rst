@@ -1200,6 +1200,7 @@ To create a new snapshot, use the *Tools > Snapshot CRConfig* menu:
 	#. When the This will push out a new CRConfig.json. Are you sure? window opens, click **OK**.
 	#. The "Successfully wrote CRConfig.json!" window opens, click **OK**.
 
+.. Note:: Snapshotting the CDN also deletes all HTTPS certificates for every :term:`Delivery Service` which has been deleted since the last :term:`Snapshot`.
 
 .. index::
 	Invalidate Content
