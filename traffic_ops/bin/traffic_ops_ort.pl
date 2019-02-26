@@ -1106,6 +1106,7 @@ sub process_config_files {
 				|| $file =~ m/\.key$/
 				|| $file eq "logs_xml.config"
 				|| $file eq "logging.config"
+				|| $file eq "logging.yaml"
 				|| $file eq "ssl_multicert.config" )
 			)
 		{
