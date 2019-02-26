@@ -29,6 +29,7 @@ import java.net.InetAddress;
 public final class DNSAccessRecord {
     private final long queryInstant;
     private final InetAddress client;
+    private final InetAddress resolver;
     private final Message dnsMessage;
     private final ResultType resultType;
     private final ResultDetails resultDetails;
@@ -41,6 +42,10 @@ public final class DNSAccessRecord {
 
     public InetAddress getClient() {
         return client;
+    }
+
+    public InetAddress getResolver() {
+        return resolver;
     }
 
     public Message getDnsMessage() {
@@ -65,7 +70,8 @@ public final class DNSAccessRecord {
 
     public static class Builder {
         private final long queryInstant;
-        private final InetAddress client;
+        private final InetAddress resolver;
+        private InetAddress client;
         private Message dnsMessage;
         private ResultType resultType;
         private ResultDetails resultDetails;
@@ -75,11 +81,17 @@ public final class DNSAccessRecord {
         public Builder(final long queryInstant, final InetAddress client) {
             this.queryInstant = queryInstant;
             this.client = client;
+            this.resolver = client;
             this.requestNanoTime = System.nanoTime();
         }
 
         public Builder dnsMessage(final Message query) {
             this.dnsMessage = query;
+            return this;
+        }
+
+        public Builder client(final InetAddress client) {
+            this.client = client;
             return this;
         }
 
@@ -106,6 +118,7 @@ public final class DNSAccessRecord {
     private DNSAccessRecord(final Builder builder) {
         queryInstant = builder.queryInstant;
         client = builder.client;
+        resolver = builder.resolver;
         dnsMessage = builder.dnsMessage;
         resultType = builder.resultType;
         resultDetails = builder.resultDetails;
