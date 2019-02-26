@@ -227,6 +227,8 @@ Message Format
 	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| chi   | The IP address of the requester                                                  | Depends on whether this was a DNS or HTTP request, see other sections               |
 	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| rhi   | The IP address of the request source address                                     | Depends on whether this was a DNS or HTTP request, see other sections               |
+	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| ttms  | The amount of time in milliseconds it took Traffic Router to process the request | A number greater than or equal to zero                                              |
 	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| rtype | Routing result type                                                              | One of ERROR, CZ, DEEP_CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED |
@@ -247,8 +249,8 @@ Items within brackets are detailed under the HTTP and DNS sections
 .. code-block:: text
 	:caption: Example Logfile Lines
 
-	144140678.000 qtype=DNS chi=192.168.10.11 ttms=789 [Fields Specific to the DNS request] rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the DNS result]
-	144140678.000 qtype=HTTP chi=192.168.10.11 ttms=789 [Fields Specific to the HTTP request] rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the HTTP result]
+	144140678.000 qtype=DNS chi=192.168.10.11 rhi=- ttms=789 [Fields Specific to the DNS request] rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the DNS result]
+	144140678.000 qtype=HTTP chi=192.168.10.11 rhi=- ttms=789 [Fields Specific to the HTTP request] rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the HTTP result]
 
 .. Note:: These samples contain fields that are always present for every single access event to Traffic Router
 
@@ -315,7 +317,7 @@ HTTP Specifics
 .. code-block:: text
 	:caption: Sample Message
 
-	1452197640.936 qtype=HTTP chi=69.241.53.218 url="http://foo.mm-test.jenkins.cdnlab.comcast.net/some/asset.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" pssc=302 ttms=0 rurl="http://odol-atsec-sim-114.mm-test.jenkins.cdnlab.comcast.net:8090/some/asset.m3u8" rh="Accept: */*" rh="myheader: asdasdasdasfasg"
+	1452197640.936 qtype=HTTP chi=69.241.53.218 rhi=- url="http://foo.mm-test.jenkins.cdnlab.comcast.net/some/asset.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" pssc=302 ttms=0 rurl="http://odol-atsec-sim-114.mm-test.jenkins.cdnlab.comcast.net:8090/some/asset.m3u8" rh="Accept: */*" rh="myheader: asdasdasdasfasg"
 
 .. table:: Request Fields
 
@@ -344,7 +346,7 @@ DNS Specifics
 .. code-block:: text
 	:caption: Sample Message
 
-	144140678.000 qtype=DNS chi=192.168.10.11 ttms=123 xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345 rcode=NOERROR rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" ans="192.168.1.2 192.168.3.4 0:0:0:0:0:ffff:c0a8:102 0:0:0:0:0:ffff:c0a8:304"
+	144140678.000 qtype=DNS chi=192.168.10.11 rhi=- ttms=123 xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345 rcode=NOERROR rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" ans="192.168.1.2 192.168.3.4 0:0:0:0:0:ffff:c0a8:102 0:0:0:0:0:ffff:c0a8:304"
 
 .. _qname: http://www.zytrax.com/books/dns/ch15/#qname
 
@@ -356,6 +358,8 @@ DNS Specifics
 	| Name  | Description                                                                     | Data                                                                                              |
 	+=======+=================================================================================+===================================================================================================+
 	| xn    | The ID from the client DNS request header                                       | a whole number between 0 and 65535 (inclusive)                                                    |
+	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
+	| rhi   | The IP address of the resolver when ENDS0 client subnet extensions are enabled. | An IPv4 or IPv6 string, or dash if request is for resolver only and no client subnet is present   |
 	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
 	| fqdn  | The qname field from the client DNS request message (i.e. the                   | A series of DNS labels/domains separated by '.' characters and ending with a '.' character        |
 	|       | :abbr:`FQDN (Fully Qualified Domain Name)` the client is requesting be          |                                                                                                   |
