@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -113,6 +113,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         { value: false, label: 'false' }
     ];
 
+    $scope.activeInactive = [
+        { value: true, label: 'Active' },
+        { value: false, label: 'Not Active'}
+    ]
+
     $scope.signingAlgos = [
         { value: null, label: 'None' },
         { value: 'url_sig', label: 'URL Signature Keys' },
@@ -120,27 +125,27 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     ];
 
     $scope.protocols = [
-        { value: 0, label: '0 - HTTP' },
-        { value: 1, label: '1 - HTTPS' },
-        { value: 2, label: '2 - HTTP AND HTTPS' },
-        { value: 3, label: '3 - HTTP TO HTTPS' }
+        { value: 0, label: 'HTTP' },
+        { value: 1, label: 'HTTPS' },
+        { value: 2, label: 'HTTP AND HTTPS' },
+        { value: 3, label: 'HTTP TO HTTPS' }
     ];
 
     $scope.qStrings = [
-        { value: 0, label: '0 - use qstring in cache key, and pass up' },
-        { value: 1, label: '1 - ignore in cache key, and pass up' },
-        { value: 2, label: '2 - drop at edge' }
+        { value: 0, label: 'Use query parameter strings in cache key and pass in upstream requests' },
+        { value: 1, label: 'Do not use query parameter strings in cache key, but do pass in upstream requests' },
+        { value: 2, label: 'Neither use query parameter strings in cache key, nor pass in upstream requests' }
     ];
 
     $scope.geoLimits = [
-        { value: 0, label: '0 - None' },
-        { value: 1, label: '1 - CZF only' },
-        { value: 2, label: '2 - CZF + Country Code(s)' }
+        { value: 0, label: 'None' },
+        { value: 1, label: 'Coverage Zone File only' },
+        { value: 2, label: 'Coverage Zone File and Country Code(s)' }
     ];
 
     $scope.geoProviders = [
-        { value: 0, label: '0 - Maxmind (Default)' },
-        { value: 1, label: '1 - Neustar' }
+        { value: 0, label: 'Maxmind' },
+        { value: 1, label: 'Neustar' }
     ];
 
     $scope.dscps = [
@@ -186,9 +191,9 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     ];
 
     $scope.rrhs = [
-        { value: 0, label: "0 - Don't cache" },
-        { value: 1, label: "1 - Use background_fetch plugin" },
-        { value: 2, label: "2 - Use cache_range_requests plugin" }
+        { value: 0, label: "Don't cache Range Requests" },
+        { value: 1, label: "Use the background_fetch plugin" },
+        { value: 2, label: "Use the cache_range_requests plugin" }
     ];
 
     $scope.msoAlgos = [
@@ -282,11 +287,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.manageUrlSigKeys = function() {
         $location.path($location.path() + '/url-sig-keys');
     };
-    
+
     $scope.manageUriSigningKeys = function() {
         $location.path($location.path() + '/uri-signing-keys');
     };
-    
+
     $scope.viewStaticDnsEntries = function() {
         $location.path($location.path() + '/static-dns-entries');
     };

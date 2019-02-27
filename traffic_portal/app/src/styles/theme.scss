@@ -2864,7 +2864,12 @@ ul.count2 li span {
 }
 .divider {
   border-bottom: 1px solid #ddd;
-  margin: 10px
+  margin: 10px;
+}
+hr.divider {
+  margin: 10px 0;
+  border: none;
+  background-color: #ddd;
 }
 .divider-dashed {
   border-top: 1px dashed #e7eaec;
