@@ -20,10 +20,79 @@ import {ngExpressEngine} from '@nguniversal/express-engine';
 import {provideModuleMap} from '@nguniversal/module-map-ngfactory-loader';
 
 import * as express from 'express';
+import {parse} from 'url';
+import {request} from 'https';
 import {join} from 'path';
+
+import {environment} from './src/environments/environment';
 
 // Faster server renders w/ Prod mode (dev mode never needed)
 enableProdMode();
+
+// Get a URL for a Traffic Ops instance
+let to_url_raw = '';
+if (process.argv.length >= 3) {
+	to_url_raw = process.argv[2];
+}
+else if (process.env.hasOwnProperty("TO_URL")) {
+	to_url_raw = process.env.TO_URL;
+}
+else {
+	console.error("Must define a Traffic Ops URL, either on the command line or TO_URL environment variable");
+	process.exit(1);
+}
+
+let to_port;
+let to_host;
+const to_url_split = to_url_raw.split(':', 2);
+if (to_url_split.length === 1) {
+	to_host = to_url_split[0];
+	to_port = 443;
+}
+else if (to_url_split.length === 2) {
+	if (to_url_split[0].toLowerCase() === 'https') {
+		to_host = to_url_split[1];
+		if (to_host.length < 3) {
+			console.error("Malformed Traffic Ops URL:", to_url_raw);
+			process.exit(1);
+		}
+		to_host = to_host.slice(2);
+		to_port = 443;
+	}
+	else {
+		to_host = to_url_split[0];
+		try {
+			to_port = Number(to_url_split[1]);
+		}
+		catch (e) {
+			console.error("Malformed Traffic Ops URL:", to_url_raw);
+			console.debug("Exception:", e);
+			process.exit(1);
+		}
+	}
+}
+else {
+	to_host = to_url_split[1];
+	if (to_host.length < 3) {
+		console.error("Malformed Traffic Ops URL:", to_url_raw);
+		process.exit(1);
+	}
+	to_host = to_host.slice(2);
+
+	try {
+		to_port = Number(to_url_split[2]);
+	}
+	catch (e) {
+		console.error("Malformed Traffic Ops URL:", to_url_raw);
+		console.debug("Exception:", e);
+		process.exit(1);
+	}
+}
+
+console.debug("TO_HOST:", to_host, "TO_PORT:", to_port);
+
+// Ignore untrusted certificate signers (TODO: this should be an option)
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = '0';
 
 // Express server
 const app = express();
@@ -45,16 +114,59 @@ app.engine('html', ngExpressEngine({
 app.set('view engine', 'html');
 app.set('views', DIST_FOLDER);
 
-// Example Express Rest API endpoints
-// app.get('/api/**', (req, res) => { });
-// Serve static files from /browser
+// When in a dev environment, serve changes quickly
+let m = '1s';
+if (environment.production) {
+	m = '1y';
+}
+
+// Static files
 app.get('*.*', express.static(DIST_FOLDER, {
-	maxAge: '1s'
+	maxAge: m
 }));
 
-// All regular routes use the Universal engine
-app.get('*', (req, res) => {
+// Forward API requests to Traffic Ops
+app.use('/api/**', (req, res) => {
+	let rawBody = '';
+	req.on('data', (chunk) => {
+		rawBody += chunk;
+	});
+
+	req.on('end', () =>{
+		const fwdRequest = {
+			host: to_host,
+			port: to_port,
+			path: parse(req.originalUrl).path,
+			method: req.method,
+			headers: {
+				'Content-Type': 'application/json',
+				'Content-Length': Buffer.byteLength(rawBody)
+			}
+		};
+
+		const proxiedRequest = request(fwdRequest, (r) => {
+			r.on('data', (d) => {
+				res.send(d);
+			});
+		});
+
+		proxiedRequest.write(rawBody);
+		proxiedRequest.end();
+	});
+});
+
+// Default route shows the dash
+app.get('/', (req, res) => {
 	res.render('index', { req });
+});
+
+// Login Routes
+app.get('/login', (req, res) => {
+	res.render('login', { req });
+});
+app.post('/login', (req, res) => {
+	res.send("Logged in!");
+	console.log("Login Data: ", req);
 });
 
 // Start up the Node server
