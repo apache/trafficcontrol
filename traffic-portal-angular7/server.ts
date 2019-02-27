@@ -23,6 +23,7 @@ import * as express from 'express';
 import {parse} from 'url';
 import {request} from 'https';
 import {join} from 'path';
+import * as zlib from 'zlib';
 
 import {environment} from './src/environments/environment';
 
@@ -126,27 +127,60 @@ app.get('*.*', express.static(DIST_FOLDER, {
 }));
 
 // Forward API requests to Traffic Ops
+// Note that this doesn't handle compression/encoding, just transparently
+// proxies arbitrary data
 app.use('/api/**', (req, res) => {
+	console.debug(`Making TO API request to \`${req.originalUrl}\``);
+
 	let rawBody = '';
 	req.on('data', (chunk) => {
 		rawBody += chunk;
 	});
 
 	req.on('end', () =>{
-		const fwdRequest = {
+		let fwdRequest = {
 			host: to_host,
 			port: to_port,
 			path: parse(req.originalUrl).path,
 			method: req.method,
-			headers: {
-				'Content-Type': 'application/json',
-				'Content-Length': Buffer.byteLength(rawBody)
-			}
+			headers: req.headers
 		};
 
+		fwdRequest.headers["Host"] = to_host;
+
 		const proxiedRequest = request(fwdRequest, (r) => {
-			r.on('data', (d) => {
-				res.send(d);
+			// let respBody = '';
+			// r.on('data', (d) => {
+			// 	respBody += d;
+			// });
+			let respBody = new ArrayBuffer(r.headers['content-length']);
+			switch (r.headers['content-encoding']) {
+				// case 'br':
+				// 	r.pipe(zlib.createBrotliDecompress()).pipe(res);
+				// 	break;
+				case 'gzip':
+					r.pipe(zlib.createGunzip()).pipe(respBody);
+					break;
+				case 'deflate':
+					r.pipe(zlib.createInflate()).pipe(res);
+					break;
+				default:
+					r.pipe(res);
+					break;
+			}
+			r.on('end', () => {
+				console.log("r headers: ", r.headers);
+				// console.log("response body: ", respBody);
+				if (r.rawHeaders.length % 2 !== 0) {
+					console.error("At least one header was sent without value!");
+					console.debug(r);
+					return;
+				}
+				for (const h in r.headers) {
+					res.append(h, r.headers[h]);
+				}
+
+				res.status(r.statusCode).send(respBody);
 			});
 		});
 
@@ -156,18 +190,11 @@ app.use('/api/**', (req, res) => {
 });
 
 // Default route shows the dash
-app.get('/', (req, res) => {
+app.get('*', (req, res) => {
 	res.render('index', { req });
 });
 
-// Login Routes
-app.get('/login', (req, res) => {
-	res.render('login', { req });
-});
-app.post('/login', (req, res) => {
-	res.send("Logged in!");
-	console.log("Login Data: ", req);
-});
+app.enable('trust proxy');
 
 // Start up the Node server
 app.listen(PORT, () => {

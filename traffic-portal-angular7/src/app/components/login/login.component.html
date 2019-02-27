@@ -11,8 +11,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<form method="post" action="/login">
-	<label>Username: <input autocomplete="username" autofocus type="text" name="u"/></label>
-	<label>Password: <input autocomplete="new-password" type="password" name="p"/></label>
-	<button type="submit">Login</button>
+<form name="login" (ngSubmit)="submitLogin()">
+	<label>Username: <input required autocomplete="username" autofocus type="text" [formControl]="u" name="u"/></label>
+	<label>Password: <input required autocomplete="new-password" type="password" [formControl]="p" name="p"/></label>
+	<button>Login</button>
 </form>

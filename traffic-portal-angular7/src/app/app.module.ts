@@ -14,24 +14,44 @@
 */
 
 import { BrowserModule } from '@angular/platform-browser';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Routes, RouterModule } from '@angular/router';
 
+// Components
 import { AppComponent } from './app.component';
-import { LoginComponent } from '../login/login.component';
+import { LoginComponent } from './components/login/login.component';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
+
+// Routing
+import { AppRoutingModule } from './app-routing.module';
+import { AuthGuard } from './interceptor/auth.guard';
+// import { ErrorInterceptor } from './interceptor/error.interceptor';
+
+
+const appRoutes: Routes = [
+	{ path: '', component: DashboardComponent, canActivate: [AuthGuard] },
+	{ path: 'login', component: LoginComponent },
+];
 
 @NgModule({
 	declarations: [
 		AppComponent,
 		LoginComponent,
+		DashboardComponent,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),
-		RouterModule.forRoot([
-			{path: 'login', component: LoginComponent, pathMatch: 'full'}
-		])
+		RouterModule.forRoot(appRoutes),
+		AppRoutingModule,
+		HttpClientModule,
+		ReactiveFormsModule,
+		FormsModule
 	],
-	providers: [],
-	bootstrap: [AppComponent, LoginComponent]
+	// providers: [
+	// 	{provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true}
+	// ],
+	bootstrap: [AppComponent]
 })
 export class AppModule { }
