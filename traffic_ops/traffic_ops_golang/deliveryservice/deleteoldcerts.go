@@ -191,6 +191,12 @@ func doOldCertDeleter(do chan struct{}, die chan struct{}, db *sql.DB, dbTimeout
 		case <-do:
 			deleteOldDSCertsDB(db, dbTimeout, riakOpts, riakPort, cdn)
 		case <-die:
+			// Go selects aren't ordered, so double-check the do chan in case a race happened and a job came in at the same time as the die.
+			select {
+			case <-do:
+				deleteOldDSCertsDB(db, dbTimeout, riakOpts, riakPort, cdn)
+			default:
+			}
 			return
 		}
 	}
