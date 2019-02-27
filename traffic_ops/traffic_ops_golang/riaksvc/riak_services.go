@@ -196,7 +196,6 @@ func FetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*ri
 	return fvc.Response.Values, nil
 }
 
-// saves an object to riak storage
 func SaveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 	if cluster == nil {
 		return errors.New("ERROR: No valid cluster on which to execute a command")
@@ -357,13 +356,20 @@ func WithCluster(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, f func(
 }
 
 // Search searches Riak for the given query. Returns nil and a nil error if no object was found.
-func Search(cluster StorageCluster, index string, query string, filterQuery string, numRows int) ([]*riak.SearchDoc, error) {
-	iCmd, err := riak.NewSearchCommandBuilder().
+// If fields is empty, all fields will be returned.
+func Search(cluster StorageCluster, index string, query string, filterQuery string, numRows int, fields []string) ([]*riak.SearchDoc, error) {
+	riakCmd := riak.NewSearchCommandBuilder().
 		WithIndexName(index).
 		WithQuery(query).
-		WithFilterQuery(filterQuery).
-		WithNumRows(uint32(numRows)).
-		Build()
+		WithNumRows(uint32(numRows))
+	if len(filterQuery) > 0 {
+		riakCmd = riakCmd.WithFilterQuery(filterQuery)
+	}
+	if len(fields) > 0 {
+		riakCmd = riakCmd.WithReturnFields(fields...)
+	}
+	iCmd, err := riakCmd.Build()
+
 	if err != nil {
 		return nil, errors.New("building Riak command: " + err.Error())
 	}

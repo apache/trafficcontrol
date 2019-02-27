@@ -116,6 +116,28 @@ func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantCol
 	return where, queryValues
 }
 
+// CommitIf commits if doCommit is true at the time of execution.
+// This is designed as a defer helper.
+//
+// Example:
+//
+//  tx, err := db.Begin()
+//  txCommit := false
+//  defer dbhelpers.CommitIf(tx, &txCommit)
+//  if err := tx.Exec("select ..."); err != nil {
+//    return errors.New("executing: " + err.Error())
+//  }
+//  txCommit = true
+//  return nil
+//
+func CommitIf(tx *sql.Tx, doCommit *bool) {
+	if *doCommit {
+		tx.Commit()
+	} else {
+		tx.Rollback()
+	}
+}
+
 // GetPrivLevelFromRoleID returns the priv_level associated with a role, whether it exists, and any error.
 // This method exists on a temporary basis. After priv_level is fully deprecated and capabilities take over,
 // this method will not only no longer be needed, but the corresponding new privilege check should be done
@@ -206,4 +228,42 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 		return "", false, errors.New("Error querying CDN name: " + err.Error())
 	}
 	return domain, true, nil
+}
+
+func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}, error) {
+	dses := map[tc.DeliveryServiceName]struct{}{}
+	qry := `SELECT xml_id from deliveryservice where cdn_id = (select id from cdn where name = $1)`
+	rows, err := tx.Query(qry, cdn)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		ds := tc.DeliveryServiceName("")
+		if err := rows.Scan(&ds); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		dses[ds] = struct{}{}
+	}
+	return dses, nil
+}
+
+func GetCDNs(tx *sql.Tx) (map[tc.CDNName]struct{}, error) {
+	cdns := map[tc.CDNName]struct{}{}
+	qry := `SELECT name from cdn;`
+	rows, err := tx.Query(qry)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		cdn := tc.CDNName("")
+		if err := rows.Scan(&cdn); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		cdns[cdn] = struct{}{}
+	}
+	return cdns, nil
 }

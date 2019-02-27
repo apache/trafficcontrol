@@ -200,6 +200,19 @@ func DeleteDSSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, xml
 	return err
 }
 
+// DeleteDeliveryServicesSSLKey deletes a Delivery Service SSL key.
+// This should almost never be used directly, prefer DeleteDSSSLKeys instead.
+// This should only be used to delete keys, which may not conform to the MakeDSSSLKeyKey format. For example when deleting all keys on a delivery service, and some may have been created manually outside Traffic Ops, or are otherwise malformed.
+func DeleteDeliveryServicesSSLKey(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, key string) error {
+	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+		if err := DeleteObject(key, DeliveryServiceSSLKeysBucket, cluster); err != nil {
+			return errors.New("deleting SSL keys: " + err.Error())
+		}
+		return nil
+	})
+	return err
+}
+
 // GetURLSigConfigFileName returns the filename of the Apache Traffic Server URLSig config file
 // TODO move to ats config directory/file
 func GetURLSigConfigFileName(ds tc.DeliveryServiceName) string {
@@ -260,7 +273,8 @@ func GetCDNSSLKeysObj(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cd
 		// get the deliveryservice ssl keys by xmlID and version
 		query := `cdn:` + cdnName
 		filterQuery := `_yz_rk:*latest`
-		searchDocs, err := Search(cluster, SSLKeysIndex, query, filterQuery, CDNSSLKeysLimit)
+		fields := []string{"deliveryservice", "hostname", "certificate.crt", "certificate.key"}
+		searchDocs, err := Search(cluster, SSLKeysIndex, query, filterQuery, CDNSSLKeysLimit, fields)
 		if err != nil {
 			return errors.New("riak search error: " + err.Error())
 		}
@@ -296,4 +310,42 @@ func SearchDocsToCDNSSLKeys(docs []*riak.SearchDoc) []tc.CDNSSLKey {
 		keys = append(keys, key)
 	}
 	return keys
+}
+
+// GetCDNSSLKeysDSNames returns the delivery service names (xml_id) of every delivery service on the given cdn with SSL keys in Riak, and the keys currently in Riak.
+// Returns map[tc.DeliveryServiceName][]key
+func GetCDNSSLKeysDSNames(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cdn tc.CDNName) (map[tc.DeliveryServiceName][]string, error) {
+	dsVersions := map[tc.DeliveryServiceName][]string{}
+	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+		// get the deliveryservice ssl keys by xmlID and version
+		query := `cdn:` + string(cdn)
+		filterQuery := ""
+		fields := []string{"_yz_rk", "deliveryservice"} // '_yz_rk' is the magic Riak field that populates the key. Without this, doc.Key would be empty.
+		searchDocs, err := Search(cluster, SSLKeysIndex, query, filterQuery, CDNSSLKeysLimit, fields)
+		if err != nil {
+			return errors.New("riak search error: " + err.Error())
+		}
+		if len(searchDocs) == 0 {
+			return nil // no error, and leave keys empty
+		}
+
+		for _, doc := range searchDocs {
+			dses := doc.Fields["deliveryservice"]
+			if len(dses) == 0 {
+				log.Errorln("Riak had a CDN '" + string(cdn) + "' key with no delivery service '" + doc.Key + "' - ignoring!")
+				continue
+			}
+			if len(dses) > 1 {
+				log.Errorf("Riak had a CDN '"+string(cdn)+"' key with multiple delivery services '"+doc.Key+"' deliveryservices '%+v' - ignoring all but the first!\n", dses)
+			}
+			ds := tc.DeliveryServiceName(dses[0])
+
+			dsVersions[ds] = append(dsVersions[ds], doc.Key)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, errors.New("with cluster error: " + err.Error())
+	}
+	return dsVersions, nil
 }

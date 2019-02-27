@@ -330,10 +330,10 @@ func verifyCertificate(certificate string, rootCA string) (string, bool, error) 
 		block := &pem.Block{Type: "CERTIFICATE", Bytes: link.Raw}
 		pemEncodedChain += string(pem.EncodeToMemory(block))
 	}
-   
-  	if len(pemEncodedChain) < 1 {
+
+	if len(pemEncodedChain) < 1 {
 		return "", false, errors.New("Invalid empty certicate chain in request")
-  	}
+	}
 
 	return pemEncodedChain, false, nil
 }
