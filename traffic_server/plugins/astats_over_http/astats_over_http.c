@@ -220,8 +220,9 @@ stats_process_read(TSCont contp, TSEvent event, stats_state *my_state) {
 #define APPEND(a) my_state->output_bytes += stats_add_data_to_resp_buffer(a, my_state)
 #define APPEND_STAT(a, fmt, v) do { \
 		char b[3048]; \
-		if (snprintf(b, sizeof(b), "   \"%s\": " fmt ",\n", a, v) < sizeof(b)) \
-		APPEND(b); \
+		int nbytes = snprintf(b, sizeof(b), "   \"%s\": " fmt ",\n", a, v); \
+		if (0 < nbytes && nbytes < (int)sizeof(b)) \
+			APPEND(b); \
 } while(0)
 
 static void
@@ -298,19 +299,18 @@ static int getSpeed(char *inf, char *buffer, int bufferSize) {
 
 static void appendSystemState(stats_state *my_state) {
 	char *interface = my_state->interfaceName;
-	char buffer[2024];
-	int bsize = 2024;
+	char buffer[16384];
 	char *str;
 	char *end;
 	int speed = 0;
 
 	APPEND_STAT("inf.name", "\"%s\"", interface);
 
-	speed = getSpeed(interface, buffer, bsize);
+	speed = getSpeed(interface, buffer, sizeof(buffer));
 
 	APPEND_STAT("inf.speed", "%d", speed);
 
-	str = getFile("/proc/net/dev", buffer, bsize);
+	str = getFile("/proc/net/dev", buffer, sizeof(buffer));
 	if (str && interface) {
 		str = strstr(str, interface);
 		if (str) {
@@ -321,7 +321,7 @@ static void appendSystemState(stats_state *my_state) {
 		}
 	}
 
-	str = getFile("/proc/loadavg", buffer, bsize);
+	str = getFile("/proc/loadavg", buffer, sizeof(buffer));
 	if (str) {
 		end = strstr(str, "\n");
 		if (end)
