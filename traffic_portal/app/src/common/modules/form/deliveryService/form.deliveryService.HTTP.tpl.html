@@ -95,14 +95,14 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="xmlId">
                     <span uib-popover-html="label('xmlId', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('xmlId', 'title')}}</span> *
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="xmlId" type="text" class="form-control" placeholder="Unique id used for the delivery service" ng-model="deliveryService.xmlId" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" ng-readonly="(!settings.isRequest && !settings.isNew) || (settings.isRequest && changeType == 'update')" autofocus>
+                    <input id="xmlId" name="xmlId" type="text" class="form-control" placeholder="Unique id used for the delivery service" ng-model="deliveryService.xmlId" required maxlength="48" pattern="[a-z][a-z0-9\-]*" ng-readonly="(!settings.isRequest && !settings.isNew) || (settings.isRequest && changeType == 'update')">
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">No spaces</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces)</small>
                     <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.xmlId != dsCurrent.xmlId">Current Value: [ {{dsCurrent.xmlId}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.xmlId)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
