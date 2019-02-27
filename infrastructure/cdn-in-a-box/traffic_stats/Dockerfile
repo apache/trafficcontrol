@@ -29,12 +29,10 @@ RUN yum install -y epel-release && \
     yum install -y /$(basename $TRAFFIC_TS_RPM) \
         jq \
         nmap-ncat \
-        iproute \
         net-tools \
         gettext \
         bind-utils \
-        openssl \
-        initscripts && \
+        openssl && \
     rm /$(basename $TRAFFIC_TS_RPM) && \
     yum clean all
 

@@ -408,31 +408,23 @@ This container provides a Grafana service. It's an open platform for analytics a
 
 How to start it
 """""""""""""""
-#. It is recommended that this be done using a custom bash alias.
+It is recommended that this be done using a custom bash alias.
 
-	.. code-block:: shell
-		:caption: CIAB Startup with Grafana
+.. code-block:: shell
+	:caption: CIAB Startup with Grafana
 
-		# From infrastructure/cdn-in-a-box
-		alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.grafana.yml -f $PWD/optional/docker-compose.grafana.expose-ports.yml"
-		mydc down -v
-		mydc build
-		mydc up
+	# From infrastructure/cdn-in-a-box
+	alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.grafana.yml -f $PWD/optional/docker-compose.grafana.expose-ports.yml"
+	mydc down -v
+	mydc build
+	mydc up
+
+Apart from start Grafana, the above commands also expose port 3000 for it.
 
 Check the charts
 """"""""""""""""
 There are some *scripted dashboards* can show beautiful charts. You can display different charts by passing in different *query string*
 
-#. ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``. The *query string* ``which`` should be passed ``cachegroup``. Take CIAB as an example, There are 2 URLs can be accessed directly:
-
-	#. ``https://grafana.infra.ciab.test/dashboard/script/traffic_ops_cachegroup.js?which=CDN_in_a_Box_Edge``
-	#. ``https://grafana.infra.ciab.test/dashboard/script/traffic_ops_cachegroup.js?which=CDN_in_a_Box_Mid``
-
-#. ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``. The *query string* ``which`` should be passed ``deliveryservice``. Take CIAB as an example, This URL can be accessed directly:
-
-	#. ``https://grafana.infra.ciab.test/dashboard/script/traffic_ops_deliveryservice.js?which=demo1``
-
-#. ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``. The *query string* ``which`` should be passed ``hostname``. Take CIAB as an example, There are 2 URLs can be accessed directly:
-
-	#. ``https://grafana.infra.ciab.test/dashboard/script/traffic_ops_server.js?which=edge``
-	#. ``https://grafana.infra.ciab.test/dashboard/script/traffic_ops_server.js?which=mid``
+* ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``. The query parameter `which` in this particular URL should be the **cachegroup**. Take CIAB as an example, it can be filled in with **CDN_in_a_Box_Edge** or **CDN_in_a_Box_Edge**.
+* ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``. The query parameter `which` in this particular URL should be the **xml_id** of the desired Delivery Service.
+* ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``. The query parameter `which` in this particular URL should be the **hostname** (not **FQDN**). It can be filled in with **edge** or **mid** in CIAB.

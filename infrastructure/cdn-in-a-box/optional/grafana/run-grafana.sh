@@ -55,6 +55,4 @@ export GF_SERVER_CERT_FILE=$X509_INFRA_CERT_FILE
 export GF_SERVER_CERT_KEY=$X509_INFRA_KEY_FILE
 envsubst < "/datasources.yml.template" > "$GF_PATHS_PROVISIONING/datasources/datasources.yml"
 
-setcap 'cap_net_bind_service=+ep' `which grafana-server`
-sudo -u grafana -E PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /run.sh
-
+/run.sh
