@@ -14,53 +14,29 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-# This compose file will expose the ports of each service on the host.
-#
-#      docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up
-#
 
----
-version: '2.1'
+FROM grafana/grafana:5.4.3
 
-services:
-  db:
-    ports:
-      - "5432:5432"
-  trafficops:
-    ports:
-      - "6443:443"
-  trafficops-perl:
-    ports:
-      - "60443:443"
-  trafficportal:
-    ports:
-      - "443:443"
-  trafficmonitor:
-    ports:
-      - "80:80"
-  trafficrouter:
-    ports:
-      - "3053:53"
-      - "3080:80"
-      - "3443:443"
-      - "3333:3333"
-  influxdb:
-    ports:
-      - "8086:8086"
-  trafficvault:
-    ports:
-      - "8087:8087"
-      - "8098:8098"
-  edge:
-    ports:
-      - "9000:80"
-  mid:
-    ports:
-      - "9100:80"
-  origin:
-    ports:
-      - "9200:80"
-  dns:
-    ports:
-      - "9353:53"
+USER root
+ARG TRAFFIC_TS_RPM=traffic_stats/traffic_stats.rpm
+
+RUN apt-get update && \
+    apt-get install -y dnsutils net-tools gettext-base p7zip-full netcat && \
+    rm -rf /var/lib/apt/lists/*
+
+ADD enroller/server_template.json \
+    traffic_ops/to-access.sh \
+    optional/grafana/run-grafana.sh \
+    optional/grafana/datasources.yml.template \
+    $TRAFFIC_TS_RPM \
+    /
+
+RUN cd ~ \
+    && 7z x /traffic_stats.rpm \
+    && 7z e traffic_stats-*.cpio *.js -r \
+    && mv *.js /usr/share/grafana/public/dashboards \
+    && rm /traffic_stats.rpm \
+    && rm ~/traffic_stats-*.cpio
+
+ENTRYPOINT [ "/run-grafana.sh" ]
+EXPOSE 443

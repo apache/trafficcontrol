@@ -45,11 +45,12 @@ TO_SOURCE += $(wildcard ../../traffic_ops_db/**/*)
 TM_SOURCE := $(wildcard ../../traffic_monitor/**/*)
 TP_SOURCE := $(wildcard ../../traffic_portal/**/*)
 TR_SOURCE := $(wildcard ../../traffic_router/**/*)
+TS_SOURCE := $(wildcard ../../traffic_stats/**/*)
 
 .PHONY: clean very-clean all nearly-all
 
 # Default target; builds all pre-requisite rpms from source trees
-all: traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_ops/traffic_ops.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm
+all: traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_ops/traffic_ops.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm traffic_stats/traffic_stats.rpm
 
 # Actual output rpm recipies
 traffic_monitor/traffic_monitor.rpm: ../../dist/traffic_monitor-$(SPECIAL_SAUCE)
@@ -63,6 +64,8 @@ traffic_portal/traffic_portal.rpm: ../../dist/traffic_portal-$(SPECIAL_SAUCE)
 traffic_router/traffic_router.rpm: ../../dist/traffic_router-$(SPECIAL_SAUCE)
 	cp -f $? $@
 traffic_router/tomcat.rpm: ../../dist/tomcat-$(SPECIAL_SEASONING)
+	cp -f $? $@
+traffic_stats/traffic_stats.rpm: ../../dist/traffic_stats-$(SPECIAL_SAUCE)
 	cp -f $? $@
 
 # Dist rpms
@@ -80,6 +83,9 @@ traffic_router/tomcat.rpm: ../../dist/tomcat-$(SPECIAL_SEASONING)
 
 ../../dist/traffic_router-$(SPECIAL_SAUCE) ../../dist/tomcat-$(SPECIAL_SEASONING): $(TR_SOURCE)
 	sudo ../../pkg -v traffic_router_build
+
+../../dist/traffic_stats-$(SPECIAL_SAUCE): $(TS_SOURCE)
+	sudo ../../pkg -v traffic_stats_build
 
 clean:
 	$(RM) traffic_ops/traffic_ops.rpm traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm edge/traffic_ops_ort.rpm mid/traffic_ops_ort.rpm

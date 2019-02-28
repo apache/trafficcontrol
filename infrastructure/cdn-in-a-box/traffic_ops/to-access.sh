@@ -230,9 +230,24 @@ to-enroll() {
 			export MY_PROFILE="TRAFFIC_PORTAL"
 			export MY_STATUS="ONLINE"
 			;;
+		"ts" )
+			export MY_TYPE="TRAFFIC_STATS"
+			export MY_PROFILE="TRAFFIC_STATS"
+			export MY_STATUS="ONLINE"
+			;;
 		"tv" )
 			export MY_TYPE="RIAK"
 			export MY_PROFILE="RIAK_ALL"
+			export MY_STATUS="ONLINE"
+			;;
+		"influxdb" )
+			export MY_TYPE="INFLUXDB"
+			export MY_PROFILE="INFLUXDB"
+			export MY_STATUS="ONLINE"
+			;;
+		"grafana" )
+			export MY_TYPE="GRAFANA"
+			export MY_PROFILE="GRAFANA"
 			export MY_STATUS="ONLINE"
 			;;
 		* )

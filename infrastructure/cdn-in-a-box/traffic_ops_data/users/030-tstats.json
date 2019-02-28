@@ -1,0 +1,9 @@
+{
+  "email": "$TS_EMAIL",
+  "fullName": "Traffic Stats",
+  "localPasswd": "$TS_PASSWORD",
+  "confirmLocalPasswd": "$TS_PASSWORD",
+  "rolename": "operations",
+  "tenant": "root",
+  "username": "$TS_USER"
+}

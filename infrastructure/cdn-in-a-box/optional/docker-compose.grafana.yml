@@ -1,0 +1,60 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# This container provide a Grafana service.
+# To start up CiaB with optional Grafana container:
+#
+# alias mydc="docker-compose "` \
+#   `"-f $PWD/docker-compose.yml "` \
+#   `"-f $PWD/optional/docker-compose.grafana.yml "`
+#
+# mydc rm -fv
+# mydc up
+#
+# Here are some links can be used to check grafana:
+#
+#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_cachegroup.js?which=CDN_in_a_Box_Edge
+#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_cachegroup.js?which=CDN_in_a_Box_Mid
+#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_deliveryservice.js?which=demo1
+#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_server.js?which=edge
+#  https://grafana.infra.ciab.test/dashboard/script/traffic_ops_server.js?which=mid
+
+
+---
+version: '2.1'
+
+services:
+  grafana:
+    build:
+      context: .
+      dockerfile: optional/grafana/Dockerfile
+    hostname: grafana
+    domainname: infra.ciab.test
+    depends_on:
+      - influxdb
+    env_file:
+      - variables.env
+    volumes:
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
+      - shared:/shared
+
+volumes:
+  schemas:
+    external: false
+  shared:
+    external: false

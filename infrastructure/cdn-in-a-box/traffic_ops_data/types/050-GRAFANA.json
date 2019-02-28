@@ -1,0 +1,5 @@
+{
+  "description": "Grafana Service",
+  "name": "GRAFANA",
+  "useInTable": "server"
+}

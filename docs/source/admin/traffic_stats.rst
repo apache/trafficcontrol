@@ -82,6 +82,8 @@ Once InfluxDB is installed and configured, databases and retention policies need
 
 To easily create databases, retention policies, and continuous queries, run :program:`create_ts_databases` from the :file:`/opt/traffic_stats/influxdb_tools` directory on your Traffic Stats server. See the `InfluxDB Tools`_ section for more information.
 
+.. _grafana-config:
+
 Configuring Grafana
 -------------------
 In Traffic Portal the :menuselection:`Other --> Grafana` menu item can be configured to display Grafana graphs using InfluxDB data. In order for this to work correctly, you will need two things:
@@ -129,11 +131,11 @@ To configure Traffic Portal to use Grafana Dashboards, you need to enter the fol
 	+---------------------------+----------------------------------------------------------------------------------------------------+
 	|       parameter name      |                                        parameter value                                             |
 	+===========================+====================================================================================================+
-	| all_graph_url             | ``https://<grafana_url>/dashboard/db/deliveryservice-stats``                                       |
+	| all_graph_url             | ``https://<grafanaHost>/dashboard/db/deliveryservice-stats``                                       |
 	+---------------------------+----------------------------------------------------------------------------------------------------+
 	| cachegroup_graph_url      | ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``                        |
 	+---------------------------+----------------------------------------------------------------------------------------------------+
-	| deliveryservice_graph_url | ``https://<grafanaHost>/dashboard/script/traffic_ops_devliveryservice.js?which=``                  |
+	| deliveryservice_graph_url | ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``                   |
 	+---------------------------+----------------------------------------------------------------------------------------------------+
 	| server_graph_url          | ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``                            |
 	+---------------------------+----------------------------------------------------------------------------------------------------+

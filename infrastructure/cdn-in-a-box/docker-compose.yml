@@ -156,6 +156,38 @@ services:
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
       - shared:/shared
 
+  # trafficstats collect traffic information
+  trafficstats:
+    build:
+      context: .
+      dockerfile: traffic_stats/Dockerfile
+    depends_on:
+      - enroller
+      - influxdb
+    domainname: infra.ciab.test
+    env_file:
+      - variables.env
+    hostname: trafficstats
+    volumes:
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
+      - shared:/shared
+
+  influxdb:
+    build:
+      context: .
+      dockerfile: traffic_stats/Dockerfile-influxdb
+    hostname: influxdb
+    domainname: infra.ciab.test
+    depends_on:
+      - dns
+    env_file:
+      - variables.env
+    volumes:
+      - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
+      - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
+      - shared:/shared
+
   # trafficvault runs a riak container to store private keys
   trafficvault:
     build:

@@ -73,6 +73,12 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Vault                   | Riak key-value store on port 8010                            | ``TV_ADMIN_USER`` in `variables.env`_ | ``TV_ADMIN_PASSWORD`` in `variables.env`_ |
 	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Stats                   | N/A                                                          | N/A                                   | N/A                                       |
+	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
+	| Traffic Stats Influxdb          | Influxdbd connections accepted on port 8086 (database name:  | ``INFLUXDB_ADMIN_USER`` in            | ``INFLUXDB_ADMIN_PASSWORD`` in            |
+	|                                 | ``cache_stats``, ``daily_stats`` and                         | `variables.env`_                      | `variables.env`_                          |
+	|                                 | ``deliveryservice_stats``)                                   |                                       |                                           |
+	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 
 .. seealso:: :ref:`tr-api` and :ref:`tm-api`
 
@@ -347,14 +353,14 @@ How to use it
 """""""""""""
 #. It is recommended that this be done using a custom bash alias.
 
-    .. code-block:: shell
-        :caption: CIAB Startup with VPN
+	.. code-block:: shell
+		:caption: CIAB Startup with VPN
 
-        # From infrastructure/cdn-in-a-box
-        alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/docker-compose.expose-ports.yml -f $PWD/optional/docker-compose.vpn.yml -f $PWD/optional/docker-compose.vpn.expose-ports.yml"
-        mydc down -v
-        mydc build
-        mydc up
+		# From infrastructure/cdn-in-a-box
+		alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/docker-compose.expose-ports.yml -f $PWD/optional/docker-compose.vpn.yml -f $PWD/optional/docker-compose.vpn.expose-ports.yml"
+		mydc down -v
+		mydc build
+		mydc up
 
 #. All certificates, keys, and client configuration are stored at ``infrastruture/cdn-in-a-box/optional/vpn/vpnca``. You just simply change ``REALHOSTIP`` and ``REALPORT`` of ``client.ovpn`` to fit your environment, and then you can use it to connect to this OpenVPN server.
 
@@ -363,16 +369,16 @@ The proposed VPN client
 On Linux, we suggest ``openvpn``. On most Linux distributions, this will also be the name of the package that provides it.
 
 .. code-block:: shell
-    :caption: Install openvpn on ubuntu/debian
+	:caption: Install openvpn on ubuntu/debian
 
-    apt-get update && apt-get install -y openvpn
+	apt-get update && apt-get install -y openvpn
 
 On OSX, it only works with brew installed openvpn client, not the *OpenVPN GUI client*.
 
 .. code-block:: shell
-    :caption: Install openvpn on OSX
+	:caption: Install openvpn on OSX
 
-    brew install openvpn
+	brew install openvpn
 
 If you want a GUI version of VPN client, we recommend `Tunnelblick <https://tunnelblick.net/>`_.
 
@@ -395,3 +401,30 @@ Pushed settings are shown as follows:
 * A routing rule for the ``CIAB`` subnet
 
 .. note:: It will not change your default gateway. That means apart from CDN in a Box traffic and DNS requests, all other traffic will use the standard interface bound to the default gateway.
+
+Grafana
+-------
+This container provides a Grafana service. It's an open platform for analytics and monitoring. This container has prepared necessary *datasources* and *scripted dashboards*. Please refer to :ref:`grafana-config` for detailed Settings.
+
+How to start it
+"""""""""""""""
+It is recommended that this be done using a custom bash alias.
+
+.. code-block:: shell
+	:caption: CIAB Startup with Grafana
+
+	# From infrastructure/cdn-in-a-box
+	alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.grafana.yml -f $PWD/optional/docker-compose.grafana.expose-ports.yml"
+	mydc down -v
+	mydc build
+	mydc up
+
+Apart from start Grafana, the above commands also expose port 3000 for it.
+
+Check the charts
+""""""""""""""""
+There are some *scripted dashboards* can show beautiful charts. You can display different charts by passing in different *query string*
+
+* ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``. The query parameter `which` in this particular URL should be the **cachegroup**. Take CIAB as an example, it can be filled in with **CDN_in_a_Box_Edge** or **CDN_in_a_Box_Edge**.
+* ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``. The query parameter `which` in this particular URL should be the **xml_id** of the desired Delivery Service.
+* ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``. The query parameter `which` in this particular URL should be the **hostname** (not **FQDN**). It can be filled in with **edge** or **mid** in CIAB.

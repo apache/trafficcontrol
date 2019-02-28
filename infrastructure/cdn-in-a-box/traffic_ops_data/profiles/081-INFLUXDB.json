@@ -1,0 +1,7 @@
+{
+  "cdnName": "ALL",
+  "description": "InfluxDB profile",
+  "name": "INFLUXDB",
+  "routingDisabled": false,
+  "type": "INFLUXDB_PROFILE"
+}

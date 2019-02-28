@@ -1,0 +1,234 @@
+{
+  "cdnName": "ALL",
+  "description": "Traffic_Stats profile",
+  "name": "TRAFFIC_STATS",
+  "routingDisabled": false,
+  "type": "TS_PROFILE",
+  "params": [
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "bandwidth"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "maxKbps"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.http.current_client_connections"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "DsStats",
+      "value": "kbps"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "DsStats",
+      "value": "tps_2xx"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "DsStats",
+      "value": "status_4xx"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "DsStats",
+      "value": "status_5xx"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "DsStats",
+      "value": "tps_3xx"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "DsStats",
+      "value": "tps_4xx"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "DsStats",
+      "value": "tps_5xx"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "DsStats",
+      "value": "tps_total"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.volume_1.wrap_count"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.volume_2.wrap_count"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.volume_1.write.failure"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.volume_1.write.success"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.ssl.cipher.user_agent.ECDHE-RSA-AES128-GCM-SHA256"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.ssl.cipher.user_agent.RC4-SHA"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.ssl.cipher.user_agent.RC4-MD5"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.ssl.cipher.user_agent.DES-CBC3-SHA"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.bytes_total"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.bytes_used"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.direntries.total"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.direntries.used"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.directory_collision"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.evacuate.active"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.evacuate.failure"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.evacuate.success"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.frags_per_doc.1"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.frags_per_doc.2"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.frags_per_doc.3+"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.gc_bytes_evacuated"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.gc_frags_evacuated"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.hdr_marshal_bytes"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.hdr_marshals"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.lookup.active"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.lookup.failure"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.lookup.success"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.ram_cache.bytes_used"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.ram_cache.total_bytes"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.ram_cache.hits"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.cache.ram_cache.misses"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.http.background_fill_bytes_aborted_stat"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.http.background_fill_bytes_completed_stat"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.process.http.background_fill_current_count"
+    },
+    {
+      "configFile": "traffic_stats.config",
+      "name": "CacheStats",
+      "value": "ats.proxy.node.cache.bytes_free"
+    }
+  ]
+}
