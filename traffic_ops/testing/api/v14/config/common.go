@@ -96,7 +96,7 @@ func ValidateDHMSTimeFormat(time string) error {
 func expandIP(ip string) string {
 
 	// d.d.d.d with optional groups of (.d)
-	ipRegex := regexp.MustCompile(`^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:\.(\d+))?`)
+	ipRegex := regexp.MustCompile(`^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:\.(\d+))?$`)
 	match := ipRegex.FindStringSubmatch(ip)
 	if match == nil {
 		return ""
@@ -147,18 +147,17 @@ func ValidateIPRange(ip string) error {
 
 		// both must be valid
 		if ip1 == nil || ip2 == nil {
-			return fmt.Errorf("invalid IP range (1): %v \n", ip)
+			return fmt.Errorf("invalid IP range: %v \n", ip)
 		}
 
 		// must be of the same type
 		if (ip1.To4() == nil) != (ip2.To4() == nil) {
-			return fmt.Errorf("invalid IP range (2): %v \n", ip)
+			return fmt.Errorf("invalid IP range: %v \n", ip)
 		}
 
-		// ip1 must be less than ip2
-		// I think the operator ">" is backwards
-		if bytes.Compare(ip1, ip2) > 0 {
-			return fmt.Errorf("invalid IP range (3): %v \n", ip)
+		// ip2 must be less than ip1
+		if bytes.Compare(ip2, ip1) < 0 {
+			return fmt.Errorf("invalid IP range: %v \n", ip)
 		}
 		return nil
 	}
@@ -176,9 +175,10 @@ func ValidateIPRange(ip string) error {
 	splt = strings.Split(ip, "/")
 	if len(splt) == 2 {
 		ip = fmt.Sprintf("%v/%v", expandIP(splt[0]), splt[1])
-		if _, _, err = net.ParseCIDR(ip); err != nil {
-			return fmt.Errorf("invalid CIDR address: %v \n", ip)
+		if _, _, err = net.ParseCIDR(ip); err == nil {
+			return nil
 		}
+		return fmt.Errorf("invalid CIDR address: %v \n", ip)
 	}
 
 	return fmt.Errorf("invalid IP range: %v", ip)
