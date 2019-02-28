@@ -31,8 +31,8 @@ Queries database for an active Traffic Router on a given CDN and sends GET reque
 Request Structure
 -----------------
 :regex:       The regex to apply to the request path to get a resulting path that will be used for consistent hashing
-:requestpath: The request path to use to test the regular expression against
-:cdnid:       The unique identifier of a CDN that will be used to query for an active Traffic Router
+:requestPath: The request path to use to test the regular expression against
+:cdnId:       The unique identifier of a CDN that will be used to query for an active Traffic Router
 
 .. code-block:: http
 	:caption: Request Example
@@ -45,7 +45,7 @@ Request Structure
 	Content-Length: 80
 	Content-Type: application/x-www-form-urlencoded
 
-	{"regex":"/.*?(/.*?/).*?(m3u8)","requestpath":"/test/path/asset.m3u8","cdnid":2}
+	{"regex":"/.*?(/.*?/).*?(m3u8)","requestPath":"/test/path/asset.m3u8","cdnId":2}
 
 Response Structure
 ------------------

@@ -91,19 +91,14 @@ SELECT concat(server.host_name, '.', server.domain_name) AS fqdn,
  (parameter.name = 'api.port'::text) AND
  (status.name = 'ONLINE') AND
  (server.cdn_id = $1))
+ORDER BY RANDOM()
+LIMIT 1
 `
-	rows, err := tx.Query(q, cdnId)
-	defer rows.Close()
-	if err != nil {
-		return nil, errors.New("querying for eligible Traffic Router to test pattern based consistent hashing: " + err.Error())
-	}
 
 	trafficRouter := ""
 	apiPort := ""
-	for rows.Next() {
-		if err := rows.Scan(&trafficRouter, &apiPort); err != nil {
-			return nil, errors.New("scanning eligible Traffic Routers for pattern based consistent hashing: " + err.Error())
-		}
+	if err := tx.QueryRow(q, cdnId).Scan(&trafficRouter, &apiPort); err != nil {
+		return nil, errors.New("querying for eligible Traffic Router to test pattern based consistent hashing: " + err.Error())
 	}
 
 	if trafficRouter == "" {
@@ -130,5 +125,8 @@ SELECT concat(server.host_name, '.', server.domain_name) AS fqdn,
 		return nil, errors.New("failed to read body: " + err.Error())
 	}
 
+	if r.StatusCode != 200 {
+		return nil, errors.New("Traffic Router returned " + strconv.Itoa(r.StatusCode))
+	}
 	return body, nil
 }
