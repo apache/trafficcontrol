@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
@@ -527,13 +529,15 @@ public class TrafficRouter {
 
 		final List<SteeringResult> resultsToRemove = new ArrayList<>();
 
+		// Pattern based consistent hashing - use consistentHashRegex from steering DS instead of targets
+		final String pathToHash = buildPatternBasedHashString(entryDeliveryService, request.getPath());
 		for (final SteeringResult steeringResult : steeringResults) {
 			final DeliveryService ds = steeringResult.getDeliveryService();
 
 			final List<Cache> caches = selectCaches(request, ds, track);
 
 			if (caches != null && !caches.isEmpty()) {
-				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), request.getPath());
+				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
 				steeringResult.setCache(cache);
 			} else {
 				resultsToRemove.add(steeringResult);
@@ -553,6 +557,33 @@ public class TrafficRouter {
 		}
 
 		return routeResult;
+	}
+
+	public String buildPatternBasedHashString(final DeliveryService deliveryService, final String requestPath) {
+		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty() && !requestPath.isEmpty()) {
+			return buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), requestPath);
+		}
+		return requestPath;
+	}
+
+	public String buildPatternBasedHashString(final String regex, final String requestPath) {
+		try {
+			final Pattern pattern = Pattern.compile(regex);
+			final Matcher matcher = pattern.matcher(requestPath);
+
+			final StringBuilder sb = new StringBuilder();
+			if (matcher.find() && matcher.groupCount() > 0) {
+				for (int i = 1; i <= matcher.groupCount(); i++) {
+					final String text = matcher.group(i);
+					sb.append(text);
+				}
+				return sb.toString();
+			}
+			return requestPath;
+		} catch (final Exception e) {
+			return requestPath;
+		}
+
 	}
 
 	@SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.NPathComplexity" })
@@ -597,7 +628,9 @@ public class TrafficRouter {
 			return routeResult;
 		}
 
-		final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), request.getPath());
+		// Pattern based consistent hashing
+		final String pathToHash = buildPatternBasedHashString(deliveryService, request.getPath());
+		final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
 
 		// Enforce anonymous IP blocking if a DS has anonymous blocking enabled
 		// and the feature is enabled
@@ -831,7 +864,8 @@ public class TrafficRouter {
 			return null;
 		}
 
-		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), requestPath);
+		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
 	}
 
 	public Cache consistentHashForGeolocation(final String ip, final String deliveryServiceId, final String requestPath) {
@@ -859,7 +893,12 @@ public class TrafficRouter {
 			return null;
 		}
 
-		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), requestPath);
+		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
+	}
+
+	public String buildPatternBasedHashStringDeliveryService(final String deliveryServiceId, final String requestPath) {
+		return buildPatternBasedHashString(cacheRegister.getDeliveryService(deliveryServiceId), requestPath);
 	}
 
 	private boolean isSteeringDeliveryService(final DeliveryService deliveryService) {
@@ -917,7 +956,10 @@ public class TrafficRouter {
 		}
 
 		final Steering steering = steeringRegistry.get(deliveryService.getId());
-		final List<SteeringTarget> steeringTargets = consistentHasher.selectHashables(steering.getTargets(), requestPath);
+
+		// Pattern based consistent hashing
+		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		final List<SteeringTarget> steeringTargets = consistentHasher.selectHashables(steering.getTargets(), pathToHash);
 
 		for (final SteeringTarget steeringTarget : steeringTargets) {
 			final DeliveryService target = cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
@@ -930,10 +972,29 @@ public class TrafficRouter {
 		return steeringResults;
 	}
 
+	public Cache consistentHashSteeringForCoverageZone(final String ip, final String deliveryServiceId, final String requestPath) {
+		final DeliveryService deliveryService = consistentHashDeliveryService(deliveryServiceId, requestPath);
+		if (deliveryService == null) {
+			LOGGER.error("Failed getting delivery service from cache register for id '" + deliveryServiceId + "'");
+			return null;
+		}
+
+		final CacheLocation coverageZoneCacheLocation = getCoverageZoneCacheLocation(ip, deliveryService, false, null);
+		final List<Cache> caches = selectCachesByCZ(deliveryService, coverageZoneCacheLocation);
+
+		if (caches == null || caches.isEmpty()) {
+			return null;
+		}
+
+		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
+	}
+
 	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final String requestPath) {
 		return consistentHashDeliveryService(cacheRegister.getDeliveryService(deliveryServiceId), requestPath, "");
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public DeliveryService consistentHashDeliveryService(final DeliveryService deliveryService, final String requestPath, final String xtcSteeringOption) {
 		if (deliveryService == null) {
 			return null;
@@ -961,8 +1022,17 @@ public class TrafficRouter {
 		final List<SteeringTarget> availableTargets = steering.getTargets().stream()
 				.filter(target -> cacheRegister.getDeliveryService(target.getDeliveryService()) != null)
 				.collect(Collectors.toList());
-		final SteeringTarget steeringTarget = consistentHasher.selectHashable(availableTargets, deliveryService.getDispersion(), requestPath);
-		return cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
+
+		// Pattern based consistent hashing
+		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		final SteeringTarget steeringTarget = consistentHasher.selectHashable(availableTargets, deliveryService.getDispersion(), pathToHash);
+
+		// set target.consistentHashRegex from steering DS, if it is set
+		final DeliveryService targetDeliveryService = cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
+		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty()) {
+			targetDeliveryService.setConsistentHashRegex(deliveryService.getConsistentHashRegex());
+		}
+		return targetDeliveryService;
 	}
 
 	/**

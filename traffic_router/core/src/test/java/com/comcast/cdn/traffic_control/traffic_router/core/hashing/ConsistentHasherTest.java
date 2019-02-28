@@ -21,6 +21,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.Hashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunction;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.NumberSearcher;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
@@ -34,11 +35,15 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Random;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class ConsistentHasherTest {
@@ -62,6 +67,8 @@ public class ConsistentHasherTest {
 	@InjectMocks
 	ConsistentHasher consistentHasher;
 
+	TrafficRouter trafficRouter;
+
 	@Before
 	public void before() {
 		hashable1.generateHashes("hashId1", 100);
@@ -71,6 +78,9 @@ public class ConsistentHasherTest {
 		hashables.add(hashable1);
 		hashables.add(hashable2);
 		hashables.add(hashable3);
+
+		trafficRouter = mock(TrafficRouter.class);
+		when(trafficRouter.buildPatternBasedHashString(anyString(), anyString())).thenCallRealMethod();
 
 		initMocks(this);
 	}
@@ -164,6 +174,35 @@ public class ConsistentHasherTest {
 		for (String path : rehashedPaths.get(shrunkBucket)) {
 			assertThat(hashedPaths.get(largerBucket).contains(path), equalTo(true));
 		}
+	}
+
+	@Test
+	public void testPatternBasedHashing() throws Exception {
+		// use regex to standardize path
+		final String regex = "/.*?(/.*?/).*?(.m3u8)";
+		final String expectedResult = "/some_stream_name1234/.m3u8";
+
+		String requestPath = "/path12341234/some_stream_name1234/some_info4321.m3u8";
+		String pathToHash = trafficRouter.buildPatternBasedHashString(regex, requestPath);
+		assertThat(pathToHash, equalTo(expectedResult));
+		DefaultHashable hashableResult1 = consistentHasher.selectHashable(hashables, null, pathToHash);
+
+		requestPath = "/pathasdf1234/some_stream_name1234/some_other_info.m3u8";
+		pathToHash = trafficRouter.buildPatternBasedHashString(regex, requestPath);
+		assertThat(pathToHash, equalTo(expectedResult));
+		DefaultHashable hashableResult2 = consistentHasher.selectHashable(hashables, null, pathToHash);
+
+		requestPath = "/path4321fdsa/some_stream_name1234/4321some_info.m3u8";
+		pathToHash = trafficRouter.buildPatternBasedHashString(regex, requestPath);
+		assertThat(pathToHash, equalTo(expectedResult));
+		DefaultHashable hashableResult3 = consistentHasher.selectHashable(hashables, null, pathToHash);
+
+		requestPath = "/1234pathfdas/some_stream_name1234/some_info.m3u8";
+		pathToHash = trafficRouter.buildPatternBasedHashString(regex, requestPath);
+		assertThat(pathToHash, equalTo(expectedResult));
+		DefaultHashable hashableResult4 = consistentHasher.selectHashable(hashables, null, pathToHash);
+
+		assertThat(hashableResult1, allOf(equalTo(hashableResult2), equalTo(hashableResult3), equalTo(hashableResult4)));
 	}
 
 	String alphanumericCharacters = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWZYZ";

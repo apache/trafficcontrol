@@ -156,10 +156,10 @@ func ExpectedMakeDSes() map[string]tc.CRConfigDeliveryService {
 func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryService, cdn string) {
 	// select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers, d.anonymous_blocking_enabled
 
-	rows := sqlmock.NewRows([]string{"xml_id", "miss_lat", "miss_long", "protocol", "ttl", "routing_name", "geo_provider", "type", "geo_limit", "geo_limit_countries", "geeo_limit_redirect_url", "initial_dispersion", "regional_geo_blocking", "tr_response_headers", "max_dns_answers", "profile", "dns_bypass_ip", "dns_bypass_ip6", "dns_bypass_ttl", "dns_bypass_cname", "http_bypass_fqdn", "ipv6_routing_enabled", "deep_caching_type", "tr_request_headers", "tr_response_headers", "anonymous_blocking_enabled"})
+	rows := sqlmock.NewRows([]string{"xml_id", "miss_lat", "miss_long", "protocol", "ttl", "routing_name", "geo_provider", "type", "geo_limit", "geo_limit_countries", "geeo_limit_redirect_url", "initial_dispersion", "regional_geo_blocking", "tr_response_headers", "max_dns_answers", "profile", "dns_bypass_ip", "dns_bypass_ip6", "dns_bypass_ttl", "dns_bypass_cname", "http_bypass_fqdn", "ipv6_routing_enabled", "deep_caching_type", "tr_request_headers", "tr_response_headers", "anonymous_blocking_enabled", "consistent_hash_regex"})
 
 	for dsName, ds := range expected {
-		rows = rows.AddRow(dsName, ds.MissLocation.Lat, ds.MissLocation.Lon, 0, *ds.TTL, *ds.RoutingName, 0, "HTTP", 0, "", "", 42, false, "", nil, "", "", "", 0, "", *ds.BypassDestination["HTTP"].FQDN, *ds.IP6RoutingEnabled, nil, "", "", false)
+		rows = rows.AddRow(dsName, ds.MissLocation.Lat, ds.MissLocation.Lon, 0, *ds.TTL, *ds.RoutingName, 0, "HTTP", 0, "", "", 42, false, "", nil, "", "", "", 0, "", *ds.BypassDestination["HTTP"].FQDN, *ds.IP6RoutingEnabled, nil, "", "", false, "")
 	}
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
 }

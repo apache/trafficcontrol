@@ -91,7 +91,7 @@ func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeli
 	}
 
 	q := `
-select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers, d.anonymous_blocking_enabled
+select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers, d.anonymous_blocking_enabled, d.consistent_hash_regex
 from deliveryservice as d
 inner join type as t on t.id = d.type
 left outer join profile as p on p.id = d.profile
@@ -138,7 +138,8 @@ and d.active = true
 		trRequestHeaders := sql.NullString{}
 		trResponseHeaders := sql.NullString{}
 		anonymousBlocking := false
-		if err := rows.Scan(&xmlID, &missLat, &missLon, &protocol, &ds.TTL, &ds.RoutingName, &geoProvider, &ttype, &geoLimit, &geoLimitCountries, &geoLimitRedirectURL, &dispersion, &geoBlocking, &trRespHdrsStr, &maxDNSAnswers, &profile, &dnsBypassIP, &dnsBypassIP6, &dnsBypassTTL, &dnsBypassCName, &httpBypassFQDN, &ip6RoutingEnabled, &deepCachingType, &trRequestHeaders, &trResponseHeaders, &anonymousBlocking); err != nil {
+		consistentHashRegex := sql.NullString{}
+		if err := rows.Scan(&xmlID, &missLat, &missLon, &protocol, &ds.TTL, &ds.RoutingName, &geoProvider, &ttype, &geoLimit, &geoLimitCountries, &geoLimitRedirectURL, &dispersion, &geoBlocking, &trRespHdrsStr, &maxDNSAnswers, &profile, &dnsBypassIP, &dnsBypassIP6, &dnsBypassTTL, &dnsBypassCName, &httpBypassFQDN, &ip6RoutingEnabled, &deepCachingType, &trRequestHeaders, &trResponseHeaders, &anonymousBlocking, &consistentHashRegex); err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
 		// TODO prevent (lat XOR lon) in the Tx and UI
@@ -305,6 +306,10 @@ and d.active = true
 			if dispersion.Valid {
 				ds.Dispersion = &tc.CRConfigDispersion{Limit: int(dispersion.Int64), Shuffled: true}
 			}
+		}
+
+		if consistentHashRegex.Valid && consistentHashRegex.String != "" {
+			ds.ConsistentHashRegex = &consistentHashRegex.String
 		}
 
 		ds.IP6RoutingEnabled = &ip6RoutingEnabled.Bool // No Valid check, false if null

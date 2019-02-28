@@ -95,6 +95,7 @@ public class DeliveryService {
 	private final boolean acceptHttps;
 	private final boolean redirectToHttps;
 	private final DeepCachingType deepCache;
+	private String consistentHashRegex;
 
 	public enum DeepCachingType {
 		NEVER,
@@ -147,6 +148,7 @@ public class DeliveryService {
 		}
 		sslEnabled = JsonUtils.optBoolean(dsJo, "sslEnabled");
 		this.anonymousIpEnabled = JsonUtils.optBoolean(dsJo, "anonymousBlockingEnabled");
+		this.consistentHashRegex = JsonUtils.optString(dsJo, "consistentHashRegex");
 
 		final JsonNode protocol = dsJo.get("protocol");
 		acceptHttp = JsonUtils.optBoolean(protocol, "acceptHttp", true);
@@ -649,5 +651,11 @@ public class DeliveryService {
 
 	public boolean isAcceptHttp() {
 		return acceptHttp;
+	}
+
+	public String getConsistentHashRegex() { return consistentHashRegex; }
+
+	public void setConsistentHashRegex(final String consistentHashRegex) {
+		this.consistentHashRegex = consistentHashRegex;
 	}
 }

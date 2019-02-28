@@ -81,6 +81,10 @@ Response Structure
 :cdnId:                    The integral, unique identifier of the CDN to which the :term:`Delivery Service` belongs
 :cdnName:                  Name of the CDN to which the :term:`Delivery Service` belongs
 :checkPath:                The path portion of the URL to check connections to this :term:`Delivery Service`'s origin server
+:consistentHashRegex:      If defined, this is a regex used for the Pattern-Based Consistent Hashing feature. It is only applicable for HTTP and Steering Delivery Services
+
+	.. versionadded:: 1.5
+
 :deepCachingType:          A string that describes when "Deep Caching" will be used by this :term:`Delivery Service` - one of:
 
 	ALWAYS
@@ -211,12 +215,12 @@ Response Structure
 
 	.. versionadded:: 1.3
 
-:tenantId:          The integral, unique identifier of the tenant who owns this :term:`Delivery Service`
-:trRequestHeaders:  If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:trResponseHeaders: If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:type:              The name of the routing type of this :term:`Delivery Service` e.g. "HTTP"
-:typeId:            The integral, unique identifier of the routing type of this :term:`Delivery Service`
-:xmlId:             A unique string that describes this :term:`Delivery Service` - exists for legacy reasons
+:tenantId:            The integral, unique identifier of the tenant who owns this :term:`Delivery Service`
+:trRequestHeaders:    If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
+:trResponseHeaders:   If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
+:type:                The name of the routing type of this :term:`Delivery Service` e.g. "HTTP"
+:typeId:              The integral, unique identifier of the routing type of this :term:`Delivery Service`
+:xmlId:               A unique string that describes this :term:`Delivery Service` - exists for legacy reasons
 
 .. code-block:: http
 	:caption: Response Example

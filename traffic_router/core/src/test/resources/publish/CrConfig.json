@@ -526,6 +526,7 @@
   "deliveryServices": {
     "https-only-test": {
       "sslEnabled": "true",
+      "consistentHashRegex": "/.*?(/.*?/).*?(.m3u8)",
       "protocol": {
         "acceptHttp" : "false",
         "acceptHttps" : "true",
@@ -867,6 +868,7 @@
     },
     "steering-test-1": {
       "sslEnabled": "false",
+      "consistentHashRegex": "/.*?(/.*?/).*?(.m3u8)",
       "protocol": {
         "acceptHttp" : "true",
         "acceptHttps" : "false",

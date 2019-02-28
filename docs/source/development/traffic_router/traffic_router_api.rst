@@ -471,3 +471,105 @@ Request Structure
 Response Structure
 ------------------
 TBD
+
+``/crs/consistenthash/patternbased/regex``
+==========================================
+The resulting path that will be used for consistent hashing when the given regex is applied to the given request path.
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| regex             | yes      | The (URI encoded) regular expression to be used to test pattern based consistent hashing                     |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| requestPath       | yes      | The (URI encoded) request path to use to test pattern based consistent hashing                               |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /crs/consistenthash/patternbased/regex?regex=%2F.*%3F%28%2F.*%3F%2F%29.*%3F%28%5C.m3u8%29&requestPath=%2Ftext1234%2Fname%2Fasset.m3u8 HTTP/1.1
+	Host: localhost:3333
+	User-Agent: curl/7.54.0
+	Accept: */*
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200
+	Content-Type: application/json;charset=UTF-8
+	Transfer-Encoding: chunked
+	Date: Fri, 15 Feb 2019 22:06:53 GMT
+
+	{
+	"resultingPathToConsistentHash":"/name/.m3u8",
+	"consistentHashRegex":"/.*?(/.*?/).*?(\\.m3u8)",
+	"requestPath":"/text1234/name/asset.m3u8"
+	}
+
+``/crs/consistenthash/patternbased/deliveryservice``
+====================================================
+The resulting path that will be used for consistent hashing for the given delivery service and the given request path.
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| requestPath       | yes      | The (URI encoded) request path to use to test pattern based consistent hashing                               |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /crs/consistenthash/patternbased/deliveryservice?deliveryServiceId=asdf&requestPath=%2Fsometext1234%2Fstream_name%2Fasset_name.m3u8 HTTP/1.1
+	Host: localhost:3333
+	User-Agent: curl/7.54.0
+	Accept: */*
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200
+	Content-Type: application/json;charset=UTF-8
+	Transfer-Encoding: chunked
+	Date: Fri, 15 Feb 2019 22:12:38 GMT
+
+	{
+	"resultingPathToConsistentHash":"/sometext1234/stream_name/asset_name.m3u8",
+	"deliveryServiceId":"asdf",
+	"requestPath":"/sometext1234/stream_name/asset_name.m3u8"
+	}
+
+``/crs/consistenthash/cache/coveragezone/steering``
+===================================================
+The resulting cache of the consistent hash using coverage zone for a given client IP, delivery service and, request path -- used to test cache selection for steering delivery services.
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                  |
+	+===================+==========+==============================================================================================================+
+	| requestPath       | yes      | The (URI encoded) request path to use to test pattern based consistent hashing                               |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| ip                | yes      | The IP address of a potential client                                                                         |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+
+Response Structure
+------------------
+TBD
