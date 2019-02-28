@@ -116,8 +116,8 @@ Arguments and Flags
 		Runs as though the mode was BADASS, but asks the user for confirmation before making changes
 	REVALIDATE
 		Will not restart Apache Traffic Server, install packages, or enable/disable system services
-		and will exit immediately if this server does not have revalidations pending. Otherwise, the
-		same as BADASS.
+		and will exit immediately if this server does not have revalidations pending. Also, the only
+		configuration file that will be updated is `regex_revalidate.config`.
 	SYNCDS
 		Will not restart Apache Traffic Server, and will exit immediately if this server does not
 		have updates pending. Otherwise, the same as BADASS

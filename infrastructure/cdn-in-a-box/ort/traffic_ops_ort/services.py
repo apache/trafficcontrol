@@ -136,17 +136,18 @@ def restartService(service:str, conf:Configuration) -> bool:
 	return True
 
 #: A big ol' map of filenames to the services which require reloads when said files change
-FILES_THAT_REQUIRE_RELOADS = {"records.config":       reloadATSConfigs,
-                              "remap.config":         reloadATSConfigs,
-                              "parent.config":        reloadATSConfigs,
-                              "cache.config":         reloadATSConfigs,
-                              "hosting.config":       reloadATSConfigs,
-                              "astats.config":        reloadATSConfigs,
-                              "logs_xml.config":      reloadATSConfigs,
-                              "ssl_multicert.config": reloadATSConfigs,
-                              "plugin.config":        restartATS,
-                              "ntpd.conf":            partial(restartService, "ntpd"),
-                              "50-ats.rules":         restartATS}
+FILES_THAT_REQUIRE_RELOADS = {"records.config":          reloadATSConfigs,
+                              "remap.config":            reloadATSConfigs,
+                              "parent.config":           reloadATSConfigs,
+                              "cache.config":            reloadATSConfigs,
+                              "hosting.config":          reloadATSConfigs,
+                              "astats.config":           reloadATSConfigs,
+                              "logs_xml.config":         reloadATSConfigs,
+                              "ssl_multicert.config":    reloadATSConfigs,
+                              "regex_revalidate.config": reloadATSConfigs,
+                              "plugin.config":           restartATS,
+                              "ntpd.conf":               partial(restartService, "ntpd"),
+                              "50-ats.rules":            restartATS}
 
 def doReloads(conf:Configuration) -> bool:
 	"""
