@@ -36,6 +36,7 @@ ADD docs/source/requirements.txt /docs.requirements.txt
 RUN	yum -y install \
 		python34 \
 		python34-pip \
+        python34-psutil \
 		make && \
 	yum -y clean all && \
 	python3 -m pip install --upgrade setuptools && \
