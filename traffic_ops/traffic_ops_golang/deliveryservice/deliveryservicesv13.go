@@ -118,13 +118,6 @@ func CreateV13(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
 		return
 	}
-	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-		return
-	} else if !authorized {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-		return
-	}
 	ds, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, ds)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -135,6 +128,12 @@ func CreateV13(w http.ResponseWriter, r *http.Request) {
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
 func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.DeliveryServiceNullable) (tc.DeliveryServiceNullable, int, error, error) {
+	if authorized, err := isTenantAuthorized(user, tx, &ds.DeliveryServiceNullableV12); err != nil {
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("checking tenant: " + err.Error())
+	} else if !authorized {
+		return tc.DeliveryServiceNullable{}, http.StatusForbidden, errors.New("not authorized on this tenant"), nil
+	}
+
 	// TODO change DeepCachingType to implement sql.Valuer and sql.Scanner, so sqlx struct scan can be used.
 	deepCachingType := tc.DeepCachingType("").String()
 	if ds.DeepCachingType != nil {
@@ -380,14 +379,6 @@ func UpdateV13(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-		return
-	} else if !authorized {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-		return
-	}
-
 	ds, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &ds)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -408,6 +399,12 @@ func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
 }
 
 func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.DeliveryServiceNullable) (tc.DeliveryServiceNullable, int, error, error) {
+	if authorized, err := isTenantAuthorized(user, tx, &ds.DeliveryServiceNullableV12); err != nil {
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("checking tenant: " + err.Error())
+	} else if !authorized {
+		return tc.DeliveryServiceNullable{}, http.StatusForbidden, errors.New("not authorized on this tenant"), nil
+	}
+
 	if ds.XMLID == nil {
 		return tc.DeliveryServiceNullable{}, http.StatusBadRequest, errors.New("missing xml_id"), nil
 	}
