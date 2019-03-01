@@ -607,7 +607,7 @@ under the License.
                         <span uib-popover-html="label('remapText', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('remapText', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="remapText" name="remapText" type="text" class="form-control" ng-model="deliveryService.remapText" ng-maxlength="2048">
+                        <input id="remapText" name="remapText" type="text" class="form-control" ng-model="deliveryService.remapText" maxlength="2048">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.remapText, 'maxlength')">Too Long</small>
                         <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.remapText != dsCurrent.remapText">Current Value: [ {{dsCurrent.remapText}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.remapText)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -620,6 +620,7 @@ under the License.
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="infoUrl" name="infoUrl" type="url" class="form-control" ng-model="deliveryService.infoUrl" maxlength="255">
+                        <small class="input-error invalid-URL-error">Invalid URL</small>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.infoUrl, 'maxlength')">Too Long</small>
                         <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.infoUrl != dsCurrent.infoUrl">Current Value: [ {{dsCurrent.infoUrl}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.infoUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>

@@ -639,6 +639,7 @@ under the License.
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="infoUrl" name="infoUrl" type="url" title="Must be a valid URL." class="form-control" ng-model="deliveryService.infoUrl" maxlength="255">
+                        <small class="input-error invalid-URL-error">Invalid URL</small>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.infoUrl, 'maxlength')">Too Long</small>
                         <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.infoUrl != dsCurrent.infoUrl">Current Value: [ {{dsCurrent.infoUrl}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.infoUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>

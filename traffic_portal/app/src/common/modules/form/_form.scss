@@ -28,6 +28,16 @@ form .control-label > span {
 	}
 }
 
+small.invalid-URL-error {
+	display: none;
+	visibility: hidden;
+}
+
+input[type="url"]:invalid ~ small.invalid-URL-error {
+	display: inline-block;
+	visibility: visible;
+}
+
 .dnssec-info-text {
   margin-bottom: 12px;
   font-size: medium;
