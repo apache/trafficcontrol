@@ -28,32 +28,31 @@ under the License.
     </div>
     <div class="x_content">
         <br>
-        <form name="dsConsistentHashRegexForm" class="form-horizontal form-label-left" novalidate>
+        <form name="dsConsistentHashRegexForm" class="form-horizontal form-label-left">
             <div class="form-group" ng-class="{'has-error': hasError(dsConsistentHashRegexForm.pattern), 'has-feedback': hasError(dsConsistentHashRegexForm.pattern)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Pattern *</label>
+                <label for="pattern" class="control-label col-md-2 col-sm-2 col-xs-12">Pattern</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="pattern" type="text" class="form-control" ng-model="pattern" ng-maxlength="48" ng-pattern="/^\S*$/" required autofocus>
+                    <input id="pattern" name="pattern" type="text" class="form-control" ng-model="pattern" maxlength="48" required autofocus>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(dsConsistentHashRegexForm.requestPath), 'has-feedback': hasError(dsConsistentHashRegexForm.requestPath)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Request Path *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="requestPath">Request Path</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="requestPath" type="text" class="form-control" ng-model="requestPath" ng-maxlength="27" ng-pattern="/^\/*//" required autofocus>
+                    <input id="requestPath" name="requestPath" type="text" class="form-control" ng-model="requestPath" maxlength="27" pattern="/.*" required>
                     <small class="input-error" ng-show="hasPropertyError(dsConsistentHashRegexForm.requestPath, 'pattern')">Path Must Start With '/'</small>
-                    <small class="input-error" ng-show="hasPropertyError(dsConsistentHashRegexForm.requestPath, 'maxlength')">Too Long - Request Path length is restricted by test tool</small>
                     <span ng-show="hasError(dsConsistentHashRegexForm.requestPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Resulting Path</label>
+                <label for="resultingPath" class="control-label col-md-2 col-sm-2 col-xs-12">Resulting Path</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="resultingPath" type="text" disabled class="form-control" ng-model="resultingPath" autofocus>
+                    <output id="resultingPath" name="resultingPath" class="form-control">{{resultingPath}}</output>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" ng-disabled="dsConsistentHashRegexForm.$invalid" ng-click="test(pattern, requestPath, deliveryService.cdnId)">Test</button>
+                <button class="btn btn-success" ng-disabled="dsConsistentHashRegexForm.$invalid" ng-click="test(pattern, requestPath, deliveryService.cdnId)">Test</button>
             </div>
         </form>
     </div>
