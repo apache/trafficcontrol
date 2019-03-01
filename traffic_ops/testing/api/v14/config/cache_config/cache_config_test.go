@@ -188,7 +188,7 @@ var positiveTests = []PositiveTest{
 
 func negativeTestDriver(tests []NegativeTest, t *testing.T) {
 	for _, test := range tests {
-		actual := parseCacheConfig(test.Config)
+		actual := ParseCacheConfig(test.Config)
 		if actual == nil || actual.Code() != test.Expected {
 			t.Errorf(`
   config: "%v"
@@ -208,7 +208,7 @@ func TestCacheConfig(t *testing.T) {
 
 	// Positive Tests
 	for _, test := range positiveTests {
-		actual := parseCacheConfig(test.Config)
+		actual := ParseCacheConfig(test.Config)
 		if actual != nil {
 			t.Errorf(`
   config: "%v"

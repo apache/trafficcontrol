@@ -23,15 +23,26 @@ import (
 	"github.com/go-ozzo/ozzo-validation/is"
 )
 
-func parseCacheConfig(config string) test.Error {
+// ParseCacheConfig takes a string presumed to be an ATS cache.config and validates
+// it is syntatically correct.
+//
+// The general format of a cache config is three types of labels separated by spaces:
+//
+//  primary_destination=value secondary_specifier=value action=value
+//
+// For a full description of how to format a cache config, refer to the ATS documentation
+// for the cache config:
+// https://docs.trafficserver.apache.org/en/latest/admin-guide/files/cache.config.en.html
+//
+func ParseCacheConfig(config string) test.Error {
 	lines := strings.Split(config, "\n")
 
 	if len(lines) == 1 {
-		return parseCacheConfigRule(lines[0])
+		return parseConfigRule(lines[0])
 	}
 
 	for i, ln := range lines {
-		err := parseCacheConfigRule(ln)
+		err := parseConfigRule(ln)
 		if err != nil {
 			return err.Prepend("error on line %d: ", i+1)
 		}
@@ -39,8 +50,6 @@ func parseCacheConfig(config string) test.Error {
 
 	return nil
 }
-
-type parser func(string, string) test.Error
 
 func parsePrimaryDestinations(lhs string, rhs string) test.Error {
 
@@ -57,12 +66,9 @@ func parsePrimaryDestinations(lhs string, rhs string) test.Error {
 			return ErrorContext.NewError(InvalidIP, `"%s" %v`, rhs, err)
 		}
 	case "host_regex":
-		// only makes sure the regex compiles, not that the regex generates valid hosts
-		if _, err := regexp.Compile(rhs); err != nil {
-			return ErrorContext.NewError(InvalidRegex, "%v", err)
-		}
+		fallthrough
 	case "url_regex":
-		// only makes sure the regex compiles, not that the regex generates valid urls
+		// only makes sure the regex compiles, not that the regex generates anything valid
 		if _, err := regexp.Compile(rhs); err != nil {
 			return ErrorContext.NewError(InvalidRegex, "%v", err)
 		}
@@ -97,7 +103,8 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 		//	have difference specifications for file suffixes.
 	case "method":
 		// assuming all methods are valid
-		// RFC 2616-9 for list of all methods
+		// see RFC 2616-9 for list of all methods
+		// PURGE and PUSH are specific to ATS
 		switch rhs {
 		case "get":
 		case "put":
@@ -108,6 +115,8 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 		case "head":
 		case "connect":
 		case "patch":
+		case "purge":
+		case "push":
 		default:
 			return ErrorContext.NewError(InvalidMethod, `invalid method "%v"`, rhs)
 		}
@@ -168,7 +177,7 @@ func parseActions(lhs string, rhs string) test.Error {
 	return nil
 }
 
-func parseCacheConfigRule(rule string) test.Error {
+func parseConfigRule(rule string) test.Error {
 
 	var destination bool
 	var action bool

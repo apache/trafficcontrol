@@ -14,12 +14,14 @@
 
 package config
 
+// NegativeTest is a struct for table tests.
 type NegativeTest struct {
 	Description string
 	Config      string
 	Expected    int
 }
 
+// PositiveTest is a struct for table tests.
 type PositiveTest struct {
 	Description string
 	Config      string

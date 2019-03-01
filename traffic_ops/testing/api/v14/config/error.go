@@ -16,16 +16,14 @@ package config
 
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 
+// Error codes:
 const (
-	BadAssignmentMatch = iota + 10
+	BadAssignmentMatch = iota + 1
 	NotEnoughAssignments
 	ExcessLabel
 	InvalidLabel
 	MissingLabel
-)
-
-const (
-	InvalidAction = iota + 20
+	InvalidAction
 	InvalidBool
 	InvalidCacheCookieResponse
 	InvalidHTTPScheme
@@ -38,6 +36,8 @@ const (
 	InvalidTimeRange24Hr
 )
 
+// ErrorContext contains the error codes mentioned above.
+// Any error made must have one of those error codes.
 var ErrorContext *test.ErrorContext
 
 func init() {
