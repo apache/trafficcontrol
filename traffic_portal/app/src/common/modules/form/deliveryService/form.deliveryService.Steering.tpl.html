@@ -260,7 +260,6 @@ under the License.
                             <option ng-value="0" selected>Maxmind</option>
                             <option ng-value="1">Neustar</option>
                         </select>
-                        <small class="input-warning" ng-show="deliveryService.geoProvider == 1">Neustar support may have been dropped! Use with caution...</small>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
                         <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoProvider != dsCurrent.geoProvider">Current Value: [ {{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}} ]</small>
                     </div>
