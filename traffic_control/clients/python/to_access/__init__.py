@@ -188,29 +188,15 @@ l = logging.getLogger()
 l.disabled = True
 logging.basicConfig(level=logging.CRITICAL+1)
 
-#: The full path to a file used to store the user's Mojolicious athentication cookie (currently unused)
-COOKIEFILE = "" #os.path.expanduser(os.path.join("~", ".to-auth.cookie"))
-
-def set_cookie(cookie):
-	"""
-	Writes the passed cookie to the :data:`COOKIEFILE` file for later use.
-
-	.. warning::
-		Currently this function is never used, and it depends on the value of :data:`COOKIEFILE`,
-		which at the moment is being set to an empty string.
-	"""
-	with open(COOKIEFILE, "w") as f:
-		f.write(cookie)
-
 def output(r, pretty, request_header, response_header, request_payload, indent = '\t'):
 	"""
 	Prints the passed response object in a format consistent with the other parameters.
 
 	:param r: The :mod:`requests` response object being printed
 	:param pretty: If :const:`True`, attempt to pretty-print payloads as JSON
-	:param reqHeader: If :const:`True`, print request line and request headers
-	:param respHeader: If :const:`True`, print response line and response headers
-	:param reqPayload: If :const:`True`, print the request payload
+	:param request_header: If :const:`True`, print request line and request headers
+	:param response_header: If :const:`True`, print response line and response headers
+	:param request_payload: If :const:`True`, print the request payload
 	:param indent: An optional number of spaces for pretty-printing indentation (default is the tab character)
 	"""
 	if request_header:
@@ -339,7 +325,6 @@ def parse_arguments(program):
 	              ssl=useSSL,
 	              api_version=str(args.api_version),
 	              verify_cert=not args.insecure)
-	# s.create()
 
 	# The TOSession object's methods will handle '/' stripping for us, so it's only necessary with
 	# raw paths.
@@ -352,11 +337,6 @@ def parse_arguments(program):
 
 	if isinstance(data, str):
 		data = data.encode()
-
-	# if os.path.isfile(COOKIEFILE):
-	# 	with open(COOKIEFILE) as f:
-	# 		s._session.cookies.set("mojolicious", f.read())
-	# 	return s, path, data, args.full, args.raw_path
 
 	try:
 		to_user = args.to_user if args.to_user else os.environ["TO_USER"]
@@ -417,7 +397,6 @@ def get():
 			return 2
 
 	output(r, pretty, *full)
-	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
 def put():
@@ -450,7 +429,6 @@ def put():
 			return 2
 
 	output(r, pretty, *full)
-	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
 def post():
@@ -483,7 +461,6 @@ def post():
 			return 2
 
 	output(r, pretty, *full)
-	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
 def delete():
@@ -516,7 +493,6 @@ def delete():
 			return 2
 
 	output(r, pretty, *full)
-	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
 def options():
@@ -550,7 +526,6 @@ def options():
 			return 2
 
 	output(r, pretty, *full)
-	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
 def head():
@@ -583,7 +558,6 @@ def head():
 			return 2
 
 	output(r, pretty, *full)
-	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
 
 def patch():
@@ -616,5 +590,4 @@ def patch():
 			return 2
 
 	output(r, pretty, *full)
-	# set_cookie(s._session.cookies.get("mojolicious"))
 	return 0 if r.status_code < 400 else r.status_code // 100
