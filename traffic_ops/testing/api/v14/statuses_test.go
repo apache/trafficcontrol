@@ -32,7 +32,7 @@ func TestStatuses(t *testing.T) {
 func CreateTestStatuses(t *testing.T) {
 
 	for _, status := range testData.Statuses {
-		resp, _, err := TOSession.CreateStatus(status)
+		resp, _, err := TOSession.CreateStatusNullable(status)
 		log.Debugln("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE types: %v\n", err)
@@ -44,8 +44,12 @@ func CreateTestStatuses(t *testing.T) {
 func UpdateTestStatuses(t *testing.T) {
 
 	firstStatus := testData.Statuses[0]
+	if firstStatus.Name == nil {
+		t.Fatalf("cannot update test statuses: first test data status must have a name\n")
+	}
+
 	// Retrieve the Status by name so we can get the id for the Update
-	resp, _, err := TOSession.GetStatusByName(firstStatus.Name)
+	resp, _, err := TOSession.GetStatusByName(*firstStatus.Name)
 	if err != nil {
 		t.Errorf("cannot GET Status by name: %v - %v\n", firstStatus.Name, err)
 	}
@@ -73,7 +77,10 @@ func UpdateTestStatuses(t *testing.T) {
 func GetTestStatuses(t *testing.T) {
 
 	for _, status := range testData.Statuses {
-		resp, _, err := TOSession.GetStatusByName(status.Name)
+		if status.Name == nil {
+			t.Fatalf("cannot get ftest statuses: test data statuses must have names\n")
+		}
+		resp, _, err := TOSession.GetStatusByName(*status.Name)
 		if err != nil {
 			t.Errorf("cannot GET Status by name: %v - %v\n", err, resp)
 		}
@@ -83,8 +90,12 @@ func GetTestStatuses(t *testing.T) {
 func DeleteTestStatuses(t *testing.T) {
 
 	for _, status := range testData.Statuses {
+		if status.Name == nil {
+			t.Fatalf("cannot get ftest statuses: test data statuses must have names\n")
+		}
+
 		// Retrieve the Status by name so we can get the id for the Update
-		resp, _, err := TOSession.GetStatusByName(status.Name)
+		resp, _, err := TOSession.GetStatusByName(*status.Name)
 		if err != nil {
 			t.Errorf("cannot GET Status by name: %v - %v\n", status.Name, err)
 		}
@@ -96,12 +107,12 @@ func DeleteTestStatuses(t *testing.T) {
 		}
 
 		// Retrieve the Status to see if it got deleted
-		types, _, err := TOSession.GetStatusByName(status.Name)
+		types, _, err := TOSession.GetStatusByName(*status.Name)
 		if err != nil {
 			t.Errorf("error deleting Status name: %s\n", err.Error())
 		}
 		if len(types) > 0 {
-			t.Errorf("expected Status name: %s to be deleted\n", status.Name)
+			t.Errorf("expected Status name: %s to be deleted\n", *status.Name)
 		}
 	}
 }

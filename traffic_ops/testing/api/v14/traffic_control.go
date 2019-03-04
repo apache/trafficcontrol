@@ -38,7 +38,7 @@ type TrafficControl struct {
 	Regions                        []tc.Region                        `json:"regions"`
 	Roles                          []tc.Role                          `json:"roles"`
 	Servers                        []tc.Server                        `json:"servers"`
-	Statuses                       []tc.Status                        `json:"statuses"`
+	Statuses                       []tc.StatusNullable                `json:"statuses"`
 	StaticDNSEntries               []tc.StaticDNSEntry                `json:"staticdnsentries"`
 	Tenants                        []tc.Tenant                        `json:"tenants"`
 	Types                          []tc.Type                          `json:"types"`
