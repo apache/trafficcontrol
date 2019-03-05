@@ -174,15 +174,19 @@ Module Reference
 ================
 
 """
-from __future__ import print_function, raise_from
+from __future__ import print_function
 
 import json
 import logging
 import os
 import sys
 
-from trafficops.restapi import LoginError, OperationError, InvalidJSONError
+from future.utils import raise_from
+
+from trafficops.restapi import LoginError
 from trafficops.tosession import TOSession
+
+from requests.exceptions import RequestException
 
 l = logging.getLogger()
 l.disabled = True
@@ -301,7 +305,7 @@ def parse_arguments(program):
 	args = parser.parse_args()
 
 	try:
-		to_host = args.to_host if args.to_host else os.environ["TO_URL"]
+		to_host = args.to_url if args.to_url else os.environ["TO_URL"]
 	except KeyError as e:
 		raise KeyError("Traffic Ops hostname not set! Set the TO_URL environment variable or use "\
 		               "'--to_url'.") from e
@@ -325,10 +329,6 @@ def parse_arguments(program):
 	              ssl=useSSL,
 	              api_version=str(args.api_version),
 	              verify_cert=not args.insecure)
-
-	# The TOSession object's methods will handle '/' stripping for us, so it's only necessary with
-	# raw paths.
-	path = args.PATH if not args.raw_path else '/'.join((s.to_url.rstrip('/'), args.PATH.lstrip('/')))
 
 	data = args.DATA
 	if data and os.path.isfile(data):
@@ -356,7 +356,7 @@ def parse_arguments(program):
 		raise PermissionError from e
 
 	return (s,
-	       path,
+	       args.PATH,
 	       data,
 	       (
 	         args.request_headers or args.full,
@@ -366,6 +366,35 @@ def parse_arguments(program):
 	       args.raw_path,
 	       args.pretty)
 
+def request(method):
+	"""
+	All of the scripts wind up calling this function to handle their common functionality.
+
+	:param method: The name of the request method to use (case-insensitive)
+	:returns: The program's exit code
+	"""
+	try:
+		s, path, data, full, raw, pretty = parse_arguments("to%s" % method)
+	except (PermissionError, KeyError) as e:
+		print(e, file=sys.stderr)
+		return 1
+
+	if raw:
+		path = '/'.join((s.to_url.rstrip('/'), path.lstrip('/')))
+	else:
+		path = '/'.join((s.base_url.rstrip('/'), path.lstrip('/')))
+
+	try:
+		if data is not None:
+			r = s._session.request(method, path, data=data)
+		else:
+			r = s._session.request(method, path)
+	except (RequestException, ValueError) as e:
+		print("Error occurred: ", e, file=sys.stderr)
+		return 2
+
+	output(r, pretty, *full)
+	return 0 if r.status_code < 400 else r.status_code // 100
 
 def get():
 	"""
@@ -373,31 +402,7 @@ def get():
 
 	:returns: The program's exit code
 	"""
-	try:
-		s, path, data, full, raw, pretty = parse_arguments("toget")
-	except (PermissionError, KeyError) as e:
-		print(e, file=sys.stderr)
-		return 1
-
-	try:
-		if raw:
-			if data is not None:
-				r = s._session.get(path, data=data)
-			else:
-				r = s._session.get(path)
-		elif data is not None:
-			r = s.get(path, data=data)[1]
-		else:
-			r = s.get(path)[1]
-	except (OperationError, InvalidJSONError) as e:
-		if e.resp is not None:
-			r = e.resp
-		else:
-			print("Error occurred: ", e, file=sys.stderr)
-			return 2
-
-	output(r, pretty, *full)
-	return 0 if r.status_code < 400 else r.status_code // 100
+	return request("get")
 
 def put():
 	"""
@@ -405,31 +410,7 @@ def put():
 
 	:returns: The program's exit code
 	"""
-	try:
-		s, path, data, full, raw, pretty = parse_arguments("toput")
-	except (PermissionError, KeyError) as e:
-		print(e, file=sys.stderr)
-		return 1
-
-	try:
-		if raw:
-			if data is not None:
-				r = s._session.put(path, data=data)
-			else:
-				r = s._session.put(path)
-		elif data is not None:
-			r = s.put(path, data=data)[1]
-		else:
-			r = s.put(path)[1]
-	except (OperationError, InvalidJSONError) as e:
-		if e.resp is not None:
-			r = e.resp
-		else:
-			print("Error occurred: ", e, file=sys.stderr)
-			return 2
-
-	output(r, pretty, *full)
-	return 0 if r.status_code < 400 else r.status_code // 100
+	return request("put")
 
 def post():
 	"""
@@ -437,31 +418,7 @@ def post():
 
 	:returns: The program's exit code
 	"""
-	try:
-		s, path, data, full, raw, pretty = parse_arguments("topost")
-	except (PermissionError, KeyError) as e:
-		print(e, file=sys.stderr)
-		return 1
-
-	try:
-		if raw:
-			if data is not None:
-				r = s._session.post(path, data=data)
-			else:
-				r = s._session.post(path)
-		elif data is not None:
-			r = s.post(path, data=data)[1]
-		else:
-			r = s.post(path)[1]
-	except (OperationError, InvalidJSONError) as e:
-		if e.resp is not None:
-			r = e.resp
-		else:
-			print("Error occurred: ", e, file=sys.stderr)
-			return 2
-
-	output(r, pretty, *full)
-	return 0 if r.status_code < 400 else r.status_code // 100
+	return request("post")
 
 def delete():
 	"""
@@ -469,31 +426,7 @@ def delete():
 
 	:returns: The program's exit code
 	"""
-	try:
-		s, path, data, full, raw, pretty = parse_arguments("todelete")
-	except (PermissionError, KeyError) as e:
-		print(e, file=sys.stderr)
-		return 1
-
-	try:
-		if raw:
-			if data is not None:
-				r = s._session.delete(path, data=data)
-			else:
-				r = s._session.delete(path)
-		elif data is not None:
-			r = s.delete(path, data=data)[1]
-		else:
-			r = s.delete(path)[1]
-	except (OperationError, InvalidJSONError) as e:
-		if e.resp is not None:
-			r = e.resp
-		else:
-			print("Error occurred: ", e, file=sys.stderr)
-			return 2
-
-	output(r, pretty, *full)
-	return 0 if r.status_code < 400 else r.status_code // 100
+	return request("delete")
 
 def options():
 	"""
@@ -501,32 +434,7 @@ def options():
 
 	:returns: The program's exit code
 	"""
-	from functools import partial
-
-	try:
-		s, path, data, full, raw, pretty = parse_arguments("tooptions")
-	except (PermissionError, KeyError) as e:
-		print(e, file=sys.stderr)
-		return 1
-
-	try:
-		if raw:
-			if data is not None:
-				r = s._session.options(path, data=data)
-			else: r = s._session.options(path)
-		elif data is not None:
-			r = s.options(path, data=data)[1]
-		else:
-			r = s.options(path)[1]
-	except (OperationError, InvalidJSONError) as e:
-		if e.resp is not None:
-			r = e.resp
-		else:
-			print("Error occurred: ", e, file=sys.stderr)
-			return 2
-
-	output(r, pretty, *full)
-	return 0 if r.status_code < 400 else r.status_code // 100
+	return request("options")
 
 def head():
 	"""
@@ -534,31 +442,7 @@ def head():
 
 	:returns: The program's exit code
 	"""
-	try:
-		s, path, data, full, raw, pretty = parse_arguments("tohead")
-	except (PermissionError, KeyError) as e:
-		print(e, file=sys.stderr)
-		return 1
-
-	try:
-		if raw:
-			if data is not None:
-				r = s._session.head(path, data=data)
-			else:
-				r = s._session.head(path)
-		elif data is not None:
-			r = s.head(path, data=data)[1]
-		else:
-			r = s.head(path)[1]
-	except (OperationError, InvalidJSONError) as e:
-		if e.resp is not None:
-			r = e.resp
-		else:
-			print("Error occurred: ", e, file=sys.stderr)
-			return 2
-
-	output(r, pretty, *full)
-	return 0 if r.status_code < 400 else r.status_code // 100
+	return request("head")
 
 def patch():
 	"""
@@ -566,28 +450,4 @@ def patch():
 
 	:returns: The program's exit code
 	"""
-	try:
-		s, path, data, full, raw, pretty = parse_arguments("topatch")
-	except (PermissionError, KeyError) as e:
-		print(e, file=sys.stderr)
-		return 1
-
-	try:
-		if raw:
-			if data is not None:
-				r = s._session.patch(path, data=data)
-			else:
-				r = s._session.patch(path)
-		elif data is not None:
-			r = s.patch(path, data=data)[1]
-		else:
-			r = s.patch(path)[1]
-	except (OperationError, InvalidJSONError) as e:
-		if e.resp is not None:
-			r = e.resp
-		else:
-			print("Error occurred: ", e, file=sys.stderr)
-			return 2
-
-	output(r, pretty, *full)
-	return 0 if r.status_code < 400 else r.status_code // 100
+	return request("patch")
