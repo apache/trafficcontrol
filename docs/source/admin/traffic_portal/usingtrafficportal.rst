@@ -131,6 +131,8 @@ A table showing the results of the periodic :ref:`to-check-ext` that are run. Th
 :Connections: Number of connections to this :term:`cache server` or :term:`Cache Group`
 :MbpsOut:     Data flow rate outward from the CDN (toward client) in Megabits per second
 
+.. _tp-services:
+
 Services
 ========
 :guilabel:`Services` groups the functionality to modify :term:`Delivery Service`\ s - for those users with the necessary permissions - or make Requests for such changes - for uses without necessary permissions.
