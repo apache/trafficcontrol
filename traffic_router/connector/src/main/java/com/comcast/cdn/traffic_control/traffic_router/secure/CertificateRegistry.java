@@ -71,18 +71,20 @@ public class CertificateRegistry {
 			try {
 				final String alias = certificateData.alias();
 
-				//if (!master.containsKey(alias)) {
+				if (!master.containsKey(alias)) {
 					final HandshakeData handshakeData = certificateDataConverter.toHandshakeData(certificateData);
-					master.put(alias, handshakeData);
-					//if (!certificateData.equals(previousData.get(alias))) {
-						changes.put(alias, handshakeData);
-						log.warn("Imported handshake data with alias " + alias);
-					//}
-				/*}
+					if (handshakeData != null) {
+						master.put(alias, handshakeData);
+						if (!certificateData.equals(previousData.get(alias))) {
+							changes.put(alias, handshakeData);
+							log.warn("Imported handshake data with alias " + alias);
+						}
+					}
+				}
 				else {
 					log.error("An TLS certificate already exists in the registry for host: "+alias+" There can be " +
 							"only one!" );
-				}*/
+				}
 			} catch (Exception e) {
 				log.error("Failed to import certificate data for delivery service: '" + certificateData.getDeliveryservice() + "', hostname: '" + certificateData.getHostname() + "'");
 			}
@@ -103,7 +105,7 @@ public class CertificateRegistry {
 		previousData.clear();
 		for (final CertificateData certificateData : certificateDataList) {
 			final String alias = certificateData.alias();
-			if (!previousData.containsKey(alias)) {
+			if (!previousData.containsKey(alias) && master.containsKey(alias)) {
 				previousData.put(alias, certificateData);
 			}
 		}

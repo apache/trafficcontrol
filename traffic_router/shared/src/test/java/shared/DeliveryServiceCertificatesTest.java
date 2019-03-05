@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -41,7 +42,7 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 public class DeliveryServiceCertificatesTest {
 	@Before
 	public void before() throws Exception {
-		mockStatic(System.class);
+		PowerMockito.mockStatic(System.class);
 		when(System.currentTimeMillis()).thenReturn(1234L);
 	}
 
