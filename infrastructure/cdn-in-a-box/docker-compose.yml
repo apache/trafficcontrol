@@ -209,23 +209,12 @@ services:
       - variables.env
     hostname: trafficvault
 
-  # Apache Traffic Server (ATS) caches defined here
-  # base image from which all other caches inherit (builds and installs ATS+plugins)
-  tccache:
-    build:
-      context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
-    image: tccache:latest
-
   # edge cache
   edge:
     privileged: True
     build:
-      context: .
-      dockerfile: edge/Dockerfile
-    depends_on:
-      - enroller
-      - tccache
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
     domainname: infra.ciab.test
     env_file:
       - variables.env
@@ -233,17 +222,15 @@ services:
     volumes:
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
+      - ./edge/run.sh:/opt/init.d/99-run.sh
       - shared:/shared
 
   # mid cache
   mid:
     privileged: True
     build:
-      context: .
-      dockerfile: mid/Dockerfile
-    depends_on:
-      - enroller
-      - tccache
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
     domainname: infra.ciab.test
     env_file:
       - variables.env
@@ -251,6 +238,7 @@ services:
     volumes:
       - ./dns/set-dns.sh:/usr/local/sbin/set-dns.sh
       - ./dns/insert-self-into-dns.sh:/usr/local/sbin/insert-self-into-dns.sh
+      - ./mid/run.sh:/opt/init.d/99-run.sh
       - shared:/shared
 
   # origin provides the content to be distributed through the CDN caches

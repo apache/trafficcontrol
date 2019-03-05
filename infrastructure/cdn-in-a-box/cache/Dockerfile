@@ -53,6 +53,7 @@ ADD traffic_control/clients/python /opt/Apache-TrafficControl/
 
 WORKDIR /opt
 
-RUN touch /var/log/ort.log && pip3 install ./Apache-TrafficControl && pip3 install ./ort && cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
+RUN touch /var/log/ort.log && pip3 install ./Apache-TrafficControl && pip3 install ./ort && cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template && mkdir -p /opt/init.d
 
-CMD exit
+ADD infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic_ops/to-access.sh infrastructure/cdn-in-a-box/enroller/server_template.json /
+CMD /run.sh
