@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,14 +17,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-############################################################
-# Dockerfile to build Mid-Tier Cache container images for
-# Apache Traffic Control
-# Based on CentOS 7.2
-############################################################
+set -e
+set -x
+set -m
 
-FROM tccache:latest
+for f in /opt/init.d/*; do
+    echo "$f"
+    $f
+done
 
-ADD mid/run.sh traffic_ops/to-access.sh enroller/server_template.json /
-
-CMD /run.sh
+# tail -f /dev/null
+/bin/bash
