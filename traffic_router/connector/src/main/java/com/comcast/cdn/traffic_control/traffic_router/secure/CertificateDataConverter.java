@@ -70,12 +70,10 @@ public class CertificateDataConverter {
 
 		} catch ( CertificateNotYetValidException er) {
 			log.error("Failed to convert certificate data for delivery service = " + certificateData.getHostname()
-							+ ", because the certificate is not valid yet: "+ er.getClass().getSimpleName() + ": " + er.getMessage(),
-					er);
+							+ ", because the certificate is not valid yet. ");
 		} catch (CertificateExpiredException ex ) {
 			log.error("Failed to convert certificate data for delivery service = " + certificateData.getHostname()
-					+ ", because the certificate has expired: "+ ex.getClass().getSimpleName() + ": " + ex.getMessage(),
-					 ex);
+					+ ", because the certificate has expired. ");
 		} catch (Exception e) {
 			log.error("Failed to convert certificate data (delivery service = " + certificateData.getDeliveryservice()
 					+ ", hostname = " + certificateData.getHostname() + ") from traffic ops to handshake data! "
