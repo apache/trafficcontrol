@@ -31,7 +31,7 @@ under the License.
         <br>
         <form name="dsStaticDnsEntryForm" class="form-horizontal form-label-left">
             <div class="form-group" ng-class="{'has-error': hasError(dsStaticDnsEntryForm.host), 'has-feedback': hasError(dsStaticDnsEntryForm.host)}">
-                <label for="host" class="control-label col-md-2 col-sm-2 col-xs-12">Host</label>
+                <label for="host" class="control-label col-md-2 col-sm-2 col-xs-12">Host *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="host" name="host" type="text" class="form-control" ng-model="staticDnsEntry.host" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsStaticDnsEntryForm.host, 'required')">Required</small>
@@ -39,7 +39,7 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(dsStaticDnsEntryForm.typeId), 'has-feedback': hasError(dsStaticDnsEntryForm.typeId)}">
-                <label for="typeId" class="control-label col-md-2 col-sm-2 col-xs-12">Type</label>
+                <label for="typeId" class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="typeId" name="typeId" class="form-control" ng-model="staticDnsEntry.typeId" ng-options="type.id as type.name for type in types" required>
                         <option disabled hidden value="">Select...</option>
@@ -48,7 +48,7 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(dsStaticDnsEntryForm.ttl), 'has-feedback': hasError(dsStaticDnsEntryForm.ttl)}">
-                <label for="ttl" class="control-label col-md-2 col-sm-2 col-xs-12">TTL</label>
+                <label for="ttl" class="control-label col-md-2 col-sm-2 col-xs-12">TTL *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="ttl" name="ttl" type="number" class="form-control" ng-model="staticDnsEntry.ttl" min="0" step="1" required>
                     <small class="input-error" ng-show="hasPropertyError(dsStaticDnsEntryForm.ttl, 'required')">Required</small>
@@ -57,7 +57,7 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(dsStaticDnsEntryForm.address), 'has-feedback': hasError(dsStaticDnsEntryForm.address)}">
-                <label for="address" class="control-label col-md-2 col-sm-2 col-xs-12">Address</label>
+                <label for="address" class="control-label col-md-2 col-sm-2 col-xs-12">Address *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="address" name="address" type="text" class="form-control" ng-model="staticDnsEntry.address" required>
                     <small class="input-error" ng-show="hasPropertyError(dsStaticDnsEntryForm.address, 'required')">Required</small>
