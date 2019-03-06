@@ -81,12 +81,18 @@ public class RouterNioEndpoint extends NioEndpoint {
 
     synchronized public void reloadSSLHosts(final Map<String, HandshakeData> cr) {
         replaceSSLHosts(cr);
-
+/*
         for (final HandshakeData data : cr.values()) {
             final SSLHostConfig sslHostConfig = sslHostConfigs.get(data.getHostname());
             sslHostConfig.setConfigType(getSslConfigType());
             createSSLContext(sslHostConfig);
         }
+        */
+    }
+
+    private SSLHostConfig createDefaultSSLHostConfigName()
+    {
+        return new SSLHostConfig();
     }
 
     @Override

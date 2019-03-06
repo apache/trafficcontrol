@@ -37,7 +37,16 @@ public class CertificateRegistry {
 	}
 
 	public static CertificateRegistry getInstance() {
+		synchronized (CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES) {
+			Map<String, HandshakeData> handshakeDataMap =
+					CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES.getHandshakeData();
+			handshakeDataMap.putIfAbsent("_default_", createDefaultSsl());
+		}
 		return CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES;
+	}
+
+	private static HandshakeData createDefaultSsl() {
+		return new HandshakeData("", "", null,null);
 	}
 
 	public List<String> getAliases() {
