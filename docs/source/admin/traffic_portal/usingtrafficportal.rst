@@ -197,6 +197,9 @@ This page contains a table displaying all :term:`Delivery Service`\ s visible to
 - create, update and delete :term:`Delivery Service` regular expressions
 - view and create :term:`Delivery Service` invalidate content jobs
 - manage steering targets
+- view and manage static DNS records within a :term:`Delivery Service` subdomain
+
+	.. seealso:: :ref:`static-dns-qht`
 
 Delivery Service Requests
 -------------------------
