@@ -18,7 +18,7 @@
 ******************************
 Configuring Static DNS Entries
 ******************************
-Any number static DNS entries can be configured on a per-:term:`Delivery Service` basis. In a typical scenario, the :term:`Delivery Service` will have DNS entries automatically generated based on its "xml_id" and "routing name", and the name and subdomain of the CDN to which it belongs. For example, in the :ref:`ciab` default environment, the "demo1" :term:`Delivery Service` has an automatically generated DNS record for ``video.demo1.mycdn.ciab.test``. Configuring a static DNS entry allows for further extension of this, for example, one could create an entry that enforces lookups of the name ``foo.demo1.mycdn.ciab.test`` resolve to the IPv4 address ``0.0.0.1``.
+Any number static DNS entries can be configured on a per-:term:`Delivery Service` basis. In a typical scenario, the :term:`Delivery Service` will have DNS entries automatically generated based on its "xml_id" and "routing name", and the name and subdomain of the CDN to which it belongs. For example, in the :ref:`ciab` default environment, the "demo1" :term:`Delivery Service` has an automatically generated DNS record for ``video.demo1.mycdn.ciab.test``. Configuring a static DNS entry allows for further extension of this, for example, one could create an entry that enforces lookups of the name ``foo.demo1.mycdn.ciab.test`` resolve to the IPv4 address ``192.0.2.0``.
 
 .. note:: It's not possible to alter higher levels of the DNS name using this method. That is, one could **not** create a rule for routing the name ``foo.bar.mycdn.ciab.test`` on the :ref:`ciab` :term:`Delivery Service` "demo1".
 
@@ -74,4 +74,4 @@ To set up the aforementioned rule, follow these steps.
 		:caption: Example DNS Query to Test a New Static DNS Entry within :ref:`ciab`
 
 		$ docker exec cdninabox_enroller_1 dig +noall +answer foo.demo1.mycdn.ciab.test
-		foo.demo1.mycdn.ciab.test. 42 IN      A   0.0.0.1.
+		foo.demo1.mycdn.ciab.test. 42	IN	A	192.0.2.0
