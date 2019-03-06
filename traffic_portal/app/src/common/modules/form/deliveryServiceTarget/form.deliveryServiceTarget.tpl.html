@@ -33,7 +33,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.deliveryServiceId), 'has-feedback': hasError(dsTargetForm.deliveryServiceId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Steering Delivery Service</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="deliveryServiceId" class="form-control" ng-model="target.deliveryServiceId" ng-disabled="true" ng-options="ds.id as ds.xmlId for ds in deliveryServices"></select>
+                    <input name="deliveryServiceId" type="text" class="form-control" ng-model="deliveryService.xmlId" ng-disabled="true">
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.targetId), 'has-feedback': hasError(dsTargetForm.targetId)}">
