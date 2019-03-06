@@ -18,9 +18,11 @@
 ******************************
 Configuring Static DNS Entries
 ******************************
-Any number static DNS entries can be configured on a per-:term:`Delivery Service` basis. In a typical scenario, the :term:`Delivery Service` will have DNS entries automatically generated based on its "xml_id" and "routing name", and the name and subdomain of the CDN to which it belongs. For example, in the :ref:`ciab` default environment, the "demo1" :term:`Delivery Service` has an automatically generated DNS record for ``video.demo1.mycdn.ciab.test``. Configuring a static DNS entry allows for further extension of this, for example, one could create an entry that enforces lookups of the name ``foo.video.demo1.mycdn.ciab.test`` resolve to the IPv4 address ``0.0.0.1``.
+Any number static DNS entries can be configured on a per-:term:`Delivery Service` basis. In a typical scenario, the :term:`Delivery Service` will have DNS entries automatically generated based on its "xml_id" and "routing name", and the name and subdomain of the CDN to which it belongs. For example, in the :ref:`ciab` default environment, the "demo1" :term:`Delivery Service` has an automatically generated DNS record for ``video.demo1.mycdn.ciab.test``. Configuring a static DNS entry allows for further extension of this, for example, one could create an entry that enforces lookups of the name ``foo.demo1.mycdn.ciab.test`` resolve to the IPv4 address ``0.0.0.1``.
 
 .. note:: It's not possible to alter higher levels of the DNS name using this method. That is, one could **not** create a rule for routing the name ``foo.bar.mycdn.ciab.test`` on the :ref:`ciab` :term:`Delivery Service` "demo1".
+
+.. seealso:: This guide covers how to set up static DNS entries using Traffic Portal. It's also possible to do so directly using the :ref:`to-api` endpoint :ref:`to-api-staticdnsentries`.
 
 Example
 =======
@@ -40,7 +42,7 @@ To set up the aforementioned rule, follow these steps.
 #. Fill in all of the fields.
 
 	Host
-		This is the lowest-level DNS label that will be used in the DNS record. In the :ref:`ciab` scenario, for example, entering ``foo`` here will result in a full DNS name of ``foo.video.mycdn.ciab.test``.
+		This is the lowest-level DNS label that will be used in the DNS record. In the :ref:`ciab` scenario, for example, entering ``foo`` here will result in a full DNS name of ``foo.demo1.mycdn.ciab.test``.
 	Type
 		Indicates the type of DNS record that will be created. The available types are
 
@@ -71,7 +73,5 @@ To set up the aforementioned rule, follow these steps.
 	.. code-block:: console
 		:caption: Example DNS Query to Test a New Static DNS Entry within :ref:`ciab`
 
-		$ docker exec cdninabox_enroller_1 dig foo.video.demo1.mycdn.ciab.test
-
-		;; ANSWER SECTION:
-		foo.video.demo1.mycdn.ciab.test. 42 IN      A   0.0.0.1.
+		$ docker exec cdninabox_enroller_1 dig +noall +answer foo.demo1.mycdn.ciab.test
+		foo.demo1.mycdn.ciab.test. 42 IN      A   0.0.0.1.
