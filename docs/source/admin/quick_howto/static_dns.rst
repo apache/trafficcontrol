@@ -20,7 +20,7 @@ Configuring Static DNS Entries
 ******************************
 Any number static DNS records (historically "entries") can be configured on a per-:term:`Delivery Service` basis. In a typical scenario, the :term:`Delivery Service` will have DNS records automatically generated based on its "xml_id" and "routing name", and the name and subdomain of the CDN to which it belongs. For example, in the :ref:`ciab` default environment, the "demo1" :term:`Delivery Service` has an automatically generated DNS record for ``video.demo1.mycdn.ciab.test``. Configuring a static DNS record allows for further extension of this, for example, one could create an ``A`` record that enforces lookups of the name ``foo.demo1.mycdn.ciab.test`` resolve to the IPv4 address ``192.0.2.0``.
 
-.. note:: It's not possible to alter higher levels of the DNS name using this method. That is, one could **not** create a rule for routing the name ``foo.bar.mycdn.ciab.test`` on the :ref:`ciab` :term:`Delivery Service` "demo1".
+.. note:: It's only possible to create static DNS records within a :term:`Delivery Service`'s subdomain. That is, one could not create an ``A`` record for ``foo.bar.mycdn.ciab.test`` on the :ref:`ciab` :term:`Delivery Service` "demo1", since "demo1"'s subdomain is ``demo1.mycdn.ciab.test``.
 
 .. seealso:: This guide covers how to set up static DNS records using Traffic Portal. It's also possible to do so directly using the :ref:`to-api` endpoint :ref:`to-api-staticdnsentries`.
 
