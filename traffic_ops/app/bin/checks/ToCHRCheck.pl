@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# CHR check extension. Populates the 'CHR' (Cache Hit Ratio) column. 
+# CHR check extension. Populates the 'CHR' (Cache Hit Ratio) column.
 #
 
 use strict;
@@ -98,7 +98,8 @@ foreach my $server ( @{$jdataserver} ) {
 		my $ip        = $server->{ipAddress};
 		my $host_name = $server->{hostName};
 		my $interface = $server->{interfaceName};
-		my $url       = 'http://' . $ip . '/_astats?application=proxy.process.http.transaction_counts&inf.name=' . $interface;
+		my $port      = $server->{tcpPort};
+		my $url       = 'http://' . $ip . ':' . $port . '/_astats?application=proxy.process.http.transaction_counts&inf.name=' . $interface;
 		TRACE "getting $url";
 		my $response = $ua->get($url);
 		if ( $response->is_success ) {
@@ -149,9 +150,14 @@ foreach my $server ( @{$jdataserver} ) {
 					my $h  = $hits - $prev_hits;
 					my $m  = $miss - $prev_miss;
 					my $e  = $errors - $prev_errors;
-					my $hr = sprintf( "%3d", $h / ( $h + $m + $e ) * 100 );
-					TRACE "$host_name: \% hitratio: $hr\%   errors: $e period: $secs\n";
-					$ext->post_result( $server->{id}, $check_name, $hr );
+					my $t  = ( $h + $m + $e );
+					if ( $t != 0 ) {
+						my $hr = sprintf( "%d", ($h / $t) * 100 );
+						TRACE "$host_name: hitratio: $hr\%, errors: $e, period: $secs\n";
+						$ext->post_result( $server->{id}, $check_name, $hr );
+				  } else {
+						TRACE "$host_name: No transaction_counts! Service enabled?"
+					}
 				}
 			}
 			else {
