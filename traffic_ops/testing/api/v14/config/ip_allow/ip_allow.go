@@ -22,7 +22,17 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
 
-// TODO Godoc
+// Parse takes a string presumed to be an ATS ip_allow.config and validates that it is
+// syntatically correct.
+//
+// The general format of an ip_allow config is the following:
+//
+//  src_ip=<range of IP addresses> action=<action> [method=<list of methods separated by '|'>]
+//  dest_ip=<range of IP addresses> action=<action> [method=<list of methods separated by '|'>]
+//
+// For a full description of the syntax, refer to the ATS documentation for the ip_allow config:
+// https://docs.trafficserver.apache.org/en/latest/admin-guide/files/cache.config.en.html
+//
 func Parse(config string) test.Error {
 	lines := strings.Split(config, "\n")
 
@@ -107,7 +117,7 @@ func parseConfigRule(rule string) test.Error {
 	}
 
 	// neither the rhs or lhs can contain any whitespace
-	assignment := regexp.MustCompile(`([a-z_\-\d]+)=(\S+)`)
+	assignment := regexp.MustCompile(`^([a-z_\-\d]+)=(\S+)$`)
 	for _, elem := range assignments {
 		match = assignment.FindStringSubmatch(strings.ToLower(elem))
 		if match == nil {
