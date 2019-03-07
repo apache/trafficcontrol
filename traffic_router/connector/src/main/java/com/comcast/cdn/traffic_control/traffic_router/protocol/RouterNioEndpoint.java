@@ -48,9 +48,8 @@ public class RouterNioEndpoint extends NioEndpoint {
         }
     }
 
-    synchronized private void replaceSSLHosts(final Map<String, HandshakeData> sslHostsData) {
+    synchronized public void replaceSSLHosts(final Map<String, HandshakeData> sslHostsData) {
         final Set<String> aliases = sslHostsData.keySet();
-        boolean firstAlias = true;
         String lastHostName = "";
 
         for (final String alias : aliases) {
@@ -70,29 +69,11 @@ public class RouterNioEndpoint extends NioEndpoint {
                 lastHostName = sslHostConfig.getHostName();
             }
 
-            if (firstAlias && ! "".equals(alias)) {
+            if (CertificateRegistry.DEFAULT_SSL_KEY.equals(alias)) {
                 // One of the configs must be set as the default
                 setDefaultSSLHostConfigName(sslHostConfig.getHostName());
-                firstAlias = false;
             }
         }
-
-    }
-
-    synchronized public void reloadSSLHosts(final Map<String, HandshakeData> cr) {
-        replaceSSLHosts(cr);
-/*
-        for (final HandshakeData data : cr.values()) {
-            final SSLHostConfig sslHostConfig = sslHostConfigs.get(data.getHostname());
-            sslHostConfig.setConfigType(getSslConfigType());
-            createSSLContext(sslHostConfig);
-        }
-        */
-    }
-
-    private SSLHostConfig createDefaultSSLHostConfigName()
-    {
-        return new SSLHostConfig();
     }
 
     @Override

@@ -87,6 +87,7 @@ public class CertificateRegistryTest {
 		verify(certificateDataConverter).toHandshakeData(certificateData3);
 
 		assertThat(certificateRegistry.getAliases(),
-			containsInAnyOrder("ds-1.some-cdn.example.com", "ds-2.some-cdn.example.com", "ds-3.some-cdn.example.com"));
+			containsInAnyOrder(CertificateRegistry.DEFAULT_SSL_KEY, "ds-1.some-cdn.example.com",
+					"ds-2.some-cdn.example.com", "ds-3.some-cdn.example.com"));
 	}
 }

@@ -18,13 +18,18 @@ package com.comcast.cdn.traffic_control.traffic_router.secure;
 import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterNioEndpoint;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.log4j.Logger;
+import sun.security.tools.keytool.CertAndKeyGen;
+import sun.security.x509.X500Name;
 
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class CertificateRegistry {
+	public static final String DEFAULT_SSL_KEY = "_default_";
 	private static final Logger log = Logger.getLogger(CertificateRegistry.class);
 	private CertificateDataConverter certificateDataConverter = new CertificateDataConverter();
 	volatile private Map<String, HandshakeData>	handshakeDataMap = new HashMap<>();
@@ -38,15 +43,28 @@ public class CertificateRegistry {
 
 	public static CertificateRegistry getInstance() {
 		synchronized (CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES) {
-			Map<String, HandshakeData> handshakeDataMap =
+			final Map<String, HandshakeData> handshakeDataMap =
 					CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES.getHandshakeData();
-			handshakeDataMap.putIfAbsent("_default_", createDefaultSsl());
+			handshakeDataMap.putIfAbsent(DEFAULT_SSL_KEY, createDefaultSsl());
 		}
 		return CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES;
 	}
 
 	private static HandshakeData createDefaultSsl() {
-		return new HandshakeData("", "", null,null);
+		try {
+			final CertAndKeyGen certGen = new CertAndKeyGen("RSA", "SHA1WithRSA", null);
+			certGen.generate(1024);
+
+			//Generate self signed certificate
+			final X509Certificate[] chain = new X509Certificate[1];
+			chain[0] = certGen.getSelfCertificate(new X500Name("CN=Invalid"), (long) 3 * 365 * 24 * 3600);
+			final PrivateKey serverPrivateKey = certGen.getPrivateKey();
+			return new HandshakeData(DEFAULT_SSL_KEY, "Invalid", chain, serverPrivateKey);
+		}
+		catch (Exception e) {
+			log.error("Could not generate the default certificate: "+e.getMessage(),e);
+			return null;
+		}
 	}
 
 	public List<String> getAliases() {
@@ -79,7 +97,6 @@ public class CertificateRegistry {
 		for (final CertificateData certificateData : certificateDataList) {
 			try {
 				final String alias = certificateData.alias();
-
 				if (!master.containsKey(alias)) {
 					final HandshakeData handshakeData = certificateDataConverter.toHandshakeData(certificateData);
 					if (handshakeData != null) {
@@ -98,7 +115,6 @@ public class CertificateRegistry {
 				log.error("Failed to import certificate data for delivery service: '" + certificateData.getDeliveryservice() + "', hostname: '" + certificateData.getHostname() + "'");
 			}
 		}
-
 		// find CertificateData which has been removed
 		for (final String alias : previousData.keySet())
 		{
@@ -119,12 +135,12 @@ public class CertificateRegistry {
 			}
 		}
 
+		master.putIfAbsent(DEFAULT_SSL_KEY, handshakeDataMap.get(DEFAULT_SSL_KEY));
 		handshakeDataMap = master;
 
 		if (sslEndpoint != null) {
-			sslEndpoint.reloadSSLHosts(changes);
+			sslEndpoint.replaceSSLHosts(changes);
 		}
-
 	}
 
 	public CertificateDataConverter getCertificateDataConverter() {
