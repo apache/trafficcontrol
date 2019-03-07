@@ -29,6 +29,28 @@ func Test24HrTimeRange(t *testing.T) {
 		{"8:00-xxx", false},
 		{"8:00-16:00", true},
 		{"08:00-16:00", true},
+		{"", false},
+		{" ", false},
+		{"-", false},
+		{"--", false},
+		{" - ", false},
+		{"asdf", false},
+		{"08:00-asdf", false},
+		{"asdf-08:00", false},
+		{"-08:00", false},
+		{"08:00-", false},
+		{"08-09:00", false},
+		{"09:00-10", false},
+		{"09:00-10:0", false},
+		{"9:00-10:0", false},
+		{"08:00-32:00", false},
+		{"32:00-33:00", false},
+		{"08:00--16:00", false},
+		{"08:00-16:00-", false},
+		{"08:00-16:00-17:00", false},
+		{"08:00-09:00 16:00-17:00", false},
+		{"foo 16:00-17:00", false},
+		{"16:00-17:00 foo", false},
 	}
 
 	for _, test := range tests {
@@ -36,7 +58,8 @@ func Test24HrTimeRange(t *testing.T) {
 			if test.ok {
 				t.Errorf(`
   test should have passed
-  time: %v`, test.time)
+  time: %v
+  err: %v`, test.time, err)
 			} else {
 				t.Errorf(`
   test should not have passed
@@ -74,7 +97,8 @@ func TestDHMSTimeFormat(t *testing.T) {
 			if test.ok {
 				t.Errorf(`
   test should have passed
-  time: %v`, test.time)
+  time: %v
+  err: %v`, test.time, err)
 			} else {
 				t.Errorf(`
   test should not have passed

@@ -21,14 +21,14 @@ import (
 	"time"
 )
 
-// Defines the 24hr format
+// militaryTimeFmt defines the 24hr format
 // see https://golang.org/pkg/time/#Parse
 const militaryTimeFmt = "15:04"
 
 // Validate24HrTimeRange determines whether the provided
-// string fits in a format such as "08:00-16:00"
+// string fits in a format such as "08:00-16:00".
 func Validate24HrTimeRange(rng string) error {
-	rangeFormat := regexp.MustCompile(`(\S+)-(\S+)`)
+	rangeFormat := regexp.MustCompile(`^(\S+)-(\S+)$`)
 	match := rangeFormat.FindStringSubmatch(rng)
 	if match == nil {
 		return fmt.Errorf("string %v is not a range", rng)
@@ -41,10 +41,10 @@ func Validate24HrTimeRange(rng string) error {
 
 	t2, err := time.Parse(militaryTimeFmt, match[2])
 	if err != nil {
-		return fmt.Errorf("time range must be a 24Hr format")
+		return fmt.Errorf("second time range must be a 24Hr format")
 	}
 
-	if t1.String() > t2.String() {
+	if t1.After(t2) {
 		return fmt.Errorf("first time should be smaller than the second")
 	}
 
@@ -60,7 +60,7 @@ func ValidateDHMSTimeFormat(time string) error {
 		return fmt.Errorf("time string cannot be empty")
 	}
 
-	dhms := regexp.MustCompile(`(\d+)([dhms])(\S*)`)
+	dhms := regexp.MustCompile(`^(\d+)([dhms])(\S*)$`)
 	match := dhms.FindStringSubmatch(time)
 
 	if match == nil {

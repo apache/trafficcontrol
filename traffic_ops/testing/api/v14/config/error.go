@@ -29,7 +29,7 @@ const (
 	InvalidHTTPScheme
 	InvalidHost
 	InvalidIP
-	InvalidMethod
+	UnknownMethod
 	InvalidPort
 	InvalidRegex
 	InvalidTimeFormatDHMS
@@ -53,7 +53,7 @@ func init() {
 		InvalidHTTPScheme,
 		InvalidHost,
 		InvalidIP,
-		InvalidMethod,
+		UnknownMethod,
 		InvalidPort,
 		InvalidRegex,
 		InvalidTimeFormatDHMS,

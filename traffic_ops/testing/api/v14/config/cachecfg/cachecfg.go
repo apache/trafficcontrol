@@ -12,19 +12,19 @@
    limitations under the License.
 */
 
-package cache_config
+package cachecfg
 
 import (
 	"regexp"
 	"strings"
 
-	. "github.com/apache/trafficcontrol/traffic_ops/testing/api/v14/config"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v14/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/go-ozzo/ozzo-validation/is"
 )
 
-// ParseCacheConfig takes a string presumed to be an ATS cache.config and validates
-// it is syntatically correct.
+// Parse takes a string presumed to be an ATS cache.config and validates that it is
+// syntatically correct.
 //
 // The general format of a cache config is three types of labels separated by spaces:
 //
@@ -34,7 +34,7 @@ import (
 // for the cache config:
 // https://docs.trafficserver.apache.org/en/latest/admin-guide/files/cache.config.en.html
 //
-func ParseCacheConfig(config string) test.Error {
+func Parse(config string) test.Error {
 	lines := strings.Split(config, "\n")
 
 	if len(lines) == 1 {
@@ -59,21 +59,21 @@ func parsePrimaryDestinations(lhs string, rhs string) test.Error {
 		fallthrough
 	case "dest_host":
 		if err := is.Host.Validate(rhs); err != nil {
-			return ErrorContext.NewError(InvalidHost, `"%s" %v`, rhs, err)
+			return config.ErrorContext.NewError(config.InvalidHost, `"%s" %v`, rhs, err)
 		}
 	case "dest_ip":
 		if err := is.IP.Validate(rhs); err != nil {
-			return ErrorContext.NewError(InvalidIP, `"%s" %v`, rhs, err)
+			return config.ErrorContext.NewError(config.InvalidIP, `"%s" %v`, rhs, err)
 		}
 	case "host_regex":
 		fallthrough
 	case "url_regex":
 		// only makes sure the regex compiles, not that the regex generates anything valid
 		if _, err := regexp.Compile(rhs); err != nil {
-			return ErrorContext.NewError(InvalidRegex, "%v", err)
+			return config.ErrorContext.NewError(config.InvalidRegex, "%v", err)
 		}
 	default:
-		return ErrorContext.NewError(InvalidLabel)
+		return config.ErrorContext.NewError(config.InvalidLabel)
 	}
 
 	return nil
@@ -84,23 +84,17 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 	switch lhs {
 	case "port":
 		if err := is.Port.Validate(rhs); err != nil {
-			return ErrorContext.AddErrorCode(InvalidPort, err)
+			return config.ErrorContext.AddErrorCode(config.InvalidPort, err)
 		}
 	case "scheme":
 		if rhs != "http" && rhs != "https" {
-			return ErrorContext.NewError(InvalidHTTPScheme)
+			return config.ErrorContext.NewError(config.InvalidHTTPScheme)
 		}
 	case "prefix":
-		// idk what validation to do on this
-		// does a path prefix contain '/' at the start of it?
-		// ignore..
-		//	Same cross platform problem as below?
+		// no clear validation to perform
 	case "suffix":
 		// examples: gif jpeg
-		// pure syntax: xxx.1 is a valid file name
-		//	I doubt there is anything in a validation package for this.
-		//	Even if there was, it would be silly since different platforms
-		//	have difference specifications for file suffixes.
+		// no clear validation to perform
 	case "method":
 		// assuming all methods are valid
 		// see RFC 2616-9 for list of all methods
@@ -118,24 +112,24 @@ func parseSecondarySpecifiers(lhs string, rhs string) test.Error {
 		case "purge":
 		case "push":
 		default:
-			return ErrorContext.NewError(InvalidMethod, `invalid method "%v"`, rhs)
+			return config.ErrorContext.NewError(config.UnknownMethod, `unknown method "%v"`, rhs)
 		}
 
 	case "time":
-		if err := Validate24HrTimeRange(rhs); err != nil {
-			return ErrorContext.AddErrorCode(InvalidTimeRange24Hr, err)
+		if err := config.Validate24HrTimeRange(rhs); err != nil {
+			return config.ErrorContext.AddErrorCode(config.InvalidTimeRange24Hr, err)
 		}
 	case "src_ip":
 		if err := is.IP.Validate(rhs); err != nil {
-			return ErrorContext.AddErrorCode(InvalidIP, err)
+			return config.ErrorContext.AddErrorCode(config.InvalidIP, err)
 		}
 	case "internal":
 		if rhs != "true" && rhs != "false" {
-			return ErrorContext.NewError(InvalidBool)
+			return config.ErrorContext.NewError(config.InvalidBool)
 		}
 
 	default:
-		return ErrorContext.NewError(InvalidLabel)
+		return config.ErrorContext.NewError(config.InvalidLabel)
 	}
 
 	return nil
@@ -151,13 +145,13 @@ func parseActions(lhs string, rhs string) test.Error {
 		case "ignore-client-no-cache":
 		case "ignore-server-no-cache":
 		default:
-			return ErrorContext.NewError(InvalidAction)
+			return config.ErrorContext.NewError(config.InvalidAction)
 		}
 
 	case "cache-responses-to-cookies":
 		digit := rhs[0]
 		if digit < '0' || '4' > digit || len(rhs) > 1 {
-			return ErrorContext.NewError(InvalidCacheCookieResponse)
+			return config.ErrorContext.NewError(config.InvalidCacheCookieResponse)
 		}
 
 	// All of these are time formats
@@ -166,12 +160,12 @@ func parseActions(lhs string, rhs string) test.Error {
 	case "revalidate":
 		fallthrough
 	case "ttl-in-cache":
-		err := ValidateDHMSTimeFormat(rhs)
+		err := config.ValidateDHMSTimeFormat(rhs)
 		if err != nil {
-			return ErrorContext.AddErrorCode(InvalidTimeFormatDHMS, err)
+			return config.ErrorContext.AddErrorCode(config.InvalidTimeFormatDHMS, err)
 		}
 	default:
-		return ErrorContext.NewError(InvalidLabel)
+		return config.ErrorContext.NewError(config.InvalidLabel)
 	}
 
 	return nil
@@ -179,13 +173,21 @@ func parseActions(lhs string, rhs string) test.Error {
 
 func parseConfigRule(rule string) test.Error {
 
-	var destination bool
-	var action bool
-	var match []string
 	var err test.Error
 
+	rule = strings.TrimSpace(rule)
+	if rule == "" || strings.HasPrefix(rule, "#") {
+		return nil
+	}
+
+	assignments := strings.Fields(rule)
+	last := len(assignments) - 1
+	if last < 1 {
+		return config.ErrorContext.NewError(config.NotEnoughAssignments)
+	}
+
 	// no individual secondary specifier label can be used twice
-	var count = map[string]int{
+	count := map[string]int{
 		"port":     0,
 		"scheme":   0,
 		"prefix":   0,
@@ -196,46 +198,39 @@ func parseConfigRule(rule string) test.Error {
 		"internal": 0,
 	}
 
-	rule = strings.Trim(rule, "\t ")
-	if rule == "" || strings.HasPrefix(rule, "#") {
-		return nil
-	}
-
-	assignments := strings.Fields(rule)
-	last := len(assignments) - 1
-	if last < 1 {
-		return ErrorContext.NewError(NotEnoughAssignments)
-	}
-
 	// neither the rhs or lhs can contain any whitespace
 	assignment := regexp.MustCompile(`([a-z_\-\d]+)=(\S+)`)
+
+	destination := false
+	action := false
+
 	for _, elem := range assignments {
-		match = assignment.FindStringSubmatch(strings.ToLower(elem))
+		match := assignment.FindStringSubmatch(strings.ToLower(elem))
 		if match == nil {
-			return ErrorContext.NewError(BadAssignmentMatch, `could not match assignment: "%v"`, elem)
+			return config.ErrorContext.NewError(config.BadAssignmentMatch, `could not match assignment: "%v"`, elem)
 		}
 
 		err = parsePrimaryDestinations(match[1], match[2])
 		if err == nil {
 			if destination {
-				return ErrorContext.NewError(ExcessLabel, "too many primary destination labels")
+				return config.ErrorContext.NewError(config.ExcessLabel, "too many primary destination labels")
 			} else {
 				destination = true
 				continue
 			}
 		}
-		if err.Code() != InvalidLabel {
+		if err.Code() != config.InvalidLabel {
 			return err.Prepend(`coult not parse primary destination from "%s": `, match[0])
 		}
 
 		err = parseSecondarySpecifiers(match[1], match[2])
 		if err == nil {
 			if count[match[1]]++; count[match[1]] == 2 {
-				return ErrorContext.NewError(ExcessLabel, `the label "%s" can only be used once per rule`, match[1])
+				return config.ErrorContext.NewError(config.ExcessLabel, `the label "%s" can only be used once per rule`, match[1])
 			}
 			continue
 		}
-		if err.Code() != InvalidLabel {
+		if err.Code() != config.InvalidLabel {
 			return err.Prepend(`could not parse secondary specifier from "%s": `, match[0])
 		}
 
@@ -245,7 +240,7 @@ func parseConfigRule(rule string) test.Error {
 			continue
 		}
 
-		if err.Code() == InvalidLabel {
+		if err.Code() == config.InvalidLabel {
 			return err
 		} else {
 			return err.Prepend(`could not parse action from "%s": `, match[0])
@@ -254,11 +249,11 @@ func parseConfigRule(rule string) test.Error {
 	}
 
 	if !destination {
-		return ErrorContext.NewError(MissingLabel, "missing primary destination label")
+		return config.ErrorContext.NewError(config.MissingLabel, "missing primary destination label")
 	}
 
 	if !action {
-		return ErrorContext.NewError(MissingLabel, "missing action lablel")
+		return config.ErrorContext.NewError(config.MissingLabel, "missing action lablel")
 	}
 
 	return nil
