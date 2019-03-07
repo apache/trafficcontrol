@@ -1622,8 +1622,7 @@ sub get_cookie {
 
 	my $url = $to_host . "/api/1.3/user/login";
     	my $json = qq/{ "u": "$u", "p": "$p"}/;
-    	my $lwp = LWP::UserAgent->new;
-    	my $response = $lwp->post($url, Content => $json);
+	my $response = $lwp_conn->post($url, Content => $json);
 
     	&check_lwp_response_code($response, $FATAL);
 
