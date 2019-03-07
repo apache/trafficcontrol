@@ -80,7 +80,8 @@ foreach my $server ( @{$jdataserver} ) {
 		my $ip        = $server->{ipAddress};
 		my $host_name = $server->{hostName};
 		my $interface = $server->{interfaceName};
-		my $url       = 'http://' . $ip . '/_astats?application=bytes_used;bytes_total&inf.name=' . $interface;
+		my $port      = $server->{tcpPort};
+		my $url       = 'http://' . $ip . ':' . $port . '/_astats?application=bytes_used;bytes_total&inf.name=' . $interface;
 		TRACE "getting $url";
 		my $response = $ua->get($url);
 		if ( $response->is_success ) {
@@ -100,7 +101,7 @@ foreach my $server ( @{$jdataserver} ) {
 
 			my $size                  = $stats_var->{ats}{'proxy.process.cache.bytes_total'};
 			my $used                  = $stats_var->{ats}{'proxy.process.cache.bytes_used'};
-			if ( $size == 0 ) { 
+			if ( $size == 0 ) {
 				ERROR "$host_name: cache size is 0!";
 				next;
 			}
