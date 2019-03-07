@@ -18,11 +18,12 @@ import (
 	"regexp"
 	"strings"
 
-	. "github.com/apache/trafficcontrol/traffic_ops/testing/api/v14/config"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v14/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
 
-func parseConfig(config string) test.Error {
+// TODO Godoc
+func Parse(config string) test.Error {
 	lines := strings.Split(config, "\n")
 
 	if len(lines) == 1 {
@@ -45,15 +46,15 @@ func parseLabelValue(lhs string, rhs string) test.Error {
 	case "src_ip":
 		fallthrough
 	case "dest_ip":
-		if err := ValidateIPRange(rhs); err != nil {
-			return ErrorContext.AddErrorCode(InvalidIPRange, err)
+		if err := config.ValidateIPRange(rhs); err != nil {
+			return config.ErrorContext.AddErrorCode(config.InvalidIPRange, err)
 		}
 	case "action":
 		switch rhs {
 		case "ip_allow":
 		case "ip_deny":
 		default:
-			return ErrorContext.NewError(InvalidAction)
+			return config.ErrorContext.NewError(config.InvalidAction)
 		}
 	case "method":
 		methods := strings.Split(rhs, "|")
@@ -75,12 +76,12 @@ func parseLabelValue(lhs string, rhs string) test.Error {
 			case "purge":
 			case "push":
 			default:
-				return ErrorContext.NewError(InvalidMethod, `invalid method "%v"`, method)
+				return config.ErrorContext.NewError(config.UnknownMethod, `unknown method "%v"`, method)
 			}
 		}
 
 	default:
-		return ErrorContext.NewError(InvalidLabel)
+		return config.ErrorContext.NewError(config.InvalidLabel)
 	}
 
 	return nil
@@ -102,7 +103,7 @@ func parseConfigRule(rule string) test.Error {
 	assignments := strings.Fields(rule)
 	last := len(assignments) - 1
 	if last < 1 {
-		return ErrorContext.NewError(NotEnoughAssignments)
+		return config.ErrorContext.NewError(config.NotEnoughAssignments)
 	}
 
 	// neither the rhs or lhs can contain any whitespace
@@ -110,7 +111,7 @@ func parseConfigRule(rule string) test.Error {
 	for _, elem := range assignments {
 		match = assignment.FindStringSubmatch(strings.ToLower(elem))
 		if match == nil {
-			return ErrorContext.NewError(BadAssignmentMatch, `could not match assignment: "%v"`, elem)
+			return config.ErrorContext.NewError(config.BadAssignmentMatch, `could not match assignment: "%v"`, elem)
 		}
 
 		err = parseLabelValue(match[1], match[2])
@@ -118,21 +119,21 @@ func parseConfigRule(rule string) test.Error {
 			switch match[1] {
 			case "action":
 				if action {
-					return ErrorContext.NewError(ExcessLabel, "only one action is allowed per rule")
+					return config.ErrorContext.NewError(config.ExcessLabel, "only one action is allowed per rule")
 				}
 				action = true
 			case "src_ip":
 				fallthrough
 			case "dest_ip":
 				if ip {
-					return ErrorContext.NewError(ExcessLabel, "only one of src_ip or dest_ip is allowed per rule")
+					return config.ErrorContext.NewError(config.ExcessLabel, "only one of src_ip or dest_ip is allowed per rule")
 				}
 				ip = true
 			}
 			continue
 		}
 
-		if err.Code() == InvalidLabel {
+		if err.Code() == config.InvalidLabel {
 			return err
 		} else {
 			return err.Prepend(`could not parse %s:`, match[1])
@@ -140,10 +141,10 @@ func parseConfigRule(rule string) test.Error {
 	}
 
 	if !ip {
-		return ErrorContext.NewError(MissingLabel, "missing either src_ip or dest_ip label")
+		return config.ErrorContext.NewError(config.MissingLabel, "missing either src_ip or dest_ip label")
 	}
 	if !action {
-		return ErrorContext.NewError(MissingLabel, "missing action label")
+		return config.ErrorContext.NewError(config.MissingLabel, "missing action label")
 	}
 
 	return nil

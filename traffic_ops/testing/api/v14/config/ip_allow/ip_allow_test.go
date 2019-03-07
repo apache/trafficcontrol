@@ -12,96 +12,97 @@
    limitations under the License.
 */
 
-package ip_allow
+package ip_allow_test
 
 import (
 	"fmt"
 	"testing"
 
-	. "github.com/apache/trafficcontrol/traffic_ops/testing/api/v14/config"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v14/config"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v14/config/ip_allow"
 )
 
-var negativeTests = []NegativeTest{
+var negativeTests = []config.NegativeTest{
 	{
 		"too few assignments",
 		"foo1=foo",
-		NotEnoughAssignments,
+		config.NotEnoughAssignments,
 	},
 	{
 		"empty assignment",
 		"src_ip= foo1=foo",
-		BadAssignmentMatch,
+		config.BadAssignmentMatch,
 	},
 	{
 		"missing equals in assignment",
 		"src_ip foo1=foo",
-		BadAssignmentMatch,
+		config.BadAssignmentMatch,
 	},
 	{
 		"missing src_ip label",
 		"action=ip_allow method=ALL",
-		MissingLabel,
+		config.MissingLabel,
 	},
 	{
 		"missing action label",
 		"src_ip=0/0 method=ALL",
-		MissingLabel,
+		config.MissingLabel,
 	},
 	{
 		"unknown field",
 		"foo1=foo foo2=foo foo3=foo",
-		InvalidLabel,
+		config.InvalidLabel,
 	},
 	{
 		"extra action",
 		"src_ip=0/0 action=ip_allow action=ip_deny",
-		ExcessLabel,
+		config.ExcessLabel,
 	},
 	{
 		"extra ip",
 		"src_ip=0/0 dest_ip=0.0.0.0 action=ip_allow",
-		ExcessLabel,
+		config.ExcessLabel,
 	},
 	{
 		"invalid label on second line",
 		fmt.Sprintf("%s\n\n%s",
 			"src_ip=0/0 action=ip_allow",
 			"foo1=foo foo2=foo foo3=foo"),
-		InvalidLabel,
+		config.InvalidLabel,
 	},
 	{
 		"bad src_ip",
 		"src_ip=x action=ip_allow",
-		InvalidIPRange,
+		config.InvalidIPRange,
 	},
 	{
 		"bad action",
 		"src_ip=0/0 action=ip_allowed",
-		InvalidAction,
+		config.InvalidAction,
 	},
 	{
 		"unknown method",
 		"src_ip=0/0 action=ip_allow method=x",
-		InvalidMethod,
+		config.UnknownMethod,
 	},
 	{
 		"bad method delimiter",
 		"src_ip=0/0 action=ip_allow method=GET|",
-		InvalidMethod,
+		config.UnknownMethod,
 	},
 	{
 		"bad method delimiter",
 		"src_ip=0/0 action=ip_allow method=GET,",
-		InvalidMethod,
+		config.UnknownMethod,
 	},
 	{
 		"bad ip",
 		"dest_ip=bad_ip foo1=foo",
-		InvalidIPRange,
+		config.InvalidIPRange,
 	},
 }
 
-var positiveTests = []PositiveTest{
+var positiveTests = []config.PositiveTest{
 	{
 		"IPv4",
 		"src_ip=127.0.0.1 action=ip_allow method=ALL",
@@ -172,7 +173,7 @@ func TestIPAllowConfig(t *testing.T) {
 
 	// Negative Tests
 	for _, test := range negativeTests {
-		actual := parseConfig(test.Config)
+		actual := ip_allow.Parse(test.Config)
 		if actual == nil || actual.Code() != test.Expected {
 			t.Errorf(`
   config: "%v"
@@ -183,7 +184,7 @@ func TestIPAllowConfig(t *testing.T) {
 
 	// Positive Tests
 	for _, test := range positiveTests {
-		actual := parseConfig(test.Config)
+		actual := ip_allow.Parse(test.Config)
 		if actual != nil {
 			t.Errorf(`
   config: "%v"
