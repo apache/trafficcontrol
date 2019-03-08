@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -101,6 +102,17 @@ func GetCombinedParams(r *http.Request) (map[string]string, error) {
 	return combinedParams, nil
 }
 
+// reset will set the zero value of the struct pointer
+func reset(v interface{}) error {
+	if reflect.ValueOf(v).Kind() != reflect.Ptr {
+		return errors.New("can only reset pointer values")
+	}
+
+	p := reflect.ValueOf(v).Elem()
+	p.Set(reflect.Zero(p.Type()))
+	return nil
+}
+
 // decodeAndValidateRequestBody decodes and validates a pointer to a struct implementing the Validator interface
 func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
 	defer r.Body.Close()
@@ -125,6 +137,7 @@ func ReadHandler(obj Reader) http.HandlerFunc {
 		}
 		defer inf.Close()
 
+		reset(obj)
 		obj.SetInfo(inf)
 		results, userErr, sysErr, errCode := obj.Read()
 		if userErr != nil || sysErr != nil {
@@ -151,6 +164,7 @@ func UpdateHandler(obj Updater) http.HandlerFunc {
 		}
 		defer inf.Close()
 
+		reset(obj)
 		obj.SetInfo(inf)
 		if err := decodeAndValidateRequestBody(r, obj); err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
@@ -230,6 +244,7 @@ func DeleteHandler(obj Deleter) http.HandlerFunc {
 		}
 		defer inf.Close()
 
+		reset(obj)
 		obj.SetInfo(inf)
 		keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
 		keys := make(map[string]interface{})
@@ -291,6 +306,7 @@ func CreateHandler(obj Creator) http.HandlerFunc {
 		}
 		defer inf.Close()
 
+		reset(obj)
 		obj.SetInfo(inf)
 		err := decodeAndValidateRequestBody(r, obj)
 		if err != nil {
