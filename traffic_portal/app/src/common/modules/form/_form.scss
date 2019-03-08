@@ -27,7 +27,7 @@
 }
 
 /******* tooltip styling *******/
-form label.control-label {
+form label.has-tooltip {
 	text-decoration: underline dotted;
 	position: relative;
 	cursor: help;
@@ -91,7 +91,7 @@ input[type="url"]:invalid ~ small.invalid-URL-error {
 }
 
 @media (min-width: 768px) {
-	form label.control-label {
+	form label.has-tooltip {
 		div.helptooltip {
 			left: calc(100% - 140px);
 		}
@@ -103,7 +103,7 @@ input[type="url"]:invalid ~ small.invalid-URL-error {
 }
 
 @media (max-width: 767px) {
-	form label.control-label {
+	form label.has-tooltip {
 		div.helptooltip {
 			left: 0;
 		}

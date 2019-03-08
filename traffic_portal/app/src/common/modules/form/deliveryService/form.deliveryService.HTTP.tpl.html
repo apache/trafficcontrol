@@ -68,7 +68,7 @@ under the License.
         <form name="deliveryServiceForm" class="form-horizontal form-label-left">
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.active), 'has-feedback': hasError(deliveryServiceForm.active)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="active">Active *<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="active">Active *<div class="helptooltip">
                     <div class="helptext">Whether or not this Delivery Service is active on the CDN and is capable of traffic.</div>
                 </div>
                 </label>
@@ -84,7 +84,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.type), 'has-feedback': hasError(deliveryServiceForm.type)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="type">Content Routing Type *<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="type">Content Routing Type *<div class="helptooltip">
                     <div class="helptext">
                         DNS is the standard routing type for most CDN services. HTTP Redirect is a specialty routing service that is primarily used for video and large file downloads where localization and latency are significant concerns. A "Live" routing type should be used for all live services.
                         <br>
@@ -104,7 +104,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="xmlId">XML_ID (Key) *<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="xmlId">XML_ID (Key) *<div class="helptooltip">
                     <div class="helptext">This id becomes a part of the CDN service domain in the form <samp>http://cdn.service-key.company.com/</samp>. Must be all lowercase, no spaces or special characters. May contain dashes.</div>
                 </div>
                 </label>
@@ -119,7 +119,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.displayName), 'has-feedback': hasError(deliveryServiceForm.displayName)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="displayName">Display Name *<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="displayName">Display Name *<div class="helptooltip">
                     <div class="helptext">Name of the service that appears in the Traffic portal. No character restrictions.</div>
                 </div>
                 </label>
@@ -133,7 +133,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.tenantId), 'has-feedback': hasError(deliveryServiceForm.tenantId)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="tenantId">Tenant *<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="tenantId">Tenant *<div class="helptooltip">
                     <div class="helptext">Name of company or division of company who owns account. Allows you to group your services and control access. Tenants are setup as a simple hierarchy where you may create parent / child accounts.</div>
                 </div>
                 </label>
@@ -148,7 +148,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cdn), 'has-feedback': hasError(deliveryServiceForm.cdn)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="cdn">CDN *<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="cdn">CDN *<div class="helptooltip">
                     <div class="helptext">The CDN to which the Delivery Service belongs.</div>
                 </div>
                 </label>
@@ -163,7 +163,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.orgServerFqdn), 'has-feedback': hasError(deliveryServiceForm.orgServerFqdn)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="orgServerFqdn">Origin Server Base URL *<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="orgServerFqdn">Origin Server Base URL *<div class="helptooltip">
                     <div class="helptext">The Origin Server’s base URL which includes the protocol (http or https). Example: <samp>http://movies.origin.com</samp>. Must be a domain only, no directories or IP addresses</div>
                 </div>
                 </label>
@@ -178,7 +178,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.protocol), 'has-feedback': hasError(deliveryServiceForm.protocol)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="protocol">Protocol *<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="protocol">Protocol *<div class="helptooltip">
                     <div class="helptext">
                         The protocol with which to serve this Delivery Service to the clients:
                         <br>
@@ -206,7 +206,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc), 'has-feedback': hasError(deliveryServiceForm.longDesc)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">Long Description *<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">Long Description *<div class="helptooltip">
                     <div class="helptext">Free text field that describes the purpose of the Delivery Service and will be displayed in the portal as a description field.</div>
                 </div>
                 </label>
@@ -219,7 +219,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc1), 'has-feedback': hasError(deliveryServiceForm.longDesc1)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="longDesc1">Long Description 2<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc1">Long Description 2<div class="helptooltip">
                     <div class="helptext">Free text field not currently used in configuration. For example, you can use this field to describe your customer type.</div>
                 </div>
                 </label>
@@ -231,7 +231,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc2), 'has-feedback': hasError(deliveryServiceForm.longDesc2)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Long Description 3<div class="helptooltip">
+                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Long Description 3<div class="helptooltip">
                     <div class="helptext">Free text field not currently used in configuration.</div>
                 </div>
                 </label>
@@ -252,7 +252,7 @@ under the License.
             <div ng-show="advancedShowing">
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.routingName), 'has-feedback': hasError(deliveryServiceForm.routingName)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="routingName">Routing Name *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="routingName">Routing Name *<div class="helptooltip">
                         <div class="helptext">The routing name to use for the delivery <abbr title="Fully Qualified Domain Name">FQDN</abbr>, e.g. <samp>routing-name.deliveryservice.cdn-domain</samp>. It must be a valid hostname without periods.</div>
                     </div>
                     </label>
@@ -268,7 +268,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.deepCachingType), 'has-feedback': hasError(deliveryServiceForm.deepCachingType)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="deepCachingType">Deep Caching *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="deepCachingType">Deep Caching *<div class="helptooltip">
                         <div class="helptext">
                             Enables clients to be routed to the closest possible deep edge caches on a per Delivery Service basis.
                             <br>
@@ -288,7 +288,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dscp), 'has-feedback': hasError(deliveryServiceForm.dscp)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="dscp">DSCP *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="dscp">DSCP *<div class="helptooltip">
                         <div class="helptext">The <abbr title="Differentiated Services Code Point">DSCP</abbr> value with which to mark IP packets outbound to the client.</div>
                     </div>
                     </label>
@@ -301,7 +301,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ipv6RoutingEnabled), 'has-feedback': hasError(deliveryServiceForm.ipv6RoutingEnabled)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="ipv6RoutingEnabled">IPv6 Routing Enabled *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ipv6RoutingEnabled">IPv6 Routing Enabled *<div class="helptooltip">
                         <div class="helptext">Enabeld by default, disabling this allows you to turn off CDN responses to IPv6 requests</div>
                     </div>
                     </label>
@@ -316,7 +316,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.rangeRequestHandling), 'has-feedback': hasError(deliveryServiceForm.rangeRequestHandling)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="rangeRequestHandling">Range Request Handling *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="rangeRequestHandling">Range Request Handling *<div class="helptooltip">
                         <div class="helptext">
                             How to treat range requests.
                             <br>
@@ -341,7 +341,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.qstringIgnore), 'has-feedback': hasError(deliveryServiceForm.qstringIgnore)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12">Query String Handling *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Query String Handling *<div class="helptooltip">
                         <div class="helptext">
                             How to treat query parameter strings in request URLs:
                             <br>
@@ -372,7 +372,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.multiSiteOrigin), 'has-feedback': hasError(deliveryServiceForm.multiSiteOrigin)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="multiSiteOrigin">Use Multi-Site Origin Feature *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="multiSiteOrigin">Use Multi-Site Origin Feature *<div class="helptooltip">
                         <div class="helptext">
                             Enables/disables the Multi-Site Origin feature for this Delivery Service.
                             <br>
@@ -392,7 +392,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.logsEnabled), 'has-feedback': hasError(deliveryServiceForm.logsEnabled)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="logsEnabled">Logs Enabled *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="logsEnabled">Logs Enabled *<div class="helptooltip">
                         <div class="helptext">Allows you to turn on/off logging for this Delivery Service</div>
                     </div>
                     </label>
@@ -407,7 +407,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.initialDispersion), 'has-feedback': hasError(deliveryServiceForm.initialDispersion)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="initialDispersion">Initial Dispersion *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="initialDispersion">Initial Dispersion *<div class="helptooltip">
                         <div class="helptext">Determines number of machines content will be placed on within a cache group. Setting too high will result in poor caching performance. An initial dispersion of 1 is equivalent to "no dispersion".</div>
                     </div>
                     </label>
@@ -419,7 +419,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.regionalGeoBlocking), 'has-feedback': hasError(deliveryServiceForm.regionalGeoBlocking)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="regionalGeoBlocking">Regional Geoblocking *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="regionalGeoBlocking">Regional Geoblocking *<div class="helptooltip">
                         <div class="helptext">
                             Define regional geo-blocking rules for Delivery Services in a JSON format and set this to 'Enabled' to use "Regional Geoblocking". <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/regionalgeo.html" target="_blank">See Regional Geo-blocking</a>
                         </div>
@@ -436,7 +436,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.anonymousBlockingEnabled), 'has-feedback': hasError(deliveryServiceForm.anonymousBlockingEnabled)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="anonymousBlockingEnabled">Anonymous Blocking *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="anonymousBlockingEnabled">Anonymous Blocking *<div class="helptooltip">
                         <div class="helptext">
                             Enable this to block anonymized IP addresses (e.g. <abbr title="The Onion Ring">TOR</abbr> exit nodes) for this Delivery Service.
                             <br>
@@ -458,7 +458,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoProvider), 'has-feedback': hasError(deliveryServiceForm.geoProvider)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoProvider">Geolocation Provider *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoProvider">Geolocation Provider *<div class="helptooltip">
                         <div class="helptext">Choose which Geolocation database provider - company that collects data on the location of IP addresses - to use.</div>
                     </div>
                     </label>
@@ -473,7 +473,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.missLat), 'has-feedback': hasError(deliveryServiceForm.missLat)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="missLat">Geo Miss Default Latitude *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="missLat">Geo Miss Default Latitude *<div class="helptooltip">
                         <div class="helptext">Default latitude for this Delivery Service. When client localization fails for both Coverage Zone and Geo Lookup, the client will be routed as if it was at this latitude.</div>
                     </div>
                     </label>
@@ -486,7 +486,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.missLong), 'has-feedback': hasError(deliveryServiceForm.missLong)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="missLong">Geo Miss Default Longitude *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="missLong">Geo Miss Default Longitude *<div class="helptooltip">
                         <div class="helptext">Default longitude for this Delivery Service. When client localization fails for both Coverage Zone and Geo Lookup, the client will be routed as if it was at this longitude.</div>
                     </div>
                     </label>
@@ -499,7 +499,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimit), 'has-feedback': hasError(deliveryServiceForm.geoLimit)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoLimit">Geo Limit *<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimit">Geo Limit *<div class="helptooltip">
                         <div class="helptext">
                             Some services are intended to be limited by geography. The possible settings are:
                             <br>
@@ -524,7 +524,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimitCountries), 'has-feedback': hasError(deliveryServiceForm.geoLimitCountries)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitCountries">Geo Limit Countries<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitCountries">Geo Limit Countries<div class="helptooltip">
                         <div class="helptext">How (if at all) is this service to be limited by geography. Example Country Codes: <abbr title="Canada">CA</abbr>, <abbr title="India">IN</abbr>, <abbr title="Puerto Rico">PR</abbr>.</div>
                     </div>
                     </label>
@@ -537,7 +537,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimitRedirectURL), 'has-feedback': hasError(deliveryServiceForm.geoLimitRedirectURL)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitRedirectURL">Geo Limit Redirect URL<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitRedirectURL">Geo Limit Redirect URL<div class="helptooltip">
                         <div class="helptext">
                             Traffic Router will redirect to this URL when Geo Limit check fails.
                             <br>
@@ -554,7 +554,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.signingAlgorithm), 'has-feedback': hasError(deliveryServiceForm.signingAlgorithm)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="signingAlgorithm">Signing Algorithm<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="signingAlgorithm">Signing Algorithm<div class="helptooltip">
                         <div class="helptext">
                             Type of URL signing method to sign the URLs:
                             <br>
@@ -580,7 +580,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.httpBypassFqdn), 'has-feedback': hasError(deliveryServiceForm.httpBypassFqdn)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="httpBypassFqdn">HTTP Bypass FQDN<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="httpBypassFqdn">HTTP Bypass FQDN<div class="helptooltip">
                         <div class="helptext">
                             Traffic Router will redirect to this <abbr title="Fully Qualified Domain Name">FQDN</abbr> (with the same path) when the Max Mbps or Max Tps for this Delivery Service are exceeded.
                         </div>
@@ -595,7 +595,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dnsBypassTtl), 'has-feedback': hasError(deliveryServiceForm.dnsBypassTtl)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="dnsBypassTtl">DNS Bypass TTL<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="dnsBypassTtl">DNS Bypass TTL<div class="helptooltip">
                         <div class="helptext"><abbr title="Time To Live">TTL</abbr> for the DNS bypass domain or IP address when thresholds are exceeded.</div>
                     </div>
                     </label>
@@ -607,7 +607,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ccrDnsTtl), 'has-feedback': hasError(deliveryServiceForm.ccrDnsTtl)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="ccrDnsTtl">Delivery Service DNS TTL<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ccrDnsTtl">Delivery Service DNS TTL<div class="helptooltip">
                         <div class="helptext">The <abbr title="Time To Live">TTL</abbr> on the DNS record for the Traffic Router A and AAAA records. Setting too high or too low will result in poor caching performance.</div>
                     </div>
                     </label>
@@ -619,7 +619,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.profile), 'has-feedback': hasError(deliveryServiceForm.profile)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="profile">Delivery Service Profile<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="profile">Delivery Service Profile<div class="helptooltip">
                         <div class="helptext">Only used if a Delivery Service uses configurations that specifically require a profile. Example: Multi-Site Origin configurations would require a Delivery Service Profile to be used.</div>
                     </div>
                     </label>
@@ -633,7 +633,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.globalMaxMbps), 'has-feedback': hasError(deliveryServiceForm.globalMaxMbps)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="globalMaxMbps">Global Max Mbps<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="globalMaxMbps">Global Max Mbps<div class="helptooltip">
                         <div class="helptext">The maximum bits per second this Delivery Service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS Delivery Service, the Bypass Ipv4 or Ipv6 will be used (depending on whether this was an A or AAAA request), and for HTTP Delivery Services the Bypass <abbr title="Fully Qualified Domain Name">FQDN</abbr> will be used.</div>
                     </div>
                     </label>
@@ -645,7 +645,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.globalMaxTps), 'has-feedback': hasError(deliveryServiceForm.globalMaxTps)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="globalMaxTps">Global Max Tps<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="globalMaxTps">Global Max Tps<div class="helptooltip">
                         <div class="helptext">The maximum transactions this Delivery Service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS Delivery Service, the Bypass Ipv4 or Ipv6 will be used (depending on whether this was an A or AAAA request), and for HTTP Delivery Services the Bypass <abbr title="Fully Qualified Domain Name">FQDN</abbr> will be used.</div>
                     </div>
                     </label>
@@ -657,7 +657,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.fqPacingRate), 'has-feedback': hasError(deliveryServiceForm.fqPacingRate)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="fqPacingRate">Fair Queueing Pacing Rate Bps<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="fqPacingRate">Fair Queueing Pacing Rate Bps<div class="helptooltip">
                         <div class="helptext">The maximum bytes per second a cache will deliver on any single TCP connection. This uses the Linux kernel's Fair Queuing (<code>setsockopt(SO_MAX_PACING_RATE)</code>) to limit the rate of delivery.</div>
                     </div>
                     </label>
@@ -669,7 +669,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.edgeHeaderRewrite), 'has-feedback': hasError(deliveryServiceForm.edgeHeaderRewrite)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="edgeHeaderRewrite">Edge Header Rewrite Rules<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="edgeHeaderRewrite">Edge Header Rewrite Rules<div class="helptooltip">
                         <div class="helptext">
                             Headers can be added or altered at each layer of the CDN. You must tell us four things: the action, the header name, the header value, and the direction to apply. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. The direction will determine whether we add it before we respond to a request or before we make a request further up the chain in the server hierarchy. Examples include:
                             <br>
@@ -694,7 +694,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.midHeaderRewrite), 'has-feedback': hasError(deliveryServiceForm.midHeaderRewrite)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="midHeaderRewrite">Mid Header Rewrite Rules<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="midHeaderRewrite">Mid Header Rewrite Rules<div class="helptooltip">
                         <div class="helptext">
                             Headers can be added or altered at each layer of the CDN. You must tell us four things: the action, the header name, the header value, and the direction to apply. The action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. The direction will determine whether we add it before we respond to a request or before we make a request further up the chain in the server hierarchy. Examples include:
                             <ul>
@@ -718,7 +718,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trResponseHeaders), 'has-feedback': hasError(deliveryServiceForm.trResponseHeaders)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="trResponseHeaders">Traffic Router Additional Response Headers<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trResponseHeaders">Traffic Router Additional Response Headers<div class="helptooltip">
                         <div class="helptext">
                             List of header name:value pairs separated by <code>__RETURN__</code>. Listed pairs will be included in all Traffic Router HTTP(S) responses.
                         </div>
@@ -733,7 +733,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trRequestHeaders), 'has-feedback': hasError(deliveryServiceForm.trRequestHeaders)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="trRequestHeaders">Traffic Router Log Request Headers<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trRequestHeaders">Traffic Router Log Request Headers<div class="helptooltip">
                         <div class="helptext">
                             List of header keys separated by <code>__RETURN__</code>. Listed headers will be included in Traffic Router access log entries under the <samp>rh=</samp> token.
                         </div>
@@ -748,7 +748,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.regexRemap), 'has-feedback': hasError(deliveryServiceForm.regexRemap)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="regexRemap">Regex remap expression<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="regexRemap">Regex remap expression<div class="helptooltip">
                         <div class="helptext">
                             Allows remapping of incoming requests URL using regex pattern matching to search/replace text.
                             <br>
@@ -771,7 +771,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cacheurl), 'has-feedback': hasError(deliveryServiceForm.cacheurl)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="cacheurl">Cache URL Expression<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="cacheurl">Cache URL Expression<div class="helptooltip">
                         <div class="helptext">
                             Allows you to manipulate the cache key of the incoming requests. Normally, the cache key is the origin domain. This can be changed so that multiple services can share a cache key, can also be used to preserve cached content if service origin is changed.
                             <br>
@@ -798,7 +798,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.remapText), 'has-feedback': hasError(deliveryServiceForm.remapText)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="remapText">Raw remap text<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="remapText">Raw remap text<div class="helptooltip">
                         <div class="helptext">For HTTP and DNS Delivery Services, this will get added to the end of the remap line verbatim on cache servers. For ANY_MAP Delivery Services this is the entire remap line.</div>
                     </div>
                     </label>
@@ -811,7 +811,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.infoUrl), 'has-feedback': hasError(deliveryServiceForm.infoUrl)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="infoUrl">Info URL<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="infoUrl">Info URL<div class="helptooltip">
                         <div class="helptext">Free text field used to enter a URL which provides information about the service.</div>
                     </div>
                     </label>
@@ -825,7 +825,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.checkPath), 'has-feedback': hasError(deliveryServiceForm.checkPath)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="checkPath">Check Path<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="checkPath">Check Path<div class="helptooltip">
                         <div class="helptext">A path (e.g. <samp>/crossdomain.xml</samp>) with which to verify the connection to the origin server. This can be used by Check Extension scripts to do periodic health checks against the Delivery Service.</div>
                     </div>
                     </label>
@@ -838,7 +838,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.originShield), 'has-feedback': hasError(deliveryServiceForm.originShield)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="originShield">Origin Shield<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="originShield">Origin Shield<div class="helptooltip">
                         <div class="helptext">
                             Add another forward proxy upstream of the mid caches. Example: <samp>go_direct=true</samp> will allow the Mid to hit the origin directly instead of failing if the origin shield is down.
                             <aside class="warning">
@@ -857,7 +857,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.consistentHashRegex), 'has-feedback': hasError(deliveryServiceForm.consistentHashRegex)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="consistentHashRegex">Consistent Hash Regex<div class="helptooltip">
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="consistentHashRegex">Consistent Hash Regex<div class="helptooltip">
                         <div class="helptext">
                             Regex used to extract parts of the request path using grouping in order to build a consistent request string to be used for cache selection. If this field is set on a steering delivery service, it will override the regex set on the target delivery services.
                             <br>
