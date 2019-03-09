@@ -30,14 +30,13 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity"})
 public class CertificateDataConverter {
 	private static final Logger log = Logger.getLogger(CertificateDataConverter.class);
 
 	private PrivateKeyDecoder privateKeyDecoder = new PrivateKeyDecoder();
 	private CertificateDecoder certificateDecoder = new CertificateDecoder();
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity"})
+	@SuppressWarnings({"PMD.CyclomaticComplexity"})
 	public HandshakeData toHandshakeData(final CertificateData certificateData) {
 		try {
 			final PrivateKey privateKey = privateKeyDecoder.decode(certificateData.getCertificate().getKey());
@@ -82,7 +81,6 @@ public class CertificateDataConverter {
 		return null;
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity"})
 	public boolean verifySubject(final X509Certificate certificate, final String hostAlias ) {
 		final String host = certificate.getSubjectDN().getName();
 		if (hostCompare(hostAlias,host)) {
@@ -113,14 +111,11 @@ public class CertificateDataConverter {
 			return true;
 		}
 		final String[] chopped = subject.split("CN=", 2);
-		String chop = null;
 		if (chopped != null && chopped.length > 1) {
-			chop = chopped[1];
-		}
-		if (chop != null) {
+			String chop = chopped[1];
 			chop = chop.replaceFirst("\\*\\.", ".");
 			chop = chop.split(",", 2)[0];
-			if (hostAlias.contains(chop) || chop.contains(hostAlias)) {
+			if (chop.length()>0 && (hostAlias.contains(chop) || chop.contains(hostAlias))) {
 				return true;
 			}
 		}
