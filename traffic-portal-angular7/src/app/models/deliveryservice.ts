@@ -29,7 +29,7 @@ export enum GeoLimit {
  * This namespace merges with the `GeoLimit` enum to provide a seamless method on the object. The
  * mechanics of this are a mystery to me.
 */
-namespace GeoLimit {
+export namespace GeoLimit {
 	export function toString(g: GeoLimit): string {
 		switch (g) {
 			case GeoLimit.None:
@@ -76,7 +76,7 @@ export enum Protocol {
  * This namespace merges with the `Protocol` enum to provide a seamless method to convert those
  * values to verbose explanations.
 */
-namespace Protocol {
+export namespace Protocol {
 	export function toString(p: Protocol): string {
 		switch (p) {
 			case Protocol.HTTP:
@@ -106,7 +106,7 @@ export enum QStringHandling {
  * This namespace merges with the `QStringHandling` enum to provide a seamless method to convert
  * those values to verbose explanations.
 */
-namespace QStringHandling {
+export namespace QStringHandling {
 	export function toString(q: QStringHandling): string {
 		switch (q) {
 			case QStringHandling.USE:
@@ -134,7 +134,7 @@ export enum RangeRequestHandling {
  * This namespace merges with the `RangeRequestHandling` enum to provide a seamless method to convert
  * those values to verbose explanations.
 */
-namespace RangeRequestHandling {
+export namespace RangeRequestHandling {
 	export function toString(r: RangeRequestHandling): string {
 		switch (r) {
 			case RangeRequestHandling.NONE:
