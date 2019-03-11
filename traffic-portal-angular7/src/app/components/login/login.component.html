@@ -14,7 +14,7 @@ limitations under the License.
 <header>
 	<img src="/ATC-SVG.svg"/><h1>Traffic Portal</h1>
 </header>
-<form name="login" (ngSubmit)="submitLogin()">
+<form name="login" (ngSubmit)="submitLogin()" ngNativeValidate>
 	<label for="u">Username:</label><input required autocomplete="username" autofocus type="text" [formControl]="u" name="u" id="u"/>
 	<label for="p">Password:</label><input required autocomplete="new-password" type="password" [formControl]="p" name="p" id="p"/>
 	<div>
