@@ -131,6 +131,8 @@ A table showing the results of the periodic :ref:`to-check-ext` that are run. Th
 :Connections: Number of connections to this :term:`cache server` or :term:`Cache Group`
 :MbpsOut:     Data flow rate outward from the CDN (toward client) in Megabits per second
 
+.. _tp-services:
+
 Services
 ========
 :guilabel:`Services` groups the functionality to modify :term:`Delivery Service`\ s - for those users with the necessary permissions - or make Requests for such changes - for uses without necessary permissions.
@@ -195,6 +197,9 @@ This page contains a table displaying all :term:`Delivery Service`\ s visible to
 - create, update and delete :term:`Delivery Service` regular expressions
 - view and create :term:`Delivery Service` invalidate content jobs
 - manage steering targets
+- view and manage static DNS records within a :term:`Delivery Service` subdomain
+
+	.. seealso:: :ref:`static-dns-qht`
 
 Delivery Service Requests
 -------------------------

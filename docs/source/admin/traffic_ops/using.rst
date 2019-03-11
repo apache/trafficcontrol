@@ -905,15 +905,6 @@ The **Order** entry defines the order in which the regular expressions get evalu
 .. Note:: In most cases is is sufficient to have just one entry in this table that has a ``HOST_REGEXP`` Type, and Order ``0``. For the *movies* delivery service in the Kabletown CDN, the entry is simply single ``HOST_REGEXP`` set to ``.*\.movies\..*``. This will match every url that has a hostname that ends with ``movies.cdn1.kabletown.net``, since ``cdn1.kabletown.net`` is the Kabletown CDN's DNS domain.
 
 .. index::
-	Static DNS Entries
-
-.. _static-dns:
-
-Static DNS Entries
-------------------
-Static DNS entries allow you to create other names *under* the delivery service domain. You can enter any valid hostname, and create a CNAME, A or AAAA record for it by clicking the **Static DNS** button at the bottom of the delivery service details screen.
-
-.. index::
 	Server Assignments
 
 .. _assign-edges:

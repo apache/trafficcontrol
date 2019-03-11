@@ -20,12 +20,13 @@ Traffic Control is a complicated system, and documenting it is not trivial. Some
 
 .. toctree::
 
-	multi_site
-	federations
-	regionalgeo
 	anonymous_blocking
+	cachegroup_fallback
+	ciab
 	dnssec
 	ds_requests
+	federations
+	multi_site
+	regionalgeo
+	static_dns
 	steering
-	ciab
-	cachegroup_fallback

@@ -501,7 +501,7 @@ Response Structure
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/1.1 200
+	HTTP/1.1 200 OK
 	Content-Type: application/json;charset=UTF-8
 	Transfer-Encoding: chunked
 	Date: Fri, 15 Feb 2019 22:06:53 GMT
@@ -541,7 +541,7 @@ Response Structure
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/1.1 200
+	HTTP/1.1 200 OK
 	Content-Type: application/json;charset=UTF-8
 	Transfer-Encoding: chunked
 	Date: Fri, 15 Feb 2019 22:12:38 GMT
