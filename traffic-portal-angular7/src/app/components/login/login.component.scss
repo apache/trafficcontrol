@@ -11,8 +11,40 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@import '../../../styles.scss';
+h1 {
+	display: inline-block;
+	color: $theme_tertiary;
+	font-size: 3em;
+}
+header {
+	margin: auto;
+	width: max-content;
+}
+img {
+	height: 3em;
+}
 form {
 	margin: auto;
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: 1fr 4fr;
+	grid-column-gap: normal;
+	grid-row-gap: 15px;
+	width: min-content;
+	border: 3px outset $theme_secondary;
+	border-radius: 5px;
+	padding: 15px;
+	label {
+		margin: 5px auto;
+		text-align: end;
+	}
+	input {
+		min-width: 25em;
+		margin-left: 5px;
+		text-align: start;
+	}
+	button {
+		margin: auto;
+	}
 }
+

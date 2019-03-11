@@ -13,4 +13,13 @@
 */
 
 /* This file should be used for styling that is used globally e.g. theme colors */
-$theme_main: #2A3F54
+$theme_main: #2A3F54;
+$theme_secondary: #337AB7;
+$theme_tertiary: #2E6DA4;
+$error: #E74C3C;
+$warning: #F0B37E;
+$success: #1ABB9C;
+
+body {
+	background-color: white;
+}
