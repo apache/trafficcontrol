@@ -63,8 +63,9 @@ under the License.
         <form name="deliveryServiceForm" class="form-horizontal form-label-left">
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.active), 'has-feedback': hasError(deliveryServiceForm.active)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="active">
-                    <span uib-popover-html="label('active', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('active', 'title')}}</span> *
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="active">Active *<div class="helptooltip">
+                    <div class="helptext">Whether or not this Delivery Service is active on the CDN and is capable of traffic.</div>
+                </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="active" name="active" class="form-control" ng-model="deliveryService.active" required autofocus>
@@ -73,109 +74,122 @@ under the License.
                         <option ng-value="false">Not Active</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.active, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.active != dsCurrent.active">Current Value: [ {{dsCurrent.active ? 'Active' : 'Not Active'}} ]</small>
+                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.active != dsCurrent.active">Current Value: [ {{dsCurrent.active ? 'Active' : 'Not Active'}} ]</small>
                 </div>
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.type), 'has-feedback': hasError(deliveryServiceForm.type)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="type">
-                    <span uib-popover-html="label('typeId', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('typeId', 'title')}}</span> *
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="type">Content Routing Type *<div class="helptooltip">
+                    <div class="helptext">
+                        DNS is the standard routing type for most CDN services. HTTP Redirect is a specialty routing service that is primarily used for video and large file downloads where localization and latency are significant concerns. A "Live" routing type should be used for all live services.
+                        <br>
+                        <br>
+                        <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#ds-types" target="_blank">See Delivery Service Types.</a>
+                    </div>
+                </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="type" name="type" class="form-control" ng-model="deliveryService.typeId" ng-options="type.id as type.name for type in types" required>
                         <option disabled selected hidden value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.typeId != dsCurrent.typeId">Current Value: [ {{dsCurrent.type}} ]</small>
+                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.typeId != dsCurrent.typeId">Current Value: [ {{dsCurrent.type}} ]</small>
                     <small ng-show="deliveryService.typeId"><a href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
-           <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="xmlId">
-                    <span uib-popover-html="label('xmlId', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('xmlId', 'title')}}</span> *
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="xmlId">XML_ID (Key) *<div class="helptooltip">
+                    <div class="helptext">This id becomes a part of the CDN service domain in the form <samp>http://cdn.service-key.company.com/</samp>. Must be all lowercase, no spaces or special characters. May contain dashes.</div>
+                </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="xmlId" name="xmlId" type="text" class="form-control" placeholder="Unique id used for the delivery service" ng-model="deliveryService.xmlId" required maxlength="48" pattern="[a-z]([a-z0-9\-]*[a-z0-9])?" ng-readonly="(!settings.isRequest && !settings.isNew) || (settings.isRequest && changeType == 'update')">
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.xmlId != dsCurrent.xmlId">Current Value: [ {{dsCurrent.xmlId}} ]</small>
+                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.xmlId != dsCurrent.xmlId">Current Value: [ {{dsCurrent.xmlId}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.xmlId)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.displayName), 'has-feedback': hasError(deliveryServiceForm.displayName)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="displayName">
-                    <span uib-popover-html="label('displayName', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('displayName', 'title')}}</span> *
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="displayName">Display Name *<div class="helptooltip">
+                    <div class="helptext">Name of the service that appears in the Traffic portal. No character restrictions.</div>
+                </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="displayName" name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" maxlength="48" required>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'maxlength')">Too Long</small>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.displayName != dsCurrent.displayName">Current Value: [ {{dsCurrent.displayName}} ]</small>
+                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.displayName != dsCurrent.displayName">Current Value: [ {{dsCurrent.displayName}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.displayName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.tenantId), 'has-feedback': hasError(deliveryServiceForm.tenantId)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="tenantId">
-                    <span uib-popover-html="label('tenantId', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('tenantId', 'title')}}</span> *
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="tenantId">Tenant *<div class="helptooltip">
+                    <div class="helptext">Name of company or division of company who owns account. Allows you to group your services and control access. Tenants are setup as a simple hierarchy where you may create parent / child accounts.</div>
+                </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="tenantId" name="tenantId" class="form-control" ng-model="deliveryService.tenantId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
                         <option disabled selected hidden value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.tenantId, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.tenantId != dsCurrent.tenantId">Current Value: [ {{dsCurrent.tenant}} ]</small>
+                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.tenantId != dsCurrent.tenantId">Current Value: [ {{dsCurrent.tenant}} ]</small>
                     <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cdn), 'has-feedback': hasError(deliveryServiceForm.cdn)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="cdn">
-                    <span uib-popover-html="label('cdnId', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('cdnId', 'title')}}</span> *
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="cdn">CDN *<div class="helptooltip">
+                    <div class="helptext">The CDN to which the Delivery Service belongs.</div>
+                </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="cdn" name="cdn" class="form-control" ng-model="deliveryService.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required>
                         <option disabled selected hidden value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.cdnId != dsCurrent.cdnId">Current Value: [ {{dsCurrent.cdnName}} ]</small>
+                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.cdnId != dsCurrent.cdnId">Current Value: [ {{dsCurrent.cdnName}} ]</small>
                     <small ng-show="deliveryService.cdnId"><a href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc), 'has-feedback': hasError(deliveryServiceForm.longDesc)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">
-                    <span uib-popover-html="label('longDesc', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc', 'title')}}</span> *
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">Long Description *<div class="helptooltip">
+                    <div class="helptext">Free text field that describes the purpose of the Delivery Service and will be displayed in the portal as a description field.</div>
+                </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <textarea id="longDesc" name="longDesc" type="text" class="form-control" ng-model="deliveryService.longDesc" rows="3" required></textarea>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.longDesc != dsCurrent.longDesc">Current Value: [ {{dsCurrent.longDesc}} ]</small>
+                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc != dsCurrent.longDesc">Current Value: [ {{dsCurrent.longDesc}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.longDesc)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc1), 'has-feedback': hasError(deliveryServiceForm.longDesc1)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="longDesc1">
-                    <span uib-popover-html="label('longDesc1', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc1', 'title')}}</span>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="longDesc1">Long Description 2<div class="helptooltip">
+                    <div class="helptext">Free text field not currently used in configuration. For example, you can use this field to describe your customer type.</div>
+                </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <textarea id="longDesc1" name="longDesc1" type="text" class="form-control" ng-model="deliveryService.longDesc1" rows="3"></textarea>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.longDesc1 != dsCurrent.longDesc1">Current Value: [ {{dsCurrent.longDesc1}} ]</small>
+                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc1 != dsCurrent.longDesc1">Current Value: [ {{dsCurrent.longDesc1}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.longDesc1)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc2), 'has-feedback': hasError(deliveryServiceForm.longDesc2)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="longDesc2">
-                    <span uib-popover-html="label('longDesc2', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc2', 'title')}}</span>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Long Description 3<div class="helptooltip">
+                    <div class="helptext">Free text field not currently used in configuration.</div>
+                </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <textarea id="longDesc2" name="longDesc2" type="text" class="form-control" ng-model="deliveryService.longDesc2" rows="3"></textarea>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.longDesc2 != dsCurrent.longDesc2">Current Value: [ {{dsCurrent.longDesc2}} ]</small>
+                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc2 != dsCurrent.longDesc2">Current Value: [ {{dsCurrent.longDesc2}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.longDesc2)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
@@ -190,8 +204,11 @@ under the License.
             <div ng-show="advancedShowing">
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.regionalGeoBlocking), 'has-feedback': hasError(deliveryServiceForm.regionalGeoBlocking)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="regionalGeoBlocking">
-                        <span uib-popover-html="label('regionalGeoBlocking', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('regionalGeoBlocking', 'title')}}</span> *
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="regionalGeoBlocking">Regional Geoblocking *<div class="helptooltip">
+                        <div class="helptext">
+                            Define regional geo-blocking rules for Delivery Services in a JSON format and set this to 'Enabled' to use "Regional Geoblocking". <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/regionalgeo.html" target="_blank">See Regional Geo-blocking</a>
+                        </div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select id="regionalGeoBlocking" name="regionalGeoBlocking" class="form-control" ng-model="deliveryService.regionalGeoBlocking" required>
@@ -199,13 +216,14 @@ under the License.
                             <option ng-value="false" selected>Disabled</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.regionalGeoBlocking, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.regionalGeoBlocking != dsCurrent.regionalGeoBlocking">Current Value: [ {{dsCurrent.regionalGeoBlocking ? 'Enabled' : 'Disabled'}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.regionalGeoBlocking != dsCurrent.regionalGeoBlocking">Current Value: [ {{dsCurrent.regionalGeoBlocking ? 'Enabled' : 'Disabled'}} ]</small>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.logsEnabled), 'has-feedback': hasError(deliveryServiceForm.logsEnabled)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="logsEnabled">
-                        <span uib-popover-html="label('logsEnabled', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('logsEnabled', 'title')}}</span> *
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="logsEnabled">Logs Enabled *<div class="helptooltip">
+                        <div class="helptext">Allows you to turn on/off logging for this Delivery Service</div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select id="logsEnabled" name="logsEnabled" class="form-control" ng-model="deliveryService.logsEnabled" required>
@@ -213,13 +231,14 @@ under the License.
                             <option ng-value="false">Disabled</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.logsEnabled, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.logsEnabled != dsCurrent.logsEnabled">Current Value: [ {{dsCurrent.logsEnabled ? 'Enabled' : 'Disabled'}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.logsEnabled != dsCurrent.logsEnabled">Current Value: [ {{dsCurrent.logsEnabled ? 'Enabled' : 'Disabled'}} ]</small>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoProvider), 'has-feedback': hasError(deliveryServiceForm.geoProvider)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoProvider">
-                        <span uib-popover-html="label('geoProvider', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('geoProvider', 'title')}}</span> *
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoProvider">Geolocation Provider *<div class="helptooltip">
+                        <div class="helptext">Choose which Geolocation database provider - company that collects data on the location of IP addresses - to use.</div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select id="geoProvider" name="geoProvider" class="form-control" ng-model="deliveryService.geoProvider" required>
@@ -227,13 +246,23 @@ under the License.
                             <option ng-value="1">Neustar</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoProvider != dsCurrent.geoProvider">Current Value: [ {{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoProvider != dsCurrent.geoProvider">Current Value: [ {{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}} ]</small>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimit), 'has-feedback': hasError(deliveryServiceForm.geoLimit)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoLimit">
-                        <span uib-popover-html="label('geoLimit', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('geoLimit', 'title')}}</span> *
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoLimit">Geo Limit *<div class="helptooltip">
+                        <div class="helptext">
+                            Some services are intended to be limited by geography. The possible settings are:
+                            <br>
+                            <br>
+                            <dl>
+                                <dt>None</dt><dd>Do not limit by geography.</dd>
+                                <dt>Coverage Zone File only</dt><dd>If the requesting IP is not in the Coverage Zone File, do not serve the request.</dd>
+                                <dt>Coverage Zone File and Country Code(s)</dt><dd>If the requesting IP is not in the Coverage Zone File or not in the United States, do not serve the request.</dd>
+                            </dl>
+                        </div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select id="geoLimit" name="geoLimit" class="form-control" ng-model="deliveryService.geoLimit" required>
@@ -242,115 +271,144 @@ under the License.
                             <option ng-value="2">Coverage Zone File and Country Code(s)</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimit != dsCurrent.geoLimit">Current Value: [ {{magicNumberLabel(geoLimits, dsCurrent.geoLimit)}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimit != dsCurrent.geoLimit">Current Value: [ {{magicNumberLabel(geoLimits, dsCurrent.geoLimit)}} ]</small>
                     </div>
                 </div>
 
-
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimitCountries), 'has-feedback': hasError(deliveryServiceForm.geoLimitCountries)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitCountries">
-                        <span uib-popover-html="label('geoLimitCountries', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('geoLimitCountries', 'title')}}</span>
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitCountries">Geo Limit Countries<div class="helptooltip">
+                        <div class="helptext">How (if at all) is this service to be limited by geography. Example Country Codes: <abbr title="Canada">CA</abbr>, <abbr title="India">IN</abbr>, <abbr title="Puerto Rico">PR</abbr>.</div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="geoLimitCountries" name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" maxlength="255">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimitCountries, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">Current Value: [ {{dsCurrent.geoLimitCountries}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">Current Value: [ {{dsCurrent.geoLimitCountries}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.geoLimitCountries)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimitRedirectURL), 'has-feedback': hasError(deliveryServiceForm.geoLimitRedirectURL)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitRedirectURL">
-                        <span uib-popover-html="label('geoLimitRedirectURL', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('geoLimitRedirectURL', 'title')}}</span>
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitRedirectURL">Geo Limit Redirect URL<div class="helptooltip">
+                        <div class="helptext">
+                            Traffic Router will redirect to this URL when Geo Limit check fails.
+                            <br>
+                            <br>
+                            See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-ngb" target="_blank">GeoLimit Failure Redirect</a> feature...
+                        </div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="geoLimitRedirectURL" name="geoLimitRedirectURL" type="url" class="form-control" ng-model="deliveryService.geoLimitRedirectURL" title="Must be a valid URL.">
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimitRedirectURL != dsCurrent.geoLimitRedirectURL">Current Value: [ {{dsCurrent.geoLimitRedirectURL}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitRedirectURL != dsCurrent.geoLimitRedirectURL">Current Value: [ {{dsCurrent.geoLimitRedirectURL}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.geoLimitRedirectURL)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.profile), 'has-feedback': hasError(deliveryServiceForm.profile)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="profile">
-                        <span uib-popover-html="label('profileId', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('profileId', 'title')}}</span>
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="profile">Delivery Service Profile<div class="helptooltip">
+                        <div class="helptext">Only used if a Delivery Service uses configurations that specifically require a profile. Example: Multi-Site Origin configurations would require a Delivery Service Profile to be used.</div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select id="profile" name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles">
                             <option selected value="">None</option>
                         </select>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.profileId != dsCurrent.profileId">Current Value: [ {{dsCurrent.profileName}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.profileId != dsCurrent.profileId">Current Value: [ {{dsCurrent.profileName}} ]</small>
                         <small ng-show="deliveryService.profileId"><a href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trRequestHeaders), 'has-feedback': hasError(deliveryServiceForm.trRequestHeaders)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="trRequestHeaders">
-                        <span uib-popover-html="label('trRequestHeaders', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('trRequestHeaders', 'title')}}</span>
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="trRequestHeaders">Traffic Router Log Request Headers<div class="helptooltip">
+                        <div class="helptext">
+                            List of header keys separated by <code>__RETURN__</code>. Listed headers will be included in Traffic Router access log entries under the <samp>rh=</samp> token.
+                        </div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="trRequestHeaders" name="trRequestHeaders" type="text" class="form-control" ng-model="deliveryService.trRequestHeaders" maxlength="1024">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.trRequestHeaders, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.trRequestHeaders != dsCurrent.trRequestHeaders">Current Value: [ {{dsCurrent.trRequestHeaders}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.trRequestHeaders != dsCurrent.trRequestHeaders">Current Value: [ {{dsCurrent.trRequestHeaders}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.trRequestHeaders)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cacheurl), 'has-feedback': hasError(deliveryServiceForm.cacheurl)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="cacheurl">
-                        <span uib-popover-html="label('cacheurl', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('cacheurl', 'title')}}</span>
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="cacheurl">Cache URL Expression<div class="helptooltip">
+                        <div class="helptext">
+                            Allows you to manipulate the cache key of the incoming requests. Normally, the cache key is the origin domain. This can be changed so that multiple services can share a cache key, can also be used to preserve cached content if service origin is changed.
+                            <br>
+                            <aside>
+                                <h6>Note</h6>
+                                <p>This only works with Edge-tier cache servers running <abbr title="Apache Traffic Server">ATS</abbr> version 6 and earlier. This <em>must</em> be empty if using <abbr title="Apache Traffic Server">ATS</abbr> 7 and / or the <a href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/cachekey.en.html" target="_blank">cachekey plugin.</a></p>
+                                <br>
+                                <br>
+                                See <a href="https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/plugins/cacheurl.en.html" target="_blank">ATS documentation on cacheurl</a>
+                            </aside>
+                            <aside class="warning">
+                                <h6>Warning</h6>
+                                <p>This field is deprecated, and is subject to removal in upcoming releases. It is recommended that this be left blank.</p>
+                            </aside>
+                        </div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="cacheurl" name="cacheurl" type="text" class="form-control" ng-model="deliveryService.cacheurl" maxlength="1024">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cacheurl, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.cacheurl != dsCurrent.cacheurl">Current Value: [ {{dsCurrent.cacheurl}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.cacheurl != dsCurrent.cacheurl">Current Value: [ {{dsCurrent.cacheurl}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.cacheurl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ccrDnsTtl), 'has-feedback': hasError(deliveryServiceForm.ccrDnsTtl)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="ccrDnsTtl">
-                        <span uib-popover-html="label('ccrDnsTtl', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('ccrDnsTtl', 'title')}}</span>
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="ccrDnsTtl">Delivery Service DNS TTL<div class="helptooltip">
+                        <div class="helptext">The <abbr title="Time To Live">TTL</abbr> on the DNS record for the Traffic Router A and AAAA records. Setting too high or too low will result in poor caching performance.</div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="ccrDnsTtl" name="ccrDnsTtl" type="number" class="form-control" ng-model="deliveryService.ccrDnsTtl" min="0" step="1">
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">Current Value: [ {{dsCurrent.ccrDnsTtl}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">Current Value: [ {{dsCurrent.ccrDnsTtl}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.ccrDnsTtl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.remapText), 'has-feedback': hasError(deliveryServiceForm.remapText)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="remapText">
-                        <span uib-popover-html="label('remapText', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('remapText', 'title')}}</span>
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="remapText">Raw remap text<div class="helptooltip">
+                        <div class="helptext">For HTTP and DNS Delivery Services, this will get added to the end of the remap line verbatim on cache servers. For ANY_MAP Delivery Services this is the entire remap line.</div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="remapText" name="remapText" type="text" class="form-control" ng-model="deliveryService.remapText" maxlength="2048">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.remapText, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.remapText != dsCurrent.remapText">Current Value: [ {{dsCurrent.remapText}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.remapText != dsCurrent.remapText">Current Value: [ {{dsCurrent.remapText}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.remapText)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.infoUrl), 'has-feedback': hasError(deliveryServiceForm.infoUrl)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="infoUrl">
-                        <span uib-popover-html="label('infoUrl', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('infoUrl', 'title')}}</span>
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="infoUrl">Info URL<div class="helptooltip">
+                        <div class="helptext">Free text field used to enter a URL which provides information about the service.</div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="infoUrl" name="infoUrl" type="url" class="form-control" ng-model="deliveryService.infoUrl" title="Must be a valid URL." maxlength="255">
+                        <input id="infoUrl" name="infoUrl" type="url" class="form-control" ng-model="deliveryService.infoUrl" title="Must be a valid URL" maxlength="255">
                         <small class="input-error invalid-URL-error">Invalid URL</small>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.infoUrl, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.infoUrl != dsCurrent.infoUrl">Current Value: [ {{dsCurrent.infoUrl}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.infoUrl != dsCurrent.infoUrl">Current Value: [ {{dsCurrent.infoUrl}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.infoUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.checkPath), 'has-feedback': hasError(deliveryServiceForm.checkPath)}">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="checkPath">
-                        <span uib-popover-html="label('checkPath', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('checkPath', 'title')}}</span>
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="checkPath">Check Path<div class="helptooltip">
+                        <div class="helptext">A path (e.g. <samp>/crossdomain.xml</samp>) with which to verify the connection to the origin server. This can be used by Check Extension scripts to do periodic health checks against the Delivery Service.</div>
+                    </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="checkPath" name="checkPath" type="text" class="form-control" ng-model="deliveryService.checkPath" maxlength="255">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.checkPath, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.checkPath != dsCurrent.checkPath">Current Value: [ {{dsCurrent.checkPath}} ]</small>
+                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.checkPath != dsCurrent.checkPath">Current Value: [ {{dsCurrent.checkPath}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.checkPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
