@@ -31,6 +31,7 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 // Routing
 import { AppRoutingModule } from './app-routing.module';
 import { AuthGuard } from './interceptor/auth.guard';
+import { DsCardComponent } from './components/ds-card/ds-card.component';
 // import { ErrorInterceptor } from './interceptor/error.interceptor';
 
 /**
@@ -49,6 +50,7 @@ const appRoutes: Routes = [
 		AppComponent,
 		LoginComponent,
 		DashboardComponent,
+		DsCardComponent,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),

@@ -11,16 +11,25 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@import '../../../styles.scss';
+details {
+	border: 2px solid gray;
+	border-radius: 12px;
 
-h1 {
-	margin: auto;
-}
+	& > summary {
+		background-color: $theme_main;
+		color: white;
+		padding: 10px;
+		cursor: pointer;
+		border-radius: 10px;
+	}
 
-img {
-	margin: auto;
-}
+	&.inactive > summary {
+		background-color: $theme_secondary;
+		color: lightgray;
+	}
 
-div#deliveryservices {
-	width: 80%;
-	margin: auto;
+	&[open] > summary {
+		border-radius: 10px 10px 0 0;
+	}
 }

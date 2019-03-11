@@ -11,10 +11,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<h1>Welcome to Traffic Portal!</h1>
-<img src="/ATC-SVG.svg" width="300"/>
-<h2>Delivery Services</h2>
-<hr/>
-<div id="deliveryservices">
-	<ds-card *ngFor="let ds of deliveryServices" [deliveryService]="ds"></ds-card>
-</div>
+<details [ngClass]="{'inactive': !deliveryService.active}">
+	<summary>{{deliveryService.displayName}}{{deliveryService.active ? '' : ' (inactive)'}}</summary>
+	{{deliveryService.active}}<br/>
+	{{deliveryService.xmlId}} ({{deliveryService.id}})
+</details>

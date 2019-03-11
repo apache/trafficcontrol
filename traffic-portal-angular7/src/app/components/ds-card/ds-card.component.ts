@@ -11,16 +11,21 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { Component, OnInit, Input } from '@angular/core';
 
-h1 {
-	margin: auto;
-}
+import { DeliveryService } from '../../models/deliveryservice'
 
-img {
-	margin: auto;
-}
+@Component({
+	selector: 'ds-card',
+	templateUrl: './ds-card.component.html',
+	styleUrls: ['./ds-card.component.scss']
+})
+export class DsCardComponent implements OnInit {
 
-div#deliveryservices {
-	width: 80%;
-	margin: auto;
+	@Input() deliveryService: DeliveryService;
+
+	constructor() { }
+
+	ngOnInit() { }
+
 }
