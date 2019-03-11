@@ -1,3 +1,9 @@
+<!--
+************ STOP!! ************
+If this Pull Request is intended to fix a security vulnerability, DO NOT submit it! Instead, contact
+the Apache Software Foundation Security Team at security@trafficcontrol.apache.org and follow the
+guidelines at https://www.apache.org/security/ regarding vulnerability disclosure.
+-->
 ## What does this PR (Pull Request) do?
 <!-- Explain the changes you made here. If this fixes an Issue, identify it by
 number e.g.
@@ -53,7 +59,7 @@ e.g.
 - [ ] This PR includes an update to CHANGELOG.md OR such an update is not necessary
 - [ ] This PR includes any and all required license headers
 - [ ] This PR ensures that database migration sequence is correct OR this PR does not include a database migration
-- [ ] This PR has followed the [Apache Security Vulnerability Guidelines](https://www.apache.org/security/) OR this PR does not contain a fix for a serious security flaw
+- [ ] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines for details](https://www.apache.org/security/))
 
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
