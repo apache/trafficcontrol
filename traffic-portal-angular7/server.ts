@@ -132,61 +132,20 @@ app.get('*.*', express.static(DIST_FOLDER, {
 app.use('/api/**', (req, res) => {
 	console.debug(`Making TO API request to \`${req.originalUrl}\``);
 
-	let rawBody = '';
-	req.on('data', (chunk) => {
-		rawBody += chunk;
+	let fwdRequest = {
+		host: to_host,
+		port: to_port,
+		path: parse(req.originalUrl).path,
+		method: req.method,
+		headers: req.headers
+	};
+
+
+	const proxiedRequest = request(fwdRequest, (r) => {
+		res.writeHead(r.statusCode, r.headers);
+		r.pipe(res);
 	});
-
-	req.on('end', () =>{
-		let fwdRequest = {
-			host: to_host,
-			port: to_port,
-			path: parse(req.originalUrl).path,
-			method: req.method,
-			headers: req.headers
-		};
-
-		fwdRequest.headers["Host"] = to_host;
-
-		const proxiedRequest = request(fwdRequest, (r) => {
-			// let respBody = '';
-			// r.on('data', (d) => {
-			// 	respBody += d;
-			// });
-			let respBody = new ArrayBuffer(r.headers['content-length']);
-			switch (r.headers['content-encoding']) {
-				// case 'br':
-				// 	r.pipe(zlib.createBrotliDecompress()).pipe(res);
-				// 	break;
-				case 'gzip':
-					r.pipe(zlib.createGunzip()).pipe(respBody);
-					break;
-				case 'deflate':
-					r.pipe(zlib.createInflate()).pipe(res);
-					break;
-				default:
-					r.pipe(res);
-					break;
-			}
-			r.on('end', () => {
-				console.log("r headers: ", r.headers);
-				// console.log("response body: ", respBody);
-				if (r.rawHeaders.length % 2 !== 0) {
-					console.error("At least one header was sent without value!");
-					console.debug(r);
-					return;
-				}
-				for (const h in r.headers) {
-					res.append(h, r.headers[h]);
-				}
-
-				res.status(r.statusCode).send(respBody);
-			});
-		});
-
-		proxiedRequest.write(rawBody);
-		proxiedRequest.end();
-	});
+	req.pipe(proxiedRequest);
 });
 
 // Default route shows the dash

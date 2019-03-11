@@ -1,8 +1,22 @@
+/*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, first, catchError } from 'rxjs/operators';
 
+import { DeliveryService } from '../models/deliveryservice';
 import { User } from '../models/user';
 
 @Injectable({ providedIn: 'root' })
@@ -43,27 +57,11 @@ export class APIService {
 		                 observe: 'response' as 'response',
 		                 responseType: 'json' as 'json',
 		                 body: data};
-		const ret = this.http.request(method, path, options)/*.pipe(map((response) => {
+		return this.http.request(method, path, options).pipe(map((response) => {
 			//TODO pass alerts to the alert service
 			// (TODO create the alert service)
-			console.log("http.request made");
-			let resp = response as HttpResponse<any>;
-			if ('Cookie' in resp.headers) {
-				this.cookies = resp.headers['Cookie']
-			}
-			console.log("returning resp");
-			return resp;
-		})).pipe(catchError((e, caught) => {
-			console.log("wtf?: ", e);
-			return throwError(e);
-		}));*/
-		ret.subscribe(r => {
-			console.log("got a response: ", r);
-		},
-		e => {
-			console.error("got an error: ", e)
-		});
-		return ret;
+			return response as HttpResponse<any>;
+		}));
 	}
 
 	public login(u, p): Observable<HttpResponse<any>> {
@@ -74,5 +72,13 @@ export class APIService {
 	public getCurrentUser(): Observable<HttpResponse<any>> {
 		const path = '/api/'+this.API_VERSION+'/user/current';
 		return this.get(path);
+	}
+
+	public getDeliveryServices(): Observable<DeliveryService[]> {
+		const path = '/api/'+this.API_VERSION+'/deliveryservices';
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response as DeliveryService[];
+			}));
 	}
 }
