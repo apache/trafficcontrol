@@ -11,6 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+/**
+ * Represents a single `alert` object returned by the Traffic Ops API
+*/
 export class Alert {
 	level: string;
 	text: string;

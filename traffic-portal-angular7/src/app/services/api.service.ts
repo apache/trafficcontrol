@@ -20,6 +20,10 @@ import { DeliveryService } from '../models/deliveryservice';
 import { User } from '../models/user';
 
 @Injectable({ providedIn: 'root' })
+/**
+ * The APIService provides access to the Traffic Ops API. Its methods should be kept API-version
+ * agnostic (from the caller's perspective), and always return `Observable`s.
+*/
 export class APIService {
 	public API_VERSION = '1.5';
 
@@ -64,21 +68,36 @@ export class APIService {
 		}));
 	}
 
-	public login(u, p): Observable<HttpResponse<any>> {
+	/**
+	 * Performs authentication with the Traffic Ops server.
+	 * @param u The username to be used for authentication
+	 * @param p The password of user `u`
+	 * @returns An observable that will emit the entire HTTP response
+	*/
+	public login(u:string, p:string): Observable<HttpResponse<any>> {
 		const path = 'http://localhost:4000/api/'+this.API_VERSION+'/user/login';
 		return this.post(path, {u, p});
 	}
 
+	/**
+	 * Fetches the current user from Traffic Ops
+	 * @returns An observable that will emit the entire HTTP response
+	*/
 	public getCurrentUser(): Observable<HttpResponse<any>> {
 		const path = '/api/'+this.API_VERSION+'/user/current';
 		return this.get(path);
 	}
 
+	/**
+	 * Gets a list of all visible Delivery Services
+	 * @returns An observable that will emit an array of `DeliveryService` objects.
+	*/
 	public getDeliveryServices(): Observable<DeliveryService[]> {
 		const path = '/api/'+this.API_VERSION+'/deliveryservices';
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response as DeliveryService[];
-			}));
+			}
+		));
 	}
 }

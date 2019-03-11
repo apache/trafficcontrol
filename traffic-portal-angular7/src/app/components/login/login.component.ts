@@ -23,6 +23,9 @@ import { AuthenticationService } from '../../services';
 	templateUrl: './login.component.html',
 	styleUrls: ['./login.component.scss']
 })
+/**
+ * Controller for the `/login` page, handles form submission
+*/
 export class LoginComponent implements OnInit {
 	returnURL: string;
 
@@ -35,6 +38,11 @@ export class LoginComponent implements OnInit {
 		this.returnURL = this.route.snapshot.queryParams['returnUrl'] || '/';
 	}
 
+	/**
+	 * Handles submission of the Login form, and redirects the user back to their requested page
+	 * should it be succesful. If the user had not yet requested a page, they will be redirected to
+	 * `/`
+	*/
 	submitLogin(): void {
 		this.auth.login(this.u.value, this.p.value).pipe(first()).subscribe(
 			(response) => {

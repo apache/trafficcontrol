@@ -23,6 +23,9 @@ import { User } from './models/user';
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss']
 })
+/**
+ * The most basic component that contains everything else. This should be kept pretty simple.
+*/
 export class AppComponent {
 	title = 'Traffic Portal';
 

@@ -18,6 +18,10 @@ import { catchError } from 'rxjs/operators';
 
 import { AuthenticationService } from '../services';
 
+/**
+ * This class intercepts any and all HTTP error responses and checks for authorization problems. It
+ * then redirects the user back to login.
+*/
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
 	constructor(private authenticationService: AuthenticationService) {}

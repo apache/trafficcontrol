@@ -23,6 +23,9 @@ import { DeliveryService } from '../../models/deliveryservice';
 	templateUrl: './dashboard.component.html',
 	styleUrls: ['./dashboard.component.scss']
 })
+/**
+ * Controller for the dashboard. Doesn't do much yet.
+*/
 export class DashboardComponent implements OnInit {
 	deliveryServices: DeliveryService[];
 

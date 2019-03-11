@@ -12,6 +12,11 @@
 * limitations under the License.
 */
 
+/**
+ * This file contains the definition for the entire app. Its syntax is a bit arcane, but hopefully
+ * by copy/pasting any novice can add a new component.
+*/
+
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -28,7 +33,12 @@ import { AppRoutingModule } from './app-routing.module';
 import { AuthGuard } from './interceptor/auth.guard';
 // import { ErrorInterceptor } from './interceptor/error.interceptor';
 
-
+/**
+ * This is the list of available, distinct URLs, with the leading path separator omitted. Each
+ * element should contain a `path` key for the path value, a component which will be inserted at the
+ * `<router-outlet>` when the user navigates to `path`, and an optional `canActivate` key which
+ * should be a list of services that implement the `CanActivate` interface.
+*/
 const appRoutes: Routes = [
 	{ path: '', component: DashboardComponent, canActivate: [AuthGuard] },
 	{ path: 'login', component: LoginComponent },

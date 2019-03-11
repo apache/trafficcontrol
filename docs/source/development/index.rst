@@ -19,14 +19,14 @@ Developer's Guide
 Use this guide to start developing applications that consume the Traffic Control APIs, to create extensions to Traffic Ops, or work on Traffic Control itself.
 
 .. toctree::
-  :maxdepth: 2
+	:maxdepth: 2
 
-  building
-  traffic_ops
-  traffic_ops_golang
-  ort/traffic_ops_ort
-  traffic_portal
-  traffic_router
-  traffic_monitor
-  traffic_stats
-  documentation_guidelines
+	building
+	traffic_ops
+	traffic_ops_golang
+	ort/traffic_ops_ort
+	traffic_portal
+	traffic_router
+	traffic_monitor
+	traffic_stats
+	documentation_guidelines

@@ -16,6 +16,9 @@ import { Router, CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot } from
 
 import { AuthenticationService } from '../services';
 
+/**
+ * Ensures that a user is logged in on page load, and redirects them to `/login` if they are not.
+*/
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
 	constructor(

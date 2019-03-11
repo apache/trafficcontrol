@@ -11,6 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+/**
+ * Reprents a Traffic Ops user (`tm_user` in the database)
+*/
 export class User {
 	addressLine1?: string;
 	addressLine2?: string;
@@ -19,19 +23,19 @@ export class User {
 	country?: string;
 	email: string;
 	fullName?: string;
-	gid?: Number;
-	id: Number;
+	gid?: number;
+	id: number;
 	lastUpdated?: Date;
 	localUser: boolean;
 	newUser: boolean;
 	phoneNumber?: string;
 	postalCode?: string;
 	publicSshKey?: string;
-	role?: Number;
+	role?: number;
 	roleName?: string;
 	stateOrProvince?: string;
 	tenant?: string;
-	tenantId?: Number;
-	uid?: Number;
+	tenantId?: number;
+	uid?: number;
 	username: string;
 }
