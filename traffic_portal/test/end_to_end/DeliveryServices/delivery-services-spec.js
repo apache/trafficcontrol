@@ -26,8 +26,8 @@ describe('Traffic Portal Delivery Services Suite', function() {
 	var commonFunctions = new cfunc();
 	var mockVals = {
 		dsType: ["ANY MAP", "DNS", "HTTP", "STEERING"],
-		active: "true",
-		xmlId: "thisIsOnlyATest",
+		active: "Active",
+		xmlId: "thisisonlyatest",
 		displayName: "dsTest",
 		orgServerFqdn: "http://dstest.com",
 		longDesc: "This is only a test that should be disposed of by Automated UI Testing."
