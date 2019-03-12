@@ -103,4 +103,19 @@ export class APIService {
 			}
 		));
 	}
+
+	/**
+	 * Retrieves capacity statistics for the Delivery Service identified by a given, unique,
+	 * integral value.
+	 * @param {d} The integral, unique identifier of a Delivery Service
+	 * @returrns An Observable that emits an object that hopefully has the right keys to represent capacity.
+	*/
+	public getDSCapacity(d: number): Observable<any> {
+		const path = '/api/'+this.API_VERSION+'/deliveryservices/'+String(d)+'/capacity';
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response;
+			}
+		));
+	}
 }

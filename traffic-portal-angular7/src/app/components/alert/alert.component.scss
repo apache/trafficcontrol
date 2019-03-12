@@ -11,6 +11,23 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export * from './authentication.service';
-export * from './api.service';
-export * from './alert.service';
+@import '../../../styles.scss';
+dialog {
+	border-width: 0;
+	border-radius: 15px;
+	max-width: 80vw;
+
+	&.success {
+		background-color: $success;
+	}
+	&.warning {
+		background-color: $warning;
+	}
+	&.error {
+		background-color: $error;
+		color: white;
+	}
+	&.info {
+		background-color: $theme_tertiary;
+	}
+}

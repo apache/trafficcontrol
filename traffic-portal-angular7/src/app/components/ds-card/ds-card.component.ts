@@ -11,21 +11,49 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
-import { DeliveryService } from '../../models/deliveryservice'
+import { first } from 'rxjs/operators';
+
+import { APIService } from '../../services';
+import { DeliveryService } from '../../models/deliveryservice';
 
 @Component({
 	selector: 'ds-card',
 	templateUrl: './ds-card.component.html',
 	styleUrls: ['./ds-card.component.scss']
 })
-export class DsCardComponent implements OnInit {
+export class DsCardComponent {
 
 	@Input() deliveryService: DeliveryService;
 
-	constructor() { }
+	// Capacity measures
+	available: number;
+	maintenance: number;
+	utilized: number;
 
-	ngOnInit() { }
+	private loaded: boolean;
+
+	constructor(private api: APIService) {
+		this.available = 100;
+		this.maintenance = 0;
+		this.utilized = 0;
+		this.loaded = false;
+	}
+
+	toggle(e: Event) {
+		if (!this.loaded && (e.target as HTMLDetailsElement).open) {
+			this.api.getDSCapacity(this.deliveryService.id).pipe(first()).subscribe(
+				r => {
+					if (r) {
+						this.available = r.availablePercent;
+						this.maintenance = r.maintenancePercent;
+						this.utilized = r.utilizedPercent;
+						this.loaded = true;
+					}
+				}
+			);
+		}
+	}
 
 }

@@ -45,6 +45,15 @@ div.card-content {
 	grid-column-gap: normal;
 	grid-row-gap: 10px;
 	padding: 10px;
+
+	fieldset.capacity {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		grid-column-gap: 15px;
+		label {
+			text-align: right;
+		}
+	}
 }
 
 @media (min-width: 768px) {

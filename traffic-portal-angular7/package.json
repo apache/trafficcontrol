@@ -11,7 +11,8 @@
     "compile:server": "webpack --config webpack.server.config.js --progress --colors",
     "serve:ssr": "node dist/server",
     "build:ssr": "npm run build:client-and-server-bundles && npm run compile:server",
-    "build:client-and-server-bundles": "ng build --prod && ng run traffic-portal-angular7:server:production && cp -f ../misc/logos/ATC-SVG.svg dist/browser/"
+    "build:client-and-server-bundles": "ng build --prod && ng run traffic-portal-angular7:server:production && cp -f ../misc/logos/ATC-SVG.svg dist/browser/",
+    "autonomous:build": "npm run build:client-and-server-bundles && webpack --config webpack.server.config.js --progress --no-colors"
   },
   "private": true,
   "dependencies": {

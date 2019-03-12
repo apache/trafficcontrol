@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<details [ngClass]="{'inactive': !deliveryService.active}">
+<details [ngClass]="{'inactive': !deliveryService.active}" (toggle)="toggle($event)">
 	<summary>{{deliveryService.displayName}}{{deliveryService.active ? '' : ' (inactive)'}}<a href="{{deliveryService.infoUrl}}" *ngIf="deliveryService.infoUrl" class="info" rel="noopener" target="_blank" title="More Information"><svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" font-size="12px" font-family="Dialog" stroke-linecap="square" style="width: 1em; height: 1em;" version="1.1" stroke-miterlimit="10" xmlns:cc="http://creativecommons.org/ns#" viewBox="0 0 230.3438 230.20309">
 	<g fill="#000" transform="translate(-28.8281,-168.3281)">
 		<g fill="#000">
@@ -81,6 +81,12 @@ limitations under the License.
 					</g>
 				</g>
 			</svg>
+			<fieldset class="capacity">
+				<legend>Capacity</legend>
+				<label for="{{deliveryService.id}}-utilized">Utilized:</label><meter id="{{deliveryService.id}}-utilized" max="100" low="25" high="75" optimum="5" value="{{utilized}}" title="{{utilized}} percent">{{utilized}}%</meter>
+				<label for="{{deliveryService.id}}-available">Available:</label><meter id="{{deliveryService.id}}-available" max="100" low="25" high="75" optimum="95" value="{{available}}" title="{{available}} percent">{{available}}%</meter>
+				<label for="{{deliveryService.id}}-maintenance">Under Mainenance:</label><meter id="{{deliveryService.id}}-maintenance-" max="100" low="10" high="20" optimum="0" value="{{maintenance}}" title="{{maintenance}} percent">{{maintenance}}%</meter>
+			</fieldset>
 		</div>
 	</div>
 </details>

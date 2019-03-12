@@ -23,15 +23,17 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
-// Components
-import { AppComponent } from './app.component';
-import { LoginComponent } from './components/login/login.component';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
-
 // Routing
 import { AppRoutingModule } from './app-routing.module';
-import { DsCardComponent } from './components/ds-card/ds-card.component';
 import { ErrorInterceptor } from './interceptor/error.interceptor';
+import { AlertInterceptor } from './interceptor/alerts.interceptor';
+
+// Components
+import { AppComponent } from './app.component';
+import { AlertComponent } from './components/alert/alert.component';
+import { DsCardComponent } from './components/ds-card/ds-card.component';
+import { LoginComponent } from './components/login/login.component';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
 
 /**
  * This is the list of available, distinct URLs, with the leading path separator omitted. Each
@@ -50,6 +52,7 @@ const appRoutes: Routes = [
 		LoginComponent,
 		DashboardComponent,
 		DsCardComponent,
+		AlertComponent,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),
@@ -60,7 +63,8 @@ const appRoutes: Routes = [
 		FormsModule
 	],
 	providers: [
-		{provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true}
+		{provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
+		{provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor, multi: true}
 	],
 	bootstrap: [AppComponent]
 })
