@@ -23,6 +23,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Snapshotting the CRConfig now deletes HTTPS certificates in Riak for delivery services which have been deleted in Traffic Ops.
 
 ### Changed
+- Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
+  - validates modulus of private and public keys
+  - validates current timestamp falls within the certificate date bracket
+  - validates certificate subjects against the DS URL
 - Traffic Ops Golang Endpoints
   - Updated /api/1.1/cachegroups: Cache Group Fallbacks are included
   - Updated /api/1.1/cachegroups: fixed so fallbackToClosest can be set through API

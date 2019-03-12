@@ -19,6 +19,7 @@ import com.comcast.cdn.traffic_control.traffic_router.secure.BindPrivateKey;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -69,7 +70,7 @@ public class BindPrivateKeyTest {
 			"Exponent2: " + encode(privateCrtKey.getPrimeExponentQ())+ "\n" +
 			"Coefficient: " + encode(privateCrtKey.getCrtCoefficient())+ "\n";
 
-		privateKey = mock(PrivateKey.class);
+		privateKey = Mockito.mock(PrivateKey.class);
 		KeyFactory keyFactory = PowerMockito.mock(KeyFactory.class);
 
 		PowerMockito.mockStatic(KeyFactory.class);
