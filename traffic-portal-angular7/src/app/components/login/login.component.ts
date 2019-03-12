@@ -47,8 +47,6 @@ export class LoginComponent implements OnInit {
 		this.auth.login(this.u.value, this.p.value).pipe(first()).subscribe(
 			(response) => {
 				if (response) {
-					console.log("LoginComponent: response:", response);
-					console.log("Navigating to ", this.returnURL);
 					this.router.navigate([this.returnURL]);
 				}
 			},

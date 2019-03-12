@@ -14,14 +14,12 @@
 @import '../../../styles.scss';
 details {
 	border: 2px solid gray;
-	border-radius: 12px;
 
 	& > summary {
 		background-color: $theme_main;
 		color: white;
 		padding: 10px;
 		cursor: pointer;
-		border-radius: 10px;
 	}
 
 	&.inactive > summary {
@@ -29,7 +27,34 @@ details {
 		color: lightgray;
 	}
 
-	&[open] > summary {
-		border-radius: 10px 10px 0 0;
+	&[open] {
+		border-radius: 12px;
+		& > summary {
+			border-radius: 10px 10px 0 0;
+		}
+	}
+}
+
+a.info {
+	text-decoration: none;
+	color: inherit;
+}
+
+div.card-content {
+	display: grid;
+	grid-column-gap: normal;
+	grid-row-gap: 10px;
+	padding: 10px;
+}
+
+@media (min-width: 768px) {
+	div.card-content {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+@media (max-width: 767px) {
+	div.card-content {
+		grid-template-columns: 1fr;
 	}
 }

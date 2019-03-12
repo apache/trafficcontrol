@@ -11,13 +11,44 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@import '../../../styles.scss';
+header {
+	display: inline-flex;
+	width: 100%;
+	height: 3em;
+	padding: 5px;
+	background-color: $theme_main;
+	color: white;
 
-h1 {
-	margin: auto;
-}
+	img {
+		height: 100%;
+		display: inline-block;
+	}
 
-img {
-	margin: auto;
+	h1 {
+		display: inline-block;
+		margin: auto;
+	}
+
+	& > div {
+		flex: auto;
+	}
+
+	nav > ul {
+
+		padding-inline-start: 0;
+		padding-inline-end: 20px;
+
+		& > li {
+			display: inline;
+			margin: auto 0.5em;
+
+			a {
+				text-decoration: none;
+				color: inherit;
+			}
+		}
+	}
 }
 
 div#deliveryservices {

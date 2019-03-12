@@ -31,6 +31,7 @@ form {
 	grid-column-gap: normal;
 	grid-row-gap: 15px;
 	width: min-content;
+	max-width: 85vw;
 	border: 3px outset $theme_secondary;
 	border-radius: 5px;
 	padding: 15px;
