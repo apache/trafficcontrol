@@ -27,7 +27,7 @@ import { User } from '../models/user';
 export class APIService {
 	public API_VERSION = '1.5';
 
-	private cookies: string;
+	// private cookies: string;
 
 	constructor(private http: HttpClient) {
 
@@ -56,8 +56,7 @@ export class APIService {
 	}
 
 	private do(method: string, path: string, data?: Object): Observable<HttpResponse<any>> {
-		const options = {headers: new HttpHeaders({'Content-Type': 'application/json',
-		                                           'Cookie': this.cookies ? this.cookies : ''}),
+		const options = {headers: new HttpHeaders({'Content-Type': 'application/json'}),
 		                 observe: 'response' as 'response',
 		                 responseType: 'json' as 'json',
 		                 body: data};
@@ -81,11 +80,15 @@ export class APIService {
 
 	/**
 	 * Fetches the current user from Traffic Ops
-	 * @returns An observable that will emit the entire HTTP response
+	 * @returns An observable that will emit a `User` object representing the current user.
 	*/
-	public getCurrentUser(): Observable<HttpResponse<any>> {
+	public getCurrentUser(): Observable<User> {
 		const path = '/api/'+this.API_VERSION+'/user/current';
-		return this.get(path);
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response as User;
+			}
+		));
 	}
 
 	/**

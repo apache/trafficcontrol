@@ -22,8 +22,10 @@ limitations under the License.
 		</ul>
 	</nav>
 </header>
-<h2>Delivery Services</h2>
-<hr/>
-<div id="deliveryservices">
-	<ds-card *ngFor="let ds of deliveryServices" [deliveryService]="ds"></ds-card>
-</div>
+<main>
+	<h2>Delivery Services</h2>
+	<hr/>
+	<article id="deliveryservices" [ngClass]="{'loading': loading}">
+		<ds-card *ngFor="let ds of deliveryServices" [deliveryService]="ds"></ds-card>
+	</article>
+</main>

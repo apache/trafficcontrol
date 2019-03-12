@@ -30,9 +30,8 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 
 // Routing
 import { AppRoutingModule } from './app-routing.module';
-import { AuthGuard } from './interceptor/auth.guard';
 import { DsCardComponent } from './components/ds-card/ds-card.component';
-// import { ErrorInterceptor } from './interceptor/error.interceptor';
+import { ErrorInterceptor } from './interceptor/error.interceptor';
 
 /**
  * This is the list of available, distinct URLs, with the leading path separator omitted. Each
@@ -41,7 +40,7 @@ import { DsCardComponent } from './components/ds-card/ds-card.component';
  * should be a list of services that implement the `CanActivate` interface.
 */
 const appRoutes: Routes = [
-	{ path: '', component: DashboardComponent, canActivate: [AuthGuard] },
+	{ path: '', component: DashboardComponent },
 	{ path: 'login', component: LoginComponent },
 ];
 
@@ -60,9 +59,9 @@ const appRoutes: Routes = [
 		ReactiveFormsModule,
 		FormsModule
 	],
-	// providers: [
-	// 	{provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true}
-	// ],
+	providers: [
+		{provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true}
+	],
 	bootstrap: [AppComponent]
 })
 export class AppModule { }

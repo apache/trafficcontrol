@@ -13,8 +13,9 @@
 */
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
+
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { first, map } from 'rxjs/operators';
 
 import { User } from '../models/user';
 import { APIService } from './api.service';
@@ -41,30 +42,35 @@ export class AuthenticationService {
 		return this.loggedInSubject.value;
 	}
 
-	private updateCurrentUser(): void {
-		this.api.getCurrentUser().subscribe(
-			r => {
-				if (r.status === 200) {
-					console.debug(r.body.response as User);
-					this.currentUserSubject.next(r.body.response as User);
-				}
+	/**
+	 * Updates the current user, and provides a way for callers to check if the update was succesful
+	 * @returns {An `Observable` which will emit a boolean value indicating the success of the update}
+	*/
+	updateCurrentUser(): Observable<boolean> {
+		return this.api.getCurrentUser().pipe(first()).pipe(map(
+			u => {
+				this.currentUserSubject.next(u);
+				return true;
 			},
 			e => {
 				console.error("Failed to update current user");
+				console.debug("User update error: ", e);
+				return false;
 			}
-		);
+		));
 	}
 
+	/**
+	 * Logs in a user and, on succesful login, updates the current user.
+	*/
 	login(u: string, p: string): Observable<boolean> {
 		return this.api.login(u, p).pipe(map(
 			(resp) => {
 				if (resp && resp.status === 200) {
 					this.loggedInSubject.next(true);
 					this.updateCurrentUser();
-					console.log("returning true");
 					return true;
 				}
-				console.log("returning false");
 				return false;
 			}
 		));
@@ -72,5 +78,6 @@ export class AuthenticationService {
 
 	logout() {
 		this.currentUserSubject.next(null);
+		this.loggedInSubject.next(false);
 	}
 }

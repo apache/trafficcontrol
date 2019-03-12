@@ -28,6 +28,7 @@ import { DeliveryService } from '../../models/deliveryservice';
 */
 export class DashboardComponent implements OnInit {
 	deliveryServices: DeliveryService[];
+	loading = true;
 
 	constructor(private api: APIService) { }
 
@@ -35,6 +36,7 @@ export class DashboardComponent implements OnInit {
 		this.api.getDeliveryServices().pipe(first()).subscribe(
 			r => {
 				this.deliveryServices = r;
+				this.loading = false;
 			}
 		);
 	}

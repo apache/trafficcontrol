@@ -51,7 +51,14 @@ header {
 	}
 }
 
-div#deliveryservices {
+#deliveryservices {
 	width: 80%;
 	margin: auto;
+}
+
+.loading {
+	cursor: wait;
+	&::after {
+		content: "Loading...";
+	}
 }
