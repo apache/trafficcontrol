@@ -45,7 +45,7 @@ public class CertificateDataConverter {
 			final List<X509Certificate> x509Chain = new ArrayList<>();
 			boolean hostMatch = false;
 			boolean modMatch = false;
-			for ( final String encodedCertificate : encodedCertificates) {
+			for (final String encodedCertificate : encodedCertificates) {
 				final X509Certificate certificate = certificateDecoder.toCertificate(encodedCertificate);
 				certificate.checkValidity();
 				if (!hostMatch && verifySubject(certificate, certificateData.alias())) {
@@ -56,18 +56,18 @@ public class CertificateDataConverter {
 				}
 				x509Chain.add(certificate);
 			}
-			if ( hostMatch && modMatch) {
+			if (hostMatch && modMatch) {
 				return new HandshakeData(certificateData.getDeliveryservice(), certificateData.getHostname(),
 						x509Chain.toArray(new X509Certificate[x509Chain.size()]), privateKey);
 			}
-			else if(!hostMatch){
+			else if (!hostMatch) {
 				log.warn("Service name doesn't match the subject of the certificate = "+certificateData.getHostname());
 			}
 			else if (!modMatch) {
-				log.error("Modulus not == for host: "+certificateData.getHostname());
+				log.error("Modulus of the private key does not match the public key modulus for certificate host: "+certificateData.getHostname());
 			}
 
-		} catch ( CertificateNotYetValidException er) {
+		} catch (CertificateNotYetValidException er) {
 			log.error("Failed to convert certificate data for delivery service = " + certificateData.getHostname()
 							+ ", because the certificate is not valid yet. ");
 		} catch (CertificateExpiredException ex ) {
@@ -128,6 +128,8 @@ public class CertificateDataConverter {
 			privModulus = ((BCRSAPrivateCrtKey) privateKey).getModulus();
 		} else if (privateKey instanceof RSAPrivateCrtKeyImpl) {
 			privModulus = ((RSAPrivateCrtKeyImpl) privateKey).getModulus();
+		} else {
+			return false;
 		}
 		BigInteger pubModulus = null;
 		final PublicKey publicKey = certificate.getPublicKey();
