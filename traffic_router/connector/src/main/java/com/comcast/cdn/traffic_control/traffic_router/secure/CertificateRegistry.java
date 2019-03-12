@@ -45,7 +45,12 @@ public class CertificateRegistry {
 		synchronized (CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES) {
 			final Map<String, HandshakeData> handshakeDataMap =
 					CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES.getHandshakeData();
-			handshakeDataMap.putIfAbsent(DEFAULT_SSL_KEY, createDefaultSsl());
+			final HandshakeData defaultHd = createDefaultSsl();
+			if (defaultHd == null) {
+				log.error("Failed to initialize the CertificateRegistry.");
+				return null;
+			}
+			handshakeDataMap.putIfAbsent(DEFAULT_SSL_KEY, defaultHd);
 		}
 		return CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES;
 	}
