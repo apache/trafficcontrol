@@ -5,6 +5,40 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [3.0.0] - 2019-02-13
 ### Added
+- Traffic Ops Golang Endpoints
+  - /api/1.4/users `(GET,POST,PUT)`
+  - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys `GET`
+  - /api/1.1/deliveryservices/hostname/:hostname/sslkeys `GET`
+  - /api/1.1/deliveryservices/sslkeys/add `POST`
+  - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys/delete `GET`
+  - /api/1.4/cdns/dnsseckeys/refresh `GET`
+  - /api/1.1/cdns/name/:name/dnsseckeys `GET`
+  - /api/1.4/cdns/name/:name/dnsseckeys `GET`
+- To support reusing a single riak cluster connection, an optional parameter is added to riak.conf: "HealthCheckInterval". This options takes a 'Duration' value (ie: 10s, 5m) which affects how often the riak cluster is health checked.  Default is currently set to: "HealthCheckInterval": "5s".
+- Added a new Go db/admin binary to replace the Perl db/admin.pl script which is now deprecated and will be removed in a future release. The new db/admin binary is essentially a drop-in replacement for db/admin.pl since it supports all of the same commands and options; therefore, it should be used in place of db/admin.pl for all the same tasks.
+- Added an API 1.4 endpoint, /api/1.4/cdns/dnsseckeys/refresh, to perform necessary behavior previously served outside the API under `/internal`.
+- Adds the DS Record text to the cdn dnsseckeys endpoint in 1.4.
+- Added monitoring.json snapshotting. This stores the monitoring json in the same table as the crconfig snapshot. Snapshotting is now required in order to push out monitoring changes.
+- To traffic_ops_ort.pl added the ability to handle ##OVERRIDE## delivery service ANY_MAP raw remap text to replace and comment out a base delivery service remap rules. THIS IS A TEMPORARY HACK until versioned delivery services are implemented.
+- Snapshotting the CRConfig now deletes HTTPS certificates in Riak for delivery services which have been deleted in Traffic Ops.
+
+### Changed
+- Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
+  - validates modulus of private and public keys
+  - validates current timestamp falls within the certificate date bracket
+  - validates certificate subjects against the DS URL
+- Traffic Ops Golang Endpoints
+  - Updated /api/1.1/cachegroups: Cache Group Fallbacks are included
+  - Updated /api/1.1/cachegroups: fixed so fallbackToClosest can be set through API
+    - Warning:  a PUT of an old Cache Group JSON without the fallbackToClosest field will result in a `null` value for that field
+- Issue 2821: Fixed "Traffic Router may choose wrong certificate when SNI names overlap"
+- traffic_ops/app/bin/checks/ToDnssecRefresh.pl now requires "user" and "pass" parameters of an operations-level user! Update your scripts accordingly! This was necessary to move to an API endpoint with proper authentication, which may be safely exposed.
+- Traffic Monitor UI updated to support HTTP or HTTPS traffic.
+- Modified Traffic Router logging format to include an additional field for DNS log entries, namely `rhi`. This defaults to '-' and is only used when EDNS0 client subnet extensions are enabled and a client subnet is present in the request. When enabled and a subnet is present, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
+
+## [3.0.0] - 2018-10-30
+>>>>>>> 0d2560d98... Add SSL Certificate Validation to Traffic Router (#3380)
+### Added
 - Removed MySQL-to-Postgres migration tools.  This tool is supported for 1.x to 2.x upgrades only and should not be used with 3.x.
 - Backup Edge Cache group: If the matched group in the CZF is not available, this list of backup edge cache group configured via Traffic Ops API can be used as backup. In the event of all backup edge cache groups not available, GEO location can be optionally used as further backup. APIs detailed [here](http://traffic-control-cdn.readthedocs.io/en/latest/development/traffic_ops_api/v12/cachegroup_fallbacks.html)
 - Traffic Ops Golang Proxy Endpoints

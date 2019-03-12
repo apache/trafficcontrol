@@ -19,6 +19,7 @@ import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateRegistry
 import com.comcast.cdn.traffic_control.traffic_router.secure.HandshakeData;
 import com.comcast.cdn.traffic_control.traffic_router.secure.KeyManager;
 import org.apache.log4j.Logger;
+import org.apache.tomcat.util.modeler.Registry;
 import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.apache.tomcat.util.net.SSLHostConfigCertificate;
@@ -91,5 +92,30 @@ public class RouterNioEndpoint extends NioEndpoint {
     @Override
     protected SSLHostConfig getSSLHostConfig(final String sniHostName) {
         return super.getSSLHostConfig(sniHostName.toLowerCase());
+    }
+
+    private void unregisterJmx(final SSLHostConfig sslHostConfig) {
+        final Registry registry = Registry.getRegistry(null, null);
+        registry.unregisterComponent(sslHostConfig.getObjectName());
+        for (final SSLHostConfigCertificate sslHostConfigCert : sslHostConfig.getCertificates()) {
+            registry.unregisterComponent(sslHostConfigCert.getObjectName());
+        }
+    }
+
+    @Override
+    public void addSslHostConfig(final SSLHostConfig sslHostConfig, final boolean replace) throws IllegalArgumentException {
+        final String key = sslHostConfig.getHostName();
+        if (key == null || key.length() == 0) {
+            throw new IllegalArgumentException(sm.getString("endpoint.noSslHostName"));
+        }
+
+        SSLHostConfig previous = null;
+        if (replace) {
+            previous = sslHostConfigs.get(key);
+        }
+        super.addSslHostConfig(sslHostConfig, replace);
+        if (previous != null) {
+            unregisterJmx(previous);
+        }
     }
 }

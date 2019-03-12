@@ -73,10 +73,12 @@ public class CertificateRegistry {
 
 				if (!master.containsKey(alias)) {
 					final HandshakeData handshakeData = certificateDataConverter.toHandshakeData(certificateData);
-					master.put(alias, handshakeData);
-					if (!certificateData.equals(previousData.get(alias))) {
-						changes.put(alias, handshakeData);
-						log.warn("Imported handshake data with alias " + alias);
+					if (handshakeData != null) {
+						master.put(alias, handshakeData);
+						if (!certificateData.equals(previousData.get(alias))) {
+							changes.put(alias, handshakeData);
+							log.warn("Imported handshake data with alias " + alias);
+						}
 					}
 				}
 				else {
@@ -103,7 +105,7 @@ public class CertificateRegistry {
 		previousData.clear();
 		for (final CertificateData certificateData : certificateDataList) {
 			final String alias = certificateData.alias();
-			if (!previousData.containsKey(alias)) {
+			if (!previousData.containsKey(alias) && master.containsKey(alias)) {
 				previousData.put(alias, certificateData);
 			}
 		}

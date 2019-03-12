@@ -35,6 +35,8 @@ ARG TC_REPO=traffic-control.repo
 ADD $TMCAT /
 ADD $RPM /
 ADD $TC_REPO /etc/yum.repos.d/
+ADD starttr.sh /
+ADD shutdowntr.sh /
 
 ### Common for all sub-component builds
 RUN	yum -y install \
