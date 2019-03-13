@@ -43,7 +43,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editCacheGroup(cg.id)" ng-repeat="cg in ::cacheGroups">
+            <tr ng-click="editCacheGroup(cg.id)" ng-repeat="cg in ::cacheGroups" context-menu="contextMenuItems">
                 <td data-search="^{{::cg.name}}$">{{::cg.name}}</td>
                 <td data-search="^{{::cg.shortName}}$">{{::cg.shortName}}</td>
                 <td data-search="^{{::cg.typeName}}$">{{::cg.typeName}}</td>

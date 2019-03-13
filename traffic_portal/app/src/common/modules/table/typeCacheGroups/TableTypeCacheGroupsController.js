@@ -17,31 +17,16 @@
  * under the License.
  */
 
-var TableTypeCacheGroupsController = function(type, cacheGroups, $scope, $state, locationUtils) {
+var TableTypeCacheGroupsController = function(type, cacheGroups, $controller, $scope, $state, locationUtils) {
+
+	// extends the TableCacheGroupsController to inherit common methods
+	angular.extend(this, $controller('TableCacheGroupsController', { cacheGroups: cacheGroups, $scope: $scope }));
 
 	$scope.type = type;
 
-	$scope.cacheGroups = cacheGroups;
-
-	$scope.editCacheGroup = function(id) {
-		locationUtils.navigateToPath('/cache-groups/' + id);
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
 	$scope.navigateToPath = locationUtils.navigateToPath;
-
-	angular.element(document).ready(function () {
-		$('#cacheGroupsTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
 
 };
 
-TableTypeCacheGroupsController.$inject = ['type', 'cacheGroups', '$scope', '$state', 'locationUtils'];
+TableTypeCacheGroupsController.$inject = ['type', 'cacheGroups', '$controller', '$scope', '$state', 'locationUtils'];
 module.exports = TableTypeCacheGroupsController;
