@@ -39,7 +39,7 @@ under the License.
                 </tr>
             </thead>
             <tbody>
-                <tr ng-click="editCDN(cdn.id)" ng-repeat="cdn in ::cdns">
+                <tr ng-click="editCDN(cdn.id)" ng-repeat="cdn in ::cdns" context-menu="contextMenuItems">
                     <td name="name" data-search="^{{::cdn.name}}$">{{::cdn.name}}</td>
                     <td data-search="^{{::cdn.domainName}}$">{{::cdn.domainName}}</td>
                     <td data-search="^{{::cdn.dnssecEnabled}}$">{{::cdn.dnssecEnabled}}</td>
