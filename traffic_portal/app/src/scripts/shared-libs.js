@@ -39,6 +39,9 @@ require('loading-bar');
 require('ui-bootstrap');
 require('ui-bootstrap-tpls');
 
+// angular bootstrap context menu
+require('contextMenu');
+
 // restangular
 require('restangular');
 

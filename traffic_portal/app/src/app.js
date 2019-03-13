@@ -34,6 +34,7 @@ var trafficPortal = angular.module('trafficPortal', [
         'ngRoute',
         'ui.router',
         'ui.bootstrap',
+        'ui.bootstrap.contextMenu',
         'restangular',
         'app.templates',
         'angular-jwt',
