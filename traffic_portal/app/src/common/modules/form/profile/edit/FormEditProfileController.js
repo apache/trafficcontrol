@@ -17,14 +17,15 @@
  * under the License.
  */
 
-var FormEditProfileController = function(profile, $scope, $controller, $uibModal, $anchorScroll, locationUtils, profileService) {
+var FormEditProfileController = function(profile, $scope, $controller, $uibModal, $anchorScroll, locationUtils, profileService, messageModel) {
 
     // extends the FormProfileController to inherit common methods
     angular.extend(this, $controller('FormProfileController', { profile: profile, $scope: $scope }));
 
     var deleteProfile = function(profile) {
         profileService.deleteProfile(profile.id)
-            .then(function() {
+            .then(function(result) {
+                messageModel.setMessages(result.alerts, true);
                 locationUtils.navigateToPath('/profiles');
             });
     };
@@ -68,5 +69,5 @@ var FormEditProfileController = function(profile, $scope, $controller, $uibModal
 
 };
 
-FormEditProfileController.$inject = ['profile', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'profileService'];
+FormEditProfileController.$inject = ['profile', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'profileService', 'messageModel'];
 module.exports = FormEditProfileController;

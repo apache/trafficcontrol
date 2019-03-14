@@ -17,24 +17,15 @@
  * under the License.
  */
 
-var TableCDNProfilesController = function(cdn, profiles, $scope, $state, locationUtils) {
+var TableCDNProfilesController = function(cdn, profiles, $controller, $scope) {
+
+	// extends the TableProfilesController to inherit common methods
+	angular.extend(this, $controller('TableProfilesController', { profiles: profiles, $scope: $scope }));
 
 	$scope.cdn = cdn;
 
-	$scope.profiles = profiles;
-
-	$scope.editProfile = function(id) {
-		locationUtils.navigateToPath('/profiles/' + id);
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
 	angular.element(document).ready(function () {
-		$('#profilesTable').dataTable({
+		$('#cdnProfilesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"aaSorting": []
@@ -43,5 +34,5 @@ var TableCDNProfilesController = function(cdn, profiles, $scope, $state, locatio
 
 };
 
-TableCDNProfilesController.$inject = ['cdn', 'profiles', '$scope', '$state', 'locationUtils'];
+TableCDNProfilesController.$inject = ['cdn', 'profiles', '$controller', '$scope'];
 module.exports = TableCDNProfilesController;

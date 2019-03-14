@@ -17,9 +17,119 @@
  * under the License.
  */
 
-var TableProfilesController = function(profiles, $scope, $state, $location, $uibModal, locationUtils, profileService) {
+var TableProfilesController = function(profiles, $scope, $state, $location, $uibModal, $window, locationUtils, profileService, messageModel, fileUtils) {
+
+    var confirmDelete = function(profile) {
+        var params = {
+            title: 'Delete Profile: ' + profile.name,
+            key: profile.name
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+            controller: 'DialogDeleteController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            deleteProfile(profile);
+        }, function () {
+            // do nothing
+        });
+    };
+
+    var deleteProfile = function(profile) {
+        profileService.deleteProfile(profile.id)
+            .then(function(result) {
+                messageModel.setMessages(result.alerts, false);
+                $scope.refresh();
+            });
+    };
+
+    var cloneProfile = function(profile) {
+        var params = {
+            title: 'Clone Profile',
+            message: "Your are about to clone the " + profile.name + " profile. Your clone will have the same attributes and parameter assignments as the " + profile.name + " profile.<br><br>Please enter a name for your cloned profile."
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
+            controller: 'DialogInputController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function(clonedProfileName) {
+            profileService.cloneProfile(profile.name, clonedProfileName);
+        }, function () {
+            // do nothing
+        });
+    };
+
+    var exportProfile = function(profile) {
+        profileService.exportProfile(profile.id).
+        then(
+            function(result) {
+                fileUtils.exportJSON(result, profile.name, 'traffic_ops');
+            }
+        );
+
+    };
 
     $scope.profiles = profiles;
+
+    $scope.contextMenuItems = [
+        {
+            text: 'Open in New Tab',
+            click: function ($itemScope) {
+                $window.open('/#!/profiles/' + $itemScope.p.id, '_blank');
+            }
+        },
+        null, // Divider
+        {
+            text: 'Edit',
+            click: function ($itemScope) {
+                $scope.editProfile($itemScope.p.id);
+            }
+        },
+        {
+            text: 'Delete',
+            click: function ($itemScope) {
+                confirmDelete($itemScope.p);
+            }
+        },
+        null, // Divider
+        {
+            text: 'Clone Profile',
+            click: function ($itemScope) {
+                cloneProfile($itemScope.p);
+            }
+        },
+        {
+            text: 'Export Profile',
+            click: function ($itemScope) {
+                exportProfile($itemScope.p);
+            }
+        },
+        null, // Divider
+        {
+            text: 'Manage Parameters',
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/profiles/' + $itemScope.p.id + '/parameters');
+            }
+        },
+        {
+            text: 'Manage Servers',
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/profiles/' + $itemScope.p.id + '/servers');
+            }
+        }
+    ];
 
     $scope.editProfile = function(id) {
         locationUtils.navigateToPath('/profiles/' + id);
@@ -76,10 +186,11 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
         });
     };
 
-
     $scope.refresh = function() {
         $state.reload(); // reloads all the resolves for the view
     };
+
+    $scope.navigateToPath = locationUtils.navigateToPath;
 
     angular.element(document).ready(function () {
         $('#profilesTable').dataTable({
@@ -91,5 +202,5 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
 
 };
 
-TableProfilesController.$inject = ['profiles', '$scope', '$state', '$location', '$uibModal', 'locationUtils', 'profileService'];
+TableProfilesController.$inject = ['profiles', '$scope', '$state', '$location', '$uibModal', '$window', 'locationUtils', 'profileService', 'messageModel', 'fileUtils'];
 module.exports = TableProfilesController;

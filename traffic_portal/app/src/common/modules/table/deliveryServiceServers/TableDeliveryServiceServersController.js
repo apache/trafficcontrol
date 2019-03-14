@@ -33,7 +33,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 
 	$scope.deliveryService = deliveryService;
 
-	// adds some items to the base parameters context menu
+	// adds some items to the base servers context menu
 	$scope.contextMenuItems.splice(2, 0,
 		{
 			text: 'Unlink Server from Delivery Service',
