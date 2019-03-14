@@ -17,14 +17,15 @@
  * under the License.
  */
 
-var FormEditParameterController = function(parameter, $scope, $controller, $uibModal, $anchorScroll, locationUtils, parameterService, profileService) {
+var FormEditParameterController = function(parameter, $scope, $controller, $uibModal, $anchorScroll, locationUtils, parameterService, profileService, messageModel) {
 
     // extends the FormParameterController to inherit common methods
     angular.extend(this, $controller('FormParameterController', { parameter: parameter, $scope: $scope }));
 
     var deleteParameter = function(parameter) {
         parameterService.deleteParameter(parameter.id)
-            .then(function() {
+            .then(function(result) {
+                messageModel.setMessages(result.alerts, true);
                 locationUtils.navigateToPath('/parameters');
             });
     };
@@ -124,5 +125,5 @@ var FormEditParameterController = function(parameter, $scope, $controller, $uibM
 
 };
 
-FormEditParameterController.$inject = ['parameter', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'parameterService', 'profileService'];
+FormEditParameterController.$inject = ['parameter', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'parameterService', 'profileService', 'messageModel'];
 module.exports = FormEditParameterController;

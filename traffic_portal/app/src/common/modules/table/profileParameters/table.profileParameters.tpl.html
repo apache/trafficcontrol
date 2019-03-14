@@ -43,12 +43,12 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="pp in ::profileParameters">
-                <td data-search="^{{::pp.name}}$">{{::pp.name}}</td>
-                <td data-search="^{{::pp.configFile}}$">{{::pp.configFile}}</td>
-                <td data-search="^{{::pp.value}}$">{{::pp.value}}</td>
-                <td data-search="^{{::pp.secure}}$">{{::pp.secure}}</td>
-                <td><button type="button" class="btn btn-link" title="Unlink Parameter from Profile" ng-click="confirmRemoveParam(pp)"><i class="fa fa-chain-broken"></i></button></td>
+            <tr ng-repeat="p in ::parameters" context-menu="contextMenuItems">
+                <td data-search="^{{::p.name}}$">{{::p.name}}</td>
+                <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
+                <td data-search="^{{::p.value}}$">{{::p.value}}</td>
+                <td data-search="^{{::p.secure}}$">{{::p.secure}}</td>
+                <td><button type="button" class="btn btn-link" title="Unlink Parameter from Profile" ng-click="confirmRemoveParam(p)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

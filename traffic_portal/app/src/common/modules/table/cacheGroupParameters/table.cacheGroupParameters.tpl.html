@@ -32,7 +32,7 @@ under the License.
     </div>
     <div class="x_content">
         <br>
-        <table id="parametersTable" class="table responsive-utilities jambo_table">
+        <table id="cacheGroupParametersTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
                 <th>Name</th>
@@ -43,7 +43,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="p in ::cacheGroupParameters">
+            <tr ng-repeat="p in ::parameters" context-menu="contextMenuItems">
                 <td data-search="^{{::p.name}}$">{{::p.name}}</td>
                 <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
                 <td data-search="^{{::p.value}}$">{{::p.value}}</td>

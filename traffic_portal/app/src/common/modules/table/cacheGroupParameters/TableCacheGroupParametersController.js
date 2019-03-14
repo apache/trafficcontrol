@@ -17,11 +17,23 @@
  * under the License.
  */
 
-var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParameters, $scope, $state, $uibModal, locationUtils, cacheGroupParameterService) {
+var TableCacheGroupParametersController = function(cacheGroup, parameters, $controller, $scope, $state, $uibModal, locationUtils, cacheGroupParameterService) {
+
+	// extends the TableParametersController to inherit common methods
+	angular.extend(this, $controller('TableParametersController', { parameters: parameters, $scope: $scope }));
 
 	$scope.cacheGroup = cacheGroup;
 
-	$scope.cacheGroupParameters = cacheGroupParameters;
+	// adds some items to the base parameters context menu
+	$scope.contextMenuItems.splice(2, 0,
+		{
+			text: 'Unlink Parameter from Cache Group',
+			click: function ($itemScope) {
+				$scope.removeParameter($itemScope.p.id);
+			}
+		},
+		null // Divider
+	);
 
 	$scope.removeParameter = function(paramId) {
 		cacheGroupParameterService.unlinkCacheGroupParameter(cacheGroup.id, paramId)
@@ -30,10 +42,6 @@ var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParamet
 					$scope.refresh();
 				}
 			);
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.selectParams = function() {
@@ -69,7 +77,7 @@ var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParamet
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#parametersTable').dataTable({
+		$('#cacheGroupParametersTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
@@ -81,5 +89,5 @@ var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParamet
 
 };
 
-TableCacheGroupParametersController.$inject = ['cacheGroup', 'cacheGroupParameters', '$scope', '$state', '$uibModal', 'locationUtils', 'cacheGroupParameterService'];
+TableCacheGroupParametersController.$inject = ['cacheGroup', 'parameters', '$controller', '$scope', '$state', '$uibModal', 'locationUtils', 'cacheGroupParameterService'];
 module.exports = TableCacheGroupParametersController;
