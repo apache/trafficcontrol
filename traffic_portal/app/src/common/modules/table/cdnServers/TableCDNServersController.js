@@ -17,108 +17,22 @@
  * under the License.
  */
 
-var TableCDNServersController = function(cdn, servers, $scope, $state, $uibModal, locationUtils, serverUtils, cdnService, propertiesModel) {
+var TableCDNServersController = function(cdn, servers, $controller, $scope) {
 
-	var queueServerUpdates = function(cdn) {
-		cdnService.queueServerUpdates(cdn.id)
-			.then(
-				function() {
-					$scope.refresh();
-				}
-			);
-	};
-
-	var clearServerUpdates = function(cdn) {
-		cdnService.clearServerUpdates(cdn.id)
-			.then(
-				function() {
-					$scope.refresh();
-				}
-			);
-	};
+	// extends the TableServersController to inherit common methods
+	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
 
 	$scope.cdn = cdn;
 
-	$scope.servers = servers;
-
-	$scope.editServer = function(id) {
-		locationUtils.navigateToPath('/servers/' + id);
-	};
-
-	$scope.queueServerUpdates = function(cdn) {
-		var params = {
-			title: 'Queue Server Updates: ' + cdn.name,
-			message: 'Are you sure you want to queue server updates for all ' + cdn.name + ' servers?'
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
-			}
-		});
-		modalInstance.result.then(function() {
-			queueServerUpdates(cdn);
-		}, function () {
-			// do nothing
-		});
-	};
-
-	$scope.clearServerUpdates = function(cdn) {
-		var params = {
-			title: 'Clear Server Updates: ' + cdn.name,
-			message: 'Are you sure you want to clear server updates for all ' + cdn.name + ' servers?'
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
-			}
-		});
-		modalInstance.result.then(function() {
-			clearServerUpdates(cdn);
-		}, function () {
-			// do nothing
-		});
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.showChartsButton = propertiesModel.properties.servers.charts.show;
-
-	$scope.ssh = serverUtils.ssh;
-
-	$scope.gotoMonitor = serverUtils.gotoMonitor;
-
-	$scope.openCharts = serverUtils.openCharts;
-
-	$scope.isOffline = serverUtils.isOffline;
-
-	$scope.offlineReason = serverUtils.offlineReason;
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
 	angular.element(document).ready(function () {
-		$('#serversTable').dataTable({
+		$('#cdnServersTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
-			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableCDNServersController.$inject = ['cdn', 'servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'cdnService', 'propertiesModel'];
+TableCDNServersController.$inject = ['cdn', 'servers', '$controller', '$scope'];
 module.exports = TableCDNServersController;

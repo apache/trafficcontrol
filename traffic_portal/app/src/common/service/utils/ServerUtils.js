@@ -52,14 +52,6 @@ var ServerUtils = function($window, propertiesModel, userModel) {
 		);
 	};
 
-	this.gotoMonitor = function(server, $event) {
-		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		$window.open(
-			'http://' + server.hostName + '.' + server.domainName,
-			'_blank'
-		);
-	};
-
 };
 
 ServerUtils.$inject = ['$window', 'propertiesModel', 'userModel'];

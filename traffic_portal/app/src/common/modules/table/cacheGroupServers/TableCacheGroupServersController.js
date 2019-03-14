@@ -17,13 +17,14 @@
  * under the License.
  */
 
-var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $state, $uibModal, cacheGroupService, locationUtils, serverUtils, propertiesModel) {
+var TableCacheGroupsServersController = function(cacheGroup, servers, $controller, $scope, $state, $uibModal, cacheGroupService) {
+
+	// extends the TableServersController to inherit common methods
+	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
 
 	$scope.cacheGroup = cacheGroup;
 
-	$scope.servers = servers;
-
-	var queueServerUpdates = function(cacheGroup, cdnId) {
+	var queueCacheGroupServerUpdates = function(cacheGroup, cdnId) {
 		cacheGroupService.queueServerUpdates(cacheGroup.id, cdnId)
 			.then(
 				function() {
@@ -32,7 +33,7 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 			);
 	};
 
-	var clearServerUpdates = function(cacheGroup, cdnId) {
+	var clearCacheGroupServerUpdates = function(cacheGroup, cdnId) {
 		cacheGroupService.clearServerUpdates(cacheGroup.id, cdnId)
 			.then(
 				function() {
@@ -41,15 +42,7 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 			);
 	};
 
-	$scope.editServer = function(id) {
-		locationUtils.navigateToPath('/servers/' + id);
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.confirmQueueServerUpdates = function(cacheGroup) {
+	$scope.confirmCacheGroupQueueServerUpdates = function(cacheGroup) {
 		var params = {
 			title: 'Queue Server Updates: ' + cacheGroup.name,
 			message: "Please select a CDN"
@@ -68,13 +61,13 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 			}
 		});
 		modalInstance.result.then(function(cdn) {
-			queueServerUpdates(cacheGroup, cdn.id);
+			queueCacheGroupServerUpdates(cacheGroup, cdn.id);
 		}, function () {
 			// do nothing
 		});
 	};
 
-	$scope.confirmClearServerUpdates = function(cacheGroup) {
+	$scope.confirmCacheGroupClearServerUpdates = function(cacheGroup) {
 		var params = {
 			title: 'Clear Server Updates: ' + cacheGroup.name,
 			message: "Please select a CDN"
@@ -93,38 +86,21 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 			}
 		});
 		modalInstance.result.then(function(cdn) {
-			clearServerUpdates(cacheGroup, cdn.id);
+			clearCacheGroupServerUpdates(cacheGroup, cdn.id);
 		}, function () {
 			// do nothing
 		});
 	};
 
-	$scope.showChartsButton = propertiesModel.properties.servers.charts.show;
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
-	$scope.ssh = serverUtils.ssh;
-
-	$scope.gotoMonitor = serverUtils.gotoMonitor;
-
-	$scope.openCharts = serverUtils.openCharts;
-
-	$scope.isOffline = serverUtils.isOffline;
-
-	$scope.offlineReason = serverUtils.offlineReason;
-
 	angular.element(document).ready(function () {
-		$('#serversTable').dataTable({
+		$('#cacheGroupServersTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
-			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$scope', '$state', '$uibModal', 'cacheGroupService', 'locationUtils', 'serverUtils', 'propertiesModel'];
+TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$controller', '$scope', '$state', '$uibModal', 'cacheGroupService'];
 module.exports = TableCacheGroupsServersController;

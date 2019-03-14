@@ -17,7 +17,10 @@
  * under the License.
  */
 
-var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, $uibModal, locationUtils, serverUtils, deliveryServiceService, propertiesModel) {
+var TableDeliveryServiceServersController = function(deliveryService, servers, $controller, $scope, $uibModal, deliveryServiceService) {
+
+	// extends the TableServersController to inherit common methods
+	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
 
 	var removeServer = function(serverId) {
 		deliveryServiceService.deleteDeliveryServiceServer($scope.deliveryService.id, serverId)
@@ -30,15 +33,18 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 
 	$scope.deliveryService = deliveryService;
 
-	$scope.servers = servers;
-
-	$scope.editServer = function(id) {
-		locationUtils.navigateToPath('/servers/' + id);
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
+	// adds some items to the base parameters context menu
+	$scope.contextMenuItems.splice(2, 0,
+		{
+			text: 'Unlink Server from Delivery Service',
+			hasTopDivider: function() {
+				return true;
+			},
+			click: function ($itemScope) {
+				$scope.confirmRemoveServer($itemScope.s);
+			}
+		}
+	);
 
 	$scope.selectServers = function() {
 		var modalInstance = $uibModal.open({
@@ -70,7 +76,9 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 	};
 
 	$scope.confirmRemoveServer = function(server, $event) {
-		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
 
 		var params = {
 			title: 'Remove Server from Delivery Service?',
@@ -93,20 +101,8 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 		});
 	};
 
-	$scope.showChartsButton = propertiesModel.properties.servers.charts.show;
-
-	$scope.ssh = serverUtils.ssh;
-
-	$scope.openCharts = serverUtils.openCharts;
-
-	$scope.isOffline = serverUtils.isOffline;
-
-	$scope.offlineReason = serverUtils.offlineReason;
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
 	angular.element(document).ready(function () {
-		$('#serversTable').dataTable({
+		$('#dsServersTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
@@ -118,5 +114,5 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 
 };
 
-TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'deliveryServiceService', 'propertiesModel'];
+TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$controller', '$scope', '$uibModal', 'deliveryServiceService'];
 module.exports = TableDeliveryServiceServersController;
