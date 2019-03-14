@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state, $uibModal, $window, locationUtils, cacheGroupService, cdnService) {
+var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state, $uibModal, $window, locationUtils, cacheGroupService, cdnService, messageModel) {
 
     var queueServerUpdates = function(cacheGroup, cdnId) {
         cacheGroupService.queueServerUpdates(cacheGroup.id, cdnId);
@@ -29,7 +29,8 @@ var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state
 
     var deleteCacheGroup = function(cacheGroup) {
         cacheGroupService.deleteCacheGroup(cacheGroup.id)
-            .then(function() {
+            .then(function(result) {
+                messageModel.setMessages(result.alerts, false);
                 $scope.refresh();
             });
     };
@@ -185,5 +186,5 @@ var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state
 
 };
 
-TableCacheGroupsController.$inject = ['cacheGroups', '$location', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'cacheGroupService', 'cdnService'];
+TableCacheGroupsController.$inject = ['cacheGroups', '$location', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'cacheGroupService', 'cdnService', 'messageModel'];
 module.exports = TableCacheGroupsController;

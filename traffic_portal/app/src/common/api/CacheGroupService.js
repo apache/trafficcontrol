@@ -53,15 +53,20 @@ var CacheGroupService = function($http, $q, Restangular, locationUtils, messageM
     };
 
     this.deleteCacheGroup = function(id) {
-        return Restangular.one("cachegroups", id).remove()
+        var request = $q.defer();
+
+        $http.delete(ENV.api['root'] + "cachegroups/" + id)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Cache group deleted' } ], true);
+                function(result) {
+                    request.resolve(result.data);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
+                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject(fault);
                 }
             );
+
+        return request.promise;
     };
 
     this.queueServerUpdates = function(cgId, cdnId) {

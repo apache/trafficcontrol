@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $window, locationUtils, cdnService) {
+var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $window, locationUtils, cdnService, messageModel) {
 
     var queueServerUpdates = function(cdn) {
         cdnService.queueServerUpdates(cdn.id);
@@ -29,7 +29,8 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
 
     var deleteCDN = function(cdn) {
         cdnService.deleteCDN(cdn.id)
-            .then(function() {
+            .then(function(result) {
+                messageModel.setMessages(result.alerts, false);
                 $scope.refresh();
             });
     };
@@ -197,5 +198,5 @@ var TableCDNsController = function(cdns, $location, $scope, $state, $uibModal, $
 
 };
 
-TableCDNsController.$inject = ['cdns', '$location', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'cdnService'];
+TableCDNsController.$inject = ['cdns', '$location', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'cdnService', 'messageModel'];
 module.exports = TableCDNsController;
