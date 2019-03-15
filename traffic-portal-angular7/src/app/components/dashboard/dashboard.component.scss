@@ -19,6 +19,8 @@ header {
 	padding: 5px;
 	background-color: $theme_main;
 	color: white;
+	position: sticky;
+	top: 0;
 
 	img {
 		height: 100%;
@@ -54,6 +56,17 @@ header {
 #deliveryservices {
 	width: 80%;
 	margin: auto;
+}
+
+main > div {
+	width: 50%;
+	margin: auto;
+	padding-right: 10px;
+	min-width: 20em;
+	input {
+		width: 100%;
+		margin: 15px 0;
+	}
 }
 
 .loading {

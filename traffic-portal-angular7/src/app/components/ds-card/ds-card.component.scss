@@ -20,11 +20,23 @@ details {
 		color: white;
 		padding: 10px;
 		cursor: pointer;
+
+		span:first-child {
+			float: left;
+		}
+		span:last-child {
+			float: right;
+		}
+
+		svg {
+			height: 1.5em;
+			fill: white;
+		}
 	}
 
 	&.inactive > summary {
-		background-color: $theme_secondary;
-		color: lightgray;
+		background-color: gray;
+		color: #d3d3d3;
 	}
 
 	&[open] {
@@ -53,6 +65,10 @@ div.card-content {
 		label {
 			text-align: right;
 		}
+	}
+
+	fieldset.health > meter {
+		width: 100%;
 	}
 }
 

@@ -11,9 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input } from '@angular/core';
+import { Component, Input, ElementRef } from '@angular/core';
 
 import { first } from 'rxjs/operators';
+
+import { Chart } from 'chart.js';
 
 import { APIService } from '../../services';
 import { DeliveryService } from '../../models/deliveryservice';
@@ -32,25 +34,102 @@ export class DsCardComponent {
 	maintenance: number;
 	utilized: number;
 
-	private loaded: boolean;
+	// Health measured as a percent of Cache Groups that are healthy
+	healthy: number;
 
-	constructor(private api: APIService) {
+	// Bandwidth data
+	chart: Chart;
+	// midBandwidth: Array<Array<any>>;
+	edgeBandwidth: Array<number>;
+	labels: Array<Date>;
+
+
+	private loaded: boolean;
+	public graphDataLoaded: boolean;
+
+	constructor(private api: APIService, private elementRef: ElementRef) {
 		this.available = 100;
 		this.maintenance = 0;
 		this.utilized = 0;
 		this.loaded = false;
+		this.edgeBandwidth = new Array<number>();
+		this.labels = new Array<Date>();
+		this.graphDataLoaded = false;
 	}
 
+	/**
+	 * Triggered when the details element is opened or closed, and fetches the latest stats.
+	 * @param {e} A DOM Event caused then the open/close state of a `<details>` element changes.
+	 *
+	 * this will only fetch health and capacity information once per page load, but will update the
+	 * Bandwidth graph every time the details panel is opened.
+	*/
 	toggle(e: Event) {
-		if (!this.loaded && (e.target as HTMLDetailsElement).open) {
-			this.api.getDSCapacity(this.deliveryService.id).pipe(first()).subscribe(
-				r => {
-					if (r) {
-						this.available = r.availablePercent;
-						this.maintenance = r.maintenancePercent;
-						this.utilized = r.utilizedPercent;
-						this.loaded = true;
+		if ((e.target as HTMLDetailsElement).open) {
+			if (!this.loaded) {
+				this.loaded = true;
+				this.api.getDSCapacity(this.deliveryService.id).pipe(first()).subscribe(
+					r => {
+						if (r) {
+							this.available = r.availablePercent;
+							this.maintenance = r.maintenancePercent;
+							this.utilized = r.utilizedPercent;
+						}
 					}
+				);
+				this.api.getDSHealth(this.deliveryService.id).pipe(first()).subscribe(
+					r => {
+						if (r) {
+							this.healthy = r.totalOnline / (r.totalOnline + r.totalOffline);
+						}
+					}
+				);
+			} else if (this.chart) {
+				this.chart.destroy();
+			}
+			const now = new Date();
+			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+			this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s').pipe(first()).subscribe(
+				data => {
+					for (let d of data) {
+						this.labels.push(new Date(d[0]));
+						this.edgeBandwidth.push(d[1]);
+					}
+
+					const canvas = this.elementRef.nativeElement.querySelector('#canvas-'+String(this.deliveryService.id));
+					this.chart = new Chart(canvas, {
+						type: 'line',
+						data: {
+							labels: this.labels,
+							datasets: [
+								{
+									data: this.edgeBandwidth,
+									borderColor: '#3cba9f',
+									fill: false
+								}
+							]
+						},
+						options: {
+							legend: {
+								display: false
+							},
+							scales: {
+								xAxes: [{
+									display: true,
+									type: 'time',
+									callback: (v, i, values) => {
+										return v.toLocaleTimeString();
+									}
+								}],
+								yAxes: [{
+									display: true,
+									ticks: {
+										suggestedMin: 0
+									}
+								}],
+							}
+						}
+					});
 				}
 			);
 		}

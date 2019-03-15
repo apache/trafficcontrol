@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 import { Component, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
 
 import { first } from 'rxjs/operators';
 
@@ -30,6 +31,9 @@ export class DashboardComponent implements OnInit {
 	deliveryServices: DeliveryService[];
 	loading = true;
 
+	// Fuzzy search control
+	fuzzControl = new FormControl('');
+
 	constructor(private api: APIService) { }
 
 	ngOnInit() {
@@ -39,6 +43,24 @@ export class DashboardComponent implements OnInit {
 				this.loading = false;
 			}
 		);
+	}
+
+	/**
+	 * Checks if a Delivery Service matches a fuzzy search term
+	 * @param {ds} The Delivery Service being checked
+	 * @returns `true` if `ds` matches the fuzzy search term, `false` otherwise
+	*/
+	fuzzy(ds: DeliveryService): boolean {
+		if (!this.fuzzControl.value) {
+			return true;
+		}
+		let n = -1;
+		for (const l of this.fuzzControl.value) {
+			if (!~(n = ds.displayName.indexOf(l, n + 1))) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

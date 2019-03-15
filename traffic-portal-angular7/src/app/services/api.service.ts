@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, first, catchError } from 'rxjs/operators';
 
@@ -117,5 +117,46 @@ export class APIService {
 				return r.body.response;
 			}
 		));
+	}
+
+	/**
+	 * Retrieves the Cache Group health of a Delivery Service identified by a given, unique,
+	 * integral value.
+	 * @param {d} The integral, unique identifier of a Delivery Service
+	 * @returns An Observable that emits a response from the health endpoint
+	*/
+	public getDSHealth(d: number): Observable<any> {
+		const path = '/api/'+this.API_VERSION+'/deliveryservices/'+String(d)+'/health';
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response;
+			}
+		));
+	}
+
+	/**
+	 * Retrieves Delivery Service throughput statistics for a given time period, averaged over a given
+	 * interval.
+	 * @param {d} The `xml_id` of a Delivery Service
+	 * @param {start} A date/time from which to start data collection
+	 * @param {end} A date/time at which to end data collection
+	 * @param {interval} A unit-suffixed interval over which data will be "binned"
+	 * @param {useMids} Collect data regarding Mid-tier cache servers rather than Edge-tier cache servers
+	*/
+	public getDSKBPS(d: string,
+	                 start: Date,
+	                 end: Date,
+	                 interval: string,
+	                 useMids?: boolean): Observable<Array<Array<any>>> {
+		let path = '/api/'+this.API_VERSION+'/deliveryservice_stats?interval=60s&metricType=kbps';
+		path += '&deliveryServiceName=' + d;
+		path += '&startDate=' + start.toISOString();
+		path += '&endDate=' + end.toISOString();
+		path += '&serverType=' + (useMids ? 'mid' : 'edge');
+	    return this.get(path).pipe(map(
+	    	r => {
+	    		return r.body.response.series.values;
+	    	}
+	    ));
 	}
 }
