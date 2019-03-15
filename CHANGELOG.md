@@ -3,10 +3,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [3.0.1] - 2019-03-14
+## [3.0.1] - 2019-03-15
 ### Added
 
 ### Changed
+- Update golang requirement to allow versions greater than 1.9.4.
+- ORT bugfix for self-signed SSL certs.
+- Correct regex capture prefix for cachekey plugin.
+- Fix docs building.
+- Fix port handling for traffic ops port checks on ports other than 80.
+- Return a json response with a 200 for a successful snapshot PUT.
+- Correct FQDN case mismatch when generating DNSSEC.
 - Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
   - validates modulus of private and public keys
   - validates current timestamp falls within the certificate date bracket
