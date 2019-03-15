@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [3.0.1] - 2019-03-14
+### Added
+
+### Changed
+- Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
+  - validates modulus of private and public keys
+  - validates current timestamp falls within the certificate date bracket
+  - validates certificate subjects against the DS URL
+- Traffic Router, changed lookup of TLS certificates to be case-insensitive
+
 ## [3.0.0] - 2019-02-13
 ### Added
 - Removed MySQL-to-Postgres migration tools.  This tool is supported for 1.x to 2.x upgrades only and should not be used with 3.x.

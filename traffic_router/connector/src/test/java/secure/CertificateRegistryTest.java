@@ -50,6 +50,9 @@ public class CertificateRegistryTest {
 		certificateData1 = mock(CertificateData.class);
 		certificateData2 = mock(CertificateData.class);
 		certificateData3 = mock(CertificateData.class);
+		when(certificateData1.alias()).thenReturn("ds-1.some-cdn.example.com");
+		when(certificateData2.alias()).thenReturn("ds-2.some-cdn.example.com");
+		when(certificateData3.alias()).thenReturn("ds-3.some-cdn.example.com");
 
 		certificateDataList = Arrays.asList(certificateData1, certificateData2, certificateData3);
 
