@@ -58,7 +58,7 @@ under the License.
                 </tr>
             </thead>
             <tbody>
-                <tr ng-click="editDeliveryService(ds)" ng-repeat="ds in ::deliveryServices">
+                <tr ng-click="editDeliveryService(ds)" ng-repeat="ds in ::deliveryServices" context-menu="contextMenuItems">
                     <td name="xmlId" data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
                     <td data-search="^{{::ds.tenant}}$">{{::ds.tenant}}</td>
                     <td data-search="^{{::ds.orgServerFqdn}}$">{{::ds.orgServerFqdn}}</td>

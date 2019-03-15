@@ -17,11 +17,10 @@
  * under the License.
  */
 
-var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, serverUtils, deliveryServiceService, serverService, propertiesModel) {
+var TableServerDeliveryServicesController = function(server, deliveryServices, $controller, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, serverUtils, deliveryServiceService, serverService) {
 
-	var protocols = deliveryServiceUtils.protocols;
-
-	var qstrings = deliveryServiceUtils.qstrings;
+	// extends the TableDeliveryServicesController to inherit common methods
+	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
 
 	var removeDeliveryService = function(dsId) {
 		deliveryServiceService.deleteDeliveryServiceServer(dsId, $scope.server.id)
@@ -34,28 +33,25 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 
 	$scope.server = server;
 
-	$scope.serverDeliveryServices = serverDeliveryServices;
-
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
-
-	$scope.openCharts = deliveryServiceUtils.openCharts;
+	// adds some items to the base delivery services context menu
+	$scope.contextMenuItems.splice(2, 0,
+		{
+			text: 'Unlink Delivery Service from Server',
+			hasBottomDivider: function() {
+				return true;
+			},
+			click: function ($itemScope) {
+				$scope.confirmRemoveDS($itemScope.ds);
+			}
+		}
+	);
 
 	$scope.isEdge = serverUtils.isEdge;
-
-	$scope.protocol = function(ds) {
-		return protocols[ds.protocol];
-	};
-
-	$scope.qstring = function(ds) {
-		return qstrings[ds.qstringIgnore];
-	};
-
-	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
 	$scope.cloneDsAssignments = function() {
 		var params = {
 			title: 'Clone Delivery Service Assignments',
-			message: "Please select an edge cache to assign these " + serverDeliveryServices.length + " delivery services to.<br><br>Warning - Any delivery services currently assigned to the selected edge cache will be lost and replaced with these delivery service assignments...",
+			message: "Please select an edge cache to assign these " + deliveryServices.length + " delivery services to.<br><br>Warning - Any delivery services currently assigned to the selected edge cache will be lost and replaced with these delivery service assignments...",
 			labelFunction: function(item) { return item['hostName'] + '.' + item['domainName'] }
 		};
 		var modalInstance = $uibModal.open({
@@ -72,7 +68,7 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 			}
 		});
 		modalInstance.result.then(function(selectedServer) {
-			var dsIds = _.pluck(serverDeliveryServices, 'id');
+			var dsIds = _.pluck(deliveryServices, 'id');
 			serverService.assignDeliveryServices(selectedServer, dsIds, true, true)
 				.then(
 					function() {
@@ -83,7 +79,6 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 			// do nothing
 		});
 	};
-
 
 	$scope.selectDeliveryServices = function() {
 		var modalInstance = $uibModal.open({
@@ -98,7 +93,7 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 					return deliveryServiceService.getDeliveryServices({ cdn: server.cdnId });
 				},
 				assignedDeliveryServices: function() {
-					return serverDeliveryServices;
+					return deliveryServices;
 				}
 			}
 		});
@@ -115,7 +110,9 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 	};
 
 	$scope.confirmRemoveDS = function(ds, $event) {
-		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
 
 		var params = {
 			title: 'Remove Delivery Service from Server?',
@@ -138,15 +135,8 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 		});
 	};
 
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
 	angular.element(document).ready(function () {
-		$('#deliveryServicesTable').dataTable({
+		$('#serverDeliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
@@ -158,5 +148,5 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 
 };
 
-TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'serverUtils', 'deliveryServiceService', 'serverService', 'propertiesModel'];
+TableServerDeliveryServicesController.$inject = ['server', 'deliveryServices', '$controller', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'serverUtils', 'deliveryServiceService', 'serverService'];
 module.exports = TableServerDeliveryServicesController;

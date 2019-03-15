@@ -30,7 +30,7 @@ module.exports = angular.module('trafficPortal.private.tenants.deliveryServices'
 							tenant: function($stateParams, tenantService) {
 								return tenantService.getTenant($stateParams.tenantId);
 							},
-							tenantDeliveryServices: function(tenant, deliveryServiceService) {
+							deliveryServices: function(tenant, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryServices({ tenant: tenant.id });
 							}
 						}
