@@ -23,67 +23,13 @@ limitations under the License.
 	<div class="card-content">
 		<div>
 			<span>Key:&nbsp;{{deliveryService.xmlId}}&nbsp;({{deliveryService.id}})</span><br/>
-			<span *ngIf="deliveryService.protocol">Protocol:&nbsp;{{deliveryService.protocol.toString()}}</span>
-			<p>{{deliveryService.longDesc}}</p>
+			<span *ngIf="deliveryService.protocol">Protocol:&nbsp;{{Protocol.toString(deliveryService.protocol)}}</span>
+			<p>{{deliveryService.longDesc ? deliveryService.longDesc : 'NO DESCRIPTION'}}</p>
 		</div>
 		<div>
-			<!-- <svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="131.31602mm" width="164.33672mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 582.29545 465.293">
-				<g transform="translate(18.630339,-267.43063)">
-					<g fill="none">
-						<path d="m117.1777 497.27323h446.48742" stroke="#000" stroke-width="1px"/>
-						<path d="m181.8472 310.15262v372.24121" stroke="#000" stroke-width="1px"/>
-						<g stroke="#8a8a8a" stroke-dasharray="4, 1">
-							<path d="m136.73609 310.15262v372.24121"/>
-							<path d="m226.95832 310.15262v372.24121"/>
-							<path d="m272.0694 310.15262v372.24121"/>
-							<path d="m317.18055 310.15262v372.24121"/>
-							<path d="m362.29163 310.15262v372.24121"/>
-							<path d="m407.40275 310.15262v372.24121"/>
-							<path d="m452.51386 310.15262v372.24121"/>
-							<path d="m497.62498 310.15262v372.24121"/>
-							<path d="m542.73609 310.15262v372.24121"/>
-							<path d="m542.73609 310.15262v372.24121"/>
-						</g>
-						<g stroke="#818181" stroke-dasharray="3, 1">
-							<path d="m117.1777 456.52323h446.48742"/>
-							<path d="m117.1777 415.77323h446.48742"/>
-							<path d="m117.1777 375.02323h446.48742"/>
-							<path d="m117.1777 334.27323h446.48742"/>
-							<path d="m117.1777 538.02323h446.48742"/>
-							<path d="m117.1777 578.77323h446.48742"/>
-							<path d="m117.1777 619.52323h446.48742"/>
-							<path d="m117.1777 660.27323h446.48742"/>
-						</g>
-					</g>
-					<g font-family="sans-serif" fill="#000000">
-						<g font-size="12.5px">
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="501.82339" x="80.307129" line-height="125%"><tspan x="80.307129" y="501.82339">0</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="461.07339" x="80.307129" line-height="125%"><tspan x="80.307129" y="461.07339">10</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="420.32339" x="80.307129" line-height="125%"><tspan x="80.307129" y="420.32339">20</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="379.57339" x="80.307129" line-height="125%"><tspan x="80.307129" y="379.57339">30</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="338.82339" x="80.307129" line-height="125%"><tspan x="80.307129" y="338.82339">40</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="542.57343" x="80.307129" line-height="125%"><tspan x="80.307129" y="542.57343">-10</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="583.32343" x="80.307129" line-height="125%"><tspan x="80.307129" y="583.32343">-20</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="624.07343" x="80.307129" line-height="125%"><tspan x="80.307129" y="624.07343">-30</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="664.82343" x="80.307129" line-height="125%"><tspan x="80.307129" y="664.82343">-40</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="703.35449" x="130.77295" line-height="125%"><tspan x="130.77295" y="703.35449">-1</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="703.35449" x="177.87381" line-height="125%"><tspan x="177.87381" y="703.35449">0</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="703.35449" x="222.87201" line-height="125%"><tspan x="222.87201" y="703.35449">1</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="703.35449" x="268.2608" line-height="125%"><tspan x="268.2608" y="703.35449">2</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="703.35449" x="313.22852" line-height="125%"><tspan x="313.22852" y="703.35449">3</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="703.35449" x="358.36096" line-height="125%"><tspan x="358.36096" y="703.35449">4</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="703.35449" x="403.49039" line-height="125%"><tspan x="403.49039" y="703.35449">5</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="703.35449" x="448.49469" line-height="125%"><tspan x="448.49469" y="703.35449">6</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="703.35449" x="493.66989" line-height="125%"><tspan x="493.66989" y="703.35449">7</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="703.35449" x="538.7627" line-height="125%"><tspan x="538.7627" y="703.35449">8</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="730.12354" x="296.47977" line-height="125%"><tspan x="296.47977" y="730.12354">Sample Text</tspan></text>
-							<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" y="500.29352" x="-19.454313" line-height="125%"><tspan x="-19.454313" y="500.29352">Sample Text</tspan></text>
-						</g>
-						<text style="word-spacing:0px;letter-spacing:0px" xml:space="preserve" font-size="20px" y="282.62595" x="275.3833" line-height="125%"><tspan x="275.3833" y="282.62595">Sample Text</tspan></text>
-					</g>
-				</g>
-			</svg> -->
-			<canvas id="canvas-{{deliveryService.id}}">{{ chart }}</canvas>
+			<div class="canvas-container" [ngClass]="{'loading': !this.graphDataLoaded}">
+				<canvas id="canvas-{{deliveryService.id}}">{{ chart }}</canvas>
+			</div>
 			<fieldset class="capacity">
 				<legend>Capacity</legend>
 				<label for="{{deliveryService.id}}-utilized">Utilized:</label><meter id="{{deliveryService.id}}-utilized" max="100" low="25" high="75" optimum="5" value="{{utilized}}" title="{{utilized}} percent">{{utilized}}%</meter>

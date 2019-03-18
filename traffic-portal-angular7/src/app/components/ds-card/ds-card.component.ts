@@ -18,7 +18,7 @@ import { first } from 'rxjs/operators';
 import { Chart } from 'chart.js';
 
 import { APIService } from '../../services';
-import { DeliveryService } from '../../models/deliveryservice';
+import { DeliveryService, Protocol } from '../../models/deliveryservice';
 
 @Component({
 	selector: 'ds-card',
@@ -43,6 +43,9 @@ export class DsCardComponent {
 	edgeBandwidth: Array<number>;
 	labels: Array<Date>;
 
+	// Need this to access merged namespace for string conversions
+	Protocol = Protocol;
+
 
 	private loaded: boolean;
 	public graphDataLoaded: boolean;
@@ -62,7 +65,8 @@ export class DsCardComponent {
 	 * @param {e} A DOM Event caused then the open/close state of a `<details>` element changes.
 	 *
 	 * this will only fetch health and capacity information once per page load, but will update the
-	 * Bandwidth graph every time the details panel is opened.
+	 * Bandwidth graph every time the details panel is opened. Bandwidth data is calculated using
+	 * 60s intervals starting at 00:00 UTC the current day and ending at the current date/time.
 	*/
 	toggle(e: Event) {
 		if ((e.target as HTMLDetailsElement).open) {
@@ -86,8 +90,10 @@ export class DsCardComponent {
 				);
 			} else if (this.chart) {
 				this.chart.destroy();
+				this.graphDataLoaded = false;
 			}
 			const now = new Date();
+			now.setUTCMilliseconds(0); // apparently `const` doesn't care about this
 			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 			this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s').pipe(first()).subscribe(
 				data => {
@@ -113,6 +119,10 @@ export class DsCardComponent {
 							legend: {
 								display: false
 							},
+							title: {
+								display: true,
+								text: "Today's Bandwidth"
+							},
 							scales: {
 								xAxes: [{
 									display: true,
@@ -130,6 +140,7 @@ export class DsCardComponent {
 							}
 						}
 					});
+					this.graphDataLoaded = true;
 				}
 			);
 		}

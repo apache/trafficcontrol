@@ -50,13 +50,35 @@ details {
 a.info {
 	text-decoration: none;
 	color: inherit;
+	margin-left: 8px;
 }
 
 div.card-content {
 	display: grid;
-	grid-column-gap: normal;
+	grid-column-gap: 10px;
 	grid-row-gap: 10px;
 	padding: 10px;
+
+	div.loading {
+		cursor: wait;
+
+		div.canvas-container {
+			width: 100%;
+			padding-bottom: 56.25%;
+
+			&::before {
+				content: "Loading...";
+			}
+		}
+	}
+
+	canvas {
+		max-width: 100%;
+		min-width: 100%;
+		min-height: 100%;
+		max-height: 100%;
+		height: auto;
+	}
 
 	fieldset.capacity {
 		display: grid;
