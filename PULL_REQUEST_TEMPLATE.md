@@ -40,6 +40,24 @@ it includes tests (and most should), outline here the steps needed to run the
 tests. If not, lay out the manual testing procedure and please explain why
 tests are unnecessary for this Pull Request. -->
 
+## If this is a bug fix, what versions of Traffic Ops are affected?
+<!-- If this PR fixes a bug, please list here all of the affected versions - to
+the best of your knowledge. It's also pretty helpful to include a commit hash
+of where 'master' is at the time this PR is opened (if it affects master),
+because what 'master' means will change over time. For example, if this PR
+fixes a bug that's present in master (at commit hash '2697ebac'), in v3.0.0,
+and in the current 3.0.1 Release candidate (e.g. RC1), then this list would
+look like:
+
+- master (2697ebac)
+- 3.0.0
+- 3.0.1 (RC1)
+
+If you don't know what other versions might have this bug, AND don't know how
+to find the commit hash of 'master', then feel free to leave this section
+blank (or, preferably, delete it entirely).
+ -->
+
 
 ## The following criteria are ALL met by this PR
 <!-- Check the boxes to signify that the associated statement is true. To
@@ -59,7 +77,7 @@ e.g.
 - [ ] This PR includes an update to CHANGELOG.md OR such an update is not necessary
 - [ ] This PR includes any and all required license headers
 - [ ] This PR ensures that database migration sequence is correct OR this PR does not include a database migration
-- [ ] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines for details](https://www.apache.org/security/))
+- [ ] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines](https://www.apache.org/security/) for details)
 
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
