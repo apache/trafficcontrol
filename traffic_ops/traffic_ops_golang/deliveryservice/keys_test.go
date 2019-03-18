@@ -199,19 +199,19 @@ OEUjfakK71+V/HbQt477zR4k7cRbiA==
 func TestVerifyAndEncodeCertificate(t *testing.T) {
 
 	// should fail bad base64 data
-	dat, _, err := verifyCertificate(BadData, "")
+	dat, _, _, err := verifyCertificate(BadData, "")
 	if err == nil {
 		t.Errorf("Unexpected result, there should have been a base64 decoding failure")
 	}
 
 	// should fail, can't verify self signed cert against this rootCA
-	dat, _, err = verifyCertificate(SelfSignedCertOnly, rootCA)
+	dat, _, _, err = verifyCertificate(SelfSignedCertOnly, rootCA)
 	if err == nil {
 		t.Errorf("Unexpected result, a certificate verification error should have occured")
 	}
 
 	// should pass, unknown authority is just a warning not an error
-	dat, unknownAuth, err := verifyCertificate(GoodTLSKeys, "")
+	dat, unknownAuth, _, err := verifyCertificate(GoodTLSKeys, "")
 	if err != nil {
 		t.Errorf("Test failure: %s", err)
 	}
@@ -220,7 +220,7 @@ func TestVerifyAndEncodeCertificate(t *testing.T) {
 	}
 
 	// should pass
-	dat, _, err = verifyCertificate(GoodTLSKeys, rootCA)
+	dat, _, _, err = verifyCertificate(GoodTLSKeys, rootCA)
 	if err != nil {
 		t.Errorf("Test failure: %s", err)
 	}
@@ -229,5 +229,10 @@ func TestVerifyAndEncodeCertificate(t *testing.T) {
 	length := len(certs) - 1
 	if length != 3 { // rootCA now included in certChain
 		t.Errorf("Test failure: expected 2 certs from verifyCertificate(), got: %d ", length)
+	}
+
+	// certificate returned from verifyCertificate should always be the same as the input certificate
+	if dat != GoodTLSKeys {
+		t.Errorf("expected input certificate to match the output certificate")
 	}
 }
