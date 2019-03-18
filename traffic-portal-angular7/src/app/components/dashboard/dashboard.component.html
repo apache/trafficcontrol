@@ -18,14 +18,15 @@ limitations under the License.
 	<nav>
 		<ul>
 			<li><a href="#">Home</a></li>
-			<li><a href="#">Cache Groups</a>
+			<li><a href="#">Users</a></li>
+			<li><a href="#">Tools</a></li>
 		</ul>
 	</nav>
 </header>
 <main>
 	<h2>Delivery Services</h2>
 	<hr/>
-	<div><input type="text" name="fuzzControl" [formControl]="fuzzControl" placeholder="Fuzzy Search"/></div>
+	<div><input type="text" tabindex="1" inputmode="search" name="fuzzControl" [formControl]="fuzzControl" accesskey="/" placeholder="Fuzzy Search"/></div>
 	<article id="deliveryservices" [ngClass]="{'loading': loading}">
 		<ds-card *ngFor="let ds of deliveryServices" [hidden]="!fuzzy(ds)" [deliveryService]="ds"></ds-card>
 	</article>
