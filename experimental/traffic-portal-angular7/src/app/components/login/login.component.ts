@@ -14,7 +14,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { first }  from 'rxjs/operators';
+import { first } from 'rxjs/operators';
 
 import { AuthenticationService } from '../../services';
 
@@ -32,10 +32,14 @@ export class LoginComponent implements OnInit {
 	u = new FormControl('');
 	p = new FormControl('');
 
-	constructor(private route: ActivatedRoute, private router: Router, private auth: AuthenticationService) { }
+	/* tslint:disable */
+	constructor (private readonly route: ActivatedRoute,
+	             private readonly router: Router,
+	             private  readonly auth: AuthenticationService) { }
+	/* tslint:enable */
 
-	ngOnInit() {
-		this.returnURL = this.route.snapshot.queryParams['returnUrl'] || '/';
+	ngOnInit () {
+		this.returnURL = this.route.snapshot.queryParams.returnUrl || '/';
 	}
 
 	/**
@@ -43,15 +47,12 @@ export class LoginComponent implements OnInit {
 	 * should it be succesful. If the user had not yet requested a page, they will be redirected to
 	 * `/`
 	*/
-	submitLogin(): void {
+	submitLogin (): void {
 		this.auth.login(this.u.value, this.p.value).pipe(first()).subscribe(
 			(response) => {
 				if (response) {
 					this.router.navigate([this.returnURL]);
 				}
-			},
-			(err) => {
-				console.error("LoginComponent: Error:", err);
 			}
 		);
 	}

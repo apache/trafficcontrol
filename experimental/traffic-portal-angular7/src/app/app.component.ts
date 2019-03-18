@@ -31,11 +31,11 @@ export class AppComponent {
 
 	currentUser: User;
 
-	constructor(private router: Router, private auth: AuthenticationService) {
+	constructor (private readonly router: Router, private readonly auth: AuthenticationService) {
 		this.auth.currentUser.subscribe(x => this.currentUser = x);
 	}
 
-	logout() {
+	logout () {
 		this.auth.logout();
 		this.router.navigate(['/login']);
 	}

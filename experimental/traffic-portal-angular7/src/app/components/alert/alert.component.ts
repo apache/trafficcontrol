@@ -25,39 +25,39 @@ export class AlertComponent implements OnInit {
 	dialogElement: HTMLDialogElement;
 	alert: Alert;
 
-	constructor(private alerts: AlertService) { }
+	constructor (private readonly alerts: AlertService) { }
 
-	ngOnInit() {
-		this.dialogElement = document.getElementById("alert") as HTMLDialogElement;
+	ngOnInit () {
+		this.dialogElement = document.getElementById('alert') as HTMLDialogElement;
 		this.alerts.alerts.subscribe(
 			(a: Alert) => {
 				this.alert = a;
 				if (a.text === '') {
-					a.text = "Unknown";
+					a.text = 'Unknown';
 				}
 				switch (a.level) {
 					case 'success':
-						console.log("alert: ", a.text);
+						console.log('alert: ', a.text);
 						break;
 					case 'info':
-						console.debug("alert: ", a.text);
+						console.debug('alert: ', a.text);
 						break;
 					case 'warning':
-						console.warn("alert: ", a.text);
+						console.warn('alert: ', a.text);
 						break;
 					case 'error':
-						console.error("alert: ", a.text);
+						console.error('alert: ', a.text);
 						break;
 					default:
-						console.log("unknown alert: ", a.text);
+						console.log('unknown alert: ', a.text);
 						break;
 				}
 				this.dialogElement.showModal();
 			}
-		)
+		);
 	}
 
-	close() {
+	close () {
 		this.dialogElement.close();
 		this.alert = null;
 	}

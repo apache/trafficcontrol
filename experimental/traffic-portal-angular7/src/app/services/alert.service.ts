@@ -26,7 +26,7 @@ export class AlertService {
 	public alertsSubject: BehaviorSubject<Alert>;
 	public alerts: Observable<Alert>;
 
-	constructor() {
+	constructor () {
 		this.alertsSubject = new BehaviorSubject<Alert>(null);
 		this.alerts = this.alertsSubject.asObservable();
 	}

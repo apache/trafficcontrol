@@ -15,7 +15,7 @@ limitations under the License.
 # Traffic Portal Angular7
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.1.4.
 
-Traffic Portal Angular7 is a re-write of Traffic Portal in the latest, stable release of Angular. The goal is for rendering to take place mainly server-side, and while many pages will have Javascript-only features (e.g. graphs, sorting tables etc.) attemtps will be made to limit client-side scripting as much as possible. Ideally, most pages will work without Javascript at all, but this early in the project it's unclear whether that is realistic.
+Traffic Portal Angular7 is an attempt at making a self-service-first UI for Apache Traffic Control CDN architectures. The eventual goal is to slowly eat Traffic Portal by importing all of its functionality once the self-service UI is complete.
 
 ## Setup
 First, clone the [Apache Traffic Control repository](git://github.com/apache/trafficcontrol). This needs to be done, because this server imports the Apache Traffic Control logo from the repository.
@@ -43,7 +43,7 @@ ng build
 ng run traffic-portal-angular7:server
 
 # Necessary to pull in out-of-scope asset
-cp -f ../misc/logos/ATC-SVG.svg dist/browser/
+cp -f ../../misc/logos/ATC-SVG.svg dist/browser/
 
 # Runs the server locally at http://localhost:4000
 node dist/server.js
@@ -91,6 +91,22 @@ ng serve --proxy-config ./proxy.json
 ```
 
 By default this will set up an Angular debug-mode server to run, listening on port 4200 (as opposed to the production-mode default of 4000 [presumably so that you could run both at the same time]). Note that regardless of production-mode SSL configuration (TODO), this will **only serve unencrypted HTTP responses by default**. Also, unlike production mode which compiles things ahead of time, this will compile resources on-the-fly so that making changes to a file is immediately "live" without requiring the developer to restart the debug server. Pretty neat, desu.
+
+## Contributing
+This project uses `tslint` and an `.editorconfig` file for maintaining code style. If your editor doesn't support `.editorconfig` (VS Code does out-of-the-box as I understand, but Vim and Sublime Text need plugins. Atom ~~doesn't~~ shouldn't exist) then you'll want to manually configure it so as to avoid linting errors. There's quite a bit going on, but the big ones are:
+
+These apply to all files:
+
+- No trailing whitespace before line-endings
+- Unix line-endings
+- Ensure line ending at end-of-file (POSIX-compliance)
+- Tabs not spaces for indentation (spaces may be used for alignment with multi-line statements AFTER indenting appropriately)
+
+These apply to Typescript, specifically
+
+- Don't use `var` - only `const` and `let` are allowed
+- Prefer single quotes to double quotes for string literals
+- *Document your code - we use JSDoc here*
 
 ## Supporting old Traffic Ops versions
 This UI is built to work with an API at version 1.5. All endpoints will use this version by default, so when pointing it at a server that only supports e.g. a max of 1.4, you'll need to do something heinous: edit a source file. In the [`src/app/services/api.service.ts`](./src/app/services/api.service.ts) file, change the line `public API_VERSION = '1.5';` to the appropriate version, e.g. `public API_VERSION = '1.4';`. This will be easier in the future<sup>Citation needed</sup>.

@@ -22,39 +22,39 @@ import { APIService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
-	private currentUserSubject: BehaviorSubject<User>;
+	private readonly currentUserSubject: BehaviorSubject<User>;
 	public currentUser: Observable<User>;
-	private loggedInSubject: BehaviorSubject<boolean>;
+	private readonly loggedInSubject: BehaviorSubject<boolean>;
 	public loggedIn: Observable<boolean>;
 
-	constructor(private http: HttpClient, private api: APIService) {
+	constructor (private readonly http: HttpClient, private readonly api: APIService) {
 		this.currentUserSubject = new BehaviorSubject<User>(null);
 		this.loggedInSubject = new BehaviorSubject<boolean>(false);
 		this.currentUser = this.currentUserSubject.asObservable();
 		this.loggedIn = this.loggedInSubject.asObservable();
 	}
 
-	public get currentUserValue(): User {
+	public get currentUserValue (): User {
 		return this.currentUserSubject.value;
 	}
 
-	public get loggedInValue(): boolean {
+	public get loggedInValue (): boolean {
 		return this.loggedInSubject.value;
 	}
 
 	/**
 	 * Updates the current user, and provides a way for callers to check if the update was succesful
-	 * @returns {An `Observable` which will emit a boolean value indicating the success of the update}
+	 * @returns An `Observable` which will emit a boolean value indicating the success of the update
 	*/
-	updateCurrentUser(): Observable<boolean> {
+	updateCurrentUser (): Observable<boolean> {
 		return this.api.getCurrentUser().pipe(first()).pipe(map(
 			u => {
 				this.currentUserSubject.next(u);
 				return true;
 			},
 			e => {
-				console.error("Failed to update current user");
-				console.debug("User update error: ", e);
+				console.error('Failed to update current user');
+				console.debug('User update error: ', e);
 				return false;
 			}
 		));
@@ -63,7 +63,7 @@ export class AuthenticationService {
 	/**
 	 * Logs in a user and, on succesful login, updates the current user.
 	*/
-	login(u: string, p: string): Observable<boolean> {
+	login (u: string, p: string): Observable<boolean> {
 		return this.api.login(u, p).pipe(map(
 			(resp) => {
 				if (resp && resp.status === 200) {
@@ -76,7 +76,7 @@ export class AuthenticationService {
 		));
 	}
 
-	logout() {
+	logout () {
 		this.currentUserSubject.next(null);
 		this.loggedInSubject.next(false);
 	}

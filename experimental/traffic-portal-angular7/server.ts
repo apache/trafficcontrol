@@ -34,12 +34,10 @@ enableProdMode();
 let to_url_raw = '';
 if (process.argv.length >= 3) {
 	to_url_raw = process.argv[2];
-}
-else if (process.env.hasOwnProperty("TO_URL")) {
+} else if (process.env.hasOwnProperty('TO_URL')) {
 	to_url_raw = process.env.TO_URL;
-}
-else {
-	console.error("Must define a Traffic Ops URL, either on the command line or TO_URL environment variable");
+} else {
+	console.error('Must define a Traffic Ops URL, either on the command line or TO_URL environment variable');
 	process.exit(1);
 }
 
@@ -49,51 +47,48 @@ const to_url_split = to_url_raw.split(':', 2);
 if (to_url_split.length === 1) {
 	to_host = to_url_split[0];
 	to_port = 443;
-}
-else if (to_url_split.length === 2) {
+} else if (to_url_split.length === 2) {
 	if (to_url_split[0].toLowerCase() === 'https') {
 		to_host = to_url_split[1];
 		if (to_host.length < 3) {
-			console.error("Malformed Traffic Ops URL:", to_url_raw);
+			console.error('Malformed Traffic Ops URL:', to_url_raw);
 			process.exit(1);
 		}
 		to_host = to_host.slice(2);
 		to_port = 443;
-	}
-	else {
+	} 	else {
 		to_host = to_url_split[0];
 		try {
 			to_port = Number(to_url_split[1]);
-		}
-		catch (e) {
-			console.error("Malformed Traffic Ops URL:", to_url_raw);
-			console.debug("Exception:", e);
+		} catch (e) {
+			console.error('Malformed Traffic Ops URL:', to_url_raw);
+			console.debug('Exception:', e);
 			process.exit(1);
 		}
 	}
-}
-else {
+} else {
 	to_host = to_url_split[1];
 	if (to_host.length < 3) {
-		console.error("Malformed Traffic Ops URL:", to_url_raw);
+		console.error('Malformed Traffic Ops URL:', to_url_raw);
 		process.exit(1);
 	}
 	to_host = to_host.slice(2);
 
 	try {
 		to_port = Number(to_url_split[2]);
-	}
-	catch (e) {
-		console.error("Malformed Traffic Ops URL:", to_url_raw);
-		console.debug("Exception:", e);
+	} catch (e) {
+		console.error('Malformed Traffic Ops URL:', to_url_raw);
+		console.debug('Exception:', e);
 		process.exit(1);
 	}
 }
 
-console.debug("TO_HOST:", to_host, "TO_PORT:", to_port);
+console.debug('TO_HOST:', to_host, 'TO_PORT:', to_port);
 
 // Ignore untrusted certificate signers (TODO: this should be an option)
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = '0';
+/* tslint:disable */
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
+/* tslint:enable */
 
 // Express server
 const app = express();
@@ -132,7 +127,7 @@ app.get('*.*', express.static(DIST_FOLDER, {
 app.use('/api/**', (req, res) => {
 	console.debug(`Making TO API request to \`${req.originalUrl}\``);
 
-	let fwdRequest = {
+	const fwdRequest = {
 		host: to_host,
 		port: to_port,
 		path: parse(req.originalUrl).path,

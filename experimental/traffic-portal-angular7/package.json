@@ -11,7 +11,7 @@
     "compile:server": "webpack --config webpack.server.config.js --progress --colors",
     "serve:ssr": "node dist/server",
     "build:ssr": "npm run build:client-and-server-bundles && npm run compile:server",
-    "build:client-and-server-bundles": "ng build --prod && ng run traffic-portal-angular7:server:production && cp -f ../misc/logos/ATC-SVG.svg dist/browser/",
+    "build:client-and-server-bundles": "ng build --prod && ng run traffic-portal-angular7:server:production && cp -f ../../misc/logos/ATC-SVG.svg dist/browser/",
     "autonomous:build": "npm run build:client-and-server-bundles && webpack --config webpack.server.config.js --progress --no-colors"
   },
   "private": true,
@@ -26,7 +26,7 @@
     "@angular/platform-browser-dynamic": "~7.1.0",
     "@angular/platform-server": "~7.1.0",
     "@angular/router": "~7.1.0",
-    "@nguniversal/express-engine": "^7.1.0",
+    "@nguniversal/express-engine": "^7.1.1",
     "@nguniversal/module-map-ngfactory-loader": "0.0.0",
     "chart.js": "^2.8.0",
     "core-js": "^2.5.4",
@@ -37,7 +37,7 @@
     "zone.js": "~0.8.26"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^0.13.5",
+    "@angular-devkit/build-angular": "^0.13.6",
     "@angular/cli": "~7.1.4",
     "@angular/compiler-cli": "~7.1.0",
     "@angular/language-service": "~7.1.0",
@@ -55,8 +55,8 @@
     "protractor": "~5.4.0",
     "ts-loader": "^5.2.0",
     "ts-node": "~7.0.0",
-    "tslint": "~5.11.0",
+    "tslint": "^5.14.0",
     "typescript": "~3.1.6",
-    "webpack-cli": "^3.1.0"
+    "webpack-cli": "^3.3.0"
   }
 }

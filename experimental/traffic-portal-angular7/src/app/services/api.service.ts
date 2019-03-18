@@ -29,39 +29,42 @@ export class APIService {
 
 	// private cookies: string;
 
-	constructor(private http: HttpClient) {
+	constructor (private readonly http: HttpClient) {
 
 	}
 
-	private delete(path: string, data?: any): Observable<HttpResponse<any>> {
+	private delete (path: string, data?: any): Observable<HttpResponse<any>> {
 		return this.do('delete', path, data);
 	}
-	private get(path: string, data?: any): Observable<HttpResponse<any>> {
+	private get (path: string, data?: any): Observable<HttpResponse<any>> {
 		return this.do('get', path, data);
 	}
-	private head(path: string, data?: any): Observable<HttpResponse<any>> {
+	private head (path: string, data?: any): Observable<HttpResponse<any>> {
 		return this.do('head', path, data);
 	}
-	private options(path: string, data?: any): Observable<HttpResponse<any>> {
+	private options (path: string, data?: any): Observable<HttpResponse<any>> {
 		return this.do('options', path, data);
 	}
-	private patch(path: string, data?: any): Observable<HttpResponse<any>> {
+	private patch (path: string, data?: any): Observable<HttpResponse<any>> {
 		return this.do('patch', path, data);
 	}
-	private post(path: string, data?: any): Observable<HttpResponse<any>> {
+	private post (path: string, data?: any): Observable<HttpResponse<any>> {
 		return this.do('post', path, data);
 	}
-	private push(path: string, data?: any): Observable<HttpResponse<any>> {
+	private push (path: string, data?: any): Observable<HttpResponse<any>> {
 		return this.do('push', path, data);
 	}
 
-	private do(method: string, path: string, data?: Object): Observable<HttpResponse<any>> {
+	private do (method: string, path: string, data?: Object): Observable<HttpResponse<any>> {
+
+		/* tslint:disable */
 		const options = {headers: new HttpHeaders({'Content-Type': 'application/json'}),
 		                 observe: 'response' as 'response',
 		                 responseType: 'json' as 'json',
 		                 body: data};
+		/* tslint:enable */
 		return this.http.request(method, path, options).pipe(map((response) => {
-			//TODO pass alerts to the alert service
+			// TODO pass alerts to the alert service
 			// (TODO create the alert service)
 			return response as HttpResponse<any>;
 		}));
@@ -73,8 +76,8 @@ export class APIService {
 	 * @param p The password of user `u`
 	 * @returns An observable that will emit the entire HTTP response
 	*/
-	public login(u:string, p:string): Observable<HttpResponse<any>> {
-		const path = 'http://localhost:4000/api/'+this.API_VERSION+'/user/login';
+	public login (u: string, p: string): Observable<HttpResponse<any>> {
+		const path = 'http://localhost:4000/api/' + this.API_VERSION + '/user/login';
 		return this.post(path, {u, p});
 	}
 
@@ -82,8 +85,8 @@ export class APIService {
 	 * Fetches the current user from Traffic Ops
 	 * @returns An observable that will emit a `User` object representing the current user.
 	*/
-	public getCurrentUser(): Observable<User> {
-		const path = '/api/'+this.API_VERSION+'/user/current';
+	public getCurrentUser (): Observable<User> {
+		const path = '/api/' + this.API_VERSION + '/user/current';
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response as User;
@@ -95,8 +98,8 @@ export class APIService {
 	 * Gets a list of all visible Delivery Services
 	 * @returns An observable that will emit an array of `DeliveryService` objects.
 	*/
-	public getDeliveryServices(): Observable<DeliveryService[]> {
-		const path = '/api/'+this.API_VERSION+'/deliveryservices';
+	public getDeliveryServices (): Observable<DeliveryService[]> {
+		const path = '/api/' + this.API_VERSION + '/deliveryservices';
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response as DeliveryService[];
@@ -107,11 +110,11 @@ export class APIService {
 	/**
 	 * Retrieves capacity statistics for the Delivery Service identified by a given, unique,
 	 * integral value.
-	 * @param {d} The integral, unique identifier of a Delivery Service
+	 * @param d The integral, unique identifier of a Delivery Service
 	 * @returrns An Observable that emits an object that hopefully has the right keys to represent capacity.
 	*/
-	public getDSCapacity(d: number): Observable<any> {
-		const path = '/api/'+this.API_VERSION+'/deliveryservices/'+String(d)+'/capacity';
+	public getDSCapacity (d: number): Observable<any> {
+		const path = '/api/' + this.API_VERSION + '/deliveryservices/' + String(d) + '/capacity';
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response;
@@ -122,11 +125,11 @@ export class APIService {
 	/**
 	 * Retrieves the Cache Group health of a Delivery Service identified by a given, unique,
 	 * integral value.
-	 * @param {d} The integral, unique identifier of a Delivery Service
+	 * @param d The integral, unique identifier of a Delivery Service
 	 * @returns An Observable that emits a response from the health endpoint
 	*/
-	public getDSHealth(d: number): Observable<any> {
-		const path = '/api/'+this.API_VERSION+'/deliveryservices/'+String(d)+'/health';
+	public getDSHealth (d: number): Observable<any> {
+		const path = '/api/' + this.API_VERSION + '/deliveryservices/' + String(d) + '/health';
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response;
@@ -137,26 +140,27 @@ export class APIService {
 	/**
 	 * Retrieves Delivery Service throughput statistics for a given time period, averaged over a given
 	 * interval.
-	 * @param {d} The `xml_id` of a Delivery Service
-	 * @param {start} A date/time from which to start data collection
-	 * @param {end} A date/time at which to end data collection
-	 * @param {interval} A unit-suffixed interval over which data will be "binned"
-	 * @param {useMids} Collect data regarding Mid-tier cache servers rather than Edge-tier cache servers
-	*/
-	public getDSKBPS(d: string,
-	                 start: Date,
-	                 end: Date,
-	                 interval: string,
-	                 useMids?: boolean): Observable<Array<Array<any>>> {
-		let path = '/api/'+this.API_VERSION+'/deliveryservice_stats?interval=60s&metricType=kbps';
+	 * @param d The `xml_id` of a Delivery Service
+	 * @param start A date/time from which to start data collection
+	 * @param end A date/time at which to end data collection
+	 * @param interval A unit-suffixed interval over which data will be "binned"
+	 * @param useMids Collect data regarding Mid-tier cache servers rather than Edge-tier cache servers
+	*//* tslint:disable */
+	public getDSKBPS (d: string,
+	                  start: Date,
+	                  end: Date,
+	                  interval: string,
+	                  useMids?: boolean): Observable<Array<Array<any>>> {
+		/* tslint:enable */
+		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?interval=60s&metricType=kbps';
 		path += '&deliveryServiceName=' + d;
 		path += '&startDate=' + start.toISOString();
 		path += '&endDate=' + end.toISOString();
 		path += '&serverType=' + (useMids ? 'mid' : 'edge');
-	    return this.get(path).pipe(map(
-	    	r => {
-	    		return r.body.response.series.values;
-	    	}
-	    ));
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response.series.values;
+			}
+		));
 	}
 }

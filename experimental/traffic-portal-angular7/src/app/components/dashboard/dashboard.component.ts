@@ -34,9 +34,9 @@ export class DashboardComponent implements OnInit {
 	// Fuzzy search control
 	fuzzControl = new FormControl('');
 
-	constructor(private api: APIService) { }
+	constructor (private readonly api: APIService) { }
 
-	ngOnInit() {
+	ngOnInit () {
 		this.api.getDeliveryServices().pipe(first()).subscribe(
 			r => {
 				this.deliveryServices = r;
@@ -47,16 +47,18 @@ export class DashboardComponent implements OnInit {
 
 	/**
 	 * Checks if a Delivery Service matches a fuzzy search term
-	 * @param {ds} The Delivery Service being checked
+	 * @param ds The Delivery Service being checked
 	 * @returns `true` if `ds` matches the fuzzy search term, `false` otherwise
 	*/
-	fuzzy(ds: DeliveryService): boolean {
+	fuzzy (ds: DeliveryService): boolean {
 		if (!this.fuzzControl.value) {
 			return true;
 		}
 		let n = -1;
 		for (const l of this.fuzzControl.value) {
+			/* tslint:disable */
 			if (!~(n = ds.displayName.indexOf(l, n + 1))) {
+			/* tslint:enable */
 				return false;
 			}
 		}

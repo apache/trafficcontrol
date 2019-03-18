@@ -50,7 +50,7 @@ export class DsCardComponent {
 	private loaded: boolean;
 	public graphDataLoaded: boolean;
 
-	constructor(private api: APIService, private elementRef: ElementRef) {
+	constructor (private readonly api: APIService, private readonly elementRef: ElementRef) {
 		this.available = 100;
 		this.maintenance = 0;
 		this.utilized = 0;
@@ -62,13 +62,13 @@ export class DsCardComponent {
 
 	/**
 	 * Triggered when the details element is opened or closed, and fetches the latest stats.
-	 * @param {e} A DOM Event caused then the open/close state of a `<details>` element changes.
+	 * @param e A DOM Event caused then the open/close state of a `<details>` element changes.
 	 *
 	 * this will only fetch health and capacity information once per page load, but will update the
 	 * Bandwidth graph every time the details panel is opened. Bandwidth data is calculated using
 	 * 60s intervals starting at 00:00 UTC the current day and ending at the current date/time.
 	*/
-	toggle(e: Event) {
+	toggle (e: Event) {
 		if ((e.target as HTMLDetailsElement).open) {
 			if (!this.loaded) {
 				this.loaded = true;
@@ -84,7 +84,7 @@ export class DsCardComponent {
 				this.api.getDSHealth(this.deliveryService.id).pipe(first()).subscribe(
 					r => {
 						if (r) {
-							this.healthy = r.totalOnline / (r.totalOnline + r.totalOffline);
+							this.healthy = Number(r.totalOnline) / (Number(r.totalOnline) + Number(r.totalOffline));
 						}
 					}
 				);
@@ -97,12 +97,12 @@ export class DsCardComponent {
 			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 			this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s').pipe(first()).subscribe(
 				data => {
-					for (let d of data) {
+					for (const d of data) {
 						this.labels.push(new Date(d[0]));
 						this.edgeBandwidth.push(d[1]);
 					}
 
-					const canvas = this.elementRef.nativeElement.querySelector('#canvas-'+String(this.deliveryService.id));
+					const canvas = this.elementRef.nativeElement.querySelector('#canvas-' + String(this.deliveryService.id));
 					this.chart = new Chart(canvas, {
 						type: 'line',
 						data: {

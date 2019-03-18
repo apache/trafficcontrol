@@ -26,11 +26,15 @@ import { AuthenticationService } from '../services';
 */
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
-	constructor(private authenticationService: AuthenticationService, private router: Router) {}
 
-	intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+	/* tslint:disable */
+	constructor (private readonly authenticationService: AuthenticationService,
+	             private readonly router: Router) {}
+	/* tslint:enable */
+
+	intercept (request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 		return next.handle(request).pipe(catchError(err => {
-			console.error("HTTP Error: ", err);
+			console.error('HTTP Error: ', err);
 			if (err.status === 401 || err.status === 403) {
 				this.authenticationService.logout();
 				this.router.navigate(['/login']);

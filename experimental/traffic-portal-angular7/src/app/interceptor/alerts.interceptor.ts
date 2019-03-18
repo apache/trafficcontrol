@@ -26,9 +26,9 @@ import { Alert } from '../models/alert';
 */
 @Injectable()
 export class AlertInterceptor implements HttpInterceptor {
-	constructor(private alertService: AlertService) {}
+	constructor (private readonly alertService: AlertService) {}
 
-	intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+	intercept (request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 		return next.handle(request).pipe(tap(
 			r => {
 				if (r instanceof HttpRequest && r.body.hasOwnProperty('alerts')) {
