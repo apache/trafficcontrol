@@ -48,6 +48,7 @@ cp -f ../misc/logos/ATC-SVG.svg dist/browser/
 # Runs the server locally at http://localhost:4000
 node dist/server.js
 ```
+Note that calling `node` manually like this will allow you to pass command line parameters to the server. Currently, the only supported parametor is an optional hostname that refers to a Traffic Ops instance. This may or may not include a schema and port, e.g. `https://trafficops.infra.ciab.test`, `trafficops.infra.ciab.test` and `trafficops.infra.ciab.test:443` are all equivalent (because the default schema is `https://` and the default port is 443). If this value is not provided on the command line, the value of the `TO_URL` environment variable will be used. If the Traffic Ops server host is not defined either in the environment or on the command line (e.g. when using the below `npm` commands without `TO_URL` set), an error will be issued and the server will refuse to start.
 
 E.g. using NPM scripts
 
@@ -66,6 +67,33 @@ npm run build:ssr
 # Runs the server locally at http://localhost:4000
 npm run serve:ssr
 ```
+
+#### Debug Mode
+Because we need to proxy API requests back to Traffic Ops, running in debug mode is a bit more involved than it normally would be. Specifically, it'll require making a new file somewhere with the following information in JSON format:
+
+```json
+{
+	"/api": {
+		"target": "Traffic Ops server URL here - e.g. https://trafficops.apache.test",
+		"secure":
+		 "This should be one of the literal boolean values 'true' or 'false' to indicate if certificate authenticity should be checked."
+	}
+}
+```
+More documentation on the configuration options available in this file can be found in [the relevant section of the angular-cli documentation](https://github.com/angular/angular-cli/blob/master/docs/documentation/stories/proxy.md). This step isn't necessary in a production deployment because the proxy is built into the server-side rendering server.
+
+Now, assuming this in the project directory (i.e. the same one as this README.md file) and named e.g. `proxy.json`, a debug-mode server can be started like so:
+
+```bash
+# Note that this pre-supposes you've globally installed the angular-cli
+# e.g. via `npm install -g @angular/cli`
+ng serve --proxy-config ./proxy.json
+```
+
+By default this will set up an Angular debug-mode server to run, listening on port 4200 (as opposed to the production-mode default of 4000 [presumably so that you could run both at the same time]). Note that regardless of production-mode SSL configuration (TODO), this will **only serve unencrypted HTTP responses by default**. Also, unlike production mode which compiles things ahead of time, this will compile resources on-the-fly so that making changes to a file is immediately "live" without requiring the developer to restart the debug server. Pretty neat, desu.
+
+## Supporting old Traffic Ops versions
+This UI is built to work with an API at version 1.5. All endpoints will use this version by default, so when pointing it at a server that only supports e.g. a max of 1.4, you'll need to do something heinous: edit a source file. In the [`src/app/services/api.service.ts`](./src/app/services/api.service.ts) file, change the line `public API_VERSION = '1.5';` to the appropriate version, e.g. `public API_VERSION = '1.4';`. This will be easier in the future<sup>Citation needed</sup>.
 
 ## Code scaffolding
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
