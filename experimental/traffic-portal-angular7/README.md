@@ -111,6 +111,17 @@ These apply to Typescript, specifically
 ## Supporting old Traffic Ops versions
 This UI is built to work with an API at version 1.5. All endpoints will use this version by default, so when pointing it at a server that only supports e.g. a max of 1.4, you'll need to do something heinous: edit a source file. In the [`src/app/services/api.service.ts`](./src/app/services/api.service.ts) file, change the line `public API_VERSION = '1.5';` to the appropriate version, e.g. `public API_VERSION = '1.4';`. This will be easier in the future<sup>Citation needed</sup>.
 
+## Browser Support
+This UI obviously requires Javascript, but beyond that the hope is that any HTML5/CSS3/DOM3-compliant browser should work. Specifically, testing is being done using the latest versions of:
+
+- Google Chrome (not Chromium atm, maybe in the future)
+- Opera
+- Vivaldi (support tenuous)
+- Mozilla Firefox
+- Microsoft Edge (Once the rendering engine turns into Chromium - Chakra is not HTML5/CSS3-compliant)
+
+... and the goal is to continuously support these browser in their latest and penultimate major release versions. Safari isn't tested because I don't have a Mac, but support for that would be nice given the high usage by Traffic Control users/admins/devs. Selenium tests for these browsers may be added at some point, but for the moment (extremely limited) protractor testing is being used.
+
 ## Code scaffolding
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
