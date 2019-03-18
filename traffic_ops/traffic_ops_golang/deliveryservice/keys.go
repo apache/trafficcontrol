@@ -59,7 +59,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	certChain, isUnknownAuth, err := verifyCertificate(req.Certificate.Crt, "")
+	certChain, isUnknownAuth, isVerifiedChainNotEqual, err := verifyCertificate(req.Certificate.Crt, "")
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("verifying certificate: "+err.Error()), nil)
 		return
@@ -83,7 +83,11 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if isUnknownAuth {
-		api.WriteRespAlert(w, r, tc.WarnLevel, "WARNING: SSL keys were successfully added for '"+*req.DeliveryService+"', but the certificate is signed by an unknown authority and may be invalid")
+		api.WriteRespAlert(w, r, tc.WarnLevel, "WARNING: SSL keys were successfully added for '"+*req.DeliveryService+"', but the input certificate may be invalid (certificate is signed by an unknown authority)")
+		return
+	}
+	if isVerifiedChainNotEqual {
+		api.WriteRespAlert(w, r, tc.WarnLevel, "WARNING: SSL keys were successfully added for '"+*req.DeliveryService+"', but the input certificate may be invalid (certificate verification produced a different chain)")
 		return
 	}
 	api.WriteResp(w, r, "Successfully added ssl keys for "+*req.DeliveryService)
@@ -272,25 +276,27 @@ WHERE r.pattern = $2
 // certificate and its chain in the proper order. Returns a verified
 // and ordered certificate and CA chain.
 // If the cert verification returns UnknownAuthorityError, return true to
-// indicate that the certs are signed by an unknown authority (e.g. self-signed).
-func verifyCertificate(certificate string, rootCA string) (string, bool, error) {
+// indicate that the certs are signed by an unknown authority (e.g. self-signed). Otherwise, return false.
+// If the chain returned from Certificate.Verify() does not match the input chain,
+// return true. Otherwise, return false.
+func verifyCertificate(certificate string, rootCA string) (string, bool, bool, error) {
 	// decode, verify, and order certs for storage
 	certs := strings.SplitAfter(certificate, PemCertEndMarker)
 	if len(certs) <= 1 {
-		return "", false, errors.New("no certificate chain to verify")
+		return "", false, false, errors.New("no certificate chain to verify")
 	}
 
 	// decode and verify the server certificate
 	block, _ := pem.Decode([]byte(certs[0]))
 	if block == nil {
-		return "", false, errors.New("could not decode pem-encoded server certificate")
+		return "", false, false, errors.New("could not decode pem-encoded server certificate")
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return "", false, errors.New("could not parse the server certificate: " + err.Error())
+		return "", false, false, errors.New("could not parse the server certificate: " + err.Error())
 	}
 	if !(cert.KeyUsage&x509.KeyUsageKeyEncipherment > 0) {
-		return "", false, errors.New("no key encipherment usage for the server certificate")
+		return "", false, false, errors.New("no key encipherment usage for the server certificate")
 	}
 	bundle := ""
 	for i := 0; i < len(certs)-1; i++ {
@@ -299,7 +305,7 @@ func verifyCertificate(certificate string, rootCA string) (string, bool, error) 
 
 	intermediatePool := x509.NewCertPool()
 	if !intermediatePool.AppendCertsFromPEM([]byte(bundle)) {
-		return "", false, errors.New("certificate CA bundle is empty")
+		return "", false, false, errors.New("certificate CA bundle is empty")
 	}
 
 	opts := x509.VerifyOptions{
@@ -309,7 +315,7 @@ func verifyCertificate(certificate string, rootCA string) (string, bool, error) 
 		// verify the certificate chain.
 		rootPool := x509.NewCertPool()
 		if !rootPool.AppendCertsFromPEM([]byte(rootCA)) {
-			return "", false, errors.New("unable to parse root CA certificate")
+			return "", false, false, errors.New("unable to parse root CA certificate")
 		}
 		opts.Roots = rootPool
 	}
@@ -317,12 +323,12 @@ func verifyCertificate(certificate string, rootCA string) (string, bool, error) 
 	chain, err := cert.Verify(opts)
 	if err != nil {
 		if _, ok := err.(x509.UnknownAuthorityError); ok {
-			return certificate, true, nil
+			return certificate, true, false, nil
 		}
-		return "", false, errors.New("could not verify the certificate chain: " + err.Error())
+		return "", false, false, errors.New("could not verify the certificate chain: " + err.Error())
 	}
 	if len(chain) < 1 {
-		return "", false, errors.New("can't find valid chain for cert in file in request")
+		return "", false, false, errors.New("can't find valid chain for cert in file in request")
 	}
 	pemEncodedChain := ""
 	for _, link := range chain[0] {
@@ -332,8 +338,12 @@ func verifyCertificate(certificate string, rootCA string) (string, bool, error) 
 	}
 
 	if len(pemEncodedChain) < 1 {
-		return "", false, errors.New("Invalid empty certicate chain in request")
+		return "", false, false, errors.New("Invalid empty certicate chain in request")
 	}
 
-	return pemEncodedChain, false, nil
+	if pemEncodedChain != certificate {
+		return certificate, false, true, nil
+	}
+
+	return certificate, false, false, nil
 }
