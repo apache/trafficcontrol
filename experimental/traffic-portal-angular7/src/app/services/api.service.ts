@@ -161,7 +161,10 @@ export class APIService {
 		path += '&serverType=' + (useMids ? 'mid' : 'edge');
 		return this.get(path).pipe(map(
 			r => {
-				return r.body.response.series.values;
+				if (r && r.body && r.body.response && r.body.response.series) {
+					return r.body.response.series.values;
+				}
+				return null;
 			}
 		));
 	}

@@ -20,6 +20,38 @@ import { Chart } from 'chart.js';
 import { APIService } from '../../services';
 import { DeliveryService, Protocol } from '../../models/deliveryservice';
 
+const CHART_OPTIONS = {
+				type: 'line',
+				data: {
+					labels: [],
+					datasets: []
+				},
+				options: {
+					legend: {
+						display: false
+					},
+					title: {
+						display: true,
+						text: "Today's Bandwidth"
+					},
+					scales: {
+						xAxes: [{
+							display: true,
+							type: 'time',
+							callback: (v, unused_i, unused_values) => {
+								return v.toLocaleTimeString();
+							}
+						}],
+						yAxes: [{
+							display: true,
+							ticks: {
+								suggestedMin: 0
+							}
+						}]
+					}
+				}
+			};
+
 @Component({
 	selector: 'ds-card',
 	templateUrl: './ds-card.component.html',
@@ -39,7 +71,7 @@ export class DsCardComponent {
 
 	// Bandwidth data
 	chart: Chart;
-	// midBandwidth: Array<Array<any>>;
+	midBandwidth: Array<number>;
 	edgeBandwidth: Array<number>;
 	labels: Array<Date>;
 
@@ -56,6 +88,7 @@ export class DsCardComponent {
 		this.utilized = 0;
 		this.loaded = false;
 		this.edgeBandwidth = new Array<number>();
+		this.midBandwidth = new Array<number>();
 		this.labels = new Array<Date>();
 		this.graphDataLoaded = false;
 	}
@@ -84,63 +117,90 @@ export class DsCardComponent {
 				this.api.getDSHealth(this.deliveryService.id).pipe(first()).subscribe(
 					r => {
 						if (r) {
-							this.healthy = Number(r.totalOnline) / (Number(r.totalOnline) + Number(r.totalOffline));
+							const healthy = Number(r.totalOnline) / (Number(r.totalOnline) + Number(r.totalOffline));
+							if (isNaN(healthy)) {
+								this.healthy = 0;
+							} else {
+								this.healthy = healthy;
+							}
 						}
 					}
 				);
 			} else if (this.chart) {
 				this.chart.destroy();
+				this.chart = null;
 				this.graphDataLoaded = false;
 			}
 			const now = new Date();
 			now.setUTCMilliseconds(0); // apparently `const` doesn't care about this
 			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+			const canvas = this.elementRef.nativeElement.querySelector('#canvas-' + String(this.deliveryService.id));
+			this.chart = new Chart(canvas, CHART_OPTIONS);
+
 			this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s').pipe(first()).subscribe(
 				data => {
+					if (this.chart === null) {
+						return;
+					}
+					if (data === undefined || data === null) {
+						this.chart.destroy();
+						this.chart = null;
+						this.graphDataLoaded = true;
+						console.warn("Delivery Service '" + this.deliveryService.displayName + "' (" + this.deliveryService.id + ') has no edge bandwidth data!');
+
+						const ctx = canvas.getContext("2d");
+						ctx.font = "30px serif";
+						ctx.fillStyle = 'black';
+						ctx.textAlign = 'center';
+						ctx.fillText("No Data", canvas.width/2., canvas.height/2.);
+						return;
+					}
 					for (const d of data) {
-						this.labels.push(new Date(d[0]));
+						this.chart.data.labels.push(new Date(d[0]));
 						this.edgeBandwidth.push(d[1]);
 					}
-
-					const canvas = this.elementRef.nativeElement.querySelector('#canvas-' + String(this.deliveryService.id));
-					this.chart = new Chart(canvas, {
-						type: 'line',
-						data: {
-							labels: this.labels,
-							datasets: [
-								{
-									data: this.edgeBandwidth,
-									borderColor: '#3cba9f',
-									fill: false
-								}
-							]
-						},
-						options: {
-							legend: {
-								display: false
-							},
-							title: {
-								display: true,
-								text: "Today's Bandwidth"
-							},
-							scales: {
-								xAxes: [{
-									display: true,
-									type: 'time',
-									callback: (v, i, values) => {
-										return v.toLocaleTimeString();
-									}
-								}],
-								yAxes: [{
-									display: true,
-									ticks: {
-										suggestedMin: 0
-									}
-								}],
-							}
-						}
+					this.chart.data.datasets.push({
+						label: 'Edge-tier Bandwidth',
+						data: this.edgeBandwidth,
+						borderColor: '#3cba9f',
+						fill: true,
+						fillColor: '#3cba9f'
 					});
 					this.graphDataLoaded = true;
+					this.chart.update();
+				}
+			);
+
+			this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s', true).pipe(first()).subscribe(
+				data => {
+					if (this.chart === null) {
+						return;
+					}
+					if (data === undefined || data === null) {
+						this.chart.destroy();
+						this.chart = null;
+						this.graphDataLoaded = true;
+						console.warn("Delivery Service '" + this.deliveryService.displayName + "' (" + this.deliveryService.id + ') has no mid bandwidth data!');
+
+						const ctx = canvas.getContext("2d");
+						ctx.font = "30px serif";
+						ctx.fillStyle = 'black';
+						ctx.textAlign = 'center';
+						ctx.fillText("No Data", canvas.width/2., canvas.height/2.);
+						return;
+					}
+					for (const d of data) {
+						this.midBandwidth.push(d[1]);
+					}
+					this.chart.data.datasets.push({
+						label: 'Mid-tier Bandwidth',
+						data: this.midBandwidth,
+						borderColor: '#BA3C57',
+						fill: true,
+						fillColor: '#BA3C57'
+					});
+					this.graphDataLoaded = true;
+					this.chart.update();
 				}
 			);
 		}
