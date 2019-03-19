@@ -170,7 +170,7 @@ export class DeliveryService {
 	dnsBypassTtl?: number;
 	dscp: number;
 	edgeHeaderRewrite?: string;
-	exampleURLs?: string;
+	exampleURLs?: Array<string>;
 	fqPacingRateL?: number;
 	geoLimit: GeoLimit;
 	geoLimitCountries?: string;
