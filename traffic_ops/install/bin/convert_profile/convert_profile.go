@@ -22,6 +22,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"gopkg.in/yaml.v2"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -39,41 +40,43 @@ type InputConfigParams struct {
 
 // TrafficOps Profile Parsing
 type Profile struct {
-	Parameters  []Parameter `json:"parameters"`
-	Description ProfileDesc `json:"profile"`
+	Parameters  []Parameter `json:"parameters" yaml:"parameters"`
+	Description ProfileDesc `json:"profile" yaml:"profile"`
 }
 
 type Parameter struct {
-	Name       string `json:"name"`
-	ConfigFile string `json:"config_file"`
-	Value      string `json:"value"`
+	Name       string `json:"name" yaml:"name"`
+	ConfigFile string `json:"config_file" yaml:"config_file"`
+	Value      string `json:"value" yaml:"value"`
 }
 
 type ProfileDesc struct {
-	Description string `json:"description"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
+	Description string `json:"description" yaml:"description"`
+	Name        string `json:"name" yaml:"name"`
+	Type        string `json:"type" yaml:"type"`
+	Cdn         string `json:"cdn" yaml:"cdn"`
 }
 
 // ConversionPolicy Parsing
 type ConversionPolicy struct {
-	ValidateParameters []Parameter      `json:"validate_parameters"`
-	ReplaceName        ReplaceRule      `json:"replace_name"`
-	ReplaceDescription ReplaceRule      `json:"replace_description"`
-	ConversionRules    []ConversionRule `json:"conversion_actions"`
+	ValidateParameters []Parameter      `json:"validate_parameters" yaml:"validate_parameters"`
+	ReplaceName        ReplaceRule      `json:"replace_name" yaml:"replace_name"`
+	ReplaceDescription ReplaceRule      `json:"replace_description" yaml:"replace_description"`
+	ConversionRules    []ConversionRule `json:"conversion_actions" yaml:"conversion_actions"`
+	AddParameters      []Parameter      `json:"add_parameters" yaml:"add_parameters"`
 }
 
 type ReplaceRule struct {
-	Old string `json:"old"`
-	New string `json:"new"`
+	Old string `json:"old" yaml:"old"`
+	New string `json:"new" yaml:"new"`
 }
 
 type ConversionRule struct {
-	MatchParameter Parameter `json:"match_parameter"`
-	NewName        string    `json:"new_name"`
-	NewConfigFile  string    `json:"new_config_file"`
-	NewValue       string    `json:"new_value"`
-	Action         string    `json:"action"`
+	MatchParameter Parameter `json:"match_parameter" yaml:"match_parameter"`
+	NewName        string    `json:"new_name" yaml:"new_name"`
+	NewConfigFile  string    `json:"new_config_file" yaml:"new_config_file"`
+	NewValue       string    `json:"new_value" yaml:"new_value"`
+	Action         string    `json:"action" yaml:"action"`
 }
 
 func formatParam(p Parameter) string {
@@ -87,9 +90,8 @@ func (cr ConversionRule) Apply(param Parameter) (Parameter, bool) {
 	inParam := formatParam(param)
 
 	if cr.Action == "delete" {
-		fmt.Fprintf(os.Stderr, "Deleting parameter %s\n", inParam)
+		fmt.Fprintf(os.Stdout, "Deleting parameter %s\n", inParam)
 		return param, false
-
 	} else if cr.Action != "" {
 		fmt.Fprintf(os.Stderr, "[WARNING] Unknown action %s, skipping action\n", cr.Action)
 	}
@@ -105,7 +107,7 @@ func (cr ConversionRule) Apply(param Parameter) (Parameter, bool) {
 	if cr.NewValue != "" {
 		param.Value = cr.NewValue
 	}
-	fmt.Fprintf(os.Stderr, "Updating parameter %s to %s\n", inParam, formatParam(param))
+	fmt.Fprintf(os.Stdout, "Updating parameter %s to %s\n", inParam, formatParam(param))
 
 	return param, true
 }
@@ -143,7 +145,7 @@ func readFile(inFile string) []byte {
 
 func parseInputProfile(inFile string) *Profile {
 	var pt Profile
-	err := json.Unmarshal(readFile(inFile), &pt)
+	err := yaml.Unmarshal(readFile(inFile), &pt)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] Cannot parse input profile\n")
 		panic(err)
@@ -154,7 +156,7 @@ func parseInputProfile(inFile string) *Profile {
 
 func parseInputRules(inFile string) *ConversionPolicy {
 	var cp ConversionPolicy
-	err := json.Unmarshal(readFile(inFile), &cp)
+	err := yaml.Unmarshal(readFile(inFile), &cp)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] Cannot parse conversion rules\n")
 		panic(err)
@@ -191,6 +193,17 @@ func ValidateParameters(profile *Profile,
 	return true
 }
 
+// There is currently no check if the name, config_file or value is already present
+func AddParameters(profile *Profile, params []Parameter) {
+	filteredParams := profile.Parameters
+	for _, param := range params {
+		// fmt.Fprintf(os.Stdout, "Adding parameter %s\n", add.Name)
+		fmt.Fprintf(os.Stdout, "Adding parameter %s\n", formatParam(param))
+		filteredParams = append(filteredParams, param)
+	}
+	profile.Parameters = filteredParams
+}
+
 // ConvertProfile will modify paramaters as described by matching entries in conversionActions
 // If ignoreValue is set to true, the Value field in matcher will be ignored, effectively matching
 // all values
@@ -202,6 +215,7 @@ func ConvertProfile(profile *Profile,
 	for _, param := range profile.Parameters {
 
 		matched := false
+		//fmt.Fprintf(os.Stdout, "ConvertProfile: %s\n", param.Name)
 		for _, rule := range rules {
 			if paramsMatch(rule.MatchParameter, param, ignoreValue) {
 				matched = true
@@ -229,6 +243,7 @@ func paramsMatch(matcher Parameter, param Parameter, ignoreValue bool) bool {
 	nameRe := regexp.MustCompile(matcher.Name)
 	cfgRe := regexp.MustCompile(matcher.ConfigFile)
 	valueRe := regexp.MustCompile(matcher.Value)
+
 
 	if nil != nameRe.FindStringIndex(param.Name) &&
 		nil != cfgRe.FindStringIndex(param.ConfigFile) {
@@ -267,6 +282,7 @@ func main() {
 	}
 	ConvertProfile(inProfile, rules.ConversionRules, cfgParam.Force)
 	UpdateDetails(inProfile, rules)
+	AddParameters(inProfile, rules.AddParameters)
 
 	// Can't use the standard JSON Marshaller because it forces HTML escape
 	buf := new(bytes.Buffer)
