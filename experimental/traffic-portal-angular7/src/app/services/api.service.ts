@@ -77,7 +77,7 @@ export class APIService {
 	 * @returns An observable that will emit the entire HTTP response
 	*/
 	public login (u: string, p: string): Observable<HttpResponse<any>> {
-		const path = 'http://localhost:4000/api/' + this.API_VERSION + '/user/login';
+		const path = '/api/' + this.API_VERSION + '/user/login';
 		return this.post(path, {u, p});
 	}
 
