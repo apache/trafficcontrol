@@ -152,7 +152,8 @@ export class APIService {
 	                  interval: string,
 	                  useMids?: boolean): Observable<Array<Array<any>>> {
 		/* tslint:enable */
-		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?interval=60s&metricType=kbps';
+		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?metricType=kbps';
+		path += '&interval=' + interval;
 		path += '&deliveryServiceName=' + d;
 		path += '&startDate=' + start.toISOString();
 		path += '&endDate=' + end.toISOString();
