@@ -87,8 +87,10 @@ func UpdateTestDeliveryServices(t *testing.T) {
 
 	updatedLongDesc := "something different"
 	updatedMaxDNSAnswers := 164598
+	updatedMaxOriginConnections := 100
 	remoteDS.LongDesc = updatedLongDesc
 	remoteDS.MaxDNSAnswers = updatedMaxDNSAnswers
+	remoteDS.MaxOriginConnections = updatedMaxOriginConnections
 	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
 
 	if updateResp, err := TOSession.UpdateDeliveryService(strconv.Itoa(remoteDS.ID), &remoteDS); err != nil {
@@ -104,9 +106,10 @@ func UpdateTestDeliveryServices(t *testing.T) {
 		t.Errorf("cannot GET Delivery Service by ID: %v - nil\n", remoteDS.XMLID)
 	}
 
-	if resp.LongDesc != updatedLongDesc || resp.MaxDNSAnswers != updatedMaxDNSAnswers {
+	if resp.LongDesc != updatedLongDesc || resp.MaxDNSAnswers != updatedMaxDNSAnswers || resp.MaxOriginConnections != updatedMaxOriginConnections {
 		t.Errorf("results do not match actual: %s, expected: %s\n", resp.LongDesc, updatedLongDesc)
 		t.Errorf("results do not match actual: %v, expected: %v\n", resp.MaxDNSAnswers, updatedMaxDNSAnswers)
+		t.Errorf("results do not match actual: %v, expected: %v\n", resp.MaxOriginConnections, updatedMaxOriginConnections)
 	}
 }
 

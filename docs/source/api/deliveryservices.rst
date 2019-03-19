@@ -61,9 +61,6 @@ Response Structure
 :cdnName:                  Name of the CDN to which the :term:`Delivery Service` belongs
 :checkPath:                The path portion of the URL to check connections to this :term:`Delivery Service`'s origin server
 :consistentHashRegex:      If defined, this is a regex used for the Pattern-Based Consistent Hashing feature. It is only applicable for HTTP and Steering Delivery Services
-
-	.. versionadded:: 1.5
-
 :displayName:              The display name of the :term:`Delivery Service`
 :dnsBypassCname:           Domain name to overflow requests for HTTP :term:`Delivery Service`\ s - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
 :dnsBypassIp:              The IPv4 IP to use for bypass on a DNS :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
@@ -120,6 +117,10 @@ Response Structure
 			Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Service`\ s
 
 :maxDnsAnswers:    The maximum number of IPs to put in responses to A/AAAA DNS record requests (0 means all available)\ [4]_
+:maxOriginConnections:      The maximum number of connections allowed to the origin (0 means no maximum).
+
+	.. versionadded:: 1.4
+
 :midHeaderRewrite: Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
 :missLat:          The latitude to use when the client cannot be found in the CZF or a geographic IP lookup
 :missLong:         The longitude to use when the client cannot be found in the CZF or a geographic IP lookup
@@ -246,6 +247,7 @@ Response Structure
 			}
 		],
 		"maxDnsAnswers": null,
+		"maxOriginConnections": 0,
 		"midHeaderRewrite": null,
 		"missLat": 42,
 		"missLong": -88,
@@ -302,9 +304,6 @@ Request Structure
 :cdnId:                    The integral, unique identifier for the CDN to which this :term:`Delivery Service`\ shall be assigned
 :checkPath:                The path portion of the URL which will be used to check connections to this :term:`Delivery Service`'s origin server
 :consistentHashRegex:      If defined, this is a regex used for the Pattern-Based Consistent Hashing feature. It is only applicable for HTTP and Steering Delivery Services
-
-	.. versionadded:: 1.5
-
 :deepCachingType:          A string describing when to do Deep Caching for this :term:`Delivery Service`:
 
 	NEVER
@@ -351,6 +350,10 @@ Request Structure
 :longDesc1:          An optional field used when more detailed information that that provided by ``longDesc`` is desired
 :longDesc2:          An optional field used when even more detailed information that that provided by either ``longDesc`` or ``longDesc1`` is desired
 :maxDnsAnswers:      An optional field which, when present, specifies the maximum number of IPs to put in responses to A/AAAA DNS record requests - defaults to 0, meaning "no limit"\ [4]_
+:maxOriginConnections:      The maximum number of connections allowed to the origin (0 means no maximum).
+
+	.. versionadded:: 1.4
+
 :midHeaderRewrite:   An optional string containing rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
 :missLat:            The latitude to use when the client cannot be found in the CZF or a geographic IP lookup\ [7]_
 :missLong:           The longitude to use when the client cannot be found in the CZF or a geographic IP lookup\ [7]_
@@ -454,6 +457,7 @@ Request Structure
 		"longDesc": "A :term:`Delivery Service` created expressly for API documentation examples",
 		"missLat": -1,
 		"missLong": -1,
+		"maxOriginConnections": 0,
 		"multiSiteOrigin": false,
 		"orgServerFqdn": "http://origin.infra.ciab.test",
 		"protocol": 0,
@@ -486,9 +490,6 @@ Response Structure
 :cdnName:                  Name of the CDN to which the :term:`Delivery Service` belongs
 :checkPath:                The path portion of the URL to check connections to this :term:`Delivery Service`'s origin server
 :consistentHashRegex:      If defined, this is a regex used for the Pattern-Based Consistent Hashing feature. It is only applicable for HTTP and Steering Delivery Services
-
-	.. versionadded:: 1.5
-
 :displayName:              The display name of the :term:`Delivery Service`
 :dnsBypassCname:           Domain name to overflow requests for HTTP :term:`Delivery Service`\ s - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
 :dnsBypassIp:              The IPv4 IP to use for bypass on a DNS :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
@@ -545,6 +546,10 @@ Response Structure
 			Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Service`\ s
 
 :maxDnsAnswers:    The maximum number of IPs to put in responses to A/AAAA DNS record requests (0 means all available)\ [4]_
+:maxOriginConnections:      The maximum number of connections allowed to the origin (0 means no maximum).
+
+	.. versionadded:: 1.4
+
 :midHeaderRewrite: Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
 :missLat:          The latitude to use when the client cannot be found in the CZF or a geographic IP lookup
 :missLong:         The longitude to use when the client cannot be found in the CZF or a geographic IP lookup
@@ -677,6 +682,7 @@ Response Structure
 				}
 			],
 			"maxDnsAnswers": null,
+			"maxOriginConnections": 0,
 			"midHeaderRewrite": null,
 			"missLat": -1,
 			"missLong": -1,
