@@ -70,7 +70,7 @@ main > div {
 }
 
 .loading {
-	min-height: calc(100vh - 7.13em - 63px); // filthy hax based on Mozilla default user-agent styling
+	min-height: calc(100vh - 7.13em - 75px); // filthy hax based on Mozilla default user-agent styling
 	cursor: wait;
 	&::after {
 		content: "Loading...";

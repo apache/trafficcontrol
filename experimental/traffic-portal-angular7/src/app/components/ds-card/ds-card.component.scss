@@ -80,7 +80,7 @@ div.card-content {
 		height: auto;
 	}
 
-	fieldset.capacity {
+	fieldset > div.capacity {
 		display: grid;
 		grid-template-columns: auto 1fr;
 		grid-column-gap: 15px;
@@ -89,7 +89,7 @@ div.card-content {
 		}
 	}
 
-	fieldset.health > meter {
+	meter {
 		width: 100%;
 	}
 }
