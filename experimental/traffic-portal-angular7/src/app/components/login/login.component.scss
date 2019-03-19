@@ -19,7 +19,8 @@ h1 {
 }
 header {
 	margin: auto;
-	width: max-content;
+	max-width: 85vw;
+	text-align: center;
 }
 img {
 	height: 3em;
@@ -30,23 +31,25 @@ form {
 	grid-template-columns: 1fr 4fr;
 	grid-column-gap: normal;
 	grid-row-gap: 15px;
+	width: auto; // Old browsers may not support `min-content` (I'm looking at you, Edge)
 	width: min-content;
 	max-width: 85vw;
 	border: 3px outset $theme_secondary;
 	border-radius: 5px;
 	padding: 15px;
 	label {
-		margin: 5px auto;
-		text-align: end;
+		margin: 5px 0 5px auto;
+		text-align: right;
 	}
 	input {
 		min-width: 25em;
 		margin-left: 5px;
-		text-align: start;
+		text-align: left;
 	}
-	button {
+	div {
 		margin: auto;
-		cursor: pointer;
+		button {
+			cursor: pointer;
+		}
 	}
 }
-
