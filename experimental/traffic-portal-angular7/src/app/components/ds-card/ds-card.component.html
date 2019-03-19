@@ -24,7 +24,12 @@ limitations under the License.
 		<div>
 			<span>Key:&nbsp;{{deliveryService.xmlId}}&nbsp;({{deliveryService.id}})</span><br/>
 			<span *ngIf="deliveryService.protocol">Protocol:&nbsp;{{Protocol.toString(deliveryService.protocol)}}</span>
+			<hr/>
 			<p>{{deliveryService.longDesc ? deliveryService.longDesc : 'NO DESCRIPTION'}}</p>
+			<hr *ngIf="deliveryService.longDesc1"/>
+			<p *ngIf="deliveryService.longDesc1">{{deliveryService.longDesc1}}</p>
+			<hr *ngIf="deliveryService.longDesc2"/>
+			<p *ngIf="deliveryService.longDesc2">{{deliveryService.longDesc2}}</p>
 		</div>
 		<div>
 			<div class="canvas-container" [ngClass]="{'loading': !this.graphDataLoaded}">
