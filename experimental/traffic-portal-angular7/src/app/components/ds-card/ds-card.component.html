@@ -30,6 +30,12 @@ limitations under the License.
 			<p *ngIf="deliveryService.longDesc1">{{deliveryService.longDesc1}}</p>
 			<hr *ngIf="deliveryService.longDesc2"/>
 			<p *ngIf="deliveryService.longDesc2">{{deliveryService.longDesc2}}</p>
+			<hr/>
+			<h3>URLs</h3>
+			<ul *ngIf="deliveryService.exampleURLs">
+				<li *ngFor="let url of deliveryService.exampleURLs"><a href="{{url}}">{{url}}</a></li>
+			</ul>
+			<span class="warning" *ngIf="!deliveryService.exampleURLs">No URLs configured!</span>
 		</div>
 		<div>
 			<div class="canvas-container" [ngClass]="{'loading': !this.graphDataLoaded}">
