@@ -145,6 +145,7 @@ export class APIService {
 	 * @param end A date/time at which to end data collection
 	 * @param interval A unit-suffixed interval over which data will be "binned"
 	 * @param useMids Collect data regarding Mid-tier cache servers rather than Edge-tier cache servers
+	 * @returns An Observable that will emit an Array of datapoint Arrays (length 2 containing a date string and data value)
 	*//* tslint:disable */
 	public getDSKBPS (d: string,
 	                  start: Date,
@@ -161,6 +162,19 @@ export class APIService {
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response.series.values;
+			}
+		));
+	}
+
+	/**
+	 * Gets an array of all users in Traffic Ops
+	 * @returns An Observable that will emit an Array of User objects.
+	*/
+	public getUsers (): Observable<Array<User>> {
+		const path = '/api/' + this.API_VERSION + '/users';
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response as Array<User>;
 			}
 		));
 	}
