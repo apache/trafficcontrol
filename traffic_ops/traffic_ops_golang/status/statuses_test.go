@@ -20,6 +20,7 @@ package status
  */
 
 import (
+	"database/sql"
 	"testing"
 	"time"
 
@@ -80,6 +81,7 @@ func TestReadStatuses(t *testing.T) {
 	obj := TOStatus{
 		api.APIInfoImpl{&reqInfo},
 		tc.StatusNullable{},
+		sql.NullString{},
 	}
 	statuses, userErr, sysErr, _ := obj.Read()
 	if userErr != nil || sysErr != nil {
