@@ -117,11 +117,10 @@ export class DsCardComponent {
 				this.api.getDSHealth(this.deliveryService.id).pipe(first()).subscribe(
 					r => {
 						if (r) {
-							const healthy = Number(r.totalOnline) / (Number(r.totalOnline) + Number(r.totalOffline));
-							if (isNaN(healthy)) {
+							if (r.totalOnline === 0) {
 								this.healthy = 0;
 							} else {
-								this.healthy = healthy;
+								this.healthy = Number(r.totalOnline) / (Number(r.totalOnline) + Number(r.totalOffline));
 							}
 						}
 					}
