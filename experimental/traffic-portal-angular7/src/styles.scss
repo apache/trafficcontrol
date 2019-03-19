@@ -25,3 +25,14 @@ body {
 	margin: 0;
 	overflow-x: hidden;
 }
+
+span.warning {
+	background-color: $warning;
+	color: white;
+	&::before {
+		content: " ";
+		font-family: "FontAwesome";
+		color: inherit;
+		padding: 2px 5px;
+	}
+}
