@@ -12,6 +12,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <dialog id="alert" [ngClass]="{'success': alert && alert.level === 'success', 'info': alert && alert.level === 'info', 'warning': alert && alert.level === 'warning', 'error': alert && alert.level === 'error' }">
-  {{alert ? alert.text : ''}}
-  <button title="close">&times;</button>
+	<span>{{alert ? alert.text : ''}}</span>
+	<button title="close" (click)="dialogElement.close()">&times;</button>
 </dialog>

@@ -16,7 +16,7 @@ import { AlertService } from '../../services';
 import { Alert } from '../../models/alert';
 
 @Component({
-	selector: 'app-alert',
+	selector: 'alert',
 	templateUrl: './alert.component.html',
 	styleUrls: ['./alert.component.scss']
 })
@@ -31,28 +31,30 @@ export class AlertComponent implements OnInit {
 		this.dialogElement = document.getElementById('alert') as HTMLDialogElement;
 		this.alerts.alerts.subscribe(
 			(a: Alert) => {
-				this.alert = a;
-				if (a.text === '') {
-					a.text = 'Unknown';
+				if (a) {
+					this.alert = a;
+					if (a.text === '') {
+						a.text = 'Unknown';
+					}
+					switch (a.level) {
+						case 'success':
+							console.log('alert: ', a.text);
+							break;
+						case 'info':
+							console.debug('alert: ', a.text);
+							break;
+						case 'warning':
+							console.warn('alert: ', a.text);
+							break;
+						case 'error':
+							console.error('alert: ', a.text);
+							break;
+						default:
+							console.log('unknown alert: ', a.text);
+							break;
+					}
+					this.dialogElement.showModal();
 				}
-				switch (a.level) {
-					case 'success':
-						console.log('alert: ', a.text);
-						break;
-					case 'info':
-						console.debug('alert: ', a.text);
-						break;
-					case 'warning':
-						console.warn('alert: ', a.text);
-						break;
-					case 'error':
-						console.error('alert: ', a.text);
-						break;
-					default:
-						console.log('unknown alert: ', a.text);
-						break;
-				}
-				this.dialogElement.showModal();
 			}
 		);
 	}

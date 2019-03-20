@@ -18,7 +18,8 @@ import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { AuthenticationService } from '../services';
+import { AlertService, AuthenticationService } from '../services';
+import { Alert } from '../models/alert';
 
 /**
  * This class intercepts any and all HTTP error responses and checks for authorization problems. It
@@ -29,12 +30,18 @@ export class ErrorInterceptor implements HttpInterceptor {
 
 	/* tslint:disable */
 	constructor (private readonly authenticationService: AuthenticationService,
-	             private readonly router: Router) {}
+	             private readonly router: Router,
+	             private readonly alerts: AlertService) {}
 	/* tslint:enable */
 
 	intercept (request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 		return next.handle(request).pipe(catchError(err => {
 			console.error('HTTP Error: ', err);
+			if (err.hasOwnProperty('error') && err['error'].hasOwnProperty('alerts')) {
+				for (const a of err['error']['alerts']) {
+					this.alerts.alertsSubject.next(a as Alert);
+				}
+			}
 			if (err.status === 401 || err.status === 403) {
 				this.authenticationService.logout();
 				this.router.navigate(['/login']);
