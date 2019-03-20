@@ -58,7 +58,13 @@ while [[ -z $found ]]; do
     found=$(to-get api/1.3/cdns?name="$CDN" | jq -r '.response[].name')
 done
 
-to-enroll mid $CDN "CDN_in_a_Box_Mid" || (while true; do echo "enroll failed."; sleep 3 ; done)
+cachegroup=
+while [[ -z $cachegroup ]] || [[ "$cachegroup" == "null" ]]; do
+    echo 'waiting for enroller server setup'
+    sleep 3
+    cachegroup=$(to-get api/1.3/servers | jq -r '.response[0].cachegroup')
+done
+to-enroll mid $CDN $cachegroup || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 while [[ -z "$(testenrolled)" ]]; do
 	echo "waiting on enrollment"
