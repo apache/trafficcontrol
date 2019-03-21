@@ -28,9 +28,12 @@ import (
 	"github.com/apache/trafficcontrol/grove/cachedata"
 	"github.com/apache/trafficcontrol/grove/cacheobj"
 	"github.com/apache/trafficcontrol/grove/config"
+	"github.com/apache/trafficcontrol/grove/icache"
 	"github.com/apache/trafficcontrol/grove/remapdata"
 	"github.com/apache/trafficcontrol/grove/stat"
 	"github.com/apache/trafficcontrol/grove/web"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func AddPlugin(priority uint64, funcs Funcs) {
@@ -46,6 +49,7 @@ func AddPlugin(priority uint64, funcs Funcs) {
 type Funcs struct {
 	load                LoadFunc
 	startup             StartupFunc
+	loadCache           LoadCacheFunc
 	onRequest           OnRequestFunc
 	beforeCacheLookUp   BeforeCacheLookupFunc
 	beforeParentRequest BeforeParentRequestFunc
@@ -58,6 +62,12 @@ type StartupData struct {
 	Context *interface{}
 	// Shared is the "plugins_shared" data for all rules. This is a `map[ruleName][key]value`. Keys and values are arbitrary data. This allows plugins to do pre-processing on the config, and store computed data in the context, to save processing during requests.
 	Shared map[string]map[string]json.RawMessage
+}
+
+type LoadCacheData struct {
+	Config  config.Config
+	Context *interface{}
+	Shared  map[string]json.RawMessage
 }
 
 type OnRequestData struct {
@@ -112,6 +122,11 @@ type AfterRespondData struct {
 
 type LoadFunc func(json.RawMessage) interface{}
 type StartupFunc func(icfg interface{}, d StartupData)
+
+// LoadCacheFunc returns a map of new caches. On error, plugins should log and return a nil cache.
+// If the cache only returns one cache with a key of "", it will be given the name of the plugin.
+type LoadCacheFunc func(icfg interface{}, d LoadCacheData) map[string]icache.Cache
+
 type OnRequestFunc func(icfg interface{}, d OnRequestData) bool
 type BeforeCacheLookupFunc func(icfg interface{}, d BeforeCacheLookUpData)
 type BeforeParentRequestFunc func(icfg interface{}, d BeforeParentRequestData)
@@ -151,6 +166,7 @@ func Get(enabled []string) Plugins {
 type Plugins interface {
 	LoadFuncs() map[string]LoadFunc
 	OnStartup(cfgs map[string]interface{}, context map[string]*interface{}, d StartupData)
+	LoadCaches(cfgs map[string]interface{}, context map[string]*interface{}, d LoadCacheData) map[string]icache.Cache
 	OnRequest(cfgs map[string]interface{}, context map[string]*interface{}, d OnRequestData) bool
 	OnBeforeCacheLookup(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeCacheLookUpData)
 	OnBeforeParentRequest(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeParentRequestData)
@@ -180,6 +196,33 @@ func (ps pluginsSlice) OnStartup(cfgs map[string]interface{}, context map[string
 		d.Context = context[p.name]
 		p.funcs.startup(cfgs[p.name], d)
 	}
+}
+
+// LoadCaches returns the map of cache names to caches.
+func (ps pluginsSlice) LoadCaches(cfgs map[string]interface{}, context map[string]*interface{}, d LoadCacheData) map[string]icache.Cache {
+	log.Errorln("DEBUG pluginsSlice.LoadCaches started")
+	log.Errorf("DEBUG pluginsSlice.LoadCaches len(ps) %v\n", len(ps))
+	caches := map[string]icache.Cache{}
+	for _, p := range ps {
+		log.Errorln("DEBUG pluginsSlice.LoadCaches iterating '" + p.name + "'")
+		if p.funcs.loadCache == nil {
+			continue
+		}
+		d.Context = context[p.name]
+		newCaches := p.funcs.loadCache(cfgs[p.name], d)
+		for newCacheName, newCache := range newCaches {
+			if newCacheName == "" && len(newCaches) == 1 {
+				newCacheName = p.name
+			}
+			if _, ok := caches[newCacheName]; ok {
+				log.Errorln("plugin loading caches: multiple caches with the name'" + newCacheName + "' - disabling both for safety! Please rename the plugin or config to have unique names!")
+				delete(caches, newCacheName)
+				continue
+			}
+			caches[newCacheName] = newCache
+		}
+	}
+	return caches
 }
 
 // OnRequest returns a boolean whether to immediately stop processing the request. If a plugin returns true, this is immediately returned with no further plugins processed.
