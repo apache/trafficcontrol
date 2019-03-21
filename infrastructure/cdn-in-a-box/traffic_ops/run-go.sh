@@ -74,11 +74,7 @@ touch /var/log/traffic_ops/traffic_ops.log
 # enroll in the background so traffic_ops_golang can run in foreground
 TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
-if [[ -z "$TV_HOST" ]]; then
-    ./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF & 
-else 
-    ./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF -riakcfg $RIAKCONF &
-fi
+./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF -riakcfg $RIAKCONF &
 
 to-enroll "to" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 
@@ -97,66 +93,63 @@ while true; do
   sleep 2
 done
 
-if [[ ! -z "$TV_HOST" ]]; then
+### Add SSL keys for demo1 delivery service
+source "$X509_CA_ENV_FILE"
+demo1_sslkeys_verified=false
+demo1_version=1
+while [[ "$demo1_sslkeys_verified" = false ]]; do
+   while true; do
+     sslkeys_response=$(to-get "api/1.4/deliveryservices/xmlId/$ds_name/sslkeys?decode=true")
+     echo "CDN SSLKeys=$sslkeys_response"
+     [[ -n "$sslkeys_response" ]] && break
+     sleep 2
+   done
+   demo1_crt="$(sed -n -e '/-----BEGIN CERTIFICATE-----/,$p' $X509_DEMO1_CERT_FILE | jq -s -R '.')"
+   demo1_csr="$(sed -n -e '/-----BEGIN CERTIFICATE REQUEST-----/,$p' $X509_DEMO1_REQUEST_FILE | jq -s -R '.')"
+   demo1_key="$(sed -n -e '/-----BEGIN PRIVATE KEY-----/,$p' $X509_DEMO1_KEY_FILE | jq -s -R '.')"
+   demo1_json_request=$(jq -n \
+                           --arg     cdn        "CDN-in-a-Box" \
+                           --arg     hostname   "*.demo1.mycdn.ciab.test" \
+                           --arg     dsname     "$ds_name" \
+                           --argjson crt        "$demo1_crt" \
+                           --argjson csr        "$demo1_csr" \
+                           --argjson key        "$demo1_key" \
+                           --argjson version    $demo1_version \
+                          "{ cdn: \$cdn, 
+                             certificate: { 
+                               crt: \$crt, 
+                               csr: \$csr,
+                               key: \$key 
+                             },
+                             deliveryservice: \$dsname,
+                             hostname: \$hostname,
+                             key: \$dsname,
+                             version: $demo1_version 
+                          }")
 
-  ### Add SSL keys for demo1 delivery service
-  source "$X509_CA_ENV_FILE"
-  demo1_sslkeys_verified=false
-  demo1_version=1
-  while [[ "$demo1_sslkeys_verified" = false ]]; do
-     while true; do
-       sslkeys_response=$(to-get "api/1.4/deliveryservices/xmlId/$ds_name/sslkeys?decode=true")
-       echo "CDN SSLKeys=$sslkeys_response"
-       [[ -n "$sslkeys_response" ]] && break
-       sleep 2
-     done
-     demo1_crt="$(sed -n -e '/-----BEGIN CERTIFICATE-----/,$p' $X509_DEMO1_CERT_FILE | jq -s -R '.')"
-     demo1_csr="$(sed -n -e '/-----BEGIN CERTIFICATE REQUEST-----/,$p' $X509_DEMO1_REQUEST_FILE | jq -s -R '.')"
-     demo1_key="$(sed -n -e '/-----BEGIN PRIVATE KEY-----/,$p' $X509_DEMO1_KEY_FILE | jq -s -R '.')"
-     demo1_json_request=$(jq -n \
-                             --arg     cdn        "CDN-in-a-Box" \
-                             --arg     hostname   "*.demo1.mycdn.ciab.test" \
-                             --arg     dsname     "$ds_name" \
-                             --argjson crt        "$demo1_crt" \
-                             --argjson csr        "$demo1_csr" \
-                             --argjson key        "$demo1_key" \
-                             --argjson version    $demo1_version \
-                            "{ cdn: \$cdn, 
-                               certificate: { 
-                                 crt: \$crt, 
-                                 csr: \$csr,
-                                 key: \$key 
-                               },
-                               deliveryservice: \$dsname,
-                               hostname: \$hostname,
-                               key: \$dsname,
-                               version: $demo1_version 
-                            }")
-  
-     demo1_json_response=$(to-post 'api/1.4/deliveryservices/sslkeys/add' "$demo1_json_request")
-  
-     if [[ -n "$demo1_json_response" ]] ; then 
-        sleep 2
-        cdn_sslkeys_response=$(to-get 'api/1.3/cdns/name/CDN-in-a-Box/sslkeys.json' | jq '.response[] | length')
-        echo "cdn_sslkeys_response=$cdn_sslkeys_response"
-  
-        if [ -n "$cdn_sslkeys_response" ] ; then 
-           if ((cdn_sslkeys_response==0)); then 
-             sleep 2 # Submit it again because the first time doesn't work !
-             demo1_json_response=$(to-post 'api/1.4/deliveryservices/sslkeys/add' "$demo1_json_request")
-   
-             if [[ -n "$demo1_json_response" ]] ; then 
-                demo1_sslkeys_verified=true
-             fi
-          elif ((cdn_sslkeys_response>0)); then
-             demo1_sslkeys_verified=true
-          fi
+   demo1_json_response=$(to-post 'api/1.4/deliveryservices/sslkeys/add' "$demo1_json_request")
+
+   if [[ -n "$demo1_json_response" ]] ; then 
+      sleep 2
+      cdn_sslkeys_response=$(to-get 'api/1.3/cdns/name/CDN-in-a-Box/sslkeys.json' | jq '.response[] | length')
+      echo "cdn_sslkeys_response=$cdn_sslkeys_response"
+
+      if [ -n "$cdn_sslkeys_response" ] ; then 
+         if ((cdn_sslkeys_response==0)); then 
+           sleep 2 # Submit it again because the first time doesn't work !
+           demo1_json_response=$(to-post 'api/1.4/deliveryservices/sslkeys/add' "$demo1_json_request")
+ 
+           if [[ -n "$demo1_json_response" ]] ; then 
+              demo1_sslkeys_verified=true
+           fi
+        elif ((cdn_sslkeys_response>0)); then
+           demo1_sslkeys_verified=true
         fi
-     fi
-  
-     ((demo_version+=1)) 
-  done
-fi
+      fi
+   fi
+
+   ((demo_version+=1)) 
+done
 
 ### Automatic Queue/Snapshot ###
 while [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]] ; do

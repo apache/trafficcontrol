@@ -160,6 +160,18 @@ By default, `docker-compose.yml` does not expose ports to the host. This allows 
 
 To expose the ports of each service on the host, add the `docker-compose.expose-ports.yml` file. For example, `docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`.
 
+## Running a Limited Stack
+
+Sometimes for testing certain components, you don't need to run the entire stack. The following two commands allow you to run just trafficops and trafficportal for instance. Running trafficops without other components can be done without changing the environment variables as it is show below, but if you want clean logs it helps to disable AUTO_SNAPQUEUE. 
+
+If not all services are run, AUTO SNAPQUEUE will loop with the following message: 
+> AUTO-SNAPQUEUE - Current Servers (7): db,dns,edge,enroller,trafficops,trafficops-perl,trafficportal  
+> AUTO-SNAPQUEUE - Remain Servers (4): mid,trafficmonitor,trafficrouter,trafficvault  
+
+These are the commands:
+`docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up --build trafficops-perl trafficportal`
+`docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml run --service-ports -e AUTO_SNAPQUEUE_ENABLED=false trafficops`
+
 ## Common Pitfalls
 
 ### Everything's "waiting for Traffic Ops" forever and nothing seems to be working
