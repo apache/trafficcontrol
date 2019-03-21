@@ -346,7 +346,9 @@ under the License.
                     </div>
                 </div>
 
-
+                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trResponseHeaders), 'has-feedback': hasError(deliveryServiceForm.trResponseHeaders)}"
+                     ng-if="isClientSteering(deliveryService)">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="trResponseHeaders">Traffic Router Additional Response Headers<div class="helptooltip">
                         <div class="helptext">
                             List of header name:value pairs separated by <code>__RETURN__</code>. Listed pairs will be included in all Traffic Router HTTP(S) responses.
                         </div>
@@ -400,7 +402,7 @@ under the License.
                 </div>
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.consistentHashRegex), 'has-feedback': hasError(deliveryServiceForm.consistentHashRegex)}">
-                    <label for="consistentHashRegex" class="control-label col-md-2 col-sm-2 col-xs-12">Consistent Hash Regex<div class="helptooltip">
+                    <label for="consistentHashRegex" class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Consistent Hash Regex<div class="helptooltip">
                         <div class="helptext">
                             Regex used to extract parts of the request path using grouping in order to build a consistent request string to be used for cache selection. If this field is set on a steering delivery service, it will override the regex set on the target delivery services.
                             <br>
