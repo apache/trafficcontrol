@@ -218,8 +218,6 @@ public class RouterTest {
 		InputStream keystoreStream = getClass().getClassLoader().getResourceAsStream("keystore.jks");
 		trustStore.load(keystoreStream, "changeit".toCharArray());
 		TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).init(trustStore);
-
-
 		httpClient = HttpClientBuilder.create()
 			.setSSLSocketFactory(new ClientSslSocketFactory("tr.https-only-test.thecdn.example.com"))
 			.setSSLHostnameVerifier(new TestHostnameVerifier())
@@ -518,6 +516,11 @@ public class RouterTest {
 		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/certificates");
 		httpClient.execute(httpPost).close();
 
+		httpClient = HttpClientBuilder.create()
+				.setSSLSocketFactory(new ClientSslSocketFactory("https-additional"))
+				.setSSLHostnameVerifier(new TestHostnameVerifier())
+				.disableRedirectHandling()
+				.build();
 		// Our initial test cr config data sets cert poller to 10 seconds
 		Thread.sleep(25000L);
 
@@ -529,7 +532,8 @@ public class RouterTest {
 			assertThat("Expected an server error code! But got: "+code,
 					code, equalTo(302));
 		} catch (SSLHandshakeException e) {
-			fail();
+
+			fail(e.getMessage());
 		}
 
 		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
