@@ -74,7 +74,7 @@ touch /var/log/traffic_ops/traffic_ops.log
 # enroll in the background so traffic_ops_golang can run in foreground
 TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
-if [[ "$ADD_DEMO1_SSLKEYS" = false ]]; then
+if [[ -z "$TV_HOST" ]]; then
     ./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF & 
 else 
     ./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF -riakcfg $RIAKCONF &
@@ -97,7 +97,7 @@ while true; do
   sleep 2
 done
 
-if [[ "$ADD_DEMO1_SSLKEYS" = true ]]; then
+if [[ ! -z "$TV_HOST" ]]; then
 
   ### Add SSL keys for demo1 delivery service
   source "$X509_CA_ENV_FILE"
