@@ -62,7 +62,7 @@ cachegroup=
 while [[ -z $cachegroup ]] || [[ "$cachegroup" == "null" ]]; do
     echo 'waiting for enroller server setup'
     sleep 3
-    cachegroup=$(to-get api/1.3/servers | jq -r '.response[0].cachegroup')
+    cachegroup=$(to-get api/1.3/servers?type=MID_LOC | jq -r -c '.response[0].cachegroup')
 done
 to-enroll mid $CDN $cachegroup || (while true; do echo "enroll failed."; sleep 3 ; done)
 
