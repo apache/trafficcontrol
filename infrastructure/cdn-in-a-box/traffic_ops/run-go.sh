@@ -82,8 +82,8 @@ while true; do
   echo "Verifying that edge was associated to delivery service..."
 
   edge_name="$(to-get 'api/1.3/servers/hostname/edge/details' 2>/dev/null | jq -r -c '.response|.hostName')"
-  ds_name="$(to-get 'api/1.3/deliveryservices' 2>/dev/null | jq -r -c '.response[].xmlId')"
-  ds_id="$(to-get 'api/1.3/deliveryservices' 2>/dev/null | jq -r -c '.response[].id')"
+  ds_name=$(to-get 'api/1.3/deliveryservices' 2>/dev/null | jq -r -c '.response[] | select(.cdnName == "'"$CDN_NAME"'").xmlId')
+  ds_id=$(to-get 'api/1.3/deliveryservices' 2>/dev/null | jq -r -c '.response[] | select(.cdnName == "'"$CDN_NAME"'").id')
   edge_verify=$(to-get "/api/1.2/deliveryservices/$ds_id/servers" | jq -r '.response[]|.hostName')
 
   if [[ $edge_verify = $edge_name ]] ; then
@@ -108,7 +108,7 @@ while [[ "$demo1_sslkeys_verified" = false ]]; do
    demo1_csr="$(sed -n -e '/-----BEGIN CERTIFICATE REQUEST-----/,$p' $X509_DEMO1_REQUEST_FILE | jq -s -R '.')"
    demo1_key="$(sed -n -e '/-----BEGIN PRIVATE KEY-----/,$p' $X509_DEMO1_KEY_FILE | jq -s -R '.')"
    demo1_json_request=$(jq -n \
-                           --arg     cdn        "CDN-in-a-Box" \
+                           --arg     cdn        "$CDN_NAME" \
                            --arg     hostname   "*.demo1.mycdn.ciab.test" \
                            --arg     dsname     "$ds_name" \
                            --argjson crt        "$demo1_crt" \
@@ -131,7 +131,7 @@ while [[ "$demo1_sslkeys_verified" = false ]]; do
 
    if [[ -n "$demo1_json_response" ]] ; then 
       sleep 2
-      cdn_sslkeys_response=$(to-get 'api/1.3/cdns/name/CDN-in-a-Box/sslkeys.json' | jq '.response[] | length')
+      cdn_sslkeys_response=$(to-get "api/1.3/cdns/name/$CDN_NAME/sslkeys.json" | jq '.response[] | length')
       echo "cdn_sslkeys_response=$cdn_sslkeys_response"
 
       if [ -n "$cdn_sslkeys_response" ] ; then 
@@ -162,11 +162,11 @@ while [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]] ; do
   [ -z "$current_servers_json" ] && current_servers_json='[]'
   current_servers_list=$(jq -r -n --argjson current "$current_servers_json" '$current|join(",")')
   current_servers_total=$(jq -r -n --argjson current "$current_servers_json" '$current|length')
- 
+
   remain_servers_json=$(jq -n --argjson expected "$expected_servers_json" --argjson current "$current_servers_json" '$expected-$current')
   remain_servers_list=$(jq -r -n --argjson remain "$remain_servers_json" '$remain|join(",")')
   remain_servers_total=$(jq -r -n --argjson remain "$remain_servers_json" '$remain|length')
-    
+
   echo "AUTO-SNAPQUEUE - Expected Servers ($expected_servers_total): $expected_servers_list"
   echo "AUTO-SNAPQUEUE - Current Servers ($current_servers_total): $current_servers_list"
   echo "AUTO-SNAPQUEUE - Remain Servers ($remain_servers_total): $remain_servers_list"
@@ -180,7 +180,7 @@ while [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]] ; do
      echo "AUTO-SNAPQUEUE - Do queue updates..."
      to-post 'api/1.3/cdns/2/queue_update' '{"action":"queue"}'
      break
-  fi 
+  fi
 
   sleep $AUTO_SNAPQUEUE_POLL_INTERVAL
 done

@@ -4,7 +4,7 @@
     "tenant": "root",
     "protocol": 2,
     "orgServerFqdn": "http://origin.infra.ciab.test",
-    "cdnName": "CDN-in-a-Box",
+    "cdnName": "$CDN_NAME",
     "type": "HTTP",
     "active": true,
     "dscp": 0,

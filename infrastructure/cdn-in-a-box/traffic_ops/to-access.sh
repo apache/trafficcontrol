@@ -170,7 +170,7 @@ to-enroll() {
 	if [[ ! -z "$2" ]]; then
 		export MY_CDN="$2"
 	else
-		export MY_CDN="CDN-in-a-Box"
+		export MY_CDN="$CDN_NAME"
 	fi
 	if [[ ! -z "$3" ]]; then
 		export MY_CACHE_GROUP="$3"

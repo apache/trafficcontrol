@@ -1,5 +1,5 @@
 {
-  "cdnName": "CDN-in-a-Box",
+  "cdnName": "$CDN_NAME",
   "description": "Traffic Monitor for CDN-in-a-Box",
   "name": "RASCAL-Traffic_Monitor",
   "type": "TM_PROFILE",

@@ -1,5 +1,5 @@
 {
-  "cdnName": "CDN-in-a-Box",
+  "cdnName": "$CDN_NAME",
   "description": "Traffic Router for CDN-In-A-Box",
   "name": "CCR_CIAB",
   "routingDisabled": false,
