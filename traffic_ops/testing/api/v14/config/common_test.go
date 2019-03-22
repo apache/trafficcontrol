@@ -108,3 +108,51 @@ func TestDHMSTimeFormat(t *testing.T) {
 	}
 
 }
+
+// TestIPRange
+// \__> parseIpP (only two simple branches)
+// \__> expandIP (simple enough to test all 5 cases)
+func TestIPRange(t *testing.T) {
+
+	var tests = []struct {
+		ip string
+		ok bool
+	}{
+		{"", false},
+		{"x", false},
+		{"0", true},
+		{"0.0", true},
+		{"0.0.0", true},
+		{"0.0.0.0", true},
+		{"256.0.0.0", false},
+		{"0.0.0.0/0", true},
+		{"0.0.0.0/x", false},
+		{"0.0.0/0", true},
+		{"0.0.0.0-255.255.255.255", true},
+		{"255.255.255.255-0.0.0.0", false},
+		{"0.0.0-255.255.255.255", true},
+		{"0.0.0.0-255.255.255", true},
+		{"0.0.0.x-255.255.255.255", false},
+		{"::/0", true},
+		{"::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", true},
+		{"ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff-::", false},
+		{"::-0", false},
+		{"0.0.0.0-ffff::ffff", false},
+		{"::-ffff::ffff", true},
+	}
+
+	for _, test := range tests {
+		if err := ValidateIPRange(test.ip); (err == nil) != test.ok {
+			if test.ok {
+				t.Errorf(`
+  test should have passed
+  ip: %v
+  error: %v`, test.ip, err)
+			} else {
+				t.Errorf(`
+  test should not have passed
+  ip: %v`, test.ip)
+			}
+		}
+	}
+}

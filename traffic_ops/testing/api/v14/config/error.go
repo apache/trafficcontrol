@@ -30,6 +30,7 @@ const (
 	InvalidHost
 	InvalidIP
 	UnknownMethod
+	InvalidIPRange
 	InvalidPort
 	InvalidRegex
 	InvalidTimeFormatDHMS
@@ -54,6 +55,7 @@ func init() {
 		InvalidHost,
 		InvalidIP,
 		UnknownMethod,
+		InvalidIPRange,
 		InvalidPort,
 		InvalidRegex,
 		InvalidTimeFormatDHMS,

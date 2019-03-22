@@ -15,9 +15,12 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
+	"net"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -84,4 +87,99 @@ func ValidateDHMSTimeFormat(time string) error {
 	}
 
 	return nil
+}
+
+// expandIP matches a general IPv4 pattern and expands the captured octet
+// depending on the number of matches. This function does not validate
+// that the ip is correct or even that it matches the general pattern, but
+// it instead puts the input into a form that go's net package can validate.
+func expandIP(ip string) string {
+
+	// d.d.d.d with optional groups of (.d)
+	ipRegex := regexp.MustCompile(`^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:\.(\d+))?$`)
+	match := ipRegex.FindStringSubmatch(ip)
+	if match == nil {
+		return ""
+	}
+
+	// ping supports expanding IPv4 addresses
+	// PING 1     (0.0.0.1)
+	// PING 1.2   (1.0.0.2)
+	// PING 1.2.3 (1.2.0.3)
+	if match[2] == "" {
+		return fmt.Sprintf("0.0.0.%v", match[1])
+	}
+	if match[3] == "" {
+		return fmt.Sprintf("%v.0.0.%v", match[1], match[2])
+	}
+	if match[4] == "" {
+		return fmt.Sprintf("%v.%v.0.%v", match[1], match[2], match[3])
+	}
+	return ip
+}
+
+// parseIP first uses go's net package to test for the common case of a standard
+// ipv4 or ipv6 address. If that doesn't pass, it is possible that the address is
+// ipv4 written in shorthand notation. The ip is expanded, then we try again.
+func parseIP(ip string) net.IP {
+	if goip := net.ParseIP(ip); goip != nil {
+		return goip
+	}
+	if goip := net.ParseIP(expandIP(ip)); goip != nil {
+		return goip
+	}
+	return nil
+}
+
+// ValidateIPRange validates one of the following forms:
+// 1) IP (supports shorthand of IPv4 and IPv6 addresses)
+// 2) IP/n (CIDR)
+// 3) IP1-IP2 where IP1 < IP2 and type(IP1) == type(IP2)
+func ValidateIPRange(ip string) error {
+
+	var err error
+	var splt []string
+
+	splt = strings.Split(ip, "-")
+	if len(splt) == 2 {
+		ip1 := parseIP(splt[0])
+		ip2 := parseIP(splt[1])
+
+		// both must be valid
+		if ip1 == nil || ip2 == nil {
+			return fmt.Errorf("invalid IP range: %v \n", ip)
+		}
+
+		// must be of the same type
+		if (ip1.To4() == nil) != (ip2.To4() == nil) {
+			return fmt.Errorf("invalid IP range: %v \n", ip)
+		}
+
+		// ip2 must be less than ip1
+		if bytes.Compare(ip2, ip1) < 0 {
+			return fmt.Errorf("invalid IP range: %v \n", ip)
+		}
+		return nil
+	}
+
+	if goip := parseIP(ip); goip != nil {
+		return nil
+	}
+
+	// first try for CIDR
+	if _, _, err = net.ParseCIDR(ip); err == nil {
+		return nil
+	}
+
+	// if it looks like we have a CIDR pattern we try to expand the ip and try again
+	splt = strings.Split(ip, "/")
+	if len(splt) == 2 {
+		ip = fmt.Sprintf("%v/%v", expandIP(splt[0]), splt[1])
+		if _, _, err = net.ParseCIDR(ip); err == nil {
+			return nil
+		}
+		return fmt.Errorf("invalid CIDR address: %v \n", ip)
+	}
+
+	return fmt.Errorf("invalid IP range: %v", ip)
 }
