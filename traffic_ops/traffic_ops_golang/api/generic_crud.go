@@ -20,6 +20,7 @@ package api
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -68,17 +69,8 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 
 	id := 0
 	lastUpdated := tc.TimeNoMod{}
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
-		}
-	}
-	if rowsAffected == 0 {
-		return nil, errors.New(val.GetType() + " create: no " + val.GetType() + " was inserted, no id was returned"), http.StatusInternalServerError
-	} else if rowsAffected > 1 {
-		return nil, errors.New("too many ids returned from " + val.GetType() + " insert"), http.StatusInternalServerError
+	if err = ScanIntoItems(resultRows.Rows, []interface{}{&id, &lastUpdated}); err != nil {
+		return nil, fmt.Errorf("generic create for %s: %v", val.GetType(), err), http.StatusInternalServerError
 	}
 	val.SetKeys(map[string]interface{}{"id": id})
 	val.SetLastUpdated(lastUpdated)
@@ -117,17 +109,15 @@ func GenericUpdate(val GenericUpdater) (error, error, int) {
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return errors.New("no " + val.GetType() + " found with this id"), nil, http.StatusNotFound
-	}
 	lastUpdated := tc.TimeNoMod{}
-	if err := rows.Scan(&lastUpdated); err != nil {
-		return nil, errors.New("scanning lastUpdated from " + val.GetType() + " insert: " + err.Error()), http.StatusInternalServerError
+	if err = ScanIntoItem(rows.Rows, &lastUpdated); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("no %s found with this id", val.GetType()), http.StatusNotFound
+		}
+		return nil, fmt.Errorf("generic update for %s: %v", val.GetType(), err), http.StatusInternalServerError
 	}
 	val.SetLastUpdated(lastUpdated)
-	if rows.Next() {
-		return nil, errors.New(val.GetType() + " update affected too many rows: >1"), http.StatusInternalServerError
-	}
+
 	return nil, nil, http.StatusOK
 }
 

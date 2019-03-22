@@ -21,6 +21,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -79,6 +80,37 @@ func IsBool(s string) error {
 		err = errors.New("cannot parse to boolean")
 	}
 	return err
+}
+
+// ScanIntoItems takes a sql result set and scans the result into a list of non-homogenous items.
+// Only a single row is expected, so an error is returned if the number of rows is 0 or greater than 1.
+// The caller of this function is not expected to close the rows because this function will.
+// sql.Rows.Close() is idempotent, so continuting to close the rows is ok, but has no added effect.
+// ScanIntoItems returns sql.ErrNoRows if no rows were returned.
+func ScanIntoItems(rows *sql.Rows, items []interface{}) error {
+
+	defer rows.Close()
+
+	if !rows.Next() {
+		return sql.ErrNoRows
+	}
+	if err := rows.Scan(items...); err != nil {
+		return err
+	}
+	if rows.Next() {
+		return errors.New("multiple rows returned")
+	}
+
+	return nil
+}
+
+// ScanIntoItem takes a sql result set and scans the result into a single item.
+// Only a single row is expected, so an error is returned if the number of rows is 0 or greater than 1.
+// The caller of this function is not expected to close the rows because this function will.
+// sql.Rows.Close() is idempotent, so continuting to close the rows is ok, but has no added effect.
+// ScanIntoItems returns sql.ErrNoRows if no rows were returned.
+func ScanIntoItem(rows *sql.Rows, item interface{}) error {
+	return ScanIntoItems(rows, []interface{}{item})
 }
 
 func GetCombinedParams(r *http.Request) (map[string]string, error) {
