@@ -507,7 +507,7 @@ func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 	if match == nil {
 		return nil, nil, http.StatusOK
 	}
-	return fmt.Errorf("%s %s already exists.", match[1], match[2]), nil, http.StatusBadRequest
+	return fmt.Errorf("%v %s '%s' already exists.", err.Table, match[1], match[2]), nil, http.StatusBadRequest
 }
 
 // parses pq errors for ON DELETE RESTRICT fk constraint violations
@@ -548,7 +548,8 @@ func ParseDBError(ierr error) (error, error, int) {
 
 	err, ok := ierr.(*pq.Error)
 	if !ok {
-		return nil, errors.New("database returned non pq error: " + err.Error()), http.StatusInternalServerError
+		log.Errorf("a non-pq error was given")
+		return nil, ierr, http.StatusInternalServerError
 	}
 
 	if usrErr, sysErr, errCode := parseNotNullConstraint(err); errCode != http.StatusOK {

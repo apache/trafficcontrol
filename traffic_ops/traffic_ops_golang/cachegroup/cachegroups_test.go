@@ -153,17 +153,17 @@ func TestReadCacheGroups(t *testing.T) {
 }
 
 func TestFuncs(t *testing.T) {
-	if strings.Index(selectQuery(), "SELECT") != 0 {
-		t.Errorf("expected selectQuery to start with SELECT")
+	if strings.Index(SelectQuery(), "SELECT") != 0 {
+		t.Errorf("expected SelectQuery to start with SELECT")
 	}
-	if strings.Index(insertQuery(), "INSERT") != 0 {
-		t.Errorf("expected insertQuery to start with INSERT")
+	if strings.Index(InsertQuery(), "INSERT") != 0 {
+		t.Errorf("expected InsertQuery to start with INSERT")
 	}
-	if strings.Index(updateQuery(), "UPDATE") != 0 {
-		t.Errorf("expected updateQuery to start with UPDATE")
+	if strings.Index(UpdateQuery(), "UPDATE") != 0 {
+		t.Errorf("expected UpdateQuery to start with UPDATE")
 	}
-	if strings.Index(deleteQuery(), "DELETE") != 0 {
-		t.Errorf("expected deleteQuery to start with DELETE")
+	if strings.Index(DeleteQuery(), "DELETE") != 0 {
+		t.Errorf("expected DeleteQuery to start with DELETE")
 	}
 }
 

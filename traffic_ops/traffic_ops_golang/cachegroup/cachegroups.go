@@ -78,7 +78,7 @@ func (cg TOCacheGroup) GetAuditName() string {
 }
 
 func (cg TOCacheGroup) GetType() string {
-	return "cg"
+	return "cachegroup"
 }
 
 func (cg *TOCacheGroup) SetID(i int) {
@@ -193,16 +193,16 @@ func (cg TOCacheGroup) Validate() error {
 }
 
 //The TOCacheGroup implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a cachegroup with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted cachegroup and have
 //to be added to the struct
 func (cg *TOCacheGroup) Create() (error, error, int) {
-	coordinateID, err := cg.createCoordinate()
-	if err != nil {
-		return nil, errors.New("cg create: creating coord:" + err.Error()), http.StatusInternalServerError
+
+	if cg.LocalizationMethods == nil {
+		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
+	}
+
+	if cg.Fallbacks == nil {
+		cg.Fallbacks = &[]string{}
 	}
 
 	if cg.FallbackToClosest == nil {
@@ -210,45 +210,46 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 		cg.FallbackToClosest = &fbc
 	}
 
-	resultRows, err := cg.ReqInfo.Tx.Tx.Query(
-		insertQuery(),
+	err := cg.ReqInfo.Tx.Tx.QueryRow(
+		InsertQuery(),
 		cg.Name,
 		cg.ShortName,
-		coordinateID,
 		cg.TypeID,
 		cg.ParentCachegroupID,
 		cg.SecondaryParentCachegroupID,
 		cg.FallbackToClosest,
+	).Scan(
+		&cg.ID,
+		&cg.Type,
+		&cg.ParentName,
+		&cg.SecondaryParentName,
 	)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
-	defer resultRows.Close()
 
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			return nil, errors.New("cg create scanning: " + err.Error()), http.StatusInternalServerError
-		}
+	coordinateID, err := cg.createCoordinate()
+	if err != nil {
+		return nil, errors.New("cachegroup create: creating coord:" + err.Error()), http.StatusInternalServerError
 	}
-	if rowsAffected == 0 {
-		return nil, errors.New("cg create: no rows returned"), http.StatusInternalServerError
-	} else if rowsAffected > 1 {
-		return nil, errors.New("cg create: multiple rows returned"), http.StatusInternalServerError
+
+	err = cg.ReqInfo.Tx.Tx.QueryRow(
+		`UPDATE cachegroup SET coordinate=$1 WHERE id=$2 RETURNING last_updated`,
+		coordinateID,
+		cg.ID,
+	).Scan(&cg.LastUpdated)
+	if err != nil {
+		return nil, fmt.Errorf("followup update during cachegroup create: %v", err), http.StatusInternalServerError
 	}
-	cg.SetID(id)
+
 	if err = cg.createLocalizationMethods(); err != nil {
-		return nil, errors.New("cg create: creating localization methods: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("creating cachegroup: creating localization methods: " + err.Error()), http.StatusInternalServerError
 	}
 
 	if err = cg.createCacheGroupFallbacks(); err != nil {
-		return nil, errors.New("cg create: creating cache group fallbacks: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("creating cachegroup: creating cache group fallbacks: " + err.Error()), http.StatusInternalServerError
 	}
 
-	cg.LastUpdated = &lastUpdated
 	return nil, nil, http.StatusOK
 }
 
@@ -325,7 +326,7 @@ func (cg *TOCacheGroup) createCoordinate() (*int, error) {
 	if cg.Latitude != nil && cg.Longitude != nil {
 		q := `INSERT INTO coordinate (name, latitude, longitude) VALUES ($1, $2, $3) RETURNING id`
 		if err := cg.ReqInfo.Tx.Tx.QueryRow(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude).Scan(&coordinateID); err != nil {
-			return nil, fmt.Errorf("insert coordinate for cg '%s': %s", *cg.Name, err.Error())
+			return nil, err
 		}
 	}
 	return coordinateID, nil
@@ -336,14 +337,14 @@ func (cg *TOCacheGroup) updateCoordinate() error {
 		q := `UPDATE coordinate SET name = $1, latitude = $2, longitude = $3 WHERE id = (SELECT coordinate FROM cachegroup WHERE id = $4)`
 		result, err := cg.ReqInfo.Tx.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
 		if err != nil {
-			return fmt.Errorf("update coordinate for cg '%s': %s", *cg.Name, err.Error())
+			return fmt.Errorf("updating coordinate for cachegroup '%s': %s", *cg.Name, err.Error())
 		}
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("update coordinate for cg '%s', getting rows affected: %s", *cg.Name, err.Error())
+			return fmt.Errorf("updating coordinate for cachegroup '%s', getting rows affected: %s", *cg.Name, err.Error())
 		}
 		if rowsAffected == 0 {
-			return fmt.Errorf("update coordinate for cg '%s', zero rows affected", *cg.Name)
+			return fmt.Errorf("updating coordinate for cachegroup '%s', zero rows affected", *cg.Name)
 		}
 	}
 	return nil
@@ -353,27 +354,27 @@ func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 	q := `UPDATE cachegroup SET coordinate = NULL WHERE id = $1`
 	result, err := cg.ReqInfo.Tx.Tx.Exec(q, *cg.ID)
 	if err != nil {
-		return fmt.Errorf("updating cg %d coordinate to null: %s", *cg.ID, err.Error())
+		return fmt.Errorf("updating cachegroup %d coordinate to null: %s", *cg.ID, err.Error())
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("updating cg %d coordinate to null, getting rows affected: %s", *cg.ID, err.Error())
+		return fmt.Errorf("updating cachegroup %d coordinate to null, getting rows affected: %s", *cg.ID, err.Error())
 	}
 	if rowsAffected == 0 {
-		return fmt.Errorf("updating cg %d coordinate to null, zero rows affected", *cg.ID)
+		return fmt.Errorf("updating cachegroup %d coordinate to null, zero rows affected", *cg.ID)
 	}
 
 	q = `DELETE FROM coordinate WHERE id = $1`
 	result, err = cg.ReqInfo.Tx.Tx.Exec(q, coordinateID)
 	if err != nil {
-		return fmt.Errorf("delete coordinate %d for cg %d: %s", coordinateID, *cg.ID, err.Error())
+		return fmt.Errorf("delete coordinate %d for cachegroup %d: %s", coordinateID, *cg.ID, err.Error())
 	}
 	rowsAffected, err = result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("delete coordinate %d for cg %d, getting rows affected: %s", coordinateID, *cg.ID, err.Error())
+		return fmt.Errorf("delete coordinate %d for cachegroup %d, getting rows affected: %s", coordinateID, *cg.ID, err.Error())
 	}
 	if rowsAffected == 0 {
-		return fmt.Errorf("delete coordinate %d for cg %d, zero rows affected", coordinateID, *cg.ID)
+		return fmt.Errorf("delete coordinate %d for cachegroup %d, zero rows affected", coordinateID, *cg.ID)
 	}
 	return nil
 }
@@ -392,12 +393,10 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
-	query := selectQuery() + where + orderBy
-	log.Debugln("Query is ", query)
-
+	query := SelectQuery() + where + orderBy
 	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("cg read: querying: " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("cachegroup read: querying: " + err.Error()), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -423,7 +422,7 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 			pq.Array(&cgfs),
 			&s.FallbackToClosest,
 		); err != nil {
-			return nil, nil, errors.New("cg read: scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("cachegroup read: scanning: " + err.Error()), http.StatusInternalServerError
 		}
 		s.LocalizationMethods = &lms
 		s.Fallbacks = &cgfs
@@ -434,18 +433,28 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 }
 
 //The TOCacheGroup implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a cachegroup with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
 func (cg *TOCacheGroup) Update() (error, error, int) {
+
+	if cg.LocalizationMethods == nil {
+		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
+	}
+
+	if cg.Fallbacks == nil {
+		cg.Fallbacks = &[]string{}
+	}
+
+	if cg.FallbackToClosest == nil {
+		fbc := true
+		cg.FallbackToClosest = &fbc
+	}
+
 	coordinateID, err, errType := cg.handleCoordinateUpdate()
 	if err != nil {
 		return api.TypeErrToAPIErr(err, errType)
 	}
 
-	resultRows, err := cg.ReqInfo.Tx.Tx.Query(
-		updateQuery(),
+	err = cg.ReqInfo.Tx.Tx.QueryRow(
+		UpdateQuery(),
 		cg.Name,
 		cg.ShortName,
 		coordinateID,
@@ -454,67 +463,65 @@ func (cg *TOCacheGroup) Update() (error, error, int) {
 		cg.TypeID,
 		cg.FallbackToClosest,
 		cg.ID,
+	).Scan(
+		&cg.Type,
+		&cg.ParentName,
+		&cg.SecondaryParentName,
+		&cg.LastUpdated,
 	)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
-	defer resultRows.Close()
 
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			return nil, errors.New("cg update: scanning: " + err.Error()), http.StatusInternalServerError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	cg.LastUpdated = &lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return nil, nil, http.StatusNotFound
-		} else {
-			return nil, errors.New("cg update: affected multiple rows"), http.StatusInternalServerError
-		}
-	}
 	if err = cg.createLocalizationMethods(); err != nil {
-		return nil, errors.New("cg update: creating localization methods: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("cachegroup update: creating localization methods: " + err.Error()), http.StatusInternalServerError
 	}
 
 	if err = cg.createCacheGroupFallbacks(); err != nil {
-		return nil, errors.New("cg create: creating cache group fallbacks: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("cachegroup update: creating cache group fallbacks: " + err.Error()), http.StatusInternalServerError
 	}
 
 	return nil, nil, http.StatusOK
 }
 
+// TODO: Remove tc.ApiErrorType (see #3349)
 func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, tc.ApiErrorType) {
+
 	coordinateID, err := cg.getCoordinateID()
+
+	// This is not a logic error. Because the coordinate id is recieved from the
+	// cachegroup table, not being able to find the coordinate is equivalent to
+	// not being able to find the cachegroup.
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("no cachegroup with id %d found", *cg.ID), tc.DataMissingError
+	}
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no cg with id %d found", *cg.ID), tc.DataMissingError
-		}
-		log.Errorf("updating cg %d got error when querying coordinate: %s\n", *cg.ID, err)
 		return nil, tc.DBError, tc.SystemError
 	}
-	if coordinateID == nil && cg.Latitude != nil && cg.Longitude != nil {
-		newCoordinateID, err := cg.createCoordinate()
-		if err != nil {
-			log.Errorf("updating cg %d: %s\n", *cg.ID, err)
-			return nil, tc.DBError, tc.SystemError
-		}
-		coordinateID = newCoordinateID
-	} else if coordinateID != nil && (cg.Latitude == nil || cg.Longitude == nil) {
+
+	// If partial coordinate information is given or the coordinate information is wholly
+	// nullified, it is invalid and we zero the reference to the coordinate in the database.
+	// For now I am also nullifying both the longitude and latitude if one of them is nil
+	// because a non-nil returned value would have no meaning.
+	//
+	// TODO: Find references that talk about longitude and latidude as required fields
+	//	- Making longitude and latitude required would prevent this odd case
+	//	- Longitude and latitude probably aren't required for versioning reasons
+	//	- We've recently had a discussion on versioning that may be related
+	// TODO: In the meantime should an error be returned for partial coordinate information?
+	//	- Probably not
+	//
+	if cg.Latitude == nil || cg.Longitude == nil {
 		if err = cg.deleteCoordinate(*coordinateID); err != nil {
-			log.Errorf("updating cg %d: %s\n", *cg.ID, err)
 			return nil, tc.DBError, tc.SystemError
 		}
-		coordinateID = nil
-	} else {
-		if err = cg.updateCoordinate(); err != nil {
-			log.Errorf("updating cg %d: %s\n", *cg.ID, err)
-			return nil, tc.DBError, tc.SystemError
-		}
+		cg.Latitude = nil
+		cg.Longitude = nil
+		return nil, nil, tc.NoError
+	}
+
+	if err = cg.updateCoordinate(); err != nil {
+		return nil, tc.DBError, tc.SystemError
 	}
 	return coordinateID, nil, tc.NoError
 }
@@ -532,74 +539,73 @@ func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (cg *TOCacheGroup) Delete() (error, error, int) {
 	inUse, err := isUsed(cg.ReqInfo.Tx, *cg.ID)
-	if err != nil {
-		return nil, errors.New("cg delete: checking use: " + err.Error()), http.StatusInternalServerError
+	if inUse {
+		return err, nil, http.StatusBadRequest
 	}
-	if inUse == true {
-		return errors.New("cannot delete cachegroup in use"), nil, http.StatusInternalServerError
+	if err != nil {
+		return nil, errors.New("cachegroup delete: checking use: " + err.Error()), http.StatusInternalServerError
 	}
 
 	coordinateID, err := cg.getCoordinateID()
+	if err == sql.ErrNoRows {
+		return errors.New("no cachegroup with that id found"), nil, http.StatusNotFound
+	}
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil, http.StatusNotFound
-		}
-		return nil, errors.New("cg delete: getting coord: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("cachegroup delete: getting coord: " + err.Error()), http.StatusInternalServerError
 	}
 
-	if coordinateID != nil {
-		if err = cg.deleteCoordinate(*coordinateID); err != nil {
-			return nil, errors.New("cg delete: deleting coord: " + err.Error()), http.StatusInternalServerError
-		}
+	if err = cg.deleteCoordinate(*coordinateID); err != nil {
+		return nil, errors.New("cachegroup delete: deleting coord: " + err.Error()), http.StatusInternalServerError
 	}
 
-	result, err := cg.ReqInfo.Tx.NamedExec(deleteQuery(), cg)
+	result, err := cg.ReqInfo.Tx.Exec(DeleteQuery(), *cg.ID)
 	if err != nil {
-		return nil, errors.New("cg delete querying: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("cachegroup delete: " + err.Error()), http.StatusInternalServerError
 	}
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return nil, errors.New("cg delete getting rows affected: " + err.Error()), http.StatusInternalServerError
+		return nil, fmt.Errorf("getting rows affected: %v", err), http.StatusInternalServerError
 	}
+
+	// In the zero case, either err != nil occurs (from the Exec) or we got sql.ErrNoRows above
 	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return nil, nil, http.StatusNotFound
-		} else {
-			return nil, errors.New("cg delete affected multiple rows"), http.StatusInternalServerError
-		}
+		return nil, errors.New("cachegroup delete affected multiple rows"), http.StatusInternalServerError
 	}
 
 	return nil, nil, http.StatusOK
 }
 
-// insert query
-func insertQuery() string {
-	query := `INSERT INTO cachegroup (
+func InsertQuery() string {
+	return `INSERT INTO cachegroup (
 name,
 short_name,
-coordinate,
 type,
 parent_cachegroup_id,
 secondary_parent_cachegroup_id,
 fallback_to_closest
-) VALUES($1,$2,$3,$4,$5,$6,$7)
-RETURNING id,last_updated`
-	return query
+) VALUES($1,$2,$3,$4,$5,$6)
+RETURNING
+id,
+(SELECT name FROM type WHERE cachegroup.type = type.id),
+(SELECT name FROM cachegroup parent
+	WHERE cachegroup.parent_cachegroup_id = parent.id),
+(SELECT name FROM cachegroup secondary_parent
+	WHERE cachegroup.secondary_parent_cachegroup_id = secondary_parent.id)`
 }
 
-// select query
-func selectQuery() string {
+func SelectQuery() string {
 	// the 'type_name' and 'type_id' aliases on the 'type.name'
 	// and cachegroup.type' fields are needed
 	// to disambiguate the struct scan, see also the
 	// tc.CacheGroupNullable struct 'db' metadata
-	query := `SELECT
+	return `SELECT
 cachegroup.id,
 cachegroup.name,
 cachegroup.short_name,
 coordinate.latitude,
 coordinate.longitude,
-(SELECT array_agg(CAST(method as text)) AS localization_methods FROM cachegroup_localization_method clm WHERE clm.cachegroup = cachegroup.id),
+(SELECT COALESCE(array_agg(CAST(method as text)), '{}') AS localization_methods FROM cachegroup_localization_method clm WHERE clm.cachegroup = cachegroup.id),
 cachegroup.parent_cachegroup_id,
 cgp.name AS parent_cachegroup_name,
 cachegroup.secondary_parent_cachegroup_id,
@@ -607,28 +613,26 @@ cgs.name AS secondary_parent_cachegroup_name,
 type.name AS type_name,
 cachegroup.type AS type_id,
 cachegroup.last_updated,
-(SELECT coalesce(array_agg(CAST(cg2.name as text) ORDER BY cgf.set_order ASC), '{}') AS fallbacks FROM cachegroup cg2 INNER JOIN cachegroup_fallbacks cgf ON cgf.backup_cg = cg2.id WHERE cgf.primary_cg = cachegroup.id),
+(SELECT COALESCE(array_agg(CAST(cg2.name as text) ORDER BY cgf.set_order ASC), '{}') AS fallbacks FROM cachegroup cg2 INNER JOIN cachegroup_fallbacks cgf ON cgf.backup_cg = cg2.id WHERE cgf.primary_cg = cachegroup.id),
 cachegroup.fallback_to_closest
 FROM cachegroup
 LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
 LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
-	return query
 }
 
+// unused?
 // select type name so checks are based on name instead of id
 func selectTypeNameQuery() string {
-	query := `SELECT name FROM type WHERE id = $1;`
-	return query
+	return `SELECT name FROM type WHERE id = $1;`
 }
 
-// update query
-func updateQuery() string {
+func UpdateQuery() string {
 	// to disambiguate struct scans, the named
 	// parameter 'type_id' is an alias to cachegroup.type
 	//see also the tc.CacheGroupNullable struct 'db' metadata
-	query := `UPDATE
+	return `UPDATE
 cachegroup SET
 name=$1,
 short_name=$2,
@@ -637,12 +641,16 @@ parent_cachegroup_id=$4,
 secondary_parent_cachegroup_id=$5,
 type=$6,
 fallback_to_closest=$7
-WHERE id=$8 RETURNING last_updated`
-	return query
+WHERE id=$8
+RETURNING
+(SELECT name FROM type WHERE cachegroup.type = type.id),
+(SELECT name FROM cachegroup parent
+	WHERE cachegroup.parent_cachegroup_id = parent.id),
+(SELECT name FROM cachegroup secondary_parent
+	WHERE cachegroup.secondary_parent_cachegroup_id = secondary_parent.id),
+last_updated`
 }
 
-//delete query
-func deleteQuery() string {
-	query := `DELETE FROM cachegroup WHERE id=:id`
-	return query
+func DeleteQuery() string {
+	return `DELETE FROM cachegroup WHERE id=$1`
 }
