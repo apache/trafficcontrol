@@ -35,10 +35,39 @@ import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie
 const API_MIN_MINOR_VERSION = 1;
 const API_MAX_MINOR_VERSION = 5;
 
+// TODO: read this in properly from the VERSION file
+const VERSION = "3.0.0";
+
 // Will be used for various `lastUpdated` fields
 var CURRENT_TIME *tc.TimeNoMod = tc.NewTimeNoMod();
 
-// Current user fields
+// Static CDN Fields
+var ALL_CDN = "ALL";
+var ALL_CDN_ID = 1;
+var ALL_CDN_DOMAINNAME = "-";
+var ALL_CDN_DNSSEC_ENABLED = false;
+var CDN = "Mock-CDN";
+var CDN_ID = 2;
+var CDN_DOMAIN_NAME = "mock.cdn.test";
+var CDN_DNSSEC_ENABLED = false;
+
+var CDNS = []tc.CDNNullable{
+	tc.CDNNullable {
+		DNSSECEnabled: &ALL_CDN_DNSSEC_ENABLED,
+		DomainName: &ALL_CDN_DOMAINNAME,
+		ID: &ALL_CDN_ID,
+		LastUpdated: CURRENT_TIME,
+		Name: &ALL_CDN,
+	},
+	tc.CDNNullable {
+		DNSSECEnabled: &CDN_DNSSEC_ENABLED,
+		DomainName: &CDN_DOMAIN_NAME,
+		ID: &CDN_ID,
+		Name: &CDN,
+	},
+}
+
+// Static user fields
 // (These _should_ be `const`, but you can't take the address of a `const` (for some reason))
 var USERNAME = "admin";
 var LOCAL_USER = true;
@@ -78,13 +107,20 @@ var CURRENT_USER = tc.UserCurrent{
 	CommonUserFields: COMMON_USER_FIELDS,
 }
 
+// Just sets some common headers
+func common(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json");
+	w.Header().Set("Server", "Traffic Ops/"+VERSION+" (Mock)");
+}
+
 func ping(w http.ResponseWriter, r *http.Request) {
+	common(w);
 	w.Write([]byte("{\"ping\":\"pong\"}\n"));
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
 	form := auth.PasswordForm{};
-	w.Header().Set("Content-Type", "application/json")
+	common(w);
 	if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
 		errBytes, JsonErr := json.Marshal(tc.CreateErrorAlerts(err));
 		if JsonErr != nil {
@@ -112,7 +148,13 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func cuser(w http.ResponseWriter, r *http.Request) {
+	common(w);
 	api.WriteResp(w, r, CURRENT_USER);
+}
+
+func getCDNS(w http.ResponseWriter, r *http.Request) {
+	common(w);
+	api.WriteResp(w, r, CDNS);
 }
 
 func main() {
@@ -127,6 +169,7 @@ func main() {
 		http.HandleFunc("/api/"+v+"/ping", ping);
 		http.HandleFunc("/api/"+v+"/user/login", login);
 		http.HandleFunc("/api/"+v+"/user/current", cuser);
+		http.HandleFunc("/api/"+v+"/cdns", getCDNS);
 	}
 
 	log.Printf("Finished loading API routes at %s, server listening on port 443", CURRENT_TIME.String());
