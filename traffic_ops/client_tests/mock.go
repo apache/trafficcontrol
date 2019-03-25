@@ -28,11 +28,55 @@ import "strconv";
 import "time";
 
 import "github.com/apache/trafficcontrol/lib/go-tc";
+import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api";
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth";
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie";
 
 const API_MIN_MINOR_VERSION = 1;
 const API_MAX_MINOR_VERSION = 5;
+
+// Will be used for various `lastUpdated` fields
+var CURRENT_TIME *tc.TimeNoMod = tc.NewTimeNoMod();
+
+// Current user fields
+// (These _should_ be `const`, but you can't take the address of a `const` (for some reason))
+var USERNAME = "admin";
+var LOCAL_USER = true;
+var USER_ID = 1;
+var TENANT = "root";
+var TENANT_ID = 1; // NOTE: This places a hard requirement on `tenant` implementation - `root` == `1`
+var ROLE = "admin";
+var ROLE_ID = 1; // NOTE: This places a hard requirement on `roles` implementation - `admin` == `1`
+var NEW_USER = false;
+
+var COMMON_USER_FIELDS = tc.CommonUserFields {
+	AddressLine1: nil,
+	AddressLine2: nil,
+	City: nil,
+	Company: nil,
+	Country: nil,
+	Email: nil,
+	FullName: nil,
+	GID: nil,
+	ID: &USER_ID,
+	NewUser: &NEW_USER,
+	PhoneNumber: nil,
+	PostalCode: nil,
+	PublicSSHKey: nil,
+	Role: &ROLE_ID,
+	StateOrProvince: nil,
+	Tenant: &TENANT,
+	TenantID: &TENANT_ID,
+	UID: nil,
+	LastUpdated: CURRENT_TIME,
+}
+
+var CURRENT_USER = tc.UserCurrent{
+	UserName: &USERNAME,
+	LocalUser: &LOCAL_USER,
+	RoleName: &ROLE,
+	CommonUserFields: COMMON_USER_FIELDS,
+}
 
 func ping(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{\"ping\":\"pong\"}\n"));
@@ -67,18 +111,25 @@ func login(w http.ResponseWriter, r *http.Request) {
 	w.Write(respBts);
 }
 
+func cuser(w http.ResponseWriter, r *http.Request) {
+	api.WriteResp(w, r, CURRENT_USER);
+}
+
 func main() {
 	server := &http.Server{
 		Addr:              ":443",
 		TLSConfig:         &tls.Config{InsecureSkipVerify: false},
 	};
-	log.Println("Server listening on port 443");
 
 	for i := API_MIN_MINOR_VERSION; i <= API_MAX_MINOR_VERSION; i+=1 {
 		v := "1." + strconv.Itoa(i);
+		log.Printf("Loading API v%s\n", v);
 		http.HandleFunc("/api/"+v+"/ping", ping);
 		http.HandleFunc("/api/"+v+"/user/login", login);
+		http.HandleFunc("/api/"+v+"/user/current", cuser);
 	}
+
+	log.Printf("Finished loading API routes at %s, server listening on port 443", CURRENT_TIME.String());
 
 	if err := server.ListenAndServeTLS("./localhost.crt", "./localhost.key"); err != nil {
 		log.Fatalf("Server crashed: %v\n", err);
