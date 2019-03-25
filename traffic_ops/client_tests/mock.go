@@ -65,7 +65,77 @@ var CDNS = []tc.CDNNullable{
 		ID: &CDN_ID,
 		Name: &CDN,
 	},
-}
+};
+
+// Static Cache Group fields
+var EDGE_CACHEGROUP_ID = 1;
+var EDGE_CACHEGROUP = "Edge";
+var EDGE_CACHEGROUP_SHORT_NAME = "Edge";
+var EDGE_CACHEGROUP_LATITUDE = 0.0;
+var EDGE_CACHEGROUP_LONGITUDE = 0.0;
+var EDGE_CACHEGROUP_PARENT_NAME= "Mid"; // NOTE: This places a hard requirement on the `cachegroups` implementation - must have a `MID_LOC` Cache Group named "Mid"
+var EDGE_CACHEGROUP_PARENT_ID = 2; // NOTE: This places a hard requirement on the `cachegroups` implementation - must have a `MID_LOC` Cache Group identified by `2`
+var EDGE_CACHEGROUP_FALLBACK_TO_CLOSEST = true;
+var EDGE_CACHEGROUP_LOCALIZATION_METHODS = []tc.LocalizationMethod{
+	tc.LocalizationMethodCZ,
+	tc.LocalizationMethodDeepCZ,
+	tc.LocalizationMethodGeo,
+};
+var EDGE_CACHEGROUP_TYPE = "EDGE_LOC";
+var EDGE_CACHEGROUP_TYPE_ID = 1; // NOTE: This places a hard requirement on the `types` implementation - must have `EDGE_LOC` == 1
+
+var MID_CACHEGROUP_ID = 2;
+var MID_CACHEGROUP = "Mid";
+var MID_CACHEGROUP_SHORT_NAME = "Mid";
+var MID_CACHEGROUP_LATITUDE = 0.0;
+var MID_CACHEGROUP_LONGITUDE = 0.0;
+var MID_CACHEGROUP_FALLBACK_TO_CLOSEST = true;
+var MID_CACHEGROUP_LOCALIZATION_METHODS = []tc.LocalizationMethod{
+	tc.LocalizationMethodCZ,
+	tc.LocalizationMethodDeepCZ,
+	tc.LocalizationMethodGeo,
+};
+var MID_CACHEGROUP_TYPE = "MID_LOC";
+var MID_CACHEGROUP_TYPE_ID = 2; // NOTE: This places a hard requirement on the `types` implementation - must have `MID_LOC` == 2
+
+
+var CACHEGROUPS = []tc.CacheGroupNullable{
+	tc.CacheGroupNullable{
+		ID: &EDGE_CACHEGROUP_ID,
+		Name: &EDGE_CACHEGROUP,
+		ShortName: &EDGE_CACHEGROUP_SHORT_NAME,
+		Latitude: &EDGE_CACHEGROUP_LATITUDE,
+		Longitude: &EDGE_CACHEGROUP_LONGITUDE,
+		ParentName: &EDGE_CACHEGROUP_PARENT_NAME,
+		ParentCachegroupID: &EDGE_CACHEGROUP_PARENT_ID,
+		SecondaryParentName: nil,
+		SecondaryParentCachegroupID: nil,
+		FallbackToClosest: &EDGE_CACHEGROUP_FALLBACK_TO_CLOSEST,
+		LocalizationMethods: &EDGE_CACHEGROUP_LOCALIZATION_METHODS,
+		Type: &EDGE_CACHEGROUP_TYPE,
+		TypeID: &EDGE_CACHEGROUP_TYPE_ID,
+		LastUpdated: CURRENT_TIME,
+		Fallbacks: nil,
+	},
+	tc.CacheGroupNullable{
+		ID: &MID_CACHEGROUP_ID,
+		Name: &MID_CACHEGROUP,
+		ShortName: &MID_CACHEGROUP_SHORT_NAME,
+		Latitude: &MID_CACHEGROUP_LATITUDE,
+		Longitude: &MID_CACHEGROUP_LONGITUDE,
+		ParentName: nil,
+		ParentCachegroupID: nil,
+		SecondaryParentName: nil,
+		SecondaryParentCachegroupID: nil,
+		FallbackToClosest: &MID_CACHEGROUP_FALLBACK_TO_CLOSEST,
+		LocalizationMethods: &MID_CACHEGROUP_LOCALIZATION_METHODS,
+		Type: &MID_CACHEGROUP_TYPE,
+		TypeID: &MID_CACHEGROUP_TYPE_ID,
+		LastUpdated: CURRENT_TIME,
+		Fallbacks: nil,
+	},
+};
+
 
 // Static user fields
 // (These _should_ be `const`, but you can't take the address of a `const` (for some reason))
@@ -98,14 +168,14 @@ var COMMON_USER_FIELDS = tc.CommonUserFields {
 	TenantID: &TENANT_ID,
 	UID: nil,
 	LastUpdated: CURRENT_TIME,
-}
+};
 
 var CURRENT_USER = tc.UserCurrent{
 	UserName: &USERNAME,
 	LocalUser: &LOCAL_USER,
 	RoleName: &ROLE,
 	CommonUserFields: COMMON_USER_FIELDS,
-}
+};
 
 // Just sets some common headers
 func common(w http.ResponseWriter) {
@@ -157,6 +227,11 @@ func getCDNS(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, CDNS);
 }
 
+func getCacheGroups(w http.ResponseWriter, r *http.Request) {
+	common(w);
+	api.WriteResp(w, r, CACHEGROUPS);
+}
+
 func main() {
 	server := &http.Server{
 		Addr:              ":443",
@@ -170,6 +245,7 @@ func main() {
 		http.HandleFunc("/api/"+v+"/user/login", login);
 		http.HandleFunc("/api/"+v+"/user/current", cuser);
 		http.HandleFunc("/api/"+v+"/cdns", getCDNS);
+		http.HandleFunc("/api/"+v+"/cachegroups", getCacheGroups);
 	}
 
 	log.Printf("Finished loading API routes at %s, server listening on port 443", CURRENT_TIME.String());
