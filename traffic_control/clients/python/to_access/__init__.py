@@ -37,8 +37,8 @@ Arguments and Flags
 .. option:: PATH
 
 	This is the request path. By default, whatever is passed is considered to be relative to
-	:file:`/api/{api_version}/` where ``api_version`` is :option:`--api_version`. This behavior can
-	be disabled by using :option:`--raw_path`.
+	:file:`/api/{api-version}/` where ``api-version`` is :option:`--api-version`. This behavior can
+	be disabled by using :option:`--raw-path`.
 
 .. option:: DATA
 
@@ -50,17 +50,17 @@ Arguments and Flags
 
 	Print usage information and exit
 
-.. option:: -a API_VERSION, --api_version API_VERSION
+.. option:: -a API_VERSION, --api-version API_VERSION
 
 	Specifies the version of the Traffic Ops API that will be used for the request. Has no effect if
-	:option:`--raw_path` is used. (Default: 1.3)
+	:option:`--raw-path` is used. (Default: 1.3)
 
 .. option:: -f, --full
 
 	Output the full HTTP exchange including request method line, request headers, request body (if
 	any), response status line, and response headers (as well as the response body, if any). This is
-	equivalent to using :option:`--request_headers`, :option:`--request_payload`, and
-	:option:`--response_headers` at the same time, and those options will have no effect if given.
+	equivalent to using :option:`--request-headers`, :option:`--request-payload`, and
+	:option:`--response-headers` at the same time, and those options will have no effect if given.
 	(Default: false)
 
 .. option:: -k, --insecure
@@ -73,36 +73,36 @@ Arguments and Flags
 	Pretty-print any payloads that are output as formatted JSON. Has no effect on plaintext payloads.
 	Uses tab characters for indentation. (Default: false)
 
-.. option:: -r, --raw_path
+.. option:: -r, --raw-path
 
 	Request exactly :option:`PATH`; do not preface the request path with :file:`/api/{api_version}`.
-	This effectively means that :option:`--api_version` will have no effect. (Default: false)
+	This effectively means that :option:`--api-version` will have no effect. (Default: false)
 
-.. option:: --request_headers
+.. option:: --request-headers
 
 	Output the request method line and any and all request headers. (Default: false)
 
-.. option:: --request_payload
+.. option:: --request-payload
 
 	Output the request body if any was sent. Will attempt to pretty-print the body as JSON if
 	:option:`--pretty` is used. (Default: false)
 
-.. option:: --response_headers
+.. option:: --response-headers
 
 	Output the response status line and any and all response headers. (Default: false)
 
-.. option:: --to_url URL
+.. option:: --to-url URL
 
 	The :abbr:`FQDN (Fully Qualified Domain Name)` and optionally the port and scheme of the Traffic
 	Ops server. This will override :envvar:`TO_URL`. The format is the same as for :envvar:`TO_URL`.
 	(Default: uses the value of :envvar:`TO_URL`)
 
-.. option:: --to_password PASSWORD
+.. option:: --to-password PASSWORD
 
 	The password to use when authenticating to Traffic Ops. Overrides :envvar:`TO_PASSWORD`.
 	(Default: uses the value of :envvar:`TO_PASSWORD`)
 
-.. option:: --to_user USERNAME
+.. option:: --to-user USERNAME
 
 	The username to use when connecting to Traffic Ops. Overrides :envvar:`TO_USER`. (Default: uses
 	the value of :envvar:`TO_USER`)
@@ -111,12 +111,12 @@ Environment Variables
 ---------------------
 If defined, :program:`toaccess` scripts will use these environment variables to define their
 connection to and authentication with the Traffic Ops server. Typically, setting these is easier
-than using the long options :option:`--to_url`, :option:`--to_user`, and :option:`--to_password` on
+than using the long options :option:`--to-url`, :option:`--to-user`, and :option:`--to-password` on
 every invocation.
 
 .. envvar:: TO_PASSWORD
 
-	Will be used to authenticate the user defined by either :option:`--to_user` or :envvar:`TO_USER`.
+	Will be used to authenticate the user defined by either :option:`--to-user` or :envvar:`TO_USER`.
 
 .. envvar:: TO_URL
 
@@ -126,13 +126,13 @@ every invocation.
 	typically this is unnecessary. Also notice that the port number may be specified, though again
 	this isn't usually required. All :program:`toaccess` scripts will assume that port 443 should be
 	used unless otherwise specified. They will further assume that the protocol is HTTPS unless
-	:envvar:`TO_URL` (or :option:`--to_url`) starts with ``http://``, in which case the default port
+	:envvar:`TO_URL` (or :option:`--to-url`) starts with ``http://``, in which case the default port
 	will also be set to 80 unless otherwise specified in the URL.
 
 .. envvar:: TO_USER
 
 	The name of the user as whom to connect to the Traffic Ops server. Overriden by
-	:option:`--to_user`.
+	:option:`--to-user`.
 
 Exit Codes
 ----------
@@ -150,16 +150,16 @@ the result of calling the script was without needing to parse the output. The ex
 	of an HTTP client or server error, but rather an underlying issue connecting to or
 	authenticating with Traffic Ops. This is distinct from an exit code of ``32`` in that the
 	*format* of the arguments was correct, but there was some problem with the *value*. For example,
-	passing ``https://test:`` to :option:`--to_url` will cause an exit code of ``2``, not ``32``.
+	passing ``https://test:`` to :option:`--to-url` will cause an exit code of ``2``, not ``32``.
 4
 	An HTTP client error occurred. The HTTP stack will be printed to stdout as indicated by other
 	options - meaning by default it will only print the response payload if one was given, but will
-	respect options like e.g. :option:`--request_payload` as well as
+	respect options like e.g. :option:`--request-payload` as well as
 	:option:`-p`/:option:`--pretty`.
 5
 	An HTTP server error occurred. The HTTP stack will be printed to stdout as indicated by other
 	options - meaning by default it will only print the response payload if one was given, but will
-	respect options like e.g. :option:`--request_payload` as well as
+	respect options like e.g. :option:`--request-payload` as well as
 	:option:`-p`/:option:`--pretty`.
 32
 	This is the error code emitted by Python's :mod:`argparse` module when the passed arguments
@@ -180,10 +180,11 @@ import json
 import logging
 import os
 import sys
+from urllib.parse import urlparse
 
 from future.utils import raise_from
 
-from trafficops.restapi import LoginError
+from trafficops.restapi import LoginError, OperationError, InvalidJSONError
 from trafficops.tosession import TOSession
 
 from requests.exceptions import RequestException
@@ -244,8 +245,8 @@ def parse_arguments(program):
 	                        description="A helper program for interfacing with the Traffic Ops API",
 	                        epilog=("Typically, one will want to connect and authenticate by defining "
 	                               "the 'TO_URL', 'TO_USER' and 'TO_PASSWORD' environment variables "
-	                               "rather than (respectively) the '--to_url', '--to_user' and "
-	                               "'--to_password' command-line flags. Those flags are only "
+	                               "rather than (respectively) the '--to-url', '--to-user' and "
+	                               "'--to-password' command-line flags. Those flags are only "
 	                               "required when said environment variables are not defined.\n"
 	                               "%(prog)s will exit with a success provided a response was "
 	                               "received and the status code of said response was less than 400. "
@@ -256,38 +257,38 @@ def parse_arguments(program):
 	                               "a status code indicating a client or server error, that status "
 	                               "code will be used as the exit code."))
 
-	parser.add_argument("--to_url",
+	parser.add_argument("--to-url",
 	                    type=str,
 	                    help=("The fully qualified domain name of the Traffic Ops server. Overrides "
 	                         "'$TO_URL'. The format for both the environment variable and the flag "
 	                         "is '[scheme]hostname[:port]'. That is, ports should be specified here, "
 	                         "and they need not start with 'http://' or 'https://'. HTTPS is the "
 	                         "assumed protocol unless the scheme _is_ provided and is 'http://'."))
-	parser.add_argument("--to_user",
+	parser.add_argument("--to-user",
 	                    type=str,
 	                    help="The username to use when connecting to Traffic Ops. Overrides '$TO_USER")
-	parser.add_argument("--to_password",
+	parser.add_argument("--to-password",
 	                    type=str,
 	                    help="The password to use when authenticating to Traffic Ops. Overrides '$TO_PASSWORD'")
 	parser.add_argument("-k", "--insecure", action="store_true", help="Do not verify SSL certificates")
 	parser.add_argument("-f", "--full",
 	                    action="store_true",
 	                    help=("Also output HTTP request/response lines and headers, and request payload. "
-	                         "This is equivalent to using '--request_headers', '--response_headers' "
-	                         "and '--request_payload' at the same time."))
-	parser.add_argument("--request_headers",
+	                         "This is equivalent to using '--request-headers', '--response-headers' "
+	                         "and '--request-payload' at the same time."))
+	parser.add_argument("--request-headers",
 	                    action="store_true",
 	                    help="Output request method line and headers")
-	parser.add_argument("--response_headers",
+	parser.add_argument("--response-headers",
 	                    action="store_true",
 	                    help="Output response status line and headers")
-	parser.add_argument("--request_payload",
+	parser.add_argument("--request-payload",
 	                    action="store_true",
 	                    help="Output request payload (will try to pretty-print if '--pretty' is given)")
-	parser.add_argument("-r", "--raw_path",
+	parser.add_argument("-r", "--raw-path",
 	                    action="store_true",
-	                    help="Request exactly PATH; it won't be prefaced with '/api/{{api_version}}/")
-	parser.add_argument("-a", "--api_version",
+	                    help="Request exactly PATH; it won't be prefaced with '/api/{{api-version}}/")
+	parser.add_argument("-a", "--api-version",
 	                    type=float,
 	                    default=1.3,
 	                    help="Specify the API version to request against")
@@ -308,21 +309,22 @@ def parse_arguments(program):
 		to_host = args.to_url if args.to_url else os.environ["TO_URL"]
 	except KeyError as e:
 		raise KeyError("Traffic Ops hostname not set! Set the TO_URL environment variable or use "\
-		               "'--to_url'.") from e
+		               "'--to-url'.") from e
 
-	useSSL = True
-	to_port = 443
-	if to_host.lower().startswith("http://"):
-		to_host = to_host[7:]
-		useSSL = False
-		to_port = 80
-	elif to_host.lower().startswith("https://"):
-		to_host = to_host[8:]
+	to_host = urlparse(to_host, scheme="https")
+	useSSL = to_host.scheme.lower() == "https"
+	to_port = to_host.port
+	if to_port is None:
+		if useSSL:
+			to_port = 443
+		else:
+			to_port = 80
 
-	portpos = to_host.find(':')
-	if portpos > 0:
-		to_port = int(to_host[portpos+1:])
-		to_host = to_host[:portpos]
+	port_pos = to_host.netloc.find(':')
+	if port_pos > 0:
+		to_host = to_host.netloc[:port_pos]
+	else:
+		to_host = to_host.netloc
 
 	s = TOSession(to_host,
 	              host_port=to_port,
@@ -342,13 +344,13 @@ def parse_arguments(program):
 		to_user = args.to_user if args.to_user else os.environ["TO_USER"]
 	except KeyError as e:
 		raise KeyError("Traffic Ops user not set! Set the TO_USER environment variable or use "\
-		               "'--to_user'.") from e
+		               "'--to-user'.") from e
 
 	try:
 		to_passwd = args.to_password if args.to_password else os.environ["TO_PASSWORD"]
 	except KeyError as e:
 		raise KeyError("Traffic Ops password not set! Set the TO_PASSWORD environment variable or "\
-		               "use '--to_password'") from e
+		               "use '--to-password'") from e
 
 	try:
 		s.login(to_user, to_passwd)
