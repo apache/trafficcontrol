@@ -46,7 +46,7 @@ export class DsCardComponent {
 	// Need this to access merged namespace for string conversions
 	Protocol = Protocol;
 
-	chartOptions: object;
+	chartOptions: any;
 
 	private loaded: boolean;
 	public graphDataLoaded: boolean;
@@ -93,6 +93,19 @@ export class DsCardComponent {
 		};
 	}
 
+	/*
+	 * Handles the destruction of a chart and all of its constituent data. Does nothing if
+	 * `this.chart` is `null` or `undefined`.
+	*/
+	private destroyChart() {
+		if (this.chart) {
+			this.chart.destroy();
+			this.chart = null;
+			this.graphDataLoaded = false;
+			this.chartOptions.data = {datasets: [], labels: []};
+		}
+	}
+
 	/**
 	 * Triggered when the details element is opened or closed, and fetches the latest stats.
 	 * @param e A DOM Event caused then the open/close state of a `<details>` element changes.
@@ -125,15 +138,11 @@ export class DsCardComponent {
 						}
 					}
 				);
-			} else if (this.chart) {
-				this.chart.destroy();
-				this.chart = null;
-				this.graphDataLoaded = false;
 			}
 			const now = new Date();
 			now.setUTCMilliseconds(0); // apparently `const` doesn't care about this
 			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-			const canvas = this.elementRef.nativeElement.querySelector('#canvas-' + String(this.deliveryService.id));
+			const canvas = document.getElementById('canvas-' + String(this.deliveryService.id)) as HTMLCanvasElement;
 			this.chart = new Chart(canvas, this.chartOptions);
 
 			this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s').pipe(first()).subscribe(
@@ -142,9 +151,7 @@ export class DsCardComponent {
 						return;
 					}
 					if (data === undefined || data === null) {
-						this.chart.destroy();
-						this.chart = null;
-						this.graphDataLoaded = true;
+						this.destroyChart();
 						console.warn("Delivery Service '" + this.deliveryService.displayName + "' (" + this.deliveryService.id + ') has no edge bandwidth data!');
 
 						const ctx = canvas.getContext("2d");
@@ -176,9 +183,7 @@ export class DsCardComponent {
 						return;
 					}
 					if (data === undefined || data === null) {
-						this.chart.destroy();
-						this.chart = null;
-						this.graphDataLoaded = true;
+						this.destroyChart();
 						console.warn("Delivery Service '" + this.deliveryService.displayName + "' (" + this.deliveryService.id + ') has no mid bandwidth data!');
 
 						const ctx = canvas.getContext("2d");
@@ -202,6 +207,8 @@ export class DsCardComponent {
 					this.chart.update();
 				}
 			);
+		} else if (this.chart) {
+			this.destroyChart();
 		}
 	}
 
