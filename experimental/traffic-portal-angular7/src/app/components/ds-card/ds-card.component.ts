@@ -20,38 +20,6 @@ import { Chart } from 'chart.js';
 import { APIService } from '../../services';
 import { DeliveryService, Protocol } from '../../models/deliveryservice';
 
-const CHART_OPTIONS = {
-				type: 'line',
-				data: {
-					labels: [],
-					datasets: []
-				},
-				options: {
-					legend: {
-						display: false
-					},
-					title: {
-						display: true,
-						text: "Today's Bandwidth"
-					},
-					scales: {
-						xAxes: [{
-							display: true,
-							type: 'time',
-							callback: (v, unused_i, unused_values) => {
-								return v.toLocaleTimeString();
-							}
-						}],
-						yAxes: [{
-							display: true,
-							ticks: {
-								suggestedMin: 0
-							}
-						}]
-					}
-				}
-			};
-
 @Component({
 	selector: 'ds-card',
 	templateUrl: './ds-card.component.html',
@@ -78,6 +46,7 @@ export class DsCardComponent {
 	// Need this to access merged namespace for string conversions
 	Protocol = Protocol;
 
+	chartOptions: object;
 
 	private loaded: boolean;
 	public graphDataLoaded: boolean;
@@ -91,6 +60,37 @@ export class DsCardComponent {
 		this.midBandwidth = new Array<number>();
 		this.labels = new Array<Date>();
 		this.graphDataLoaded = false;
+		this.chartOptions = {
+			type: 'line',
+			data: {
+				labels: [],
+				datasets: []
+			},
+			options: {
+				legend: {
+					display: false
+				},
+				title: {
+					display: true,
+					text: "Today's Bandwidth"
+				},
+				scales: {
+					xAxes: [{
+						display: true,
+						type: 'time',
+						callback: (v, unused_i, unused_values) => {
+							return v.toLocaleTimeString();
+						}
+					}],
+					yAxes: [{
+						display: true,
+						ticks: {
+							suggestedMin: 0
+						}
+					}]
+				}
+			}
+		};
 	}
 
 	/**
@@ -134,7 +134,7 @@ export class DsCardComponent {
 			now.setUTCMilliseconds(0); // apparently `const` doesn't care about this
 			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 			const canvas = this.elementRef.nativeElement.querySelector('#canvas-' + String(this.deliveryService.id));
-			this.chart = new Chart(canvas, CHART_OPTIONS);
+			this.chart = new Chart(canvas, this.chartOptions);
 
 			this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s').pipe(first()).subscribe(
 				data => {
