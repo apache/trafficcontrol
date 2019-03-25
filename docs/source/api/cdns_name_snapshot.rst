@@ -108,15 +108,16 @@ Response Structure
 
 :contentRouters: An object containing keys which are the (short) hostnames of the Traffic Routers that serve requests for :term:`Delivery Service`\ s in this CDN
 
-	:api.port:  A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router
-	:fqdn:      This Traffic Router's Fully Qualified Domain Name (FQDN)
-	:httpsPort: The port number on which this Traffic Router listens for incoming HTTPS requests
-	:ip:        This Traffic Router's IPv4 address
-	:ip6:       This Traffic Router's IPv6 address
-	:location:  The name of the Cache Group to which this Traffic Router belongs
-	:port:      The port number on which this Traffic Router listens for incoming HTTP requests
-	:profile:   The :ref:`profile-name` of the :term:`Profile` used by this Traffic Router
-	:status:    The health status of this Traffic Router
+	:api.port:        A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTP
+	:secure.api.port: A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTPS (optional)
+	:fqdn:            This Traffic Router's Fully Qualified Domain Name (FQDN)
+	:httpsPort:       The port number on which this Traffic Router listens for incoming HTTPS requests
+	:ip:              This Traffic Router's IPv4 address
+	:ip6:             This Traffic Router's IPv6 address
+	:location:        The name of the Cache Group to which this Traffic Router belongs
+	:port:            The port number on which this Traffic Router listens for incoming HTTP requests
+	:profile:         The :ref:`profile-name` of the :term:`Profile` used by this Traffic Router
+	:status:          The health status of this Traffic Router
 
 		.. seealso:: :ref:`health-proto`
 
@@ -436,6 +437,7 @@ Response Structure
 		"contentRouters": {
 			"trafficrouter": {
 				"api.port": "3333",
+				"secure.api.port": "3443",
 				"fqdn": "trafficrouter.infra.ciab.test",
 				"httpsPort": 443,
 				"ip": "172.16.239.60",

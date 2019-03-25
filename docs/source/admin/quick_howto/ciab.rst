@@ -69,7 +69,7 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 	| Traffic Portal                  | Web interface on 443 (Javascript required)                   | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
 	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Router                  | Web interfaces on ports 3080 (HTTP) and 3443 (HTTPS), with a | N/A                                   | N/A                                       |
-	|                                 | DNS service on 53 and an API on 3333                         |                                       |                                           |
+	|                                 | DNS service on 53 and an API on 3333 (HTTP) and 2222 (HTTPS) |                                       |                                           |
 	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Vault                   | Riak key-value store on port 8010                            | ``TV_ADMIN_USER`` in `variables.env`_ | ``TV_ADMIN_PASSWORD`` in `variables.env`_ |
 	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+

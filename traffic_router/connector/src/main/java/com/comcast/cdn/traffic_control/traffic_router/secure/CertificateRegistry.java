@@ -17,6 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterNioEndpoint;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
+import com.comcast.cdn.traffic_control.traffic_router.utils.HttpsProperties;
 import org.apache.log4j.Logger;
 import sun.security.tools.keytool.CertAndKeyGen;
 import sun.security.util.ObjectIdentifier;
@@ -26,6 +27,11 @@ import sun.security.x509.ExtendedKeyUsageExtension;
 import sun.security.x509.KeyUsageExtension;
 
 import java.security.PrivateKey;
+import java.io.*;
+import java.security.*;
+import java.security.cert.CertificateFactory;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -43,6 +49,7 @@ public class CertificateRegistry {
 	volatile private Map<String, HandshakeData>	handshakeDataMap = new HashMap<>();
 	private RouterNioEndpoint sslEndpoint = null;
 	final private Map<String, CertificateData> previousData = new HashMap<>();
+    public static final String DEFAULT_ALIAS = "_default_";
 
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
@@ -100,14 +107,56 @@ public class CertificateRegistry {
 	    return handshakeDataMap;
     }
 
+    private void addToHandshakeData(final String key, final HandshakeData handshakeData) {
+        handshakeDataMap.putIfAbsent(key, handshakeData);
+    }
+
 	public void setEndPoint(final RouterNioEndpoint routerNioEndpoint) {
 		sslEndpoint = routerNioEndpoint;
 	}
 
-	@SuppressWarnings("PMD.AccessorClassGeneration")
-	private static class CertificateRegistryHolder {
-		private static final CertificateRegistry DELIVERY_SERVICE_CERTIFICATES = new CertificateRegistry();
-	}
+    public void loadDefaultCert() throws RuntimeException {
+        try {
+            final Map<String, String> httpsProperties = (new HttpsProperties()).getHttpsPropertiesMap();
+
+            if (getHandshakeData(DEFAULT_ALIAS) == null) {
+                final KeyStore ks = KeyStore.getInstance("JKS");
+                final String selfSignedKeystoreFile = httpsProperties.get("https.certificate.location");
+                if (new File(selfSignedKeystoreFile).exists()) {
+                    final String password = httpsProperties.get("https.password");
+                    final InputStream readStream = new FileInputStream(selfSignedKeystoreFile);
+                    ks.load(readStream, password.toCharArray());
+                    readStream.close();
+                    final Certificate[] certs = ks.getCertificateChain(DEFAULT_ALIAS);
+                    final List<X509Certificate> x509certs = new ArrayList<>();
+
+                    for (final Certificate cert : certs) {
+                        final CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                        final ByteArrayInputStream bais = new ByteArrayInputStream(cert.getEncoded());
+                        final X509Certificate x509cert = (X509Certificate) cf.generateCertificate(bais);
+                        x509certs.add(x509cert);
+                    }
+
+                    X509Certificate[] x509CertsArray = new X509Certificate[x509certs.size()];
+                    x509CertsArray = x509certs.toArray(x509CertsArray);
+
+                    final HandshakeData handshakeData = new HandshakeData("localhost", DEFAULT_ALIAS,
+                            x509CertsArray, (PrivateKey) ks.getKey(DEFAULT_ALIAS, password.toCharArray()));
+
+                    addToHandshakeData(DEFAULT_ALIAS, handshakeData);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to load default certificate. Received " + e.getClass() + " with message: " + e.getMessage());
+        }
+        // else nothing to do
+
+    }
+
+    @SuppressWarnings("PMD.AccessorClassGeneration")
+    private static class CertificateRegistryHolder {
+        private static final CertificateRegistry DELIVERY_SERVICE_CERTIFICATES = new CertificateRegistry();
+    }
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity"})
 	synchronized public void importCertificateDataList(final List<CertificateData> certificateDataList) {
@@ -137,10 +186,8 @@ public class CertificateRegistry {
 			}
 		}
 		// find CertificateData which has been removed
-		for (final String alias : previousData.keySet())
-		{
-			if (!master.containsKey(alias) && sslEndpoint != null)
-			{
+		for (final String alias : previousData.keySet()) {
+			if (!master.containsKey(alias) && sslEndpoint != null) {
 				final String hostname = previousData.get(alias).getHostname();
 				sslEndpoint.removeSslHostConfig(hostname);
 			    log.warn("Removed handshake data with hostname " + hostname);
@@ -172,6 +219,10 @@ public class CertificateRegistry {
 				master.put(DEFAULT_SSL_KEY, defaultHd);
 			}
 		}
+		if (handshakeDataMap.get(DEFAULT_ALIAS) != null) {
+			master.put(handshakeDataMap.get(DEFAULT_ALIAS).getHostname(), handshakeDataMap.get(DEFAULT_ALIAS));
+		}
+
 		handshakeDataMap = master;
 
 		if (sslEndpoint != null) {
