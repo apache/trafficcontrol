@@ -17,6 +17,7 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, first, catchError } from 'rxjs/operators';
 
 import { DeliveryService } from '../models/deliveryservice';
+import { Type } from '../models/type';
 import { User } from '../models/user';
 
 @Injectable({ providedIn: 'root' })
@@ -25,7 +26,7 @@ import { User } from '../models/user';
  * agnostic (from the caller's perspective), and always return `Observable`s.
 */
 export class APIService {
-	public API_VERSION = '1.5';
+	public API_VERSION = '1.4';
 
 	// private cookies: string;
 
@@ -178,6 +179,33 @@ export class APIService {
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response as Array<User>;
+			}
+		));
+	}
+
+	/**
+	 * Gets one or all Types from Traffic Ops
+	 * @param name Optionally, the name of a single Type which will be returned
+	 * @returns An Observable that will emit either a Map of Type names to full Type objects, or a single Type, depending on whether `name` was passed
+	 * (In the event that `name` is given but does not match any Type, `null` will be emitted)
+	*/
+	public getTypes (name?:string): Observable<Map<string, Type> | Type> {
+		const path = '/api/' + this.API_VERSION + '/types';
+		return this.get(path).pipe(map(
+			r => {
+				if (name) {
+					for (let t of r.body.response) {
+						if ((t as Type).name === name) {
+							return t as Type;
+						}
+					}
+					return null;
+				}
+				let ret = new Map<string, Type>();
+				for (let t of r.body.response) {
+					ret[(t as Type).name] = t as Type;
+				}
+				return ret;
 			}
 		));
 	}
