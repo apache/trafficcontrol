@@ -11,7 +11,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { AlertService } from '../../services';
 import { Alert } from '../../models/alert';
 
@@ -25,9 +26,13 @@ export class AlertComponent implements OnInit {
 	dialogElement: HTMLDialogElement;
 	alert: Alert;
 
-	constructor (private readonly alerts: AlertService) { }
+	constructor (private readonly alerts: AlertService, @Inject(PLATFORM_ID) private readonly PLATFORM) { }
 
 	ngOnInit () {
+		if (!isPlatformBrowser(this.PLATFORM)) {
+			console.log("Initializing 'Alert' component");
+			return;
+		}
 		this.dialogElement = document.getElementById('alert') as HTMLDialogElement;
 		this.alerts.alerts.subscribe(
 			(a: Alert) => {
