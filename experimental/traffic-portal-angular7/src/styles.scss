@@ -36,3 +36,11 @@ span.warning {
 		padding: 2px 5px;
 	}
 }
+
+button {
+	cursor: pointer;
+
+	&:disabled {
+		cursor: not-allowed;
+	}
+}
