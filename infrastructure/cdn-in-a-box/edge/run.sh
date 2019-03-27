@@ -45,8 +45,6 @@ while ! to-ping 2>/dev/null; do
 	sleep 5
 done
 
-CDN=CDN-in-a-Box
-
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
@@ -55,10 +53,10 @@ found=
 while [[ -z $found ]]; do
     echo 'waiting for enroller setup'
     sleep 3
-    found=$(to-get "api/1.3/cdns?name=$CDN" | jq -r '.response[].name')
+    found=$(to-get "api/1.3/cdns?name=$CDN_NAME" | jq -r '.response[].name')
 done
 
-to-enroll edge $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
+to-enroll edge $CDN_NAME || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 while [[ -z "$(testenrolled)" ]]; do
 	echo "waiting on enrollment"
@@ -66,7 +64,7 @@ while [[ -z "$(testenrolled)" ]]; do
 done
 
 # Wait for SSL keys to exist
-until to-get "api/1.3/cdns/name/$CDN/sslkeys" && [[ "$(to-get api/1.3/cdns/name/$CDN/sslkeys)" != '{"response":[]}' ]]; do
+until to-get "api/1.3/cdns/name/$CDN_NAME/sslkeys" && [[ "$(to-get api/1.3/cdns/name/$CDN_NAME/sslkeys)" != '{"response":[]}' ]]; do
 	echo 'waiting for SSL keys to exist'
 	sleep 3
 done

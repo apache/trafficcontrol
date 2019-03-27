@@ -1,5 +1,5 @@
 {
-	"cdnName": "CDN-in-a-Box",
+	"cdnName": "$CDN_NAME",
 	"description": "Edge Cache - Apache Traffic Server",
 	"name": "ATS_EDGE_TIER_CACHE",
 	"routingDisabled": false,

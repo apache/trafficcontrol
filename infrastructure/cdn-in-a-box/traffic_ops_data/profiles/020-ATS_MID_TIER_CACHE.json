@@ -1,5 +1,5 @@
 {
-	"cdnName": "CDN-in-a-Box",
+	"cdnName": "$CDN_NAME",
 	"description": "Mid Cache - Apache Traffic Server",
 	"name": "ATS_MID_TIER_CACHE",
 	"routingDisabled": false,
