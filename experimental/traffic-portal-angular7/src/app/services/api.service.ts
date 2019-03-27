@@ -16,6 +16,7 @@ import { HttpClient, HttpHeaders, HttpResponse, HttpParams } from '@angular/comm
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, first, catchError } from 'rxjs/operators';
 
+import { CDN } from '../models/cdn';
 import { DeliveryService } from '../models/deliveryservice';
 import { Type } from '../models/type';
 import { User } from '../models/user';
@@ -109,6 +110,23 @@ export class APIService {
 	}
 
 	/**
+	 * Creates a new Delivery Service
+	 * @param ds The new Delivery Service object
+	 * @returns An Observable that will emit a boolean value indicating the success of the operation
+	*/
+	public createDeliveryService (ds: DeliveryService): Observable<boolean> {
+		const path = '/api/' + this.API_VERSION + '/deliveryservices';
+		return this.post(path, ds).pipe(map(
+			r => {
+				return true;
+			},
+			e => {
+				return false;
+			}
+		));
+	}
+
+	/**
 	 * Retrieves capacity statistics for the Delivery Service identified by a given, unique,
 	 * integral value.
 	 * @param d The integral, unique identifier of a Delivery Service
@@ -191,19 +209,53 @@ export class APIService {
 	*/
 	public getTypes (name?:string): Observable<Map<string, Type> | Type> {
 		const path = '/api/' + this.API_VERSION + '/types';
-		return this.get(path).pipe(map(
-			r => {
-				if (name) {
-					for (let t of r.body.response) {
-						if ((t as Type).name === name) {
-							return t as Type;
+		if (name) {
+			return this.get(path + '?name=' + name).pipe(map(
+				r => {
+					for (const t of (r.body.response as Array<Type>)) {
+						if (t.name === name) {
+							return t;
 						}
 					}
 					return null;
 				}
+			));
+		}
+		return this.get(path).pipe(map(
+			r => {
 				let ret = new Map<string, Type>();
-				for (let t of r.body.response) {
-					ret[(t as Type).name] = t as Type;
+				for (let t of (r.body.response as Array<Type>)) {
+					ret.set(t.name, t);
+				}
+				return ret;
+			}
+		));
+	}
+
+	/**
+	 * Gets one or all CDNs from Traffic Ops
+	 * @param id The integral, unique identifier of a single CDN to be returned
+	 * @returns An Observable that will emit either a Map of CDN names to full CDN objects, or a single CDN, depending on whether `id` was passed.
+	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
+	*/
+	public getCDNs (id?:number): Observable<Map<string, CDN> | CDN> {
+		const path = '/api/' + this.API_VERSION + '/cdns';
+		if (id) {
+			return this.get(path + '?id=' + String(id)).pipe(map(
+				r => {
+					for (const c of (r.body.response as Array<CDN>)) {
+						if (c.id === id) {
+							return c;
+						}
+					}
+				}
+			));
+		}
+		return this.get(path).pipe(map(
+			r => {
+				let ret = new Map<string, CDN>();
+				for (const c of (r.body.response as Array<CDN>)) {
+					ret.set(c.name, c);
 				}
 				return ret;
 			}
