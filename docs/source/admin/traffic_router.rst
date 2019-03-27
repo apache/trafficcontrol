@@ -197,6 +197,30 @@ Message Format
 
 .. Note:: Any value that is a single dash character or a dash character enclosed in quotes represents an empty value
 
+.. table:: Fields Always Present
+
+	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| Name  | Description                                                                      | Data                                                                                |
+	+=======+==================================================================================+=====================================================================================+
+	| qtype | Whether the request was for DNS or HTTP                                          | Always "DNS" or "HTTP"                                                              |
+	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| chi   | The IP address of the requester                                                  | Depends on whether this was a DNS or HTTP request, see other sections               |
+	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| rhi   | The IP address of the request source address                                     | Depends on whether this was a DNS or HTTP request, see other sections               |
+	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| ttms  | The amount of time in milliseconds it took Traffic Router to process the request | A number greater than or equal to zero                                              |
+	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| rtype | Routing result type                                                              | One of ERROR, CZ, DEEP_CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED |
+	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| rloc  | GeoLocation of result                                                            | Latitude and longitude in degrees as floating point numbers                         |
+	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| rdtl  | Result details Associated with unusual conditions                                | One of DS_NOT_FOUND, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY, DS_CZ_BACKUP_CG           |
+	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| rerr  | Message about an internal Traffic Router error                                   | String                                                                              |
+	+-------+----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+
+.. seealso:: If `Regional Geo-Blocking <regionalgeo-qht>`_ is enabled on the :term:`Delivery Service`, an additional field (``rgb``) will appear.
+
 Sample Message
 """"""""""""""
 
@@ -207,6 +231,8 @@ Items within brackets below are detailed under the HTTP and DNS sections::
 
 .. Note:: The above message samples contain fields that are always present for every single access event to Traffic Router
 
+	144140678.000 qtype=DNS chi=192.168.10.11 rhi=- ttms=789 [Fields Specific to the DNS request] rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the DNS result]
+	144140678.000 qtype=HTTP chi=192.168.10.11 rhi=- ttms=789 [Fields Specific to the HTTP request] rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the HTTP result]
 
 Fields Always Present
 """""""""""""""""""""
@@ -293,7 +319,7 @@ HTTP Specifics
 Sample Message
 ::
 
-  1452197640.936 qtype=HTTP chi=69.241.53.218 url="http://foo.mm-test.jenkins.cdnlab.comcast.net/some/asset.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" pssc=302 ttms=0 rurl="http://odol-atsec-sim-114.mm-test.jenkins.cdnlab.comcast.net:8090/some/asset.m3u8" rh="Accept: */*" rh="myheader: asdasdasdasfasg"
+	1452197640.936 qtype=HTTP chi=69.241.53.218 rhi=- url="http://foo.mm-test.jenkins.cdnlab.comcast.net/some/asset.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" pssc=302 ttms=0 rurl="http://odol-atsec-sim-114.mm-test.jenkins.cdnlab.comcast.net:8090/some/asset.m3u8" rh="Accept: */*" rh="myheader: asdasdasdasfasg"
 
 .. table:: Request Fields
 
@@ -324,7 +350,7 @@ DNS Specifics
 Sample Message
 ::
 
-  144140678.000 qtype=DNS chi=192.168.10.11 ttms=123 xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345 rcode=NOERROR rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" ans="192.168.1.2 192.168.3.4 0:0:0:0:0:ffff:c0a8:102 0:0:0:0:0:ffff:c0a8:304"
+	144140678.000 qtype=DNS chi=192.168.10.11 rhi=- ttms=123 xn=65535 fqdn=www.example.com. type=A class=IN ttl=12345 rcode=NOERROR rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" ans="192.168.1.2 192.168.3.4 0:0:0:0:0:ffff:c0a8:102 0:0:0:0:0:ffff:c0a8:304"
 
 .. _qname: http://www.zytrax.com/books/dns/ch15/#qname
 
@@ -332,20 +358,22 @@ Sample Message
 
 .. table:: Request Fields
 
-	+------+------------------------------------------------------------------+--------------------------------------------------------+
-	|Name  |Description                                                       |Data                                                    |
-	+======+==================================================================+========================================================+
-	|xn    |The ID from the client DNS request header                         |a whole number between 0 and 65535 (inclusive)          |
-	+------+------------------------------------------------------------------+--------------------------------------------------------+
-	|fqdn  |The qname field from the client DNS request message (i.e. The     |A series of DNS labels/domains separated by '.'         |
-	|      |fully qualified domain name the client is requesting be resolved) |characters and ending with a '.' character (see qname_) |
-	+------+------------------------------------------------------------------+--------------------------------------------------------+
-	|type  |The qtype field from the client DNS request message (i.e.         |Examples are A (IpV4), AAAA (IpV6), NS (Name Service),  |
-	|      |the type of resolution that's requested such as IPv4, IPv6)       |SOA (Start of Authority), and CNAME, (see qtype_)       |
-	+------+------------------------------------------------------------------+--------------------------------------------------------+
-	|class |The qclass field from the client DNS request message (i.e. The    |Either IN (Internet resource) or ANY (Traffic router    |
-	|      |class of resource being requested)                                |rejects requests with any other value of class)         |
-	+------+------------------------------------------------------------------+--------------------------------------------------------+
+	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
+	| Name  | Description                                                                     | Data                                                                                              |
+	+=======+=================================================================================+===================================================================================================+
+	| xn    | The ID from the client DNS request header                                       | a whole number between 0 and 65535 (inclusive)                                                    |
+	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
+	| rhi   | The IP address of the resolver when ENDS0 client subnet extensions are enabled. | An IPv4 or IPv6 string, or dash if request is for resolver only and no client subnet is present   |
+	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
+	| fqdn  | The qname field from the client DNS request message (i.e. the                   | A series of DNS labels/domains separated by '.' characters and ending with a '.' character        |
+	|       | :abbr:`FQDN (Fully Qualified Domain Name)` the client is requesting be          |                                                                                                   |
+	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
+	| type  | The qtype field from the client DNS request message (i.e. the typeof resolution | Examples are A (IpV4), AAAA (IpV6), :abbr:`NS (Name Service)`,  :abbr:`SOA (Start of Authority)`, |
+	|       | that's requested such as IPv4, IPv6)                                            | and :abbr:`CNAME (Canonical Name)`, (see qtype_)                                                  |
+	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
+	| class | The qclass field from the client DNS request message (i.e. the class of         | Either :abbr:`IN (Internet resource)` or ANY (Traffic Router rejects requests with any other      |
+	|       | resource being requested)                                                       | value of class)                                                                                   |
+	+-------+---------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------+
 
 .. table:: Response Fields
 

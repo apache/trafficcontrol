@@ -135,7 +135,7 @@ func UpdateTestSteeringTargets(t *testing.T) {
 	}
 	st = sts[0]
 
-	expected := uint64(12345)
+	expected := util.JSONIntStr(-12345)
 	if st.Value != nil && *st.Value == expected {
 		expected += 1
 	}

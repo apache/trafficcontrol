@@ -536,7 +536,7 @@ public final class SignatureManager {
 	}
 
 	private boolean isDnssecEnabled(final Name name) {
-		return dnssecEnabled && keyMap.containsKey(name.toString());
+		return dnssecEnabled && keyMap.containsKey(name.toString().toLowerCase());
 	}
 
 	private void setDnssecEnabled(final boolean dnssecEnabled) {
