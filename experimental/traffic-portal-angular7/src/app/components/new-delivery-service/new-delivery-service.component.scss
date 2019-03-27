@@ -21,12 +21,45 @@ form {
 	max-width: 80vw;
 	margin: auto;
 	margin-top: 15px;
-	label {
-		margin: auto;
-		float: left;
-		clear: both;
-		color: $theme_tertiary;
+
+	div.form-content {
+		display: grid;
+		grid-template-columns: 1fr 2fr;
+		width: 100%;
+		grid-row-gap: 15px;
+		margin: 15px 0;
+		label {
+			margin-right: 5px;
+			color: $theme_tertiary;
+			text-align: right;
+			max-height: 25px;
+			line-height: 25px;
+			vertical-align: middle;
+		}
+
+		input, select {
+			width: 100%;
+		}
+
+		textarea {
+			width: 100%;
+			resize: vertical;
+		}
 	}
+
+	button {
+		float: right;
+	}
+
+	button[type=reset] {
+		float: left;
+	}
+
+}
+
+hr {
+	max-width: 80%;
+	color: $theme_main;
 }
 
 #info-URL-sub-form-label {
@@ -35,6 +68,10 @@ form {
 	border-radius: 10px;
 	padding: 5px;
 	cursor: pointer;
+	width: auto;
+	text-align: center;
+	margin: 0 auto;
+	grid-column: span 2;
 
 	&::before {
 		color: inherit;
@@ -45,13 +82,13 @@ form {
 input#info-URL-sub-form {
 	display: none;
 	visibility: hidden;
-	& ~ #info-URL-label {
+	& ~ #info-URL-label, & ~ #infoURL {
 		display: none;
 	}
 	&:checked ~ #info-URL-sub-form-label {
 		display: none;
 	}
-	&:checked ~ #info-URL-label {
+	&:checked ~ #info-URL-label, &:checked ~ #infoURL {
 		display: inline-block;
 	}
 }

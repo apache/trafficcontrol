@@ -194,6 +194,11 @@ export class NewDeliveryServiceComponent implements OnInit {
 		++this.step;
 	}
 
+	/**
+	 * Currently merely sets the CDN to which the Delivery Service shall belong. In the future, this
+	 * should probably handle queuing cache assignments and the like, possibly with advanced
+	 * controls for things like Traffic Router DNS and redirects
+	*/
 	setInfrastructureInformation () {
 		this.deliveryService.cdnName = this.cdnObject.value.name;
 		this.deliveryService.cdnId = this.cdnObject.value.id;
@@ -204,5 +209,12 @@ export class NewDeliveryServiceComponent implements OnInit {
 				}
 			}
 		);
+	}
+
+	/**
+	 * Allows a user to return to the previous step
+	**/
+	previous () {
+		--this.step;
 	}
 }
