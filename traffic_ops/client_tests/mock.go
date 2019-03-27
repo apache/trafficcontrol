@@ -135,6 +135,101 @@ var CACHEGROUPS = []tc.CacheGroupNullable{
 	},
 }
 
+// Static profile fields
+var GLOBAL_PROFILE_ID = 1
+var GLOBAL_PROFILE_NAME = "GLOBAL"
+var GLOBAL_PROFILE_DESCRIPTION = "Global Traffic Ops profile, DO NOT DELETE"
+var GLOBAL_PROFILE_CDN_NAME = ALL_CDN
+var GLOBAL_PROFILE_CDN_ID = ALL_CDN_ID
+var GLOBAL_PROFILE_ROUTING_DISABLED = false
+var GLOBAL_PROFILE_TYPE = "UNK_PROFILE"
+var TO_PROFILE_ID = 2
+var TO_PROFILE_NAME = "TRAFFIC_OPS"
+var TO_PROFILE_DESCRIPTION = "Traffic Ops profile"
+var TO_PROFILE_CDN_NAME = ALL_CDN
+var TO_PROFILE_CDN_ID = ALL_CDN_ID
+var TO_PROFILE_ROUTING_DISABLED = false
+var TO_PROFILE_TYPE = "UNK_PROFILE"
+var TO_DB_PROFILE_ID = 3
+var TO_DB_PROFILE_NAME = "TRAFFIC_OPS_DB"
+var TO_DB_PROFILE_DESCRIPTION = "Traffic Ops DB profile"
+var TO_DB_PROFILE_CDN_NAME = ALL_CDN
+var TO_DB_PROFILE_CDN_ID = ALL_CDN_ID
+var TO_DB_PROFILE_ROUTING_DISABLED = false
+var TO_DB_PROFILE_TYPE = "UNK_PROFILE"
+var EDGE_PROFILE_ID = 4
+var EDGE_PROFILE_NAME = "ATS_EDGE_TIER_CACHE"
+var EDGE_PROFILE_DESCRIPTION = "Edge Cache - Apache Traffic Server"
+var EDGE_PROFILE_CDN_NAME = CDN
+var EDGE_PROFILE_CDN_ID = CDN_ID
+var EDGE_PROFILE_ROUTING_DISABLED = false
+var EDGE_PROFILE_TYPE = "ATS_PROFILE"
+var MID_PROFILE_ID = 5
+var MID_PROFILE_NAME = "ATS_MID_TIER_CACHE"
+var MID_PROFILE_DESCRIPTION = "Mid Cache - Apache Traffic Server"
+var MID_PROFILE_CDN_NAME = CDN
+var MID_PROFILE_CDN_ID = CDN_ID
+var MID_PROFILE_ROUTING_DISABLED = false
+var MID_PROFILE_TYPE = "ATS_PROFILE"
+
+var PROFILES = []tc.ProfileNullable{
+	tc.ProfileNullable{
+		ID:              &GLOBAL_PROFILE_ID,
+		LastUpdated:     CURRENT_TIME,
+		Name:            &GLOBAL_PROFILE_NAME,
+		Description:     &GLOBAL_PROFILE_DESCRIPTION,
+		CDNName:         &GLOBAL_PROFILE_CDN_NAME,
+		CDNID:           &GLOBAL_PROFILE_CDN_ID,
+		RoutingDisabled: &GLOBAL_PROFILE_ROUTING_DISABLED,
+		Type:            &GLOBAL_PROFILE_TYPE,
+		Parameters:      nil,
+	},
+	tc.ProfileNullable{
+		ID:              &TO_PROFILE_ID,
+		LastUpdated:     CURRENT_TIME,
+		Name:            &TO_PROFILE_NAME,
+		Description:     &TO_PROFILE_DESCRIPTION,
+		CDNName:         &TO_PROFILE_CDN_NAME,
+		CDNID:           &TO_PROFILE_CDN_ID,
+		RoutingDisabled: &TO_PROFILE_ROUTING_DISABLED,
+		Type:            &TO_PROFILE_TYPE,
+		Parameters:      nil,
+	},
+	tc.ProfileNullable{
+		ID:              &TO_DB_PROFILE_ID,
+		LastUpdated:     CURRENT_TIME,
+		Name:            &TO_DB_PROFILE_NAME,
+		Description:     &TO_DB_PROFILE_DESCRIPTION,
+		CDNName:         &TO_DB_PROFILE_CDN_NAME,
+		CDNID:           &TO_DB_PROFILE_CDN_ID,
+		RoutingDisabled: &TO_DB_PROFILE_ROUTING_DISABLED,
+		Type:            &TO_DB_PROFILE_TYPE,
+		Parameters:      nil,
+	},
+	tc.ProfileNullable{
+		ID:              &EDGE_PROFILE_ID,
+		LastUpdated:     CURRENT_TIME,
+		Name:            &EDGE_PROFILE_NAME,
+		Description:     &EDGE_PROFILE_DESCRIPTION,
+		CDNName:         &EDGE_PROFILE_CDN_NAME,
+		CDNID:           &EDGE_PROFILE_CDN_ID,
+		RoutingDisabled: &EDGE_PROFILE_ROUTING_DISABLED,
+		Type:            &EDGE_PROFILE_TYPE,
+		Parameters:      nil,
+	},
+	tc.ProfileNullable{
+		ID:              &MID_PROFILE_ID,
+		LastUpdated:     CURRENT_TIME,
+		Name:            &MID_PROFILE_NAME,
+		Description:     &MID_PROFILE_DESCRIPTION,
+		CDNName:         &MID_PROFILE_CDN_NAME,
+		CDNID:           &MID_PROFILE_CDN_ID,
+		RoutingDisabled: &MID_PROFILE_ROUTING_DISABLED,
+		Type:            &MID_PROFILE_TYPE,
+		Parameters:      nil,
+	},
+}
+
 // Static user fields
 // (These _should_ be `const`, but you can't take the address of a `const` (for some reason))
 var USERNAME = "admin"
@@ -220,14 +315,19 @@ func cuser(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, CURRENT_USER)
 }
 
-func getCDNS(w http.ResponseWriter, r *http.Request) {
+func CDNs(w http.ResponseWriter, r *http.Request) {
 	common(w)
 	api.WriteResp(w, r, CDNS)
 }
 
-func getCacheGroups(w http.ResponseWriter, r *http.Request) {
+func cacheGroups(w http.ResponseWriter, r *http.Request) {
 	common(w)
 	api.WriteResp(w, r, CACHEGROUPS)
+}
+
+func profiles(w http.ResponseWriter, r *http.Request) {
+	common(w)
+	api.WriteResp(w, r, PROFILES)
 }
 
 func main() {
@@ -242,8 +342,9 @@ func main() {
 		http.HandleFunc("/api/"+v+"/ping", ping)
 		http.HandleFunc("/api/"+v+"/user/login", login)
 		http.HandleFunc("/api/"+v+"/user/current", cuser)
-		http.HandleFunc("/api/"+v+"/cdns", getCDNS)
-		http.HandleFunc("/api/"+v+"/cachegroups", getCacheGroups)
+		http.HandleFunc("/api/"+v+"/cdns", CDNs)
+		http.HandleFunc("/api/"+v+"/cachegroups", cacheGroups)
+		http.HandleFunc("/api/"+v+"/profiles", profiles)
 	}
 
 	log.Printf("Finished loading API routes at %s, server listening on port 443", CURRENT_TIME.String())
