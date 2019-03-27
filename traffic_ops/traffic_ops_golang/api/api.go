@@ -481,7 +481,7 @@ func toCamelCase(str string) string {
 }
 
 // parses pq errors for not null constraint
-func parseNotNullConstraintError(err *pq.Error) (error, error, int) {
+func parseNotNullConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`null value in column "(.+)" violates not-null constraint`)
 	match := pattern.FindStringSubmatch(err.Message)
 	if match == nil {
@@ -491,7 +491,7 @@ func parseNotNullConstraintError(err *pq.Error) (error, error, int) {
 }
 
 // parses pq errors for violated foreign key constraints
-func parseNotPresentFKConstraintError(err *pq.Error) (error, error, int) {
+func parseNotPresentFKConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`Key \(.+\)=\(.+\) is not present in table "(.+)"`)
 	match := pattern.FindStringSubmatch(err.Detail)
 	if match == nil {
@@ -501,7 +501,7 @@ func parseNotPresentFKConstraintError(err *pq.Error) (error, error, int) {
 }
 
 // parses pq errors for uniqueness constraint violations
-func parseUniqueConstraintError(err *pq.Error) (error, error, int) {
+func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`Key \((.+)\)=\((.+)\) already exists`)
 	match := pattern.FindStringSubmatch(err.Detail)
 	if match == nil {
@@ -510,7 +510,40 @@ func parseUniqueConstraintError(err *pq.Error) (error, error, int) {
 	return fmt.Errorf("%s %s already exists.", match[1], match[2]), nil, http.StatusBadRequest
 }
 
-// ParseDBError parses pq errors for uniqueness constraint violations, and returns the (userErr, sysErr, httpCode) format expected by the API helpers.
+// parses pq errors for ON DELETE RESTRICT fk constraint violations
+//
+// Note: This method would also catch an ON UPDATE RESTRICT fk constraint,
+// but only an error message appropiate for delete is returned. Currently,
+// no API endpoint can trigger an ON UPDATE RESTRICT fk constraint since
+// no API endpoint updates the primary key of any table.
+//
+// ATM I'm not sure if there is significance in restricting either of the table
+// names that are captured in the regex to not contain any underscores.
+// This function fixes issues like #3410. If an error message needs to be made
+// for tables with underscores in particular, it should be made into an issue
+// and this function should be udated then. At the moment, there are no documented
+// issues for this case, so I won't include it.
+//
+// It may be helpful to look at constraints for api_capability, role_capability,
+// and user_role for examples.
+//
+func parseRestrictFKConstraint(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`update or delete on table "([a-z]+)" violates foreign key constraint ".+" on table "([a-z]+)"`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+
+	// small heuristic for grammar
+	article := "a"
+	switch match[2][0] {
+	case 'a', 'e', 'i', 'o':
+		article = "an"
+	}
+	return fmt.Errorf("cannot delete %s because it is being used by %s %s", match[1], article, match[2]), nil, http.StatusBadRequest
+}
+
+// ParseDBError parses pq errors for database constraint violations, and returns the (userErr, sysErr, httpCode) format expected by the API helpers.
 func ParseDBError(ierr error) (error, error, int) {
 
 	err, ok := ierr.(*pq.Error)
@@ -518,15 +551,19 @@ func ParseDBError(ierr error) (error, error, int) {
 		return nil, errors.New("database returned non pq error: " + err.Error()), http.StatusInternalServerError
 	}
 
-	if usrErr, sysErr, errCode := parseNotNullConstraintError(err); errCode != http.StatusOK {
+	if usrErr, sysErr, errCode := parseNotNullConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
-	if usrErr, sysErr, errCode := parseNotPresentFKConstraintError(err); errCode != http.StatusOK {
+	if usrErr, sysErr, errCode := parseNotPresentFKConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
-	if usrErr, sysErr, errCode := parseUniqueConstraintError(err); errCode != http.StatusOK {
+	if usrErr, sysErr, errCode := parseUniqueConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseRestrictFKConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
