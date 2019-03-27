@@ -11,7 +11,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<form ngNativeValidate>
-	<label>I want to create a Delivery Service for: <input type="url" name="origin" placeholder="this URL" autofocus title="Must be a URL (should start with `http://` or `https://`)" /></label>
+<h1>{{deliveryService && deliveryService.displayName ? deliveryService.displayName : 'New Delivery Service'}}</h1>
+<hr/>
+<form ngNativeValidate (ngSubmit)="setOriginURL()" *ngIf="step === 0">
+	<h2>Step 1 - Origin Server</h2>
+	<label>I want to create a Delivery Service for: <input [formControl]="originURL" type="url" name="origin" placeholder="this URL" autofocus title="Must be a URL (should start with `http://` or `https://`)" pattern="(https?|HTTPS?)://[a-zA-Z][a-zA-z0-9\-]*(\.[a-zA-Z][a-zA-z0-9\-]*)*(/[\w\.]+)*/?" required/></label>
+	<button>Next</button>
+</form>
+
+<form ngNativeValidate (ngSubmit)="setMetaInformation()" *ngIf="step === 1">
+	<h2>Step 2 - Meta Information</h2>
+	<hr/>
+	<label>This Delivery Service's name will be: <input type="text" autofocus title="This will be the name of the Delivery Service as it appears on the 'Home' screen" name="displayName" id="displayName" [formControl]="displayName" placeholder="{{deliveryService.displayName}}" required></label>
+	<label>Please briefly describe this Delivery Service's purpose and function here: <textarea name="longDesc" title="No character limit - be as verbose as you like." required placeholder="e.g. This Delivery Service is for my website's image assets." [formControl]="description"></textarea></label>
+	<input type="checkbox" name="info-URL-sub-form" id="info-URL-sub-form"/>
+	<label for="info-URL-sub-form" id="info-URL-sub-form-label">Add Informational URL</label>
+	<label id="info-URL-label">For more information, people can look at this URL: <input type="url" name="infoURL" id="infoURL" placeholder="e.g. https://company.jira.com/ticket/9001"/></label>
+	<button>Next</button>
+</form>
+
+<form ngNativeValidate (ngSubmit)="setInfrastructureInformation()" *ngIf="step === 2">
+	<h2>Step 3 - Infrastructure</h2>
+	<label>This Delivery Service will be a part of this CDN: <select [formControl]="cdnObject" required>
+		<option *ngFor="let cdn of cdns" [selected]="cdn.id === deliveryService.cdnId" [ngValue]="cdn">{{cdn.name}}</option>
+	</select></label>
 	<button>Submit</button>
 </form>
