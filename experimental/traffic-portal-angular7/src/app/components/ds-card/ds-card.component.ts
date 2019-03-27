@@ -159,6 +159,7 @@ export class DsCardComponent {
 						ctx.fillStyle = 'black';
 						ctx.textAlign = 'center';
 						ctx.fillText("No Data", canvas.width/2., canvas.height/2.);
+						this.graphDataLoaded = true;
 						return;
 					}
 					for (const d of data) {
@@ -191,6 +192,7 @@ export class DsCardComponent {
 						ctx.fillStyle = 'black';
 						ctx.textAlign = 'center';
 						ctx.fillText("No Data", canvas.width/2., canvas.height/2.);
+						this.graphDataLoaded = true;
 						return;
 					}
 					for (const d of data) {
