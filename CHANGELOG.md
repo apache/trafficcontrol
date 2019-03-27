@@ -8,17 +8,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Update golang requirement to allow versions greater than 1.9.4.
+- Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
+  - validates modulus of private and public keys
+  - validates current timestamp falls within the certificate date bracket
+  - validates certificate subjects against the DS URL
+- Modified Traffic Router logging format to include an additional field for DNS log entries, namely `rhi`. This defaults to '-' and is only used when EDNS0 client subnet extensions are enabled and a client subnet is present in the request. When enabled and a subnet is present, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
+
+### Fixed
+- ToDSCPCheck.pl - Changed "80" to used the tcpPort in get_dscp function
 - ORT bugfix for self-signed SSL certs.
 - Correct regex capture prefix for cachekey plugin.
 - Fix docs building.
 - Fix port handling for traffic ops port checks on ports other than 80.
 - Return a json response with a 200 for a successful snapshot PUT.
 - Correct FQDN case mismatch when generating DNSSEC.
-- Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
-  - validates modulus of private and public keys
-  - validates current timestamp falls within the certificate date bracket
-  - validates certificate subjects against the DS URL
-- Modified Traffic Router logging format to include an additional field for DNS log entries, namely `rhi`. This defaults to '-' and is only used when EDNS0 client subnet extensions are enabled and a client subnet is present in the request. When enabled and a subnet is present, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
+
 
 ## [3.0.0] - 2019-02-13
 ### Added
