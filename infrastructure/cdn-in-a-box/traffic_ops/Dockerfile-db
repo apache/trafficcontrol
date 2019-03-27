@@ -19,10 +19,10 @@
 # Dockerfile for trafficops db
 ############################################################
 
-FROM postgres:9.6.6
+FROM postgres:9.6-alpine
 
 ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-RUN apt-get update && apt-get install -y dnsutils net-tools
+RUN apk add bind-tools
 COPY traffic_ops/initdb.d /docker-entrypoint-initdb.d
 COPY traffic_ops/run-db.sh /
 ENTRYPOINT /run-db.sh
