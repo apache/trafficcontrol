@@ -30,13 +30,14 @@ main > div {
 	}
 }
 
-.loading {
-	min-height: calc(100vh - 7.13em - 75px); // filthy hax based on Mozilla default user-agent styling
-	cursor: wait;
-	text-align: center;
-	&::after {
-		content: "Loading...";
-	}
+#loading {
+	min-height: calc(100vh - 8em - 75px); // filthy hax based on Mozilla default user-agent styling
+	padding: 0;
+	width: 80%;
+	display: flex;
+	flex-direction: column;
+	margin: auto;
+	top: auto;
 }
 
 a#new {

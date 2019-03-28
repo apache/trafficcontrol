@@ -38,8 +38,9 @@ limitations under the License.
 			<span class="warning" *ngIf="!deliveryService.exampleURLs">No URLs configured!</span>
 		</div>
 		<div>
-			<div class="canvas-container" [ngClass]="{'loading': !this.graphDataLoaded}">
+			<div class="canvas-container" [ngClass]="{'graph-loading': !graphDataLoaded}">
 				<canvas id="canvas-{{deliveryService.id}}">{{ chart }}</canvas>
+				<div class="loading" *ngIf="!graphDataLoaded"><loading></loading></div>
 			</div>
 			<fieldset>
 				<legend>Capacity</legend>

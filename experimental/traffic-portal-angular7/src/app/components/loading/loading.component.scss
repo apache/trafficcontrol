@@ -12,30 +12,29 @@
 * limitations under the License.
 */
 @import '../../../styles.scss';
-#users {
-	width: 80%;
-	margin: auto;
+:host {
+	flex: auto;
+	display: flex;
+	flex-direction: column;
+	cursor: wait;
 }
+#container {
+	text-align: center;
+	flex: auto;
+	display: flex;
+	flex-direction: column;
 
-main > div {
-	width: 50%;
-	margin: auto;
-	padding-right: 10px;
-	min-width: 20em;
-	position: sticky;
-	top: 0;
-	input {
-		width: 100%;
-		margin: 15px 0;
+	#svg-container {
+		width: 20%;
+		max-width: 10em;
+		min-width: 2em;
+		margin: auto;
+		svg {
+			margin-bottom: 1.2em;
+		}
 	}
 }
 
-#loading {
-	min-height: calc(100vh - 8em - 75px); // filthy hax based on Mozilla default user-agent styling
-	padding: 0;
-	width: 80%;
-	display: flex;
-	flex-direction: column;
-	margin: auto;
-	top: auto;
+#spacer {
+	flex: auto;
 }

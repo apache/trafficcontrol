@@ -16,8 +16,9 @@ limitations under the License.
 	<h2>Delivery Services</h2>
 	<hr/>
 	<div><input type="text" autofocus inputmode="search" name="fuzzControl" [formControl]="fuzzControl" accesskey="/" placeholder="Fuzzy Search"/></div>
-	<article id="deliveryservices" [ngClass]="{'loading': loading}">
+	<article id="deliveryservices" [hidden]="loading">
 		<ds-card *ngFor="let ds of deliveryServices" [hidden]="!fuzzy(ds)" [deliveryService]="ds"></ds-card>
 	</article>
+	<div id="loading" *ngIf="loading"><loading></loading></div>
 </main>
 <a id="new" title="Create a new Delivery Service" routerLink="/new.Delivery.Service">+</a>

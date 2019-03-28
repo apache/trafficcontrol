@@ -11,31 +11,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import '../../../styles.scss';
-#users {
-	width: 80%;
-	margin: auto;
-}
+import { Component, Input } from '@angular/core';
 
-main > div {
-	width: 50%;
-	margin: auto;
-	padding-right: 10px;
-	min-width: 20em;
-	position: sticky;
-	top: 0;
-	input {
-		width: 100%;
-		margin: 15px 0;
-	}
-}
+@Component({
+	selector: 'loading',
+	templateUrl: './loading.component.html',
+	styleUrls: ['./loading.component.scss']
+})
+export class LoadingComponent {
 
-#loading {
-	min-height: calc(100vh - 8em - 75px); // filthy hax based on Mozilla default user-agent styling
-	padding: 0;
-	width: 80%;
-	display: flex;
-	flex-direction: column;
-	margin: auto;
-	top: auto;
+	@Input() size?: number;
+
+	constructor() { }
+
 }

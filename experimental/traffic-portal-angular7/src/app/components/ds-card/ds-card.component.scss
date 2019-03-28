@@ -59,17 +59,28 @@ div.card-content {
 	grid-row-gap: 10px;
 	padding: 10px;
 
+	div.canvas-container {
+		width: 100%;
+		position: relative;
+
+		// &.graph-loading {
+		// 	width: 100%;
+		// 	padding-bottom: 56.27%;
+		// }
+	}
+
 	div.loading {
-		cursor: wait;
-
-		div.canvas-container {
-			width: 100%;
-			padding-bottom: 56.25%;
-
-			&::before {
-				content: "Loading...";
-			}
-		}
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		right: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		margin: 0;
+		padding: 0;
 	}
 
 	canvas {
