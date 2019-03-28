@@ -60,6 +60,18 @@ export class UsersComponent implements OnInit {
 	}
 
 	fuzzy (u: User): boolean {
+		if (!this.fuzzControl.value) {
+			return true;
+		}
+		const testVal = u.username.toLocaleLowerCase();
+		let n = -1;
+		for (const l of this.fuzzControl.value.toLocaleLowerCase()) {
+			/* tslint:disable */
+			if (!~(n = testVal.indexOf(l, n + 1))) {
+			/* tslint:enable */
+				return false;
+			}
+		}
 		return true;
 	}
 
