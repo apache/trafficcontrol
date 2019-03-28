@@ -36,6 +36,7 @@ import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { UsersComponent } from './components/users/users.component';
 import { NewDeliveryServiceComponent } from './components/new-delivery-service/new-delivery-service.component';
+import { TpHeaderComponent } from './components/tp-header/tp-header.component';
 
 /**
  * This is the list of available, distinct URLs, with the leading path separator omitted. Each
@@ -59,6 +60,7 @@ const appRoutes: Routes = [
 		AlertComponent,
 		UsersComponent,
 		NewDeliveryServiceComponent,
+		TpHeaderComponent,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),

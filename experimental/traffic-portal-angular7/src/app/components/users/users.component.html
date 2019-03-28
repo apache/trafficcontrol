@@ -11,21 +11,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<header>
-	<img src="/ATC-SVG.svg" alt="Apache Traffic Control logo"/>
-	<h1>Welcome to Traffic Portal!</h1>
-	<div></div>
-	<nav>
-		<ul>
-			<li><a routerLink="/">Home</a></li>
-			<li><a routerLink="/users">Users</a></li>
-			<li><a href="#">Tools</a></li>
-		</ul>
-	</nav>
-</header>
+<tp-header [title]="'Users'"></tp-header>
 <main>
-	<h2>Users</h2>
-	<hr/>
 	<div><input type="text" autofocus inputmode="search" name="fuzzControl" [formControl]="fuzzControl" accesskey="/" placeholder="Fuzzy Search"/></div>
 	<article id="users" [ngClass]="{'loading': loading}">
 		<ul>
