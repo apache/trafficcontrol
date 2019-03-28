@@ -54,10 +54,11 @@ export class DashboardComponent implements OnInit {
 		if (!this.fuzzControl.value) {
 			return true;
 		}
+		const testVal = ds.displayName.toLocaleLowerCase();
 		let n = -1;
-		for (const l of this.fuzzControl.value) {
+		for (const l of this.fuzzControl.value.toLocaleLowerCase()) {
 			/* tslint:disable */
-			if (!~(n = ds.displayName.indexOf(l, n + 1))) {
+			if (!~(n = testVal.indexOf(l, n + 1))) {
 			/* tslint:enable */
 				return false;
 			}
