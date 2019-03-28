@@ -49,10 +49,14 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if reqObj.CDN == nil && reqObj.CDNID == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn does not exist"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn is a required field"), nil)
 		return
 	}
-	if reqObj.CDN == nil || *reqObj.CDN == "" {
+	if *reqObj.CDN == "" {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn cannot be blank"), nil)
+		return
+	}
+	if reqObj.CDNID != nil && reqObj.CDN == nil || *reqObj.CDN == "" {
 		cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*reqObj.CDNID))
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+strconv.Itoa(int(*reqObj.CDNID))+"': "+err.Error()))
