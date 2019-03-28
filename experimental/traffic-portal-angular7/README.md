@@ -42,9 +42,6 @@ ng build
 # For production deployment, run ng run traffic-portal-angular7:server:production
 ng run traffic-portal-angular7:server
 
-# Necessary to pull in out-of-scope asset
-cp -f ../../misc/logos/ATC-SVG.svg dist/browser/
-
 # Runs the server locally at http://localhost:4000
 node dist/server.js
 ```
@@ -127,6 +124,9 @@ Run `ng generate component component-name` to generate a new component. You can 
 
 ## Running unit tests
 Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+	!!! NOTE !!!
+	These don't appear to work for some reason
 
 ## Running end-to-end tests
 Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
