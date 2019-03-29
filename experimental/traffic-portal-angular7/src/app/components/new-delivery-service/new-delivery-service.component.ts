@@ -205,7 +205,10 @@ export class NewDeliveryServiceComponent implements OnInit {
 		this.api.createDeliveryService(this.deliveryService).pipe(first()).subscribe(
 			v => {
 				if (v) {
-					this.router.navigate(['/?search=' + encodeURIComponent(this.deliveryService.displayName)])
+					console.log("New Delivery Service '%s' created", this.deliveryService.displayName);
+					this.router.navigate(['/'], {queryParams: {search: encodeURIComponent(this.deliveryService.displayName)}});
+				} else {
+					console.error("Failed to create deliveryService: ", this.deliveryService);
 				}
 			}
 		);

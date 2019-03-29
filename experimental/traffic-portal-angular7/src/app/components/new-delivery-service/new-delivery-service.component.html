@@ -11,8 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<h1>{{deliveryService && deliveryService.displayName ? deliveryService.displayName : 'New Delivery Service'}}</h1>
-<hr/>
+<tp-header [title]="deliveryService && deliveryService.displayName ? deliveryService.displayName : 'New Delivery Service'"></tp-header>
 <form ngNativeValidate (ngSubmit)="setOriginURL()" *ngIf="step === 0">
 	<h2>Step 1 - Origin Server</h2>
 	<div class="form-content">
