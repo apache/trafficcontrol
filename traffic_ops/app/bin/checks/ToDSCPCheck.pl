@@ -459,7 +459,7 @@ sub trim  { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s }
 
 sub help() {
 	print
-		"ToDSCPCheck.pl -c \"{\\\"base_url\\\": \\\"https://localhost\\\", \\\"check_name\\\": \\\"DSCP\\\", \\\"cms_interface\\\": \\\"eth0\\\"[, \\\"name\\\": \\\"DSCP Service Check\\\", \\\"syslog_facility\\\": \\\"local0\\\"]}\" [-f <1-3>] [-l <1-3>]	[-q]	[-s	<hostname>]	[-x	<xmlId>]\n";
+		"ToDSCPCheck.pl -c \"{\\\"base_url\\\": \\\"https://localhost\\\", \\\"check_name\\\": \\\"DSCP\\\", \\\"cms_interface\\\": \\\"eth0\\\"[, \\\"name\\\": \\\"DSCP Service Check\\\", \\\"syslog_facility\\\": \\\"local0\\\"]}\" [-f <1-3>] [-l <1-6>] [-q] [-s <hostname>] [-x <xmlId>]\n";
 	print "\n";
 	print "-c   json formatted list of variables\n";
 	print "     base_url: required\n";
