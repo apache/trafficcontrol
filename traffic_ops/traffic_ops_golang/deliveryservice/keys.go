@@ -303,29 +303,10 @@ func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA strin
 		return "", "", false, false, errors.New("could not parse the server certificate: " + err.Error())
 	}
 
-	// validate certificate is a server auth certificate if the extension is present
-	if cert.Version > 1 {
-		serverAuthExtKeyUsageFound := false
-		for _, certExtKeyUsage := range cert.ExtKeyUsage {
-			if certExtKeyUsage == x509.ExtKeyUsageServerAuth {
-				serverAuthExtKeyUsageFound = true
-				break
-			}
-		}
-
-		if !serverAuthExtKeyUsageFound {
-			return "", "", false, false, errors.New("version 3 x509 certificate does not have 'server auth' extended key usage")
-		}
-	}
-
-	// ensure that the certificate is signed
-	if len(cert.Signature) == 0 {
-		return "", "", false, false, errors.New("certificate does not have valid signature")
-	}
-
-	// verify that the cert has a public key available
-	if cert.PublicKey == nil {
-		return "", "", false, false, errors.New("certificate does not have a public key")
+	// Common x509 certificate validation
+	err = commonX509CertificateValidation(cert)
+	if err != nil {
+		return "", "", false, false, err
 	}
 
 	switch cert.PublicKeyAlgorithm {
@@ -345,12 +326,12 @@ func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA strin
 		// Extract the RSA public key from the x509 certificate
 		certPublicKey, ok := cert.PublicKey.(*rsa.PublicKey)
 		if !ok || certPublicKey == nil {
-			return "", "", false, false, errors.New("could not get public RSA key from certificate")
+			return "", "", false, false, errors.New("could not extract public RSA key from certificate")
 		}
 
 		// Check RSA private key modulus against the x509 RSA public key modulus
 		if rsaPrivateKey != nil && certPublicKey != nil && !bytes.Equal(rsaPrivateKey.N.Bytes(), certPublicKey.N.Bytes()) {
-			return "", "", false, false, errors.New("private RSA key modulus does not match certificate RSA modulus")
+			return "", "", false, false, errors.New("cert/key mismatch error: certificate public modulus does not match private key modulus")
 		}
 
 	case x509.ECDSA:
@@ -370,22 +351,22 @@ func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA strin
 		// Extract the ECDSA public key from the x509 certificate
 		certPublicKey, ok := cert.PublicKey.(*ecdsa.PublicKey)
 		if !ok || certPublicKey == nil {
-			return "", "", false, false, errors.New("could not get public ECDSA key from certificate")
+			return "", "", false, false, errors.New("could not get extract public ECDSA key from certificate")
 		}
 
 		// Compare the ECDSA curve name contained within the x509.PublicKey against the curve name indicated in the private key
 		if strings.Compare(certPublicKey.Params().Name, ecdsaPrivateKey.Params().Name) != 0 {
-			return "", "", false, false, errors.New("ecdsa curve name does not match")
+			return "", "", false, false, errors.New("cert/key mismatch error: ecdsa curve name in cert does not match curve name in private key")
 		}
 
 		// Verify that ECDSA public value X matches in both the cert.PublicKey and the private key.
 		if !bytes.Equal(certPublicKey.X.Bytes(), ecdsaPrivateKey.X.Bytes()) {
-			return "", "", false, false, errors.New("ecdsa public key X value mismatch")
+			return "", "", false, false, errors.New("cert/key mismatch error: ecdsa public X value mismatch")
 		}
 
 		// Verify that ECDSA public value Y matches in both the cert.PublicKey and the private key.
 		if !bytes.Equal(certPublicKey.Y.Bytes(), ecdsaPrivateKey.Y.Bytes()) {
-			return "", "", false, false, errors.New("ecdsa public key Y value mismatch")
+			return "", "", false, false, errors.New("cert/key mismatch error: ecdsa public Y value mismatch")
 		}
 
 	case x509.DSA:
@@ -446,6 +427,42 @@ func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA strin
 	return pemCertificate, cleanPemPrivateKey, false, false, nil
 }
 
+func commonX509CertificateValidation(cert *x509.Certificate) error {
+
+	// validate certificate is a server auth certificate if the extension is present
+	if cert.Version > 1 {
+		serverAuthExtKeyUsageFound := false
+		for _, certExtKeyUsage := range cert.ExtKeyUsage {
+			if certExtKeyUsage == x509.ExtKeyUsageServerAuth {
+				serverAuthExtKeyUsageFound = true
+				break
+			}
+		}
+
+		if !serverAuthExtKeyUsageFound {
+			return errors.New("version 3 x509 certificate does not have 'server auth' extended key usage")
+		}
+	}
+
+	// ensure that the certificate uses a supported PKI algorithm and a public key is present.
+	if cert.PublicKey == nil {
+		return errors.New("certificate contains no PKI public key")
+	}
+	if cert.PublicKeyAlgorithm == x509.UnknownPublicKeyAlgorithm {
+		return errors.New("certificate uses unsupported PKI authentication algorithm")
+	}
+
+	// ensure that the certificate is signed with supported algorithm
+	if len(cert.Signature) == 0 {
+		return errors.New("certificate does not have valid signature")
+	}
+	if cert.SignatureAlgorithm == x509.UnknownSignatureAlgorithm {
+		return errors.New("certificate is signed with unsupported signature algorithm")
+	}
+
+	return nil
+}
+
 // Common privateKey validation logic.
 // Reject unsupported encrypted private keys
 func commonPrivateKeyValidation(block *pem.Block) error {
@@ -456,7 +473,7 @@ func commonPrivateKeyValidation(block *pem.Block) error {
 
 	// Check for encrypted keys or other unsupported key types
 	if strings.Contains(block.Type, "ENCRYPTED") {
-		return errors.New("encrypted private key not supported")
+		return errors.New("encrypted private key not supported - block type: " + block.Type)
 	}
 
 	// Check block headers for encryption.
@@ -487,7 +504,7 @@ func decodeRSAPrivateKey(pemPrivateKey string) (*rsa.PrivateKey, string, error) 
 	// Check for proper key count before attempting to decode.
 	blockCount := strings.Count(trimmedPrivateKey, "\n-----END")
 	if blockCount < 1 {
-		return nil, "", errors.New("no private key PEM blocks found")
+		return nil, "", errors.New("no RSA private key PEM blocks found")
 	}
 	if blockCount > 1 {
 		return nil, "", errors.New("multiple private key PEM blocks found")
@@ -566,8 +583,8 @@ func decodeECDSAPrivateKey(pemPrivateKey string) (*ecdsa.PrivateKey, string, err
 			break
 		}
 
+		// Attempt to decode the first PEM Block
 		block, pemData = pem.Decode(pemData)
-
 		if block == nil {
 			return nil, "", errors.New("could not decode pem-encoded block")
 		}
@@ -587,7 +604,7 @@ func decodeECDSAPrivateKey(pemPrivateKey string) (*ecdsa.PrivateKey, string, err
 		// First try to parse an EC key the normal way, before attempting PKCS8
 		ecdsaPrivateKey, err = x509.ParseECPrivateKey(block.Bytes)
 		if ecdsaPrivateKey == nil || err != nil {
-			msg := fmt.Sprintf("x509.ParseECPrivateKey() error: %s", err.Error())
+			msg := fmt.Sprintf("parse EC ANSI X9.62 error: %s", err.Error())
 			decodeErrors = append(decodeErrors, msg)
 		} else {
 			return ecdsaPrivateKey, trimmedPrivateKey, nil
@@ -596,10 +613,11 @@ func decodeECDSAPrivateKey(pemPrivateKey string) (*ecdsa.PrivateKey, string, err
 		// Second, try to parse PEM block as a PKCS#8 formatted RSA Private Key.
 		privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err != nil {
-			msg := fmt.Sprintf("x509.ParsePKCS8PrivateKey() error: %s", err.Error())
+			msg := fmt.Sprintf("parse PKCS#8 error: %s", err.Error())
 			decodeErrors = append(decodeErrors, msg)
 			return nil, "", errors.New(collapseErrors(decodeErrors))
 		}
+
 		// Make sure the privateKey is of the correct type (ecdsa.PrivateKey)
 		ecdsaPrivateKey, ok := privateKey.(*ecdsa.PrivateKey)
 		if !ok || ecdsaPrivateKey == nil {

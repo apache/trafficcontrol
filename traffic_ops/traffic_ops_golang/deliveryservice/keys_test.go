@@ -156,7 +156,6 @@ cmgIRz1yhqHy1Psw3/z8FhhBkhm1Y0InJ7xxt0CsOYs2/faAOmNcKt3mwwthLcEy
 9XVZrwbog5s76datlz/7iVd4Jo7vS88=
 -----END EC PRIVATE KEY-----
 `
-
 	PrivateKeyECDSANISTSecP384R1Encrypted = `
 -----BEGIN EC PRIVATE KEY-----
 Proc-Type: 4,ENCRYPTED
@@ -225,7 +224,6 @@ oIuOOmvkBAyy0cHT/BSunqxiFOWcu9yb+2MfSWaHHxNj3kteif8Oai1lL84JOucC
 /FZTue8KxnrjBcbGYYtwPCU=
 -----END PRIVATE KEY-----
 `
-
 	SelfSignedNOSKIAKIRSACertificate = `
 -----BEGIN CERTIFICATE-----
 MIID4DCCAsigAwIBAgIJAI84W5tsR3z4MA0GCSqGSIb3DQEBCwUAMIGFMQswCQYD
@@ -281,8 +279,7 @@ XkhQHb96BsPSpUioe5MLzr5EnDLLV8Hptf4mmJctkd0eczgvtlX9QyFp9LpeqAMQ
 FA21NyLKatm942vrWMsBGrcS
 -----END PRIVATE KEY-----
 `
-
-	SelfSignedECDSACertificate = `
+	SelfSignedECDSACertificateNoDigitalSignatureKeyUsage = `
 -----BEGIN CERTIFICATE-----
 MIICiTCCAi+gAwIBAgIJAKVi77tebfBPMAoGCCqGSM49BAMCMIGFMQswCQYDVQQG
 EwJVUzELMAkGA1UECAwCQ08xHzAdBgNVBAcMFkFwYWNoZSBUcmFmZmljIENvbnRy
@@ -300,7 +297,7 @@ BAMCA0gAMEUCIDybXtWSTIeyETgLBGitveWAYh8dmBK/Wt3+Jdj/5GF6AiEA95I8
 96/cXDmduClIg4CnYLGbkDPsC+3nENEIr92WqgE=
 -----END CERTIFICATE-----
 `
-	SelfSignedECDSAPrivateKey = `
+	SelfSignedECDSAPrivateKeyNoDigitalSignatureKeyUsage = `
 -----BEGIN EC PARAMETERS-----
 BggqhkjOPQMBBw==
 -----END EC PARAMETERS-----
@@ -310,7 +307,44 @@ AwEHoUQDQgAEg6md9g5rb4XGHGX33oDly9Q5SuljX+jLq5R0GaCjRF9qX2W/k2Ix
 GGCDuz76OvbJ/yWzbMsiiw09KEhUsmX1Jw==
 -----END EC PRIVATE KEY-----
 `
-
+	SelfSignedECDSACertificate = `
+-----BEGIN CERTIFICATE-----
+MIIC/jCCAqSgAwIBAgIUXHzSgl46W/BuBZ+Vf8qyBa/qVZwwCgYIKoZIzj0EAwIw
+ga4xCzAJBgNVBAYTAlVTMREwDwYDVQQIEwhDb2xvcmFkbzEPMA0GA1UEBxMGRGVu
+dmVyMRUwEwYDVQQKEwxDRE4taW4tYS1Cb3gxFTATBgNVBAsTDENETi1pbi1hLUJv
+eDEkMCIGA1UEAxQbKi5lY2RzYXRlc3QubXljZG4uY2lhYi50ZXN0MScwJQYJKoZI
+hvcNAQkBFhhuby1yZXBseUBpbmZyYS5jaWFiLnRlc3QwHhcNMTkwMzMwMTgyMTIx
+WhcNMTkwNDI5MTgyMTIxWjCBrjELMAkGA1UEBhMCVVMxETAPBgNVBAgTCENvbG9y
+YWRvMQ8wDQYDVQQHEwZEZW52ZXIxFTATBgNVBAoTDENETi1pbi1hLUJveDEVMBMG
+A1UECxMMQ0ROLWluLWEtQm94MSQwIgYDVQQDFBsqLmVjZHNhdGVzdC5teWNkbi5j
+aWFiLnRlc3QxJzAlBgkqhkiG9w0BCQEWGG5vLXJlcGx5QGluZnJhLmNpYWIudGVz
+dDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABB1UpeDr4LCoxdYwziBAWpNJGeUK
+3ikfqHn9dFr/p9I3j24yo9lJcvjGB7LP0euKr0Qjnsgm1cq6xR2meFEfutGjgZ0w
+gZowDAYDVR0TBAUwAwEB/zARBglghkgBhvhCAQEEBAMCBkAwDgYDVR0PAQH/BAQD
+AgKEMCAGA1UdJQEB/wQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAzAdBgNVHQ4EFgQU
+ASswQL7PBDEAWVySy/6K3UBrP8owJgYDVR0RBB8wHYIbKi5lY2RzYXRlc3QubXlj
+ZG4uY2lhYi50ZXN0MAoGCCqGSM49BAMCA0gAMEUCIFS0uTwkNybSS/m+DbkDAi0j
+FueoHu2+4E9uF4iy6g9jAiEA5IQfSN4S4Oyr6fQkFZx7OrymvechwOXjHcxa7BmB
+zo8=
+-----END CERTIFICATE-----
+`
+	SelfSignedECDSAPrivateKey = `
+-----BEGIN EC PARAMETERS-----
+BggqhkjOPQMBBw==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEINVb8yaaCT14CVhYVaOv3fmGpEVuXvTclOQYIZq793svoAoGCCqGSM49
+AwEHoUQDQgAEHVSl4OvgsKjF1jDOIEBak0kZ5QreKR+oef10Wv+n0jePbjKj2Uly
++MYHss/R64qvRCOeyCbVyrrFHaZ4UR+60Q==
+-----END EC PRIVATE KEY-----
+`
+	SelfSignedECDSAPrivateKeyWithoutParams = `
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEINVb8yaaCT14CVhYVaOv3fmGpEVuXvTclOQYIZq793svoAoGCCqGSM49
+AwEHoUQDQgAEHVSl4OvgsKjF1jDOIEBak0kZ5QreKR+oef10Wv+n0jePbjKj2Uly
++MYHss/R64qvRCOeyCbVyrrFHaZ4UR+60Q==
+-----END EC PRIVATE KEY-----
+`
 	SelfSignedDSACertificate = `
 -----BEGIN CERTIFICATE-----
 MIIF6TCCBY6gAwIBAgIUHRv+ycqq+/HTUnXc3uMefnW3qrowCwYJYIZIAWUDBAMC
@@ -383,7 +417,6 @@ iFseRh/PBULbli+HA7sn8UT7OBNrwt6ZN+84tW+qidaZnGEm1CjGxDW6i7lvY3zX
 YrFVEAcj0AIgQGLEWrKD5SwnFfhG5QNOjFO6RN/bNB8SanXrnzDUnkE=
 -----END DSA PRIVATE KEY-----
 `
-
 	CASignedRSACertificateChain = `
 -----BEGIN CERTIFICATE-----
 MIIE+zCCA+OgAwIBAgIFFVGJEGcwDQYJKoZIhvcNAQELBQAwga0xCzAJBgNVBAYT
@@ -497,7 +530,6 @@ GcDuf0HznG/JMOtoGmMELyxJlIHCBPG1h+myLON9/XuPHlhMQcIhmqNEBBGwSdwm
 1Ybc3W8sUkBAEha1Nm4SGJOz2Lfk/rAZ
 -----END CERTIFICATE-----
 `
-
 	CASignedNoSkiAkiRSACertificateChain = `
 -----BEGIN CERTIFICATE-----
 MIID/zCCAuegAwIBAgIFFVGJhGIwDQYJKoZIhvcNAQELBQAwga0xCzAJBgNVBAYT
@@ -772,12 +804,25 @@ func TestDecodePrivateKeyECDSANISTSecP384R1WithoutParams(t *testing.T) {
 	}
 }
 
-func TestDecodePrivateKeyBadData(t *testing.T) {
+func TestDecodeRSAPrivateKeyBadData(t *testing.T) {
 
 	// Expected to fail.
 	privateKey, _, err := decodeRSAPrivateKey(BadKeyData)
 	if err == nil && privateKey != nil {
 		t.Fatal("unexpected result: decoding of bad private key data should have returned an error")
+	} else {
+		t.Logf("Expected Error Msg: %s", err.Error())
+	}
+}
+
+func TestDecodeECDSAPrivateKeyBadData(t *testing.T) {
+
+	// Expected to fail.
+	privateKey, _, err := decodeECDSAPrivateKey(BadKeyData)
+	if err == nil && privateKey != nil {
+		t.Fatal("unexpected result: decoding of bad private key data should have returned an error")
+	} else {
+		t.Logf("Expected Error Msg: %s", err.Error())
 	}
 }
 
@@ -787,6 +832,8 @@ func TestDecodePrivateKeyRSAEncrypted(t *testing.T) {
 	privateKey, _, err := decodeRSAPrivateKey(PrivateKeyEncryptedRSA2048)
 	if err == nil && privateKey != nil {
 		t.Fatal("unexpected result: decoding of encrypted private key should have returned an error")
+	} else {
+		t.Logf("Expected Error Msg: %s", err.Error())
 	}
 }
 
@@ -796,6 +843,8 @@ func TestDecodePrivateKeyECDSAEncrypted(t *testing.T) {
 	privateKey, _, err := decodeECDSAPrivateKey(PrivateKeyECDSANISTSecP384R1Encrypted)
 	if err == nil && privateKey != nil {
 		t.Fatal("unexpected result: decoding of encrypted private key should have returned an error")
+	} else {
+		t.Logf("Expected Error Msg: %s", err.Error())
 	}
 }
 
@@ -875,6 +924,8 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairMisMatchedPrivateKey(t *
 
 	if err == nil {
 		t.Fatalf("Unexpected result, a certificate/key modulus mismatch error should have occurred")
+	} else {
+		t.Logf("Expected Error Msg: %s", err.Error())
 	}
 }
 
@@ -965,11 +1016,11 @@ func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPairWithRootCA(t *test
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, CASignedNoSkiAkiRSARootCA)
 
 	if err != nil {
-		t.Fatalf("Unexpected result: " + err.Error())
+		t.Fatalf("unexpected result: " + err.Error())
 	}
 
 	if unknownAuth {
-		t.Fatalf("Unexpected result: warning for unknown authority even though rootCA is in certChain")
+		t.Fatalf("unexpected result: warning for unknown authority even though rootCA is in certChain")
 	}
 
 	// Decode the clean Private Key
@@ -982,15 +1033,46 @@ func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPairWithRootCA(t *test
 	}
 
 	if len(certChain) == 0 {
-		t.Fatal("unexpected: certchain should not empty")
+		t.Fatal("unexpected: cert chain should not empty")
 	}
 }
 
-func TestVerifyAndEncodeCertificateECDSACertificateKeyPair(t *testing.T) {
+func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutDigitalSignatureKeyUsage(t *testing.T) {
 	// Should fail due to unsupported private/public key algorithm
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKey, "")
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificateNoDigitalSignatureKeyUsage, SelfSignedECDSAPrivateKeyNoDigitalSignatureKeyUsage, "")
 
 	if err == nil {
 		t.Fatalf("Unexpected result, cert/key PKI algorithm for ECDSA is unsupported.")
+	} else {
+		t.Logf("Expected Error Msg: %s", err.Error())
+	}
+}
+
+func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPair(t *testing.T) {
+	// Should be successfull as the certificate and key are valid with proper keyUsage/extendedKeyUsage.
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKey, "")
+
+	if err != nil {
+		t.Fatalf("Unexpected result - valid ECDSA cert/key pair should have been validated: " + err.Error())
+	}
+}
+
+func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutParams(t *testing.T) {
+	// Test result should be successful as the certificate and key are valid with proper keyUsage/extendedKeyUsage.
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKeyWithoutParams, "")
+
+	if err != nil {
+		t.Fatalf("Unexpected result - valid ECDSA cert/key pair should have been validated: " + err.Error())
+	}
+}
+
+func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairMisMatchedPrivateKey(t *testing.T) {
+	// Should fail due to mismatched ECDSA cert/private key pair
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, PrivateKeyECDSANISTPrime256V1, "")
+
+	if err == nil {
+		t.Fatalf("Unexpected Result: Mismatched ECDSA cert/key pair should have failed verification")
+	} else {
+		t.Logf("Expected Error Msg: %s", err.Error())
 	}
 }
