@@ -373,18 +373,23 @@ func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA strin
 			return "", "", false, false, errors.New("could not get public ECDSA key from certificate")
 		}
 
-		// Extract the ECDSA public key from the ECDSA Private Key
+		// Compare the ECDSA curve name contained within the x509.PublicKey against the curve name indicated in the private key
 		if strings.Compare(certPublicKey.Params().Name, ecdsaPrivateKey.Params().Name) != 0 {
 			return "", "", false, false, errors.New("ecdsa curve name does not match")
 		}
 
+		// Verify that ECDSA public value X matches in both the cert.PublicKey and the private key.
 		if !bytes.Equal(certPublicKey.X.Bytes(), ecdsaPrivateKey.X.Bytes()) {
 			return "", "", false, false, errors.New("ecdsa public key X value mismatch")
 		}
 
+		// Verify that ECDSA public value Y matches in both the cert.PublicKey and the private key.
 		if !bytes.Equal(certPublicKey.Y.Bytes(), ecdsaPrivateKey.Y.Bytes()) {
 			return "", "", false, false, errors.New("ecdsa public key Y value mismatch")
 		}
+
+	case x509.DSA:
+		return "", "", false, false, errors.New("certificate is signed with unsupported DSA PKI algorithm")
 
 	default:
 		return "", "", false, false, errors.New("certificate is signed with an unsupported PKI authentication algorithm")
@@ -441,7 +446,8 @@ func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA strin
 	return pemCertificate, cleanPemPrivateKey, false, false, nil
 }
 
-// Common method to check for
+// Common privateKey validation logic.
+// Reject unsupported encrypted private keys
 func commonPrivateKeyValidation(block *pem.Block) error {
 
 	if block == nil {
@@ -468,7 +474,6 @@ func commonPrivateKeyValidation(block *pem.Block) error {
 // check for correct number of keys
 // return private key object, cleaned private key PEM, or any errors.
 func decodeRSAPrivateKey(pemPrivateKey string) (*rsa.PrivateKey, string, error) {
-
 
 	// Remove any white space before decoding
 	var trimmedPrivateKey = strings.TrimSpace(pemPrivateKey)
@@ -541,9 +546,11 @@ func decodeECDSAPrivateKey(pemPrivateKey string) (*ecdsa.PrivateKey, string, err
 	// Check for proper key count before attempting to decode.
 	// ECDSA keys can have 1 or 2 PEM blocks if the 'EC PARAM' block is included.
 	var blockCount = strings.Count(trimmedPrivateKey, "\n-----END")
+
 	if blockCount < 1 {
 		return nil, "", errors.New("no EC private key PEM blocks found")
 	}
+
 	if blockCount > 2 {
 		return nil, "", errors.New("too many EC related PEM blocks found")
 	}
@@ -568,7 +575,6 @@ func decodeECDSAPrivateKey(pemPrivateKey string) (*ecdsa.PrivateKey, string, err
 		}
 
 		// Check if this pem block has 'KEY' contained in the type and try to decode it.
-
 		if strings.Contains(block.Type, "KEY") {
 			var ecdsaPrivateKey *ecdsa.PrivateKey
 
@@ -577,7 +583,7 @@ func decodeECDSAPrivateKey(pemPrivateKey string) (*ecdsa.PrivateKey, string, err
 
 			if ecdsaPrivateKey == nil || err != nil {
 				msg := fmt.Sprintf("x509.ParseECPrivateKey() error: %s", err.Error())
-				decodeErrors = append(decodeErrors, msg)				
+				decodeErrors = append(decodeErrors, msg)
 			} else {
 				return ecdsaPrivateKey, trimmedPrivateKey, nil
 			}
