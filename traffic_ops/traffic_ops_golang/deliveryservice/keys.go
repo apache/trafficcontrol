@@ -520,16 +520,15 @@ func decodeRSAPrivateKey(pemPrivateKey string) (*rsa.PrivateKey, string, error) 
 	}
 
 	// Decode PKCS#1 - RSA Private Key
-    rsaPrivateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
-    if err != nil || rsaPrivateKey == nil {
+	rsaPrivateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil || rsaPrivateKey == nil {
 		msg := fmt.Sprintf("parse pkcs#1 error: %s", err.Error())
 		decodeErrors = append(decodeErrors, msg)
 		return nil, "", errors.New(collapseErrors(decodeErrors))
 	}
 
-    return rsaPrivateKey, trimmedPrivateKey, nil
+	return rsaPrivateKey, trimmedPrivateKey, nil
 }
-
 
 // decode the private key
 // check for proper algorithm.
@@ -586,7 +585,7 @@ func decodeECDSAPrivateKey(pemPrivateKey string) (*ecdsa.PrivateKey, string, err
 		}
 
 		// First try to parse an EC key the normal way, before attempting PKCS8
-		ecdsaPrivateKey, err = x509.ParseECPrivateKey(block.Bytes);
+		ecdsaPrivateKey, err = x509.ParseECPrivateKey(block.Bytes)
 		if ecdsaPrivateKey == nil || err != nil {
 			msg := fmt.Sprintf("x509.ParseECPrivateKey() error: %s", err.Error())
 			decodeErrors = append(decodeErrors, msg)
