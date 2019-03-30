@@ -506,7 +506,7 @@ func decodeRSAPrivateKey(pemPrivateKey string) (*rsa.PrivateKey, string, error) 
 	// Decode PKCS#8 - RSA Private Key
 	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
-		msg := fmt.Sprintf("ParsePKCS8PrivateKey error: %s", err.Error())
+		msg := fmt.Sprintf("parse pkcs#8 error: %s", err.Error())
 		decodeErrors = append(decodeErrors, msg)
 	}
 
@@ -522,7 +522,7 @@ func decodeRSAPrivateKey(pemPrivateKey string) (*rsa.PrivateKey, string, error) 
 	// Decode PKCS#1 - RSA Private Key
     rsaPrivateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
     if err != nil || rsaPrivateKey == nil {
-		msg := fmt.Sprintf("parsePKCS1PrivateKey error: %s", err.Error())
+		msg := fmt.Sprintf("parse pkcs#1 error: %s", err.Error())
 		decodeErrors = append(decodeErrors, msg)
 		return nil, "", errors.New(collapseErrors(decodeErrors))
 	}
@@ -536,6 +536,8 @@ func decodeRSAPrivateKey(pemPrivateKey string) (*rsa.PrivateKey, string, error) 
 // check for correct number of keys
 // return private key object, cleaned private key PEM, or any errors.
 func decodeECDSAPrivateKey(pemPrivateKey string) (*ecdsa.PrivateKey, string, error) {
+
+	var ecdsaPrivateKey *ecdsa.PrivateKey = nil
 
 	// Remove any white space before decoding
 	var trimmedPrivateKey = strings.TrimSpace(pemPrivateKey)
@@ -567,6 +569,10 @@ func decodeECDSAPrivateKey(pemPrivateKey string) (*ecdsa.PrivateKey, string, err
 
 		block, pemData = pem.Decode(pemData)
 
+		if block == nil {
+			return nil, "", errors.New("could not decode pem-encoded block")
+		}
+
 		// Check that the key was decoded and validate key isn't encrypted and
 		// other common validation shared between PKI algorithms
 		err := commonPrivateKeyValidation(block)
@@ -575,47 +581,35 @@ func decodeECDSAPrivateKey(pemPrivateKey string) (*ecdsa.PrivateKey, string, err
 		}
 
 		// Check if this pem block has 'KEY' contained in the type and try to decode it.
-		if strings.Contains(block.Type, "KEY") {
-			var ecdsaPrivateKey *ecdsa.PrivateKey
-
-			// First try to parse an EC key the normal way, before attempting PKCS8
-			ecdsaPrivateKey, err = x509.ParseECPrivateKey(block.Bytes);
-
-			if ecdsaPrivateKey == nil || err != nil {
-				msg := fmt.Sprintf("x509.ParseECPrivateKey() error: %s", err.Error())
-				decodeErrors = append(decodeErrors, msg)
-			} else {
-				return ecdsaPrivateKey, trimmedPrivateKey, nil
-			}
-
-			// Attempt to parse PEM block as a PKCS#8 formatted RSA Private Key.
-			privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-
-			if err != nil {
-				msg := fmt.Sprintf("x509.ParsePKCS8PrivateKey() error: %s", err.Error())
-				decodeErrors = append(decodeErrors, msg)
-				return nil, "", errors.New(collapseErrors(decodeErrors))
-			}
-
-			// Determine if the privateKey is of the correct type
-			ecdsaPrivateKey, ok := privateKey.(*ecdsa.PrivateKey)
-
-			if !ok || ecdsaPrivateKey == nil {
-				msg := fmt.Sprintf("private key algorithm not supported: %T", privateKey)
-				decodeErrors = append(decodeErrors, msg)
-				return nil, "", errors.New(collapseErrors(decodeErrors))
-			}
-
-			return ecdsaPrivateKey, trimmedPrivateKey, nil
-
-		} else if strings.Contains(block.Type, "PARAM") {
-			// Discard the ECDSA PARAM data
+		if !strings.Contains(block.Type, "KEY") {
 			continue
 		}
 
-		if block == nil {
-			return nil, "", errors.New("could not decode pem-encoded block")
+		// First try to parse an EC key the normal way, before attempting PKCS8
+		ecdsaPrivateKey, err = x509.ParseECPrivateKey(block.Bytes);
+		if ecdsaPrivateKey == nil || err != nil {
+			msg := fmt.Sprintf("x509.ParseECPrivateKey() error: %s", err.Error())
+			decodeErrors = append(decodeErrors, msg)
+		} else {
+			return ecdsaPrivateKey, trimmedPrivateKey, nil
 		}
+
+		// Second, try to parse PEM block as a PKCS#8 formatted RSA Private Key.
+		privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			msg := fmt.Sprintf("x509.ParsePKCS8PrivateKey() error: %s", err.Error())
+			decodeErrors = append(decodeErrors, msg)
+			return nil, "", errors.New(collapseErrors(decodeErrors))
+		}
+		// Make sure the privateKey is of the correct type (ecdsa.PrivateKey)
+		ecdsaPrivateKey, ok := privateKey.(*ecdsa.PrivateKey)
+		if !ok || ecdsaPrivateKey == nil {
+			msg := fmt.Sprintf("private key algorithm not supported: %T", privateKey)
+			decodeErrors = append(decodeErrors, msg)
+			return nil, "", errors.New(collapseErrors(decodeErrors))
+		}
+
+		return ecdsaPrivateKey, trimmedPrivateKey, nil
 	}
 
 	return nil, "", errors.New("no ECDSA private keys found")
