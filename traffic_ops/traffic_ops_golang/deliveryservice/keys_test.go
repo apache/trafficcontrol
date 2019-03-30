@@ -2,6 +2,7 @@ package deliveryservice
 
 import (
 	"encoding/pem"
+	"strings"
 	"testing"
 )
 
@@ -86,6 +87,42 @@ eCCN0BITcIW7lCQonUwSETPc70Nyid+UqHR7ZNWmEfridqAsLwbe1r1pIdyHnqvh
 +udnvBzrFfaw5E/88KDeICa8S3Np69AdC55PkGQPfOYLpFAgM5g3kPOmiSBdku5M
 JSX3l6+oCwhnoJ3e2o0Kqskh+A==
 -----END PRIVATE KEY-----
+`
+	PrivateKeyECCNISTPrime256V1 = `
+-----BEGIN EC PARAMETERS-----
+BggqhkjOPQMBBw==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIM1u5X+fmuna0jK5NoBO8CRWJiTzopg9xzqjs34dB3osoAoGCCqGSM49
+AwEHoUQDQgAEq0gH7B1q2cWMDvYTmFr+xNmbrJBMK9ERmZkSfRfaDmzxqvE56FrB
+p3aue/xDiaFp9yniuM8lqbTWHwyopraMlA==
+-----END EC PRIVATE KEY-----
+`
+	PrivateKeyECCNISTPrime256V1WithoutParams = `
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIM1u5X+fmuna0jK5NoBO8CRWJiTzopg9xzqjs34dB3osoAoGCCqGSM49
+AwEHoUQDQgAEq0gH7B1q2cWMDvYTmFr+xNmbrJBMK9ERmZkSfRfaDmzxqvE56FrB
+p3aue/xDiaFp9yniuM8lqbTWHwyopraMlA==
+-----END EC PRIVATE KEY-----
+`
+	PrivateKeyECCNISTSecP384R1 = `
+-----BEGIN EC PARAMETERS-----
+BgUrgQQAIg==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDB563eEBAdLcLBpgUi3WOszJS6JOHkAcAePAWX/fvguKP56brbIsZnl
+/IlujyM6RACgBwYFK4EEACKhZANiAAStW0BfZ2KCkmBQv9Cc8GT9hoGDRuJvfbj0
+cmgIRz1yhqHy1Psw3/z8FhhBkhm1Y0InJ7xxt0CsOYs2/faAOmNcKt3mwwthLcEy
+9XVZrwbog5s76datlz/7iVd4Jo7vS88=
+-----END EC PRIVATE KEY-----
+`
+	PrivateKeyECCNISTSecP384R1WithoutParams = `
+-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDB563eEBAdLcLBpgUi3WOszJS6JOHkAcAePAWX/fvguKP56brbIsZnl
+/IlujyM6RACgBwYFK4EEACKhZANiAAStW0BfZ2KCkmBQv9Cc8GT9hoGDRuJvfbj0
+cmgIRz1yhqHy1Psw3/z8FhhBkhm1Y0InJ7xxt0CsOYs2/faAOmNcKt3mwwthLcEy
+9XVZrwbog5s76datlz/7iVd4Jo7vS88=
+-----END EC PRIVATE KEY-----
 `
 	PrivateKeyEncryptedRSA2048 = `
 -----BEGIN RSA PRIVATE KEY-----
@@ -532,6 +569,122 @@ func TestDecodePrivateKeyPKCS1RSA2048(t *testing.T) {
 
 	if privateKey == nil {
 		t.Fatal("RSA private key is nil")
+	}
+}
+
+func TestDecodePrivateKeyECCNISTPrime256V1(t *testing.T) {
+
+	privateKey, cleanPemPrivateKey, err := decodeECDSAPrivateKey(PrivateKeyECCNISTPrime256V1)
+
+	if err != nil {
+		t.Fatalf("Unexpected result: " + err.Error())
+	}
+
+	var pemData = []byte(cleanPemPrivateKey)
+	var parsedBlocks = make([]*pem.Block, 0)
+
+	for len(pemData) > 0 {
+		var block *pem.Block = nil
+
+		// Check for at least one END marker
+		if strings.Count(string(pemData), "\n-----END") == 0 {
+			break
+		}
+
+		block, pemData = pem.Decode(pemData)
+
+		if block == nil {
+			t.Fatal("can't decode cleaned ecdsa private-key/param pem block")
+		}
+
+		parsedBlocks = append(parsedBlocks, block)
+	}
+
+	expectedParsedBlocks := 2
+	if len(parsedBlocks) != expectedParsedBlocks {
+		t.Fatalf("incorrect number of parsed pem blocks - expected:%d actual:%d", expectedParsedBlocks, len(parsedBlocks))
+	}
+
+	if privateKey == nil {
+		t.Fatal("ECDSA private key is nil")
+	}
+}
+
+func TestDecodePrivateKeyECCNISTPrime256V1WithoutParams(t *testing.T) {
+
+	privateKey, cleanPemPrivateKey, err := decodeECDSAPrivateKey(PrivateKeyECCNISTPrime256V1WithoutParams)
+
+	if err != nil {
+		t.Fatalf("Unexpected result: " + err.Error())
+	}
+
+	pBlock, remain := pem.Decode([]byte(cleanPemPrivateKey))
+
+	if pBlock == nil {
+		t.Fatal("can't decode cleaned private key pem block")
+	} else if len(remain) > 0 {
+		t.Fatal("remaining bytes after decode > 0. expected: 0")
+	}
+
+	if privateKey == nil {
+		t.Fatal("ECDSA private key is nil")
+	}
+}
+
+func TestDecodePrivateKeyECCNISTSecP384R1(t *testing.T) {
+	privateKey, cleanPemPrivateKey, err := decodeECDSAPrivateKey(PrivateKeyECCNISTSecP384R1)
+
+	if err != nil {
+		t.Fatalf("Unexpected result: " + err.Error())
+	}
+
+	var pemData = []byte(cleanPemPrivateKey)
+	var parsedBlocks = make([]*pem.Block, 0)
+
+	for len(pemData) > 0 {
+		var block *pem.Block = nil
+
+		// Check for at least one END marker
+		if strings.Count(string(pemData), "\n-----END") == 0 {
+			break
+		}
+
+		block, pemData = pem.Decode(pemData)
+
+		if block == nil {
+			t.Fatal("can't decode cleaned ecdsa private-key/param pem block")
+		}
+
+		parsedBlocks = append(parsedBlocks, block)
+	}
+
+	expectedParsedBlocks := 2
+	if len(parsedBlocks) != expectedParsedBlocks {
+		t.Fatalf("incorrect number of parsed pem blocks - expected:%d actual:%d", expectedParsedBlocks, len(parsedBlocks))
+	}
+
+	if privateKey == nil {
+		t.Fatal("ECDSA private key is nil")
+	}
+}
+
+func TestDecodePrivateKeyECCNISTSecP384R1WithoutParams(t *testing.T) {
+	privateKey, cleanPemPrivateKey, err := decodeECDSAPrivateKey(PrivateKeyECCNISTSecP384R1WithoutParams)
+
+	if err != nil {
+		t.Fatalf("Unexpected result: " + err.Error())
+	}
+
+	pBlock, remain := pem.Decode([]byte(cleanPemPrivateKey))
+
+	if pBlock == nil {
+		t.Fatal("can't decode cleaned private key pem block")
+	} else if len(remain) > 0 {
+		t.Fatal("remaining bytes after decode > 0. expected: 0")
+	}
+
+	if privateKey == nil {
+		t.Fatal("ECDSA private key is nil")
 	}
 }
 
