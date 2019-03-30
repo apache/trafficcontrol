@@ -498,22 +498,19 @@ func TestDecodePrivateKeyPKCS8RSA2048(t *testing.T) {
 	privateKey, cleanPemPrivateKey, err := decodeRSAPrivateKey(PrivateKeyPKCS8RSA2048)
 
 	if err != nil {
-		t.Errorf("Unexpected result: " + err.Error())
+		t.Fatalf("Unexpected result: " + err.Error())
 	}
 
 	pBlock, remain := pem.Decode([]byte(cleanPemPrivateKey))
 
 	if pBlock == nil {
-		t.Error("can't decode cleaned private key pem block")
-		t.FailNow()
+		t.Fatal("can't decode cleaned private key pem block")
 	} else if len(remain) > 0 {
-		t.Error("remaining bytes after decode > 0. expected: 0")
-		t.FailNow()
+		t.Fatal("remaining bytes after decode > 0. expected: 0")
 	}
 
 	if privateKey == nil {
-		t.Error("RSA private key is nil. expect: not nil")
-		t.FailNow()
+		t.Fatal("RSA private key is nil. expect: not nil")
 	}
 }
 
@@ -522,22 +519,19 @@ func TestDecodePrivateKeyPKCS1RSA2048(t *testing.T) {
 	privateKey, cleanPemPrivateKey, err := decodeRSAPrivateKey(PrivateKeyPKCS1RSA2048)
 
 	if err != nil {
-		t.Errorf("Unexpected result: " + err.Error())
+		t.Fatalf("Unexpected result: " + err.Error())
 	}
 
 	pBlock, remain := pem.Decode([]byte(cleanPemPrivateKey))
 
 	if pBlock == nil {
-		t.Error("can't decode cleaned private key pem block")
-		t.FailNow()
+		t.Fatal("can't decode cleaned private key pem block")
 	} else if len(remain) > 0 {
-		t.Error("remaining bytes after decode > 0. expected: 0")
-		t.FailNow()
+		t.Fatal("remaining bytes after decode > 0. expected: 0")
 	}
 
 	if privateKey == nil {
-		t.Error("RSA private key is nil")
-		t.FailNow()
+		t.Fatal("RSA private key is nil")
 	}
 }
 
@@ -546,8 +540,7 @@ func TestDecodePrivateKeyBadData(t *testing.T) {
 	// Expected to fail.
 	privateKey, _, err := decodeRSAPrivateKey(BadKeyData)
 	if err == nil && privateKey != nil {
-		t.Error("unexpected result: decoding of bad private key data should have returned an error")
-		t.FailNow()
+		t.Fatal("unexpected result: decoding of bad private key data should have returned an error")
 	}
 }
 
@@ -556,8 +549,7 @@ func TestDecodePrivateKeyRSAEncrypted(t *testing.T) {
 	// Expected to fail on decode of encrypted pem private key
 	privateKey, _, err := decodeRSAPrivateKey(PrivateKeyEncryptedRSA2048)
 	if err == nil && privateKey != nil {
-		t.Error("unexpected result: decoding of encrypted private key should have returned an error")
-		t.FailNow()
+		t.Fatal("unexpected result: decoding of encrypted private key should have returned an error")
 	}
 }
 
@@ -565,7 +557,7 @@ func TestVerifyAndEncodeCertificateBadData(t *testing.T) {
 	// should fail bad base64 data
 	_, _, _, _, err := verifyCertKeyPair(BadCertData, BadKeyData, "")
 	if err == nil {
-		t.Errorf("Unexpected result: there should have been a base64 decoding failure")
+		t.Fatalf("Unexpected result: there should have been a base64 decoding failure")
 	}
 }
 
@@ -574,27 +566,24 @@ func TestVerifyAndEncodeCertificateSelfSignedNoSkiAkiCertKeyPair(t *testing.T) {
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedNOSKIAKIRSACertificate, SelfSignedNOSKIAKIRSAPrivateKey, "")
 
 	if err != nil {
-		t.Errorf("Unexpected result: a certificate verification error should have occured")
+		t.Fatalf("Unexpected result: a certificate verification error should have occured")
 	}
 
 	if !unknownAuth {
-		t.Errorf("Unexpected result: certificate verification should have detected unknown authority")
+		t.Fatalf("Unexpected result: certificate verification should have detected unknown authority")
 	}
 
 	// Decode the clean Private Key
 	pBlock, remain := pem.Decode([]byte(certPrivateKey))
 
 	if pBlock == nil {
-		t.Error("unexpected result: can't decode cleaned private key pem block")
-		t.FailNow()
+		t.Fatal("unexpected result: can't decode cleaned private key pem block")
 	} else if len(remain) > 0 {
-		t.Error("unexpected result: remaining bytes after decode > 0. expected: 0")
-		t.FailNow()
+		t.Fatal("unexpected result: remaining bytes after decode > 0. expected: 0")
 	}
 
-
 	if len(certChain) == 0 {
-		t.Error("unexpected: certChain should not be empty")
+		t.Fatal("unexpected: certChain should not be empty")
 	}
 }
 
@@ -603,28 +592,25 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPair(t *testing.T) {
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedRSACertificate, SelfSignedRSAPrivateKey, "")
 
 	if err != nil {
-		t.Errorf("Unexpected result, a certificate verification error should have occured")
+		t.Fatalf("Unexpected result, a certificate verification error should have occured")
 	}
 
 	if !unknownAuth {
-		t.Errorf("Unexpected result, certificate verification should have detected unknown authority")
+		t.Fatalf("Unexpected result, certificate verification should have detected unknown authority")
 	}
 
 	// Decode the clean Private Key
 	pBlock, remain := pem.Decode([]byte(certPrivateKey))
 
 	if pBlock == nil {
-		t.Error("unexpected result: can't decode cleaned private key pem block")
-		t.FailNow()
+		t.Fatal("unexpected result: can't decode cleaned private key pem block")
 	} else if len(remain) > 0 {
-		t.Error("unexpected result: remaining bytes after decode > 0. expected: 0")
-		t.FailNow()
+		t.Fatal("unexpected result: remaining bytes after decode > 0. expected: 0")
 	}
 
 	if len(certChain) == 0 {
-		t.Error("unexpected: certchain should not empty")
+		t.Fatal("unexpected: certchain should not empty")
 	}
-
 }
 
 func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairMisMatchedPrivateKey(t *testing.T) {
@@ -633,7 +619,7 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairMisMatchedPrivateKey(t *
 	_, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificate, PrivateKeyPKCS1RSA2048, "")
 
 	if err == nil {
-		t.Errorf("Unexpected result, a certificate/key modulus mismatch error should have occurred")
+		t.Fatalf("Unexpected result, a certificate/key modulus mismatch error should have occurred")
 	}
 }
 
@@ -643,26 +629,24 @@ func TestVerifyAndEncodeCertificateCASignedCertKeyPair(t *testing.T) {
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedRSACertificateChain, CASignedRSACertificateChainPrivateKey, "")
 
 	if err != nil {
-		t.Errorf("Unexpected result: " + err.Error())
+		t.Fatalf("Unexpected result: " + err.Error())
 	}
 
 	if !unknownAuth {
-		t.Errorf("Unexpected result, certificate verification should have detected unknown authority")
+		t.Fatalf("Unexpected result, certificate verification should have detected unknown authority")
 	}
 
 	// Decode the clean Private Key
 	pBlock, remain := pem.Decode([]byte(certPrivateKey))
 
 	if pBlock == nil {
-		t.Error("unexpected result: can't decode cleaned private key pem block")
-		t.FailNow()
+		t.Fatal("unexpected result: can't decode cleaned private key pem block")
 	} else if len(remain) > 0 {
-		t.Error("unexpected result: remaining bytes after decode > 0. expected: 0")
-		t.FailNow()
+		t.Fatal("unexpected result: remaining bytes after decode > 0. expected: 0")
 	}
 
 	if len(certChain) == 0 {
-		t.Error("unexpected: certchain should not empty")
+		t.Fatal("unexpected: certchain should not empty")
 	}
 }
 
@@ -672,26 +656,24 @@ func TestVerifyAndEncodeCertificateCASignedCertKeyPairWithRootCA(t *testing.T) {
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedRSACertificateChain, CASignedRSACertificateChainPrivateKey, CASignedRSARootCA)
 
 	if err != nil {
-		t.Errorf("Unexpected result: " + err.Error())
+		t.Fatalf("Unexpected result: " + err.Error())
 	}
 
 	if unknownAuth {
-		t.Errorf("Unexpected result: warning for unknown authority even though rootCA is in certChain")
+		t.Fatalf("Unexpected result: warning for unknown authority even though rootCA is in certChain")
 	}
 
 	// Decode the clean Private Key
 	pBlock, remain := pem.Decode([]byte(certPrivateKey))
 
 	if pBlock == nil {
-		t.Error("unexpected result: can't decode cleaned private key pem block")
-		t.FailNow()
+		t.Fatal("unexpected result: can't decode cleaned private key pem block")
 	} else if len(remain) > 0 {
-		t.Error("unexpected result: remaining bytes after decode > 0. expected: 0")
-		t.FailNow()
+		t.Fatal("unexpected result: remaining bytes after decode > 0. expected: 0")
 	}
 
 	if len(certChain) == 0 {
-		t.Error("unexpected: certchain should not empty")
+		t.Fatal("unexpected: certchain should not empty")
 	}
 }
 
@@ -701,26 +683,24 @@ func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPair(t *testing.T) {
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, "")
 
 	if err != nil {
-		t.Errorf("Unexpected result: " + err.Error())
+		t.Fatalf("Unexpected result: " + err.Error())
 	}
 
 	if !unknownAuth {
-		t.Errorf("Unexpected result, certificate verification should have detected unknown authority")
+		t.Fatalf("Unexpected result, certificate verification should have detected unknown authority")
 	}
 
 	// Decode the clean Private Key
 	pBlock, remain := pem.Decode([]byte(certPrivateKey))
 
 	if pBlock == nil {
-		t.Error("unexpected result: can't decode cleaned private key pem block")
-		t.FailNow()
+		t.Fatal("unexpected result: can't decode cleaned private key pem block")
 	} else if len(remain) > 0 {
-		t.Error("unexpected result: remaining bytes after decode > 0. expected: 0")
-		t.FailNow()
+		t.Fatal("unexpected result: remaining bytes after decode > 0. expected: 0")
 	}
 
 	if len(certChain) == 0 {
-		t.Error("unexpected: certchain should not empty")
+		t.Fatal("unexpected: certchain should not empty")
 	}
 }
 
@@ -730,26 +710,24 @@ func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPairWithRootCA(t *test
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, CASignedNoSkiAkiRSARootCA)
 
 	if err != nil {
-		t.Errorf("Unexpected result: " + err.Error())
+		t.Fatalf("Unexpected result: " + err.Error())
 	}
 
 	if unknownAuth {
-		t.Errorf("Unexpected result: warning for unknown authority even though rootCA is in certChain")
+		t.Fatalf("Unexpected result: warning for unknown authority even though rootCA is in certChain")
 	}
 
 	// Decode the clean Private Key
 	pBlock, remain := pem.Decode([]byte(certPrivateKey))
 
 	if pBlock == nil {
-		t.Error("unexpected result: can't decode cleaned private key pem block")
-		t.FailNow()
+		t.Fatal("unexpected result: can't decode cleaned private key pem block")
 	} else if len(remain) > 0 {
-		t.Error("unexpected result: remaining bytes after decode > 0. expected: 0")
-		t.FailNow()
+		t.Fatal("unexpected result: remaining bytes after decode > 0. expected: 0")
 	}
 
 	if len(certChain) == 0 {
-		t.Error("unexpected: certchain should not empty")
+		t.Fatal("unexpected: certchain should not empty")
 	}
 }
 
@@ -759,6 +737,6 @@ func TestVerifyAndEncodeCertificateECCCertificateKeyPair(t *testing.T) {
 	_, _, _, _, err := verifyCertKeyPair(SelfSignedECCCertificate, SelfSignedECCPrivateKey, "")
 
 	if err == nil {
-		t.Errorf("Unexpected result, cert/key PKI algorithm for ECC is unsupported.")
+		t.Fatalf("Unexpected result, cert/key PKI algorithm for ECC is unsupported.")
 	}
 }
