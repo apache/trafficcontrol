@@ -66,7 +66,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	certChain, certPrivateKey, isUnknownAuth, isVerifiedChainNotEqual, err := verifyCertKeyPair(req.Certificate.Crt, req.Certificate.Key, "")
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("verifying certificate: "+err.Error()), nil)
 		return
 	}
 	req.Certificate.Crt = certChain
