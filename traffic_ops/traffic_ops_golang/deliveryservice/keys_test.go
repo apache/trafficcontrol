@@ -1020,7 +1020,7 @@ func TestDecodePrivateKeyECDSAEncrypted(t *testing.T) {
 
 func TestVerifyAndEncodeCertificateBadData(t *testing.T) {
 	// should fail bad base64 data
-	_, _, _, _, err := verifyCertKeyPair(BadCertData, BadKeyData, "")
+	_, _, _, _, err := verifyCertKeyPair(BadCertData, BadKeyData, "", true)
 	if err == nil {
 		t.Fatalf("unexpected result: there should have been a base64 decoding failure")
 	}
@@ -1028,7 +1028,7 @@ func TestVerifyAndEncodeCertificateBadData(t *testing.T) {
 
 func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairDSA(t *testing.T) {
 	// should fail due to x509 + DSA being unsupported
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedDSACertificate, SelfSignedDSAPrivateKey, "")
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedDSACertificate, SelfSignedDSAPrivateKey, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected result: the DSA PKI algorithm is unsupported")
@@ -1039,7 +1039,7 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairDSA(t *testing.T) {
 
 func TestVerifyAndEncodeCertificateSelfSignedX509v1(t *testing.T) {
 	// should successfully validate as x509v1 must remain supported
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedX509v1Certificate, SelfSignedX509v1PrivateKey, "")
+	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedX509v1Certificate, SelfSignedX509v1PrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: the x509v1 cert/key pair is valid and should have passed validation")
@@ -1065,7 +1065,7 @@ func TestVerifyAndEncodeCertificateSelfSignedX509v1(t *testing.T) {
 
 func TestVerifyAndEncodeCertificateSelfSignedNoSkiAkiCertKeyPair(t *testing.T) {
 
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedNOSKIAKIRSACertificate, SelfSignedNOSKIAKIRSAPrivateKey, "")
+	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedNOSKIAKIRSACertificate, SelfSignedNOSKIAKIRSAPrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: a certificate verification error should have occured")
@@ -1091,7 +1091,7 @@ func TestVerifyAndEncodeCertificateSelfSignedNoSkiAkiCertKeyPair(t *testing.T) {
 
 func TestVerifyAndEncodeCertificateSelfSignedCertKeyPair(t *testing.T) {
 
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedRSACertificate, SelfSignedRSAPrivateKey, "")
+	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedRSACertificate, SelfSignedRSAPrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result, a certificate verification error should have occured")
@@ -1118,7 +1118,7 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPair(t *testing.T) {
 func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairMisMatchedPrivateKey(t *testing.T) {
 
 	// Should fail on cert/private-key mismatch
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificate, PrivateKeyPKCS1RSA2048, "")
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificate, PrivateKeyPKCS1RSA2048, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected result: a certificate/key modulus mismatch error should have occurred")
@@ -1130,7 +1130,7 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairMisMatchedPrivateKey(t *
 func TestVerifyAndEncodeCertificateSelfSignedNoServerAuthExtKeyUsage(t *testing.T) {
 
 	// Should fail due to not having the serverAuth extKeyUsage (x509v3 only)
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificateNoServerAuthExtKeyUsage, SelfSignedRSAPrivateKeyNoServerAuthExtKeyUsage, "")
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificateNoServerAuthExtKeyUsage, SelfSignedRSAPrivateKeyNoServerAuthExtKeyUsage, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected result: x509v3 certificate should have been rejected since it doesn't have the server auth extKeyUsage")
@@ -1143,7 +1143,7 @@ func TestVerifyAndEncodeCertificateSelfSignedRSANoKeyEnciphermentKeyUsage(t *tes
 
 	// Should fail due to not having the keyEncipherment keyUsage (x509v3 only)
 	// keyUsage extension must include keyEncipherment if the PKI algorithm is RSA.
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificateNoKeyEnciphermentKeyUsage, SelfSignedRSAPrivateKeyNoKeyEnciphermentKeyUsage, "")
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedRSACertificateNoKeyEnciphermentKeyUsage, SelfSignedRSAPrivateKeyNoKeyEnciphermentKeyUsage, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected result: x509v3 certificate should have been rejected since it doesn't have the keyEncipherment keyUsage (required for x509v3+RSA certificates)")
@@ -1155,7 +1155,7 @@ func TestVerifyAndEncodeCertificateSelfSignedRSANoKeyEnciphermentKeyUsage(t *tes
 func TestVerifyAndEncodeCertificateCASignedCertKeyPair(t *testing.T) {
 
 	// Should succeed, but with unknown authority warning.
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedRSACertificateChain, CASignedRSACertificateChainPrivateKey, "")
+	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedRSACertificateChain, CASignedRSACertificateChainPrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: " + err.Error())
@@ -1182,7 +1182,7 @@ func TestVerifyAndEncodeCertificateCASignedCertKeyPair(t *testing.T) {
 func TestVerifyAndEncodeCertificateCASignedCertKeyPairWithRootCA(t *testing.T) {
 
 	// should succeed and be fully validated.
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedRSACertificateChain, CASignedRSACertificateChainPrivateKey, CASignedRSARootCA)
+	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedRSACertificateChain, CASignedRSACertificateChainPrivateKey, CASignedRSARootCA, true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: " + err.Error())
@@ -1209,7 +1209,7 @@ func TestVerifyAndEncodeCertificateCASignedCertKeyPairWithRootCA(t *testing.T) {
 func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPair(t *testing.T) {
 
 	// Should succeed, but with unknown authority warning.
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, "")
+	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: " + err.Error())
@@ -1236,7 +1236,7 @@ func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPair(t *testing.T) {
 func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPairWithRootCA(t *testing.T) {
 
 	// should succeed and be fully validated despite not having subject/authority key identifier(s).
-	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, CASignedNoSkiAkiRSARootCA)
+	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(CASignedNoSkiAkiRSACertificateChain, CASignedNoSkiAkiRSAPrivateKey, CASignedNoSkiAkiRSARootCA, true)
 
 	if err != nil {
 		t.Fatalf("unexpected result: " + err.Error())
@@ -1263,7 +1263,7 @@ func TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPairWithRootCA(t *test
 func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutDigitalSignatureKeyUsage(t *testing.T) {
 	// Should fail due to unsupported private/public key algorithm
 	// keyUsage must contain the digitalSignature usage if a DSA based PKI algorithm is indicated (unlike RSA).
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificateNoDigitalSignatureKeyUsage, SelfSignedECDSAPrivateKeyNoDigitalSignatureKeyUsage, "")
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificateNoDigitalSignatureKeyUsage, SelfSignedECDSAPrivateKeyNoDigitalSignatureKeyUsage, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected result: x509v3 certificate should have been rejected since it doesn't have the digitalSignature keyUsage (required for x509v3+ECDSA certificates)")
@@ -1274,16 +1274,27 @@ func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutDigit
 
 func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPair(t *testing.T) {
 	// Should be successful as the certificate and key are valid with proper keyUsage/extendedKeyUsage.
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKey, "")
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKey, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result - valid ECDSA cert/key pair should have been validated: " + err.Error())
 	}
 }
 
+func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairECDisabled(t *testing.T) {
+	// Should be rejected as allowEC flag has been set to false
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKey, "", false)
+
+	if err == nil {
+		t.Fatalf("unexpected result - ECDSA cert/key pair should have been rejected due to allowEC being false")
+	} else {
+		t.Logf("expected error message: %s", err.Error())
+	}
+}
+
 func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutParams(t *testing.T) {
 	// Test result should be successful as the certificate and key are valid with proper keyUsage/extendedKeyUsage.
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKeyWithoutParams, "")
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKeyWithoutParams, "", true)
 
 	if err != nil {
 		t.Fatalf("unexpected result - valid ECDSA cert/key pair should have been validated: " + err.Error())
@@ -1292,7 +1303,7 @@ func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutParam
 
 func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairMisMatchedPrivateKey(t *testing.T) {
 	// Should fail due to mismatched ECDSA cert/private key pair
-	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, PrivateKeyECDSANISTPrime256V1, "")
+	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, PrivateKeyECDSANISTPrime256V1, "", true)
 
 	if err == nil {
 		t.Fatalf("unexpected Result: Mismatched ECDSA cert/key pair should have failed verification")

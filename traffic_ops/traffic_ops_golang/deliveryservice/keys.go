@@ -64,7 +64,25 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	certChain, certPrivateKey, isUnknownAuth, isVerifiedChainNotEqual, err := verifyCertKeyPair(req.Certificate.Crt, req.Certificate.Key, "")
+
+	// ECDSA keys support is only permitted for DNS delivery services
+	// Traffic Router (HTTP* delivery service types) do not support ECDSA keys
+	allowEC := false
+	dsType, dsFound, err := getDSType(inf.Tx.Tx, *req.Key)
+	if err == nil && dsFound {
+		switch dsType {
+		case tc.DSTypeDNS:
+			fallthrough
+		case tc.DSTypeDNSLive:
+			fallthrough
+		case tc.DSTypeDNSLiveNational:
+			allowEC = true
+		default:
+			allowEC = false
+		}
+	}
+
+	certChain, certPrivateKey, isUnknownAuth, isVerifiedChainNotEqual, err := verifyCertKeyPair(req.Certificate.Crt, req.Certificate.Key, "", allowEC)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("verifying certificate: "+err.Error()), nil)
 		return
@@ -286,7 +304,7 @@ WHERE r.pattern = $2
 // indicate that the certs are signed by an unknown authority (e.g. self-signed). Otherwise, return false.
 // If the chain returned from Certificate.Verify() does not match the input chain,
 // return true. Otherwise, return false.
-func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA string) (string, string, bool, bool, error) {
+func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA string, allowEC bool) (string, string, bool, bool, error) {
 	// decode, verify, and order certs for storage
 	var cleanPemPrivateKey string = ""
 	certs := strings.SplitAfter(pemCertificate, PemCertEndMarker)
@@ -338,7 +356,10 @@ func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA strin
 	case x509.ECDSA:
 		var ecdsaPrivateKey *ecdsa.PrivateKey
 
-		// TODO - Add DNS delivery service check here.
+		// Only permit ECDSA support for DNS* DSTypes until the Traffic Router can support it
+		if !allowEC {
+			return "", "", false, false, errors.New("cert/key validation error: ECDSA public key algorithm unsupported for non-DNS delivery service type")
+		}
 
 		// DSA and ECDSA is not an encryption algorithm and only a signing algorithm, hence the
 		// certificate only needs to have the DigitalSignature KeyUsage indicated.
