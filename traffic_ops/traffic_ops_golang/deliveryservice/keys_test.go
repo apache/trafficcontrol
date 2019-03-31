@@ -533,6 +533,62 @@ iFseRh/PBULbli+HA7sn8UT7OBNrwt6ZN+84tW+qidaZnGEm1CjGxDW6i7lvY3zX
 YrFVEAcj0AIgQGLEWrKD5SwnFfhG5QNOjFO6RN/bNB8SanXrnzDUnkE=
 -----END DSA PRIVATE KEY-----
 `
+	SelfSignedX509v1Certificate = `
+-----BEGIN CERTIFICATE-----
+MIID6TCCAtECFCs7N+H5AQ4SN7lVyK+bHTrKgwOGMA0GCSqGSIb3DQEBCwUAMIGw
+MQswCQYDVQQGEwJVUzERMA8GA1UECBMIQ29sb3JhZG8xDzANBgNVBAcTBkRlbnZl
+cjEVMBMGA1UEChMMQ0ROLWluLWEtQm94MRUwEwYDVQQLEwxDRE4taW4tYS1Cb3gx
+JjAkBgNVBAMUHSoueDUwOXYxLXRlc3QubXljZG4uY2lhYi50ZXN0MScwJQYJKoZI
+hvcNAQkBFhhuby1yZXBseUBpbmZyYS5jaWFiLnRlc3QwHhcNMTkwMzMxMDM1MDU4
+WhcNMTkwNDMwMDM1MDU4WjCBsDELMAkGA1UEBhMCVVMxETAPBgNVBAgTCENvbG9y
+YWRvMQ8wDQYDVQQHEwZEZW52ZXIxFTATBgNVBAoTDENETi1pbi1hLUJveDEVMBMG
+A1UECxMMQ0ROLWluLWEtQm94MSYwJAYDVQQDFB0qLng1MDl2MS10ZXN0Lm15Y2Ru
+LmNpYWIudGVzdDEnMCUGCSqGSIb3DQEJARYYbm8tcmVwbHlAaW5mcmEuY2lhYi50
+ZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzXMtRmZ4SVYpO4yf
+00kKJD7MKCVzjTOKJNiOyJn++RYNX64gZU7a8LRefvruv6wO1Ic4IR7xvZ58t/sg
+He6AoHW3Uz9XJ4knZ1BHNFHYsaELSDUkPNRowQprzJmAf3yDrn6kWrLVgX0iWrQh
+T5UJxgS7L1iNibqAKFGkr0tRMk0rwjBzm5CGGyt1WS/J1W3h/R05BaDXukSCoSlo
+cx1XgmldCQE27de+WXusITZse5h+Giei/hGkHdJJr1aROP3y+czeOF1YOr24p/0T
+HPrir0iesWV2+bA/Tdj5hVWipt1OJBwOvfull9fZTvC1RRdhIyUJauWr4iwD2gpn
+UI8OywIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQBaEUQcKbLhlcyEE0OfcKTmHdwl
+uhUpE55FkVJP9TN5nNAziYW+KRWiSyRdn/35s5Z+bFplbzT7Au5tZw6kTtkmtim3
+i6v7nNLES0hnj+zRybut4yEw9Ma0p/exiT0+qqVynBdgtpVwOcYIvgYlGgVUttNN
+b/nKxOXZ9qDkqBDgMbXmYHCI5txFnqblLP8dW0CeFYIL0RuBx2qS5edYw8oTZPOL
+b/CpL85+xi6pd+bOQ3UXbTaa78HEwcP1nX3IKzuMjtxUmZ5d2Gbo6TihuXiWCJHW
+i/LiVIfp1/TNdiOvLRXYZV5itIKpgmr8nYCX8QRUewtP9Ex4RRcoEKQdVRpI
+-----END CERTIFICATE-----
+`
+	SelfSignedX509v1PrivateKey = `
+-
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDNcy1GZnhJVik7
+jJ/TSQokPswoJXONM4ok2I7Imf75Fg1friBlTtrwtF5++u6/rA7UhzghHvG9nny3
++yAd7oCgdbdTP1cniSdnUEc0UdixoQtINSQ81GjBCmvMmYB/fIOufqRastWBfSJa
+tCFPlQnGBLsvWI2JuoAoUaSvS1EyTSvCMHObkIYbK3VZL8nVbeH9HTkFoNe6RIKh
+KWhzHVeCaV0JATbt175Ze6whNmx7mH4aJ6L+EaQd0kmvVpE4/fL5zN44XVg6vbin
+/RMc+uKvSJ6xZXb5sD9N2PmFVaKm3U4kHA69+6WX19lO8LVFF2EjJQlq5aviLAPa
+CmdQjw7LAgMBAAECggEAQUsFbIZMXCJB4GcEtEVWL8a1Y1zjqFBk6ujYF/C5E7hq
+b6oLKacx9aWdEoX1Mn0gCXMf54bKFRU1VdM9lcWio1xF8vMCY9I276KXvoz0bR9d
+UolxBtQKpq8FK3TtXZbY0q/0085aBFkcfe8ZVw1qmcAPLTDbapYW/LlVuVAacf16
+Ism+oVlpGosrG8pVe2nkxRLkA+FBsFNeliX8YucgvOcQWMjcJ1VPYgfA/7b8q4b7
+cVxfs7l+SrtMMYNNOM695b3AEW2Tve5JwNGEvaOJsHqS+VNHZ9T4NAr+ZAU6C237
+rM6dfPMqb/177Yvz32Bq6vbYVoeb2iDnMVbjgRQvYQKBgQD8nkXLguq+MkkhhW4c
+xPYIHxZBQ948fFn1O2JKgmDR5bjQPbbXA/0Ko/l/yJ0ikNKeLC0/wXvUcQiuurIh
+gFGgOU9uzaXgThZUsv35S9fiTuT4VamcQKOA42LTbxCk9O80fz4qR/mkMFz1KtoD
+4cghfFRG/ZWpZ8ESSHOz8jzmJwKBgQDQM0HoBXkPZURj90jpg+oO4SD2ZTeAIfpM
+YiHxI/jNV8Np8DLDne0a9ncsG1cCmPekVoEV5kliekak4H211CgWIERVOOSJumH5
+VHuqLK2BoUiEiMpAKQrG3Bc7MNK1BY8G4MUu//Sj508WJzyU1OBOHRVzc6fJ0bmK
+o8EFYBg8vQKBgCufVSQYflrLqi88sFANfwLWA2zPwG+ndY1QbN+69ecpCSoEji9B
+BBAzUqFLTj8qzQP9Uu8AhVahEkPB/4KjevT1EI9suakrMtX7drn269erkgSEHl7a
+FqHqIiWqtzAVD717/4sjlKtSoqq/dJhZA8ssgg0kOxTe0stKcZhwSy3fAoGBAMxs
+R53lIcR4DfqJZtHBcCND8PV81E2/Dt/IysLWKwiTz49JBM8FVTVQIhrwjTJDt4No
+XD6AajWDEbH5qfTKZsGy1OVIgzyoAGKrDPE+BO5uyaE4Hj15DtfKahT4DysmVhTO
+xU0si6wTBZge1mDb05FfBRzixjBm9+KkfnUksSeRAoGAfVxTz3PDE3oigzh3uOtu
+3vB0xiUVGLsw6ZN1MJj/tkx631ejPV512uwMMTiP36zvYRgzbtNsFolz+jnfsZjp
+JebgC1b0m89GkINe4oO3WGhIi7hsGGFP+CvWwQnALLX0aT+05OEbfBgoVm0ywTCf
++AQpUpVQ/mLB6W1mx9AuMeY=
+-----END PRIVATE KEY-----
+`
 	CASignedRSACertificateChain = `
 -----BEGIN CERTIFICATE-----
 MIIE+zCCA+OgAwIBAgIFFVGJEGcwDQYJKoZIhvcNAQELBQAwga0xCzAJBgNVBAYT
@@ -752,11 +808,9 @@ igzzaBprKzbSuGpj9QKLO4P4vIvgt2RutfqYBNR6sdzKmQYyPCYshfsoQVWo9mmD
 jI///X8MUJs=
 -----END CERTIFICATE-----
 `
-
-	CASignedECDSACertificateChain           = ``
-	CASignedECDSACertificateChainPrivateKey = ``
-	CASignedECDSARootCA                     = ``
-
+	CASignedECDSACertificateChain                   = ``
+	CASignedECDSACertificateChainPrivateKey         = ``
+	CASignedECDSARootCA                             = ``
 	CASignedNoSkiAkiECDSACertificateChain           = ``
 	CASignedNoSkiAkiECDSACertificateChainPrivateKey = ``
 	CASignedNoSkiAkiECDSARootCA                     = ``
@@ -983,6 +1037,32 @@ func TestVerifyAndEncodeCertificateSelfSignedCertKeyPairDSA(t *testing.T) {
 	}
 }
 
+func TestVerifyAndEncodeCertificateSelfSignedX509v1(t *testing.T) {
+	// should successfully validate as x509v1 must remain supported
+	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedX509v1Certificate, SelfSignedX509v1PrivateKey, "")
+
+	if err != nil {
+		t.Fatalf("unexpected result: the x509v1 cert/key pair is valid and should have passed validation")
+	}
+
+	if !unknownAuth {
+		t.Fatalf("unexpected result: certificate verification should have detected signature of unknown authority")
+	}
+
+	// Decode the clean Private Key
+	pBlock, remain := pem.Decode([]byte(certPrivateKey))
+
+	if pBlock == nil {
+		t.Fatal("unexpected result: can't decode cleaned private key pem block")
+	} else if len(remain) > 0 {
+		t.Fatal("unexpected result: remaining bytes after decode > 0. expected: 0")
+	}
+
+	if len(certChain) == 0 {
+		t.Fatal("unexpected: certChain should not be empty")
+	}
+}
+
 func TestVerifyAndEncodeCertificateSelfSignedNoSkiAkiCertKeyPair(t *testing.T) {
 
 	certChain, certPrivateKey, unknownAuth, _, err := verifyCertKeyPair(SelfSignedNOSKIAKIRSACertificate, SelfSignedNOSKIAKIRSAPrivateKey, "")
@@ -1193,7 +1273,7 @@ func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutDigit
 }
 
 func TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPair(t *testing.T) {
-	// Should be successfull as the certificate and key are valid with proper keyUsage/extendedKeyUsage.
+	// Should be successful as the certificate and key are valid with proper keyUsage/extendedKeyUsage.
 	_, _, _, _, err := verifyCertKeyPair(SelfSignedECDSACertificate, SelfSignedECDSAPrivateKey, "")
 
 	if err != nil {
