@@ -93,11 +93,11 @@ export class DsCardComponent {
 		};
 	}
 
-	/*
+	/**
 	 * Handles the destruction of a chart and all of its constituent data. Does nothing if
 	 * `this.chart` is `null` or `undefined`.
 	*/
-	private destroyChart() {
+	private destroyChart () {
 		if (this.chart) {
 			this.chart.destroy();
 			this.chart = null;
@@ -152,13 +152,12 @@ export class DsCardComponent {
 					}
 					if (data === undefined || data === null) {
 						this.destroyChart();
-						console.warn("Delivery Service '" + this.deliveryService.displayName + "' (" + this.deliveryService.id + ') has no edge bandwidth data!');
 
-						const ctx = canvas.getContext("2d");
-						ctx.font = "30px serif";
+						const ctx = canvas.getContext('2d');
+						ctx.font = '30px serif';
 						ctx.fillStyle = 'black';
 						ctx.textAlign = 'center';
-						ctx.fillText("No Data", canvas.width/2., canvas.height/2.);
+						ctx.fillText('No Data', canvas.width / 2., canvas.height / 2.);
 						this.graphDataLoaded = true;
 						return;
 					}
@@ -185,13 +184,12 @@ export class DsCardComponent {
 					}
 					if (data === undefined || data === null) {
 						this.destroyChart();
-						console.warn("Delivery Service '" + this.deliveryService.displayName + "' (" + this.deliveryService.id + ') has no mid bandwidth data!');
 
-						const ctx = canvas.getContext("2d");
-						ctx.font = "30px serif";
+						const ctx = canvas.getContext('2d');
+						ctx.font = '30px serif';
 						ctx.fillStyle = 'black';
 						ctx.textAlign = 'center';
-						ctx.fillText("No Data", canvas.width/2., canvas.height/2.);
+						ctx.fillText('No Data', canvas.width / 2., canvas.height / 2.);
 						this.graphDataLoaded = true;
 						return;
 					}

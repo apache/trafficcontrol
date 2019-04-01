@@ -27,16 +27,16 @@ export class UserCardComponent implements OnInit {
 
 	@Input() user: User;
 
-	constructor(private readonly api: APIService) { }
+	constructor (private readonly api: APIService) { }
 
-	ngOnInit() {
+	ngOnInit () {
 		this.user = this.user as User;
 		if (!this.user.roleName) {
 			this.api.getRoles(this.user.role).pipe(first()).subscribe(
 				(role: Role) => {
 					this.user.roleName = role.name;
 				}
-			)
+			);
 		}
 		// Go emits marshaled JSON date/time structs in a format only Chrome can parse. Because, you know, Google is web standard.
 		if (typeof(this.user.lastUpdated) === 'string') {
@@ -45,11 +45,11 @@ export class UserCardComponent implements OnInit {
 		console.log(this.user);
 	}
 
-	userHasLocation(): boolean {
+	userHasLocation (): boolean {
 		return this.user.city !== null || this.user.stateOrProvince !== null || this.user.country !== null || this.user.postalCode !== null;
 	}
 
-	userLocationString(): string | null {
+	userLocationString (): string | null {
 		let ret = '';
 		if (this.user.city) {
 			ret += this.user.city;

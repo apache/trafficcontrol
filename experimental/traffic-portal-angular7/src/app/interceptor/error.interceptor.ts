@@ -37,8 +37,11 @@ export class ErrorInterceptor implements HttpInterceptor {
 	intercept (request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 		return next.handle(request).pipe(catchError(err => {
 			console.error('HTTP Error: ', err);
+
+			/* tslint:disable */
 			if (err.hasOwnProperty('error') && err['error'].hasOwnProperty('alerts')) {
 				for (const a of err['error']['alerts']) {
+					/* tslint:enable */
 					this.alerts.alertsSubject.next(a as Alert);
 				}
 			}

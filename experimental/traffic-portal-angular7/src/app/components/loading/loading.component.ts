@@ -22,6 +22,4 @@ export class LoadingComponent {
 
 	@Input() size?: number;
 
-	constructor() { }
-
 }

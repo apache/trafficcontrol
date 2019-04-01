@@ -209,7 +209,8 @@ export class APIService {
 	 * @param name Optionally, the name of a single Role which will be fetched
 	 * @param id Optionally, the integral, unique identifier of a single Role which will be fetched
 	 * @throws {TypeError} When called with an improper argument.
-	 * @returns an Observable that will emit either a Map of Role names to full Role objects, or a single Role, depending on whether `name`/`id` was passed
+	 * @returns an Observable that will emit either a Map of Role names to full Role objects, or a single Role, depending on whether
+	 *	`name`/`id` was passed
 	 * (In the event that `name`/`id` is given but does not match any Role, `null` will be emitted)
 	*/
 	public getRoles (nameOrID?: string | number) {
@@ -229,7 +230,7 @@ export class APIService {
 					));
 					break;
 				case 'number':
-					return this.get(path + '?id=' + nameOrID).pipe(map(
+					return this.get(path + '?id=' + nameOrID.toString()).pipe(map(
 						r => {
 							for (const role of (r.body.response as Array<Role>)) {
 								if (role.id === nameOrID) {
@@ -246,8 +247,8 @@ export class APIService {
 		}
 		return this.get(path).pipe(map(
 			r => {
-				let ret = new Map<string, Role>();
-				for (let role of (r.body.response as Array<Role>)) {
+				const ret = new Map<string, Role>();
+				for (const role of (r.body.response as Array<Role>)) {
 					ret.set(role.name, role);
 				}
 				return ret;
@@ -258,10 +259,11 @@ export class APIService {
 	/**
 	 * Gets one or all Types from Traffic Ops
 	 * @param name Optionally, the name of a single Type which will be returned
-	 * @returns An Observable that will emit either a Map of Type names to full Type objects, or a single Type, depending on whether `name` was passed
+	 * @returns An Observable that will emit either a Map of Type names to full Type objects, or a single Type, depending on whether
+	 * 	`name` was passed
 	 * (In the event that `name` is given but does not match any Type, `null` will be emitted)
 	*/
-	public getTypes (name?:string): Observable<Map<string, Type> | Type> {
+	public getTypes (name?: string): Observable<Map<string, Type> | Type> {
 		const path = '/api/' + this.API_VERSION + '/types';
 		if (name) {
 			return this.get(path + '?name=' + name).pipe(map(
@@ -277,8 +279,8 @@ export class APIService {
 		}
 		return this.get(path).pipe(map(
 			r => {
-				let ret = new Map<string, Type>();
-				for (let t of (r.body.response as Array<Type>)) {
+				const ret = new Map<string, Type>();
+				for (const t of (r.body.response as Array<Type>)) {
 					ret.set(t.name, t);
 				}
 				return ret;
@@ -289,10 +291,11 @@ export class APIService {
 	/**
 	 * Gets one or all CDNs from Traffic Ops
 	 * @param id The integral, unique identifier of a single CDN to be returned
-	 * @returns An Observable that will emit either a Map of CDN names to full CDN objects, or a single CDN, depending on whether `id` was passed.
+	 * @returns An Observable that will emit either a Map of CDN names to full CDN objects, or a single CDN, depending on whether `id` was
+	 * 	passed.
 	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
 	*/
-	public getCDNs (id?:number): Observable<Map<string, CDN> | CDN> {
+	public getCDNs (id?: number): Observable<Map<string, CDN> | CDN> {
 		const path = '/api/' + this.API_VERSION + '/cdns';
 		if (id) {
 			return this.get(path + '?id=' + String(id)).pipe(map(
@@ -307,7 +310,7 @@ export class APIService {
 		}
 		return this.get(path).pipe(map(
 			r => {
-				let ret = new Map<string, CDN>();
+				const ret = new Map<string, CDN>();
 				for (const c of (r.body.response as Array<CDN>)) {
 					ret.set(c.name, c);
 				}

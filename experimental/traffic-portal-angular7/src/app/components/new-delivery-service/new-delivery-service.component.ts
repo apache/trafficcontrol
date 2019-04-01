@@ -24,12 +24,12 @@ import { Type } from '../../models/type';
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s
 */
-const XML_ID_SANITIZE = /[^a-z0-9\-]+/g
+const XML_ID_SANITIZE = /[^a-z0-9\-]+/g;
 
 /**
  * A regular expression that matches a valid xml_id
 */
-const VALID_XML_ID = /^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$/
+const VALID_XML_ID = /^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$/;
 
 @Component({
 	selector: 'app-new-delivery-service',
@@ -48,16 +48,16 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 	step = 0;
 
-	constructor(private readonly api: APIService, private readonly auth: AuthenticationService, private readonly router: Router) { }
+	constructor (private readonly api: APIService, private readonly auth: AuthenticationService, private readonly router: Router) { }
 
-	ngOnInit() {
+	ngOnInit () {
 		this.auth.updateCurrentUser().subscribe( success => {
 			if (!success || this.auth.currentUserValue === null) {
 				return;
 			}
 			this.deliveryService.active = false;
 			this.deliveryService.anonymousBlockingEnabled = false;
-			this.deliveryService.deepCachingType = "NEVER";
+			this.deliveryService.deepCachingType = 'NEVER';
 			this.deliveryService.dscp = 0;
 			this.deliveryService.geoLimit = GeoLimit.None;
 			this.deliveryService.geoProvider = GeoProvider.MaxMind;
@@ -120,7 +120,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 				let def: CDN;
 				cdns.forEach( (c: CDN, name: string) => {
 
-					//this is a special, magic-value CDN that can't have any DSes
+					// this is a special, magic-value CDN that can't have any DSes
 					if (c.name !== 'ALL') {
 						this.cdns.push(c);
 						if (id > 0) {
@@ -145,7 +145,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	/**
 	 * When a user submits their origin URL, this parses that out into the related DS fields
 	*/
-	setOriginURL() {
+	setOriginURL () {
 		const parser = document.createElement('a') as HTMLAnchorElement;
 		parser.href = this.originURL.value;
 		this.deliveryService.orgServerFqdn = parser.origin;
@@ -154,10 +154,10 @@ export class NewDeliveryServiceComponent implements OnInit {
 		}
 
 		switch (parser.protocol) {
-			case "http:":
+			case 'http:':
 				this.deliveryService.protocol = Protocol.HTTP_AND_HTTPS;
 				break;
-			case "https:":
+			case 'https:':
 				this.deliveryService.protocol = Protocol.HTTP_TO_HTTPS;
 				break;
 			default:
@@ -165,7 +165,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 				break;
 		}
 
-		this.deliveryService.displayName = "Delivery Service for " + parser.hostname;
+		this.deliveryService.displayName = 'Delivery Service for ' + parser.hostname;
 		this.displayName.setValue(this.deliveryService.displayName);
 		++this.step;
 	}
@@ -184,7 +184,9 @@ export class NewDeliveryServiceComponent implements OnInit {
 			// this could instead be implemented with a Directive, but that doesn't really seem like
 			// any less of a hack to me.
 			const nativeDisplayNameElement = document.getElementById('displayName') as HTMLInputElement;
-			nativeDisplayNameElement.setCustomValidity('Failed to create a unique key from Delivery Service name. Try using less special characters.');
+			nativeDisplayNameElement.setCustomValidity(
+				'Failed to create a unique key from Delivery Service name. Try using less special characters.'
+			);
 			nativeDisplayNameElement.reportValidity();
 			nativeDisplayNameElement.value = '';
 			nativeDisplayNameElement.setCustomValidity('');
@@ -208,7 +210,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 					console.log("New Delivery Service '%s' created", this.deliveryService.displayName);
 					this.router.navigate(['/'], {queryParams: {search: encodeURIComponent(this.deliveryService.displayName)}});
 				} else {
-					console.error("Failed to create deliveryService: ", this.deliveryService);
+					console.error('Failed to create deliveryService: ', this.deliveryService);
 				}
 			}
 		);
