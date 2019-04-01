@@ -14,10 +14,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
+import { BehaviorSubject, Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 
 import { APIService, AuthenticationService } from '../../services';
-import { User } from '../../models/user';
+import { Role, User } from '../../models/user';
 
 @Component({
 	selector: 'users',
@@ -31,7 +32,12 @@ export class UsersComponent implements OnInit {
 	loading: boolean;
 	myId: number;
 
+	private readonly rolesMapSubject: BehaviorSubject<Map<number, string>>;
+	public rolesMap: Observable<Map<number, string>>;
+
 	constructor (private readonly api: APIService, private readonly auth: AuthenticationService) {
+		this.rolesMapSubject = new BehaviorSubject<Map<number, string>>(null);
+		this.rolesMap = this.rolesMapSubject.asObservable();
 		this.users = new Array<User>();
 		this.loading = true;
 		this.myId = -1;
@@ -57,8 +63,23 @@ export class UsersComponent implements OnInit {
 				this.loading = false;
 			}
 		);
+
+		this.api.getRoles().pipe(first()).subscribe(
+			(roles: Array<Role>) => {
+				const roleMap = new Map<number, string>();
+				for (const r of roles) {
+					roleMap.set(r.id, r.name);
+				}
+				this.rolesMapSubject.next(roleMap);
+			}
+		)
 	}
 
+	/**
+	 * Implements a fuzzy search over usernames
+	 * @param u The user being checked for a fuzzy match (currently uses the username)
+	 * @returns `true` if `u` is a fuzzy match for the `fuzzControl` value, `false` otherwise
+	*/
 	fuzzy (u: User): boolean {
 		if (!this.fuzzControl.value) {
 			return true;

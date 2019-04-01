@@ -13,6 +13,7 @@
 */
 import { Component, Input, ElementRef, OnInit } from '@angular/core';
 
+import { Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 
 import { APIService } from '../../services';
@@ -25,18 +26,43 @@ import { Role, User } from '../../models/user';
 })
 export class UserCardComponent implements OnInit {
 
+	/**
+	 * The User being modled
+	*/
 	@Input() user: User;
+
+	/**
+	 * An optional map of role IDs to role names, since often the API will omit role names in user objects
+	 * If this isn't given, this component will make its own HTTP request to find out its user's role name
+	*/
+	@Input() roleMap?: Observable<Map<number, string>>;
 
 	constructor (private readonly api: APIService) { }
 
 	ngOnInit () {
 		this.user = this.user as User;
 		if (!this.user.roleName) {
-			this.api.getRoles(this.user.role).pipe(first()).subscribe(
-				(role: Role) => {
-					this.user.roleName = role.name;
-				}
-			);
+			if (!this.roleMap) {
+				this.api.getRoles(this.user.role).pipe(first()).subscribe(
+					(role: Role) => {
+						this.user.roleName = role.name;
+					}
+				);
+			} else {
+				this.roleMap.subscribe(
+					m => {
+						// initial value will be null
+						if (!m) {
+							return;
+						}
+						if (m.has(this.user.role)) {
+							this.user.roleName = m.get(this.user.role);
+						} else {
+							console.error('Role ID %d not found in Traffic Ops!');
+						}
+					}
+				);
+			}
 		}
 		// Go emits marshaled JSON date/time structs in a format only Chrome can parse. Because, you know, Google is web standard.
 		if (typeof(this.user.lastUpdated) === 'string') {

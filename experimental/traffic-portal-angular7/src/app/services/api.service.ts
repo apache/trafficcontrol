@@ -203,13 +203,13 @@ export class APIService {
 
 	public getRoles (id: number): Observable<Role>;
 	public getRoles (name: string): Observable<Role>;
-	public getRoles (): Observable<Map<string, Role>>;
+	public getRoles (): Observable<Array<Role>>;
 	/**
 	 * Fetches one or all Roles from Traffic Ops
 	 * @param name Optionally, the name of a single Role which will be fetched
 	 * @param id Optionally, the integral, unique identifier of a single Role which will be fetched
 	 * @throws {TypeError} When called with an improper argument.
-	 * @returns an Observable that will emit either a Map of Role names to full Role objects, or a single Role, depending on whether
+	 * @returns an Observable that will emit either an Arry of Roles, or a single Role, depending on whether
 	 *	`name`/`id` was passed
 	 * (In the event that `name`/`id` is given but does not match any Role, `null` will be emitted)
 	*/
@@ -247,11 +247,7 @@ export class APIService {
 		}
 		return this.get(path).pipe(map(
 			r => {
-				const ret = new Map<string, Role>();
-				for (const role of (r.body.response as Array<Role>)) {
-					ret.set(role.name, role);
-				}
-				return ret;
+				return r.body.response as Array<Role>;
 			}
 		));
 	}
