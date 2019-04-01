@@ -39,6 +39,7 @@ details {
 div.card-content {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
+	column-gap: 15px;
 	width: 100%;
 	padding: 10px;
 
