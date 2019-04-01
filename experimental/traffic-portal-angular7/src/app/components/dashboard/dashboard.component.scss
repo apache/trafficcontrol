@@ -24,6 +24,7 @@ main > div {
 	min-width: 20em;
 	position: sticky;
 	top: 0;
+	z-index: 101;
 	input {
 		width: 100%;
 		margin: 15px 0;
