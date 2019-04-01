@@ -32,18 +32,6 @@ main > div {
 
 }
 
-ul {
-margin: 0;
-padding: 0;
-list-style: none;
-
-	li {
-		display: inline-block;
-		width: 100%;
-		margin-top: 15px;
-	}
-}
-
 #loading {
 	min-height: calc(100vh - 8em - 75px); // filthy hax based on Mozilla default user-agent styling
 	padding: 0;
