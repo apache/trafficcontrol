@@ -28,6 +28,19 @@ main > div {
 		width: 100%;
 		margin: 15px 0;
 	}
+
+}
+
+ul {
+margin: 0;
+padding: 0;
+list-style: none;
+
+	li {
+		display: inline-block;
+		width: 100%;
+		margin-top: 15px;
+	}
 }
 
 #loading {

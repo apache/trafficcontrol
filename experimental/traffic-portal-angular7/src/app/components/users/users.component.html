@@ -16,7 +16,7 @@ limitations under the License.
 	<div><input type="text" autofocus inputmode="search" name="fuzzControl" [formControl]="fuzzControl" accesskey="/" placeholder="Fuzzy Search"/></div>
 	<article id="users" [hidden]="loading">
 		<ul>
-			<li *ngFor="let user of users" [hidden]="!fuzzy(user)">{{user.username}}<span *ngIf="user.id === myId">&nbsp;(You)</span></li>
+			<li *ngFor="let user of users" [hidden]="!fuzzy(user)"><user-card [user]="user"></user-card></li>
 		</ul>
 	</article>
 	<div id="loading" *ngIf="loading"><loading></loading></div>
