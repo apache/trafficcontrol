@@ -1,52 +1,105 @@
-## Which issue is fixed by this PR? If not related to an existing issue, what does this PR do?
-
-Fixes #(replace_this_text_with_issue_number) 
-
-## Which TC components are affected by this PR?
-
-- [ ] Documentation
-- [ ] Grove
-- [ ] Traffic Analytics
-- [ ] Traffic Monitor
-- [ ] Traffic Ops
-- [ ] Traffic Ops ORT
-- [ ] Traffic Portal
-- [ ] Traffic Router
-- [ ] Traffic Stats
-- [ ] Traffic Vault
-- [ ] Other _________
-
-## What is the best way to verify this PR? Please include manual steps or automated tests. 
-### (If no tests are part of this PR, please provide explanation as to why no tests are included.)
-
-
-## Check all that apply
-
-- [ ] This PR includes tests
-- [ ] This PR includes documentation updates
-- [ ] This PR includes an update to CHANGELOG.md
-- [ ] This PR includes all required license headers
-- [ ] This PR includes a database migration (ensure that migration sequence is correct)
-- [ ] This PR fixes a serious security flaw. Read more: [www.apache.org/security](http://www.apache.org/security/)
-
 <!--
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
+************ STOP!! ************
+If this Pull Request is intended to fix a security vulnerability, DO NOT submit it! Instead, contact
+the Apache Software Foundation Security Team at security@trafficcontrol.apache.org and follow the
+guidelines at https://www.apache.org/security/ regarding vulnerability disclosure.
+-->
+## What does this PR (Pull Request) do?
+<!-- Explain the changes you made here. If this fixes an Issue, identify it by
+replacing the text in the checkbox item with the Issue number e.g.
 
-      http://www.apache.org/licenses/LICENSE-2.0
+[x] This PR fixes #9001 OR is not related to any Issue
 
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
+^ This will automatically close Issue number 9001 when the Pull Request is
+merged (The '#' is important).
+
+Be sure you check the box properly, see the "The following criteria are ALL
+met by this PR" section for details.
 -->
 
+[ ] This PR fixes #REPLACE_ME OR is not related to any Issue <!-- You can check for an issue here: https://github.com/apache/trafficcontrol/issues -->
 
 
+## Which Traffic Control components are affected by this PR?
+<!-- Please delete all components from this list that are NOT affected by this
+Pull Request. Also, feel free to add the name of a tool or script that is
+affected but not on the list.
+
+Additionally, if this Pull Request does NOT affect documentation, please
+explain why documentation is not required. -->
+
+- CDN in a Box
+- Documentation
+- Grove
+- Traffic Control Client <!-- Please specify which; e.g. 'Python', 'Go', 'Java' -->
+- Traffic Monitor
+- Traffic Ops
+- Traffic Ops ORT
+- Traffic Portal
+- Traffic Router
+- Traffic Stats
+- Traffic Vault
+
+## What is the best way to verify this PR?
+<!-- Please include here ALL the steps necessary to test your Pull Request. If
+it includes tests (and most should), outline here the steps needed to run the
+tests. If not, lay out the manual testing procedure and please explain why
+tests are unnecessary for this Pull Request. -->
+
+## If this is a bug fix, what versions of Traffic Ops are affected?
+<!-- If this PR fixes a bug, please list here all of the affected versions - to
+the best of your knowledge. It's also pretty helpful to include a commit hash
+of where 'master' is at the time this PR is opened (if it affects master),
+because what 'master' means will change over time. For example, if this PR
+fixes a bug that's present in master (at commit hash '2697ebac'), in v3.0.0,
+and in the current 3.0.1 Release candidate (e.g. RC1), then this list would
+look like:
+
+- master (2697ebac)
+- 3.0.0
+- 3.0.1 (RC1)
+
+If you don't know what other versions might have this bug, AND don't know how
+to find the commit hash of 'master', then feel free to leave this section
+blank (or, preferably, delete it entirely).
+ -->
+
+
+## The following criteria are ALL met by this PR
+<!-- Check the boxes to signify that the associated statement is true. To
+"check a box", replace the space inside of the square brackets with an 'x'.
+e.g.
+
+- [ x] <- Wrong
+- [x ] <- Wrong
+- [] <- Wrong
+- [*] <- Wrong
+- [x] <- Correct!
+
+-->
+
+- [ ] This PR includes tests OR I have explained why tests are unnecessary
+- [ ] This PR includes documentation OR I have explained why documentation is unnecessary
+- [ ] This PR includes an update to CHANGELOG.md OR such an update is not necessary
+- [ ] This PR includes any and all required license headers
+- [ ] This PR ensures that database migration sequence is correct OR this PR does not include a database migration
+- [ ] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines](https://www.apache.org/security/) for details)
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
