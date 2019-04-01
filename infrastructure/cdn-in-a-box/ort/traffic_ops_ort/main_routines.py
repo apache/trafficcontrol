@@ -260,6 +260,9 @@ def processConfigurationFiles(conf:Configuration) -> bool:
 	for file in myFiles:
 		try:
 			file = config_files.ConfigFile(file, conf.TOURL)
+			if conf.mode is conf.Modes.REVALIDATE and file.fname != "regex_revalidate.config":
+				logging.info("Skipping file %s because is not a revalidation file", file.fname)
+				continue
 			logging.info("\n============ Processing File: %s ============", file.fname)
 			if file.update(conf) and file.fname in services.FILES_THAT_REQUIRE_RELOADS:
 				services.NEEDED_RELOADS.add(services.FILES_THAT_REQUIRE_RELOADS[file.fname])
