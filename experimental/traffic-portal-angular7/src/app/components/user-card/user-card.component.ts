@@ -42,7 +42,6 @@ export class UserCardComponent implements OnInit {
 		if (typeof(this.user.lastUpdated) === 'string') {
 			this.user.lastUpdated = new Date((this.user.lastUpdated as string).replace('-', '/').replace('-', '/').replace('+', ' GMT+'));
 		}
-		console.log(this.user);
 	}
 
 	userHasLocation (): boolean {
