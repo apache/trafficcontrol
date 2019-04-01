@@ -19,7 +19,7 @@ import { map, first, catchError } from 'rxjs/operators';
 import { CDN } from '../models/cdn';
 import { DeliveryService } from '../models/deliveryservice';
 import { Type } from '../models/type';
-import { User } from '../models/user';
+import { Role, User } from '../models/user';
 
 @Injectable({ providedIn: 'root' })
 /**
@@ -197,6 +197,60 @@ export class APIService {
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response as Array<User>;
+			}
+		));
+	}
+
+	public getRoles (id: number): Observable<Role>;
+	public getRoles (name: string): Observable<Role>;
+	public getRoles (): Observable<Map<string, Role>>;
+	/**
+	 * Fetches one or all Roles from Traffic Ops
+	 * @param name Optionally, the name of a single Role which will be fetched
+	 * @param id Optionally, the integral, unique identifier of a single Role which will be fetched
+	 * @throws {TypeError} When called with an improper argument.
+	 * @returns an Observable that will emit either a Map of Role names to full Role objects, or a single Role, depending on whether `name`/`id` was passed
+	 * (In the event that `name`/`id` is given but does not match any Role, `null` will be emitted)
+	*/
+	public getRoles (nameOrID?: string | number) {
+		const path = '/api/' + this.API_VERSION + '/roles';
+		if (nameOrID) {
+			switch (typeof nameOrID) {
+				case 'string':
+					return this.get(path + '?name=' + nameOrID).pipe(map(
+						r => {
+							for (const role of (r.body.response as Array<Role>)) {
+								if (role.name === nameOrID) {
+									return role;
+								}
+							}
+							return null;
+						}
+					));
+					break;
+				case 'number':
+					return this.get(path + '?id=' + nameOrID).pipe(map(
+						r => {
+							for (const role of (r.body.response as Array<Role>)) {
+								if (role.id === nameOrID) {
+									return role;
+								}
+							}
+						}
+					));
+					break;
+				default:
+					throw new TypeError("expected a name or ID, got '" + typeof(name) + "'");
+					break;
+			}
+		}
+		return this.get(path).pipe(map(
+			r => {
+				let ret = new Map<string, Role>();
+				for (let role of (r.body.response as Array<Role>)) {
+					ret.set(role.name, role);
+				}
+				return ret;
 			}
 		));
 	}
