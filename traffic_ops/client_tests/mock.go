@@ -66,6 +66,7 @@ func ping(w http.ResponseWriter, r *http.Request) {
 func mockDatabase(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", "Traffic Ops/"+VERSION+" (Mock)")
 	if r.Method == http.MethodGet {
+		w.Header().Set("Content-Disposition", `attachment; filename="database.dat"`)
 		w.Write([]byte("Mock Traffic Ops servers don't have real databases\n"))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -106,6 +107,10 @@ func main() {
 		http.HandleFunc("/api/"+v+"/statuses", statuses)
 		http.HandleFunc("/api/"+v+"/types", types)
 		http.HandleFunc("/api/"+v+"/servers", servers)
+		http.HandleFunc("/api/"+v+"/servers/"+EDGE_SERVER_HOSTNAME+"/configfiles/ats", edgeConfigFiles)
+		http.HandleFunc("/api/"+v+"/servers/"+MID_SERVER_HOSTNAME+"/configfiles/ats", midConfigFiles)
+		http.HandleFunc("/api/"+v+"/servers/"+TO_SERVER_HOSTNAME+"/configfiles/ats", toConfigFiles)
+		http.HandleFunc("/api/"+v+"/servers/"+TODB_SERVER_HOSTNAME+"/configfiles/ats", toDbConfigFiles)
 	}
 
 	http.HandleFunc("/mock/geo/database.dat", mockDatabase)
