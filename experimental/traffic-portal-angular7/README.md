@@ -18,7 +18,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 Traffic Portal Angular7 is an attempt at making a self-service-first UI for Apache Traffic Control CDN architectures. The eventual goal is to slowly eat Traffic Portal by importing all of its functionality once the self-service UI is complete.
 
 ## Setup
-First, clone the [Apache Traffic Control repository](git://github.com/apache/trafficcontrol). This needs to be done, because this server imports the Apache Traffic Control logo from the repository.
+First, clone the [Apache Traffic Control repository](git://github.com/apache/trafficcontrol).
 
 ### Prerequisites
 Traffic Portal Angular7 runs on [NodeJS](https://nodejs.org/) version 10 (8 theoretically works also - untested) and uses its built-in NPM package manager to manage dependencies.
@@ -45,7 +45,6 @@ ng run traffic-portal-angular7:server
 # Runs the server locally at http://localhost:4000
 node dist/server.js
 ```
-Note that calling `node` manually like this will allow you to pass command line parameters to the server. Currently, the only supported parametor is an optional hostname that refers to a Traffic Ops instance. This may or may not include a schema and port, e.g. `https://trafficops.infra.ciab.test`, `trafficops.infra.ciab.test` and `trafficops.infra.ciab.test:443` are all equivalent (because the default schema is `https://` and the default port is 443). If this value is not provided on the command line, the value of the `TO_URL` environment variable will be used. If the Traffic Ops server host is not defined either in the environment or on the command line (e.g. when using the below `npm` commands without `TO_URL` set), an error will be issued and the server will refuse to start.
 
 E.g. using NPM scripts
 
@@ -63,6 +62,29 @@ npm run build:ssr
 
 # Runs the server locally at http://localhost:4000
 npm run serve:ssr
+```
+
+#### Server Command Line Arguments
+By default, the Traffic Portal server will attempt to connect to a Traffic Ops server running at the location specified by the `TO_URL` environment variable. If one is not set or you wish to override it, this (and other behavior) can be configured by passing arguments on the command line. To see the available command line options, pass the `-h`/`--help` flag to the server, e.g.
+
+```console
+$ CMD="node dist/server.js" # The arguments can be passed to either command, use whichever you like
+$ CMD="npm run serve:ssr --" # (`--` signals the end of options to `npm`)
+$ $CMD --help # output is verbatim, but omits some things npm might echo e.g. the actual command
+usage: server.js [-h] [-v] [-t TRAFFIC_OPS] [-k] [-p PORT]
+
+A re-imagining of Traffic Portal with server-side rendering in Angular7.
+
+Optional arguments:
+  -h, --help            Show this help message and exit.
+  -v, --version         Show program's version number and exit.
+  -t TRAFFIC_OPS, --traffic-ops TRAFFIC_OPS
+                        Specify the Traffic Ops host/URL, including port. 
+                        (Default: uses the `TO_URL` environment variable)
+  -k, --insecure        Skip Traffic Ops server certificate validation.
+  -p PORT, --port PORT  Specify the port on which Traffic Portal will listen 
+                        (Default: 4200)
+$
 ```
 
 #### Debug Mode
@@ -87,7 +109,7 @@ Now, assuming this in the project directory (i.e. the same one as this README.md
 ng serve --proxy-config ./proxy.json
 ```
 
-By default this will set up an Angular debug-mode server to run, listening on port 4200 (as opposed to the production-mode default of 4000 [presumably so that you could run both at the same time]). Note that regardless of production-mode SSL configuration (TODO), this will **only serve unencrypted HTTP responses by default**. Also, unlike production mode which compiles things ahead of time, this will compile resources on-the-fly so that making changes to a file is immediately "live" without requiring the developer to restart the debug server. Pretty neat, desu.
+By default this will set up an Angular debug-mode server to run, listening on port 4200. Note that regardless of production-mode SSL configuration (TODO), this will **only serve unencrypted HTTP responses by default**. Also, unlike production mode which compiles things ahead of time, this will compile resources on-the-fly so that making changes to a file is immediately "live" without requiring the developer to restart the debug server. Pretty neat, desu.
 
 ## Contributing
 This project uses `tslint` and an `.editorconfig` file for maintaining code style. If your editor doesn't support `.editorconfig` (VS Code does out-of-the-box as I understand, but Vim and Sublime Text need plugins. Atom ~~doesn't~~ shouldn't exist) then you'll want to manually configure it so as to avoid linting errors. There's quite a bit going on, but the big ones are:
@@ -130,6 +152,10 @@ Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.
 
 ## Running end-to-end tests
 Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+
+	!!! NOTE !!!
+	These don't appear to work for some reason
+
 
 ## Further help
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).

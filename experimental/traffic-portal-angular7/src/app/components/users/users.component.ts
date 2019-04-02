@@ -72,7 +72,7 @@ export class UsersComponent implements OnInit {
 				}
 				this.rolesMapSubject.next(roleMap);
 			}
-		)
+		);
 	}
 
 	/**

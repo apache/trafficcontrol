@@ -20,80 +20,147 @@ import {ngExpressEngine} from '@nguniversal/express-engine';
 import {provideModuleMap} from '@nguniversal/module-map-ngfactory-loader';
 
 import * as express from 'express';
-import {parse} from 'url';
-import {request} from 'https';
+import {request as HTTPRequest} from 'http';
+import {request as HTTPSRequest} from 'https';
 import {join} from 'path';
+import {parse} from 'url';
 import * as zlib from 'zlib';
+
+import {ArgumentParser} from 'argparse';
 
 import {environment} from './src/environments/environment';
 
 // Faster server renders w/ Prod mode (dev mode never needed)
 enableProdMode();
 
-// Get a URL for a Traffic Ops instance
-let to_url_raw = '';
-if (process.argv.length >= 3) {
-	to_url_raw = process.argv[2];
+const VERSION = '4.0.0';
+
+const parser = new ArgumentParser({
+	version: VERSION,
+	addHelp: true,
+	description: 'A re-imagining of Traffic Portal with server-side rendering in Angular7.'
+});
+parser.addArgument(['-t', '--traffic-ops'], {
+	help: 'Specify the Traffic Ops host/URL, including port. (Default: uses the `TO_URL` environment variable)',
+	type: (arg: string) => {
+		try {
+			return new URL(arg);
+		} catch (e) {
+			if (e instanceof TypeError) {
+				return new URL('https://' + arg);
+			}
+			throw e;
+		}
+	}
+});
+parser.addArgument(['-k', '--insecure'], {
+	help: 'Skip Traffic Ops server certificate validation.',
+	action: 'storeTrue'
+});
+parser.addArgument(['-p', '--port'], {
+	help: 'Specify the port on which Traffic Portal will listen (Default: 4200)',
+	type: Number,
+	defaultValue: 4200
+});
+
+const args = parser.parseArgs();
+
+if (isNaN(args.port) || args.port <= 0 || args.port > 65535) {
+	console.error('Invalid listen port:', args.port);
+	process.exit(1);
+}
+
+let to_url: URL;
+if (args.traffic_ops) {
+	to_url = args.traffic_ops;
 } else if (process.env.hasOwnProperty('TO_URL')) {
-	to_url_raw = process.env.TO_URL;
+	try {
+		to_url = new URL((process.env as any).TO_URL);
+	} catch (e) {
+		console.error('Invalid Traffic Ops URL set in environment variable:', (process.env as any).TO_URL);
+		process.exit(1);
+	}
 } else {
 	console.error('Must define a Traffic Ops URL, either on the command line or TO_URL environment variable');
 	process.exit(1);
 }
 
-let to_port;
-let to_host;
-const to_url_split = to_url_raw.split(':', 2);
-if (to_url_split.length === 1) {
-	to_host = to_url_split[0];
-	to_port = 443;
-} else if (to_url_split.length === 2) {
-	if (to_url_split[0].toLowerCase() === 'https') {
-		to_host = to_url_split[1];
-		if (to_host.length < 3) {
-			console.error('Malformed Traffic Ops URL:', to_url_raw);
+let to_host: string;
+let to_port: number;
+let to_use_SSL: boolean;
+
+if (!to_url.hostname || to_url.hostname.length <= 0) {
+	console.error("'%s' is not a valid Traffic Ops URL! (hint: try -h/--help)", to_url.href);
+	process.exit(1);
+}
+to_host = to_url.hostname;
+
+if (to_url.protocol) {
+	switch (to_url.protocol) {
+		case 'http:':
+			to_use_SSL = false;
+			break;
+		case 'https:':
+			to_use_SSL = true;
+			break;
+		default:
+			console.error("Unknown/unsupported protocol: '%s'", to_url.protocol);
 			process.exit(1);
-		}
-		to_host = to_host.slice(2);
-		to_port = 443;
-	} 	else {
-		to_host = to_url_split[0];
-		try {
-			to_port = Number(to_url_split[1]);
-		} catch (e) {
-			console.error('Malformed Traffic Ops URL:', to_url_raw);
-			console.debug('Exception:', e);
-			process.exit(1);
-		}
 	}
 } else {
-	to_host = to_url_split[1];
-	if (to_host.length < 3) {
-		console.error('Malformed Traffic Ops URL:', to_url_raw);
-		process.exit(1);
-	}
-	to_host = to_host.slice(2);
-
-	try {
-		to_port = Number(to_url_split[2]);
-	} catch (e) {
-		console.error('Malformed Traffic Ops URL:', to_url_raw);
-		console.debug('Exception:', e);
-		process.exit(1);
-	}
+	to_use_SSL = true;
 }
 
-console.debug('TO_HOST:', to_host, 'TO_PORT:', to_port);
+if (to_url.port) {
+	to_port = Number(to_url.port);
+	if (isNaN(to_port) || to_port > 65535 || to_port <= 0) {
+		console.error('Invalid port: ', to_port);
+		process.exit(1);
+	}
+} else if (to_use_SSL) {
+	to_port = 443;
+} else {
+	to_port = 80;
+}
 
-// Ignore untrusted certificate signers (TODO: this should be an option)
-/* tslint:disable */
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
-/* tslint:enable */
+const TO_URL = 'http' + (to_use_SSL ? 's' : '') + '://' + to_host + ':' + String(to_port);
+
+console.debug('Traffic Ops server at:', TO_URL);
+
+// Ignore untrusted certificate signers
+(process.env as any).NODE_TLS_REJECT_UNAUTHORIZED = args.insecure ? '0' : '1';
+
+const request = to_use_SSL ? HTTPSRequest : HTTPRequest;
+
+console.debug('Pinging Traffic Ops server...');
+const pingRequest = request({
+		host:   to_host,
+		port:   to_port,
+		path:   '/api/1.4/ping',
+		method: 'GET'
+	},
+	response => {
+		if ((response as any).aborted || (response as any).statusCode !== 200) {
+			console.error("Failed to ping Traffic Ops server! Is '%s' correct?", TO_URL);
+			if (response.hasOwnProperty('statusCode') && response.hasOwnProperty('statusMessage')) {
+				console.debug('Response status code was', (response as any).statusCode, (response as any).statusMessage);
+			}
+			response.pipe(process.stderr);
+			process.exit(2);
+		}
+		console.debug('Ping succeeded.');
+	}
+);
+pingRequest.on('error', e => {
+	console.error('Failed to contact Traffic Ops server!');
+	console.error(e);
+	process.exit(2);
+});
+pingRequest.end();
+
 
 // Express server
 const app = express();
-
-const PORT = process.env.PORT || 4000;
 const DIST_FOLDER = join(process.cwd(), 'dist/browser');
 
 // * NOTE :: leave this as require() since this file is built Dynamically from webpack
@@ -128,10 +195,10 @@ app.use('/api/**', (req, res) => {
 	console.debug(`Making TO API request to \`${req.originalUrl}\``);
 
 	const fwdRequest = {
-		host: to_host,
-		port: to_port,
-		path: parse(req.originalUrl).path,
-		method: req.method,
+		host:    to_host,
+		port:    to_port,
+		path:    parse(req.originalUrl).path,
+		method:  req.method,
 		headers: req.headers
 	};
 
@@ -151,6 +218,6 @@ app.get('*', (req, res) => {
 app.enable('trust proxy');
 
 // Start up the Node server
-app.listen(PORT, () => {
-	console.log(`Node Express server listening on http://localhost:${PORT}`);
+app.listen(args.port, () => {
+	console.log(`Node Express server listening on http://localhost:${args.port}`);
 });
