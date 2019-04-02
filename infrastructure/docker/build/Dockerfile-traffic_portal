@@ -24,20 +24,21 @@ VOLUME /trafficcontrol
 
 ### Common for all sub-component builds
 RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+	rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
 	yum -y update ca-certificates && \
 	yum -y install \
-		epel-release \
-		git \
-		rpm-build && \
+		epel-release && \
 	yum -y clean all
 
 # traffic_portal specific
 RUN	yum -y install \
 		gcc \
+		git \
 		libffi-devel \
 		make \
 		nodejs \
 		npm \
+		rpm-build \
 		ruby-devel \
 		rubygems
 
@@ -52,6 +53,5 @@ RUN	echo '{ "allow_root": true }' > /root/.bowerrc
 
 ADD infrastructure/docker/build/clean_build.sh /
 CMD /clean_build.sh traffic_portal
-
 
 # vi:syntax=Dockerfile
