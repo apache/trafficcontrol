@@ -41,10 +41,13 @@ export class NewDeliveryServiceComponent implements OnInit {
 	deliveryService = new DeliveryService();
 	originURL = new FormControl('');
 	displayName = new FormControl('');
+	infoURL = new FormControl('');
 	description = new FormControl('');
 	cdnObject = new FormControl('');
+	dsType = new FormControl('');
 
 	cdns: Array<CDN>;
+	dsTypes: Array<Type>;
 
 	step = 0;
 
@@ -72,10 +75,17 @@ export class NewDeliveryServiceComponent implements OnInit {
 			this.deliveryService.regionalGeoBlocking = false;
 			this.deliveryService.tenant = this.auth.currentUserValue.tenant;
 			this.deliveryService.tenantId = this.auth.currentUserValue.tenantId;
-			this.api.getTypes('HTTP').pipe(first()).subscribe(
-				(t: Type) => {
-					this.deliveryService.type = t.name;
-					this.deliveryService.typeId = t.id;
+			this.api.getDSTypes().pipe(first()).subscribe(
+				(types: Array<Type>) => {
+					this.dsTypes = types;
+					for (const t of types) {
+						if (t.name === 'HTTP') {
+							this.deliveryService.type = t.name;
+							this.deliveryService.typeId = t.id;
+							this.dsType.setValue(t);
+							break;
+						}
+					}
 				}
 			);
 			this.api.getDeliveryServices().pipe(first()).subscribe(
@@ -103,6 +113,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 					this.setDefaultCDN(mostId);
 				}
 			);
+
 		});
 	}
 
@@ -193,6 +204,10 @@ export class NewDeliveryServiceComponent implements OnInit {
 			return;
 		}
 		this.deliveryService.longDesc = this.description.value;
+
+		if (this.infoURL.value) {
+			this.deliveryService.infoUrl = this.infoURL.value;
+		}
 		++this.step;
 	}
 
@@ -204,6 +219,10 @@ export class NewDeliveryServiceComponent implements OnInit {
 	setInfrastructureInformation () {
 		this.deliveryService.cdnName = this.cdnObject.value.name;
 		this.deliveryService.cdnId = this.cdnObject.value.id;
+		if (this.dsType.value) {
+			this.deliveryService.typeId = this.dsType.value.id;
+			this.deliveryService.type = this.dsType.value.name;
+		}
 		this.api.createDeliveryService(this.deliveryService).pipe(first()).subscribe(
 			v => {
 				if (v) {

@@ -21,6 +21,7 @@ form {
 	max-width: 80vw;
 	margin: auto;
 	margin-top: 15px;
+	text-align: center;
 
 	div.form-content {
 		display: grid;
@@ -62,7 +63,7 @@ hr {
 	color: $theme_main;
 }
 
-#info-URL-sub-form-label {
+label.sub-form {
 	color: white;
 	background-color: $theme_tertiary;
 	border-radius: 10px;
@@ -79,16 +80,14 @@ hr {
 	}
 }
 
-input#info-URL-sub-form {
-	display: none;
-	visibility: hidden;
-	& ~ #info-URL-label, & ~ #infoURL {
+input.sub-form {
+	& ~ div.form-content {
 		display: none;
 	}
-	&:checked ~ #info-URL-sub-form-label {
+	&:checked ~ label.sub-form {
 		display: none;
 	}
-	&:checked ~ #info-URL-label, &:checked ~ #infoURL {
-		display: inline-block;
+	&:checked ~ div.form-content {
+		display: grid;
 	}
 }

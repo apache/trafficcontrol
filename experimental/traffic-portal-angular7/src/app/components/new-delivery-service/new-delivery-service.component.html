@@ -29,10 +29,12 @@ limitations under the License.
 		<input type="text" autofocus title="This will be the name of the Delivery Service as it appears on the 'Home' screen" name="displayName" id="displayName" [formControl]="displayName" placeholder="{{deliveryService.displayName}}" required>
 		<label for="longDesc">Please briefly describe this Delivery Service's purpose and function here:</label>
 		<textarea id="longDesc" name="longDesc" title="No character limit - be as verbose as you like." required placeholder="e.g. This Delivery Service is for my website's image assets." [formControl]="description" rows="3"></textarea>
-		<input type="checkbox" name="info-URL-sub-form" id="info-URL-sub-form"/>
-		<label for="info-URL-sub-form" id="info-URL-sub-form-label">Add Informational URL</label>
+	</div>
+	<input type="checkbox" class="sub-form" id="info-URL-sub-form" hidden/>
+	<label for="info-URL-sub-form" class="sub-form">Add Informational URL</label>
+	<div class="form-content">
 		<label for="infoURL" id="info-URL-label">For more information, people can look at this URL:</label>
-		<input type="url" name="infoURL" id="infoURL" placeholder="e.g. https://company.jira.com/ticket/9001"/>
+		<input [formControl]="infoURL" type="url" name="infoURL" id="infoURL" placeholder="e.g. https://company.jira.com/ticket/9001"/>
 	</div>
 	<button type="reset" (click)="previous()">Previous</button>
 	<button>Next</button>
@@ -45,6 +47,15 @@ limitations under the License.
 		<select [formControl]="cdnObject" name="cdnObject" id="cdnObject" required>
 			<option *ngFor="let cdn of cdns" [selected]="cdn.id === deliveryService.cdnId" [ngValue]="cdn">{{cdn.name}}</option>
 		</select>
+	</div>
+	<input type="checkbox" class="sub-form" id="adv-routing-sub-form" hidden/>
+	<label for="adv-routing-sub-form" class="sub-form">Change Advanced Routing Options</label>
+	<div class="form-content">
+		<label for="routingType">Change routing type</label>
+		<select [formControl]="dsType" name="routingType" id="routingType">
+			<option *ngFor="let t of dsTypes" [selected]="t.id === deliveryService.typeId" [ngValue]="t">{{t.description}}</option>
+		</select>
+		<div></div><blockquote></blockquote>
 	</div>
 	<button type="reset" (click)="previous()">Previous</button>
 	<button>Submit</button>
