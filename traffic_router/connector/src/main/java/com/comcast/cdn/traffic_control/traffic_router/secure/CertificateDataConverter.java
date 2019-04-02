@@ -64,18 +64,20 @@ public class CertificateDataConverter {
 				log.warn("Service name doesn't match the subject of the certificate = "+certificateData.getHostname());
 			}
 			else if (!modMatch) {
-				log.error("Modulus of the private key does not match the public key modulus for certificate host: "+certificateData.getHostname());
+				log.warn("Modulus of the private key does not match the public key modulus for certificate host: "+certificateData.getHostname());
 			}
 
 		} catch (CertificateNotYetValidException er) {
-			log.error("Failed to convert certificate data for delivery service = " + certificateData.getHostname()
-							+ ", because the certificate is not valid yet. ");
+			log.warn("Failed to convert certificate data for delivery service = " + certificateData.getHostname()
+							+ ", because the certificate is not valid yet. This certificate will not be used by " +
+					"Traffic Router.");
 		} catch (CertificateExpiredException ex ) {
-			log.error("Failed to convert certificate data for delivery service = " + certificateData.getHostname()
-					+ ", because the certificate has expired. ");
+			log.warn("Failed to convert certificate data for delivery service = " + certificateData.getHostname()
+					+ ", because the certificate has expired. This certificate will not be used by Traffic Router.");
 		} catch (Exception e) {
-			log.error("Failed to convert certificate data (delivery service = " + certificateData.getDeliveryservice()
-					+ ", hostname = " + certificateData.getHostname() + ") from traffic ops to handshake data! "
+			log.warn("Failed to convert certificate data (delivery service = " + certificateData.getDeliveryservice()
+					+ ", hostname = " + certificateData.getHostname() + ") from traffic ops to handshake data! This " +
+					"certificate will not be used by Traffic Router. "
 					+ e.getClass().getSimpleName() + ": " + e.getMessage(), e);
 		}
 		return null;
