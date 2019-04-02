@@ -107,9 +107,9 @@ Assign a set of one or more servers to a :term:`Delivery Service`
 
 Request Structure
 -----------------
-:deliveryService: The integral, unique identifier of the :term:`Delivery Service` to which the servers identified in the ``servers`` array will be assigned
-:replace:         If ``true``, any existing assignments for a server identified in the ``servers`` array will be overwritten by this request
-:servers:         An array of integral, unique identifiers for servers which are to be assigned to the :term:`Delivery Service` identified by ``deliveryService``
+:dsId:    The integral, unique identifier of the :term:`Delivery Service` to which the servers identified in the ``servers`` array will be assigned
+:replace: If ``true``, any existing assignments for a server identified in the ``servers`` array will be overwritten by this request
+:servers: An array of integral, unique identifiers for servers which are to be assigned to the :term:`Delivery Service` identified by ``deliveryService``
 
 .. code-block:: http
 	:caption: Request Example
@@ -126,9 +126,9 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryService: The integral, unique identifier of the :term:`Delivery Service` to which the servers identified by the elements of the ``servers`` array have been assigned
-:replace:         If ``true``, any existing assignments for a server identified in the ``servers`` array have been overwritten by this request
-:servers:         An array of integral, unique identifiers for servers which have been assigned to the :term:`Delivery Service` identified by ``deliveryService``
+:dsId:    The integral, unique identifier of the :term:`Delivery Service` to which the servers identified by the elements of the ``servers`` array have been assigned
+:replace: If ``true``, any existing assignments for a server identified in the ``servers`` array have been overwritten by this request
+:servers: An array of integral, unique identifiers for servers which have been assigned to the :term:`Delivery Service` identified by ``deliveryService``
 
 .. code-block:: http
 	:caption: Response Example
