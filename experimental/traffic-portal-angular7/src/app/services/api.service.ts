@@ -29,6 +29,8 @@ import { Role, User } from '../models/user';
 export class APIService {
 	public API_VERSION = '1.4';
 
+	private deliveryServiceTypes: Array<Type>;
+
 	// private cookies: string;
 
 	constructor (private readonly http: HttpClient) {
@@ -280,6 +282,32 @@ export class APIService {
 					ret.set(t.name, t);
 				}
 				return ret;
+			}
+		));
+	}
+
+	/**
+	 * This method is handled seperately from :js:method:`APIService.getTypes` because this information
+	 * (should) never change, and therefore can be cached. This method makes an HTTP request iff the values are not already
+	 * cached.
+	 * @returns An Observable that will emit an array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service
+	 * 	types.
+	*/
+	public getDSTypes(): Observable<Array<Type>> {
+		if (this.deliveryServiceTypes) {
+			return new Observable(
+				o => {
+					o.next(this.deliveryServiceTypes);
+					o.complete();
+					return {unsubscribe() {}};
+				}
+			);
+		}
+		const path = '/api/' + this.API_VERSION + '/types?useInTable=deliveryservice';
+		return this.get(path).pipe(map(
+			r => {
+				this.deliveryServiceTypes = r.body.response as Array<Type>;
+				return r.body.response as Array<Type>;
 			}
 		));
 	}
