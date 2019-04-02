@@ -67,19 +67,10 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 
 	// ECDSA keys support is only permitted for DNS delivery services
 	// Traffic Router (HTTP* delivery service types) do not support ECDSA keys
-	allowEC := false
 	dsType, dsFound, err := getDSType(inf.Tx.Tx, *req.Key)
-	if err == nil && dsFound {
-		switch dsType {
-		case tc.DSTypeDNS:
-			fallthrough
-		case tc.DSTypeDNSLive:
-			fallthrough
-		case tc.DSTypeDNSLiveNational:
-			allowEC = true
-		default:
-			allowEC = false
-		}
+	allowEC := false
+	if err == nil && dsFound && dsType.IsDNS() {
+		allowEC = true
 	}
 
 	certChain, certPrivateKey, isUnknownAuth, isVerifiedChainNotEqual, err := verifyCertKeyPair(req.Certificate.Crt, req.Certificate.Key, "", allowEC)
