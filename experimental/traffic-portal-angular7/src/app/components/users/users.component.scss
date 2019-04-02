@@ -32,6 +32,25 @@ main > div {
 
 }
 
+@media(max-width: 1230px) {
+	main > div {
+		margin: auto auto auto 15%;
+	}
+}
+
+@media(max-width: 630px) {
+	main > div {
+		width: 75%;
+		margin: auto;
+		position: fixed;
+		left: 12.5%;
+	}
+
+	#users {
+		margin: 25px auto 0;
+	}
+}
+
 #loading {
 	min-height: calc(100vh - 8em - 75px); // filthy hax based on Mozilla default user-agent styling
 	padding: 0;
@@ -40,4 +59,5 @@ main > div {
 	flex-direction: column;
 	margin: auto;
 	top: auto;
+	position: static;
 }

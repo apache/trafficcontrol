@@ -62,11 +62,7 @@ div.card-content {
 	div.canvas-container {
 		width: 100%;
 		position: relative;
-
-		// &.graph-loading {
-		// 	width: 100%;
-		// 	padding-bottom: 56.27%;
-		// }
+		z-index: -1;
 	}
 
 	div.loading {

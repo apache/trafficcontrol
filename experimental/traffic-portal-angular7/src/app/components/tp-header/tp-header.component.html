@@ -15,7 +15,16 @@ limitations under the License.
 	<img src="/assets/logo.svg" alt="Apache Traffic Control logo"/>
 	<h1>{{title ? title : 'Welcome to Traffic Portal!'}}</h1>
 	<div></div>
-	<nav>
+	<nav id="expanded">
+		<ul>
+			<li><a routerLink="/">Home</a></li>
+			<li><a routerLink="/users">Users</a></li>
+			<li><a href="#">Tools</a></li>
+		</ul>
+	</nav>
+	<nav id="collapsed">
+		<input type="checkbox" hidden id="collapsed-menu"/>
+		<label for="collapsed-menu"></label>
 		<ul>
 			<li><a routerLink="/">Home</a></li>
 			<li><a routerLink="/users">Users</a></li>
