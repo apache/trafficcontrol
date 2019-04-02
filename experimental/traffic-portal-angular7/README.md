@@ -79,13 +79,25 @@ Optional arguments:
   -h, --help            Show this help message and exit.
   -v, --version         Show program's version number and exit.
   -t TRAFFIC_OPS, --traffic-ops TRAFFIC_OPS
-                        Specify the Traffic Ops host/URL, including port. 
+                        Specify the Traffic Ops host/URL, including port.
                         (Default: uses the `TO_URL` environment variable)
-  -k, --insecure        Skip Traffic Ops server certificate validation.
-  -p PORT, --port PORT  Specify the port on which Traffic Portal will listen 
+  -k, --insecure        Skip Traffic Ops server certificate validation. This
+                        affects requests from Traffic Portal to Traffic Ops
+                        AND signature verification of any passed SSL
+  -p PORT, --port PORT  Specify the port on which Traffic Portal will listen
                         (Default: 4200)
+  -c CERT_PATH, --cert-path CERT_PATH
+                        Specify a location for an SSL certificate to be used
+                        by Traffic Portal. (Requires `-K`/`--key-path`. If
+                        both are omitted, will serve using HTTP)
+  -K KEY_PATH, --key-path KEY_PATH
+                        Specify a location for an SSL certificate to be used
+                        by Traffic Portal. (Requires `-c`/`--cert-path`. If
+                        both are omitted, will serve using HTTP)
 $
 ```
+
+Note that only certificates for `localhost` are accepted at the time of this writing.
 
 #### Debug Mode
 Because we need to proxy API requests back to Traffic Ops, running in debug mode is a bit more involved than it normally would be. Specifically, it'll require making a new file somewhere with the following information in JSON format:
@@ -109,7 +121,7 @@ Now, assuming this in the project directory (i.e. the same one as this README.md
 ng serve --proxy-config ./proxy.json
 ```
 
-By default this will set up an Angular debug-mode server to run, listening on port 4200. Note that regardless of production-mode SSL configuration (TODO), this will **only serve unencrypted HTTP responses by default**. Also, unlike production mode which compiles things ahead of time, this will compile resources on-the-fly so that making changes to a file is immediately "live" without requiring the developer to restart the debug server. Pretty neat, desu.
+By default this will set up an Angular debug-mode server to run, listening on port 4200. Note that regardless of production-mode SSL configuration, this will **only serve unencrypted HTTP responses by default**. Also, unlike production mode which compiles things ahead of time, this will compile resources on-the-fly so that making changes to a file is immediately "live" without requiring the developer to restart the debug server. Pretty neat, desu.
 
 ## Contributing
 This project uses `tslint` and an `.editorconfig` file for maintaining code style. If your editor doesn't support `.editorconfig` (VS Code does out-of-the-box as I understand, but Vim and Sublime Text need plugins. Atom ~~doesn't~~ shouldn't exist) then you'll want to manually configure it so as to avoid linting errors. There's quite a bit going on, but the big ones are:

@@ -20,8 +20,9 @@ import {ngExpressEngine} from '@nguniversal/express-engine';
 import {provideModuleMap} from '@nguniversal/module-map-ngfactory-loader';
 
 import * as express from 'express';
+import {existsSync, readFileSync, statSync} from 'fs';
 import {request as HTTPRequest} from 'http';
-import {request as HTTPSRequest} from 'https';
+import {request as HTTPSRequest, createServer} from 'https';
 import {join} from 'path';
 import {parse} from 'url';
 import * as zlib from 'zlib';
@@ -54,13 +55,24 @@ parser.addArgument(['-t', '--traffic-ops'], {
 	}
 });
 parser.addArgument(['-k', '--insecure'], {
-	help: 'Skip Traffic Ops server certificate validation.',
+	help: 'Skip Traffic Ops server certificate validation.' +
+	      'This affects requests from Traffic Portal to Traffic Ops AND signature verification of any passed SSL keys/certificates',
 	action: 'storeTrue'
 });
 parser.addArgument(['-p', '--port'], {
 	help: 'Specify the port on which Traffic Portal will listen (Default: 4200)',
 	type: Number,
 	defaultValue: 4200
+});
+parser.addArgument(['-c', '--cert-path'], {
+	help: 'Specify a location for an SSL certificate to be used by Traffic Portal. (Requires `-K`/`--key-path`.' +
+	      ' If both are omitted, will serve using HTTP)',
+	type: String
+});
+parser.addArgument(['-K', '--key-path'], {
+	help: 'Specify a location for an SSL certificate to be used by Traffic Portal. (Requires `-c`/`--cert-path`.' +
+	      ' If both are omitted, will serve using HTTP)',
+	type: String
 });
 
 const args = parser.parseArgs();
@@ -125,6 +137,12 @@ if (to_url.port) {
 
 const TO_URL = 'http' + (to_use_SSL ? 's' : '') + '://' + to_host + ':' + String(to_port);
 
+if ((args.cert_path && !args.key_path) || (!args.cert_path && args.key_path)) {
+	console.error("Either both `-c`/`--cert-path` and `-K`/`--key-path` must be given, or neither.");
+	process.exit(1);
+}
+const serveSSL = args.cert_path && args.key_path;
+
 console.debug('Traffic Ops server at:', TO_URL);
 
 // Ignore untrusted certificate signers
@@ -157,6 +175,35 @@ pingRequest.on('error', e => {
 	process.exit(2);
 });
 pingRequest.end();
+
+// Read in SSL key/cert if present.
+let key: string;
+let cert: string;
+if (serveSSL) {
+	if (!existsSync(args.key_path)) {
+		console.error('%s: no such file or directory', args.key_path);
+		process.exit(1);
+	}
+	if (statSync(args.key_path).isDirectory()) {
+		console.error('%s: is a directory', args.key_path);
+		process.exit(1);
+	}
+	if (!existsSync(args.cert_path)) {
+		console.error('%s: no such file or directory', args.cert_path);
+		process.exit(1);
+	}
+	if (statSync(args.cert_path).isDirectory()) {
+		console.error('%s: is a directory', args.cert_path);
+		process.exit(1);
+	}
+	try {
+		key = readFileSync(args.key_path, 'utf8');
+		cert = readFileSync(args.cert_path, 'utf8');
+	} catch (e) {
+		console.error("An error occurred reading SSL certificate/key files:", e);
+		process.exit(1);
+	}
+}
 
 
 // Express server
@@ -218,6 +265,19 @@ app.get('*', (req, res) => {
 app.enable('trust proxy');
 
 // Start up the Node server
-app.listen(args.port, () => {
-	console.log(`Node Express server listening on http://localhost:${args.port}`);
-});
+function logMsg() {
+	if (serveSSL) {
+		console.log(`Node Express server listening on https://localhost:${args.port}`);
+	} else {
+		console.log(`Node Express server listening on http://localhost:${args.port}`);
+	}
+}
+if (serveSSL) {
+	createServer({
+		key: key,
+		cert: cert,
+		rejectUnauthorized: !args.insecure,
+	}, app).listen(args.port, logMsg);
+} else {
+	app.listen(args.port, logMsg);
+}
