@@ -80,11 +80,6 @@ func (ds *TODeliveryServiceV14) Validate() error {
 	return ds.DeliveryServiceNullable.Validate(ds.APIInfo().Tx.Tx)
 }
 
-// Create is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
-func (ds *TODeliveryServiceV14) Create() (error, error, int) {
-	return nil, nil, http.StatusNotImplemented
-}
-
 // 	TODO allow users to post names (type, cdn, etc) and get the IDs from the names. This isn't trivial to do in a single query, without dynamically building the entire insert query, and ideally inserting would be one query. But it'd be much more convenient for users. Alternatively, remove IDs from the database entirely and use real candidate keys.
 func CreateV14(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -131,11 +126,6 @@ func (ds *TODeliveryServiceV14) Read() ([]interface{}, error, error, int) {
 		returnable = append(returnable, ds)
 	}
 	return returnable, nil, nil, http.StatusOK
-}
-
-// Update is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
-func (ds *TODeliveryServiceV14) Update() (error, error, int) {
-	return nil, nil, http.StatusNotImplemented
 }
 
 func UpdateV14(w http.ResponseWriter, r *http.Request) {

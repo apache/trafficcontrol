@@ -21,6 +21,7 @@ package ats
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/jmoiron/sqlx"
@@ -50,47 +51,41 @@ func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	where := "WHERE ds.xml_id = '" + inf.Params["xml-id"] + "'"
-	query := deliveryservice.GetDSSelectQuery() + where
-	dses, errs, _ := deliveryservice.GetDeliveryServices(query, nil, inf.Tx)
-
-	if len(errs) > 0 {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_xml-id.config text: "+err.Error()))
+	ds, err := getDeliveryService(inf.Tx, inf.Params["xml-id"])
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
 		return
 	}
 
-	if len(dses) > 0 {
-		ds := dses[0]
-		maxOriginConnections := *ds.MaxOriginConnections
+	maxOriginConnections := *ds.MaxOriginConnections
 
-		dsType, err := deliveryservice.GetDeliveryServiceType(*ds.ID, inf.Tx.Tx)
+	dsType, err := deliveryservice.GetDeliveryServiceType(*ds.ID, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_xml-id.config text: "+err.Error()))
+		return
+	}
+	usesMids := dsType.UsesMidCache()
+
+	// write a header rewrite rule if maxOriginConnections > 0 and the ds does NOT use mids
+	if maxOriginConnections > 0 && !usesMids {
+		dsOnlineEdgeCount, err := getOnlineDSEdgeCount(inf.Tx, *ds.ID)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_xml-id.config text: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ds server count: "+err.Error()))
 			return
 		}
-		usesMids := dsType.UsesMidCache()
+		maxOriginConnectionsPerEdge := int(math.Round(float64(maxOriginConnections) / float64(dsOnlineEdgeCount)))
+		if ds.EdgeHeaderRewrite == nil {
+			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge) + " [L]"
+		} else {
+			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge) + "\n"
 
-		// write a header rewrite rule if maxOriginConnections > 0 and the ds does NOT use mids
-		if maxOriginConnections > 0 && !usesMids {
-			dsEdgeCount, err := getDSEdgeCount(inf.Tx, *ds.ID)
-			maxOriginConnectionsPerEdge := int(math.Round(float64(maxOriginConnections) / float64(dsEdgeCount)))
-			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ds server count: "+err.Error()))
-				return
-			}
-			if ds.EdgeHeaderRewrite == nil {
-				text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge) + " [L]"
-			} else {
-				text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge) + "\n"
-
-			}
 		}
+	}
 
-		// write the contents of ds.EdgeHeaderRewrite to hdr_rw_xml-id.config replacing any instances of __RETURN__ (surrounded by spaces or not) with \n
-		if ds.EdgeHeaderRewrite != nil {
-			var re = regexp.MustCompile(`\s*__RETURN__\s*`)
-			text += re.ReplaceAllString(*ds.EdgeHeaderRewrite, "\n")
-		}
+	// write the contents of ds.EdgeHeaderRewrite to hdr_rw_xml-id.config replacing any instances of __RETURN__ (surrounded by spaces or not) with \n
+	if ds.EdgeHeaderRewrite != nil {
+		var re = regexp.MustCompile(`\s*__RETURN__\s*`)
+		text += re.ReplaceAllString(*ds.EdgeHeaderRewrite, "\n")
 	}
 
 	text += "\n"
@@ -119,47 +114,41 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	where := "WHERE ds.xml_id = '" + inf.Params["xml-id"] + "'"
-	query := deliveryservice.GetDSSelectQuery() + where
-	dses, errs, _ := deliveryservice.GetDeliveryServices(query, nil, inf.Tx)
-
-	if len(errs) > 0 {
+	ds, err := getDeliveryService(inf.Tx, inf.Params["xml-id"])
+	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
 		return
 	}
 
-	if len(dses) > 0 {
-		ds := dses[0]
-		maxOriginConnections := *ds.MaxOriginConnections
+	maxOriginConnections := *ds.MaxOriginConnections
 
-		dsType, err := deliveryservice.GetDeliveryServiceType(*ds.ID, inf.Tx.Tx)
+	dsType, err := deliveryservice.GetDeliveryServiceType(*ds.ID, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
+		return
+	}
+	usesMids := dsType.UsesMidCache()
+
+	// write a header rewrite rule if maxOriginConnections > 0 and the ds DOES use mids
+	if maxOriginConnections > 0 && usesMids {
+		dsOnlineMidCount, err := getOnlineDSMidCount(inf.Tx, *ds.ID)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ds server count: "+err.Error()))
 			return
 		}
-		usesMids := dsType.UsesMidCache()
+		maxOriginConnectionsPerMid := int(math.Round(float64(maxOriginConnections) / float64(dsOnlineMidCount)))
+		if ds.MidHeaderRewrite == nil {
+			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid) + " [L]"
+		} else {
+			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid) + "\n"
 
-		// write a header rewrite rule if maxOriginConnections > 0 and the ds DOES use mids
-		if maxOriginConnections > 0 && usesMids {
-			dsMidCount, err := getDSMidCount(inf.Tx, *ds.CDNID)
-			maxOriginConnectionsPerMid := int(math.Round(float64(maxOriginConnections) / float64(dsMidCount)))
-			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ds server count: "+err.Error()))
-				return
-			}
-			if ds.MidHeaderRewrite == nil {
-				text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid) + " [L]"
-			} else {
-				text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid) + "\n"
-
-			}
 		}
+	}
 
-		// write the contents of ds.MidHeaderRewrite to hdr_rw_mid_xml-id.config replacing any instances of __RETURN__ (surrounded by spaces or not) with \n
-		if ds.MidHeaderRewrite != nil {
-			var re = regexp.MustCompile(`\s*__RETURN__\s*`)
-			text += re.ReplaceAllString(*ds.MidHeaderRewrite, "\n")
-		}
+	// write the contents of ds.MidHeaderRewrite to hdr_rw_mid_xml-id.config replacing any instances of __RETURN__ (surrounded by spaces or not) with \n
+	if ds.MidHeaderRewrite != nil {
+		var re = regexp.MustCompile(`\s*__RETURN__\s*`)
+		text += re.ReplaceAllString(*ds.MidHeaderRewrite, "\n")
 	}
 
 	text += "\n"
@@ -168,19 +157,44 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(text))
 }
 
-func getDSEdgeCount(tx *sqlx.Tx, dsID int) (int, error) {
-	qry := `SELECT count(1) FROM deliveryservice_server WHERE deliveryservice = $1`
+func getDeliveryService(tx *sqlx.Tx, xmlId string) (tc.DeliveryServiceNullable, error) {
+	qry := `SELECT id, cdn_id, max_origin_connections, edge_header_rewrite, mid_header_rewrite FROM deliveryservice WHERE xml_id = $1`
+	ds := tc.DeliveryServiceNullable{}
+	if err := tx.QueryRow(qry, xmlId).Scan(&ds.ID, &ds.CDNID, &ds.MaxOriginConnections, &ds.EdgeHeaderRewrite, &ds.MidHeaderRewrite); err != nil {
+		return tc.DeliveryServiceNullable{}, err
+	}
+	return ds, nil
+}
+// get the count of "online" edges assigned to a delivery service
+func getOnlineDSEdgeCount(tx *sqlx.Tx, dsID int) (int, error) {
 	count := 0
+	qry := `SELECT count(1)
+	  	FROM deliveryservice_server 
+		JOIN server ON deliveryservice_server.server = server.id 
+		JOIN status ON server.status = status.id
+		WHERE deliveryservice_server.deliveryservice = $1 AND status.name IN ('REPORTED', 'ONLINE')`
 	if err := tx.QueryRow(qry, dsID).Scan(&count); err != nil {
 		return 0, err
 	}
 	return count, nil
 }
 
-func getDSMidCount(tx *sqlx.Tx, cdnID int) (int, error) {
-	qry := `SELECT count(1) FROM server WHERE type = (SELECT id FROM type WHERE name = 'MID') AND cdn_id = $1`
+// 1. get the cache groups of the edges assigned to the ds
+// 2. get the parent cachegroups for those cachegroups (found in 1)
+// 3. get the servers that belong to thos cachegroups that are a) mids and b) online/reported
+func getOnlineDSMidCount(tx *sqlx.Tx, dsID int) (int, error) {
 	count := 0
-	if err := tx.QueryRow(qry, cdnID).Scan(&count); err != nil {
+	qry := `SELECT COUNT(1)
+FROM server AS s 
+JOIN type AS t ON s.type = t.id
+JOIN status AS st ON s.status = st.id
+WHERE t.name = 'MID' AND st.name IN ('ONLINE', 'REPORTED') AND s.cachegroup IN (
+    SELECT cg.parent_cachegroup_id FROM cachegroup AS cg 
+    WHERE cg.id IN (
+        SELECT s.cachegroup FROM server AS s 
+        WHERE s.id IN (
+            SELECT server FROM deliveryservice_server WHERE deliveryservice = $1)))`
+	if err := tx.QueryRow(qry, dsID).Scan(&count); err != nil {
 		return 0, err
 	}
 	return count, nil
