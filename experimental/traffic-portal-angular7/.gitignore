@@ -15,6 +15,10 @@
 /tmp
 /out-tsc
 
+# Generated docs
+/docs
+/doc
+
 # dependencies
 /node_modules
 

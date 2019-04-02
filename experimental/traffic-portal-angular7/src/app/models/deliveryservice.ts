@@ -214,6 +214,6 @@ export class DeliveryService {
 	trRequestHeaders?:        string;
 	trResponseHeaders?:       string;
 	type?:                    string;
-	typeId:                   number; // TODO: Deterministic? Use enum if so
+	typeId:                   number;
 	xmlId:                    string;
 }
