@@ -39,6 +39,8 @@ import (
 const TypeCacheGroupOrigin = "ORG_LOC"
 const DefaultATSVersion = "5" // emulates Perl
 
+const InvalidID = -1
+
 func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id-or-host"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -87,7 +89,6 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 	text := ""
 	// TODO put these in separate functions. No if-statement should be this long.
 	if serverInfo.IsTopLevelCache() {
-		log.Errorf("DEBUG PCGen isTopLevel\n")
 		uniqueOrigins := map[string]struct{}{}
 
 		data, err := getParentConfigDSTopLevel(inf.Tx.Tx, serverInfo.CDN)
@@ -98,11 +99,9 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 
 		parentInfos := map[string][]ParentInfo{} // TODO better names (this was transliterated from Perl)
 
-		log.Errorf("DEBUG PCGTL len(data) %+v\n", len(data))
-
 		for _, ds := range data {
 			parentQStr := "ignore"
-			if ds.QStringHandling == "" && ds.MSOAlgorithm == AlgorithmConsistentHash && ds.QStringIgnore == 0 {
+			if ds.QStringHandling == "" && ds.MSOAlgorithm == AlgorithmConsistentHash && ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp {
 				parentQStr = "consider"
 			}
 
@@ -124,26 +123,19 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if _, ok := uniqueOrigins[ds.OriginFQDN]; ok {
-				// log.Errorf("DEBUG PCGT uniqueorigins skipping %+v\n", ds.OriginFQDN)
 				continue // TODO warn?
 			}
 			uniqueOrigins[ds.OriginFQDN] = struct{}{}
 
-			log.Errorf("DEBUG PCGTQ origin %+v\n", ds.OriginFQDN)
-
-			// log.Errorf("DEBUG PCGT uniqueorigins adding ds '%+v' ds.OriginfQDN '%+v' orgURI.Hostname '%+v'\n", ds.Name, ds.OriginFQDN, orgURI.Hostname())
-
 			textLine := ""
 
 			if ds.OriginShield != "" {
-				log.Errorf("DEBUG PCGT ds '%+v' is origin shield\n", ds.Name)
 				// TODO fix to only call once
 				serverParams, err := getParentConfigServerProfileParams(inf.Tx.Tx, serverInfo.ID)
 				if err != nil {
 					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting server params: "+err.Error()))
 					return
 				}
-				// log.Errorf("DEBUG PCGT getParentConfigServerProfileParams %+v len %+v\n", serverInfo.ID, len(serverParams))
 
 				algorithm := ""
 				if parentSelectAlg, hasParentSelectAlg := serverParams[ParentConfigParamAlgorithm]; hasParentSelectAlg {
@@ -151,12 +143,10 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 				}
 				textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " parent=" + ds.OriginShield + " " + algorithm + " go_direct=true\n"
 			} else if ds.MultiSiteOrigin {
-				log.Errorf("DEBUG PCGT ds '%+v' is multisite\n", ds.Name)
 				textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " "
 				if len(parentInfos) == 0 {
 					// If we have multi-site origin, get parent_data once
 					parentInfos, err = getParentInfo(inf.Tx.Tx, serverInfo)
-					// log.Errorf("DEBUG PCGT getParentInfo len %+v\n", len(parentInfos))
 					if err != nil {
 						api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting server parent info: "+err.Error()))
 						return
@@ -167,10 +157,6 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 					// TODO error? emulates Perl
 					log.Warnln("ParentInfo: delivery service " + ds.Name + " has no parent servers")
 				}
-
-				// log.Errorf("DEBUG PCGT parentInfos len %+v\n", len(parentInfos))
-				// log.Errorf("DEBUG PCGT parentInfos origin '"+orgURI.Hostname()+"' len %+v\n", len(parentInfos[orgURI.Hostname()]))
-				// log.Errorf("DEBUG PCGT parentInfos %++v\n\n", parentInfos)
 
 				rankedParents := ParentInfoSortByRank(parentInfos[orgURI.Hostname()])
 				sort.Sort(rankedParents)
@@ -220,10 +206,8 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 				parentRetry := ds.MSOParentRetry
 				if atsMajorVer >= 6 && parentRetry != "" {
 					if unavailableServerRetryResponsesValid(ds.MSOUnavailableServerRetryResponses) {
-						log.Errorf("DEBUG unavailableServerRetryResponsesValid '%+v'\n", ds.MSOUnavailableServerRetryResponses)
 						textLine += ` parent_retry=` + parentRetry + ` unavailable_server_retry_responses=` + ds.MSOUnavailableServerRetryResponses
 					} else {
-						log.Errorf("DEBUG unavailableServerRetryResponsesValid '%+v' NOT\n", ds.MSOUnavailableServerRetryResponses)
 						if ds.MSOUnavailableServerRetryResponses != "" {
 							log.Errorln("Malformed unavailable_server_retry_responses parameter '" + ds.MSOUnavailableServerRetryResponses + "', not using!")
 						}
@@ -233,14 +217,11 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 				}
 				textLine += "\n"
 				textArr = append(textArr, textLine)
-			} else {
-				// log.Errorf("DEBUG PCGT ds '%+v' neither origin shield nor multisite\n", ds.Name)
 			}
 		}
 		sort.Sort(sort.StringSlice(textArr))
 		text = hdr + strings.Join(textArr, "")
 	} else {
-		log.Errorf("DEBUG PCGen not top level\n")
 		// not a top level cache
 		data, err := getParentConfigDS(inf.Tx.Tx, serverInfo.ID) // TODO rename
 		if err != nil {
@@ -248,15 +229,11 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Errorf("DEBUG PCGen got data len %+v\n", len(data))
-
 		parentInfos, err := getParentInfo(inf.Tx.Tx, serverInfo)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting server parent info (non-top-level: "+err.Error()))
 			return
 		}
-
-		log.Errorf("DEBUG PCGen got parent info len %+v\n", len(parentInfos))
 
 		done := map[string]tc.DeliveryServiceName{}                                       // map[originHost]ds
 		serverParams, err := getParentConfigServerProfileParams(inf.Tx.Tx, serverInfo.ID) // (map[string]string, error) {
@@ -265,13 +242,9 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Errorf("DEBUG PCGen got server params len %+v\n", len(serverParams))
-
 		qsh := serverParams[ParentConfigParamQStringHandling] // TODO rename
 		parentInfo := []string{}
 		secondaryParentInfo := []string{}
-
-		log.Errorf("DEBUG PCGen ranging over len(parentInfos[DeliveryServicesAllParentsKey]) %+v\n", len(parentInfos[DeliveryServicesAllParentsKey]))
 
 		parentInfosAllParents := parentInfos[DeliveryServicesAllParentsKey]
 		sort.Sort(ParentInfoSortByRank(parentInfosAllParents))
@@ -307,7 +280,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 		}
 
 		roundRobin := `round_robin=consistent_hash`
-		goDirect := `go_direct=false` // TODO double-check with Perl, that this isn't ever different
+		goDirect := `go_direct=false`
 
 		sort.Sort(ParentConfigDSSortByName(data))
 		for _, ds := range data {
@@ -339,10 +312,6 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			// debug
-			if orgURI.Hostname() == "odol-cim-linear-hds.cmc.co.ndcwest.comcast.net" {
-				log.Errorf("DEBUG ds '%+v' orgURI '%+v' is %++v\n", ds.Name, orgURI.Hostname(), ds)
-			}
 			// TODO encode this in a DSType func, IsGoDirect() ?
 			if dsType := tc.DSType(ds.Type); dsType == tc.DSTypeHTTPNoCache || dsType == tc.DSTypeHTTPLive || dsType == tc.DSTypeDNSLive {
 				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
@@ -364,7 +333,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 				if parentQStr == "" {
 					parentQStr = "ignore"
 				}
-				if ds.QStringIgnore == 0 && dsQSH == "" {
+				if ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp && dsQSH == "" {
 					parentQStr = "consider"
 				}
 
@@ -441,8 +410,6 @@ func (s ParentConfigDSSortByName) Less(i, j int) bool {
 	return strings.Compare(string(s[i].Name), string(s[j].Name)) < 0
 }
 
-//ParentConfigDS
-
 const AlgorithmConsistentHash = "consistent_hash"
 
 type ServerInfo struct {
@@ -464,18 +431,18 @@ type ServerInfo struct {
 }
 
 func (s *ServerInfo) IsTopLevelCache() bool {
-	return (s.ParentCacheGroupType == TypeCacheGroupOrigin || s.ParentCacheGroupID == 0) &&
-		(s.ParentCacheGroupType == TypeCacheGroupOrigin || s.SecondaryParentCacheGroupID == 0)
+	return (s.ParentCacheGroupType == TypeCacheGroupOrigin || s.ParentCacheGroupID == InvalidID) &&
+		(s.SecondaryParentCacheGroupType == TypeCacheGroupOrigin || s.SecondaryParentCacheGroupID == InvalidID)
 }
 
 // getServerInfo returns the necessary info about the server, whether the server exists, and any error.
 func getServerInfoByID(tx *sql.Tx, id int) (*ServerInfo, bool, error) {
-	return getServerInfo(tx, ServerInfoQuery+`WHERE s.id = $1`, []interface{}{id})
+	return getServerInfo(tx, ServerInfoQuery()+`WHERE s.id = $1`, []interface{}{id})
 }
 
 // getServerInfo returns the necessary info about the server, whether the server exists, and any error.
 func getServerInfoByHost(tx *sql.Tx, host string) (*ServerInfo, bool, error) {
-	return getServerInfo(tx, ServerInfoQuery+` WHERE s.host_name = $1 `, []interface{}{host})
+	return getServerInfo(tx, ServerInfoQuery()+` WHERE s.host_name = $1 `, []interface{}{host})
 }
 
 // getServerInfo returns the necessary info about the server, whether the server exists, and any error.
@@ -491,7 +458,8 @@ func getServerInfo(tx *sql.Tx, qry string, qryParams []interface{}) (*ServerInfo
 	return &s, true, nil
 }
 
-const ServerInfoQuery = `
+func ServerInfoQuery() string {
+	return `
 SELECT
   c.name as cdn,
   s.cdn_id,
@@ -504,8 +472,8 @@ SELECT
   s.tcp_port,
   t.name as type,
   s.cachegroup,
-  COALESCE(cg.parent_cachegroup_id, -1),
-  COALESCE(cg.secondary_parent_cachegroup_id, -1),
+  COALESCE(cg.parent_cachegroup_id, ` + strconv.Itoa(InvalidID) + `),
+  COALESCE(cg.secondary_parent_cachegroup_id, ` + strconv.Itoa(InvalidID) + `),
   COALESCE(parentt.name, '') as parent_cachegroup_type,
   COALESCE(sparentt.name, '') as secondary_parent_cachegroup_type
 FROM
@@ -517,6 +485,7 @@ FROM
   LEFT JOIN type parentt on parentt.id = (select type from cachegroup where id = cg.parent_cachegroup_id)
   LEFT JOIN type sparentt on sparentt.id = (select type from cachegroup where id = cg.secondary_parent_cachegroup_id)
 `
+}
 
 // GetATSMajorVersion returns the major version of the given profile's package trafficserver parameter.
 // If no parameter exists, this does not return an error, but rather logs a warning and uses DefaultATSVersion.
@@ -550,7 +519,6 @@ WHERE
   AND p.config_file = $2
   AND p.name = $3
 `
-	log.Errorf("DEBUG GetProfileParamValue calling with %v %v %v\n", profileID, configFile, name)
 	val := ""
 	if err := tx.QueryRow(qry, profileID, configFile, name).Scan(&val); err != nil {
 		if err == sql.ErrNoRows {
@@ -563,7 +531,7 @@ WHERE
 
 type ParentConfigDS struct {
 	Name            tc.DeliveryServiceName
-	QStringIgnore   int
+	QStringIgnore   tc.QStringIgnore
 	OriginFQDN      string
 	MultiSiteOrigin bool
 	OriginShield    string
@@ -581,10 +549,11 @@ type ParentConfigDSTopLevel struct {
 	MSOMaxUnavailableServerRetries     string
 }
 
-const ParentConfigDSQuerySelect = `
+func ParentConfigDSQuerySelect() string {
+	return `
 SELECT
   ds.xml_id,
-  COALESCE(ds.qstring_ignore, 0),
+  COALESCE(ds.qstring_ignore, ` + tc.QStringIgnoreUseInCacheKeyAndPassUp.String() + `),
   COALESCE((SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
     FROM origin o
     WHERE o.deliveryservice = ds.id
@@ -593,6 +562,8 @@ SELECT
   COALESCE(ds.origin_shield, ''),
   dt.name AS ds_type
 `
+}
+
 const ParentConfigDSQueryFromTopLevel = `
 FROM
   deliveryservice ds
@@ -600,10 +571,6 @@ FROM
   JOIN cdn ON cdn.id = ds.cdn_id
 ` // TODO Perl does 'JOIN deliveryservice_regex dsr ON dsr.deliveryservice = ds.id   JOIN regex r ON dsr.regex = r.id   JOIN type as rt ON r.type = rt.id' and orders by, but doesn't use; ensure it isn't necessary
 
-//debug
-// const ParentConfigDSQueryFrom = ParentConfigDSQueryFromTopLevel + `
-// JOIN deliveryservice_server dss ON dss.deliveryservice = ds.id
-// `
 const ParentConfigDSQueryFrom = ParentConfigDSQueryFromTopLevel + `
 `
 
@@ -611,10 +578,6 @@ const ParentConfigDSQueryOrder = `
 ORDER BY ds.id
 ` // TODO: perl does 'ORDER BY ds.id, rt.name, dsr.set_number' - but doesn't actually use regexes - ensure it isn't necessary
 
-//debug
-// const ParentConfigDSQueryWhere = `
-// WHERE dss.server = $1
-// `
 const ParentConfigDSQueryWhere = `
 WHERE ds.id in (SELECT DISTINCT(dss.deliveryservice) FROM deliveryservice_server dss where dss.server = $1)
 `
@@ -626,18 +589,22 @@ WHERE
   AND ds.active = true
 `
 
-const ParentConfigDSQuery = ParentConfigDSQuerySelect +
-	ParentConfigDSQueryFrom +
-	ParentConfigDSQueryWhere +
-	ParentConfigDSQueryOrder
+func ParentConfigDSQuery() string {
+	return ParentConfigDSQuerySelect() +
+		ParentConfigDSQueryFrom +
+		ParentConfigDSQueryWhere +
+		ParentConfigDSQueryOrder
+}
 
-const ParentConfigDSQueryTopLevel = ParentConfigDSQuerySelect +
-	ParentConfigDSQueryFromTopLevel +
-	ParentConfigDSQueryWhereTopLevel +
-	ParentConfigDSQueryOrder
+func ParentConfigDSQueryTopLevel() string {
+	return ParentConfigDSQuerySelect() +
+		ParentConfigDSQueryFromTopLevel +
+		ParentConfigDSQueryWhereTopLevel +
+		ParentConfigDSQueryOrder
+}
 
 func getParentConfigDSTopLevel(tx *sql.Tx, cdnName tc.CDNName) ([]ParentConfigDSTopLevel, error) {
-	dses, err := getParentConfigDSRaw(tx, ParentConfigDSQueryTopLevel, []interface{}{cdnName})
+	dses, err := getParentConfigDSRaw(tx, ParentConfigDSQueryTopLevel(), []interface{}{cdnName})
 	if err != nil {
 		return nil, errors.New("getting top level raw parent config ds: " + err.Error())
 	}
@@ -646,40 +613,17 @@ func getParentConfigDSTopLevel(tx *sql.Tx, cdnName tc.CDNName) ([]ParentConfigDS
 		topDSes = append(topDSes, ParentConfigDSTopLevel{ParentConfigDS: ds})
 	}
 
-	// log.Errorf("DEBUG getParentConfigDSTopLevel topDses len %+v\n", len(topDSes))
-
-	debugDSes := map[tc.DeliveryServiceName]struct{}{}
-	for _, ds := range topDSes {
-		debugDSes[ds.Name] = struct{}{}
-	}
-	// log.Errorf("DEBUG getParentConfigDSTopLevel debugDSes %++v\n", debugDSes)
-	// log.Errorf("DEBUG getParentConfigDSTopLevel debugDSes len %++v\n", len(debugDSes))
-
 	dsesWithParams, err := getParentConfigDSParamsTopLevel(tx, topDSes)
 	if err != nil {
 		return nil, errors.New("getting top level ds params: " + err.Error())
 	}
 
-	// log.Errorf("DEBUG getParentConfigDSTopLevel dsesWithParams len %+v\n", len(dsesWithParams))
-
 	return dsesWithParams, nil
 }
 
 func getParentConfigDS(tx *sql.Tx, serverID int) ([]ParentConfigDS, error) {
-	log.Errorln("DEBUG dupar query QQ" + ParentConfigDSQuery + "QQ")
 
-	dses, err := getParentConfigDSRaw(tx, ParentConfigDSQuery, []interface{}{serverID})
-
-	// debug
-	seen := map[tc.DeliveryServiceName]struct{}{}
-	log.Errorf("DEBUG dupar checking\n")
-	for _, ds := range dses {
-		if _, ok := seen[ds.Name]; ok {
-			log.Errorf("DEBUG dupar %v\n", ds)
-		}
-		seen[ds.Name] = struct{}{}
-	}
-	log.Errorf("DEBUG dupar checked.\n")
+	dses, err := getParentConfigDSRaw(tx, ParentConfigDSQuery(), []interface{}{serverID})
 
 	if err != nil {
 		return nil, errors.New("getting raw parent config ds: " + err.Error())
@@ -691,10 +635,6 @@ func getParentConfigDS(tx *sql.Tx, serverID int) ([]ParentConfigDS, error) {
 	}
 	return dsesWithParams, nil
 }
-
-// my $qstring = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'qstring', undef );
-// 		my $parent_select_alg = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'algorithm', undef );
-// my $qsh = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'psel.qstring_handling');
 
 const ParentConfigParamQStringHandling = "psel.qstring_handling"
 const ParentConfigParamMSOAlgorithm = "mso.algorithm"
@@ -742,7 +682,6 @@ WHERE
 }
 
 func getParentConfigDSRaw(tx *sql.Tx, qry string, qryParams []interface{}) ([]ParentConfigDS, error) {
-	log.Errorf("DEBUG PCGen getParentConfigDSRaw qry qqq%+vqqq params %+v\n", qry, qryParams)
 	rows, err := tx.Query(qry, qryParams...)
 	if err != nil {
 		return nil, errors.New("querying: " + err.Error())
@@ -852,7 +791,6 @@ func getParentConfigDSParamsTopLevel(tx *sql.Tx, dses []ParentConfigDSTopLevel) 
 	}
 	for i, ds := range dses {
 		dsParams, ok := params[ds.Name]
-		log.Errorf("DEBUG dsParams %++v\n", dsParams)
 		if !ok {
 			continue // TODO warn? set defaults anyway??
 		}
@@ -904,7 +842,6 @@ func getParentConfigDSParamsRaw(tx *sql.Tx, qry string, dsNames []string) (map[t
 		if err := rows.Scan(&dsName, &pName, &pVal); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
-		log.Errorf("DEBUG getParentConfigDSParamsRaw dsName %+v pName %+v pVal %+v\n", dsName, pName, pVal)
 		if _, ok := params[dsName]; !ok {
 			params[dsName] = map[string]string{}
 		}
@@ -927,7 +864,6 @@ type ParentInfo struct {
 
 // parentData parent_data in Perl
 func getParentInfo(tx *sql.Tx, server *ServerInfo) (map[string][]ParentInfo, error) {
-	log.Errorf("DEBUG PCGen getParentInfo\n")
 	parentInfos := map[string][]ParentInfo{}
 
 	serverDomain, ok, err := getCDNDomainByProfileID(tx, server.ProfileID)
@@ -936,18 +872,11 @@ func getParentInfo(tx *sql.Tx, server *ServerInfo) (map[string][]ParentInfo, err
 	} else if !ok || serverDomain == "" {
 		return parentInfos, nil // TODO warn? Perl doesn't.
 	}
-	log.Errorf("DEBUG PCGen getParentInfo got CDN domain '%+v'\n", serverDomain)
 
 	profileCaches, deliveryServices, err := getServerParentCacheGroupProfiles(tx, server)
 	if err != nil {
 		return nil, errors.New("getting server parent cachegroup profiles: " + err.Error())
 	}
-
-	log.Errorf("DEBUG PCGen getParentInfo got profileCaches len '%+v'\n", len(profileCaches))
-	log.Errorf("DEBUG PCGen getParentInfo got deliveryServices len '%+v'\n", len(deliveryServices))
-
-	// log.Errorf("DEBUG PCGen getParentInfo got profileCaches '%++v'\n", profileCaches)
-	// log.Errorf("DEBUG PCGen getParentInfo got deliveryServices '%++v'\n", deliveryServices)
 
 	// note deliveryServies also contains an "all" key
 	// originFQDN is "prefix" in Perl; ds is not really a "ds", that's what it's named in Perl
@@ -955,7 +884,6 @@ func getParentInfo(tx *sql.Tx, server *ServerInfo) (map[string][]ParentInfo, err
 		for _, row := range dses {
 			profile := profileCaches[row.ProfileID]
 			if profile.NotAParent {
-				log.Errorf("DEBUG PCGen getParentInfo row " + row.ServerHost + " not a parent, skipping\n")
 				continue
 			}
 			// Perl has this check, but we only select "deliveryServices" (servers) with the right CDN in the first place
@@ -1085,7 +1013,6 @@ WHERE
 		qryParams = []interface{}{server.CDN, server.ID}
 	}
 
-	// log.Errorln("DEBUG gspi qry QQ" + qry + "QQ")
 	rows, err := tx.Query(qry, qryParams...)
 	if err != nil {
 		return nil, nil, errors.New("querying: " + err.Error())

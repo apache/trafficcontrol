@@ -560,6 +560,31 @@ func (t DSType) UsesMidCache() bool {
 	return true
 }
 
+// QStringIgnore is an entry in the delivery_service table qstring_ignore column, and represents how to treat the URL query string for requests to that delivery service.
+// This enum's String function returns the numeric representation, because it is a legacy database value, and the number should be kept for both database and API JSON uses. For the same reason, this enum has no FromString function.
+type QStringIgnore int
+
+const (
+	QStringIgnoreUseInCacheKeyAndPassUp    QStringIgnore = 0
+	QStringIgnoreIgnoreInCacheKeyAndPassUp QStringIgnore = 1
+	QStringIgnoreDrop                      QStringIgnore = 2
+)
+
+// String returns the string number of the QStringIgnore value.
+// Note this returns the number, not a human-readable value, because QStringIgnore is a legacy database sigil, and both database and API JSON uses should use the number. This also returns 'INVALID' for unknown values, to fail fast in the event of bad data.
+func (e QStringIgnore) String() string {
+	switch e {
+	case QStringIgnoreUseInCacheKeyAndPassUp:
+		fallthrough
+	case QStringIgnoreIgnoreInCacheKeyAndPassUp:
+		fallthrough
+	case QStringIgnoreDrop:
+		return strconv.Itoa(int(e))
+	default:
+		return "INVALID"
+	}
+}
+
 type DSMatchType string
 
 const (
