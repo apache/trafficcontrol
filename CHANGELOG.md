@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - traffic_ops/app/bin/checks/ToDnssecRefresh.pl now requires "user" and "pass" parameters of an operations-level user! Update your scripts accordingly! This was necessary to move to an API endpoint with proper authentication, which may be safely exposed.
 - Traffic Monitor UI updated to support HTTP or HTTPS traffic.
 - Modified Traffic Router logging format to include an additional field for DNS log entries, namely `rhi`. This defaults to '-' and is only used when EDNS0 client subnet extensions are enabled and a client subnet is present in the request. When enabled and a subnet is present, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
+- Changed traffic_ops_ort.pl so that hdr_rw-<ds>.config files are compared with strict ordering and line duplication when detecting configuration changes.
 
 ## [3.0.0] - 2018-10-30
 ### Added

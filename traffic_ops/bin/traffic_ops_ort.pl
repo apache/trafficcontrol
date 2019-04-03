@@ -398,7 +398,7 @@ sub process_cfg_file {
 	my $change_needed = ( join( '\0', @disk_file_lines ) ne join( '\0', @db_file_lines ) );
 
 	# if different, look deeper to see if we care about the diffs (e.g. different order)
-	if ( $change_needed && !( $cfg_file eq 'logs_xml.config' || $cfg_file =~ /\.cer$/ ) ) {
+	if ( $change_needed && !( $cfg_file eq 'logs_xml.config' || $cfg_file =~ m/\.cer$/ || $cfg_file =~ m/hdr\_rw\_(.*)\.config$/ ) ) {
 		my @return             = &diff_file_lines( $cfg_file, \@db_file_lines, \@disk_file_lines );
 		my @db_lines_missing   = @{ shift(@return) };
 		my @disk_lines_missing = @{ shift(@return) };
