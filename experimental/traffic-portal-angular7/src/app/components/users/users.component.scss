@@ -21,7 +21,6 @@ main > div {
 	width: 50%;
 	margin: auto;
 	padding-right: 10px;
-	min-width: 20em;
 	position: sticky;
 	top: 0;
 	z-index: 101;
@@ -32,12 +31,14 @@ main > div {
 
 }
 
+// Low-res monitors
 @media(max-width: 1230px) {
 	main > div {
 		margin: auto auto auto 15%;
 	}
 }
 
+// Anything less than this is probably a phone
 @media(max-width: 630px) {
 	main > div {
 		width: 75%;
@@ -48,6 +49,18 @@ main > div {
 
 	#users {
 		margin: 25px auto 0;
+		width: 95%;
+	}
+}
+
+@media(max-width: 480px) {
+	main > div {
+		left: 7px;
+		width: calc(100vw - 4em);
+	}
+
+	#users {
+		width: 100%;
 	}
 }
 

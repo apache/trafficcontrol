@@ -47,3 +47,9 @@ div.card-content {
 		color: $theme_tertiary;
 	}
 }
+
+@media (max-width: 630px) {
+	div.card-content {
+		grid-template-columns: 1fr;
+	}
+}

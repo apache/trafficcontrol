@@ -21,7 +21,6 @@ main > div {
 	width: 50%;
 	margin: auto;
 	padding-right: 10px;
-	min-width: 20em;
 	position: sticky;
 	top: 0;
 	input {
@@ -46,6 +45,18 @@ main > div {
 
 	#deliveryservices {
 		margin: 25px auto 0;
+		width: 95%;
+	}
+}
+
+@media(max-width: 480px) {
+	main > div {
+		left: 7px;
+		width: calc(100vw - 4em);
+	}
+
+	#deliveryservices {
+		width: 100%;
 	}
 }
 

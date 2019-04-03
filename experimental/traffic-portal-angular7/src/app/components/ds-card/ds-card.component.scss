@@ -22,10 +22,19 @@ details {
 		cursor: pointer;
 
 		span:first-child {
-			float: left;
+			display: inline-block;
+			max-width: 45%;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
 		}
 		span:last-child {
 			float: right;
+			display: inline-block;
+			max-width: 30%;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
 		}
 
 		svg {

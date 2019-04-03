@@ -28,11 +28,10 @@ img {
 form {
 	margin: auto;
 	display: grid;
-	grid-template-columns: 1fr 4fr;
+	grid-template-columns: auto 1fr;
 	grid-column-gap: normal;
 	grid-row-gap: 15px;
-	width: auto; // Old browsers may not support `min-content` (I'm looking at you, Edge)
-	width: min-content;
+	width: 30em;
 	max-width: 85vw;
 	border: 3px outset $theme_secondary;
 	border-radius: 5px;
@@ -42,7 +41,6 @@ form {
 		text-align: right;
 	}
 	input {
-		min-width: 25em;
 		margin-left: 5px;
 		text-align: left;
 	}
