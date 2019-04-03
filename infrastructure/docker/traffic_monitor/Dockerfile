@@ -25,7 +25,7 @@
 # docker run --name my-traffic-monitor-0 --hostname my-traffic-monitor-0 --net=cdnet --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --detach traffic_monitor:1.6.0
 
 FROM centos/systemd
-MAINTAINER Dan Kirkwood
+MAINTAINER dev@trafficcontrol.apache.org
 # Default values for RPM -- override with `docker build --build-arg RPM=...'
 ARG RPM=traffic_monitor.rpm
 ADD $RPM /

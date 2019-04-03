@@ -39,7 +39,7 @@
 # docker run --name my-edge-0 --hostname my-edge-0 --net cdnet --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --detach traffic_server_edge:1.4
 
 FROM centos:6.6
-MAINTAINER Dan Kirkwood
+MAINTAINER dev@trafficcontrol.apache.org
 
 RUN yum install -y perl-JSON
 

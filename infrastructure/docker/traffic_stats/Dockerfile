@@ -25,7 +25,7 @@
 # docker run --name my-traffic-stats --hostname my-traffic-stats --net cdnet --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver --env CERT_COMPANY=NotComcast --detach traffic_stats:1.4
 
 FROM centos:6.6
-MAINTAINER Dan Kirkwood
+MAINTAINER dev@trafficcontrol.apache.org
 
 # Default value for RPM -- override with `docker build --build-arg RPM=...'
 ARG INFLUXDB=http://influxdb.s3.amazonaws.com/influxdb-0.11.1-1.x86_64.rpm

@@ -13,7 +13,7 @@
 #
 FROM postgres:9.6.6
 
-MAINTAINER Dan Kirkwood
+MAINTAINER dev@trafficcontrol.apache.org
 
 # Postgres Access
 ENV POSTGRES_USER=$POSTGRES_USER

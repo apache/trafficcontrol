@@ -22,7 +22,7 @@
 # docker run --add-host="localhost:10.0.2.2" -p 9008:9008 --name my-tour --hostname my-tour --detach traffic_ops_url_rewriter:0.1
 
 FROM nginx:1.9
-MAINTAINER Robert Butts
+MAINTAINER dev@trafficcontrol.apache.org
 
 RUN printf '\
 server {\n\

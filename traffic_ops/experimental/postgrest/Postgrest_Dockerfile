@@ -23,7 +23,7 @@
 
 # Based on Ubuntu because PostgREST binaries have issues on CentOS and would require building from source.
 FROM ubuntu:15.10
-MAINTAINER Robert Butts
+MAINTAINER dev@trafficcontrol.apache.org
 
 RUN apt-get install -y curl tar xz-utils postgresql-client
 RUN curl -LO https://github.com/begriffs/postgrest/releases/download/v0.3.1.1/postgrest-0.3.1.1-ubuntu.tar.xz

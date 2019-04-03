@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 FROM centos:7
-MAINTAINER Dan Kirkwood <dangogh@apache.org>
+MAINTAINER dev@trafficcontrol.apache.org
 
 RUN yum -y install \
         https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm

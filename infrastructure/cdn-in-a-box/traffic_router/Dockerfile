@@ -20,7 +20,7 @@
 ############################################################
 
 FROM centos:7
-MAINTAINER Dan Kirkwood
+MAINTAINER dev@trafficcontrol.apache.org
 
 # Default values for TOMCAT RPM and RPM -- override with `docker build --build-arg JDK=...'
 ARG TRAFFIC_ROUTER_RPM=traffic_router/traffic_router.rpm
