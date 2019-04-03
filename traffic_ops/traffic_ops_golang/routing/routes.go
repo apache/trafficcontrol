@@ -384,7 +384,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_{xml-id}.config/?(\.json)?$`, ats.GetEdgeHeaderRewriteDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 
 		// Cache Configs
-		{1.4, http.MethodGet, `servers/{id-or-host}/configfiles/ats/parent.config/?(\.json)?$`, ats.GetParentDotConfig, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `servers/{id-or-host}/configfiles/ats/parent.config/?(\.json)?$`, ats.GetParentDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 
 		// Federations
 		{1.4, http.MethodGet, `federations/all/?(\.json)?$`, federations.GetAll, auth.PrivLevelAdmin, Authenticated, nil},
