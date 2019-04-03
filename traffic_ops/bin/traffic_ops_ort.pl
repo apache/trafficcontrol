@@ -504,7 +504,7 @@ sub start_service {
 	}
 	my $running_string = "";
 	if ( $pkg_name eq "trafficserver" ) {
-		$running_string = "traffic_cop";
+		$running_string = "traffic_manager";
 	}
 	else {
 		$running_string = $pkg_name;
