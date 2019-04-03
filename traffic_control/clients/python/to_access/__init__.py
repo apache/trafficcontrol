@@ -311,6 +311,7 @@ def parse_arguments(program):
 		raise KeyError("Traffic Ops hostname not set! Set the TO_URL environment variable or use "\
 		               "'--to-url'.") from e
 
+	original_to_host = to_host
 	to_host = urlparse(to_host, scheme="https")
 	useSSL = to_host.scheme.lower() == "https"
 	to_port = to_host.port
@@ -320,11 +321,9 @@ def parse_arguments(program):
 		else:
 			to_port = 80
 
-	port_pos = to_host.netloc.find(':')
-	if port_pos > 0:
-		to_host = to_host.netloc[:port_pos]
-	else:
-		to_host = to_host.netloc
+	to_host = to_host.hostname
+	if not to_host:
+		raise KeyError("Invalid URL/host for Traffic Ops: '%s'" % original_to_host)
 
 	s = TOSession(to_host,
 	              host_port=to_port,
