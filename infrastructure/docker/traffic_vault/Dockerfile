@@ -25,7 +25,7 @@
 # docker run --name my-traffic-vault --hostname my-traffic-vault --net cdnet --env ADMIN_PASS=riakadminsecret --env USER_PASS=marginallylesssecret --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver --env CERT_COMPANY=NotComcast --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --env DOMAIN=cdnet --detach traffic_vault:1.6.0
 
 FROM centos:6.6
-MAINTAINER Dan Kirkwood
+MAINTAINER dev@trafficcontrol.apache.org
 
 ARG ADMIN_PASS
 ARG USER_PASS
