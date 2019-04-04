@@ -16,6 +16,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { DashboardComponent } from './dashboard.component';
+import { DeliveryService } from '../../models/deliveryservice';
 import { DsCardComponent } from '../ds-card/ds-card.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { TpHeaderComponent } from '../tp-header/tp-header.component';
@@ -44,10 +45,31 @@ describe('DashboardComponent', () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(DashboardComponent);
 		component = fixture.componentInstance;
+		component.deliveryServices = [
+			{
+				displayName: 'FIZZbuzz'
+			} as DeliveryService,
+			{
+				displayName: 'fooBAR'
+			} as DeliveryService
+		]
 		fixture.detectChanges();
 	});
 
-	it('should create', () => {
+	it('should exist', () => {
 		expect(component).toBeTruthy();
+	});
+
+	it('should implement fuzzy search', () => {
+		// letter exclusion
+		component.fuzzControl.setValue('z');
+		expect(component.fuzzy(component.deliveryServices[0])).toBeTruthy();
+		expect(component.fuzzy(component.deliveryServices[1])).toBeFalsy();
+
+		// matches case-insensitively
+		component.fuzzControl.setValue('fb');
+		expect(component.fuzzy(component.deliveryServices[0])).toBeTruthy();
+		expect(component.fuzzy(component.deliveryServices[1])).toBeTruthy();
+
 	});
 });

@@ -48,7 +48,7 @@ describe('UsersComponent', () => {
 		fixture.detectChanges();
 	});
 
-	it('should create', () => {
+	it('should exist', () => {
 		expect(component).toBeTruthy();
 	});
 });

@@ -34,12 +34,11 @@ describe('UserCardComponent', () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(UserCardComponent);
 		component = fixture.componentInstance;
-		component.user = new User();
-		component.user.lastUpdated = new Date();
+		component.user = {lastUpdated: new Date(), id: 1, name: 'test'} as User;
 		fixture.detectChanges();
 	});
 
-	it('should create', () => {
+	it('should exist', () => {
 		expect(component).toBeTruthy();
 	});
 });
