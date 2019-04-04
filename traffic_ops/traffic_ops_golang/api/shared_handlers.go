@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -116,7 +117,7 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
 //      combines the path and query parameters
 //      produces the proper status code based on the error code returned
 //      marshals the structs returned into the proper response json
-func ReadHandler(obj Reader) http.HandlerFunc {
+func ReadHandler(reader Reader) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
@@ -125,7 +126,15 @@ func ReadHandler(obj Reader) http.HandlerFunc {
 		}
 		defer inf.Close()
 
+		interfacePtr := reflect.ValueOf(reader)
+		if interfacePtr.Kind() != reflect.Ptr {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
+			return
+		}
+		objectType := reflect.Indirect(interfacePtr).Type()
+		obj := reflect.New(objectType).Interface().(Reader)
 		obj.SetInfo(inf)
+
 		results, userErr, sysErr, errCode := obj.Read()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -142,7 +151,7 @@ func ReadHandler(obj Reader) http.HandlerFunc {
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func UpdateHandler(obj Updater) http.HandlerFunc {
+func UpdateHandler(updater Updater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
@@ -151,7 +160,15 @@ func UpdateHandler(obj Updater) http.HandlerFunc {
 		}
 		defer inf.Close()
 
+		interfacePtr := reflect.ValueOf(updater)
+		if interfacePtr.Kind() != reflect.Ptr {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
+			return
+		}
+		objectType := reflect.Indirect(interfacePtr).Type()
+		obj := reflect.New(objectType).Interface().(Updater)
 		obj.SetInfo(inf)
+
 		if err := decodeAndValidateRequestBody(r, obj); err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
@@ -221,7 +238,7 @@ func UpdateHandler(obj Updater) http.HandlerFunc {
 //   *current user
 //   *change log entry
 //   *forming and writing the body over the wire
-func DeleteHandler(obj Deleter) http.HandlerFunc {
+func DeleteHandler(deleter Deleter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
@@ -230,7 +247,15 @@ func DeleteHandler(obj Deleter) http.HandlerFunc {
 		}
 		defer inf.Close()
 
+		interfacePtr := reflect.ValueOf(deleter)
+		if interfacePtr.Kind() != reflect.Ptr {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
+			return
+		}
+		objectType := reflect.Indirect(interfacePtr).Type()
+		obj := reflect.New(objectType).Interface().(Deleter)
 		obj.SetInfo(inf)
+
 		keyFields := obj.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
 		keys := make(map[string]interface{})
 		for _, kf := range keyFields {
@@ -282,7 +307,7 @@ func DeleteHandler(obj Deleter) http.HandlerFunc {
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func CreateHandler(obj Creator) http.HandlerFunc {
+func CreateHandler(creator Creator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
@@ -291,7 +316,15 @@ func CreateHandler(obj Creator) http.HandlerFunc {
 		}
 		defer inf.Close()
 
+		interfacePtr := reflect.ValueOf(creator)
+		if interfacePtr.Kind() != reflect.Ptr {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
+			return
+		}
+		objectType := reflect.Indirect(interfacePtr).Type()
+		obj := reflect.New(objectType).Interface().(Creator)
 		obj.SetInfo(inf)
+
 		err := decodeAndValidateRequestBody(r, obj)
 		if err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
