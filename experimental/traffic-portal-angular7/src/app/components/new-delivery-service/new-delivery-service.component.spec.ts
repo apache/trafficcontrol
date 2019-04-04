@@ -12,8 +12,12 @@
 * limitations under the License.
 */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientModule } from '@angular/common/http';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { NewDeliveryServiceComponent } from './new-delivery-service.component';
+import { TpHeaderComponent } from '../tp-header/tp-header.component';
 
 describe('NewDeliveryServiceComponent', () => {
 	let component: NewDeliveryServiceComponent;
@@ -21,7 +25,16 @@ describe('NewDeliveryServiceComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ NewDeliveryServiceComponent ]
+			declarations: [
+				NewDeliveryServiceComponent,
+				TpHeaderComponent
+			],
+			imports: [
+				FormsModule,
+				HttpClientModule,
+				ReactiveFormsModule,
+				RouterTestingModule
+			]
 		})
 		.compileComponents();
 	}));

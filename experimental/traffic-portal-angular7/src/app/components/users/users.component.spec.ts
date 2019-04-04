@@ -12,8 +12,14 @@
 * limitations under the License.
 */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
 import { UsersComponent } from './users.component';
+
+import { LoadingComponent } from '../loading/loading.component';
+import { TpHeaderComponent } from '../tp-header/tp-header.component';
+import { UserCardComponent } from '../user-card/user-card.component';
 
 describe('UsersComponent', () => {
 	let component: UsersComponent;
@@ -21,7 +27,17 @@ describe('UsersComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ UsersComponent ]
+			declarations: [
+				UsersComponent,
+				LoadingComponent,
+				TpHeaderComponent,
+				UserCardComponent
+			],
+			imports: [
+				FormsModule,
+				HttpClientModule,
+				ReactiveFormsModule
+			]
 		})
 	.compileComponents();
 	}));

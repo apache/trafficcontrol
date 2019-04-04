@@ -13,14 +13,22 @@
 */
 
 import { TestBed, async } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app.component';
+import { AlertComponent } from './components/alert/alert.component';
 
 describe('AppComponent', () => {
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
 			declarations: [
-				AppComponent
+				AppComponent,
+				AlertComponent
 			],
+			imports: [
+				RouterTestingModule,
+				HttpClientModule
+			]
 		}).compileComponents();
 	}));
 
@@ -30,16 +38,9 @@ describe('AppComponent', () => {
 		expect(app).toBeTruthy();
 	});
 
-	it(`should have as title 'traffic-portal-angular7'`, () => {
+	it(`should have as title 'Traffic Portal'`, () => {
 		const fixture = TestBed.createComponent(AppComponent);
 		const app = fixture.debugElement.componentInstance;
-		expect(app.title).toEqual('traffic-portal-angular7');
-	});
-
-	it('should render title in a h1 tag', () => {
-		const fixture = TestBed.createComponent(AppComponent);
-		fixture.detectChanges();
-		const compiled = fixture.debugElement.nativeElement;
-		expect(compiled.querySelector('h1').textContent).toContain('Welcome to traffic-portal-angular7!');
+		expect(app.title).toEqual('Traffic Portal');
 	});
 });

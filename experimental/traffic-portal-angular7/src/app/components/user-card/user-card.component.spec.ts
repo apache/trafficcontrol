@@ -12,8 +12,10 @@
 * limitations under the License.
 */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientModule } from '@angular/common/http';
 
 import { UserCardComponent } from './user-card.component';
+import { User } from '../../models/user';
 
 describe('UserCardComponent', () => {
 	let component: UserCardComponent;
@@ -21,7 +23,10 @@ describe('UserCardComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ UserCardComponent ]
+			declarations: [ UserCardComponent ],
+			imports: [
+				HttpClientModule
+			]
 		})
 		.compileComponents();
 	}));
@@ -29,6 +34,8 @@ describe('UserCardComponent', () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(UserCardComponent);
 		component = fixture.componentInstance;
+		component.user = new User();
+		component.user.lastUpdated = new Date();
 		fixture.detectChanges();
 	});
 

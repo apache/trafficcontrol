@@ -12,16 +12,31 @@
 * limitations under the License.
 */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientModule } from '@angular/common/http';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { DashboardComponent } from './dashboard.component';
+import { DsCardComponent } from '../ds-card/ds-card.component';
+import { LoadingComponent } from '../loading/loading.component';
+import { TpHeaderComponent } from '../tp-header/tp-header.component';
 
-describe('LoginComponent', () => {
+describe('DashboardComponent', () => {
 	let component: DashboardComponent;
 	let fixture: ComponentFixture<DashboardComponent>;
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-		declarations: [ DashboardComponent ]
+		declarations: [
+			DashboardComponent,
+			DsCardComponent,
+			LoadingComponent,
+			TpHeaderComponent
+		],
+		imports: [
+			FormsModule,
+			HttpClientModule,
+			ReactiveFormsModule
+		]
 		})
 		.compileComponents();
 	}));

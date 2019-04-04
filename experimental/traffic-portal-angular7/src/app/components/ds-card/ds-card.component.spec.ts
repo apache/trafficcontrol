@@ -12,8 +12,12 @@
 * limitations under the License.
 */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientModule } from '@angular/common/http';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { DsCardComponent } from './ds-card.component';
+import { LoadingComponent } from '../loading/loading.component';
+import { DeliveryService } from '../../models/deliveryservice';
 
 describe('DsCardComponent', () => {
 	let component: DsCardComponent;
@@ -21,7 +25,14 @@ describe('DsCardComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ DsCardComponent ]
+			declarations: [
+				DsCardComponent,
+				LoadingComponent
+			],
+			imports: [
+				HttpClientModule,
+				RouterTestingModule
+			]
 		})
 		.compileComponents();
 	}));
@@ -29,6 +40,7 @@ describe('DsCardComponent', () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(DsCardComponent);
 		component = fixture.componentInstance;
+		component.deliveryService = new DeliveryService();
 		fixture.detectChanges();
 	});
 
