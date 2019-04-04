@@ -64,6 +64,17 @@ with open(os.path.join(HERE, "README.rst")) as fd:
 	           "requests>=2.13.0",
 	           "munch>=2.1.1",
 	       ],
+	       entry_points={
+	           'console_scripts': [
+	       	    'toget=to_access:get',
+	       	    'toput=to_access:put',
+	       	    'topost=to_access:post',
+	       	    'todelete=to_access:delete',
+	       	    'tooptions=to_access:options',
+	       	    'tohead=to_access:head',
+	       	    'topatch=to_access:patch'
+	            ],
+	       },
 	       extras_require={
 	           "dev": [
 	               "pylint>=2.0,<3.0"

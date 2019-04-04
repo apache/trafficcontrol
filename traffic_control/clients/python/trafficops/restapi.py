@@ -61,16 +61,22 @@ class OperationError(IOError):
 	This class represents a generic error, indicating something went wrong with the request or on
 	the server.
 	"""
-	def __init__(self, *args):
+	#: Contains the response object that generated the error
+	resp = None
+	def __init__(self, *args, resp=None):
 		IOError.__init__(self, *args)
+		self.resp = resp
 
 
 class InvalidJSONError(ValueError):
 	"""
 	An error that occurs when an invalid JSON payload is passed to an endpoint.
 	"""
-	def __init__(self, *args):
+	#: Contains the response object that generated the error
+	resp = None
+	def __init__(self, *args, resp=None):
 		ValueError.__init__(self, *args)
+		self.resp = resp
 
 # Miscellaneous Constants and/or Variables
 DEFAULT_HEADERS = {u'Content-Type': u'application/json; charset=UTF-8'}
@@ -410,13 +416,13 @@ class RestApiSession(object):
 				msg = msg.format(response.status_code, endpoint, e)
 				if debug_response:
 					log_with_debug_info(logging.ERROR, msg + u' Data: [' + str(response.text) + u']')
-				raise InvalidJSONError(msg)
+				raise InvalidJSONError(msg, resp=response)
 			msg = u'{0} request to RESTful API at [{1}] expected status(s) {2}; failed: {3} {4};'\
 			      u' Response: {5}'
 			msg = msg.format(operation.upper(), endpoint, expected_status_codes,
 			                 response.status_code, response.reason, retdata)
 			log_with_debug_info(logging.ERROR, msg)
-			raise OperationError(msg)
+			raise OperationError(msg, resp=response)
 
 		try:
 			if response.status_code in ('204',):
@@ -432,7 +438,7 @@ class RestApiSession(object):
 			msg = msg.format(response.status_code, endpoint, e)
 			if debug_response:
 				log_with_debug_info(logging.ERROR, msg + u' Data: [' + str(response.text) + u']')
-			raise InvalidJSONError(msg)
+			raise InvalidJSONError(msg, resp=response)
 		retdata = munch.munchify(retdata) if munchify else retdata
 		return (retdata[u'response'] if u'response' in retdata else retdata), response
 
@@ -495,3 +501,75 @@ class RestApiSession(object):
 		"""
 
 		return self._do_operation(u'delete', api_path, *args, **kwargs)
+
+	def head(self, api_path, *args, **kwargs):
+		"""
+		Perform HTTP HEAD requests
+		:param api_path: The path to the API end-point that you want to call which does not include
+			the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution
+			parameters as denoted by a valid field_name replacement field specification as per
+			:meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
+
+		:type api_path: str
+		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass
+			the keyword parameter ``data`` with the Python data structure. This method will convert
+			it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a
+			dictionary of query parameters
+
+		:type kwargs: Dict[str, Any]
+		:return: Python data structure distilled from JSON from the API request.
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]],
+			requests.Response]
+
+		:raises: Union[LoginError, OperationError]
+		"""
+
+		return self._do_operation(u'head', api_path, *args, **kwargs)
+
+	def options(self, api_path, *args, **kwargs):
+		"""
+		Perform HTTP OPTIONS requests
+		:param api_path: The path to the API end-point that you want to call which does not include
+			the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution
+			parameters as denoted by a valid field_name replacement field specification as per
+			:meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
+
+		:type api_path: str
+		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass
+			the keyword parameter ``data`` with the Python data structure. This method will convert
+			it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a
+			dictionary of query parameters
+
+		:type kwargs: Dict[str, Any]
+		:return: Python data structure distilled from JSON from the API request.
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]],
+			requests.Response]
+
+		:raises: Union[LoginError, OperationError]
+		"""
+
+		return self._do_operation(u'options', api_path, *args, **kwargs)
+
+	def patch(self, api_path, *args, **kwargs):
+		"""
+		Perform HTTP PATCH requests
+		:param api_path: The path to the API end-point that you want to call which does not include
+			the base URL e.g. ``user/login``, ``servers``, etc. This string can contain substitution
+			parameters as denoted by a valid field_name replacement field specification as per
+			:meth:`str.format` e.g. ``cachegroups/{id}`` or ``cachegroups/{id:d}``
+
+		:type api_path: str
+		:param kwargs: Passed Keyword Parameters. If you need to send JSON data to the endpoint pass
+			the keyword parameter ``data`` with the Python data structure. This method will convert
+			it to JSON before sending it to the API endpoint. Use ``query_params`` to pass a
+			dictionary of query parameters
+
+		:type kwargs: Dict[str, Any]
+		:return: Python data structure distilled from JSON from the API request.
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]], munch.Munch, List[munch.Munch]],
+			requests.Response]
+
+		:raises: Union[LoginError, OperationError]
+		"""
+
+		return self._do_operation(u'patch', api_path, *args, **kwargs)

@@ -13,17 +13,13 @@
 .. limitations under the License.
 ..
 
-.. _tools:
+.. _toaccess-module:
 
-*****
-Tools
-*****
-This is a living list of tools used to interact with, test, and develop for the Traffic Control CDN.
+********
+toaccess
+********
 
-.. toctree::
-	:maxdepth: 2
-
-	compare
-	python_client
-	traffic_vault_util
-	toaccess
+.. automodule:: to_access
+	:members:
+	:undoc-members:
+	:show-inheritance:
