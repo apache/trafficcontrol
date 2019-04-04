@@ -33,7 +33,13 @@ func TestDivisions(t *testing.T) {
 
 func TryToDeleteDivision(t *testing.T) {
 	division := testData.Divisions[0]
-	_, _, err := TOSession.DeleteDivisionByName(division.Name)
+
+	resp, _, err := TOSession.GetDivisionByName(division.Name)
+	if err != nil {
+		t.Errorf("cannot GET Division by name: %v - %v\n", division.Name, err)
+	}
+	division = resp[0]
+	_, _, err = TOSession.DeleteDivisionByID(division.ID)
 
 	if err == nil {
 		t.Errorf("should not be able to delete a division prematurely")
@@ -45,7 +51,7 @@ func TryToDeleteDivision(t *testing.T) {
 		return
 	}
 
-	if strings.Contains(err.Error(), "This division is currently used by regions.") {
+	if strings.Contains(err.Error(), "cannot delete division because it is being used by a region") {
 		return
 	}
 
