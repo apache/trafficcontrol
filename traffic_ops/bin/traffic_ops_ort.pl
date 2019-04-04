@@ -504,7 +504,7 @@ sub start_service {
 	}
 	my $running_string = "";
 	if ( $pkg_name eq "trafficserver" ) {
-		$running_string = "traffic_cop";
+		$running_string = "traffic_manager";
 	}
 	else {
 		$running_string = $pkg_name;
@@ -599,7 +599,7 @@ sub restart_service {
 	}
 	my $running_string = "";
 	if ( $pkg_name eq "trafficserver" ) {
-		$running_string = "traffic_cop";
+		$running_string = "traffic_manager";
 	}
 	if ( $running_string ne "" ) {
 		if ( $pkg_running =~ m/$running_string \(pid  (\d+)\) is running.../ ) {
