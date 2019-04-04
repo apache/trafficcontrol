@@ -111,6 +111,14 @@ func main() {
 		http.HandleFunc("/api/"+v+"/servers/"+MID_SERVER_HOSTNAME+"/configfiles/ats", midConfigFiles)
 		http.HandleFunc("/api/"+v+"/servers/"+TO_SERVER_HOSTNAME+"/configfiles/ats", toConfigFiles)
 		http.HandleFunc("/api/"+v+"/servers/"+TODB_SERVER_HOSTNAME+"/configfiles/ats", toDbConfigFiles)
+		http.HandleFunc("/api/"+v+"/profiles/"+EDGE_PROFILE_NAME+"/configfiles/ats/astats.config", edgeAstatsConfig)
+		http.HandleFunc("/api/"+v+"/profiles/"+MID_PROFILE_NAME+"/configfiles/ats/astats.config", midAstatsConfig)
+		http.HandleFunc("/api/"+v+"/profiles/"+EDGE_PROFILE_NAME+"/configfiles/ats/cache.config", edgeCacheConfig)
+		http.HandleFunc("/api/"+v+"/profiles/"+MID_PROFILE_NAME+"/configfiles/ats/cache.config", midCacheConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+EDGE_SERVER_HOSTNAME+"/configfiles/ats/chkconfig", chkConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+MID_SERVER_HOSTNAME+"/configfiles/ats/chkconfig", chkConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+EDGE_SERVER_HOSTNAME+"/configfiles/ats/hosting.config", edgeHostingConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+MID_SERVER_HOSTNAME+"/configfiles/ats/hosting.config", midHostingConfig)
 	}
 
 	http.HandleFunc("/mock/geo/database.dat", mockDatabase)
