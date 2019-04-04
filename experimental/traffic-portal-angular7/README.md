@@ -123,6 +123,11 @@ ng serve --proxy-config ./proxy.json
 
 By default this will set up an Angular debug-mode server to run, listening on port 4200. Note that regardless of production-mode SSL configuration, this will **only serve unencrypted HTTP responses by default**. Also, unlike production mode which compiles things ahead of time, this will compile resources on-the-fly so that making changes to a file is immediately "live" without requiring the developer to restart the debug server. Pretty neat, desu.
 
+### Running the Tests
+Coverage is pretty abysmal at the moment, but unit tests can be run using the [Angular CLI](https://github.com/angular/angular-cli). To run the unit tests, use the command `ng test` (dependencies must first be installed). This will attempt to open Chrome, Firefox and Opera, so ideally you would have those installed prior to running the tests.
+
+End-to-end testing is broken at the time of this writing, but to run it anyway use `ng e2e`.
+
 ## Contributing
 This project uses `tslint` and an `.editorconfig` file for maintaining code style. If your editor doesn't support `.editorconfig` (VS Code does out-of-the-box as I understand, but Vim and Sublime Text need plugins. Atom ~~doesn't~~ shouldn't exist) then you'll want to manually configure it so as to avoid linting errors. There's quite a bit going on, but the big ones are:
 
@@ -151,23 +156,10 @@ This UI obviously requires Javascript, but beyond that the hope is that any HTML
 - Mozilla Firefox
 - Microsoft Edge (Once the rendering engine turns into Chromium - Chakra is not HTML5/CSS3-compliant)
 
-... and the goal is to continuously support these browser in their latest and penultimate major release versions. Safari isn't tested because I don't have a Mac, but support for that would be nice given the high usage by Traffic Control users/admins/devs. Selenium tests for these browsers may be added at some point, but for the moment (extremely limited) protractor testing is being used.
+... and the goal is to continuously support these browser in their latest and penultimate major release versions. Safari isn't tested because I don't have a Mac, but support for that would be nice given the high usage by Traffic Control users/admins/devs.
 
 ## Code scaffolding
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Running unit tests
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-	!!! NOTE !!!
-	These don't appear to work for some reason
-
-## Running end-to-end tests
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-	!!! NOTE !!!
-	These don't appear to work for some reason
-
 
 ## Further help
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
