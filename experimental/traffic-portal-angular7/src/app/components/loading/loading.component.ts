@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
 	selector: 'loading',
@@ -19,7 +19,5 @@ import { Component, Input } from '@angular/core';
 	styleUrls: ['./loading.component.scss']
 })
 export class LoadingComponent {
-
-	@Input() size?: number;
 
 }
