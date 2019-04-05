@@ -658,10 +658,8 @@ under the License.
                     </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="edgeHeaderRewrite" name="edgeHeaderRewrite" type="text" class="form-control" ng-model="deliveryService.edgeHeaderRewrite" maxlength="2048">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.edgeHeaderRewrite, 'maxlength')">Too Long</small>
+                        <textarea id="edgeHeaderRewrite" name="edgeHeaderRewrite" type="text" class="form-control" ng-model="deliveryService.edgeHeaderRewrite" rows="10" autofocus></textarea>
                         <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.edgeHeaderRewrite != dsCurrent.edgeHeaderRewrite">Current Value: [ {{dsCurrent.edgeHeaderRewrite}} ]</small>
-                        <span ng-show="hasError(deliveryServiceForm.edgeHeaderRewrite)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
@@ -682,10 +680,8 @@ under the License.
                     </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="midHeaderRewrite" name="midHeaderRewrite" type="text" class="form-control" ng-model="deliveryService.midHeaderRewrite" maxlength="2048">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.midHeaderRewrite, 'maxlength')">Too Long</small>
+                        <textarea id="midHeaderRewrite" name="midHeaderRewrite" type="text" class="form-control" ng-model="deliveryService.midHeaderRewrite" rows="10" autofocus></textarea>
                         <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.midHeaderRewrite != dsCurrent.midHeaderRewrite">Current Value: [ {{dsCurrent.midHeaderRewrite}} ]</small>
-                        <span ng-show="hasError(deliveryServiceForm.midHeaderRewrite)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
