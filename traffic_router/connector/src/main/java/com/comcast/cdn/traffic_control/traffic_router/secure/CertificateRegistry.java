@@ -53,13 +53,15 @@ public class CertificateRegistry {
 		{
 			final Map<String, HandshakeData> handshakeDataMap =
 					CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES.getHandshakeData();
-			final HandshakeData defaultHd = createDefaultSsl();
-			if (defaultHd == null) {
-				log.error("Failed to initialize the CertificateRegistry because of a problem with the 'default' " +
-								"certificate.  Returning a Null reference to the factory.");
-				return null;
+			if (!handshakeDataMap.containsKey(DEFAULT_SSL_KEY)){
+				final HandshakeData defaultHd = createDefaultSsl();
+				if (defaultHd == null){
+					log.error("Failed to initialize the CertificateRegistry because of a problem with the 'default' " +
+							"certificate.  Returning a Null reference to the factory.");
+					return null;
+				}
+				handshakeDataMap.put(DEFAULT_SSL_KEY, defaultHd);
 			}
-			handshakeDataMap.putIfAbsent(DEFAULT_SSL_KEY, defaultHd);
 		}
 		return CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES;
 	}
