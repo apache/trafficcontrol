@@ -48,7 +48,7 @@ type Servercheck struct {
 	HostName string `json:"name" db:"name"`
 
 	// Value of the check result
-    //
+	//
 	// required: true
 	Value int `json:"value" db:"value"`
 }
