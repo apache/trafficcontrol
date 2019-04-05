@@ -14,11 +14,6 @@ package client
 
 import (
     "encoding/json"
-    //"errors"
-    //"fmt"
-    //"net"
-    //"net/http"
-    //"strconv"
 
     "github.com/apache/trafficcontrol/lib/go-tc"
 )
