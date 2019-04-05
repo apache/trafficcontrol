@@ -511,8 +511,6 @@ func (t DSType) IsSteering() bool {
 	case DSTypeSteering:
 		fallthrough
 	case DSTypeClientSteering:
-		fallthrough
-	case DSTypeDNSLive:
 		return true
 	}
 	return false
