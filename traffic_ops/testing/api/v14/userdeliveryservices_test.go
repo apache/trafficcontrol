@@ -16,7 +16,6 @@ package v14
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"testing"
 )
 
@@ -29,8 +28,6 @@ func TestUserDeliveryServices(t *testing.T) {
 const TestUsersDeliveryServicesUser = "admin" // TODO make dynamic
 
 func CreateTestUsersDeliveryServices(t *testing.T) {
-	log.Debugln("CreateTestUsersDeliveryServices")
-
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, dses)
@@ -93,8 +90,6 @@ func CreateTestUsersDeliveryServices(t *testing.T) {
 }
 
 func GetTestUsersDeliveryServices(t *testing.T) {
-	log.Debugln("GetTestUsersDeliveryServices")
-
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, dses)
@@ -152,8 +147,6 @@ func GetTestUsersDeliveryServices(t *testing.T) {
 }
 
 func DeleteTestUsersDeliveryServices(t *testing.T) {
-	log.Debugln("DeleteTestUsersDeliveryServices")
-
 	users, _, err := TOSession.GetUsers()
 	if err != nil {
 		t.Errorf("cannot GET users: %v\n", err)

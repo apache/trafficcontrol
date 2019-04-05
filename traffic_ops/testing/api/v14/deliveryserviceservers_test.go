@@ -17,8 +17,6 @@ package v14
 
 import (
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func TestDeliveryServiceServers(t *testing.T) {
@@ -28,8 +26,6 @@ func TestDeliveryServiceServers(t *testing.T) {
 }
 
 func DeleteTestDeliveryServiceServers(t *testing.T) {
-	log.Debugln("DeleteTestDeliveryServiceServers")
-
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v\n", err)

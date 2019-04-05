@@ -87,7 +87,6 @@ func GetTestRegions(t *testing.T) {
 }
 
 func GetTestRegionsByNamePath(t *testing.T) {
-	log.Debugln("GetTestRegionsByNamePath")
 	for _, region := range testData.Regions {
 		_, _, err := TOSession.GetRegionByNamePath(region.Name)
 		if err != nil {

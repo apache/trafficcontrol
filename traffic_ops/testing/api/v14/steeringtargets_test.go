@@ -30,7 +30,6 @@ func TestSteeringTargets(t *testing.T) {
 }
 
 func CreateTestSteeringTargets(t *testing.T) {
-	log.Debugln("CreateTestSteeringTargets")
 	for _, st := range testData.SteeringTargets {
 		if st.Type == nil {
 			t.Errorf("creating steering target: test data missing type\n")
@@ -78,12 +77,9 @@ func CreateTestSteeringTargets(t *testing.T) {
 			t.Errorf("creating steering target: %v\n", err)
 		}
 	}
-	log.Debugln("CreateTestSteeringTargets() PASSED")
 }
 
 func UpdateTestSteeringTargets(t *testing.T) {
-	log.Debugln("UpdateTestSteeringTargets")
-
 	if len(testData.SteeringTargets) < 1 {
 		t.Errorf("updating steering target: no steering target test data\n")
 	}
@@ -115,7 +111,7 @@ func UpdateTestSteeringTargets(t *testing.T) {
 
 	expected := util.JSONIntStr(-12345)
 	if st.Value != nil && *st.Value == expected {
-		expected += 1
+		expected++
 	}
 	st.Value = &expected
 
@@ -168,12 +164,9 @@ func UpdateTestSteeringTargets(t *testing.T) {
 	} else if *st.Value != *actual.Value {
 		t.Errorf("steering target update: value expected %v actual %v\n", *st.Value, actual.Value)
 	}
-	log.Debugln("UpdateTestSteeringTargets() PASSED")
 }
 
 func GetTestSteeringTargets(t *testing.T) {
-	log.Debugln("GetTestSteeringTargets")
-
 	if len(testData.SteeringTargets) < 1 {
 		t.Errorf("updating steering target: no steering target test data\n")
 	}
@@ -227,11 +220,9 @@ func GetTestSteeringTargets(t *testing.T) {
 	} else if *expected.Value != *actual.Value {
 		t.Errorf("steering target get: value expected %v actual %v\n", *expected.Value, *actual.Value)
 	}
-	log.Debugln("GetTestSteeringTargets() PASSED")
 }
 
 func DeleteTestSteeringTargets(t *testing.T) {
-	log.Debugln("DeleteTestSteeringTargets")
 	dsIDs := []uint64{}
 	for _, st := range testData.SteeringTargets {
 		if st.DeliveryService == nil {
@@ -276,5 +267,4 @@ func DeleteTestSteeringTargets(t *testing.T) {
 			t.Errorf("deleting steering targets: after delete, getting steering target: expected 0 actual %+v\n", len(sts))
 		}
 	}
-	log.Debugln("DeleteTestSteeringTargets() PASSED")
 }

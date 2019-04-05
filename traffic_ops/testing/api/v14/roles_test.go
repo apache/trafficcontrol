@@ -55,10 +55,8 @@ func CreateTestRoles(t *testing.T) {
 }
 
 func UpdateTestRoles(t *testing.T) {
-	log.Debugln("entered test")
 	log.Debugf("testData.Roles contains: %++v\n", testData.Roles)
 	firstRole := testData.Roles[0]
-	log.Debugln("got first role from slice")
 	// Retrieve the Role by role so we can get the id for the Update
 	resp, _, status, err := TOSession.GetRoleByName(*firstRole.Name)
 	log.Debugln("Status Code: ", status)

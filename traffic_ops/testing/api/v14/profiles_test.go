@@ -49,8 +49,6 @@ func CreateBadProfiles(t *testing.T) {
 
 		if err == nil {
 			t.Errorf("Creating bad profile succeeded: %+v\nResponse is %+v", pr, resp)
-		} else {
-			log.Debugf("bad profile creation failed appropriately")
 		}
 	}
 }
