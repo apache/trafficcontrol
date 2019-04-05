@@ -20,7 +20,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -31,8 +30,6 @@ func TestCRConfig(t *testing.T) {
 }
 
 func UpdateTestCRConfigSnapshot(t *testing.T) {
-	log.Debugln("UpdateTestCRConfigSnapshot")
-
 	if len(testData.CDNs) < 1 {
 		t.Errorf("no cdn test data")
 	}
@@ -133,6 +130,4 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
 	}
-
-	log.Debugln("UpdateTestCRConfigSnapshot() PASSED: ")
 }

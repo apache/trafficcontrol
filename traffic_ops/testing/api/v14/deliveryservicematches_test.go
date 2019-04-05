@@ -18,7 +18,6 @@ package v14
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -29,7 +28,6 @@ func TestDeliveryServiceMatches(t *testing.T) {
 }
 
 func GetTestDeliveryServiceMatches(t *testing.T) {
-	log.Debugln("GetTestDeliveryServiceMatches")
 	dsMatches, _, err := TOSession.GetDeliveryServiceMatches()
 	if err != nil {
 		t.Errorf("cannot GET DeliveryService matches: %v\n", err)

@@ -24,7 +24,6 @@ import (
 
 	"golang.org/x/net/publicsuffix"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
@@ -35,7 +34,6 @@ func TestLoginFail(t *testing.T) {
 }
 
 func PostTestLoginFail(t *testing.T) {
-	log.Debugln("TestLoginFail")
 	// This specifically tests a previous bug: auth failure returning a 200, causing the client to think the request succeeded, and deserialize no matching fields successfully, and return an empty object.
 
 	userAgent := "to-api-v14-client-tests-loginfailtest"
@@ -59,7 +57,6 @@ func PostTestLoginFail(t *testing.T) {
 	if expectedCDN.Name != actualCDN.Name {
 		t.Fatalf("cdn.Name expected '%+v' actual '%+v'\n", expectedCDN.Name, actualCDN.Name)
 	}
-	log.Debugln("TestLoginFail PASSED")
 }
 
 func getUninitializedTOClient(user, pass, uri, agent string, reqTimeout time.Duration) (*toclient.Session, error) {

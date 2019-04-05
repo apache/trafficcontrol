@@ -17,8 +17,6 @@ package v14
 
 import (
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func TestFederations(t *testing.T) {
@@ -29,8 +27,6 @@ func TestFederations(t *testing.T) {
 }
 
 func GetTestFederations(t *testing.T) {
-	log.Debugln("GetTestFederations")
-
 	if len(testData.Federations) == 0 {
 		t.Errorf("no federations test data")
 	}
@@ -78,12 +74,9 @@ func GetTestFederations(t *testing.T) {
 	if !matched {
 		t.Errorf("federation mapping expected to match test data, actual: cname %v not in test data", *mapping.CName)
 	}
-
-	log.Debugln("GetTestFederations PASSED")
 }
 
 func PostTestFederationsDeliveryServices(t *testing.T) {
-	log.Debugln("PostTestFederationsDeliveryServices")
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, dses)
@@ -100,5 +93,4 @@ func PostTestFederationsDeliveryServices(t *testing.T) {
 	if _, err = TOSession.CreateFederationDeliveryServices(fedID, []int{ds.ID}, true); err != nil {
 		t.Errorf("creating federations delivery services: %v\n", err)
 	}
-	log.Debugln("PostTestFederationsDeliveryServices PASSED")
 }

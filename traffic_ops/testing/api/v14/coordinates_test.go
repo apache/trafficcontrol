@@ -18,7 +18,6 @@ package v14
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -30,42 +29,29 @@ func TestCoordinates(t *testing.T) {
 }
 
 func CreateTestCoordinates(t *testing.T) {
-	failed := false
-
 	for _, coord := range testData.Coordinates {
 
 		_, _, err := TOSession.CreateCoordinate(coord)
 		if err != nil {
 			t.Errorf("could not CREATE coordinates: %v\n", err)
-			failed = true
 		}
-	}
-	if !failed {
-		log.Debugln("CreateTestCoordinates() PASSED: ")
 	}
 }
 
 func GetTestCoordinates(t *testing.T) {
-	failed := false
 	for _, coord := range testData.Coordinates {
 		resp, _, err := TOSession.GetCoordinateByName(coord.Name)
 		if err != nil {
 			t.Errorf("cannot GET Coordinate: %v - %v\n", err, resp)
-			failed = true
 		}
-	}
-	if !failed {
-		log.Debugln("GetTestCoordinates() PASSED: ")
 	}
 }
 
 func UpdateTestCoordinates(t *testing.T) {
-	failed := false
 	firstCoord := testData.Coordinates[0]
 	resp, _, err := TOSession.GetCoordinateByName(firstCoord.Name)
 	if err != nil {
 		t.Errorf("cannot GET Coordinate by name: %v - %v\n", firstCoord.Name, err)
-		failed = true
 	}
 	coord := resp[0]
 	expectedLat := 12.34
@@ -75,55 +61,40 @@ func UpdateTestCoordinates(t *testing.T) {
 	alert, _, err = TOSession.UpdateCoordinateByID(coord.ID, coord)
 	if err != nil {
 		t.Errorf("cannot UPDATE Coordinate by id: %v - %v\n", err, alert)
-		failed = true
 	}
 
 	// Retrieve the Coordinate to check Coordinate name got updated
 	resp, _, err = TOSession.GetCoordinateByID(coord.ID)
 	if err != nil {
 		t.Errorf("cannot GET Coordinate by name: '$%s', %v\n", firstCoord.Name, err)
-		failed = true
 	}
 	coord = resp[0]
 	if coord.Latitude != expectedLat {
 		t.Errorf("results do not match actual: %s, expected: %f\n", coord.Name, expectedLat)
 	}
-	if !failed {
-		log.Debugln("UpdateTestCoordinates() PASSED: ")
-	}
 }
 
 func DeleteTestCoordinates(t *testing.T) {
-	failed := false
-
 	for _, coord := range testData.Coordinates {
 		// Retrieve the Coordinate by name so we can get the id for the Update
 		resp, _, err := TOSession.GetCoordinateByName(coord.Name)
 		if err != nil {
 			t.Errorf("cannot GET Coordinate by name: %v - %v\n", coord.Name, err)
-			failed = true
 		}
 		if len(resp) > 0 {
 			respCoord := resp[0]
 			_, _, err := TOSession.DeleteCoordinateByID(respCoord.ID)
 			if err != nil {
 				t.Errorf("cannot DELETE Coordinate by name: '%s' %v\n", respCoord.Name, err)
-				failed = true
 			}
 			// Retrieve the Coordinate to see if it got deleted
 			coords, _, err := TOSession.GetCoordinateByName(coord.Name)
 			if err != nil {
 				t.Errorf("error deleting Coordinate name: %s\n", err.Error())
-				failed = true
 			}
 			if len(coords) > 0 {
 				t.Errorf("expected Coordinate name: %s to be deleted\n", coord.Name)
-				failed = true
 			}
 		}
-	}
-
-	if !failed {
-		log.Debugln("DeleteTestCoordinates() PASSED: ")
 	}
 }

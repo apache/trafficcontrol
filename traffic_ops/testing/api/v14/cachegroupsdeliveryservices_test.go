@@ -17,8 +17,6 @@ package v14
 
 import (
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func TestDeliveryServicesCachegroups(t *testing.T) {
@@ -31,8 +29,6 @@ func TestDeliveryServicesCachegroups(t *testing.T) {
 const TestEdgeServerCacheGroupName = "cachegroup1" // TODO this is the name hard-coded in the create servers test; change to be dynamic
 
 func CreateTestCachegroupsDeliveryServices(t *testing.T) {
-	log.Debugln("CreateTestCachegroupsDeliveryServices")
-
 	dss, _, err := TOSession.GetDeliveryServiceServers()
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceServers: %v\n", err)
@@ -108,8 +104,6 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 }
 
 func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
-	log.Debugln("DeleteTestCachegroupsDeliveryServices")
-
 	dss, _, err := TOSession.GetDeliveryServiceServersN(1000000)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceServers: %v\n", err)
