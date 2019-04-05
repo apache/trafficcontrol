@@ -17,8 +17,6 @@ package com.comcast.cdn.traffic_control.traffic_router.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterNioEndpoint;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
-//import com.fasterxml.jackson.core.type.TypeReference;
-//import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 import sun.security.tools.keytool.CertAndKeyGen;
 import sun.security.util.ObjectIdentifier;
@@ -51,8 +49,8 @@ public class CertificateRegistry {
 	private CertificateRegistry() {
 	}
 
-	public static CertificateRegistry getInstance() {
-		synchronized (CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES) {
+	public static synchronized CertificateRegistry getInstance() {
+		{
 			final Map<String, HandshakeData> handshakeDataMap =
 					CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES.getHandshakeData();
 			final HandshakeData defaultHd = createDefaultSsl();

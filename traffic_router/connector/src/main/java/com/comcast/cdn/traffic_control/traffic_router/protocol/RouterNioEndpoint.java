@@ -110,7 +110,7 @@ public class RouterNioEndpoint extends NioEndpoint {
          */
         @Override
         protected void doRun() {
-	        final SocketWrapperBase<NioChannel> localWrapper = socketWrapper;
+			final SocketWrapperBase<NioChannel> localWrapper = socketWrapper;
             final NioChannel socket = localWrapper.getSocket();
             super.doRun();
             if (!socket.isOpen()){
