@@ -34,11 +34,12 @@ RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
 ### docs specific requirements
 ADD docs/source/requirements.txt /docs.requirements.txt
 RUN	yum -y install \
-		python34 \
-		python34-pip \
+		python36 \
+		python36-pip \
+		python36-psutil \
 		make && \
-	yum -y clean all && \
-	python3 -m pip install --upgrade setuptools && \
+	yum -y clean all
+RUN	python3 -m pip install --upgrade setuptools && \
 	python3 -m pip install -r /docs.requirements.txt
 ###
 
