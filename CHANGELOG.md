@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Return a json response with a 200 for a successful snapshot PUT.
 - Correct FQDN case mismatch when generating DNSSEC.
 - Issue 3223 - cannot add steering targets to steering delivery service.
+- Issue 3466 - docs fail to build in python 3.6.
 
 
 ## [3.0.0] - 2019-02-13
