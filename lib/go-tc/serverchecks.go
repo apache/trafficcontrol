@@ -54,13 +54,12 @@ type Servercheck struct {
 }
 
 type ServercheckNullable struct {
-	Name string `json:"servercheck_short_name" db:"servercheck_short_name"`
-	ID int `json:"id" db:"id"`
-	Value int `json:"value" db:"value"`
+	Name  string `json:"servercheck_short_name" db:"servercheck_short_name"`
+	ID    int    `json:"id" db:"id"`
+	Value int    `json:"value" db:"value"`
 }
 
 type ServercheckPostResponse struct {
-        Alerts   []Alert                 `json:"alerts"`
-        Response DeliveryServiceUserPost `json:"response"`
+	Alerts   []Alert                 `json:"alerts"`
+	Response DeliveryServiceUserPost `json:"response"`
 }
-
