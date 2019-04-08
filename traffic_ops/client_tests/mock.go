@@ -32,6 +32,7 @@ const API_MAX_MINOR_VERSION = 5
 
 // TODO: read this in properly from the VERSION file
 const VERSION = "3.0.0"
+var SERVER_STRING = "Traffic Ops/" + VERSION + " (Mock)"
 
 // This needs to exist for... reasons
 const TM_LOGO = `<?xml version="1.0" encoding="UTF-8"?>
@@ -55,7 +56,7 @@ var CURRENT_TIME *tc.TimeNoMod = tc.NewTimeNoMod()
 // Just sets some common headers
 func common(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Server", "Traffic Ops/"+VERSION+" (Mock)")
+	w.Header().Set("Server", SERVER_STRING)
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {
@@ -119,6 +120,41 @@ func main() {
 		http.HandleFunc("/api/"+v+"/servers/"+MID_SERVER_HOSTNAME+"/configfiles/ats/chkconfig", chkConfig)
 		http.HandleFunc("/api/"+v+"/servers/"+EDGE_SERVER_HOSTNAME+"/configfiles/ats/hosting.config", edgeHostingConfig)
 		http.HandleFunc("/api/"+v+"/servers/"+MID_SERVER_HOSTNAME+"/configfiles/ats/hosting.config", midHostingConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+EDGE_SERVER_HOSTNAME+"/configfiles/ats/ip_allow.config", edgeIp_allowConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+MID_SERVER_HOSTNAME+"/configfiles/ats/ip_allow.config", midIp_allowConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+EDGE_SERVER_HOSTNAME+"/configfiles/ats/parent.config", edgeParentConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+MID_SERVER_HOSTNAME+"/configfiles/ats/parent.config", midParentConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+EDGE_PROFILE_NAME+"/configfiles/ats/plugin.config", edgePluginConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+MID_PROFILE_NAME+"/configfiles/ats/plugin.config", midPluginConfig)
+		http.HandleFunc("/api/"+v+"/profiles/"+EDGE_PROFILE_NAME+"/configfiles/ats/records.config", edgeRecordsConfig)
+		http.HandleFunc("/api/"+v+"/profiles/"+MID_PROFILE_NAME+"/configfiles/ats/records.config", midRecordsConfig)
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/regex_revalidate.config", regex_revalidateConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+EDGE_SERVER_HOSTNAME+"/configfiles/ats/remap.config", edgeRemapConfig)
+		http.HandleFunc("/api/"+v+"/servers/"+MID_SERVER_HOSTNAME+"/configfiles/ats/remap.config", midRemapConfig)
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_0.config", setDSCPn(0))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_8.config", setDSCPn(8))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_10.config", setDSCPn(10))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_12.config", setDSCPn(12))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_14.config", setDSCPn(14))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_16.config", setDSCPn(16))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_18.config", setDSCPn(18))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_22.config", setDSCPn(22))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_24.config", setDSCPn(24))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_26.config", setDSCPn(26))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_28.config", setDSCPn(28))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_30.config", setDSCPn(30))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_32.config", setDSCPn(32))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_34.config", setDSCPn(34))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_36.config", setDSCPn(36))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_37.config", setDSCPn(37))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_38.config", setDSCPn(38))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_40.config", setDSCPn(40))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_48.config", setDSCPn(48))
+		http.HandleFunc("/api/"+v+"/cdns/"+CDN+"/configfiles/ats/set_dscp_56.config", setDSCPn(56))
+		http.HandleFunc("/api/"+v+"/profiles/"+EDGE_PROFILE_NAME+"/configfiles/ats/storage.config", edgeStorageConfig)
+		http.HandleFunc("/api/"+v+"/profiles/"+MID_PROFILE_NAME+"/configfiles/ats/storage.config", midStorageConfig)
+		http.HandleFunc("/api/"+v+"/profiles/"+EDGE_PROFILE_NAME+"/configfiles/ats/volume.config", edgeVolumeConfig)
+		http.HandleFunc("/api/"+v+"/profiles/"+MID_PROFILE_NAME+"/configfiles/ats/volume.config", midVolumeConfig)
 	}
 
 	http.HandleFunc("/mock/geo/database.dat", mockDatabase)
