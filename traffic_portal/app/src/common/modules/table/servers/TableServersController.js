@@ -130,11 +130,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
 
     $scope.contextMenuItems = [
         {
-            text: 'Open Server Config in New Tab',
+            text: 'Open in New Tab',
             click: function ($itemScope) {
                 $window.open('/#!/servers/' + $itemScope.s.id, '_blank');
             }
         },
+        null, // Divider
         {
             text: 'Navigate to Server FQDN',
             click: function ($itemScope) {
