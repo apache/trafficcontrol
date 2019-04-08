@@ -49,20 +49,7 @@ public class CertificateRegistry {
 	private CertificateRegistry() {
 	}
 
-	public static synchronized CertificateRegistry getInstance() {
-		{
-			final Map<String, HandshakeData> handshakeDataMap =
-					CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES.getHandshakeData();
-			if (!handshakeDataMap.containsKey(DEFAULT_SSL_KEY)){
-				final HandshakeData defaultHd = createDefaultSsl();
-				if (defaultHd == null){
-					log.error("Failed to initialize the CertificateRegistry because of a problem with the 'default' " +
-							"certificate.  Returning a Null reference to the factory.");
-					return null;
-				}
-				handshakeDataMap.put(DEFAULT_SSL_KEY, defaultHd);
-			}
-		}
+	public static CertificateRegistry getInstance() {
 		return CertificateRegistryHolder.DELIVERY_SERVICE_CERTIFICATES;
 	}
 
@@ -169,7 +156,22 @@ public class CertificateRegistry {
 			}
 		}
 
-		master.putIfAbsent(DEFAULT_SSL_KEY, handshakeDataMap.get(DEFAULT_SSL_KEY));
+		// Check to see if a Default cert has been provided by Traffic Ops
+		if (!master.containsKey(DEFAULT_SSL_KEY)){
+			// Check to see if a Default cert has been provided/created previously
+			if (handshakeDataMap.containsKey(DEFAULT_SSL_KEY)) {
+				master.put(DEFAULT_SSL_KEY, handshakeDataMap.get(DEFAULT_SSL_KEY));
+			}else{
+				// create a new default certificate
+				final HandshakeData defaultHd = createDefaultSsl();
+				if (defaultHd == null){
+					log.error("Failed to initialize the CertificateRegistry because of a problem with the 'default' " +
+							"certificate.  Returning the Certificate Registry without a default.");
+					return;
+				}
+				master.put(DEFAULT_SSL_KEY, defaultHd);
+			}
+		}
 		handshakeDataMap = master;
 
 		if (sslEndpoint != null) {
