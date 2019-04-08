@@ -24,19 +24,20 @@ VOLUME /trafficcontrol
 
 ### Common for all sub-component builds
 RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+	rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
 	yum -y update ca-certificates && \
 	yum -y install \
-		epel-release \
-		git \
-		rpm-build && \
+		epel-release && \
 	yum -y clean all
 
 ### traffic_router specific requirements
 RUN	yum -y install \
 		which  \
                 curl \
+		git \
                 java-1.8.0-openjdk \
-                java-1.8.0-openjdk-devel && \
+                java-1.8.0-openjdk-devel \
+		rpm-build && \
 	yum -y clean all
 
 ENV JAVA_HOME=/usr/lib/jvm/java
@@ -48,6 +49,5 @@ RUN curl -L https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3
 
 ADD infrastructure/docker/build/clean_build.sh /
 CMD /clean_build.sh traffic_router
-
 
 # vi:syntax=Dockerfile

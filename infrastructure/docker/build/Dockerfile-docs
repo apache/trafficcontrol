@@ -24,11 +24,10 @@ VOLUME /trafficcontrol
 
 ### Common for all sub-component builds
 RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+	rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
 	yum -y update ca-certificates && \
 	yum -y install \
-		epel-release \
-		git \
-		rpm-build && \
+		epel-release && \
 	yum -y clean all
 
 ### docs specific requirements
