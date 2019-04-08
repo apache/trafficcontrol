@@ -44,7 +44,10 @@ export class NewDeliveryServiceComponent implements OnInit {
 	infoURL = new FormControl('');
 	description = new FormControl('');
 	cdnObject = new FormControl('');
-	dsType = new FormControl('');
+	dsType = new FormControl();
+	protocol = new FormControl();
+
+	Protocol = Protocol;
 
 	cdns: Array<CDN>;
 	dsTypes: Array<Type>;
@@ -167,12 +170,15 @@ export class NewDeliveryServiceComponent implements OnInit {
 		switch (parser.protocol) {
 			case 'http:':
 				this.deliveryService.protocol = Protocol.HTTP_AND_HTTPS;
+				this.protocol.setValue(Protocol.HTTP_AND_HTTPS)
 				break;
 			case 'https:':
 				this.deliveryService.protocol = Protocol.HTTP_TO_HTTPS;
+				this.protocol.setValue(Protocol.HTTP_TO_HTTPS)
 				break;
 			default:
 				this.deliveryService.protocol = Protocol.HTTP_AND_HTTPS;
+				this.protocol.setValue(Protocol.HTTP_AND_HTTPS)
 				break;
 		}
 
@@ -219,10 +225,15 @@ export class NewDeliveryServiceComponent implements OnInit {
 	setInfrastructureInformation () {
 		this.deliveryService.cdnName = this.cdnObject.value.name;
 		this.deliveryService.cdnId = this.cdnObject.value.id;
-		if (this.dsType.value) {
+		if (this.dsType.dirty) {
 			this.deliveryService.typeId = this.dsType.value.id;
 			this.deliveryService.type = this.dsType.value.name;
 		}
+
+		if (this.protocol.dirty) {
+			this.deliveryService.protocol = this.protocol.value;
+		}
+
 		this.api.createDeliveryService(this.deliveryService).pipe(first()).subscribe(
 			v => {
 				if (v) {

@@ -33,19 +33,23 @@ form {
 			margin-right: 5px;
 			color: $theme_tertiary;
 			text-align: right;
-			max-height: 25px;
 			line-height: 25px;
 			vertical-align: middle;
 		}
 
-		input, select {
-			width: 100%;
-		}
+		// input, select {
+		// 	width: 100%;
+		// }
 
 		textarea {
-			width: 100%;
+			// width: 100%;
 			resize: vertical;
 		}
+	}
+
+	div.buttons-holder {
+		padding-top: 15px;
+		grid-column: span 2;
 	}
 
 	button {
@@ -56,6 +60,24 @@ form {
 		float: left;
 	}
 
+}
+
+@media (max-width: 1230px) {
+	form {
+		max-width: 95vw;
+
+		div.form-content {
+			grid-template-columns: auto;
+
+			label {
+				text-align: center;
+			}
+		}
+	}
+
+	label.sub-form, div.buttons-holder {
+		grid-column: span 1;
+	}
 }
 
 hr {
