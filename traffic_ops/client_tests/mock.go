@@ -20,6 +20,8 @@ package main
  */
 
 import "crypto/tls"
+import "flag"
+import "fmt"
 import "log"
 import "net/http"
 import "os"
@@ -87,8 +89,83 @@ func logo(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	certPathLong := flag.String("cert-path", "", "Specify a path to an SSL certificate for the mock server to use (default ./localhost.crt)")
+	certPathShort := flag.String("c", "", "Specify a path to an SSL certificate for the mock server to use (default ./localhost.crt)")
+	helpLong := flag.Bool("help", false, "Print usage information and exit")
+	helpShort := flag.Bool("h", false, "Print usage information and exit")
+	keyPathLong := flag.String("key-path", "", "Specify a path to an SSL private key for the mock server to use (default ./localhost.key)")
+	keyPathShort := flag.String("k", "", "Specify a path to an SSL private key for the mock server to use (default ./localhost.key)")
+	listenAddrLong := flag.String("listen", "", "Choose the address or hostname on which the mock server will listen (default '')")
+	listenAddrShort := flag.String("l", "", "Choose the address or hostname on which the mock server will listen (default '')")
+	portLong := flag.Uint("port", 443, "Choose the port on which the mock server will listen for incoming connections")
+	portShort := flag.Uint("p", 443, "Choose the port on which the mock server will listen for incoming connections")
+	versionLong := flag.Bool("version", false, "Print version information and exit")
+	versionShort := flag.Bool("v", false, "Print version information and exit")
+
+	flag.Parse()
+
+	version := *versionLong || *versionShort
+	if version {
+		fmt.Printf("Traffic Ops Mock server, built for version %s\n", VERSION)
+		os.Exit(0)
+	}
+
+	help := *helpLong || *helpShort
+	if help {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	var port uint
+	if *portLong != 443 {
+		if *portLong == 0 || *portLong >= 65536 {
+			log.Fatalf("Invalid port number: %d\n", *portLong)
+		}
+		if *portShort != 443 && *portShort != *portLong {
+			log.Fatalf("Must specify exactly one port number!\n")
+		}
+		port = *portLong
+	} else if *portShort != 443 {
+		if *portShort == 0 || *portShort >= 65536 {
+			log.Fatalf("Invalid port number: %d\n", *portLong)
+		}
+		port = *portShort
+	} else {
+		port = 443
+	}
+
+	listenAddr := ""
+	if *listenAddrLong != "" {
+		if *listenAddrShort != "" && *listenAddrShort != *listenAddrLong {
+			log.Fatalf("Must specify exactly one listen address!\n")
+		}
+		listenAddr = *listenAddrLong
+	} else if *listenAddrShort != "" {
+		listenAddr = *listenAddrShort
+	}
+
+	certpath := "./localhost.crt"
+	if *certPathLong != "" {
+		if *certPathShort != "" && *certPathShort != *certPathLong {
+			log.Fatalf("Must specify exactly one path to an SSL certificate!\n")
+		}
+		certpath = *certPathLong
+	} else if *certPathShort != "" {
+		certpath = *certPathShort
+	}
+
+	keypath := "./localhost.key"
+	if *keyPathLong != "" {
+		if *keyPathShort != "" && *keyPathShort != *keyPathLong {
+			log.Fatalf("Must specify exactly one path to an SSL private key!\n")
+		}
+		keypath = *keyPathLong
+	} else if *keyPathShort != "" {
+		keypath = *keyPathShort
+	}
+
 	server := &http.Server{
-		Addr:      ":443",
+		Addr:      fmt.Sprintf("%s:%d", listenAddr, port),
 		TLSConfig: &tls.Config{InsecureSkipVerify: false},
 	}
 
@@ -160,9 +237,9 @@ func main() {
 	http.HandleFunc("/mock/geo/database.dat", mockDatabase)
 	http.HandleFunc("/logo.svg", logo)
 
-	log.Printf("Finished loading API routes at %s, server listening on port 443", CURRENT_TIME.String())
+	log.Printf("Finished loading API routes at %s, server listening on %s on port %d", CURRENT_TIME.String(), listenAddr, port)
 
-	if err := server.ListenAndServeTLS("./localhost.crt", "./localhost.key"); err != nil {
+	if err := server.ListenAndServeTLS(certpath, keypath); err != nil {
 		log.Fatalf("Server crashed: %v\n", err)
 	}
 	os.Exit(0)
