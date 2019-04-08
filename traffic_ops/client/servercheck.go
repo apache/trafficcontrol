@@ -14,6 +14,7 @@ package client
 
 import (
 	"encoding/json"
+	"net"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -21,16 +22,18 @@ import (
 const API_V13_SERVERCHECK = "/api/1.3/servercheck"
 
 // Update a Server Check Status
-func (to *Session) UpdateCheckStatus(status tc.ServercheckNullable) (*tc.ServercheckPostResponse, error) {
+func (to *Session) UpdateCheckStatus(status tc.ServercheckNullable) (*tc.ServercheckPostResponse, ReqInf, error) {
 	uri := API_V13_SERVERCHECK
+	var remoteAddr net.Addr
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	jsonReq, err := json.Marshal(status)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	resp := tc.ServercheckPostResponse{}
-	_, err = post(to, uri, jsonReq, &resp)
+	reqInf, err = post(to, uri, jsonReq, &resp)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
-	return &resp, nil
+	return &resp, reqInf, nil
 }
