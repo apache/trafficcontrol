@@ -45,6 +45,7 @@ under the License.
                 <th>Profile</th>
                 <th>CDN</th>
                 <th>Cache Group</th>
+                <th>Phys Location</th>
                 <th>ILO</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
@@ -67,6 +68,7 @@ under the License.
                 <td data-search="^{{::s.profile}}$">{{::s.profile}}</td>
                 <td data-search="^{{::s.cdnName}}$">{{::s.cdnName}}</td>
                 <td data-search="^{{::s.cachegroup}}$">{{::s.cachegroup}}</td>
+                <td data-search="^{{::s.physLocation}}$">{{::s.physLocation}}</td>
                 <td data-search="^{{::s.iloIpAddress}}$"><a ng-click="ssh(s.iloIpAddress, $event)">{{::s.iloIpAddress}}</a></td>
                 <td style="text-align: right;">
                     <a class="link action-link" title="Unlink Server from Delivery Service" ng-click="confirmRemoveServer(s, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
