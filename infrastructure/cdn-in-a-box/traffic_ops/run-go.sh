@@ -87,94 +87,12 @@ while true; do
 done
 
 ### Add SSL keys for demo1 delivery service
-demo1_sslkeys_verified=false
-demo1_version=1
-while [[ "$demo1_sslkeys_verified" = false ]]; do
-   while true; do
-     sslkeys_response=$(to-get "api/1.4/deliveryservices/xmlId/$ds_name/sslkeys?decode=true")
-     echo "CDN SSLKeys=$sslkeys_response"
-     [[ -n "$sslkeys_response" ]] && break
-     sleep 2
-   done
-   demo1_crt="$(sed -n -e '/-----BEGIN CERTIFICATE-----/,$p' $X509_DEMO1_CERT_FILE | jq -s -R '.')"
-   demo1_csr="$(sed -n -e '/-----BEGIN CERTIFICATE REQUEST-----/,$p' $X509_DEMO1_REQUEST_FILE | jq -s -R '.')"
-   demo1_key="$(sed -n -e '/-----BEGIN PRIVATE KEY-----/,$p' $X509_DEMO1_KEY_FILE | jq -s -R '.')"
-   demo1_json_request=$(jq -n \
-                           --arg     cdn        "$CDN_NAME" \
-                           --arg     hostname   "*.demo1.mycdn.ciab.test" \
-                           --arg     dsname     "$ds_name" \
-                           --argjson crt        "$demo1_crt" \
-                           --argjson csr        "$demo1_csr" \
-                           --argjson key        "$demo1_key" \
-                           --argjson version    $demo1_version \
-                          "{ cdn: \$cdn, 
-                             certificate: { 
-                               crt: \$crt, 
-                               csr: \$csr,
-                               key: \$key 
-                             },
-                             deliveryservice: \$dsname,
-                             hostname: \$hostname,
-                             key: \$dsname,
-                             version: $demo1_version 
-                          }")
-
-   demo1_json_response=$(to-post 'api/1.4/deliveryservices/sslkeys/add' "$demo1_json_request")
-
-   if [[ -n "$demo1_json_response" ]] ; then 
-      sleep 2
-      cdn_sslkeys_response=$(to-get "api/1.3/cdns/name/$CDN_NAME/sslkeys.json" | jq '.response[] | length')
-      echo "cdn_sslkeys_response=$cdn_sslkeys_response"
-
-      if [ -n "$cdn_sslkeys_response" ] ; then 
-         if ((cdn_sslkeys_response==0)); then 
-           sleep 2 # Submit it again because the first time doesn't work !
-           demo1_json_response=$(to-post 'api/1.4/deliveryservices/sslkeys/add' "$demo1_json_request")
- 
-           if [[ -n "$demo1_json_response" ]] ; then 
-              demo1_sslkeys_verified=true
-           fi
-        elif ((cdn_sslkeys_response>0)); then
-           demo1_sslkeys_verified=true
-        fi
-      fi
-   fi
-
-   ((demo_version+=1)) 
-done
+to-add-sslkeys $CDN_NAME $ds_name "*.demo1.mycdn.ciab.test" $X509_DEMO1_CERT_FILE $X509_DEMO1_REQUEST_FILE $X509_DEMO1_KEY_FILE
 
 ### Automatic Queue/Snapshot ###
-while [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]] ; do
+if [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]]; then
   # AUTO_SNAPQUEUE_SERVERS should be a comma delimited list of expected docker service names to be enrolled - see varibles.env
-  expected_servers_json=$(echo "$AUTO_SNAPQUEUE_SERVERS" | tr ',' '\n' | jq -R . | jq -M -c -e -s '.|sort')
-  expected_servers_list=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|join(",")')
-  expected_servers_total=$(jq -r -n --argjson expected "$expected_servers_json" '$expected|length')
-
-  current_servers_json=$(to-get 'api/1.4/servers' 2>/dev/null | jq -c -e '[.response[] | .xmppId] | sort')
-  [ -z "$current_servers_json" ] && current_servers_json='[]'
-  current_servers_list=$(jq -r -n --argjson current "$current_servers_json" '$current|join(",")')
-  current_servers_total=$(jq -r -n --argjson current "$current_servers_json" '$current|length')
-
-  remain_servers_json=$(jq -n --argjson expected "$expected_servers_json" --argjson current "$current_servers_json" '$expected-$current')
-  remain_servers_list=$(jq -r -n --argjson remain "$remain_servers_json" '$remain|join(",")')
-  remain_servers_total=$(jq -r -n --argjson remain "$remain_servers_json" '$remain|length')
-
-  echo "AUTO-SNAPQUEUE - Expected Servers ($expected_servers_total): $expected_servers_list"
-  echo "AUTO-SNAPQUEUE - Current Servers ($current_servers_total): $current_servers_list"
-  echo "AUTO-SNAPQUEUE - Remain Servers ($remain_servers_total): $remain_servers_list"
-
-  if ((remain_servers_total == 0)) ; then
-     echo "AUTO-SNAPQUEUE - All expected servers enrolled."
-     sleep $AUTO_SNAPQUEUE_ACTION_WAIT
-     echo "AUTO-SNAPQUEUE - Do automatic snapshot..."
-     to-put 'api/1.3/cdns/2/snapshot'
-     sleep $AUTO_SNAPQUEUE_ACTION_WAIT
-     echo "AUTO-SNAPQUEUE - Do queue updates..."
-     to-post 'api/1.3/cdns/2/queue_update' '{"action":"queue"}'
-     break
-  fi
-
-  sleep $AUTO_SNAPQUEUE_POLL_INTERVAL
-done
+  to-auto-snapqueue $AUTO_SNAPQUEUE_SERVERS $CDN_NAME
+fi
 
 exec tail -f /dev/null
