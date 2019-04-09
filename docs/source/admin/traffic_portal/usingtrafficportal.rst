@@ -271,11 +271,12 @@ A table of all servers (of all kinds) across all :term:`Delivery Service`\ s and
 
 	.. seealso:: :ref:`health-proto`
 
-:Type:        The type of server e.g. EDGE for an Edge-tier :term:`cache server`
-:Profile:     The name of the server's :term:`Profile`
-:CDN:         The name of the CDN to which this server is assigned (if any)
-:Cache Group: The name of the :term:`Cache Group` to which this server belongs
-:ILO:         If not empty, this is the IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` interface
+:Type:        	The type of server e.g. EDGE for an Edge-tier :term:`cache server`
+:Profile:     	The name of the server's :term:`Profile`
+:CDN:         	The name of the CDN to which this server is assigned (if any)
+:Cache Group: 	The name of the :term:`Cache Group` to which this server belongs
+:Phys Location:	The name of the :term:`Physical Location` to which this server belongs
+:ILO:         	If not empty, this is the IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` interface
 
 	.. seealso:: `Hewlett Packard ILO Wikipedia Page <https://en.wikipedia.org/wiki/HP_Integrated_Lights-Out>`_
 

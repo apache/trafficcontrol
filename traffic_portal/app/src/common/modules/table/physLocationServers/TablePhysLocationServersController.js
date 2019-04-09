@@ -50,7 +50,7 @@ var TablePhysLocationServersController = function(physLocation, servers, $scope,
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 11 }
+				{ 'orderable': false, 'targets': 12 }
 			],
 			"aaSorting": []
 		});
