@@ -225,9 +225,9 @@ under the License.
             </div>
 
             <div class="form-group" ng-if="!settings.isNew && !settings.isRequest">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="edgeFQDNs">Delivery Service URLs</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="edgeFQDNs">Delivery Service URL(s)</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="edgeFQDNs" name="edgeFQDNs" rows="4" cols="17" class="form-control readonly" readonly>{{edgeFQDNs(deliveryService)}}</textarea>
+                    <textarea id="edgeFQDNs" name="edgeFQDNs" rows="{{deliveryService.exampleURLs.length}}" class="form-control readonly" readonly>{{edgeFQDNs(deliveryService)}}</textarea>
                 </div>
             </div>
 
@@ -348,17 +348,13 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trResponseHeaders), 'has-feedback': hasError(deliveryServiceForm.trResponseHeaders)}"
                      ng-if="isClientSteering(deliveryService)">
-                    <label class="control-label col-md-2 col-sm-2 col-xs-12" for="trResponseHeaders">Traffic Router Additional Response Headers<div class="helptooltip">
-                        <div class="helptext">
-                            List of header name:value pairs separated by <code>__RETURN__</code>. Listed pairs will be included in all Traffic Router HTTP(S) responses.
-                        </div>
+                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trResponseHeaders">Traffic Router Additional Response Headers<div class="helptooltip">
+                        <div class="helptext">List of header name:value pairs separated by line breaks. Listed pairs will be included in all Traffic Router HTTP(S) responses.</div>
                     </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="trResponseHeaders" name="trResponseHeaders" type="text" class="form-control" ng-model="deliveryService.trResponseHeaders" maxlength="1024">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.trResponseHeaders, 'maxlength')">Too Long</small>
+                        <textarea id="trResponseHeaders" name="trResponseHeaders" type="text" class="form-control" ng-model="deliveryService.trResponseHeaders" rows="5" autofocus></textarea>
                         <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.trResponseHeaders != dsCurrent.trResponseHeaders">Current Value: [ {{dsCurrent.trResponseHeaders}} ]</small>
-                        <span ng-show="hasError(deliveryServiceForm.trResponseHeaders)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 

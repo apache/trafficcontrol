@@ -195,9 +195,9 @@ under the License.
             </div>
 
             <div class="form-group" ng-if="!settings.isNew && !settings.isRequest">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Delivery Service URLs</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Delivery Service URL(s)</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="edgeFQDNs" name="edgeFQDNs" rows="4" cols="17" class="form-control readonly" readonly>{{edgeFQDNs(deliveryService)}}</textarea>
+                    <textarea id="edgeFQDNs" name="edgeFQDNs" rows="{{deliveryService.exampleURLs.length}}" class="form-control readonly" readonly>{{edgeFQDNs(deliveryService)}}</textarea>
                 </div>
             </div>
 
@@ -322,15 +322,13 @@ under the License.
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trRequestHeaders), 'has-feedback': hasError(deliveryServiceForm.trRequestHeaders)}">
                     <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trRequestHeaders">Traffic Router Log Request Headers<div class="helptooltip">
                         <div class="helptext">
-                            List of header keys separated by <code>__RETURN__</code>. Listed headers will be included in Traffic Router access log entries under the <samp>rh=</samp> token.
+                            List of header keys separated by line breaks. Listed headers will be included in Traffic Router access log entries under the <samp>rh=</samp> token.
                         </div>
                     </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="trRequestHeaders" name="trRequestHeaders" type="text" class="form-control" ng-model="deliveryService.trRequestHeaders" maxlength="1024">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.trRequestHeaders, 'maxlength')">Too Long</small>
+                        <textarea id="trRequestHeaders" name="trRequestHeaders" type="text" class="form-control" ng-model="deliveryService.trRequestHeaders" rows="5" autofocus></textarea>
                         <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.trRequestHeaders != dsCurrent.trRequestHeaders">Current Value: [ {{dsCurrent.trRequestHeaders}} ]</small>
-                        <span ng-show="hasError(deliveryServiceForm.trRequestHeaders)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
@@ -379,10 +377,8 @@ under the License.
                     </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="remapText" name="remapText" type="text" class="form-control" ng-model="deliveryService.remapText" maxlength="2048">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.remapText, 'maxlength')">Too Long</small>
+                        <textarea id="remapText" name="remapText" type="text" class="form-control" ng-model="deliveryService.remapText" rows="5" autofocus></textarea>
                         <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.remapText != dsCurrent.remapText">Current Value: [ {{dsCurrent.remapText}} ]</small>
-                        <span ng-show="hasError(deliveryServiceForm.remapText)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
 
