@@ -40,4 +40,4 @@ sudo ./mock
 # sudo LD_LIBRARY_PATH=/usr/local/lib64 ./mock
 ```
 
-More configurability is expected as the server matures.
+For additional configuration options, see the output of the `-h`/`--help` flag and/or (the official documentation)[https://traffic-control-cdn.readthedocs.io/en/latest/tools/mock_trafficops.html].
