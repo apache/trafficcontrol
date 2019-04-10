@@ -31,7 +31,7 @@ vendoring and building
 =======================================
 
 ### vendoring
-We treat `golang.org/x` as apart of the Go compiler so that means that we still vendor application dependencies for stability and reproducible builds.  This is a helpful tool for managing dependencies [https://github.com/govend/govend](https://github.com/govend/govend])
+We treat `golang.org/x` as apart of the Go compiler so that means that we still vendor application dependencies for stability and reproducible builds.  This is a helpful tool for managing dependencies [https://github.com/govend/govend](https://github.com/govend/govend)
 
 ### building
 To download the remaining `golang.org/x` dependencies you need to:
@@ -125,11 +125,11 @@ Now we need to create the Go endpoint.
 
 #### Getting a "Handle" on Routes
 
-Open [routes.go](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/traffic_ops_golang/routes.go). Routes are defined in the `Routes` function, of the form `{version, method, path, handler}`. Notice the path can contain variables, of the form `/{var}/`. These variables will be made available to your handler.
+Open [routes.go](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/traffic_ops_golang/routing/routes.go). Routes are defined in the `Routes` function, of the form `{version, method, path, handler}`. Notice the path can contain variables, of the form `/{var}/`. These variables will be made available to your handler.
 
 #### Creating a Handler
 
-The first step is to create your handler. For an example, look at `monitoringHandler` in `monitoring.go`. Your handler arguments can be any data available to the router (the config and database, or what you can create from them). Passing the `db` or prepared `Stmt`s is common. The handler function must return a `RegexHandlerFunc`. In general, you want to return an inline function, `return func(w http.ResponseWriter, r *http.Request, p ParamMap) {...`. 
+The first step is to create your handler. For an example, look at `monitoringHandler` in `monitoring.go`. Your handler arguments can be any data available to the router (the config and database, or what you can create from them). Passing the `db` or prepared `Stmt`s is common. The handler function must return a `RegexHandlerFunc`. In general, you want to return an inline function, `return func(w http.ResponseWriter, r *http.Request, p ParamMap) {...`.
 
 The `ResponseWriter` and `Request` are standard Go `HandlerFunc` parameters. The `ParamMap` is a `map[string]string`, containing the variables from your route path.
 
