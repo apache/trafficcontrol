@@ -153,9 +153,33 @@ func main() {
 	}
 
 	go func() {
+		if cfg.KeyPath == "" {
+			log.Errorf("key cannot be blank in %s", cfg.ConfigHypnotoad.Listen)
+			os.Exit(1)
+		}
+
+		if cfg.CertPath == "" {
+			log.Errorf("cert cannot be blank in %s", cfg.ConfigHypnotoad.Listen)
+			os.Exit(1)
+		}
+
+		if file, err := os.Open(cfg.CertPath); err != nil {
+			log.Errorf("cannot open %s for read: %s", cfg.CertPath, err.Error())
+			os.Exit(1)
+		} else {
+			file.Close()
+		}
+
+		if file, err := os.Open(cfg.KeyPath); err != nil {
+			log.Errorf("cannot open %s for read: %s", cfg.KeyPath, err.Error())
+			os.Exit(1)
+		} else {
+			file.Close()
+		}
+
 		if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
 			log.Errorf("stopping server: %v\n", err)
-			panic(err)
+			os.Exit(1)
 		}
 	}()
 
@@ -172,12 +196,12 @@ func main() {
 	}
 
 	reloadProfilingConfig := func() {
-		SetNewProfilingInfo(*configFileName, &profiling, &profilingLocation, cfg.Version)
+		setNewProfilingInfo(*configFileName, &profiling, &profilingLocation, cfg.Version)
 	}
 	signalReloader(unix.SIGHUP, reloadProfilingConfig)
 }
 
-func SetNewProfilingInfo(configFileName string, currentProfilingEnabled *bool, currentProfilingLocation *string, version string) {
+func setNewProfilingInfo(configFileName string, currentProfilingEnabled *bool, currentProfilingLocation *string, version string) {
 	newProfilingEnabled, newProfilingLocation, err := reloadProfilingInfo(configFileName)
 	if err != nil {
 		log.Errorln("reloading config: ", err.Error())
@@ -215,7 +239,7 @@ func getProcessedProfilingLocation(rawProfilingLocation string, errorLogLocation
 		if _, err := os.Stat(profilingLocation); err != nil {
 			err = os.Mkdir(profilingLocation, 0755)
 			if err != nil {
-				return "", fmt.Errorf("unable to create profiling location: %s\n", err.Error())
+				return "", fmt.Errorf("unable to create profiling location: %s", err.Error())
 			}
 		}
 	}
