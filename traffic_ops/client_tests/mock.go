@@ -34,6 +34,7 @@ const API_MAX_MINOR_VERSION = 5
 
 // TODO: read this in properly from the VERSION file
 const VERSION = "3.0.0"
+
 var SERVER_STRING = "Traffic Ops/" + VERSION + " (Mock)"
 
 // This needs to exist for... reasons

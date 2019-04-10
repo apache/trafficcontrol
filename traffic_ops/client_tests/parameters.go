@@ -812,7 +812,7 @@ var PARAMETERS = []tc.Parameter{
 
 func parameters(w http.ResponseWriter, r *http.Request) {
 	common(w)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		api.WriteResp(w, r, PARAMETERS)
 	} else {
 		w.Header().Set("Allow", http.MethodGet)

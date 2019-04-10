@@ -37,7 +37,7 @@ record_types=122
 
 func edgeAstatsConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(EDGE_PROFILE_HEADER + ASTATS_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -47,7 +47,7 @@ func edgeAstatsConfig(w http.ResponseWriter, r *http.Request) {
 
 func midAstatsConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(MID_PROFILE_HEADER + ASTATS_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -57,7 +57,7 @@ func midAstatsConfig(w http.ResponseWriter, r *http.Request) {
 
 func edgeCacheConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(EDGE_PROFILE_HEADER))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -67,7 +67,7 @@ func edgeCacheConfig(w http.ResponseWriter, r *http.Request) {
 
 func midCacheConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(MID_PROFILE_HEADER))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -77,7 +77,7 @@ func midCacheConfig(w http.ResponseWriter, r *http.Request) {
 
 func chkConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(`[{"value":"0:off\t1:off\t2:on\t3:on\t4:on\t5:on\t6:off","name":"trafficserver"}]`))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -91,7 +91,7 @@ hostname=*   volume=1
 
 func edgeHostingConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(EDGE_SERVER_HEADER + HOSTING_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -101,7 +101,7 @@ func edgeHostingConfig(w http.ResponseWriter, r *http.Request) {
 
 func midHostingConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(MID_SERVER_HEADER + HOSTING_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -125,7 +125,7 @@ src_ip=192.168.0.0-192.168.255.255                                            ac
 
 func edgeIp_allowConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(EDGE_SERVER_HEADER + IP_ALLOW_CONFIG_TOP + IP_ALLOW_CONFIG_BOTTOM))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -135,7 +135,7 @@ func edgeIp_allowConfig(w http.ResponseWriter, r *http.Request) {
 
 func midIp_allowConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(MID_SERVER_HEADER + IP_ALLOW_CONFIG_TOP + MID_IP_ALLOW_CONFIG + IP_ALLOW_CONFIG_BOTTOM))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -144,12 +144,12 @@ func midIp_allowConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 var EDGE_PARENT_CONFIG = `
-dest_domain=. parent="`+ MID_SERVER_HOSTNAME+"."+MID_SERVER_DOMAIN_NAME+fmt.Sprintf(":%d", MID_SERVER_TCP_PORT)+`|0.999;" round_robin=consistent_hash go_direct=false
+dest_domain=. parent="` + MID_SERVER_HOSTNAME + "." + MID_SERVER_DOMAIN_NAME + fmt.Sprintf(":%d", MID_SERVER_TCP_PORT) + `|0.999;" round_robin=consistent_hash go_direct=false
 `
 
 func edgeParentConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(EDGE_SERVER_HEADER + EDGE_PARENT_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -159,7 +159,7 @@ func edgeParentConfig(w http.ResponseWriter, r *http.Request) {
 
 func midParentConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(MID_SERVER_HEADER))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -174,7 +174,7 @@ regex_revalidate.so --config regex_revalidate.config
 
 func edgePluginConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(EDGE_PROFILE_HEADER + PLUGIN_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -184,7 +184,7 @@ func edgePluginConfig(w http.ResponseWriter, r *http.Request) {
 
 func midPluginConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(MID_PROFILE_HEADER + PLUGIN_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -246,7 +246,7 @@ CONFIG proxy.config.url_remap.remap_required INT 0
 
 func edgeRecordsConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(EDGE_PROFILE_HEADER + EDGE_RECORDS_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -256,7 +256,7 @@ func edgeRecordsConfig(w http.ResponseWriter, r *http.Request) {
 
 func midRecordsConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(MID_PROFILE_HEADER + MID_RECORDS_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -266,7 +266,7 @@ func midRecordsConfig(w http.ResponseWriter, r *http.Request) {
 
 func regex_revalidateConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(CDN_HEADER + "\n"))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -276,7 +276,7 @@ func regex_revalidateConfig(w http.ResponseWriter, r *http.Request) {
 
 func edgeRemapConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(EDGE_SERVER_HEADER + "\n"))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -286,14 +286,13 @@ func edgeRemapConfig(w http.ResponseWriter, r *http.Request) {
 
 func midRemapConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(MID_SERVER_HEADER + "\n"))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
 		w.WriteHeader(http.StatusNotImplemented)
 	}
 }
-
 
 var SET_DSCP_N_CONFIG = `
 cond %{REMAP_PSEUDO_HOOK}
@@ -302,7 +301,7 @@ set-conn-dscp %d [L]
 
 func setDSCP(n int, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(CDN_HEADER + fmt.Sprintf(SET_DSCP_N_CONFIG, n)))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -310,7 +309,7 @@ func setDSCP(n int, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func setDSCPn(n int) func (http.ResponseWriter, *http.Request) {
+func setDSCPn(n int) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		setDSCP(n, w, r)
 	}
@@ -322,7 +321,7 @@ var STORAGE_CONFIG = `
 
 func edgeStorageConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(EDGE_PROFILE_HEADER + STORAGE_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -332,7 +331,7 @@ func edgeStorageConfig(w http.ResponseWriter, r *http.Request) {
 
 func midStorageConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(MID_PROFILE_HEADER + STORAGE_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -347,7 +346,7 @@ volume=1 scheme=http size=100%
 
 func edgeVolumeConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(EDGE_PROFILE_HEADER + VOLUME_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -357,7 +356,7 @@ func edgeVolumeConfig(w http.ResponseWriter, r *http.Request) {
 
 func midVolumeConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", SERVER_STRING)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		w.Write([]byte(MID_PROFILE_HEADER + VOLUME_CONFIG))
 	} else {
 		w.Header().Set("Allow", http.MethodGet)

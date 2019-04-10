@@ -118,10 +118,9 @@ var PROFILES = []tc.ProfileNullable{
 	},
 }
 
-
 func profiles(w http.ResponseWriter, r *http.Request) {
 	common(w)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		api.WriteResp(w, r, PROFILES)
 	} else {
 		w.Header().Set("Allow", http.MethodGet)

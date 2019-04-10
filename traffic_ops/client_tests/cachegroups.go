@@ -89,7 +89,7 @@ var CACHEGROUPS = []tc.CacheGroupNullable{
 
 func cacheGroups(w http.ResponseWriter, r *http.Request) {
 	common(w)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		api.WriteResp(w, r, CACHEGROUPS)
 	} else {
 		w.Header().Set("Allow", http.MethodGet)

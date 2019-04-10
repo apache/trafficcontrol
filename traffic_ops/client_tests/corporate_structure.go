@@ -23,16 +23,16 @@ import "net/http"
 import "github.com/apache/trafficcontrol/lib/go-tc"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
-var DIVISION = tc.Division {
-	ID: 1,
+var DIVISION = tc.Division{
+	ID:          1,
 	LastUpdated: *CURRENT_TIME,
-	Name: "Mock",
+	Name:        "Mock",
 }
-var DIVISIONS = []tc.Division { DIVISION, }
+var DIVISIONS = []tc.Division{DIVISION}
 
 func divisions(w http.ResponseWriter, r *http.Request) {
 	common(w)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		api.WriteResp(w, r, DIVISIONS)
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -41,18 +41,18 @@ func divisions(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var REGION = tc.Region {
+var REGION = tc.Region{
 	DivisionName: DIVISION.Name,
-	Division: DIVISION.ID,
-	ID: 1,
-	LastUpdated: *CURRENT_TIME,
-	Name: "Mock",
+	Division:     DIVISION.ID,
+	ID:           1,
+	LastUpdated:  *CURRENT_TIME,
+	Name:         "Mock",
 }
-var REGIONS = []tc.Region { REGION, }
+var REGIONS = []tc.Region{REGION}
 
 func regions(w http.ResponseWriter, r *http.Request) {
 	common(w)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		api.WriteResp(w, r, REGIONS)
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
@@ -61,27 +61,27 @@ func regions(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var LOCATION = tc.PhysLocation {
-	Address: "555 Mock Lane",
-	City: "Mockville",
-	Comments: "This isn't a real place",
-	Email: "admin@cdn.test",
-	ID: 1,
+var LOCATION = tc.PhysLocation{
+	Address:     "555 Mock Lane",
+	City:        "Mockville",
+	Comments:    "This isn't a real place",
+	Email:       "admin@cdn.test",
+	ID:          1,
 	LastUpdated: *CURRENT_TIME,
-	Name: "Mock",
-	Phone: "1-555-555-5555",
-	POC: "Nobody",
-	RegionID: REGION.ID,
-	RegionName: REGION.Name,
-	ShortName: "Mock",
-	State: "Denial",
-	Zip: "0",
+	Name:        "Mock",
+	Phone:       "1-555-555-5555",
+	POC:         "Nobody",
+	RegionID:    REGION.ID,
+	RegionName:  REGION.Name,
+	ShortName:   "Mock",
+	State:       "Denial",
+	Zip:         "0",
 }
-var LOCATIONS = []tc.PhysLocation { LOCATION, }
+var LOCATIONS = []tc.PhysLocation{LOCATION}
 
 func locations(w http.ResponseWriter, r *http.Request) {
 	common(w)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		api.WriteResp(w, r, LOCATIONS)
 	} else {
 		w.Header().Set("Allow", http.MethodGet)

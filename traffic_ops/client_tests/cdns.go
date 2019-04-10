@@ -51,7 +51,7 @@ var CDNS = []tc.CDNNullable{
 
 func CDNs(w http.ResponseWriter, r *http.Request) {
 	common(w)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		api.WriteResp(w, r, CDNS)
 	} else {
 		w.Header().Set("Allow", http.MethodGet)

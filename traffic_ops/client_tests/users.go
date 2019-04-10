@@ -71,8 +71,8 @@ var CURRENT_USER = tc.UserCurrent{
 func login(w http.ResponseWriter, r *http.Request) {
 	// This behavior deviates from the actual server, but it's an error - and this is a much better
 	// error imo.
-	if (r.Method != http.MethodPost) {
-		w.Header().Set("Server", "Traffic Ops/" + VERSION + " (Mock)")
+	if r.Method != http.MethodPost {
+		w.Header().Set("Server", "Traffic Ops/"+VERSION+" (Mock)")
 		w.Header().Set("Allow", http.MethodPost)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -107,7 +107,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 func cuser(w http.ResponseWriter, r *http.Request) {
 	common(w)
-	if (r.Method == http.MethodGet) {
+	if r.Method == http.MethodGet {
 		api.WriteResp(w, r, CURRENT_USER)
 	} else {
 		w.Header().Set("Allow", http.MethodGet)
