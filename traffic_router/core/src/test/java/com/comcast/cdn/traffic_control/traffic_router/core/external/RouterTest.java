@@ -27,6 +27,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
@@ -217,8 +218,6 @@ public class RouterTest {
 		InputStream keystoreStream = getClass().getClassLoader().getResourceAsStream("keystore.jks");
 		trustStore.load(keystoreStream, "changeit".toCharArray());
 		TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).init(trustStore);
-
-
 		httpClient = HttpClientBuilder.create()
 			.setSSLSocketFactory(new ClientSslSocketFactory("tr.https-only-test.thecdn.example.com"))
 			.setSSLHostnameVerifier(new TestHostnameVerifier())
@@ -438,8 +437,11 @@ public class RouterTest {
 
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
 			int code = response.getStatusLine().getStatusCode();
-			assertThat("Expected to get an ssl handshake error! But got: "+code,
+			assertThat("Expected a server error code (503) But got: "+code,
 					code, greaterThan(500));
+		}
+		catch (SSLHandshakeException she) {
+			// Expected result of getting the self-signed _default_ certificate
 		}
 
 		// Pretend someone did a cr-config snapshot that would have updated the location to be different
@@ -494,8 +496,11 @@ public class RouterTest {
 
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
 			int code = response.getStatusLine().getStatusCode();
-			assertThat("Expected to get an ssl handshake error! But got: "+code,
+			assertThat("Expected an server error code! But got: "+code,
 					code, greaterThan(500));
+		}
+		catch (SSLHandshakeException she) {
+			// expected result of getting the self-signed _default_ certificate
 		}
 
 		// Go back to the cr-config that makes the delivery service https again
@@ -511,6 +516,11 @@ public class RouterTest {
 		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/certificates");
 		httpClient.execute(httpPost).close();
 
+		httpClient = HttpClientBuilder.create()
+				.setSSLSocketFactory(new ClientSslSocketFactory("https-additional"))
+				.setSSLHostnameVerifier(new TestHostnameVerifier())
+				.disableRedirectHandling()
+				.build();
 		// Our initial test cr config data sets cert poller to 10 seconds
 		Thread.sleep(25000L);
 
@@ -518,10 +528,13 @@ public class RouterTest {
 		httpGet.addHeader("Host", "tr." + "https-additional" + ".bar");
 
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
-	    } catch (SSLHandshakeException e) {
-		// Expected, this means we're doing the right thing
-	    }
+			int code = response.getStatusLine().getStatusCode();
+			assertThat("Expected an server error code! But got: "+code,
+					code, equalTo(302));
+		} catch (SSLHandshakeException e) {
+
+			fail(e.getMessage());
+		}
 
 		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
@@ -598,7 +611,7 @@ public class RouterTest {
 		private final String host;
 
 		public ClientSslSocketFactory(String host) throws Exception {
-			super(SSLContextBuilder.create().loadTrustMaterial(trustStore, null).build(),
+			super(SSLContextBuilder.create().loadTrustMaterial(trustStore, new TrustSelfSignedStrategy()).build(),
 				new TestHostnameVerifier());
 			this.host = host;
 		}
@@ -607,7 +620,6 @@ public class RouterTest {
 			SNIHostName serverName = new SNIHostName(host);
 			List<SNIServerName> serverNames = new ArrayList<>(1);
 			serverNames.add(serverName);
-
 			SSLParameters params = sslSocket.getSSLParameters();
 			params.setServerNames(serverNames);
 			sslSocket.setSSLParameters(params);
