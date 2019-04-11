@@ -21,4 +21,4 @@
 
 An AngularJS client served from a lightweight Node.js web server. Traffic Portal was designed to consume the Traffic Ops API.
 
-Installation / configuration instructions are found at https://github.com/apache/trafficcontrol/tree/master/traffic_portal/build
+Installation / configuration instructions may be found in [the `build/` directory](./build/)

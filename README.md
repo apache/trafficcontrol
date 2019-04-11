@@ -30,15 +30,14 @@ Apache Traffic Control is an Open Source implementation of a Content Delivery Ne
 
 ##### Releases
 * [https://github.com/apache/trafficcontrol/releases](https://github.com/apache/trafficcontrol/releases)
- 
+
 ##### Downloads
-* [http://trafficcontrol.apache.org/downloads/index.html](http://trafficcontrol.apache.org/downloads/index.html)
- 
+* [https://www.apache.org/dyn/closer.cgi/trafficcontrol](https://www.apache.org/dyn/closer.cgi/trafficcontrol)
+
 ####  Questions, Comments, Bugs and More
-* [Frequently Asked Questions](http://traffic-control-cdn.readthedocs.io/en/latest/faq/index.html)
+* [Frequently Asked Questions](https://traffic-control-cdn.readthedocs.io/en/latest/faq.html)
 * [Found a bug or file a feature request](https://github.com/apache/trafficcontrol/issues)
 * [Subscribe to our users list](mailto:users-subscribe@trafficcontrol.apache.org)
 * [Subscribe to our dev list](mailto:dev-subscribe@trafficcontrol.apache.org)
 * [Search the email archives](https://lists.apache.org/list.html?dev@trafficcontrol.apache.org)
-* [Check out the wiki](https://github.com/Comcast/traffic_control/wiki) for less formal documentation, design docs and roadmap discussions 
-
+* [Check out the wiki](https://cwiki.apache.org/confluence/display/TC/Traffic+Control+Home) for less formal documentation, design docs and roadmap discussions
