@@ -20,10 +20,11 @@ package asn
  */
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -43,8 +44,9 @@ type TOASNV11 struct {
 }
 
 func (v *TOASNV11) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOASNV11) NewReadObj() interface{}       { return &tc.ASNNullable{} }
-func (v *TOASNV11) SelectQuery() string           { return selectQuery() }
+
+func (v *TOASNV11) NewReadObj() interface{} { return &tc.ASNNullable{} }
+
 func (v *TOASNV11) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"asn":            dbhelpers.WhereColumnInfo{"a.asn", nil},
@@ -53,8 +55,6 @@ func (v *TOASNV11) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 		"cachegroupName": dbhelpers.WhereColumnInfo{"c.name", nil},
 	}
 }
-func (v *TOASNV11) UpdateQuery() string { return updateQuery() }
-func (v *TOASNV11) DeleteQuery() string { return deleteQuery() }
 
 func (asn TOASNV11) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
@@ -104,13 +104,12 @@ func (val *TOASNV11) Create() (error, error, int) {
 
 	// An info tag is specified to mark fields that the database updates.
 	// It is the non-marked fields that are only provided by the request (via create).
-	log.Infof("There are %d fields for %v", len(inf.Fields[api.NotMarked]), inf.Fields)
 	row := inf.Tx.QueryRow(val.InsertQuery(), inf.Fields[api.NotMarked]...)
 
 	key := inf.Fields["key"]
 	joins := inf.Fields["join"]
 	lu := inf.Fields["lastUpdated"]
-	items := append(append(key, joins...), lu...)
+	items := append(append(key, lu...), joins...)
 
 	if err := row.Scan(items...); err != nil {
 		return api.ParseDBError(err)
@@ -119,9 +118,33 @@ func (val *TOASNV11) Create() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func (as *TOASNV11) Read() ([]interface{}, error, error, int) { return api.GenericRead(as) }
-func (as *TOASNV11) Update() (error, error, int)              { return api.GenericUpdate(as) }
-func (as *TOASNV11) Delete() (error, error, int)              { return api.GenericDelete(as) }
+func (as *TOASNV11) Read() ([]interface{}, error, error, int) {
+	return api.GenericRead(as)
+}
+
+func (val *TOASNV11) Update() (error, error, int) {
+
+	inf := val.APIInfo()
+
+	updateItems := append(inf.Fields[api.NotMarked], inf.Fields["key"]...)
+	rows := inf.Tx.QueryRow(val.UpdateQuery(), updateItems...)
+
+	joins := inf.Fields["join"]
+	lu := inf.Fields["lastUpdated"]
+	items := append(lu, joins...)
+
+	if err := rows.Scan(items...); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("no " + val.GetType() + " found with this id"), nil, http.StatusNotFound
+		}
+		return api.ParseDBError(err)
+	}
+	return nil, nil, http.StatusOK
+}
+
+func (as *TOASNV11) Delete() (error, error, int) {
+	return api.GenericDelete(as)
+}
 
 // V11ReadAll implements the asns 1.1 route, which is different from the 1.1 route for a single ASN and from 1.2+ routes, in that it wraps the content in an additional "asns" object.
 func V11ReadAll(w http.ResponseWriter, r *http.Request) {
@@ -142,7 +165,7 @@ func V11ReadAll(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, tc.ASNsV11{asns})
 }
 
-func selectQuery() string {
+func (v *TOASNV11) SelectQuery() string {
 	return `
 SELECT
  a.id,
@@ -163,24 +186,24 @@ INSERT INTO
   asn (asn, cachegroup)
 VALUES
   ($1, $2)
-RETURNING id, last_updated
-`
+RETURNING id, last_updated,
+(SELECT c.name FROM cachegroup c WHERE c.id = asn.cachegroup)`
 }
 
-func updateQuery() string {
+func (v *TOASNV11) UpdateQuery() string {
 	return `
 UPDATE
   asn
 SET
-  asn        = :asn,
-  cachegroup = :cachegroup_id
+  asn = $1,
+  cachegroup = $2
 WHERE
-  id = :id
+  id = $3
 RETURNING
-  last_updated
-`
+  last_updated,
+  (SELECT c.name FROM cachegroup c WHERE c.id = asn.cachegroup)`
 }
 
-func deleteQuery() string {
+func (v *TOASNV11) DeleteQuery() string {
 	return `DELETE FROM asn WHERE id=:id`
 }

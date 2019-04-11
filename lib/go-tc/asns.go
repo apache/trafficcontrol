@@ -71,7 +71,7 @@ type ASNNullable struct {
 
 	// Related cachegroup name
 	//
-	Cachegroup *string `json:"cachegroup" db:"cachegroup" info:"joinz"`
+	Cachegroup *string `json:"cachegroup" db:"cachegroup" info:"join"`
 
 	// Related cachegroup id
 	//
