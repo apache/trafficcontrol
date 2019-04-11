@@ -27,7 +27,7 @@ To run `traffic_ops_golang` proxy locally the following prerequisites are needed
 * Because the Golang proxy is fronting Mojolicious Perl you need to have that service setup and running as well [TO Perl Setup Here](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/INSTALL.md)
 
 
-vendoring and building
+Vendoring and Building
 =======================================
 
 ### vendoring
@@ -110,7 +110,7 @@ Converting an Endpoint
 Perl
 ----
 
-If you don't already have an endpoint in mind, open [TrafficOpsRoutes.pm](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/lib/TrafficOpsRoutes.pm) and browse the routes. Start with `/api/` routes. We'll be moving others, like config files, but they're a bit more complex. We specifically won't be moving GUI routes (e.g. `/asns`), they'll go away when the new [Portal](https://github.com/apache/trafficcontrol/tree/master/traffic_portal) is done.
+If you don't already have an endpoint in mind, open [TrafficOpsRoutes.pm](../app/lib/TrafficOpsRoutes.pm) and browse the routes. Start with `/api/` routes. We'll be moving others, like config files, but they're a bit more complex. We specifically won't be moving GUI routes (e.g. `/asns`), they'll go away when the new [Portal](https://github.com/apache/trafficcontrol/tree/master/traffic_portal) is done.
 
 After you pick a route, you'll need to look at the code that generates it. For example, if we look at `$r->get("/api/$version/cdns")->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#index', namespace => $namespace );`, we see it's calling `Cdn#index`, so we look in `app/lib/API/Cdn.pm` at `sub index`.
 
@@ -125,7 +125,7 @@ Now we need to create the Go endpoint.
 
 #### Getting a "Handle" on Routes
 
-Open [routes.go](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/traffic_ops_golang/routing/routes.go). Routes are defined in the `Routes` function, of the form `{version, method, path, handler}`. Notice the path can contain variables, of the form `/{var}/`. These variables will be made available to your handler.
+Open [routes.go](./routing/routes.go). Routes are defined in the `Routes` function, of the form `{version, method, path, handler}`. Notice the path can contain variables, of the form `/{var}/`. These variables will be made available to your handler.
 
 #### Creating a Handler
 
