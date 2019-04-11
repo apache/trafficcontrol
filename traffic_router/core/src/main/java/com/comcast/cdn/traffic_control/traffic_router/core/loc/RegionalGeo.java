@@ -357,7 +357,7 @@ public final class RegionalGeo {
         if (result.getType() == DENIED) {
             routeResult.setResponseCode(result.getHttpResponseCode());
         } else {
-            routeResult.setUrl(new URL(createRedirectURIString(httpRequest, deliveryService, cache, result)));
+            routeResult.addUrl(new URL(createRedirectURIString(httpRequest, deliveryService, cache, result)));
         }
     }
 
