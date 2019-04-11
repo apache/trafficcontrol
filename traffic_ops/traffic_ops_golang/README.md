@@ -31,7 +31,7 @@ vendoring and building
 =======================================
 
 ### vendoring
-We treat `golang.org/x` as apart of the Go compiler so that means that we still vendor application dependencies for stability and reproducible builds.  This is a helpful tool for managing dependencies [https://github.com/govend/govend](https://github.com/govend/govend)
+We treat `golang.org/x` as a part of the Go compiler so that means that we still vendor application dependencies for stability and reproducible builds.  The [govend](https://github.com/govend/govend) tool is helpful for managing dependencies.
 
 ### building
 To download the remaining `golang.org/x` dependencies you need to:

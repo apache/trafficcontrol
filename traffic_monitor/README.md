@@ -18,8 +18,9 @@
 -->
 # Traffic Monitor
 
-* To run:
-  * `./build.sh && traffic_monitor --opsCfg ./conf/traffic_ops.cfg -config ./conf/traffic_monitor.cfg`
+To run:
 
-* Documentation
-  * https://traffic-control-cdn.readthedocs.io/en/latest/overview/traffic_monitor.html
+`./build.sh && traffic_monitor --opsCfg ./conf/traffic_ops.cfg -config ./conf/traffic_monitor.cfg`
+
+
+Documentation can be found [here](https://traffic-control-cdn.readthedocs.io/en/latest/overview/traffic_monitor.html)
