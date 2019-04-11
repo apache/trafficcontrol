@@ -284,6 +284,7 @@ func Parse(r io.Reader, tx *sql.Tx, v ParseValidator) error {
 type APIInfo struct {
 	Params    map[string]string
 	IntParams map[string]int
+	Fields    StructFields
 	User      *auth.CurrentUser
 	ReqID     uint64
 	Tx        *sqlx.Tx

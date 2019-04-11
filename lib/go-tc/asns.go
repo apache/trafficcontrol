@@ -71,7 +71,7 @@ type ASNNullable struct {
 
 	// Related cachegroup name
 	//
-	Cachegroup *string `json:"cachegroup" db:"cachegroup"`
+	Cachegroup *string `json:"cachegroup" db:"cachegroup" info:"joinz"`
 
 	// Related cachegroup id
 	//
@@ -80,11 +80,11 @@ type ASNNullable struct {
 	// ID of the ASN
 	//
 	// required: true
-	ID *int `json:"id" db:"id"`
+	ID *int `json:"id" db:"id" info:"key"`
 
 	// LastUpdated
 	//
-	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated" info:"lastUpdated"`
 }
 
 type ASNsV11 struct {

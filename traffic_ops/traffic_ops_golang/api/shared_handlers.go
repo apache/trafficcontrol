@@ -160,6 +160,7 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 		}
 		defer inf.Close()
 
+		// Every object contains APIInfo as a package of data that is often helpful while implementing endpoints.
 		interfacePtr := reflect.ValueOf(updater)
 		if interfacePtr.Kind() != reflect.Ptr {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("reflect: can only indirect from a pointer"))
@@ -167,9 +168,17 @@ func UpdateHandler(updater Updater) http.HandlerFunc {
 		}
 		objectType := reflect.Indirect(interfacePtr).Type()
 		obj := reflect.New(objectType).Interface().(Updater)
+
+		var err error
+		inf.Fields, err = GetFieldInfo(obj)
+		if err != nil {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
 		obj.SetInfo(inf)
 
-		if err := decodeAndValidateRequestBody(r, obj); err != nil {
+		// Verifies JSON syntax is correct and calls Validate
+		if err = decodeAndValidateRequestBody(r, obj); err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}
@@ -325,7 +334,16 @@ func CreateHandler(creator Creator) http.HandlerFunc {
 		obj := reflect.New(objectType).Interface().(Creator)
 		obj.SetInfo(inf)
 
-		err := decodeAndValidateRequestBody(r, obj)
+		var err error
+		inf.Fields, err = GetFieldInfo(obj)
+		if err != nil {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		obj.SetInfo(inf)
+
+		// Verifies JSON syntax is correct and calls Validate
+		err = decodeAndValidateRequestBody(r, obj)
 		if err != nil {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return

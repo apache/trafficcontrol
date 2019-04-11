@@ -1,7 +1,7 @@
 package api
 
 import (
-	"bufio"
+	"database/sql"
 	"errors"
 	"reflect"
 )
@@ -17,8 +17,14 @@ func allFieldsExported(obj interface{}) bool {
 	return true
 }
 
+// NotMarked is a key value for the `StructFields` map returned.
+// It refers to fields that had no "info" tag
+const NotMarked = ""
+
 // AllFields is a key value for the `StructFields` map returned.
-const AllFields = ""
+// It refers to all fields, regardless of whether or not they
+// have an info tag.
+const AllFields = "all"
 
 // StructFields is a map from an "info" struct tag to a list of pointers.
 // It can be obtained by using the `GetFieldInfo` function.
@@ -73,21 +79,25 @@ func GetFieldInfo(obj interface{}) (StructFields, error) {
 
 	// infoTag is captured by the append function, and
 	// can be updated in the main loop.
-	var infoTag string = ""
+	var infoTag string = NotMarked
 
 	// AppendToResult appends the passed argument (presumably a pointer)
 	// to the list of fields. Any info tag will create a new key, value
 	// pair in the map if it doesn't exist already.
 	AppendToResult := func(ptr ...interface{}) StructFields {
-		if infoTag != "" {
-			fields[infoTag] = append(fields[infoTag], ptr...)
+		if infoTag == AllFields {
+			// error?
+			// just don't count it?
 		}
+		fields[infoTag] = append(fields[infoTag], ptr...)
 		fields[AllFields] = append(fields[AllFields], ptr...)
 		return fields
 	}
 
 	// if obj implements scanner, read obj as atomic value
-	if _, ok := obj.(bufio.Scanner); ok {
+	// I'm unsure if this is needed, or what scanner to do. TODO: Update after testing
+	//if _, ok := obj.(bufio.Scanner); ok {
+	if _, ok := obj.(sql.Scanner); ok {
 		return AppendToResult(obj), nil
 	}
 
@@ -141,6 +151,9 @@ func GetFieldInfo(obj interface{}) (StructFields, error) {
 		field := val.Field(i)
 
 		infoTag = Struct.Field(i).Tag.Get("info")
+		if infoTag == "-" { // skip!
+			continue
+		}
 
 		switch field.Kind() {
 		case reflect.Struct:

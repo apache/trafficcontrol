@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -37,12 +38,11 @@ const ASNsPrivLevel = 10
 
 //we need a type alias to define functions on
 type TOASNV11 struct {
-	api.APIInfoImpl `json:"-"`
+	api.APIInfoImpl `json:"-" info:"-"`
 	tc.ASNNullable
 }
 
 func (v *TOASNV11) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOASNV11) InsertQuery() string           { return insertQuery() }
 func (v *TOASNV11) NewReadObj() interface{}       { return &tc.ASNNullable{} }
 func (v *TOASNV11) SelectQuery() string           { return selectQuery() }
 func (v *TOASNV11) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
@@ -98,7 +98,27 @@ func (asn TOASNV11) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (as *TOASNV11) Create() (error, error, int)              { return api.GenericCreate(as) }
+func (val *TOASNV11) Create() (error, error, int) {
+
+	inf := val.APIInfo()
+
+	// An info tag is specified to mark fields that the database updates.
+	// It is the non-marked fields that are only provided by the request (via create).
+	log.Infof("There are %d fields for %v", len(inf.Fields[api.NotMarked]), inf.Fields)
+	row := inf.Tx.QueryRow(val.InsertQuery(), inf.Fields[api.NotMarked]...)
+
+	key := inf.Fields["key"]
+	joins := inf.Fields["join"]
+	lu := inf.Fields["lastUpdated"]
+	items := append(append(key, joins...), lu...)
+
+	if err := row.Scan(items...); err != nil {
+		return api.ParseDBError(err)
+	}
+
+	return nil, nil, http.StatusOK
+}
+
 func (as *TOASNV11) Read() ([]interface{}, error, error, int) { return api.GenericRead(as) }
 func (as *TOASNV11) Update() (error, error, int)              { return api.GenericUpdate(as) }
 func (as *TOASNV11) Delete() (error, error, int)              { return api.GenericDelete(as) }
@@ -137,12 +157,12 @@ JOIN
 `
 }
 
-func insertQuery() string {
+func (v *TOASNV11) InsertQuery() string {
 	return `
 INSERT INTO
   asn (asn, cachegroup)
 VALUES
-  (:asn, :cachegroup_id)
+  ($1, $2)
 RETURNING id, last_updated
 `
 }
