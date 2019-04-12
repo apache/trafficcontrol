@@ -1,13 +1,13 @@
 {
     "name": "traffic_portal",
     "dependencies": {
-        "forever": "0.15.1",
-        "morgan": "1.7.0",
+        "forever": "1.0.0",
+        "morgan": "1.9.1",
         "errorhandler": "1.4.3",
         "connect-modrewrite": "0.8.5",
-        "connect-timeout": "1.7.0",
+        "connect-timeout": "1.9.0",
         "ssl-root-cas": "1.1.10",
-        "express": "4.13.4",
+        "express": "4.16.4",
         "requirejs": "2.1.22"
     },
     "engines": {
