@@ -414,7 +414,7 @@ var trafficPortal = angular.module('trafficPortal', [
 
     ], App)
 
-        .config(function($stateProvider, $logProvider, $controllerProvider, RestangularProvider, momentPickerProvider, ENV) {
+        .config(function($stateProvider, $logProvider, RestangularProvider, momentPickerProvider, ENV) {
 
             momentPickerProvider.options({
                 minutesStep: 1,
@@ -435,7 +435,6 @@ var trafficPortal = angular.module('trafficPortal', [
                 }
             });
 
-            $controllerProvider.allowGlobals();
             $logProvider.debugEnabled(true);
             $stateProvider
                 .state('trafficPortal', {
