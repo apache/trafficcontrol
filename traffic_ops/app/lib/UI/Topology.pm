@@ -595,6 +595,11 @@ sub write_crconfig_json_to_db {
     } else {
         my $insert = $self->db->resultset('Snapshot')->create( { cdn => $cdn_name, content => $crconfig_json } );
         $insert->insert();
+
+        my $rs = $self->db->resultset('Snapshot')->find( { id => $insert->id } );
+        if ( !defined($rs) ) {
+            $self->app->log->error( "Failed to save snapshot!!" );
+        }
     }
 
 }
