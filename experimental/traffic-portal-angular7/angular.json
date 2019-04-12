@@ -10,7 +10,25 @@
 			"prefix": "app",
 			"schematics": {
 				"@schematics/angular:component": {
-					"styleext": "scss"
+					"styleext": "scss",
+					"lintFix": "true",
+					"prefix": ""
+				},
+				"@schematics/angular:directive": {
+					"lintFix": "true",
+					"prefix": ""
+				},
+				"@schematics/angular:service": {
+					"lintFix": "true"
+				},
+				"@schematics/angular:module": {
+					"lintFix": "true"
+				},
+				"@schematics/angular:class": {
+					"lintFix": "true"
+				},
+				"@schematics/angular:pipe": {
+					"lintFix": "true"
 				}
 			},
 			"architect": {
