@@ -17,13 +17,25 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.powermock.api.mockito.PowerMockito.*;
 
 import java.io.File;
 import java.io.FileReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.regex.Pattern;
 import java.util.Set;
 import java.util.HashSet;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.HTTPRouteResult;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
@@ -189,6 +201,39 @@ public class RegionalGeoTest {
 
         assertThat(result.getType(), equalTo(RegionalGeoResultType.ALLOWED));
         assertThat(result.getUrl(), equalTo(url));
+    }
+
+    @Test
+    public void testEnforceWhiteListAllowedRouteResultMultipleUrls() throws GeolocationException, MalformedURLException {
+        String clientIp = "129.100.254.2";
+        String requestUrl = "http://ds1.example.com/live4";
+
+        HTTPRequest request = new HTTPRequest();
+        request.setClientIP(clientIp);
+        request.setHostname("ds1.example.com");
+        request.applyUrl(new URL(requestUrl));
+
+        StatTracker.Track track = new StatTracker.Track();
+
+        Cache cache = mock(Cache.class);
+
+        DeliveryService ds = mock(DeliveryService.class);
+        when(ds.getId()).thenReturn("ds-geoblock-include");
+        when(ds.createURIString(request, cache)).thenReturn(requestUrl);
+
+        TrafficRouter tr = mock(TrafficRouter.class);
+        when(tr.getClientGeolocation(clientIp, track, ds)).thenReturn(new Geolocation(42, -71));
+
+        HTTPRouteResult routeResult = new HTTPRouteResult(true);
+        String firstUrl = "http://example.com/url1.m3u8";
+        routeResult.addUrl(new URL(firstUrl));
+
+        RegionalGeo.enforce(tr, request, ds, cache, routeResult, track);
+
+        assertThat(routeResult.getUrls().size(), equalTo(2));
+        assertThat(routeResult.getUrls().get(1).toString(), equalTo(requestUrl));
+        assertThat(routeResult.getUrls().get(0).toString(), equalTo(firstUrl));
+
     }
 }
 

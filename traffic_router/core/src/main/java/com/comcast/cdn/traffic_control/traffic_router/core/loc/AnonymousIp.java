@@ -245,7 +245,7 @@ public final class AnonymousIp {
 			routeResult.setResponseCode(AnonymousIp.BLOCK_CODE);
 			track.setResult(ResultType.ANON_BLOCK);
 			if (AnonymousIp.getCurrentConfig().redirectUrl != null) {
-				routeResult.setUrl(new URL(AnonymousIp.getCurrentConfig().redirectUrl));
+				routeResult.addUrl(new URL(AnonymousIp.getCurrentConfig().redirectUrl));
 			}
 		}
 	}
