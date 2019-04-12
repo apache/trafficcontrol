@@ -292,8 +292,16 @@ func ParseConfig(cfg Config) (Config, error) {
 		if cfg.URL, err = url.Parse(listen); err != nil {
 			invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
 		}
+
 		cfg.KeyPath = cfg.GetKeyPath()
+		if cfg.KeyPath == "" {
+			return Config{}, fmt.Errorf("key in %s cannot be blank", listen)
+		}
+
 		cfg.CertPath = cfg.GetCertPath()
+		if cfg.CertPath == "" {
+			return Config{}, fmt.Errorf("cert in %s cannot be blank", listen)
+		}
 
 		newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
 		cfg.URL = &newURL
