@@ -23,7 +23,7 @@ form {
 	margin-top: 15px;
 	text-align: center;
 
-	div.form-content {
+	div.form-content, div.form-content > fieldset {
 		display: grid;
 		grid-template-columns: 1fr 2fr;
 		width: 100%;
@@ -37,9 +37,14 @@ form {
 			vertical-align: middle;
 		}
 
-		// input, select {
-		// 	width: 100%;
-		// }
+		fieldset {
+			grid-column: span 2;
+		}
+
+		input[type="checkbox"], input[type="radio"] {
+			justify-self: start;
+			align-self: center;
+		}
 
 		textarea {
 			// width: 100%;
@@ -66,18 +71,32 @@ form {
 	form {
 		max-width: 95vw;
 
-		div.form-content {
+		div.form-content, div.form-content > fieldset {
 			grid-template-columns: auto;
 
 			label {
 				text-align: center;
 			}
+
+			fieldset {
+				grid-column: span 1;
+				max-width: 87vw;
+			}
 		}
+
+		div.form-content input[type="checkbox"], div.form-content input[type="radio"] {
+			justify-self: center;
+		}
+	}
+
+	#protocol {
+		grid-template-columns: auto 1fr;
 	}
 
 	label.sub-form, div.buttons-holder {
 		grid-column: span 1;
 	}
+
 }
 
 hr {

@@ -216,4 +216,26 @@ export class DeliveryService {
 	type?:                    string;
 	typeId:                   number;
 	xmlId:                    string;
+
+	/**
+	 * Determines if the Delivery Service is a candidate for bypassing
+	 * @returns `true` if it can have bypass settings, `false` otherwise.
+	*/
+	public bypassable(): boolean {
+		if (!this.type) {
+			return false;
+		}
+
+		switch (this.type) {
+			case 'HTTP':
+			case 'HTTP_LIVE':
+			case 'HTTP_LIVE_NATNL':
+			case 'DNS':
+			case 'DNS_LIVE':
+			case 'DNS_LIVE_NATNL':
+				return true;
+			default:
+				return false;
+		}
+	}
 }

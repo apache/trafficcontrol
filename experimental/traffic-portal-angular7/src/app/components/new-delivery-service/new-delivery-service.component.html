@@ -17,6 +17,8 @@ limitations under the License.
 	<div class="form-content">
 		<label for="origin">I want to create a Delivery Service for:</label>
 		<input [formControl]="originURL" type="url" id="origin" name="origin" placeholder="this URL" autofocus title="Must be a URL (should start with `http://` or `https://`)" pattern="(https?|HTTPS?)://[a-zA-Z][a-zA-z0-9\-]*(\.[a-zA-Z][a-zA-z0-9\-]*)*(/[\w\.]+)*/?" required/>
+		<label for="active-immediately">This Delivery Service should become active immediately</label>
+		<input [formControl]="activeImmediately" id="active-immediately" type="checkbox" name="active-immediately" title="This Delivery Service should become active immediately"/>
 	</div>
 	<div class="buttons-holder">
 		<button type="reset">Clear</button>
@@ -62,10 +64,20 @@ limitations under the License.
 			<select [formControl]="dsType" name="routingType" id="routingType">
 				<option *ngFor="let t of dsTypes" [selected]="t.id === deliveryService.typeId" [ngValue]="t">{{t.description}}</option>
 			</select>
-			<label>{{Protocol.toString(Protocol.HTTP)}}</label><input type="radio" name="protocol" [value]="Protocol.HTTP" [formControl]="protocol"/>
-			<label>{{Protocol.toString(Protocol.HTTPS)}}</label><input type="radio" name="protocol" [value]="Protocol.HTTPS" [formControl]="protocol"/>
-			<label>{{Protocol.toString(Protocol.HTTP_AND_HTTPS)}}</label><input type="radio" name="protocol" [value]="Protocol.HTTP_AND_HTTPS" [formControl]="protocol"/>
-			<label>{{Protocol.toString(Protocol.HTTP_TO_HTTPS)}}</label><input type="radio" name="protocol" [value]="Protocol.HTTP_TO_HTTPS" [formControl]="protocol"/>
+			<fieldset name="protocol" id="protocol">
+				<legend>How to handle request protocols</legend>
+				<label>{{Protocol.toString(Protocol.HTTP)}}</label><input type="radio" name="protocol" [value]="Protocol.HTTP" [formControl]="protocol"/>
+				<label>{{Protocol.toString(Protocol.HTTPS)}}</label><input type="radio" name="protocol" [value]="Protocol.HTTPS" [formControl]="protocol"/>
+				<label>{{Protocol.toString(Protocol.HTTP_AND_HTTPS)}}</label><input type="radio" name="protocol" [value]="Protocol.HTTP_AND_HTTPS" [formControl]="protocol"/>
+				<label>{{Protocol.toString(Protocol.HTTP_TO_HTTPS)}}</label><input type="radio" name="protocol" [value]="Protocol.HTTP_TO_HTTPS" [formControl]="protocol"/>
+			</fieldset>
+			<label for="disableIPv6">Disable IPv6 Routing</label>
+			<input type="checkbox" id="disableIPv6" name="disableIPv6" [formControl]="disableIPv6"/>
+			<fieldset name="bypass" id="bypass" *ngIf="deliveryService.bypassable()">
+				<legend>Bypass Options</legend>
+				<label>When the Delivery Service traffic becomes too heavy, clients can be redirected here:</label>
+				<input type="text" name="bypass-loc" id="bypass-loc" [formControl]="bypassLoc" title="can be either an IP (v4 or v6) address or a Fully Qualified Domain Name" pattern="(^[A-z]([A-z\d\-]*[A-z\d])?(\.[A-z]([A-z\d\-]*[A-z\d])?)*$)|(^(1\d\d|2[0-4]\d|25[0-5]|\d\d?)(\.(1\d\d|2[0-4]\d|25[0-5]|\d\d?)){3}$)|(^[a-fA-F\d]{1,4}(::?([a-fA-F\d]){1,4})*$)" /><!-- Yeah, I know that's pretty gnarly, and it doesn't exactly validate IPv6 addresses but it's a good litmus test -->
+			</fieldset>
 		</div>
 	</div>
 	<div class="buttons-holder">

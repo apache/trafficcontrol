@@ -31,6 +31,22 @@ const XML_ID_SANITIZE = /[^a-z0-9\-]+/g;
 */
 const VALID_XML_ID = /^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$/;
 
+/**
+ * A regular expression that matches IPv4 addresses
+*/
+const VALID_IPv4 = /^(1\d\d|2[0-4]\d|25[0-5]|\d\d?)(\.(1\d\d|2[0-4]\d|25[0-5]|\d\d?)){3}$/;
+
+/**
+ * A regular expression that matches IPv6 addresses
+ * This is huge and ugly, but there's no JS built-in for address parsing afaik.
+*/
+const VALID_IPv6 = /^((((((([\da-fA-F]{1,4})):){6})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((::((([\da-fA-F]{1,4})):){5})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((((([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){4})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,1}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){3})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,2}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){2})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,3}(([\da-fA-F]{1,4}))):(([\da-fA-F]{1,4})):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,4}(([\da-fA-F]{1,4}))):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,5}(([\da-fA-F]{1,4}))):)(([\da-fA-F]{1,4})))|(((((([\da-fA-F]{1,4})):){0,6}(([\da-fA-F]{1,4}))):))))$/
+
+/**
+ * A regular expression that matches a valid hostname
+*/
+const VALID_HOSTNAME = /^([A-z\d]([A-z0-9\-]*[A-z0-9])*)$/
+
 @Component({
 	selector: 'app-new-delivery-service',
 	templateUrl: './new-delivery-service.component.html',
@@ -38,13 +54,19 @@ const VALID_XML_ID = /^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$/;
 })
 export class NewDeliveryServiceComponent implements OnInit {
 
+	/** The Delivery Service being created */
 	deliveryService = new DeliveryService();
-	originURL = new FormControl('');
-	displayName = new FormControl('');
-	infoURL = new FormControl('');
-	description = new FormControl('');
+
+	/** A bunch of form controls */
+	activeImmediately = new FormControl();
+	bypassLoc = new FormControl('');
 	cdnObject = new FormControl('');
+	description = new FormControl('');
+	disableIPv6 = new FormControl();
+	displayName = new FormControl('');
 	dsType = new FormControl();
+	infoURL = new FormControl('');
+	originURL = new FormControl('');
 	protocol = new FormControl();
 
 	Protocol = Protocol;
@@ -182,6 +204,8 @@ export class NewDeliveryServiceComponent implements OnInit {
 				break;
 		}
 
+		this.deliveryService.active = this.activeImmediately.value;
+
 		this.deliveryService.displayName = 'Delivery Service for ' + parser.hostname;
 		this.displayName.setValue(this.deliveryService.displayName);
 		++this.step;
@@ -234,6 +258,33 @@ export class NewDeliveryServiceComponent implements OnInit {
 			this.deliveryService.protocol = this.protocol.value;
 		}
 
+		if (this.disableIPv6.dirty) {
+			this.deliveryService.ipv6RoutingEnabled = !this.disableIPv6.value;
+		}
+
+		if (this.bypassLoc.dirty) {
+			switch (this.deliveryService.type) {
+				case 'DNS':
+				case 'DNS_LIVE':
+				case 'DNS_LIVE_NATNL':
+					try {
+						this.setDNSBypass(this.bypassLoc.value)
+					} catch (e) {
+						console.error(e);
+						const nativeBypassElement = document.getElementById('bypass-loc') as HTMLInputElement;
+						nativeBypassElement.setCustomValidity(e.message);
+						nativeBypassElement.reportValidity();
+						nativeBypassElement.value = '';
+						nativeBypassElement.setCustomValidity('');
+						return;
+					}
+					break;
+				default:
+					this.deliveryService.httpBypassFqdn = this.bypassLoc.value;
+					break;
+			}
+		}
+
 		this.api.createDeliveryService(this.deliveryService).pipe(first()).subscribe(
 			v => {
 				if (v) {
@@ -244,6 +295,23 @@ export class NewDeliveryServiceComponent implements OnInit {
 				}
 			}
 		);
+	}
+
+	/**
+	 * Sets the appropriate bypass location for the new Delivery Service, assuming it is DNS-routed
+	 * @param v Represents a Bypass value - either an IP(v4/v6) address or a hostname.
+	 * @throws {Error} if `v` is not a valid Bypass value
+	 */
+	setDNSBypass (v: string) {
+		if (VALID_IPv6.test(v)) {
+			this.deliveryService.dnsBypassIp6 = v;
+		} else if (VALID_IPv4.test(v)) {
+			this.deliveryService.dnsBypassIp = v;
+		} else if (VALID_HOSTNAME.test(v)) {
+			this.deliveryService.dnsBypassCname = v;
+		} else {
+			throw new Error("'" + v + "' is not a valid IPv4/IPv6 address or hostname!");
+		}
 	}
 
 	/**
