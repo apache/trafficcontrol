@@ -1430,9 +1430,17 @@ sub get_ats_major_version {
 
 sub get_qstring_ignore_remap {
 	my $ats_major_version = shift;
-
+	my $range_request_handling = shift;
+	
 	if ($ats_major_version >= 6) {
-		return " \@plugin=cachekey.so \@pparam=--separator= \@pparam=--remove-all-params=true \@pparam=--remove-path=true \@pparam=--capture-prefix-uri=/^([^?]*)/\$1/";
+		my $remap_text = " \@plugin=cachekey.so \@pparam=--separator= \@pparam=--remove-all-params=true \@pparam=--remove-path=true \@pparam=--capture-prefix-uri=/^([^?]*)/\$1/";
+
+		# ATS only lets you set cache key once per txn. 
+		# Add range header into the single setting of the cachekey
+		if ( $range_request_handling == RRH_CACHE_RANGE_REQUEST ) {
+		    $remap_text .= " \@pparam=--include-headers=Range"
+		}	
+		return $remap_text;
 	}
 	else {
 		return " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
