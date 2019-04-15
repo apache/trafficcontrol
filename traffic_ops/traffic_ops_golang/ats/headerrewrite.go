@@ -53,7 +53,7 @@ func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 
 	ds, err := getDeliveryService(inf.Tx, inf.Params["xml-id"])
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
 		return
 	}
 
@@ -74,11 +74,11 @@ func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		maxOriginConnectionsPerEdge := int(math.Round(float64(maxOriginConnections) / float64(dsOnlineEdgeCount)))
+		text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge)
 		if ds.EdgeHeaderRewrite == nil {
-			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge) + " [L]"
+			text += " [L]"
 		} else {
-			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge) + "\n"
-
+			text += "\n"
 		}
 	}
 
@@ -90,7 +90,7 @@ func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 
 	text += "\n"
 
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(tc.ContentType, tc.ContentTypeTextPlain)
 	w.Write([]byte(text))
 }
 
@@ -116,7 +116,7 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 
 	ds, err := getDeliveryService(inf.Tx, inf.Params["xml-id"])
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
 		return
 	}
 
@@ -137,11 +137,11 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		maxOriginConnectionsPerMid := int(math.Round(float64(maxOriginConnections) / float64(dsOnlineMidCount)))
+		text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid)
 		if ds.MidHeaderRewrite == nil {
-			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid) + " [L]"
+			text += " [L]"
 		} else {
-			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid) + "\n"
-
+			text += "\n"
 		}
 	}
 
@@ -153,7 +153,7 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 
 	text += "\n"
 
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(tc.ContentType, tc.ContentTypeTextPlain)
 	w.Write([]byte(text))
 }
 
@@ -165,7 +165,7 @@ func getDeliveryService(tx *sqlx.Tx, xmlId string) (tc.DeliveryServiceNullable, 
 	}
 	return ds, nil
 }
-// get the count of "online" edges assigned to a delivery service
+// getOnlineDSEdgeCount gets the count of online or reported edges assigned to a delivery service
 func getOnlineDSEdgeCount(tx *sqlx.Tx, dsID int) (int, error) {
 	count := 0
 	qry := `SELECT count(1)
@@ -179,9 +179,10 @@ func getOnlineDSEdgeCount(tx *sqlx.Tx, dsID int) (int, error) {
 	return count, nil
 }
 
+// getOnlineDSMidCount gets the count of online or reported mids employed by the delivery service
 // 1. get the cache groups of the edges assigned to the ds
 // 2. get the parent cachegroups for those cachegroups (found in 1)
-// 3. get the servers that belong to thos cachegroups that are a) mids and b) online/reported
+// 3. get the servers that belong to those cachegroups that are a) mids and b) online/reported
 func getOnlineDSMidCount(tx *sqlx.Tx, dsID int) (int, error) {
 	count := 0
 	qry := `SELECT COUNT(1)
