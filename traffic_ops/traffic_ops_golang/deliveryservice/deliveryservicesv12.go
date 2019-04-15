@@ -283,7 +283,7 @@ func (ds *TODeliveryServiceV12) Delete() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-// Update is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
+// Update is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one.
 func (ds *TODeliveryServiceV12) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
@@ -311,7 +311,7 @@ func UpdateV12(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
 }
 
-// GetDeliveryServiceType returns the type of the deliveryservice
+// GetDeliveryServiceType returns the type of the deliveryservice.
 func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, error) {
 	var dsType tc.DSType
 	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
