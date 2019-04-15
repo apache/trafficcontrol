@@ -78,17 +78,13 @@ type DeliveryService struct {
 }
 
 type DeliveryServiceV13 struct {
-	DeliveryServiceV12
+	DeliveryServiceV11
 	DeepCachingType   DeepCachingType `json:"deepCachingType"`
 	FQPacingRate      int             `json:"fqPacingRate,omitempty"`
 	SigningAlgorithm  string          `json:"signingAlgorithm" db:"signing_algorithm"`
 	Tenant            string          `json:"tenant,omitempty"`
 	TRRequestHeaders  string          `json:"trRequestHeaders,omitempty"`
 	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
-}
-
-type DeliveryServiceV12 struct {
-	DeliveryServiceV11
 }
 
 // DeliveryService ...
@@ -152,18 +148,18 @@ type DeliveryServiceV11 struct {
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV13
-	MaxOriginConnections *int `json:"maxOriginConnections" db:"max_origin_connections"`
+	ConsistentHashRegex  *string `json:"consistentHashRegex,omitempty"`
+	MaxOriginConnections *int    `json:"maxOriginConnections" db:"max_origin_connections"`
 }
 
 type DeliveryServiceNullableV13 struct {
 	DeliveryServiceNullableV12
-	ConsistentHashRegex *string          `json:"consistentHashRegex,omitempty"`
-	DeepCachingType     *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
-	FQPacingRate        *int             `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm    *string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	Tenant              *string          `json:"tenant,omitempty"`
-	TRResponseHeaders   *string          `json:"trResponseHeaders,omitempty"`
-	TRRequestHeaders    *string          `json:"trRequestHeaders,omitempty"`
+	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
+	FQPacingRate      *int             `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
+	Tenant            *string          `json:"tenant,omitempty"`
+	TRResponseHeaders *string          `json:"trResponseHeaders,omitempty"`
+	TRRequestHeaders  *string          `json:"trRequestHeaders,omitempty"`
 }
 
 type DeliveryServiceNullableV12 struct {
