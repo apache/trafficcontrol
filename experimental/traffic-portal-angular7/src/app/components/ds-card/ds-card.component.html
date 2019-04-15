@@ -36,6 +36,9 @@ limitations under the License.
 				<li *ngFor="let url of deliveryService.exampleURLs"><a href="{{url}}">{{url}}</a></li>
 			</ul>
 			<span class="warning" *ngIf="!deliveryService.exampleURLs">No URLs configured!</span>
+			<a class="view-details" href="#" title="View Details">
+				<img src="assets/view-details.svg">
+			</a>
 		</div>
 		<div>
 			<div class="canvas-container" [ngClass]="{'graph-loading': !graphDataLoaded}">
@@ -47,7 +50,7 @@ limitations under the License.
 				<div class="capacity">
 					<label for="{{deliveryService.id}}-utilized">Utilized:</label><meter id="{{deliveryService.id}}-utilized" max="100" low="25" high="75" optimum="5" value="{{utilized}}" title="{{utilized}} percent">{{utilized}}%</meter>
 					<label for="{{deliveryService.id}}-available">Available:</label><meter id="{{deliveryService.id}}-available" max="100" low="25" high="75" optimum="95" value="{{available}}" title="{{available}} percent">{{available}}%</meter>
-					<label for="{{deliveryService.id}}-maintenance">Under Mainenance:</label><meter id="{{deliveryService.id}}-maintenance-" max="100" low="10" high="20" optimum="0" value="{{maintenance}}" title="{{maintenance}} percent">{{maintenance}}%</meter>
+					<label for="{{deliveryService.id}}-maintenance">Under Mainenance:</label><meter id="{{deliveryService.id}}-maintenance" max="100" low="10" high="20" optimum="0" value="{{maintenance}}" title="{{maintenance}} percent">{{maintenance}}%</meter>
 				</div>
 			</fieldset>
 			<fieldset class="health">

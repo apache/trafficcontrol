@@ -67,6 +67,8 @@ div.card-content {
 	grid-column-gap: 10px;
 	grid-row-gap: 10px;
 	padding: 10px;
+	position: relative;
+	z-index: -1;
 
 	div.canvas-container {
 		width: 100%;
@@ -119,5 +121,23 @@ div.card-content {
 @media (max-width: 767px) {
 	div.card-content {
 		grid-template-columns: 1fr;
+	}
+}
+
+a.view-details {
+	background-color: $theme_tertiary;
+	color: white;
+	height: 2em;
+	width: 2em;
+	display: block;
+	padding: 5px;
+	text-align: center;
+	border-radius: calc(1em + 5px);
+	position: absolute;
+	bottom: 5px;
+
+	img {
+		margin-top: 3px;
+		height: 1.5em;
 	}
 }

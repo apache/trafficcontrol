@@ -45,7 +45,7 @@ const VALID_IPv6 = /^((((((([\da-fA-F]{1,4})):){6})((((([\da-fA-F]{1,4})):(([\da
 /**
  * A regular expression that matches a valid hostname
 */
-const VALID_HOSTNAME = /^([A-z\d]([A-z0-9\-]*[A-z0-9])*)$/
+const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])*(\.[A-z\d]([A-z0-9\-]*[A-z0-9])*)*$/
 
 @Component({
 	selector: 'app-new-delivery-service',
@@ -204,7 +204,9 @@ export class NewDeliveryServiceComponent implements OnInit {
 				break;
 		}
 
-		this.deliveryService.active = this.activeImmediately.value;
+		if (this.activeImmediately.dirty) {
+			this.deliveryService.active = this.activeImmediately.value;
+		}
 
 		this.deliveryService.displayName = 'Delivery Service for ' + parser.hostname;
 		this.displayName.setValue(this.deliveryService.displayName);
