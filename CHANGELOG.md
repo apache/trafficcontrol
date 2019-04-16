@@ -5,9 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
-- Traffic Router: TR now generates a self-signed certificate at startup and uses it as the default TLS cert. 
+- Traffic Router: TR now generates a self-signed certificate at startup and uses it as the default TLS cert.
   The default certificate is used whenever a client attempts an SSL handshake for an SNI host which does not match
-  any of the other certificates. 
+  any of the other certificates.
 - Traffic Ops Golang Endpoints
   - /api/1.4/users `(GET,POST,PUT)`
   - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys `GET`
@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added monitoring.json snapshotting. This stores the monitoring json in the same table as the crconfig snapshot. Snapshotting is now required in order to push out monitoring changes.
 - To traffic_ops_ort.pl added the ability to handle ##OVERRIDE## delivery service ANY_MAP raw remap text to replace and comment out a base delivery service remap rules. THIS IS A TEMPORARY HACK until versioned delivery services are implemented.
 - Snapshotting the CRConfig now deletes HTTPS certificates in Riak for delivery services which have been deleted in Traffic Ops.
+- Traffic Portal standalone Dockerfile
 
 ### Changed
 - Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
