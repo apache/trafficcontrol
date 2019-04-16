@@ -25,6 +25,10 @@ use Data::Dumper;
 use JSON;
 use UI::SslKeys;
 
+use constant {
+    RRH_CACHE_RANGE_REQUEST => 2,
+};
+
 sub index {
 	my $self = shift;
 
@@ -1438,7 +1442,7 @@ sub get_qstring_ignore_remap {
 		# ATS only lets you set cache key once per txn. 
 		# Add range header into the single setting of the cachekey
 		if ( $range_request_handling == RRH_CACHE_RANGE_REQUEST ) {
-		    $remap_text .= " \@pparam=--include-headers=Range"
+		    $remap_text .= " \@pparam=--include-headers=Range";
 		}	
 		return $remap_text;
 	}
