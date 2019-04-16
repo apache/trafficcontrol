@@ -25,4 +25,5 @@ ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 RUN apk add bind-tools
 COPY traffic_ops/initdb.d /docker-entrypoint-initdb.d
 COPY traffic_ops/run-db.sh /
+RUN chmod -R a+rx /run-db.sh /docker-entrypoint-initdb.d
 ENTRYPOINT /run-db.sh
