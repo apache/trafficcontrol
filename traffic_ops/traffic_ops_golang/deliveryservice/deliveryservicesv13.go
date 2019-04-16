@@ -197,7 +197,7 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 
 	ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 
-	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, dsType); err != nil {
+	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, dsType, ds.MaxOriginConnections); err != nil {
 		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
@@ -506,7 +506,7 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 		}
 	}
 
-	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, dsType); err != nil {
+	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
 		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
 
@@ -785,11 +785,11 @@ const (
 
 // EnsureParams ensures the given delivery service's necessary parameters exist on profiles of servers assigned to the delivery service.
 // Note the edgeHeaderRewrite, midHeaderRewrite, regexRemap, and cacheURL may be nil, if the delivery service does not have those values.
-func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string, midHeaderRewrite *string, regexRemap *string, cacheURL *string, signingAlgorithm *string, dsType tc.DSType) error {
-	if err := ensureHeaderRewriteParams(tx, dsID, xmlID, edgeHeaderRewrite, edgeTier, dsType); err != nil {
+func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string, midHeaderRewrite *string, regexRemap *string, cacheURL *string, signingAlgorithm *string, dsType tc.DSType, maxOriginConns *int) error {
+	if err := ensureHeaderRewriteParams(tx, dsID, xmlID, edgeHeaderRewrite, edgeTier, dsType, maxOriginConns); err != nil {
 		return errors.New("creating edge header rewrite parameters: " + err.Error())
 	}
-	if err := ensureHeaderRewriteParams(tx, dsID, xmlID, midHeaderRewrite, midTier, dsType); err != nil {
+	if err := ensureHeaderRewriteParams(tx, dsID, xmlID, midHeaderRewrite, midTier, dsType, maxOriginConns); err != nil {
 		return errors.New("creating mid header rewrite parameters: " + err.Error())
 	}
 	if err := ensureRegexRemapParams(tx, dsID, xmlID, regexRemap); err != nil {
@@ -804,15 +804,19 @@ func EnsureParams(tx *sql.Tx, dsID int, xmlID string, edgeHeaderRewrite *string,
 	return nil
 }
 
-func ensureHeaderRewriteParams(tx *sql.Tx, dsID int, xmlID string, hdrRW *string, tier tierType, dsType tc.DSType) error {
-	if tier == midTier && dsType.IsLive() && !dsType.IsNational() {
-		return nil // live local DSes don't get remap rules
-	}
+func ensureHeaderRewriteParams(tx *sql.Tx, dsID int, xmlID string, hdrRW *string, tier tierType, dsType tc.DSType, maxOriginConns *int) error {
 	configFile := "hdr_rw_" + xmlID + ".config"
 	if tier == midTier {
 		configFile = "hdr_rw_mid_" + xmlID + ".config"
 	}
-	if hdrRW == nil || *hdrRW == "" {
+
+	if tier == midTier && dsType.IsLive() && !dsType.IsNational() {
+		// live local DSes don't get header rewrite rules on the mid so cleanup any location params related to mids
+		return deleteLocationParam(tx, configFile)
+	}
+
+	hasMaxOriginConns := *maxOriginConns > 0 && ((tier == midTier) == dsType.UsesMidCache())
+	if (hdrRW == nil || *hdrRW == "") && !hasMaxOriginConns {
 		return deleteLocationParam(tx, configFile)
 	}
 	locationParamID, err := ensureLocation(tx, configFile)
