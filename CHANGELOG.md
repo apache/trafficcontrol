@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   The default certificate is used whenever a client attempts an SSL handshake for an SNI host which does not match
   any of the other certificates.
 - Traffic Ops Golang Endpoints
+  - /api/1.4/deliveryservices `(GET,POST,PUT)`
   - /api/1.4/users `(GET,POST,PUT)`
   - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys `GET`
   - /api/1.1/deliveryservices/hostname/:hostname/sslkeys `GET`

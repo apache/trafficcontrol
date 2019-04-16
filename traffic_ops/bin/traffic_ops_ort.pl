@@ -797,7 +797,7 @@ sub get_update_status {
 
 	##Some versions of Traffic Ops had the 1.3 API but did not have the use_reval_pending field.  If this field is not present, exit.
 	if ( !defined( $upd_json->[0]->{'use_reval_pending'} ) ) {
-		my $info_uri = "/api/1.2/system/info.json";
+		my $info_uri = "/api/1.4/system/info.json";
 		my $info_ref = &lwp_get($info_uri);
 		if ($info_ref eq '404') {
 			( $log_level >> $ERROR ) && printf("ERROR Unable to get status of use_reval_pending parameter.  Stopping.\n");
@@ -856,7 +856,7 @@ sub check_revalidate_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no revalidations are waiting to be applied.\n";
 		}
 
-		my $stj = &lwp_get("/api/1.2/statuses");
+		my $stj = &lwp_get("/api/1.4/statuses");
 		if ( $stj =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: $uri returned $stj! Skipping creation of status file.\n";
 		}
@@ -973,8 +973,7 @@ sub check_syncds_state {
 		else {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
 		}
-
-		my $stj = &lwp_get("/api/1.2/statuses");
+		my $stj = &lwp_get("/api/1.4/statuses");
 		if ( $stj =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: $uri returned $stj! Skipping creation of status file.\n";
 		}
@@ -1784,7 +1783,7 @@ sub get_cfg_file_list {
 	my $cfg_files;
 	my $profile_name;
 	my $cdn_name;
-	my $uri = "/api/1.2/servers/$host_name/configfiles/ats";
+	my $uri = "/api/1.4/servers/$host_name/configfiles/ats";
 
 	my $result = &lwp_get($uri);
 
@@ -1895,7 +1894,7 @@ sub get_header_comment {
 	my $to_host = shift;
 	my $toolname;
 
-	my $uri    = "/api/1.2/system/info.json";
+	my $uri    = "/api/1.4/system/info.json";
 	my $result = &lwp_get($uri);
 
 	my $result_ref = decode_json($result);
@@ -2983,7 +2982,7 @@ sub adv_processing_ssl {
 	my @db_file_lines = @{ $_[0] };
 	if (@db_file_lines > 1) { #header line is always present, so look for 2 lines or more
 		( $log_level >> $DEBUG ) && print "DEBUG Entering advanced processing for ssl_multicert.config.\n";
-		my $uri = "/api/1.2/cdns/name/$my_cdn_name/sslkeys.json";
+		my $uri = "/api/1.4/cdns/name/$my_cdn_name/sslkeys.json";
 		my $result = &lwp_get($uri);
 		if ( $result =~ m/^\d{3}$/ ) {
 			if ( $script_mode == $REPORT ) {

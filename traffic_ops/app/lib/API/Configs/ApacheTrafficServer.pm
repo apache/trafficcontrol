@@ -153,7 +153,7 @@ sub get_config_metadata {
 			delete $config_file_obj->{$config_file}->{'apiUri'};
 		}
 		else {
-			$config_file_obj->{$config_file}->{'apiUri'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
+			$config_file_obj->{$config_file}->{'apiUri'} = "/api/1.4/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
 		}
 		$config_file_obj->{$config_file}->{'scope'} = $scope;
 	}

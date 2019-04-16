@@ -295,7 +295,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		respServers = append(respServers, server)
 	}
 
-	if err := deliveryservice.EnsureParams(inf.Tx.Tx, *dsId, ds.Name, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, ds.Type); err != nil {
+	if err := deliveryservice.EnsureParams(inf.Tx.Tx, *dsId, ds.Name, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, ds.Type, ds.MaxOriginConnections); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_server replace ensuring ds parameters: "+err.Error()))
 		return
 	}
@@ -361,7 +361,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := deliveryservice.EnsureParams(inf.Tx.Tx, ds.ID, ds.Name, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, ds.Type); err != nil {
+	if err := deliveryservice.EnsureParams(inf.Tx.Tx, ds.ID, ds.Name, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, ds.Type, ds.MaxOriginConnections); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_server replace ensuring ds parameters: "+err.Error()))
 		return
 	}
@@ -564,14 +564,15 @@ func updateQuery() string {
 }
 
 type DSInfo struct {
-	ID                int
-	Name              string
-	Type              tc.DSType
-	EdgeHeaderRewrite *string
-	MidHeaderRewrite  *string
-	RegexRemap        *string
-	SigningAlgorithm  *string
-	CacheURL          *string
+	ID                   int
+	Name                 string
+	Type                 tc.DSType
+	EdgeHeaderRewrite    *string
+	MidHeaderRewrite     *string
+	RegexRemap           *string
+	SigningAlgorithm     *string
+	CacheURL             *string
+	MaxOriginConnections *int
 }
 
 // GetDSInfo loads the DeliveryService fields needed by Delivery Service Servers from the database, from the ID. Returns the data, whether the delivery service was found, and any error.
@@ -584,7 +585,8 @@ SELECT
   ds.mid_header_rewrite,
   ds.regex_remap,
   ds.signing_algorithm,
-  ds.cacheurl
+  ds.cacheurl,
+  ds.max_origin_connections
 FROM
   deliveryservice ds
   JOIN type tp ON ds.type = tp.id
@@ -592,7 +594,7 @@ WHERE
   ds.id = $1
 `
 	di := DSInfo{ID: id}
-	if err := tx.QueryRow(qry, id).Scan(&di.Name, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.SigningAlgorithm, &di.CacheURL); err != nil {
+	if err := tx.QueryRow(qry, id).Scan(&di.Name, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.SigningAlgorithm, &di.CacheURL, &di.MaxOriginConnections); err != nil {
 		if err == sql.ErrNoRows {
 			return DSInfo{}, false, nil
 		}
@@ -612,7 +614,8 @@ SELECT
   ds.mid_header_rewrite,
   ds.regex_remap,
   ds.signing_algorithm,
-  ds.cacheurl
+  ds.cacheurl,
+  ds.max_origin_connections
 FROM
   deliveryservice ds
   JOIN type tp ON ds.type = tp.id
@@ -620,7 +623,7 @@ WHERE
   ds.xml_id = $1
 `
 	di := DSInfo{Name: dsName}
-	if err := tx.QueryRow(qry, dsName).Scan(&di.ID, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.SigningAlgorithm, &di.CacheURL); err != nil {
+	if err := tx.QueryRow(qry, dsName).Scan(&di.ID, &di.Type, &di.EdgeHeaderRewrite, &di.MidHeaderRewrite, &di.RegexRemap, &di.SigningAlgorithm, &di.CacheURL, &di.MaxOriginConnections); err != nil {
 		if err == sql.ErrNoRows {
 			return DSInfo{}, false, nil
 		}

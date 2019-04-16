@@ -22,7 +22,6 @@ package ats
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
@@ -31,12 +30,10 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 const DefaultMaxRevalDurationDays = 90
 const JobKeywordPurge = "PURGE"
-const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
 
 func GetRegexRevalidateDotConfig(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn-name-or-id"}, nil)
@@ -59,29 +56,6 @@ func GetRegexRevalidateDotConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte(regexRevalTxt))
-}
-
-// getCDNNameFromNameOrID returns the CDN name from a parameter which may be the name or ID.
-// This also checks and verifies the existence of the given CDN, and returns an appropriate user error if it doesn't exist.
-// Returns the name, any user error, any system error, and any error code.
-func getCDNNameFromNameOrID(tx *sql.Tx, cdnNameOrID string) (string, error, error, int) {
-	if cdnID, err := strconv.Atoi(cdnNameOrID); err == nil {
-		cdnName, ok, err := dbhelpers.GetCDNNameFromID(tx, int64(cdnID))
-		if err != nil {
-			return "", nil, fmt.Errorf("getting CDN name from id %v: %v", cdnID, err), http.StatusInternalServerError
-		} else if !ok {
-			return "", errors.New("cdn not found"), nil, http.StatusNotFound
-		}
-		return string(cdnName), nil, nil, http.StatusOK
-	}
-
-	cdnName := cdnNameOrID
-	if ok, err := dbhelpers.CDNExists(cdnName, tx); err != nil {
-		return "", nil, fmt.Errorf("checking CDN name '%v' existence: %v", cdnName, err), http.StatusInternalServerError
-	} else if !ok {
-		return "", errors.New("cdn not found"), nil, http.StatusNotFound
-	}
-	return cdnName, nil, nil, http.StatusOK
 }
 
 func getRegexRevalidate(tx *sql.Tx, cdnName string) (string, error) {
@@ -206,44 +180,4 @@ func getMaxDays(tx *sql.Tx) (int64, bool, error) {
 		return 0, false, errors.New("querying max reval duration days: value '" + daysStr + "' is not an integer")
 	}
 	return days, true, nil
-}
-
-func headerComment(tx *sql.Tx, name string) (string, error) {
-	nameVersionStr, err := GetNameVersionString(tx)
-	if err != nil {
-		return "", errors.New("getting name version string: " + err.Error())
-	}
-	return "# DO NOT EDIT - Generated for " + name + " by " + nameVersionStr + " on " + time.Now().Format(HeaderCommentDateFormat) + "\n", nil
-}
-
-func GetNameVersionString(tx *sql.Tx) (string, error) {
-	qry := `
-SELECT
-  p.name,
-  p.value
-FROM
-  parameter p
-WHERE
-  (p.name = 'tm.toolname' OR p.name = 'tm.url') AND p.config_file = 'global'
-`
-	rows, err := tx.Query(qry)
-	if err != nil {
-		return "", errors.New("querying: " + err.Error())
-	}
-	defer rows.Close()
-	toolName := ""
-	url := ""
-	for rows.Next() {
-		name := ""
-		val := ""
-		if err := rows.Scan(&name, &val); err != nil {
-			return "", errors.New("scanning: " + err.Error())
-		}
-		if name == "tm.toolname" {
-			toolName = val
-		} else if name == "tm.url" {
-			url = val
-		}
-	}
-	return toolName + " (" + url + ")", nil
 }

@@ -32,6 +32,7 @@ const ApplicationJson = "application/json"
 const Gzip = "gzip"
 const ContentType = "Content-Type"
 const ContentEncoding = "Content-Encoding"
+const ContentTypeTextPlain = "text/plain"
 
 type AlertLevel int
 

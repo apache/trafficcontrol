@@ -20,7 +20,6 @@ package server
  */
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -35,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -192,18 +192,6 @@ func (server *TOServer) Read() ([]interface{}, error, error, int) {
 	return returnable, nil, nil, http.StatusOK
 }
 
-// getDeliveryServiceType returns the type of the deliveryservice
-func getDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, error) {
-	var dsType tc.DSType
-	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
-		if err == sql.ErrNoRows {
-			return tc.DSTypeInvalid, errors.New("a deliveryservice with id '" + strconv.Itoa(dsID) + "' was not found")
-		}
-		return tc.DSTypeInvalid, errors.New("querying type from delivery service: " + err.Error())
-	}
-	return dsType, nil
-}
-
 func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
@@ -237,7 +225,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 `
 		// depending on ds type, also need to add mids
-		dsType, err := getDeliveryServiceType(dsID, tx.Tx)
+		dsType, err := deliveryservice.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
 			return nil, []error{err}, tc.DataConflictError
 		}

@@ -338,6 +338,7 @@
                 }
             ],
             "maxDnsAnswers": 0,
+            "maxOriginConnections": -1,
             "midHeaderRewrite": "midRewrite2",
             "missLat": 41.881944,
             "missLong": -87.627778,
@@ -405,6 +406,7 @@
                 }
             ],
             "maxDnsAnswers": 0,
+            "maxOriginConnections": 0,
             "midHeaderRewrite": "midRewrite3",
             "missLat": 41.881944,
             "missLong": -87.627778,
@@ -462,6 +464,7 @@
             "longDesc2": "",
             "matchList": [],
             "maxDnsAnswers": 0,
+            "maxOriginConnections": 1,
             "midHeaderRewrite": "",
             "missLat": 41.881944,
             "missLong": -87.627778,
