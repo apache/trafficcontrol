@@ -18,15 +18,18 @@ package v14
 import (
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 func TestDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
 		GetTestDeliveryServices(t)
+		DeliveryServiceTenancyTest(t)
 	})
 }
 
@@ -166,7 +169,7 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 func DeleteTestDeliveryServices(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Errorf("cannot GET Servers: %v\n", err)
+		t.Errorf("cannot GET deliveryservices: %v\n", err)
 	}
 	for _, testDS := range testData.DeliveryServices {
 		ds := tc.DeliveryService{}
@@ -201,5 +204,45 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot DELETE parameter by ID (%d): %v - %v\n", param.ID, err, deleted)
 		}
+	}
+}
+
+func DeliveryServiceTenancyTest(t *testing.T) {
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Errorf("cannot GET deliveryservices: %v\n", err)
+	}
+	tenant3DS := tc.DeliveryServiceNullable{}
+	foundTenant3DS := false
+	for _, d := range dses {
+		if *d.XMLID == "ds3" {
+			tenant3DS = d
+			foundTenant3DS = true
+		}
+	}
+	if !foundTenant3DS || *tenant3DS.Tenant != "tenant3" {
+		t.Error("expected to find deliveryservice 'ds3' with tenant 'tenant3'")
+	}
+
+	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v14-client-tests/tenant4user", true, toReqTimeout)
+	if err != nil {
+		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
+	}
+
+	dsesReadableByTenant4, _, err := tenant4TOClient.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Error("tenant4user cannot GET deliveryservices")
+	}
+
+	for _, ds := range dsesReadableByTenant4 {
+		if *ds.XMLID == "ds3" {
+			t.Error("expected tenant4 to be unable to read delivery services from tenant 3")
+		}
+	}
+
+	// assert that tenant4user cannot update tenant3user's deliveryservice
+	if _, err = tenant4TOClient.UpdateDeliveryServiceNullable(string(*tenant3DS.ID), &tenant3DS); err == nil {
+		t.Error("expected tenant4user to be unable to update tenant3's deliveryservice 'ds3'")
 	}
 }
