@@ -1,0 +1,20 @@
+<!-- Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License. -->
+<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+width="26" height="26"
+viewBox="0 0 210 210"
+style=" fill:#000000;"><g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><path d="M0,210v-210h210v210z" fill="none"></path><g><g id="surface1"><path d="M28.875,13.125h152.25v183.75h-152.25z" fill="#ffffff"></path><path d="M178.5,15.75v178.5h-147v-178.5h147M183.75,10.5h-157.5v189h157.5z" fill="#3498db"></path><path d="M154.875,73.5h-78.75c-1.45606,0 -2.625,-1.16894 -2.625,-2.625c0,-1.45606 1.16894,-2.625 2.625,-2.625h78.75c1.45606,0 2.625,1.16894 2.625,2.625c0,1.45606 -1.16894,2.625 -2.625,2.625z" fill="#3498db"></path><path d="M60.375,73.5h-5.25c-1.45606,0 -2.625,-1.16894 -2.625,-2.625c0,-1.45606 1.16894,-2.625 2.625,-2.625h5.25c1.45606,0 2.625,1.16894 2.625,2.625c0,1.45606 -1.16894,2.625 -2.625,2.625z" fill="#3498db"></path><path d="M154.875,94.5h-78.75c-1.45606,0 -2.625,-1.16894 -2.625,-2.625c0,-1.45606 1.16894,-2.625 2.625,-2.625h78.75c1.45606,0 2.625,1.16894 2.625,2.625c0,1.45606 -1.16894,2.625 -2.625,2.625z" fill="#3498db"></path><path d="M60.375,94.5h-5.25c-1.45606,0 -2.625,-1.16894 -2.625,-2.625c0,-1.45606 1.16894,-2.625 2.625,-2.625h5.25c1.45606,0 2.625,1.16894 2.625,2.625c0,1.45606 -1.16894,2.625 -2.625,2.625z" fill="#3498db"></path><path d="M154.875,115.5h-78.75c-1.45606,0 -2.625,-1.16894 -2.625,-2.625c0,-1.45606 1.16894,-2.625 2.625,-2.625h78.75c1.45606,0 2.625,1.16894 2.625,2.625c0,1.45606 -1.16894,2.625 -2.625,2.625z" fill="#3498db"></path><path d="M60.375,115.5h-5.25c-1.45606,0 -2.625,-1.16894 -2.625,-2.625c0,-1.45606 1.16894,-2.625 2.625,-2.625h5.25c1.45606,0 2.625,1.16894 2.625,2.625c0,1.45606 -1.16894,2.625 -2.625,2.625z" fill="#3498db"></path><path d="M154.875,136.5h-78.75c-1.45606,0 -2.625,-1.16894 -2.625,-2.625c0,-1.45606 1.16894,-2.625 2.625,-2.625h78.75c1.45606,0 2.625,1.16894 2.625,2.625c0,1.45606 -1.16894,2.625 -2.625,2.625z" fill="#3498db"></path><path d="M60.375,136.5h-5.25c-1.45606,0 -2.625,-1.16894 -2.625,-2.625c0,-1.45606 1.16894,-2.625 2.625,-2.625h5.25c1.45606,0 2.625,1.16894 2.625,2.625c0,1.45606 -1.16894,2.625 -2.625,2.625z" fill="#3498db"></path></g></g></g></svg>
