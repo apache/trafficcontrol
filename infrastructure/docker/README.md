@@ -171,3 +171,22 @@ curl -vs -o /dev/null -H "Host: edge.ds1.c23.example.net" "http://192.0.2.104/te
 # Test the HTTP delivery service. Should return a 302 and a 200.
 curl -Lvs -o /dev/null "http://tr.ds2.c23.example.net/test.ism/manifest"
 ```
+
+
+Traffic Portal
+-------------
+
+Traffic Portal is not required by the CDN to function, but provides a web interface to manage Traffic Ops.
+
+You can also create a standalone Traffic Portal Docker container and point it at a Traffic Ops not in Docker.
+
+You will need a Traffic Portal RPM, and a running Traffic Ops instance to point it to.
+
+The following commands will build a Docker image and container for Traffic Portal:
+
+
+```
+docker build --no-cache --rm --tag traffic_portal:3.0.x --build-arg=RPM=traffic_portal.rpm .
+
+docker run --name tp --hostname tp --net cdnet --publish 40443:443 --env TO_SERVER=my-traffic-ops-fqdn --env TO_PORT=443 --env DOMAIN=cdnet --detach -- traffic_portal:3.0.x
+```
