@@ -17,15 +17,18 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.utils', [])
-    .service('dateUtils', require('./DateUtils'))
-    .service('deliveryServiceUtils', require('./DeliveryServiceUtils'))
-    .service('fileUtils', require('./FileUtils'))
-    .service('formUtils', require('./FormUtils'))
-    .service('locationUtils', require('./LocationUtils'))
-    .service('numberUtils', require('./NumberUtils'))
-    .service('permissionUtils', require('./PermissionUtils'))
-    .service('serverUtils', require('./ServerUtils'))
-    .service('stringUtils', require('./StringUtils'))
-    .service('tenantUtils', require('./TenantUtils'))
-    .service('urlUtils', require('./UrlUtils'));
+var UrlUtils = function() {
+    this.getUrlQueryParams = function(url) {
+        var vars = {};
+        var hashes = url.split('?')[1];
+        var hash = hashes != null ? hashes.split('&') : '';
+
+        for (var i = 0; i < hash.length; i++) {
+            var params=hash[i].split('=');
+            vars[params[0]] = params[1];
+        }
+        return vars;
+    };
+};
+UrlUtils.$inject = [];
+module.exports = UrlUtils;
