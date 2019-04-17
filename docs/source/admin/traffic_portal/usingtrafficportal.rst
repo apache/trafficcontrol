@@ -568,6 +568,8 @@ User management includes the ability to (where applicable):
 - update an existing user
 - view :term:`Delivery Service`\ s visible to a user
 
+.. Note:: If OAuth is enabled, creating/updating a user here will update the user's roles but the user needs to be created/updated with the OAuth provider as well.
+
 Tenants
 -------
 Each entry in the table of :term:`Tenant`\ s on this page has the following entries:

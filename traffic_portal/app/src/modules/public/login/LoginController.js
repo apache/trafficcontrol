@@ -17,7 +17,12 @@
  * under the License.
  */
 
-var LoginController = function($scope, $log, $uibModal, authService, userService) {
+var LoginController = function($scope, $log, $uibModal, authService, userService, urlUtils, propertiesModel) {
+
+    $scope.returnUrl = window.location.hostname;
+    $scope.returnPort = window.location.port;
+    $scope.returnProtocol = window.location.protocol;
+    $scope.oAuthEnabled = propertiesModel.properties.oAuth.enabled;
 
     $scope.credentials = {
         username: '',
@@ -48,9 +53,31 @@ var LoginController = function($scope, $log, $uibModal, authService, userService
         });
     };
 
+    $scope.loginOauth = function() {
+        var continueURL = '';
+        const gotoUrl = propertiesModel.properties.oAuth.oAuthUrl;
+        const gotoUrlWithoutParams = gotoUrl.split('?')[0];
+        const queryParams = urlUtils.getUrlQueryParams(window.location.href);
+        const goToQueryParams = urlUtils.getUrlQueryParams(gotoUrl);
+        var returnParams = '?redirect=' + queryParams['redirect'];
+        // keeps query parameters that were added to the goToUrl
+        for (var i in goToQueryParams) {
+            returnParams = returnParams + '&' + i + '=' + goToQueryParams[i];
+        }
+
+        if (returnParams) {
+            continueURL = '?continue=' + $scope.returnProtocol + '//' + $scope.returnUrl + ($scope.returnPort ? ':' + $scope.returnPort : '') + '/' + encodeURIComponent('#!') + '/sso' + returnParams;
+        } else {
+            continueURL = '?continue=' + $scope.returnProtocol + '//' + $scope.returnUrl + ($scope.returnPort ? ':' + $scope.returnPort : '') + '/' + encodeURIComponent('#!') + '/sso';
+        }
+
+        window.location.href = gotoUrlWithoutParams + continueURL;
+
+    };
+
     var init = function() {};
     init();
 };
 
-LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService', 'userService'];
+LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService', 'userService', 'urlUtils', 'propertiesModel'];
 module.exports = LoginController;
