@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,15 +17,19 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.utils', [])
-    .service('dateUtils', require('./DateUtils'))
-    .service('deliveryServiceUtils', require('./DeliveryServiceUtils'))
-    .service('fileUtils', require('./FileUtils'))
-    .service('formUtils', require('./FormUtils'))
-    .service('locationUtils', require('./LocationUtils'))
-    .service('numberUtils', require('./NumberUtils'))
-    .service('permissionUtils', require('./PermissionUtils'))
-    .service('serverUtils', require('./ServerUtils'))
-    .service('stringUtils', require('./StringUtils'))
-    .service('tenantUtils', require('./TenantUtils'))
-    .service('urlUtils', require('./UrlUtils'));
+module.exports = angular.module('trafficPortal.public.sso', [])
+	.controller('SsoController', require('./SsoController'))
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficPortal.public.sso', {
+				url: 'sso',
+				views: {
+					publicContent: {
+						templateUrl: 'modules/public/sso/sso.tpl.html',
+						controller: 'SsoController',
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
+	});

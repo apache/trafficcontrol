@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,15 +17,18 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.utils', [])
-    .service('dateUtils', require('./DateUtils'))
-    .service('deliveryServiceUtils', require('./DeliveryServiceUtils'))
-    .service('fileUtils', require('./FileUtils'))
-    .service('formUtils', require('./FormUtils'))
-    .service('locationUtils', require('./LocationUtils'))
-    .service('numberUtils', require('./NumberUtils'))
-    .service('permissionUtils', require('./PermissionUtils'))
-    .service('serverUtils', require('./ServerUtils'))
-    .service('stringUtils', require('./StringUtils'))
-    .service('tenantUtils', require('./TenantUtils'))
-    .service('urlUtils', require('./UrlUtils'));
+var UrlUtils = function() {
+    this.getUrlQueryParams = function(url) {
+        var vars = {};
+        var hashes = url.split('?')[1];
+        var hash = hashes != null ? hashes.split('&') : '';
+
+        for (var i = 0; i < hash.length; i++) {
+            var params=hash[i].split('=');
+            vars[params[0]] = params[1];
+        }
+        return vars;
+    };
+};
+UrlUtils.$inject = [];
+module.exports = UrlUtils;
