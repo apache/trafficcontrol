@@ -46,6 +46,7 @@ var trafficPortal = angular.module('trafficPortal', [
         // public modules
         require('./modules/public').name,
         require('./modules/public/login').name,
+        require('./modules/public/sso').name,
 
         // private modules
         require('./modules/private').name,
@@ -473,7 +474,7 @@ trafficPortal.factory('authInterceptor', function ($rootScope, $q, $window, $loc
             if (rejection.status === 401) {
                 $rootScope.$broadcast('trafficPortal::exit');
                 userModel.resetUser();
-                if (url == '/login' || $location.search().redirect) {
+                if (url === '/login' || url ==='/sso' || $location.search().redirect) {
                     messageModel.setMessages(alerts, false);
                 } else {
                     $timeout(function () {

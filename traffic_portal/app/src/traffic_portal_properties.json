@@ -201,6 +201,12 @@
           "url": "http://trafficcontrol.apache.org/"
         }
       ]
+    },
+    "oAuth": {
+      "_comment": "Opt-in OAuth properties for SSO login",
+      "enabled": false,
+      "oAuthUrl": "",
+      "oAuthTokenQueryParam": ""
     }
   }
 }
