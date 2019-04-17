@@ -44,9 +44,7 @@ under the License.
             <tr ng-click="editProfile(p.id)" ng-repeat="p in ::profiles" context-menu="contextMenuItems">
                 <td data-search="^{{::p.name}}$">{{::p.name}}</td>
                 <td data-search="^{{::p.name}}$">{{::p.description}}</td>
-                <td style="text-align: right;">
-                    <a class="link action-link" title="Unlink Profile from Parameter" ng-click="confirmRemoveProfile(p, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
-                </td>
+                <td><button type="button" class="btn btn-link" title="Unlink Profile from Parameter" ng-click="confirmRemoveProfile(p, $event)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>
