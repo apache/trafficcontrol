@@ -42,12 +42,20 @@ do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
-until [ -f "$X509_CA_DONE_FILE" ] ; do
+until [[ -f "$X509_CA_ENV_FILE" ]]
+do
   echo "Waiting on SSL certificate generation."
   sleep 2
 done
 
-source "$X509_CA_ENV_FILE"
+# these expected to be stored in $X509_CA_ENV_FILE, but a race condition could render the contents
+# blank until it gets sync'd.  Ensure vars defined before writing cdn.conf.
+until [[ -n "$X509_GENERATION_COMPLETE" ]]
+do
+  echo "Waiting on X509 vars to be defined"
+  sleep 1
+  source "$X509_CA_ENV_FILE"
+done
 
 # Add the CA certificate to sysem TLS trust store
 cp $X509_CA_CERT_FULL_CHAIN_FILE /etc/pki/ca-trust/source/anchors

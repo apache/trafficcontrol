@@ -20,14 +20,19 @@
 source /to-access.sh
 
 # Wait on SSL certificate generation
-until [ -f "$X509_CA_DONE_FILE" ] 
+until [[ -f "$X509_CA_ENV_FILE" ]]
 do
      echo "Waiting on Shared SSL certificate generation"
      sleep 3
 done
 
 # Source the CIAB-CA shared SSL environment
-source "$X509_CA_ENV_FILE"
+until [[ -n "$X509_GENERATION_COMPLETE" ]]
+do
+  echo "Waiting on X509 vars to be defined"
+  sleep 1
+  source "$X509_CA_ENV_FILE"
+done
 
 # Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
 cp $X509_CA_CERT_FULL_CHAIN_FILE /usr/local/share/ca-certificates

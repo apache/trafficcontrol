@@ -48,15 +48,8 @@ insert-self-into-dns.sh
 # Source to-access functions and FQDN vars
 source /to-access.sh
 
-until [ -f "$X509_CA_DONE_FILE" ] ; do
-   echo "Waiting on SSL certificate generation."
-   sleep 2
-done
-
 # Write config files
-if [[ -x /config.sh ]]; then
-	/config.sh
-fi
+/config.sh
 
 while ! nc "$TO_PERL_FQDN" $TO_PERL_PORT </dev/null 2>/dev/null; do
         echo "waiting for $TO_PERL_FQDN:$TO_PERL_PORT" 
@@ -94,7 +87,6 @@ while true; do
 done
 
 ### Add SSL keys for demo1 delivery service
-source "$X509_CA_ENV_FILE"
 demo1_sslkeys_verified=false
 demo1_version=1
 while [[ "$demo1_sslkeys_verified" = false ]]; do

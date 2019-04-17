@@ -25,14 +25,19 @@ set +m
 [[ -f "/usr/local/sbin/set-dns.sh" ]] && /usr/local/sbin/set-dns.sh
 [[ -f "/usr/local/sbin/insert-self-into-dns.sh" ]] && /usr/local/sbin/insert-self-into-dns.sh
 
-until [ -f "$X509_CA_DONE_FILE" ] 
+until [[ -f "$X509_CA_ENV_FILE" ]]
 do
   echo "Waiting on Shared SSL certificate generation"
   sleep 3
 done
 
 # Source the CIAB-CA shared SSL environment
-source $X509_CA_ENV_FILE
+until [[ -n "$X509_GENERATION_COMPLETE" ]]
+do
+  echo "Waiting on X509 vars to be defined"
+  sleep 1
+  source "$X509_CA_ENV_FILE"
+done
 
 # Trust the CIAB-CA at the System level
 cp $X509_CA_CERT_FULL_CHAIN_FILE /etc/pki/ca-trust/source/anchors
