@@ -127,6 +127,11 @@ func OriginTenancyTest(t *testing.T) {
 	if _, _, err = tenant4TOClient.UpdateOriginByID(*tenant3Origin.ID, tenant3Origin); err == nil {
 		t.Error("expected tenant4user to be unable to update tenant3's origin")
 	}
+
+	// assert that tenant4user cannot delete an origin outside of its tenant
+	if _, _, err = tenant4TOClient.DeleteOriginByID(*origins[0].ID); err == nil {
+		t.Errorf("expected tenant4user to be unable to delete an origin outside of its tenant (origin %s)", *origins[0].Name)
+	}
 }
 
 func DeleteTestOrigins(t *testing.T) {

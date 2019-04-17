@@ -243,6 +243,11 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 
 	// assert that tenant4user cannot update tenant3user's deliveryservice
 	if _, err = tenant4TOClient.UpdateDeliveryServiceNullable(string(*tenant3DS.ID), &tenant3DS); err == nil {
-		t.Error("expected tenant4user to be unable to update tenant3's deliveryservice 'ds3'")
+		t.Errorf("expected tenant4user to be unable to update tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
+	}
+
+	// assert that tenant4user cannot delete tenant3user's deliveryservice
+	if _, err = tenant4TOClient.DeleteDeliveryService(string(*tenant3DS.ID)); err == nil {
+		t.Errorf("expected tenant4user to be unable to delete tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
 	}
 }
