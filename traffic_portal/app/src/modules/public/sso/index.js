@@ -17,15 +17,19 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.utils', [])
-    .service('dateUtils', require('./DateUtils'))
-    .service('deliveryServiceUtils', require('./DeliveryServiceUtils'))
-    .service('fileUtils', require('./FileUtils'))
-    .service('formUtils', require('./FormUtils'))
-    .service('locationUtils', require('./LocationUtils'))
-    .service('numberUtils', require('./NumberUtils'))
-    .service('permissionUtils', require('./PermissionUtils'))
-    .service('serverUtils', require('./ServerUtils'))
-    .service('stringUtils', require('./StringUtils'))
-    .service('tenantUtils', require('./TenantUtils'))
-    .service('urlUtils', require('./UrlUtils'));
+module.exports = angular.module('trafficPortal.public.sso', [])
+	.controller('SsoController', require('./SsoController'))
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficPortal.public.sso', {
+				url: 'sso',
+				views: {
+					publicContent: {
+						templateUrl: 'modules/public/sso/sso.tpl.html',
+						controller: 'SsoController',
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
+	});
