@@ -17,15 +17,10 @@
  * under the License.
  */
 
-var TableParameterProfilesController = function(parameter, parameterProfiles, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService) {
+var TableParameterProfilesController = function(parameter, profiles, $controller, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService) {
 
-	$scope.parameter = parameter;
-
-	$scope.parameterProfiles = parameterProfiles;
-
-	$scope.addProfile = function() {
-		alert('not hooked up yet: add profile to parameter');
-	};
+	// extends the TableProfilesController to inherit common methods
+	angular.extend(this, $controller('TableProfilesController', { profiles: profiles, $scope: $scope }));
 
 	var removeProfile = function(profileId) {
 		profileParameterService.unlinkProfileParameter(profileId, parameter.id)
@@ -36,7 +31,25 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 			);
 	};
 
-	$scope.confirmRemoveProfile = function(profile) {
+	$scope.parameter = parameter;
+
+	// adds some items to the base profiles context menu
+	$scope.contextMenuItems.splice(2, 0,
+		{
+			text: 'Unlink Profile from Parameter',
+			hasBottomDivider: function() {
+				return true;
+			},
+			click: function ($itemScope) {
+				$scope.confirmRemoveProfile($itemScope.p);
+			}
+		}
+	);
+
+	$scope.confirmRemoveProfile = function(profile, $event) {
+		if ($event) {
+			$event.stopPropagation();
+		}
 		if (profile.type == 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
 			deliveryServiceService.getDeliveryServices({ profile: profile.id }).
 				then(function(result) {
@@ -86,11 +99,6 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 		}
 	};
 
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
 	$scope.selectProfiles = function() {
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/table/parameterProfiles/table.paramProfilesUnassigned.tpl.html',
@@ -104,7 +112,7 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 					return profileService.getProfiles({ orderby: 'name' });
 				},
 				assignedProfiles: function() {
-					return parameterProfiles;
+					return profiles;
 				}
 			}
 		});
@@ -138,9 +146,6 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 		});
 	};
 
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
 	angular.element(document).ready(function () {
 		$('#parameterProfilesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -154,5 +159,5 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 
 };
 
-TableParameterProfilesController.$inject = ['parameter', 'parameterProfiles', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService'];
+TableParameterProfilesController.$inject = ['parameter', 'profiles', '$controller', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService'];
 module.exports = TableParameterProfilesController;

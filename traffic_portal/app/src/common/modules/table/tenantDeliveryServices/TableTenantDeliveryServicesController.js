@@ -17,39 +17,12 @@
  * under the License.
  */
 
-var TableTenantDeliveryServicesController = function(tenant, tenantDeliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils, propertiesModel) {
+var TableTenantDeliveryServicesController = function(tenant, deliveryServices, $controller, $scope) {
 
-	var protocols = deliveryServiceUtils.protocols;
-
-	var qstrings = deliveryServiceUtils.qstrings;
+	// extends the TableDeliveryServicesController to inherit common methods
+	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
 
 	$scope.tenant = tenant;
-
-	$scope.tenantDeliveryServices = tenantDeliveryServices;
-
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
-
-	$scope.openCharts = deliveryServiceUtils.openCharts;
-
-	$scope.protocol = function(ds) {
-		return protocols[ds.protocol];
-	};
-
-	$scope.qstring = function(ds) {
-		return qstrings[ds.qstringIgnore];
-	};
-
-	$scope.getRelativeTime = dateUtils.getRelativeTime;
-
-	$scope.editDeliveryService = function(ds) {
-		locationUtils.navigateToPath('/delivery-services/' + ds.id + '?type=' + ds.type);
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
 		$('#tenantDSsTable').dataTable({
@@ -64,5 +37,5 @@ var TableTenantDeliveryServicesController = function(tenant, tenantDeliveryServi
 
 };
 
-TableTenantDeliveryServicesController.$inject = ['tenant', 'tenantDeliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'propertiesModel'];
+TableTenantDeliveryServicesController.$inject = ['tenant', 'deliveryServices', '$controller', '$scope'];
 module.exports = TableTenantDeliveryServicesController;

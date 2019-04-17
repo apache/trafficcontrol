@@ -17,42 +17,15 @@
  * under the License.
  */
 
-var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils, propertiesModel) {
+var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $controller, $scope) {
 
-	var protocols = deliveryServiceUtils.protocols;
-
-	var qstrings = deliveryServiceUtils.qstrings;
+	// extends the TableDeliveryServicesController to inherit common methods
+	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
 
 	$scope.cdn = cdn;
 
-	$scope.deliveryServices = deliveryServices;
-
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
-
-	$scope.openCharts = deliveryServiceUtils.openCharts;
-
-	$scope.protocol = function(ds) {
-		return protocols[ds.protocol];
-	};
-
-	$scope.qstring = function(ds) {
-		return qstrings[ds.qstringIgnore];
-	};
-
-	$scope.getRelativeTime = dateUtils.getRelativeTime;
-
-	$scope.editDeliveryService = function(ds) {
-		locationUtils.navigateToPath('/delivery-services/' + ds.id + '?type=' + ds.type);
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
 	angular.element(document).ready(function () {
-		$('#deliveryServicesTable').dataTable({
+		$('#cdnDeliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
@@ -64,5 +37,5 @@ var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope,
 
 };
 
-TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'propertiesModel'];
+TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', '$controller', '$scope'];
 module.exports = TableCDNDeliveryServicesController;

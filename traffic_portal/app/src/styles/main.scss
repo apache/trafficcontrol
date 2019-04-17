@@ -54,9 +54,9 @@ $fa-font-path: "../assets/fonts";
   cursor: pointer;
 }
 
-html {
+html, body {
   position: relative;
-  min-height: 100%;
+  min-height: 100vh;
 }
 
 body {

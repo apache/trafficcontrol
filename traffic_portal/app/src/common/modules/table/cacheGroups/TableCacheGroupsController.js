@@ -17,9 +17,152 @@
  * under the License.
  */
 
-var TableCacheGroupsController = function(cacheGroups, $scope, $state, locationUtils) {
+var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state, $uibModal, $window, locationUtils, cacheGroupService, cdnService, messageModel) {
+
+    var queueServerUpdates = function(cacheGroup, cdnId) {
+        cacheGroupService.queueServerUpdates(cacheGroup.id, cdnId);
+    };
+
+    var clearServerUpdates = function(cacheGroup, cdnId) {
+        cacheGroupService.clearServerUpdates(cacheGroup.id, cdnId);
+    };
+
+    var deleteCacheGroup = function(cacheGroup) {
+        cacheGroupService.deleteCacheGroup(cacheGroup.id)
+            .then(function(result) {
+                messageModel.setMessages(result.alerts, false);
+                $scope.refresh();
+            });
+    };
+
+    var confirmQueueServerUpdates = function(cacheGroup) {
+        var params = {
+            title: 'Queue Server Updates: ' + cacheGroup.name,
+            message: "Please select a CDN"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+            controller: 'DialogSelectController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(cdnService) {
+                    return cdnService.getCDNs();
+                }
+            }
+        });
+        modalInstance.result.then(function(cdn) {
+            queueServerUpdates(cacheGroup, cdn.id);
+        }, function () {
+            // do nothing
+        });
+    };
+
+    var confirmClearServerUpdates = function(cacheGroup) {
+        var params = {
+            title: 'Clear Server Updates: ' + cacheGroup.name,
+            message: "Please select a CDN"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+            controller: 'DialogSelectController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(cdnService) {
+                    return cdnService.getCDNs();
+                }
+            }
+        });
+        modalInstance.result.then(function(cdn) {
+            clearServerUpdates(cacheGroup, cdn.id);
+        }, function () {
+            // do nothing
+        });
+    };
+
+    var confirmDelete = function(cacheGroup) {
+        var params = {
+            title: 'Delete Cache Group: ' + cacheGroup.name,
+            key: cacheGroup.name
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+            controller: 'DialogDeleteController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            deleteCacheGroup(cacheGroup);
+        }, function () {
+            // do nothing
+        });
+    };
+
 
     $scope.cacheGroups = cacheGroups;
+
+    $scope.contextMenuItems = [
+        {
+            text: 'Open in New Tab',
+            click: function ($itemScope) {
+                $window.open('/#!/cache-groups/' + $itemScope.cg.id, '_blank');
+            }
+        },
+        null, // Dividier
+        {
+            text: 'Edit',
+            click: function ($itemScope) {
+                $scope.editCacheGroup($itemScope.cg.id);
+            }
+        },
+        {
+            text: 'Delete',
+            click: function ($itemScope) {
+                confirmDelete($itemScope.cg);
+            }
+        },
+        null, // Dividier
+        {
+            text: 'Queue Server Updates',
+            click: function ($itemScope) {
+                confirmQueueServerUpdates($itemScope.cg);
+            }
+        },
+        {
+            text: 'Clear Server Updates',
+            click: function ($itemScope) {
+                confirmClearServerUpdates($itemScope.cg);
+            }
+        },
+        null, // Dividier
+        {
+            text: 'Manage ASNs',
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/cache-groups/' + $itemScope.cg.id + '/asns');
+            }
+        },
+        {
+            text: 'Manage Parameters',
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/cache-groups/' + $itemScope.cg.id + '/parameters');
+            }
+        },
+        {
+            text: 'Manage Servers',
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/cache-groups/' + $itemScope.cg.id + '/servers');
+            }
+        }
+    ];
 
     $scope.editCacheGroup = function(id) {
         locationUtils.navigateToPath('/cache-groups/' + id);
@@ -43,5 +186,5 @@ var TableCacheGroupsController = function(cacheGroups, $scope, $state, locationU
 
 };
 
-TableCacheGroupsController.$inject = ['cacheGroups', '$scope', '$state', 'locationUtils'];
+TableCacheGroupsController.$inject = ['cacheGroups', '$location', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'cacheGroupService', 'cdnService', 'messageModel'];
 module.exports = TableCacheGroupsController;

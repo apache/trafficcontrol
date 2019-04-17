@@ -17,11 +17,23 @@
  * under the License.
  */
 
-var TableProfileParametersController = function(profile, profileParameters, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService) {
+var TableProfileParametersController = function(profile, parameters, $controller, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService) {
+
+	// extends the TableParametersController to inherit common methods
+	angular.extend(this, $controller('TableParametersController', { parameters: parameters, $scope: $scope }));
 
 	$scope.profile = profile;
 
-	$scope.profileParameters = profileParameters;
+	// adds some items to the base parameters context menu
+	$scope.contextMenuItems.splice(2, 0,
+		{
+			text: 'Unlink Parameter from Profile',
+			click: function ($itemScope) {
+				$scope.confirmRemoveParam($itemScope.p);
+			}
+		},
+		null // Divider
+	);
 
 	var removeParameter = function(paramId) {
 		profileParameterService.unlinkProfileParameter(profile.id, paramId)
@@ -91,10 +103,6 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 		}
 	};
 
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
 	$scope.selectParams = function() {
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/table/profileParameters/table.profileParamsUnassigned.tpl.html',
@@ -108,7 +116,7 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 					return parameterService.getParameters();
 				},
 				assignedParams: function() {
-					return profileParameters;
+					return parameters;
 				}
 			}
 		});
@@ -180,5 +188,5 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 
 };
 
-TableProfileParametersController.$inject = ['profile', 'profileParameters', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService'];
+TableProfileParametersController.$inject = ['profile', 'parameters', '$controller', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService'];
 module.exports = TableProfileParametersController;

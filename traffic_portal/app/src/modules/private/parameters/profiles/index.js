@@ -30,7 +30,7 @@ module.exports = angular.module('trafficPortal.private.parameters.profiles', [])
 							parameter: function($stateParams, parameterService) {
 								return parameterService.getParameter($stateParams.parameterId);
 							},
-							parameterProfiles: function($stateParams, profileService) {
+							profiles: function($stateParams, profileService) {
 								return profileService.getParameterProfiles($stateParams.parameterId);
 							}
 						}

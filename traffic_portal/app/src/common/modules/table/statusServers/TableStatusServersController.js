@@ -17,46 +17,22 @@
  * under the License.
  */
 
-var TableStatusServersController = function(status, servers, $scope, $state, locationUtils, serverUtils, propertiesModel) {
+var TableStatusServersController = function(status, servers, $controller, $scope) {
+
+	// extends the TableServersController to inherit common methods
+	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
 
 	$scope.status = status;
 
-	$scope.servers = servers;
-
-	$scope.editServer = function(id) {
-		locationUtils.navigateToPath('/servers/' + id);
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.showChartsButton = propertiesModel.properties.servers.charts.show;
-
-	$scope.ssh = serverUtils.ssh;
-
-	$scope.gotoMonitor = serverUtils.gotoMonitor;
-
-	$scope.openCharts = serverUtils.openCharts;
-
-	$scope.isOffline = serverUtils.isOffline;
-
-	$scope.offlineReason = serverUtils.offlineReason;
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
 	angular.element(document).ready(function () {
-		$('#serversTable').dataTable({
+		$('#statusServersTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
-			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableStatusServersController.$inject = ['status', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils', 'propertiesModel'];
+TableStatusServersController.$inject = ['status', 'servers', '$controller', '$scope'];
 module.exports = TableStatusServersController;

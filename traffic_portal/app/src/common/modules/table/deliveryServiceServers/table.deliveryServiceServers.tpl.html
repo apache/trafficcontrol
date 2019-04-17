@@ -32,7 +32,7 @@ under the License.
     </div>
     <div class="x_content">
         <br>
-        <table id="serversTable" class="table responsive-utilities jambo_table">
+        <table id="dsServersTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
                 <th>UPD</th>
@@ -47,11 +47,11 @@ under the License.
                 <th>Cache Group</th>
                 <th>Phys Location</th>
                 <th>ILO</th>
-                <th style="text-align: right;">Actions</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editServer(s.id)" ng-repeat="s in ::servers" ng-class="::{'active': s.updPending}">
+            <tr ng-click="editServer(s.id)" ng-repeat="s in ::servers" ng-class="::{'active': s.updPending}" context-menu="contextMenuItems">
                 <td data-search="{{(s.updPending) ? 'UPD' : ''}}" data-order="{{::s.updPending}}">
                     <i title="Updates Pending" ng-show="s.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
                     <i title="Updates Applied" ng-show="!s.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
@@ -72,7 +72,6 @@ under the License.
                 <td data-search="^{{::s.iloIpAddress}}$"><a ng-click="ssh(s.iloIpAddress, $event)">{{::s.iloIpAddress}}</a></td>
                 <td style="text-align: right;">
                     <a class="link action-link" title="Unlink Server from Delivery Service" ng-click="confirmRemoveServer(s, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
-                    <span ng-if="showChartsButton"><a class="link action-link" title="View Charts" ng-click="openCharts(s, $event)"><i class="fa fa-sm fa-bar-chart"></i></a></span>
                 </td>
             </tr>
             </tbody>

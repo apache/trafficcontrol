@@ -17,42 +17,15 @@
  * under the License.
  */
 
-var TableTypeDeliveryServicesController = function(type, deliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils, propertiesModel) {
+var TableTypeDeliveryServicesController = function(type, deliveryServices, $controller, $scope) {
 
-	var protocols = deliveryServiceUtils.protocols;
-
-	var qstrings = deliveryServiceUtils.qstrings;
+	// extends the TableDeliveryServicesController to inherit common methods
+	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
 
 	$scope.type = type;
 
-	$scope.deliveryServices = deliveryServices;
-
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
-
-	$scope.openCharts = deliveryServiceUtils.openCharts;
-
-	$scope.protocol = function(ds) {
-		return protocols[ds.protocol];
-	};
-
-	$scope.qstring = function(ds) {
-		return qstrings[ds.qstringIgnore];
-	};
-
-	$scope.getRelativeTime = dateUtils.getRelativeTime;
-
-	$scope.editDeliveryService = function(ds) {
-		locationUtils.navigateToPath('/delivery-services/' + ds.id + '?type=' + ds.type);
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
 	angular.element(document).ready(function () {
-		$('#deliveryServicesTable').dataTable({
+		$('#typeDeliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
@@ -64,5 +37,5 @@ var TableTypeDeliveryServicesController = function(type, deliveryServices, $scop
 
 };
 
-TableTypeDeliveryServicesController.$inject = ['type', 'deliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'propertiesModel'];
+TableTypeDeliveryServicesController.$inject = ['type', 'deliveryServices', '$controller', '$scope'];
 module.exports = TableTypeDeliveryServicesController;

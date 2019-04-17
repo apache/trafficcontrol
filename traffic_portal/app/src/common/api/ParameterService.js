@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ParameterService = function(Restangular, locationUtils, messageModel) {
+var ParameterService = function(Restangular, $http, $q, locationUtils, messageModel, ENV) {
 
     this.getParameters = function(queryParams) {
         return Restangular.all('parameters').getList(queryParams);
@@ -53,16 +53,22 @@ var ParameterService = function(Restangular, locationUtils, messageModel) {
     };
 
     this.deleteParameter = function(id) {
-        return Restangular.one("parameters", id).remove()
+        var request = $q.defer();
+
+        $http.delete(ENV.api['root'] + "parameters/" + id)
             .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'Parameter deleted' } ], true);
-            },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, true);
-            }
-        );
+                function(result) {
+                    request.resolve(result.data);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject(fault);
+                }
+            );
+
+        return request.promise;
     };
+
 
     this.getProfileParameters = function(profileId) {
         return Restangular.one('profiles', profileId).getList('parameters');
@@ -78,5 +84,5 @@ var ParameterService = function(Restangular, locationUtils, messageModel) {
 
 };
 
-ParameterService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+ParameterService.$inject = ['Restangular', '$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ParameterService;

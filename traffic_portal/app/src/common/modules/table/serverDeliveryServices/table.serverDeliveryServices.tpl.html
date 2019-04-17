@@ -41,7 +41,7 @@ under the License.
     </div>
     <div class="x_content">
         <br>
-        <table id="deliveryServicesTable" class="table responsive-utilities jambo_table">
+        <table id="serverDeliveryServicesTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
                 <th>Key (XML ID)</th>
@@ -60,7 +60,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="ds in ::serverDeliveryServices">
+            <tr ng-click="editDeliveryService(ds)" ng-repeat="ds in ::deliveryServices" context-menu="contextMenuItems">
                 <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
                 <td data-search="^{{::ds.tenant}}$">{{::ds.tenant}}</td>
                 <td data-search="^{{::ds.orgServerFqdn}}$">{{::ds.orgServerFqdn}}</td>

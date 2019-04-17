@@ -17,9 +17,94 @@
  * under the License.
  */
 
-var TableParametersController = function(parameters, $scope, $state, locationUtils) {
+var TableParametersController = function(parameters, $scope, $state, $uibModal, $window, locationUtils, parameterService, profileService, messageModel) {
+
+    var deleteParameter = function(parameter) {
+        parameterService.deleteParameter(parameter.id)
+            .then(function(result) {
+                messageModel.setMessages(result.alerts, false);
+                $scope.refresh();
+            });
+    };
+
+    var confirmDelete = function(parameter) {
+        profileService.getParameterProfiles(parameter.id).
+        then(function(result) {
+            var params = {
+                title: 'Delete Parameter?',
+                message: result.length + ' profiles use this parameter.<br><br>'
+            };
+            if (result.length > 0) {
+                params.message += _.pluck(result, 'name').join('<br>') + '<br><br>';
+            }
+            params.message += 'Are you sure you want to delete the parameter?';
+
+            var modalInstance = $uibModal.open({
+                templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+                controller: 'DialogConfirmController',
+                size: 'md',
+                resolve: {
+                    params: function () {
+                        return params;
+                    }
+                }
+            });
+            modalInstance.result.then(function() {
+                params = {
+                    title: 'Delete Parameter: ' + parameter.name,
+                    key: parameter.name
+                };
+                modalInstance = $uibModal.open({
+                    templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+                    controller: 'DialogDeleteController',
+                    size: 'md',
+                    resolve: {
+                        params: function () {
+                            return params;
+                        }
+                    }
+                });
+                modalInstance.result.then(function() {
+                    deleteParameter(parameter);
+                }, function () {
+                    // do nothing
+                });
+            }, function () {
+                // do nothing
+            });
+        });
+    };
 
     $scope.parameters = parameters;
+
+    $scope.contextMenuItems = [
+        {
+            text: 'Open in New Tab',
+            click: function ($itemScope) {
+                $window.open('/#!/parameters/' + $itemScope.p.id, '_blank');
+            }
+        },
+        null, // Dividier
+        {
+            text: 'Edit',
+            click: function ($itemScope) {
+                $scope.editParameter($itemScope.p.id);
+            }
+        },
+        {
+            text: 'Delete',
+            click: function ($itemScope) {
+                confirmDelete($itemScope.p);
+            }
+        },
+        null, // Dividier
+        {
+            text: 'Manage Profiles',
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/parameters/' + $itemScope.p.id + '/profiles');
+            }
+        }
+    ];
 
     $scope.editParameter = function(id) {
         locationUtils.navigateToPath('/parameters/' + id);
@@ -43,5 +128,5 @@ var TableParametersController = function(parameters, $scope, $state, locationUti
 
 };
 
-TableParametersController.$inject = ['parameters', '$scope', '$state', 'locationUtils'];
+TableParametersController.$inject = ['parameters', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'parameterService', 'profileService', 'messageModel'];
 module.exports = TableParametersController;

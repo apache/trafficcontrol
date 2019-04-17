@@ -41,10 +41,10 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="pp in ::parameterProfiles">
-                <td data-search="^{{::pp.name}}$">{{::pp.name}}</td>
-                <td data-search="^{{::pp.name}}$">{{::pp.description}}</td>
-                <td><button type="button" class="btn btn-link" title="Unlink Profile from Parameter" ng-click="confirmRemoveProfile(pp)"><i class="fa fa-chain-broken"></i></button></td>
+            <tr ng-click="editProfile(p.id)" ng-repeat="p in ::profiles" context-menu="contextMenuItems">
+                <td data-search="^{{::p.name}}$">{{::p.name}}</td>
+                <td data-search="^{{::p.name}}$">{{::p.description}}</td>
+                <td><button type="button" class="btn btn-link" title="Unlink Profile from Parameter" ng-click="confirmRemoveProfile(p, $event)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

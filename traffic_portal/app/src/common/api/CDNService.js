@@ -74,15 +74,20 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
     };
 
     this.deleteCDN = function(id) {
-        return Restangular.one("cdns", id).remove()
+        var request = $q.defer();
+
+        $http.delete(ENV.api['root'] + "cdns/" + id)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'CDN deleted' } ], true);
+                function(result) {
+                    request.resolve(result.data);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
+                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject(fault);
                 }
             );
+
+        return request.promise;
     };
 
     this.queueServerUpdates = function(id) {

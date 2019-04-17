@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditServerController = function(server, $scope, $controller, $uibModal, locationUtils, serverService, statusService) {
+var FormEditServerController = function(server, $scope, $controller, $uibModal, locationUtils, serverService, statusService, messageModel) {
 
     // extends the FormServerController to inherit common methods
     angular.extend(this, $controller('FormServerController', { server: server, $scope: $scope }));
@@ -31,7 +31,8 @@ var FormEditServerController = function(server, $scope, $controller, $uibModal, 
 
     var deleteServer = function(server) {
         serverService.deleteServer(server.id)
-            .then(function() {
+            .then(function(result) {
+                messageModel.setMessages(result.alerts, true);
                 locationUtils.navigateToPath('/servers');
             });
     };
@@ -79,5 +80,5 @@ var FormEditServerController = function(server, $scope, $controller, $uibModal, 
 
 };
 
-FormEditServerController.$inject = ['server', '$scope', '$controller', '$uibModal', 'locationUtils', 'serverService', 'statusService'];
+FormEditServerController.$inject = ['server', '$scope', '$controller', '$uibModal', 'locationUtils', 'serverService', 'statusService', 'messageModel'];
 module.exports = FormEditServerController;

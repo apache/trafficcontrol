@@ -38,16 +38,20 @@ under the License.
                 <th>Name</th>
                 <th>Short Name</th>
                 <th>Type</th>
+                <th>Parent</th>
+                <th>2nd Parent</th>
                 <th>Latitude</th>
                 <th>Longitude</th>
                 <th></th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="cg in ::cacheGroups">
+            <tr ng-repeat="cg in ::cacheGroups" context-menu="contextMenuItems">
                 <td data-search="^{{::cg.name}}$">{{::cg.name}}</td>
                 <td data-search="^{{::cg.shortName}}$">{{::cg.shortName}}</td>
                 <td data-search="^{{::cg.typeName}}$">{{::cg.typeName}}</td>
+                <td data-search="^{{::cg.parentCachegroupName}}$">{{::cg.parentCachegroupName}}</td>
+                <td data-search="^{{::cg.secondaryParentCachegroupName}}$">{{::cg.secondaryParentCachegroupName}}</td>
                 <td data-search="^{{::cg.latitude}}$">{{::cg.latitude}}</td>
                 <td data-search="^{{::cg.longitude}}$">{{::cg.longitude}}</td>
                 <td><button type="button" class="btn btn-link" title="Remove Cache Group" ng-click="removeCacheGroup()"><i class="fa fa-trash-o"></i></button></td>

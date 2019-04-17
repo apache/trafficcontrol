@@ -53,15 +53,20 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
     };
 
     this.deleteServer = function(id) {
-        return Restangular.one("servers", id).remove()
+        var request = $q.defer();
+
+        $http.delete(ENV.api['root'] + "servers/" + id)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Server deleted' } ], true);
+                function(result) {
+                    request.resolve(result.data);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
+                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject(fault);
                 }
             );
+
+        return request.promise;
     };
 
     this.getServerConfigFiles = function(id) {

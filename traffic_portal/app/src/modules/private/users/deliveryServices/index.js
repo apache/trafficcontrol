@@ -30,7 +30,7 @@ module.exports = angular.module('trafficPortal.private.users.deliveryServices', 
 							user: function ($stateParams, userService) {
 								return userService.getUser($stateParams.userId);
 							},
-							userDeliveryServices: function ($stateParams, deliveryServiceService) {
+							deliveryServices: function ($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getUserDeliveryServices($stateParams.userId);
 							}
 						}

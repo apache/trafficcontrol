@@ -17,38 +17,15 @@
  * under the License.
  */
 
-var TableUserDeliveryServicesController = function (user, userDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, userService, propertiesModel) {
+var TableUserDeliveryServicesController = function (user, deliveryServices, $controller, $scope) {
 
-	var protocols = deliveryServiceUtils.protocols;
-
-	var qstrings = deliveryServiceUtils.qstrings;
+	// extends the TableDeliveryServicesController to inherit common methods
+	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
 
 	$scope.user = user;
 
-	$scope.userDeliveryServices = userDeliveryServices;
-
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
-
-	$scope.openCharts = deliveryServiceUtils.openCharts;
-
-	$scope.protocol = function (ds) {
-		return protocols[ds.protocol];
-	};
-
-	$scope.qstring = function (ds) {
-		return qstrings[ds.qstringIgnore];
-	};
-
-	$scope.getRelativeTime = dateUtils.getRelativeTime;
-
-	$scope.refresh = function () {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
 	angular.element(document).ready(function () {
-		$('#deliveryServicesTable').dataTable({
+		$('#userDeliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"aaSorting": []
@@ -57,5 +34,5 @@ var TableUserDeliveryServicesController = function (user, userDeliveryServices, 
 
 };
 
-TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'userService', 'propertiesModel'];
+TableUserDeliveryServicesController.$inject = ['user', 'deliveryServices', '$controller', '$scope'];
 module.exports = TableUserDeliveryServicesController;

@@ -17,14 +17,15 @@
  * under the License.
  */
 
-var FormEditCDNController = function(cdn, $scope, $controller, $uibModal, $anchorScroll, locationUtils, cdnService) {
+var FormEditCDNController = function(cdn, $scope, $controller, $uibModal, $anchorScroll, locationUtils, cdnService, messageModel) {
 
     // extends the FormCDNController to inherit common methods
     angular.extend(this, $controller('FormCDNController', { cdn: cdn, $scope: $scope }));
 
     var deleteCDN = function(cdn) {
         cdnService.deleteCDN(cdn.id)
-            .then(function() {
+            .then(function(result) {
+                messageModel.setMessages(result.alerts, true);
                 locationUtils.navigateToPath('/cdns');
             });
     };
@@ -68,5 +69,5 @@ var FormEditCDNController = function(cdn, $scope, $controller, $uibModal, $ancho
 
 };
 
-FormEditCDNController.$inject = ['cdn', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'cdnService'];
+FormEditCDNController.$inject = ['cdn', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'cdnService', 'messageModel'];
 module.exports = FormEditCDNController;

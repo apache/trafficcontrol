@@ -30,7 +30,7 @@ module.exports = angular.module('trafficPortal.private.servers.deliveryServices'
 							server: function($stateParams, serverService) {
 								return serverService.getServer($stateParams.serverId);
 							},
-							serverDeliveryServices: function($stateParams, deliveryServiceService) {
+							deliveryServices: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getServerDeliveryServices($stateParams.serverId);
 							}
 						}

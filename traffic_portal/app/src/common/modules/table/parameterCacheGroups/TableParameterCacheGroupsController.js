@@ -17,11 +17,12 @@
  * under the License.
  */
 
-var TableParameterCacheGroupsController = function(parameter, cacheGroups, $scope, $state, locationUtils) {
+var TableParameterCacheGroupsController = function(parameter, cacheGroups, $controller, $scope, $state, locationUtils) {
+
+	// extends the TableCacheGroupsController to inherit common methods
+	angular.extend(this, $controller('TableCacheGroupsController', { cacheGroups: cacheGroups, $scope: $scope }));
 
 	$scope.parameter = parameter;
-
-	$scope.cacheGroups = cacheGroups;
 
 	$scope.addCacheGroup = function() {
 		alert('not hooked up yet: add cg to parameter');
@@ -31,21 +32,9 @@ var TableParameterCacheGroupsController = function(parameter, cacheGroups, $scop
 		alert('not hooked up yet: remove cg from parameter');
 	};
 
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
 	$scope.navigateToPath = locationUtils.navigateToPath;
-
-	angular.element(document).ready(function () {
-		$('#cacheGroupsTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
 
 };
 
-TableParameterCacheGroupsController.$inject = ['parameter', 'cacheGroups', '$scope', '$state', 'locationUtils'];
+TableParameterCacheGroupsController.$inject = ['parameter', 'cacheGroups', '$controller', '$scope', '$state', 'locationUtils'];
 module.exports = TableParameterCacheGroupsController;

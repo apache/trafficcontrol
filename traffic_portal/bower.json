@@ -7,6 +7,7 @@
         "angular-route": "1.6.4",
         "angular-sanitize": "1.6.4",
         "angular-bootstrap": "0.14.3",
+        "angular-bootstrap-contextmenu": "1.2.1",
         "angular-loading-bar": "0.8.0",
         "angular-ui-router": "0.4.2",
         "angular-jwt": "0.0.9",

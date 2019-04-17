@@ -53,15 +53,20 @@ var ProfileService = function(Restangular, $http, $q, locationUtils, messageMode
     };
 
     this.deleteProfile = function(id) {
-        return Restangular.one("profiles", id).remove()
+        var request = $q.defer();
+
+        $http.delete(ENV.api['root'] + "profiles/" + id)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Profile deleted' } ], true);
+                function(result) {
+                    request.resolve(result.data);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
+                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject(fault);
                 }
-        );
+            );
+
+        return request.promise;
     };
 
     this.getParameterProfiles = function(paramId) {

@@ -30,6 +30,7 @@ module.exports = {
                             [
                                 'angular/angular.min.js',
                                 'angular-animate/angular-animate.min.js',
+                                'angular-bootstrap-contextmenu/contextMenu.js',
                                 'angular-bootstrap/ui-bootstrap.min.js',
                                 'angular-bootstrap/ui-bootstrap-tpls.min.js',
                                 'angular-jwt/dist/angular-jwt.min.js',
@@ -91,6 +92,7 @@ module.exports = {
                             [
                                 'angular/angular.js',
                                 'angular-animate/angular-animate.js',
+                                'angular-bootstrap-contextmenu/contextMenu.js',
                                 'angular-bootstrap/ui-bootstrap.js',
                                 'angular-bootstrap/ui-bootstrap-tpls.js',
                                 'angular-jwt/dist/angular-jwt.js',
