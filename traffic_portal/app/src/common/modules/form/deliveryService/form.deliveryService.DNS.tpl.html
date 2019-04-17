@@ -244,7 +244,7 @@ under the License.
             <div class="form-group" ng-if="!settings.isNew && !settings.isRequest">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12" for="edgeFQDNs">Delivery Service URL(s)</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="edgeFQDNs" name="edgeFQDNs" rows="{{deliveryService.exampleURLs.length}}" class="form-control readonly" readonly>{{edgeFQDNs(deliveryService)}}</textarea>
+                    <textarea id="edgeFQDNs" name="edgeFQDNs" rows="{{deliveryService.exampleURLs.length}}" class="form-control readonly autosize" readonly>{{edgeFQDNs(deliveryService)}}</textarea>
                 </div>
             </div>
 

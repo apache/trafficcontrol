@@ -85,6 +85,10 @@ input[type="url"]:invalid ~ small.invalid-URL-error {
 	visibility: visible;
 }
 
+textarea.readonly.autosize {
+	overflow: hidden;
+}
+
 .dnssec-info-text {
 	margin-bottom: 12px;
 	font-size: medium;
