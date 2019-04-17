@@ -51,6 +51,25 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
         );
     };
 
+    this.oauthLogin = function(token) {
+        return httpService.post(ENV.api['root'] + 'user/login/oauth', { t: token})
+            .then(
+                function(result) {
+                    $rootScope.$broadcast('authService::oauthLogin');
+                    var redirect = decodeURIComponent($location.search().redirect);
+                    if (redirect !== 'undefined') {
+                        $location.search('redirect', null); // remove the redirect query param
+                        $location.url(redirect);
+                    } else {
+                        $location.url('/');
+                    }
+                },
+                function(fault) {
+                    // do nothing
+                }
+            );
+    };
+
     this.logout = function() {
         userModel.resetUser();
         return $http.post(ENV.api['root'] + 'user/logout').then(

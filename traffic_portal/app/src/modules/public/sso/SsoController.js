@@ -17,15 +17,21 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.utils', [])
-    .service('dateUtils', require('./DateUtils'))
-    .service('deliveryServiceUtils', require('./DeliveryServiceUtils'))
-    .service('fileUtils', require('./FileUtils'))
-    .service('formUtils', require('./FormUtils'))
-    .service('locationUtils', require('./LocationUtils'))
-    .service('numberUtils', require('./NumberUtils'))
-    .service('permissionUtils', require('./PermissionUtils'))
-    .service('serverUtils', require('./ServerUtils'))
-    .service('stringUtils', require('./StringUtils'))
-    .service('tenantUtils', require('./TenantUtils'))
-    .service('urlUtils', require('./UrlUtils'));
+var SsoController = function($scope, $state, $interval, urlUtils, authService, propertiesModel) {
+
+	var init = function () {
+        const queryParams = urlUtils.getUrlQueryParams(window.location.href);
+        const tokenParameter = propertiesModel.properties.oAuth.oAuthTokenQueryParam;
+        const token = queryParams[tokenParameter];
+
+        authService.oauthLogin(token)
+            .then(
+                function() {}
+            );
+	};
+	init();
+
+};
+
+SsoController.$inject = ['$scope', '$state', '$interval', 'urlUtils', 'authService', 'propertiesModel'];
+module.exports = SsoController;
