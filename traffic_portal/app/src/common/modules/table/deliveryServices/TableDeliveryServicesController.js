@@ -1,4 +1,4 @@
-/*
+    /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -57,8 +57,6 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         });
         modalInstance.result.then(function(type) {
             locationUtils.navigateToPath('/delivery-services/' + ds.id + '/clone?type=' + type.name);
-        }, function () {
-            // do nothing
         });
     };
 
@@ -189,8 +187,6 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
                         }
                     );
             }
-        }, function () {
-            // do nothing
         });
     };
 
