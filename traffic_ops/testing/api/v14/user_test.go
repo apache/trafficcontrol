@@ -24,6 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
@@ -295,6 +296,19 @@ func UserTenancyTest(t *testing.T) {
 	// assert that tenant4user cannot update tenant3user
 	if _, _, err = tenant4TOClient.UpdateUserByID(*tenant3User.ID, &tenant3User); err == nil {
 		t.Error("expected tenant4user to be unable to update tenant4user")
+	}
+
+	// assert that tenant4user cannot create a user outside of its tenant
+	rootTenant, _, err := TOSession.TenantByName("root")
+	if err != nil {
+		t.Error("expected to be able to GET the root tenant")
+	}
+	newUser := testData.Users[0]
+	newUser.Email = util.StrPtr("testusertenancy@example.com")
+	newUser.Username = util.StrPtr("testusertenancy")
+	newUser.TenantID = &rootTenant.ID
+	if _, _, err = tenant4TOClient.CreateUser(&newUser); err == nil {
+		t.Error("expected tenant4user to be unable to create a new user in the root tenant")
 	}
 }
 

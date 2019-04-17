@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
@@ -235,6 +236,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 		t.Error("tenant4user cannot GET deliveryservices")
 	}
 
+	// assert that tenant4user cannot read deliveryservices outside of its tenant
 	for _, ds := range dsesReadableByTenant4 {
 		if *ds.XMLID == "ds3" {
 			t.Error("expected tenant4 to be unable to read delivery services from tenant 3")
@@ -250,4 +252,12 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	if _, err = tenant4TOClient.DeleteDeliveryService(string(*tenant3DS.ID)); err == nil {
 		t.Errorf("expected tenant4user to be unable to delete tenant3's deliveryservice (%s)", *tenant3DS.XMLID)
 	}
+
+	// assert that tenant4user cannot create a deliveryservice outside of its tenant
+	tenant3DS.XMLID = util.StrPtr("deliveryservicetenancytest")
+	tenant3DS.DisplayName = util.StrPtr("deliveryservicetenancytest")
+	if _, err = tenant4TOClient.CreateDeliveryServiceNullable(&tenant3DS); err == nil {
+		t.Errorf("expected tenant4user to be unable to create a deliveryservice outside of its tenant")
+	}
+
 }

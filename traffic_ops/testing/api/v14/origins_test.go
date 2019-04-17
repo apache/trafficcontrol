@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
@@ -117,6 +118,7 @@ func OriginTenancyTest(t *testing.T) {
 		t.Error("tenant4user cannot GET origins")
 	}
 
+	// assert that tenant4user cannot read origins outside of its tenant
 	for _, origin := range originsReadableByTenant4 {
 		if *origin.FQDN == "origin.ds3.example.net" {
 			t.Error("expected tenant4 to be unable to read origins from tenant 3")
@@ -131,6 +133,12 @@ func OriginTenancyTest(t *testing.T) {
 	// assert that tenant4user cannot delete an origin outside of its tenant
 	if _, _, err = tenant4TOClient.DeleteOriginByID(*origins[0].ID); err == nil {
 		t.Errorf("expected tenant4user to be unable to delete an origin outside of its tenant (origin %s)", *origins[0].Name)
+	}
+
+	// assert that tenant4user cannot create origins outside of its tenant
+	tenant3Origin.FQDN = util.StrPtr("origin.tenancy.test.example.com")
+	if _, _, err = tenant4TOClient.CreateOrigin(tenant3Origin); err == nil {
+		t.Errorf("expected tenant4user to be unable to create an origin outside of its tenant")
 	}
 }
 
