@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var AuthService = function($rootScope, $http, $state, $location, $q, $state, httpService, userModel, messageModel, ENV) {
+var AuthService = function($rootScope, $http, $state, $location, $q, httpService, userModel, messageModel, ENV) {
 
     this.login = function(username, password) {
         userModel.resetUser();
