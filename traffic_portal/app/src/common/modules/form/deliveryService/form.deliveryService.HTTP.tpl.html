@@ -884,7 +884,7 @@ under the License.
                         <input id="consistentHashRegex" name="consistentHashRegex" type="text" class="form-control" ng-model="deliveryService.consistentHashRegex" maxlength="1024">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.consistentHashRegex, 'maxlength')">Too Long</small>
                         <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.consistentHashRegex != dsCurrent.consistentHashRegex">Current Value: [ {{dsCurrent.consistentHashRegex}} ]</small>
-                        <small><a ng-click="encodeRegex(deliveryService.consistentHashRegex)" href="/#!/delivery-services/{{deliveryService.id}}/consistent-hash?pattern={{encodedRegex}}" target="_blank">Test Regex&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                        <small><a ng-click="encodeRegex(deliveryService.consistentHashRegex)" ng-href="/#!/delivery-services/{{deliveryService.id}}/consistent-hash?pattern={{encodedRegex}}" target="_blank">Test Regex&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                         <span ng-show="hasError(deliveryServiceForm.consistentHashRegex)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
