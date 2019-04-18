@@ -76,5 +76,5 @@ var AuthService = function($rootScope, $http, $state, $location, $q, httpService
 
 };
 
-AuthService.$inject = ['$rootScope', '$http', '$state', '$location', '$q', '$state', 'httpService', 'userModel', 'messageModel', 'ENV'];
+AuthService.$inject = ['$rootScope', '$http', '$state', '$location', '$q', 'httpService', 'userModel', 'messageModel', 'ENV'];
 module.exports = AuthService;
