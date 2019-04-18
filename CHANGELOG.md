@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.4/cdns/dnsseckeys/refresh `GET`
   - /api/1.1/cdns/name/:name/dnsseckeys `GET`
   - /api/1.4/cdns/name/:name/dnsseckeys `GET`
+  - /api/1.4/user/login/oauth `POST`
 - To support reusing a single riak cluster connection, an optional parameter is added to riak.conf: "HealthCheckInterval". This options takes a 'Duration' value (ie: 10s, 5m) which affects how often the riak cluster is health checked.  Default is currently set to: "HealthCheckInterval": "5s".
 - Added a new Go db/admin binary to replace the Perl db/admin.pl script which is now deprecated and will be removed in a future release. The new db/admin binary is essentially a drop-in replacement for db/admin.pl since it supports all of the same commands and options; therefore, it should be used in place of db/admin.pl for all the same tasks.
 - Added an API 1.4 endpoint, /api/1.4/cdns/dnsseckeys/refresh, to perform necessary behavior previously served outside the API under `/internal`.
@@ -27,6 +28,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Snapshotting the CRConfig now deletes HTTPS certificates in Riak for delivery services which have been deleted in Traffic Ops.
 - Added a context menu in place of the "Actions" column from the following tables in Traffic Portal: cache group tables, CDN tables, delivery service tables, parameter tables, profile tables, server tables.
 - Traffic Portal standalone Dockerfile
+- Added an API 1.4 endpoint, /api/1.4/user/login/oauth to handle SSO login using OAuth.
+- Added /#!/sso page to Traffic Portal to catch redirects back from OAuth provider and POST token into the API.
 
 ### Changed
 - Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
@@ -44,6 +47,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Changed traffic_ops_ort.pl so that hdr_rw-<ds>.config files are compared with strict ordering and line duplication when detecting configuration changes.
 - Traffic Ops (golang), Traffic Monitor, Traffic Stats are now compiled using Go version 1.11. Grove was already being compiled with this version which improves performance for TLS when RSA certificates are used.
 - Issue 3476: Traffic Router returns partial result for CLIENT_STEERING Delivery Services when Regional Geoblocking or Anonymous Blocking is enabled.
+- Added fields to traffic_portal_properties.json to configure SSO through OAuth.
+- Added field to cdn.conf to configure whitelisted URLs for Json Key Set URL returned from OAuth provider.
 
 
 ## [3.0.0] - 2018-10-30
