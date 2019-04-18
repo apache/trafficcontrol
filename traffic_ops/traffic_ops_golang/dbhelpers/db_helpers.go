@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -266,4 +267,56 @@ func GetCDNs(tx *sql.Tx) (map[tc.CDNName]struct{}, error) {
 		cdns[cdn] = struct{}{}
 	}
 	return cdns, nil
+}
+
+// GetUpdateQuery returns the fields of a SQL update query, by parsing obj's fields for db tags.
+// Any fields in `omit` will be excluded. These are typically the primary key(s) which will be in the WHERE clause.
+func GetUpdateQueryFields(obj interface{}, omit []string) (string, error) {
+	objVal := reflect.ValueOf(obj)
+	for objVal.Kind() == reflect.Ptr {
+		objVal = reflect.Indirect(objVal)
+	}
+	if objVal.Kind() != reflect.Struct {
+		return "", errors.New("obj must be a struct")
+	}
+
+	objType := objVal.Type()
+
+	omitMap := make(map[string]struct{}, len(omit))
+	for _, omitVal := range omit {
+		omitMap[omitVal] = struct{}{}
+	}
+
+	qryFieldStrs, err := getUpdateQueryFieldsType(objType, omitMap)
+	if err != nil {
+		return "", err
+	}
+	return strings.Join(qryFieldStrs, ",\n"), nil
+}
+
+func getUpdateQueryFieldsType(objType reflect.Type, omit map[string]struct{}) ([]string, error) {
+	qryFieldStrs := []string{}
+	for i := 0; i < objType.NumField(); i++ {
+		objField := objType.Field(i)
+		if objField.Type.Kind() == reflect.Struct && objField.Anonymous {
+			embeddedQryFieldStrs, err := getUpdateQueryFieldsType(objField.Type, omit)
+			if err != nil {
+				return nil, errors.New("subfield '" + objField.Name + "': " + err.Error())
+			}
+			qryFieldStrs = append(qryFieldStrs, embeddedQryFieldStrs...)
+			continue
+		}
+
+		objTag := objField.Tag
+		objDBTag := objTag.Get("db")
+		if objDBTag == "" {
+			continue
+		}
+		if _, ok := omit[objDBTag]; ok {
+			continue
+		}
+		qryFieldStr := objDBTag + "=:" + objDBTag
+		qryFieldStrs = append(qryFieldStrs, qryFieldStr)
+	}
+	return qryFieldStrs, nil
 }

@@ -148,18 +148,18 @@ type DeliveryServiceV11 struct {
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV13
-	ConsistentHashRegex  *string `json:"consistentHashRegex"`
+	ConsistentHashRegex  *string `json:"consistentHashRegex" db:"consistent_hash_regex"`
 	MaxOriginConnections *int    `json:"maxOriginConnections" db:"max_origin_connections"`
 }
 
 type DeliveryServiceNullableV13 struct {
 	DeliveryServiceNullableV12
 	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
-	FQPacingRate      *int             `json:"fqPacingRate"`
+	FQPacingRate      *int             `json:"fqPacingRate" db:"fq_pacing_rate"`
 	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
 	Tenant            *string          `json:"tenant"`
-	TRResponseHeaders *string          `json:"trResponseHeaders"`
-	TRRequestHeaders  *string          `json:"trRequestHeaders"`
+	TRResponseHeaders *string          `json:"trResponseHeaders" db:"tr_request_headers"`
+	TRRequestHeaders  *string          `json:"trRequestHeaders" db:"tr_response_headers"`
 }
 
 type DeliveryServiceNullableV12 struct {
@@ -185,7 +185,7 @@ type DeliveryServiceNullableV11 struct {
 	DNSBypassTTL             *int                    `json:"dnsBypassTtl" db:"dns_bypass_ttl"`
 	DSCP                     *int                    `json:"dscp" db:"dscp"`
 	EdgeHeaderRewrite        *string                 `json:"edgeHeaderRewrite" db:"edge_header_rewrite"`
-	FQPacingRate             *int                    `json:"fqPacingRate" db:"fq_pacing_rate"`
+	FQPacingRate             *int                    `json:"fqPacingRate"`
 	GeoLimit                 *int                    `json:"geoLimit" db:"geo_limit"`
 	GeoLimitCountries        *string                 `json:"geoLimitCountries" db:"geo_limit_countries"`
 	GeoLimitRedirectURL      *string                 `json:"geoLimitRedirectURL" db:"geolimit_redirect_url"`
@@ -209,7 +209,7 @@ type DeliveryServiceNullableV11 struct {
 	MissLong                 *float64                `json:"missLong" db:"miss_long"`
 	MultiSiteOrigin          *bool                   `json:"multiSiteOrigin" db:"multi_site_origin"`
 	OriginShield             *string                 `json:"originShield" db:"origin_shield"`
-	OrgServerFQDN            *string                 `json:"orgServerFqdn" db:"org_server_fqdn"`
+	OrgServerFQDN            *string                 `json:"orgServerFqdn"`
 	ProfileDesc              *string                 `json:"profileDescription"`
 	ProfileID                *int                    `json:"profileId" db:"profile"`
 	ProfileName              *string                 `json:"profileName"`
@@ -229,17 +229,31 @@ type DeliveryServiceNullableV11 struct {
 	ExampleURLs              []string                `json:"exampleURLs"`
 }
 
-// NewDeliveryServiceNullableFromV12 creates a new V13 DS from a V12 DS, filling new fields with appropriate defaults.
-func NewDeliveryServiceNullableFromV12(ds DeliveryServiceNullableV12) DeliveryServiceNullable {
-	newDSv13 := DeliveryServiceNullableV13{DeliveryServiceNullableV12: ds}
-	newDS := DeliveryServiceNullable{DeliveryServiceNullableV13: newDSv13}
+type ConvertibleToDeliveryServiceNullable interface {
+	ToDeliveryServiceNullable() DeliveryServiceNullable
+}
+
+func (ds DeliveryServiceNullable) ToDeliveryServiceNullable() DeliveryServiceNullable {
+	return ds
+}
+
+func (ds DeliveryServiceNullableV11) ToDeliveryServiceNullable() DeliveryServiceNullable {
+	newDS := DeliveryServiceNullable{}
+	newDS.DeliveryServiceNullableV11 = ds
 	newDS.Sanitize()
 	return newDS
 }
 
-// NewDeliveryServiceNullableFromV13 creates a new V14 DS from a V13 DS, filling new fields with appropriate defaults.
-func NewDeliveryServiceNullableFromV13(ds DeliveryServiceNullableV13) DeliveryServiceNullable {
-	newDS := DeliveryServiceNullable{DeliveryServiceNullableV13: ds}
+func (ds DeliveryServiceNullableV12) ToDeliveryServiceNullable() DeliveryServiceNullable {
+	newDS := DeliveryServiceNullable{}
+	newDS.DeliveryServiceNullableV12 = ds
+	newDS.Sanitize()
+	return newDS
+}
+
+func (ds DeliveryServiceNullableV13) ToDeliveryServiceNullable() DeliveryServiceNullable {
+	newDS := DeliveryServiceNullable{}
+	newDS.DeliveryServiceNullableV13 = ds
 	newDS.Sanitize()
 	return newDS
 }
