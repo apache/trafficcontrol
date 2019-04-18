@@ -291,6 +291,7 @@
             "sslKeyVersion": 2,
             "tenant": "tenant1",
             "tenantName": "tenant1",
+            "trResponseHeaders": "TEST-HDR: yes",
             "type": "HTTP_LIVE",
             "xmlId": "ds1",
             "anonymousBlockingEnabled": true
