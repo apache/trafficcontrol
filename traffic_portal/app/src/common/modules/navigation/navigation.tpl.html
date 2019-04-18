@@ -25,58 +25,58 @@ under the License.
     <div id="sidebar-menu" ng-show="userLoaded" class="main_menu_side hidden-print main_menu">
         <div class="menu_section">
             <ul class="nav side-menu">
-                <li class="side-menu-category" ng-class="{'current-page': isState('trafficPortal.private.dashboard')}"><a href="/#!/dashboard"><i class="fa fa-sm fa-bar-chart"></i> Dashboard</a></li>
-                <li class="side-menu-category" ng-if="hasCapability('cdns-read')" ng-class="{'current-page': isState('trafficPortal.private.cdns')}"><a href="/#!/cdns"><i class="fa fa-sm fa-sitemap"></i> CDNs</a></li>
-                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Monitor</span></a>
+                <li class="side-menu-category" ng-class="{'current-page': isState('trafficPortal.private.dashboard')}"><a ng-href="/#!/dashboard"><i class="fa fa-sm fa-bar-chart"></i> Dashboard</a></li>
+                <li class="side-menu-category" ng-if="hasCapability('cdns-read')" ng-class="{'current-page': isState('trafficPortal.private.cdns')}"><a ng-href="/#!/cdns"><i class="fa fa-sm fa-sitemap"></i> CDNs</a></li>
+                <li class="side-menu-category"><a ng-href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Monitor</span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-if="::showCacheChecks && hasCapability('servers-read')" ng-class="{'current-page': isState('trafficPortal.private.cacheChecks')}"><a href="/#!/cache-checks">Cache Checks</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('stats-read')" ng-class="{'current-page': isState('trafficPortal.private.cacheStats')}"><a href="/#!/cache-stats">Cache Stats</a></li>
+                        <li class="side-menu-category-item" ng-if="::showCacheChecks && hasCapability('servers-read')" ng-class="{'current-page': isState('trafficPortal.private.cacheChecks')}"><a ng-href="/#!/cache-checks">Cache Checks</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('stats-read')" ng-class="{'current-page': isState('trafficPortal.private.cacheStats')}"><a ng-href="/#!/cache-stats">Cache Stats</a></li>
                     </ul>
                 </li>
-                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Services</span></a>
+                <li class="side-menu-category"><a ng-href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Services</span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-if="hasCapability('delivery-services-read')" ng-class="{'current-page': isState('trafficPortal.private.deliveryServices')}"><a href="/#!/delivery-services">Delivery Services</a></li>
-                        <li class="side-menu-category-item" ng-if="::dsRequestsEnabled && hasCapability('delivery-service-requests-read')" ng-class="{'current-page': isState('trafficPortal.private.deliveryServiceRequests')}"><a href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('delivery-services-read')" ng-class="{'current-page': isState('trafficPortal.private.deliveryServices')}"><a ng-href="/#!/delivery-services">Delivery Services</a></li>
+                        <li class="side-menu-category-item" ng-if="::dsRequestsEnabled && hasCapability('delivery-service-requests-read')" ng-class="{'current-page': isState('trafficPortal.private.deliveryServiceRequests')}"><a ng-href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
                     </ul>
                 </li>
-                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Configure</span></a>
+                <li class="side-menu-category"><a ng-href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Configure</span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-if="hasCapability('servers-read')" ng-class="{'current-page': isState('trafficPortal.private.servers')}"><a href="/#!/servers">Servers</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('origins-read')" ng-class="{'current-page': isState('trafficPortal.private.origins')}"><a href="/#!/origins">Origins</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('profiles-read')" ng-class="{'current-page': isState('trafficPortal.private.profiles')}"><a href="/#!/profiles">Profiles</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('params-read')" ng-class="{'current-page': isState('trafficPortal.private.parameters')}"><a href="/#!/parameters">Parameters</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('types-read')" ng-class="{'current-page': isState('trafficPortal.private.types')}"><a href="/#!/types">Types</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('statuses-read')" ng-class="{'current-page': isState('trafficPortal.private.statuses')}"><a href="/#!/statuses">Statuses</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('servers-read')" ng-class="{'current-page': isState('trafficPortal.private.servers')}"><a ng-href="/#!/servers">Servers</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('origins-read')" ng-class="{'current-page': isState('trafficPortal.private.origins')}"><a ng-href="/#!/origins">Origins</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('profiles-read')" ng-class="{'current-page': isState('trafficPortal.private.profiles')}"><a ng-href="/#!/profiles">Profiles</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('params-read')" ng-class="{'current-page': isState('trafficPortal.private.parameters')}"><a ng-href="/#!/parameters">Parameters</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('types-read')" ng-class="{'current-page': isState('trafficPortal.private.types')}"><a ng-href="/#!/types">Types</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('statuses-read')" ng-class="{'current-page': isState('trafficPortal.private.statuses')}"><a ng-href="/#!/statuses">Statuses</a></li>
                     </ul>
                 </li>
-                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Topology</span></a>
+                <li class="side-menu-category"><a ng-href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Topology</span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-if="hasCapability('cache-groups-read')" ng-class="{'current-page': isState('trafficPortal.private.cacheGroups')}"><a href="/#!/cache-groups">Cache Groups</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('coordinates-read')" ng-class="{'current-page': isState('trafficPortal.private.coordinates')}"><a href="/#!/coordinates">Coordinates</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('phys-locations-read')" ng-class="{'current-page': isState('trafficPortal.private.physLocations')}"><a href="/#!/phys-locations">Phys Locations</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('divisions-read')" ng-class="{'current-page': isState('trafficPortal.private.divisions')}"><a href="/#!/divisions">Divisions</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('regions-read')" ng-class="{'current-page': isState('trafficPortal.private.regions')}"><a href="/#!/regions">Regions</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('asns-read')" ng-class="{'current-page': isState('trafficPortal.private.asns')}"><a href="/#!/asns">ASNs</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('cache-groups-read')" ng-class="{'current-page': isState('trafficPortal.private.cacheGroups')}"><a ng-href="/#!/cache-groups">Cache Groups</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('coordinates-read')" ng-class="{'current-page': isState('trafficPortal.private.coordinates')}"><a ng-href="/#!/coordinates">Coordinates</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('phys-locations-read')" ng-class="{'current-page': isState('trafficPortal.private.physLocations')}"><a ng-href="/#!/phys-locations">Phys Locations</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('divisions-read')" ng-class="{'current-page': isState('trafficPortal.private.divisions')}"><a ng-href="/#!/divisions">Divisions</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('regions-read')" ng-class="{'current-page': isState('trafficPortal.private.regions')}"><a ng-href="/#!/regions">Regions</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('asns-read')" ng-class="{'current-page': isState('trafficPortal.private.asns')}"><a ng-href="/#!/asns">ASNs</a></li>
                     </ul>
                 </li>
-                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Tools</span></a>
+                <li class="side-menu-category"><a ng-href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Tools</span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-if="hasCapability('jobs-read')" ng-class="{'current-page': isState('trafficPortal.private.jobs')}"><a href="/#!/jobs">Invalidate Content</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('iso-generate')" ng-class="{'current-page': isState('trafficPortal.private.iso')}"><a href="/#!/iso">Generate ISO</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('jobs-read')" ng-class="{'current-page': isState('trafficPortal.private.jobs')}"><a ng-href="/#!/jobs">Invalidate Content</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('iso-generate')" ng-class="{'current-page': isState('trafficPortal.private.iso')}"><a ng-href="/#!/iso">Generate ISO</a></li>
                     </ul>
                 </li>
-                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> User Admin</span></a>
+                <li class="side-menu-category"><a ng-href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> User Admin</span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-if="hasCapability('users-read')" ng-class="{'current-page': isState('trafficPortal.private.users')}"><a href="/#!/users">Users</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('tenants-read')" ng-class="{'current-page': isState('trafficPortal.private.tenants')}"><a href="/#!/tenants">Tenants</a></li>
-                        <li class="side-menu-category-item" ng-if="hasCapability('roles-read')" ng-class="{'current-page': isState('trafficPortal.private.roles')}"><a href="/#!/roles">Roles</a></li>
-                        <li class="side-menu-category-item" ng-if="enforceCapabilities && hasCapability('capabilities-read')" ng-class="{'current-page': isState('trafficPortal.private.capabilities')}"><a href="/#!/capabilities">Capabilities</a></li>
-                        <li class="side-menu-category-item" ng-if="enforceCapabilities && hasCapability('api-endpoints-read')" ng-class="{'current-page': isState('trafficPortal.private.endpoints')}"><a href="/#!/endpoints">API Endpoints</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('users-read')" ng-class="{'current-page': isState('trafficPortal.private.users')}"><a ng-href="/#!/users">Users</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('tenants-read')" ng-class="{'current-page': isState('trafficPortal.private.tenants')}"><a ng-href="/#!/tenants">Tenants</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('roles-read')" ng-class="{'current-page': isState('trafficPortal.private.roles')}"><a ng-href="/#!/roles">Roles</a></li>
+                        <li class="side-menu-category-item" ng-if="enforceCapabilities && hasCapability('capabilities-read')" ng-class="{'current-page': isState('trafficPortal.private.capabilities')}"><a ng-href="/#!/capabilities">Capabilities</a></li>
+                        <li class="side-menu-category-item" ng-if="enforceCapabilities && hasCapability('api-endpoints-read')" ng-class="{'current-page': isState('trafficPortal.private.endpoints')}"><a ng-href="/#!/endpoints">API Endpoints</a></li>
                     </ul>
                 </li>
-                <li class="side-menu-category" ng-if="customMenu.items.length > 0"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> {{::customMenu.name}}</span></a>
+                <li class="side-menu-category" ng-if="customMenu.items.length > 0"><a ng-href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> {{::customMenu.name}}</span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-repeat="item in ::customMenu.items"><a href="{{customURL(item)}}" target="{{customTarget(item)}}">{{item.name}}</a></li>
+                        <li class="side-menu-category-item" ng-repeat="item in ::customMenu.items"><a ng-href="{{customURL(item)}}" target="{{customTarget(item)}}">{{item.name}}</a></li>
                     </ul>
                 </li>
 

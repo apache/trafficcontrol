@@ -90,7 +90,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.cdn, 'required')">Required</small>
-                    <small ng-show="server.cdnId"><a href="/#!/cdns/{{server.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="server.cdnId"><a ng-href="/#!/cdns/{{server.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.cachegroup), 'has-feedback': hasError(serverForm.cachegroup)}">
@@ -100,7 +100,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.cachegroup, 'required')">Required</small>
-                    <small ng-show="server.cachegroupId"><a href="/#!/cache-groups/{{server.cachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="server.cachegroupId"><a ng-href="/#!/cache-groups/{{server.cachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.type), 'has-feedback': hasError(serverForm.type)}">
@@ -110,7 +110,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.type, 'required')">Required</small>
-                    <small ng-show="server.typeId"><a href="/#!/types/{{server.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="server.typeId"><a ng-href="/#!/types/{{server.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.profile), 'has-feedback': hasError(serverForm.profile)}">
@@ -120,7 +120,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.profile, 'required')">Required</small>
-                    <small ng-show="server.profileId"><a href="/#!/profiles/{{server.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="server.profileId"><a ng-href="/#!/profiles/{{server.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.interfaceName), 'has-feedback': hasError(serverForm.interfaceName)}">
@@ -178,7 +178,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.physLocation, 'required')">Required</small>
-                    <small ng-show="server.physLocationId"><a href="/#!/phys-locations/{{server.physLocationId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="server.physLocationId"><a ng-href="/#!/phys-locations/{{server.physLocationId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.ip6Address), 'has-feedback': hasError(serverForm.ip6Address)}">

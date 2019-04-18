@@ -44,7 +44,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(asnForm.cachegroup, 'required')">Required</small>
-                    <small ng-show="asn.cachegroupId"><a href="/#!/cache-groups/{{asn.cachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="asn.cachegroupId"><a ng-href="/#!/cache-groups/{{asn.cachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="modal-footer">

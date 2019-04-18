@@ -47,7 +47,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(physLocationForm.region, 'required')">Required</small>
-                    <small ng-show="physLocation.regionId"><a href="/#!/regions/{{physLocation.regionId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="physLocation.regionId"><a ng-href="/#!/regions/{{physLocation.regionId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group">

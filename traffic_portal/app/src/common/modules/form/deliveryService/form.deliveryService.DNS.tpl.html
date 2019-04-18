@@ -88,7 +88,7 @@ under the License.
                         DNS is the standard routing type for most CDN services. HTTP Redirect is a specialty routing service that is primarily used for video and large file downloads where localization and latency are significant concerns. A "Live" routing type should be used for all live services.
                         <br>
                         <br>
-                        <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#ds-types" target="_blank">See Delivery Service Types.</a>
+                        <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#ds-types" target="_blank">See Delivery Service Types.</a>
                     </div>
                 </div>
                 </label>
@@ -98,7 +98,7 @@ under the License.
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
                     <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.typeId != dsCurrent.typeId">Current Value: [ {{dsCurrent.type}} ]</small>
-                    <small ng-show="deliveryService.typeId"><a href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="deliveryService.typeId"><a ng-href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
@@ -142,7 +142,7 @@ under the License.
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.tenantId, 'required')">Required</small>
                     <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.tenantId != dsCurrent.tenantId">Current Value: [ {{dsCurrent.tenant}} ]</small>
-                    <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="deliveryService.tenantId"><a ng-href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
@@ -157,7 +157,7 @@ under the License.
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdnId, 'required')">Required</small>
                     <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.cdnId != dsCurrent.cdnId">Current Value: [ {{dsCurrent.cdnName}} ]</small>
-                    <small ng-show="deliveryService.cdnId"><a href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="deliveryService.cdnId"><a ng-href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
@@ -171,7 +171,7 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.orgServerFqdn, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.orgServerFqdn, 'pattern')">Must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)</small>
                     <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.orgServerFqdn != dsCurrent.orgServerFqdn">Current Value: [ {{dsCurrent.orgServerFqdn}} ]</small>
-                    <small ng-show="!settings.isNew && !settings.isRequest && deliveryService.orgServerFqdn"><a href="/#!/origins/{{origin.id}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="!settings.isNew && !settings.isRequest && deliveryService.orgServerFqdn"><a ng-href="/#!/origins/{{origin.id}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                     <span ng-show="hasError(deliveryServiceForm.orgServerFqdn)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
@@ -302,7 +302,7 @@ under the License.
                             <br>
                             <ul>
                                 <li>Do not cache (ranges requested from files that are already cached due to a non range request can still be served)</li>
-                                <li>Use the <a href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/background_fetch.en.html" target="_blank"><code>background_fetch</code> plugin.</a></li>
+                                <li>Use the <a ng-href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/background_fetch.en.html" target="_blank"><code>background_fetch</code> plugin.</a></li>
                                 <li>Use the <code>cache_range_requests</code> plugin.</li>
                             </ul>
                         </div>
@@ -332,9 +332,9 @@ under the License.
                             </ul>
                             <aside>
                                 <h6>Note:</h6>
-                                <p>Choosing to drop query parameter strings at the edge will preclude the use of a Regex Remap Expression. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a>
+                                <p>Choosing to drop query parameter strings at the edge will preclude the use of a Regex Remap Expression. <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a>
                                 <br>
-                                To set the qstring without the use of regex remap, or for further options, <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#qstring-handling" target="_blank">See Qstring Handling</a></p>
+                                To set the qstring without the use of regex remap, or for further options, <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#qstring-handling" target="_blank">See Qstring Handling</a></p>
                             </aside>
                         </div>
                     </div>
@@ -356,7 +356,7 @@ under the License.
                             Enables/disables the Multi-Site Origin feature for this Delivery Service.
                             <br>
                             <br>
-                            <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#multi-site-origin" target="_blank">See Multi-Site Origin.</a>
+                            <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#multi-site-origin" target="_blank">See Multi-Site Origin.</a>
                         </div>
                     </div>
                     </label>
@@ -470,7 +470,7 @@ under the License.
                             Traffic Router will redirect to this URL when Geo Limit check fails.
                             <br>
                             <br>
-                            See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-ngb" target="_blank">GeoLimit Failure Redirect</a> feature...
+                            See <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-ngb" target="_blank">GeoLimit Failure Redirect</a> feature...
                         </div>
                     </div>
                     </label>
@@ -493,7 +493,7 @@ under the License.
                             </dl>
                             <br>
                             <br>
-                            <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#signed-urls" target="_blank">See Token Based Authentication</a>
+                            <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#signed-urls" target="_blank">See Token Based Authentication</a>
                         </div>
                     </div>
                     </label>
@@ -600,7 +600,7 @@ under the License.
                             <option selected value="">None</option>
                         </select>
                         <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.profileId != dsCurrent.profileId">Current Value: [ {{dsCurrent.profileName}} ]</small>
-                        <small ng-show="deliveryService.profileId"><a href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                        <small ng-show="deliveryService.profileId"><a ng-href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                     </div>
                 </div>
 
@@ -653,7 +653,7 @@ under the License.
                                 <li>Direction: Edge Response to Client</li>
                             </ul>
                             <br>
-                            <br>See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                            <br>See <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
                         </div>
                     </div>
                     </label>
@@ -677,7 +677,7 @@ under the License.
                             </ul>
                             <br>
                             <br>
-                            See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
+                            See <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#header-rewrite" target="_blank">Header Rewrite Options and DSCP.</a>
                         </div>
                     </div>
                     </label>
@@ -729,7 +729,7 @@ under the License.
                             <br>
                             <aside>
                                 <h6>Note</h6>
-                                <p>You will not be able to save a Regex Remap Expression if you have Query String Handling set to drop query strings at the edge. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a></p>
+                                <p>You will not be able to save a Regex Remap Expression if you have Query String Handling set to drop query strings at the edge. <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#regex-remap-expression" target="_blank">See Regex Remap Expression</a></p>
                             </aside>
                         </div>
                     </div>
@@ -749,10 +749,10 @@ under the License.
                             <br>
                             <aside>
                                 <h6>Note</h6>
-                                <p>This only works with Edge-tier cache servers running <abbr title="Apache Traffic Server">ATS</abbr> version 6 and earlier. This <em>must</em> be empty if using <abbr title="Apache Traffic Server">ATS</abbr> 7 and / or the <a href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/cachekey.en.html" target="_blank">cachekey plugin.</a></p>
+                                <p>This only works with Edge-tier cache servers running <abbr title="Apache Traffic Server">ATS</abbr> version 6 and earlier. This <em>must</em> be empty if using <abbr title="Apache Traffic Server">ATS</abbr> 7 and / or the <a ng-href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/cachekey.en.html" target="_blank">cachekey plugin.</a></p>
                                 <br>
                                 <br>
-                                See <a href="https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/plugins/cacheurl.en.html" target="_blank">ATS documentation on cacheurl</a>
+                                See <a ng-href="https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/plugins/cacheurl.en.html" target="_blank">ATS documentation on cacheurl</a>
                             </aside>
                             <aside class="warning">
                                 <h6>Warning</h6>

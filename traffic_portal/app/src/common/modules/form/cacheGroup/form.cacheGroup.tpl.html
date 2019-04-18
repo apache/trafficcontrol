@@ -79,7 +79,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.type, 'required')">Required</small>
-                    <small ng-show="cacheGroup.typeId"><a href="/#!/types/{{cacheGroup.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="cacheGroup.typeId"><a ng-href="/#!/types/{{cacheGroup.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.latitude), 'has-feedback': hasError(cacheGroupForm.latitude)}">
@@ -108,7 +108,7 @@ under the License.
                     <select name="parentCacheGroup" class="form-control" ng-model="cacheGroup.parentCachegroupId" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups">
                         <option value="">Select...</option>
                     </select>
-                    <small ng-show="cacheGroup.parentCachegroupId"><a href="/#!/cache-groups/{{cacheGroup.parentCachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="cacheGroup.parentCachegroupId"><a ng-href="/#!/cache-groups/{{cacheGroup.parentCachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group">
@@ -117,7 +117,7 @@ under the License.
                     <select name="secondaryParentCacheGroup" class="form-control" ng-model="cacheGroup.secondaryParentCachegroupId" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups">
                         <option value="">Select...</option>
                     </select>
-                    <small ng-show="cacheGroup.secondaryParentCachegroupId"><a href="/#!/cache-groups/{{cacheGroup.secondaryParentCachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="cacheGroup.secondaryParentCachegroupId"><a ng-href="/#!/cache-groups/{{cacheGroup.secondaryParentCachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group">

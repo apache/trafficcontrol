@@ -62,7 +62,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(profileForm.cdn, 'required')">Required</small>
-                    <small ng-show="profile.cdn"><a href="/#!/cdns/{{profile.cdn}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="profile.cdn"><a ng-href="/#!/cdns/{{profile.cdn}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(profileForm.type), 'has-feedback': hasError(profileForm.type)}">

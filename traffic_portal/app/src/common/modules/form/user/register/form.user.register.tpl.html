@@ -55,7 +55,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(registerForm.tenantId, 'required')">Required</small>
-                    <small ng-show="registration.tenantId"><a href="/#!/tenants/{{registration.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="registration.tenantId"><a ng-href="/#!/tenants/{{registration.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="modal-footer">

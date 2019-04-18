@@ -84,7 +84,7 @@ under the License.
                         DNS is the standard routing type for most CDN services. HTTP Redirect is a specialty routing service that is primarily used for video and large file downloads where localization and latency are significant concerns. A "Live" routing type should be used for all live services.
                         <br>
                         <br>
-                        <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#ds-types" target="_blank">See Delivery Service Types.</a>
+                        <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#ds-types" target="_blank">See Delivery Service Types.</a>
                     </div>
                 </div>
                 </label>
@@ -94,7 +94,7 @@ under the License.
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
                     <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.typeId != dsCurrent.typeId">Current Value: [ {{dsCurrent.type}} ]</small>
-                    <small ng-show="deliveryService.typeId"><a href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="deliveryService.typeId"><a ng-href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
@@ -138,7 +138,7 @@ under the License.
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.tenantId, 'required')">Required</small>
                     <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.tenantId != dsCurrent.tenantId">Current Value: [ {{dsCurrent.tenant}} ]</small>
-                    <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="deliveryService.tenantId"><a ng-href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
@@ -153,7 +153,7 @@ under the License.
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
                     <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.cdnId != dsCurrent.cdnId">Current Value: [ {{dsCurrent.cdnName}} ]</small>
-                    <small ng-show="deliveryService.cdnId"><a href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="deliveryService.cdnId"><a ng-href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
@@ -206,7 +206,7 @@ under the License.
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.regionalGeoBlocking), 'has-feedback': hasError(deliveryServiceForm.regionalGeoBlocking)}">
                     <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="regionalGeoBlocking">Regional Geoblocking *<div class="helptooltip">
                         <div class="helptext">
-                            Define regional geo-blocking rules for Delivery Services in a JSON format and set this to 'Enabled' to use "Regional Geoblocking". <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/regionalgeo.html" target="_blank">See Regional Geo-blocking</a>
+                            Define regional geo-blocking rules for Delivery Services in a JSON format and set this to 'Enabled' to use "Regional Geoblocking". <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/regionalgeo.html" target="_blank">See Regional Geo-blocking</a>
                         </div>
                     </div>
                     </label>
@@ -294,7 +294,7 @@ under the License.
                             Traffic Router will redirect to this URL when Geo Limit check fails.
                             <br>
                             <br>
-                            See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-ngb" target="_blank">GeoLimit Failure Redirect</a> feature...
+                            See <a ng-href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-ngb" target="_blank">GeoLimit Failure Redirect</a> feature...
                         </div>
                     </div>
                     </label>
@@ -315,7 +315,7 @@ under the License.
                             <option selected value="">None</option>
                         </select>
                         <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.profileId != dsCurrent.profileId">Current Value: [ {{dsCurrent.profileName}} ]</small>
-                        <small ng-show="deliveryService.profileId"><a href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                        <small ng-show="deliveryService.profileId"><a ng-href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                     </div>
                 </div>
 
@@ -341,10 +341,10 @@ under the License.
                             <br>
                             <aside>
                                 <h6>Note</h6>
-                                <p>This only works with Edge-tier cache servers running <abbr title="Apache Traffic Server">ATS</abbr> version 6 and earlier. This <em>must</em> be empty if using <abbr title="Apache Traffic Server">ATS</abbr> 7 and / or the <a href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/cachekey.en.html" target="_blank">cachekey plugin.</a></p>
+                                <p>This only works with Edge-tier cache servers running <abbr title="Apache Traffic Server">ATS</abbr> version 6 and earlier. This <em>must</em> be empty if using <abbr title="Apache Traffic Server">ATS</abbr> 7 and / or the <a ng-href="https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/cachekey.en.html" target="_blank">cachekey plugin.</a></p>
                                 <br>
                                 <br>
-                                See <a href="https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/plugins/cacheurl.en.html" target="_blank">ATS documentation on cacheurl</a>
+                                See <a ng-href="https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/plugins/cacheurl.en.html" target="_blank">ATS documentation on cacheurl</a>
                             </aside>
                             <aside class="warning">
                                 <h6>Warning</h6>

@@ -51,7 +51,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(originForm.tenantId, 'required')">Required</small>
-                    <small ng-show="origin.tenantId"><a href="/#!/tenants/{{origin.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="origin.tenantId"><a ng-href="/#!/tenants/{{origin.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(originForm.fqdn), 'has-feedback': hasError(originForm.fqdn)}">
@@ -117,7 +117,7 @@ under the License.
                     <select name="coordinateId" class="form-control" ng-model="origin.coordinateId" ng-options="coordinate.id as coordinate.name for coordinate in coordinates">
                         <option value="">Select...</option>
                     </select>
-                    <small ng-show="origin.coordinateId"><a href="/#!/coordinates/{{origin.coordinateId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="origin.coordinateId"><a ng-href="/#!/coordinates/{{origin.coordinateId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(originForm.cachegroup), 'has-feedback': hasError(originForm.cachegroup)}">
@@ -126,7 +126,7 @@ under the License.
                     <select name="cachegroup" class="form-control" ng-model="origin.cachegroupId" ng-options="cachegroup.id as cachegroup.name for cachegroup in cacheGroups">
                         <option value="">Select...</option>
                     </select>
-                    <small ng-show="origin.cachegroupId"><a href="/#!/cache-groups/{{origin.cachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="origin.cachegroupId"><a ng-href="/#!/cache-groups/{{origin.cachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(originForm.profile), 'has-feedback': hasError(originForm.profile)}">
@@ -135,7 +135,7 @@ under the License.
                     <select name="profile" class="form-control" ng-model="origin.profileId" ng-options="profile.id as profile.name for profile in profiles">
                         <option value="">Select...</option>
                     </select>
-                    <small ng-show="origin.profileId"><a href="/#!/profiles/{{origin.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="origin.profileId"><a ng-href="/#!/profiles/{{origin.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="modal-footer">
