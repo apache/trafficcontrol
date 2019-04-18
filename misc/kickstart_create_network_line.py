@@ -156,7 +156,7 @@ def useable_interfaces(net_devs, nc, iface_speed):
                 else:
                     iface_list = [nc['BOND_DEVICE']]
                     notes = "{0} did not have carrier at install time, and may not work".format(nc['BOND_DEVICE'])
-    elif iface_speed is not 'auto':
+    elif iface_speed != 'auto':
         if len(net_devs[iface_speed]) > 0:
             iface_list = net_devs[iface_speed]
         else:
