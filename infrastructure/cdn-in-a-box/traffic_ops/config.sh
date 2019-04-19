@@ -80,7 +80,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "workers" : 12
     },
     "traffic_ops_golang" : {
-	    "insecure": true,
+        "insecure": true,
         "port" : "$TO_PORT",
         "proxy_timeout" : 60,
         "proxy_keep_alive" : 60,
