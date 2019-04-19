@@ -71,9 +71,8 @@ sub new {
     #                                                                config_file => 'global', name => 'use_tenancy' } )
     #    ->get_column('value')->single();
 
-    my $use_tenancy_value = $dbh->resultset("Parameter")->search( { config_file => 'global', name => 'use_tenancy' } )
-        ->get_column('value')->single();
-    my $use_tenancy = defined($use_tenancy_value) ? $use_tenancy_value != '0' : 0;
+    # tenancy is always enabled
+    my $use_tenancy = 1;
 
     my $self = {
         dbh     => $dbh,
@@ -254,14 +253,8 @@ sub is_ds_resource_accessible_to_tenant {
 }
 
 sub use_tenancy {
-    # With tenancy, the DS/User mapping is no longer required for isolation.
-    # So we need a knob to turn of this mechanisem if/as-long it is not depraceted.
-    my $self = shift;
-    if ($self->{use_tenancy}) {
-        #mechanisem disabled
-        return 1;
-    }
-    return 0;
+    # tenancy is always enabled
+    return 1;
 }
 
 sub get_tenant_heirarchy_depth {

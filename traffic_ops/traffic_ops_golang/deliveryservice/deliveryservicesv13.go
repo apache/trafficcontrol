@@ -560,21 +560,12 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 		return nil, errs, tc.DataConflictError
 	}
 
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(tx.Tx)
+	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 	if err != nil {
-		log.Errorln("checking if tenancy is enabled: " + err.Error())
+		log.Errorln("received error querying for user's tenants: " + err.Error())
 		return nil, []error{tc.DBError}, tc.SystemError
 	}
-
-	if tenancyEnabled {
-		log.Debugln("Tenancy is enabled")
-		tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
-		if err != nil {
-			log.Errorln("received error querying for user's tenants: " + err.Error())
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
-	}
+	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
 	query := selectQuery() + where + orderBy
 
 	log.Debugln("generated deliveryServices query: " + query)
