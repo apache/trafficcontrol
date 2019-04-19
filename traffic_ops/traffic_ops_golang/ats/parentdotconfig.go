@@ -761,7 +761,7 @@ const ParentConfigDSParamsQuery = ParentConfigDSParamsQuerySelect + ParentConfig
 var ParentConfigDSParamsQueryTopLevel = ParentConfigDSParamsQuerySelect + ParentConfigDSParamsQueryFrom + ParentConfigDSParamsQueryWhereTopLevel
 
 func getParentConfigDSParams(tx *sql.Tx, dses []ParentConfigDS) ([]ParentConfigDS, error) {
-	params, err := getParentConfigDSParamsRaw(tx, ParentConfigDSParamsQuery, parentConfigDSesToNames(dses)) // (map[tc.DeliveryServiceName]map[string]string, error) {
+	params, err := getParentConfigDSParamsRaw(tx, ParentConfigDSParamsQuery, parentConfigDSesToNames(dses))
 	if err != nil {
 		return nil, err
 	}
