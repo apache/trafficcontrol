@@ -768,7 +768,7 @@ func getParentConfigDSParams(tx *sql.Tx, dses []ParentConfigDS) ([]ParentConfigD
 	for i, ds := range dses {
 		dsParams, ok := params[ds.Name]
 		if !ok {
-			continue // TODO warn?
+			continue
 		}
 		if v, ok := dsParams[ParentConfigParamQStringHandling]; ok {
 			ds.QStringHandling = v
