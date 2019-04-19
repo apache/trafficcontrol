@@ -872,20 +872,20 @@ func getParentInfo(tx *sql.Tx, server *ServerInfo) (map[string][]ParentInfo, err
 		return parentInfos, nil // TODO warn? Perl doesn't.
 	}
 
-	profileCaches, deliveryServices, err := getServerParentCacheGroupProfiles(tx, server)
+	profileCaches, originServers, err := getServerParentCacheGroupProfiles(tx, server)
 	if err != nil {
 		return nil, errors.New("getting server parent cachegroup profiles: " + err.Error())
 	}
 
-	// note deliveryServices also contains an "all" key
+	// note servers also contains an "all" key
 	// originFQDN is "prefix" in Perl; ds is not really a "ds", that's what it's named in Perl
-	for originFQDN, dses := range deliveryServices {
-		for _, row := range dses {
+	for originFQDN, servers := range originServers {
+		for _, row := range servers {
 			profile := profileCaches[row.ProfileID]
 			if profile.NotAParent {
 				continue
 			}
-			// Perl has this check, but we only select "deliveryServices" (servers) with the right CDN in the first place
+			// Perl has this check, but we only select servers ("deliveryServices" in Perl) with the right CDN in the first place
 			// if profile.Domain != serverDomain {
 			// 	continue
 			// }
@@ -928,8 +928,8 @@ func DefaultProfileCache() ProfileCache {
 	}
 }
 
-// TODO rename
-type CGPDeliveryService struct {
+// CGServer is the server table data needed when selecting the servers assigned to a cachegroup.
+type CGServer struct {
 	ServerID     ServerID
 	ServerHost   string
 	ServerIP     string
@@ -944,11 +944,11 @@ type CGPDeliveryService struct {
 }
 
 // getServerParentCacheGroupProfiles gets the profile information for servers belonging to the parent cachegroup, and secondary parent cachegroup, of the cachegroup of each server.
-func getServerParentCacheGroupProfiles(tx *sql.Tx, server *ServerInfo) (map[ProfileID]ProfileCache, map[string][]CGPDeliveryService, error) {
+func getServerParentCacheGroupProfiles(tx *sql.Tx, server *ServerInfo) (map[ProfileID]ProfileCache, map[string][]CGServer, error) {
 	// TODO make this more efficient - should be a single query - this was transliterated from Perl - it's extremely inefficient.
 
 	profileCaches := map[ProfileID]ProfileCache{}
-	deliveryServices := map[string][]CGPDeliveryService{}
+	originServers := map[string][]CGServer{} // "deliveryServices" in Perl
 
 	qry := ""
 	if server.IsTopLevelCache() {
@@ -1017,9 +1017,9 @@ WHERE
 	defer rows.Close()
 
 	cgServerIDs := []int{}
-	ss := []CGPDeliveryService{}
+	ss := []CGServer{}
 	for rows.Next() {
-		s := CGPDeliveryService{}
+		s := CGServer{}
 		if err := rows.Scan(&s.ServerID, &s.ServerHost, &s.ServerIP, &s.ServerPort, &s.CacheGroupID, &s.Status, &s.Type, &s.ProfileID, &s.CDN, &s.TypeName, &s.Domain); err != nil {
 			return nil, nil, errors.New("scanning: " + err.Error())
 		}
@@ -1058,10 +1058,10 @@ WHERE
 			dses := cgServerDSes[s.ServerID]
 			for _, ds := range dses {
 				orgURI := dsOrigins[ds]
-				deliveryServices[orgURI.Host] = append(deliveryServices[orgURI.Host], s)
+				originServers[orgURI.Host] = append(originServers[orgURI.Host], s)
 			}
 		} else {
-			deliveryServices[DeliveryServicesAllParentsKey] = append(deliveryServices[DeliveryServicesAllParentsKey], s)
+			originServers[DeliveryServicesAllParentsKey] = append(originServers[DeliveryServicesAllParentsKey], s)
 		}
 
 		if _, profileCachesHasProfile := profileCaches[s.ProfileID]; !profileCachesHasProfile {
@@ -1074,7 +1074,7 @@ WHERE
 			}
 		}
 	}
-	return profileCaches, deliveryServices, nil
+	return profileCaches, originServers, nil
 }
 
 // TODO change, this is terrible practice, using a hard-coded key. What if there were a delivery service named "all_parents" (transliterated Perl)
