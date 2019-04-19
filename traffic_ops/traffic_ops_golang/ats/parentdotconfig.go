@@ -222,7 +222,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 		text = hdr + strings.Join(textArr, "")
 	} else {
 		// not a top level cache
-		data, err := getParentConfigDS(inf.Tx.Tx, serverInfo.ID) // TODO rename
+		parentConfigDSes, err := getParentConfigDS(inf.Tx.Tx, serverInfo.ID) // "data" in Perl
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting parent config DS data (non-top-level): "+err.Error()))
 			return
@@ -281,8 +281,8 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 		roundRobin := `round_robin=consistent_hash`
 		goDirect := `go_direct=false`
 
-		sort.Sort(ParentConfigDSSortByName(data))
-		for _, ds := range data {
+		sort.Sort(ParentConfigDSSortByName(parentConfigDSes))
+		for _, ds := range parentConfigDSes {
 			text := ""
 			originFQDN := ds.OriginFQDN
 			if originFQDN == "" {
