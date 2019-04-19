@@ -862,7 +862,6 @@ type ParentInfo struct {
 	SecondaryParent bool
 }
 
-// parentData parent_data in Perl
 func getParentInfo(tx *sql.Tx, server *ServerInfo) (map[string][]ParentInfo, error) {
 	parentInfos := map[string][]ParentInfo{}
 
@@ -878,7 +877,7 @@ func getParentInfo(tx *sql.Tx, server *ServerInfo) (map[string][]ParentInfo, err
 		return nil, errors.New("getting server parent cachegroup profiles: " + err.Error())
 	}
 
-	// note deliveryServies also contains an "all" key
+	// note deliveryServices also contains an "all" key
 	// originFQDN is "prefix" in Perl; ds is not really a "ds", that's what it's named in Perl
 	for originFQDN, dses := range deliveryServices {
 		for _, row := range dses {
@@ -910,8 +909,6 @@ func getParentInfo(tx *sql.Tx, server *ServerInfo) (map[string][]ParentInfo, err
 	}
 	return parentInfos, nil
 }
-
-// deliveryservices map[orgURI.Host]
 
 type ProfileCache struct {
 	Weight     string
