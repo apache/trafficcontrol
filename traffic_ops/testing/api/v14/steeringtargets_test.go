@@ -28,16 +28,17 @@ var SteeringUserSession *client.Session
 
 func TestSteeringTargets(t *testing.T) {
 
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, Users}, func() {
-		SetupSteering(t)
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, Users, SteeringTargets}, func() {
 		GetTestSteeringTargets(t)
 		UpdateTestSteeringTargets(t)
-		DeleteTestSteeringTargets(t)
 	})
+
 }
 
-func SetupSteering(t *testing.T) {
-
+// SetupSteeringTargets calls the CreateSteeringTargets test. It also sets the steering user session
+// with the logged in steering user. SteeringUserSession is used by steering target test functions.
+// Running this function depends on CreateTestUsers.
+func SetupSteeringTargets(t *testing.T) {
 	var err error
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
 	SteeringUserSession, _, err = client.LoginWithAgent(TOSession.URL, "steering", "pa$$word", true, "to-api-v14-client-tests/steering", true, toReqTimeout)
