@@ -17,16 +17,35 @@ package v14
 
 import (
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
+var SteeringUserSession *client.Session
+
 func TestSteeringTargets(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, SteeringTargets}, func() {
+
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, Users}, func() {
+		SetupSteering(t)
 		GetTestSteeringTargets(t)
 		UpdateTestSteeringTargets(t)
+		DeleteTestSteeringTargets(t)
 	})
+}
+
+func SetupSteering(t *testing.T) {
+
+	var err error
+	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	SteeringUserSession, _, err = client.LoginWithAgent(TOSession.URL, "steering", "pa$$word", true, "to-api-v14-client-tests/steering", true, toReqTimeout)
+	if err != nil {
+		t.Fatalf("failed to get log in with steering user: %v", err.Error())
+	}
+
+	CreateTestSteeringTargets(t)
 }
 
 func CreateTestSteeringTargets(t *testing.T) {
@@ -42,7 +61,7 @@ func CreateTestSteeringTargets(t *testing.T) {
 		}
 
 		{
-			respTypes, _, err := TOSession.GetTypeByName(*st.Type)
+			respTypes, _, err := SteeringUserSession.GetTypeByName(*st.Type)
 			if err != nil {
 				t.Errorf("creating steering target: getting type: %v\n", err)
 			} else if len(respTypes) < 1 {
@@ -51,7 +70,7 @@ func CreateTestSteeringTargets(t *testing.T) {
 			st.TypeID = util.IntPtr(respTypes[0].ID)
 		}
 		{
-			respDS, _, err := TOSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
+			respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
 			if err != nil {
 				t.Errorf("creating steering target: getting ds: %v\n", err)
 			} else if len(respDS) < 1 {
@@ -61,7 +80,7 @@ func CreateTestSteeringTargets(t *testing.T) {
 			st.DeliveryServiceID = &dsID
 		}
 		{
-			respTarget, _, err := TOSession.GetDeliveryServiceByXMLID(string(*st.Target))
+			respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.Target))
 			if err != nil {
 				t.Errorf("creating steering target: getting target ds: %v\n", err)
 			} else if len(respTarget) < 1 {
@@ -71,7 +90,7 @@ func CreateTestSteeringTargets(t *testing.T) {
 			st.TargetID = &targetID
 		}
 
-		resp, _, err := TOSession.CreateSteeringTarget(st)
+		resp, _, err := SteeringUserSession.CreateSteeringTarget(st)
 		log.Debugln("Response: ", resp)
 		if err != nil {
 			t.Errorf("creating steering target: %v\n", err)
@@ -91,7 +110,7 @@ func UpdateTestSteeringTargets(t *testing.T) {
 		t.Errorf("updating steering target: test data missing target\n")
 	}
 
-	respDS, _, err := TOSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
+	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
 	if err != nil {
 		t.Errorf("updating steering target: getting ds: %v\n", err)
 	}
@@ -100,7 +119,7 @@ func UpdateTestSteeringTargets(t *testing.T) {
 	}
 	dsID := respDS[0].ID
 
-	sts, _, err := TOSession.GetSteeringTargets(dsID)
+	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
 		t.Errorf("updating steering targets: getting steering target: %v\n", err)
 	}
@@ -115,12 +134,12 @@ func UpdateTestSteeringTargets(t *testing.T) {
 	}
 	st.Value = &expected
 
-	_, _, err = TOSession.UpdateSteeringTarget(st)
+	_, _, err = SteeringUserSession.UpdateSteeringTarget(st)
 	if err != nil {
 		t.Errorf("updating steering targets: updating: %+v\n", err)
 	}
 
-	sts, _, err = TOSession.GetSteeringTargets(dsID)
+	sts, _, err = SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
 		t.Errorf("updating steering targets: getting updated steering target: %v\n", err)
 	}
@@ -175,7 +194,7 @@ func GetTestSteeringTargets(t *testing.T) {
 		t.Errorf("updating steering target: test data missing ds\n")
 	}
 
-	respDS, _, err := TOSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
+	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
 	if err != nil {
 		t.Errorf("creating steering target: getting ds: %v\n", err)
 	} else if len(respDS) < 1 {
@@ -183,7 +202,7 @@ func GetTestSteeringTargets(t *testing.T) {
 	}
 	dsID := respDS[0].ID
 
-	sts, _, err := TOSession.GetSteeringTargets(dsID)
+	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
 		t.Errorf("steering target get: getting steering target: %v\n", err)
 	}
@@ -232,7 +251,7 @@ func DeleteTestSteeringTargets(t *testing.T) {
 			t.Errorf("deleting steering target: test data missing target\n")
 		}
 
-		respDS, _, err := TOSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
+		respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
 		if err != nil {
 			t.Errorf("deleting steering target: getting ds: %v\n", err)
 		} else if len(respDS) < 1 {
@@ -243,7 +262,7 @@ func DeleteTestSteeringTargets(t *testing.T) {
 
 		dsIDs = append(dsIDs, dsID)
 
-		respTarget, _, err := TOSession.GetDeliveryServiceByXMLID(string(*st.Target))
+		respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.Target))
 		if err != nil {
 			t.Errorf("deleting steering target: getting target ds: %v\n", err)
 		} else if len(respTarget) < 1 {
@@ -252,14 +271,14 @@ func DeleteTestSteeringTargets(t *testing.T) {
 		targetID := uint64(respTarget[0].ID)
 		st.TargetID = &targetID
 
-		_, _, err = TOSession.DeleteSteeringTarget(int(*st.DeliveryServiceID), int(*st.TargetID))
+		_, _, err = SteeringUserSession.DeleteSteeringTarget(int(*st.DeliveryServiceID), int(*st.TargetID))
 		if err != nil {
 			t.Errorf("deleting steering target: deleting: %+v\n", err)
 		}
 	}
 
 	for _, dsID := range dsIDs {
-		sts, _, err := TOSession.GetSteeringTargets(int(dsID))
+		sts, _, err := SteeringUserSession.GetSteeringTargets(int(dsID))
 		if err != nil {
 			t.Errorf("deleting steering targets: getting steering target: %v\n", err)
 		}
