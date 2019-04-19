@@ -36,7 +36,6 @@ import (
 	"github.com/lib/pq"
 )
 
-const TypeCacheGroupOrigin = "ORG_LOC"
 const DefaultATSVersion = "5" // emulates Perl
 
 const InvalidID = -1
@@ -431,8 +430,8 @@ type ServerInfo struct {
 }
 
 func (s *ServerInfo) IsTopLevelCache() bool {
-	return (s.ParentCacheGroupType == TypeCacheGroupOrigin || s.ParentCacheGroupID == InvalidID) &&
-		(s.SecondaryParentCacheGroupType == TypeCacheGroupOrigin || s.SecondaryParentCacheGroupID == InvalidID)
+	return (s.ParentCacheGroupType == tc.CacheGroupOriginTypeName || s.ParentCacheGroupID == InvalidID) &&
+		(s.SecondaryParentCacheGroupType == tc.CacheGroupOriginTypeName || s.SecondaryParentCacheGroupID == InvalidID)
 }
 
 // getServerInfo returns the necessary info about the server, whether the server exists, and any error.
@@ -958,7 +957,7 @@ WITH parent_cachegroup_ids AS (
   SELECT cg.id as v
   FROM cachegroup cg
   JOIN type on type.id = cg.type
-  WHERE type.name = '` + TypeCacheGroupOrigin + `'
+  WHERE type.name = '` + tc.CacheGroupOriginTypeName + `'
 )
 `
 	} else {
@@ -997,8 +996,8 @@ FROM
   JOIN status st ON st.id = s.status
 WHERE
   cg.id IN (SELECT v FROM parent_cachegroup_ids)
-  AND (stype.name = 'ORG' OR stype.name LIKE 'EDGE%' OR stype.name LIKE 'MID%')
-  AND (st.name = 'REPORTED' OR st.name = 'ONLINE')
+  AND (stype.name = '` + tc.OriginTypeName + `' OR stype.name LIKE '` + tc.EdgeTypePrefix + `%' OR stype.name LIKE '` + tc.MidTypePrefix + `%')
+  AND (st.name = '` + string(tc.CacheStatusReported) + `' OR st.name = '` + string(tc.CacheStatusOnline) + `')
   AND cdn.name = $1
 `
 
@@ -1054,7 +1053,7 @@ WHERE
 	}
 
 	for _, s := range ss {
-		if s.TypeName == TypeOrigin {
+		if s.TypeName == tc.OriginTypeName {
 			dses := cgServerDSes[s.ServerID]
 			for _, ds := range dses {
 				orgURI := dsOrigins[ds]
@@ -1079,8 +1078,6 @@ WHERE
 
 // TODO change, this is terrible practice, using a hard-coded key. What if there were a delivery service named "all_parents" (transliterated Perl)
 const DeliveryServicesAllParentsKey = "all_parents"
-
-const TypeOrigin = "ORG" // TODO move to lib/go-tc
 
 type ServerID int
 

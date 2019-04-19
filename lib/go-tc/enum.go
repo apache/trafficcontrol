@@ -70,6 +70,10 @@ const RouterTypeName = "CCR"
 const EdgeTypePrefix = "EDGE"
 const MidTypePrefix = "MID"
 
+const OriginTypeName = "ORG"
+
+const CacheGroupOriginTypeName = "ORG_LOC"
+
 func (c CacheName) String() string {
 	return string(c)
 }
