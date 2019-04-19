@@ -241,7 +241,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		qsh := serverParams[ParentConfigParamQStringHandling] // TODO rename
+		queryStringHandling := serverParams[ParentConfigParamQStringHandling] // "qsh" in Perl
 		parentInfo := []string{}
 		secondaryParentInfo := []string{}
 
@@ -268,12 +268,12 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 		secondaryParentInfo, seen = removeStrDuplicates(secondaryParentInfo, seen)
 
 		parents := ""
-		secParents := "" // TODO rename
+		secondaryParents := "" // "secparents" in Perl
 		sort.Sort(sort.StringSlice(parentInfo))
 		sort.Sort(sort.StringSlice(secondaryParentInfo))
 		if atsMajorVer >= 6 && len(secondaryParentInfo) > 0 {
 			parents = `parent="` + strings.Join(parentInfo, "") + `"`
-			secParents = ` secondary_parent="` + strings.Join(secondaryParentInfo, "") + `"`
+			secondaryParents = ` secondary_parent="` + strings.Join(secondaryParentInfo, "") + `"`
 		} else {
 			parents = `parent="` + strings.Join(parentInfo, "") + strings.Join(secondaryParentInfo, "") + `"`
 		}
@@ -324,7 +324,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 				// This is used only if not overridden by a server profile qstring handling parameter.
 
 				// TODO refactor this logic, hard to understand (transliterated from Perl)
-				dsQSH := qsh
+				dsQSH := queryStringHandling
 				if dsQSH == "" {
 					dsQSH = ds.QStringHandling
 				}
@@ -336,7 +336,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 					parentQStr = "consider"
 				}
 
-				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
+				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
 			}
 			textArr = append(textArr, text)
 			done[originFQDN] = ds.Name
@@ -344,7 +344,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 
 		defaultDestText := `dest_domain=. ` + parents
 		if serverParams[ParentConfigParamAlgorithm] == AlgorithmConsistentHash {
-			defaultDestText += secParents
+			defaultDestText += secondaryParents
 		}
 		defaultDestText += ` round_robin=consistent_hash go_direct=false`
 
@@ -1031,7 +1031,7 @@ WHERE
 		return nil, nil, errors.New("getting cachegroup server deliveryservices: " + err.Error())
 	}
 
-	profileParams, err := getParentConfigServerProfileParamsX(tx, cgServerIDs) // TODO change to take cg IDs directly?
+	profileParams, err := getParentConfigServerCacheProfileParams(tx, cgServerIDs) // TODO change to take cg IDs directly?
 	if err != nil {
 		return nil, nil, errors.New("getting cachegroup server profile params: " + err.Error())
 	}
@@ -1172,8 +1172,7 @@ const ParentConfigCacheParamNotAParent = "not_a_parent"
 
 type ProfileID int
 
-// TODO rename
-func getParentConfigServerProfileParamsX(tx *sql.Tx, serverIDs []int) (map[ProfileID]ProfileCache, error) {
+func getParentConfigServerCacheProfileParams(tx *sql.Tx, serverIDs []int) (map[ProfileID]ProfileCache, error) {
 	qry := `
 SELECT
   pr.id,
