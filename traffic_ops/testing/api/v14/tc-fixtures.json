@@ -2033,6 +2033,28 @@
             "tenant": "root",
             "uid": 0,
             "username": "opsuser"
+        },
+        {
+            "addressLine1": "address of steering",
+            "addressLine2": "place",
+            "city": "somewhere",
+            "company": "else",
+            "country": "UK",
+            "email": "steering@example.com",
+            "fullName": "Steering User",
+            "gid": 0,
+            "localPasswd": "pa$$word",
+            "confirmLocalPasswd": "pa$$word",
+            "newUser": false,
+            "phoneNumber": "",
+            "postalCode": "",
+            "publicSshKey": "",
+            "registrationSent": "",
+            "role": 3,
+            "stateOrProvince": "",
+            "tenant": "root",
+            "uid": 0,
+            "username": "steering"
         }
     ],
     "steeringTargets": [
