@@ -22,11 +22,14 @@ package ats
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -853,6 +856,29 @@ WHERE
 		ips = append(ips, i)
 	}
 	return ips, nil
+}
+
+// getCDNNameFromNameOrID returns the CDN name from a parameter which may be the name or ID.
+// This also checks and verifies the existence of the given CDN, and returns an appropriate user error if it doesn't exist.
+// Returns the name, any user error, any system error, and any error code.
+func getCDNNameFromNameOrID(tx *sql.Tx, cdnNameOrID string) (string, error, error, int) {
+	if cdnID, err := strconv.Atoi(cdnNameOrID); err == nil {
+		cdnName, ok, err := dbhelpers.GetCDNNameFromID(tx, int64(cdnID))
+		if err != nil {
+			return "", nil, fmt.Errorf("getting CDN name from id %v: %v", cdnID, err), http.StatusInternalServerError
+		} else if !ok {
+			return "", errors.New("cdn not found"), nil, http.StatusNotFound
+		}
+		return string(cdnName), nil, nil, http.StatusOK
+	}
+
+	cdnName := cdnNameOrID
+	if ok, err := dbhelpers.CDNExists(cdnName, tx); err != nil {
+		return "", nil, fmt.Errorf("checking CDN name '%v' existence: %v", cdnName, err), http.StatusInternalServerError
+	} else if !ok {
+		return "", errors.New("cdn not found"), nil, http.StatusNotFound
+	}
+	return cdnName, nil, nil, http.StatusOK
 }
 
 // type ParentDS struct {
