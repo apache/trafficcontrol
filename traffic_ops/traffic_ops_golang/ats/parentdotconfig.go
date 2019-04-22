@@ -235,8 +235,9 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		done := map[string]tc.DeliveryServiceName{}                                       // map[originHost]ds
-		serverParams, err := getParentConfigServerProfileParams(inf.Tx.Tx, serverInfo.ID) // (map[string]string, error) {
+		processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
+
+		serverParams, err := getParentConfigServerProfileParams(inf.Tx.Tx, serverInfo.ID)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting parent config server profile params: "+err.Error()))
 			return
@@ -296,7 +297,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			if existingDS, ok := done[originFQDN]; ok {
+			if existingDS, ok := processedOriginsToDSNames[originFQDN]; ok {
 				log.Errorln("parent.config generation: duplicate origin! services '" + string(ds.Name) + "' and '" + string(existingDS) + "' share origin '" + orgURI.Host + "': skipping '" + string(ds.Name) + "'!")
 				continue
 			}
@@ -340,7 +341,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
 			}
 			textArr = append(textArr, text)
-			done[originFQDN] = ds.Name
+			processedOriginsToDSNames[originFQDN] = ds.Name
 		}
 
 		defaultDestText := `dest_domain=. ` + parents
