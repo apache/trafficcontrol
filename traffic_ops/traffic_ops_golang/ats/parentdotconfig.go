@@ -31,6 +31,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 	"github.com/lib/pq"
@@ -186,9 +187,9 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 
 				// TODO benchmark, verify this isn't slow. if it is, it could easily be made faster
 				seen := map[string]struct{}{} // TODO change to host+port? host isn't unique
-				parentInfo, seen = removeStrDuplicates(parentInfo, seen)
-				secondaryParentInfo, seen = removeStrDuplicates(secondaryParentInfo, seen)
-				nullParentInfo, seen = removeStrDuplicates(nullParentInfo, seen)
+				parentInfo, seen = util.RemoveStrDuplicates(parentInfo, seen)
+				secondaryParentInfo, seen = util.RemoveStrDuplicates(secondaryParentInfo, seen)
+				nullParentInfo, seen = util.RemoveStrDuplicates(nullParentInfo, seen)
 
 				// If the ats version supports it and the algorithm is consistent hash, put secondary and non-primary parents into secondary parent group.
 				// This will ensure that secondary and tertiary parents will be unused unless all hosts in the primary group are unavailable.
@@ -264,8 +265,8 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 
 		// TODO remove duplicate code with top level if block
 		seen := map[string]struct{}{} // TODO change to host+port? host isn't unique
-		parentInfo, seen = removeStrDuplicates(parentInfo, seen)
-		secondaryParentInfo, seen = removeStrDuplicates(secondaryParentInfo, seen)
+		parentInfo, seen = util.RemoveStrDuplicates(parentInfo, seen)
+		secondaryParentInfo, seen = util.RemoveStrDuplicates(secondaryParentInfo, seen)
 
 		parents := ""
 		secondaryParents := "" // "secparents" in Perl
@@ -368,16 +369,6 @@ func unavailableServerRetryResponsesValid(s string) bool {
 	}
 	re := regexp.MustCompile(`^"(:?\d{3},)+\d{3}"\s*$`) // TODO benchmark, cache if performance matters
 	return re.MatchString(s)
-}
-func removeStrDuplicates(pi []string, seen map[string]struct{}) ([]string, map[string]struct{}) {
-	npi := []string{}
-	for _, p := range pi {
-		if _, ok := seen[p]; !ok {
-			npi = append(npi, p)
-			seen[p] = struct{}{}
-		}
-	}
-	return npi, seen
 }
 
 type OriginHost string
