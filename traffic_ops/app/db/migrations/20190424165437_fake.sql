@@ -1,11 +1,8 @@
 /*
-
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-
         http://www.apache.org/licenses/LICENSE-2.0
-
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,17 +10,12 @@
     limitations under the License.
 */
 
+-- Goose can't handle doing nothing, so in order to not break it we have to give it some meaningless
+-- menial task.
+-- Please delete this file as soon as a real migration is added.
+
 -- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
-DROP TABLE job_result;
+SELECT 'pass';
 
 -- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
-CREATE TABLE job_result (
-    id bigint NOT NULL,
-    job bigint NOT NULL,
-    agent bigint NOT NULL,
-    result text NOT NULL,
-    description text,
-    last_updated timestamp with time zone DEFAULT now()
-);
+SELECT 'pass';
