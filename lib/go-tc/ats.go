@@ -41,13 +41,6 @@ type ATSConfigMetaDataInfo struct {
 	TOURL             string `json:"toUrl"`
 }
 
-type ATSConfigMetaDataConfigFileScope string
-
-const ATSConfigMetaDataConfigFileScopeProfiles = ATSConfigMetaDataConfigFileScope("profiles")
-const ATSConfigMetaDataConfigFileScopeServers = ATSConfigMetaDataConfigFileScope("servers")
-const ATSConfigMetaDataConfigFileScopeCDNs = ATSConfigMetaDataConfigFileScope("cdns")
-const ATSConfigMetaDataConfigFileScopeInvalid = ATSConfigMetaDataConfigFileScope("")
-
 type ATSConfigMetaDataConfigFile struct {
 	FileNameOnDisk string `json:"fnameOnDisk"`
 	Location       string `json:"location"`
@@ -55,6 +48,13 @@ type ATSConfigMetaDataConfigFile struct {
 	URL            string `json:"url, omitempty"`
 	Scope          string `json:"scope"`
 }
+
+type ATSConfigMetaDataConfigFileScope string
+
+const ATSConfigMetaDataConfigFileScopeProfiles = ATSConfigMetaDataConfigFileScope("profiles")
+const ATSConfigMetaDataConfigFileScopeServers = ATSConfigMetaDataConfigFileScope("servers")
+const ATSConfigMetaDataConfigFileScopeCDNs = ATSConfigMetaDataConfigFileScope("cdns")
+const ATSConfigMetaDataConfigFileScopeInvalid = ATSConfigMetaDataConfigFileScope("")
 
 func (t ATSConfigMetaDataConfigFileScope) String() string {
 	switch t {

@@ -377,6 +377,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandler, auth.PrivLevelOperations, Authenticated, nil},
 
 		// ATS config files
+		{1.1, http.MethodGet, `servers/{id}/configfiles/ats/?(\.json)?$`, ats.GetConfigMetaData, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/regex_revalidate.config/?(\.json)?$`, ats.GetRegexRevalidateDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_mid_{xml-id}.config/?(\.json)?$`, ats.GetMidHeaderRewriteDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_{xml-id}.config/?(\.json)?$`, ats.GetEdgeHeaderRewriteDotConfig, auth.PrivLevelOperations, Authenticated, nil},
