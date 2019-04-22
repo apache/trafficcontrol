@@ -137,7 +137,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 				}
 
 				algorithm := ""
-				if parentSelectAlg, hasParentSelectAlg := serverParams[ParentConfigParamAlgorithm]; hasParentSelectAlg {
+				if parentSelectAlg := serverParams[ParentConfigParamAlgorithm]; strings.TrimSpace(parentSelectAlg) != "" {
 					algorithm = "round_robin=" + parentSelectAlg
 				}
 				textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " parent=" + ds.OriginShield + " " + algorithm + " go_direct=true\n"
@@ -789,14 +789,11 @@ func getParentConfigDSParamsTopLevel(tx *sql.Tx, dses []ParentConfigDSTopLevel) 
 		return nil, err
 	}
 	for i, ds := range dses {
-		dsParams, ok := params[ds.Name]
-		if !ok {
-			continue // TODO warn? set defaults anyway??
-		}
+		dsParams := params[ds.Name] // it's acceptable for this to not exist, if there are no params for the DS. If so, we still need to continue below, to set all the defaults.
 		if v, ok := dsParams[ParentConfigParamQStringHandling]; ok {
 			ds.QStringHandling = v
 		}
-		if v, ok := dsParams[ParentConfigParamMSOAlgorithm]; ok {
+		if v, ok := dsParams[ParentConfigParamMSOAlgorithm]; ok && strings.TrimSpace(v) != "" {
 			ds.MSOAlgorithm = v
 		} else {
 			ds.MSOAlgorithm = ParentConfigDSParamDefaultMSOAlgorithm
