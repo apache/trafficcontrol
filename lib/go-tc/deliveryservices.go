@@ -148,18 +148,18 @@ type DeliveryServiceV11 struct {
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV13
-	ConsistentHashRegex  *string `json:"consistentHashRegex,omitempty"`
+	ConsistentHashRegex  *string `json:"consistentHashRegex"`
 	MaxOriginConnections *int    `json:"maxOriginConnections" db:"max_origin_connections"`
 }
 
 type DeliveryServiceNullableV13 struct {
 	DeliveryServiceNullableV12
 	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
-	FQPacingRate      *int             `json:"fqPacingRate,omitempty"`
+	FQPacingRate      *int             `json:"fqPacingRate"`
 	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	Tenant            *string          `json:"tenant,omitempty"`
-	TRResponseHeaders *string          `json:"trResponseHeaders,omitempty"`
-	TRRequestHeaders  *string          `json:"trRequestHeaders,omitempty"`
+	Tenant            *string          `json:"tenant"`
+	TRResponseHeaders *string          `json:"trResponseHeaders"`
+	TRRequestHeaders  *string          `json:"trRequestHeaders"`
 }
 
 type DeliveryServiceNullableV12 struct {
