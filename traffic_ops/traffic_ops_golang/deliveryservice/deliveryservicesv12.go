@@ -78,7 +78,7 @@ func (ds *TODeliveryServiceV12) GetType() string {
 
 // IsTenantAuthorized checks that the user is authorized for both the delivery service's existing tenant, and the new tenant they're changing it to (if different).
 func (ds *TODeliveryServiceV12) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
-	tcDS := tc.NewDeliveryServiceNullableFromV12(ds.DeliveryServiceNullableV12)
+	tcDS := ds.DeliveryServiceNullableV12.ToDeliveryServiceNullable()
 	return isTenantAuthorized(ds.ReqInfo, &tcDS)
 }
 
@@ -98,7 +98,7 @@ func CreateV12(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
-	tcDS := tc.NewDeliveryServiceNullableFromV12(ds)
+	tcDS := ds.ToDeliveryServiceNullable()
 	tcDS, errCode, userErr, sysErr = create(inf, tcDS)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -139,8 +139,7 @@ func UpdateV12(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
-	tcDS := tc.NewDeliveryServiceNullableFromV12(ds)
-	tcDS, errCode, userErr, sysErr = update(inf, &tcDS)
+	tcDS, errCode, userErr, sysErr := update(inf, ds)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

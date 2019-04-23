@@ -71,3 +71,30 @@ FROM table t
 	}
 
 }
+
+func TestGetUpdateQueryFields(t *testing.T) {
+	type EmbeddedObj struct {
+		Baz int `db:"baz"`
+	}
+	type Obj struct {
+		EmbeddedObj
+		Foo    string   `json:"foo" db:"foo"`
+		Bar    int      `db:"bar"`
+		FooBar *float64 `db:"foo_bar" json:"foo_bar"`
+	}
+
+	f := 42.24
+	obj := &Obj{Foo: "asdf", Bar: 42, FooBar: &f, EmbeddedObj: EmbeddedObj{Baz: 9}}
+
+	expected := `baz=:baz,
+foo=:foo,
+foo_bar=:foo_bar`
+
+	actual, err := GetUpdateQueryFields(&obj, []string{"bar"})
+	if err != nil {
+		t.Fatalf("expected: nil error, actual: %v", err)
+	}
+	if expected != actual {
+		t.Errorf("expected: '%+v', actual: '%+v'", expected, actual)
+	}
+}

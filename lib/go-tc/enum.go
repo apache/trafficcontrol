@@ -309,6 +309,22 @@ func DeepCachingTypeFromString(s string) DeepCachingType {
 	}
 }
 
+// Value implements database/sql/driver.Valuer.
+func (d DeepCachingType) Value() (driver.Value, error) { return d.String(), nil }
+
+// Scan implements database/sql.Scanner.
+func (d *DeepCachingType) Scan(value interface{}) error {
+	str, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("unsupported Scan, storing driver.Value type %T into type %T", value, d)
+	}
+	*d = DeepCachingTypeFromString(str)
+	if *d == DeepCachingTypeInvalid {
+		return fmt.Errorf("unsupported Scan, storing driver.Value type %T value %s into type %T", value, str, d)
+	}
+	return nil
+}
+
 // UnmarshalJSON unmarshals a JSON representation of a DeepCachingType (i.e. a string) or returns an error if the DeepCachingType is invalid
 func (t *DeepCachingType) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {

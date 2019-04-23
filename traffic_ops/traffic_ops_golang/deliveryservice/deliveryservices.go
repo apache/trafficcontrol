@@ -253,10 +253,12 @@ func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
 	return nil
 }
 
-func update(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (tc.DeliveryServiceNullable, int, error, error) {
+func update(inf *api.APIInfo, iDS tc.ConvertibleToDeliveryServiceNullable) (tc.DeliveryServiceNullable, int, error, error) {
 	tx := inf.Tx.Tx
 	cfg := inf.Config
 	user := inf.User
+	dsVal := iDS.ToDeliveryServiceNullable()
+	ds := &dsVal
 
 	if authorized, err := isTenantAuthorized(inf, ds); err != nil {
 		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("checking tenant: " + err.Error())
@@ -288,18 +290,17 @@ func update(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (tc.DeliveryServic
 		}
 	}
 
-	// TODO change DeepCachingType to implement sql.Valuer and sql.Scanner, so sqlx struct scan can be used.
-	deepCachingType := tc.DeepCachingType("").String()
-	if ds.DeepCachingType != nil {
-		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
+	qry, err := updateDSQuery(iDS)
+	if err != nil {
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("getting DS update query: " + err.Error())
 	}
 
-	resultRows, err := tx.Query(updateDSQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID, &ds.AnonymousBlockingEnabled, &ds.ConsistentHashRegex, &ds.MaxOriginConnections, &ds.ID)
-
+	resultRows, err := inf.Tx.NamedQuery(qry, iDS)
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		return tc.DeliveryServiceNullable{}, code, usrErr, sysErr
 	}
+
 	defer resultRows.Close()
 	if !resultRows.Next() {
 		return tc.DeliveryServiceNullable{}, http.StatusNotFound, errors.New("no delivery service found with this id"), nil
@@ -1096,65 +1097,17 @@ LEFT JOIN tenant ON ds.tenant_id = tenant.id
 `
 }
 
-func updateDSQuery() string {
+func updateDSQuery(ds tc.ConvertibleToDeliveryServiceNullable) (string, error) {
+	fields, err := dbhelpers.GetUpdateQueryFields(ds, []string{"id"})
+	if err != nil {
+		return "", fmt.Errorf("error getting fields from ds type %T: %+v", ds, err)
+	}
 	return `
-UPDATE
-deliveryservice SET
-active=$1,
-cacheurl=$2,
-ccr_dns_ttl=$3,
-cdn_id=$4,
-check_path=$5,
-deep_caching_type=$6,
-display_name=$7,
-dns_bypass_cname=$8,
-dns_bypass_ip=$9,
-dns_bypass_ip6=$10,
-dns_bypass_ttl=$11,
-dscp=$12,
-edge_header_rewrite=$13,
-geolimit_redirect_url=$14,
-geo_limit=$15,
-geo_limit_countries=$16,
-geo_provider=$17,
-global_max_mbps=$18,
-global_max_tps=$19,
-fq_pacing_rate=$20,
-http_bypass_fqdn=$21,
-info_url=$22,
-initial_dispersion=$23,
-ipv6_routing_enabled=$24,
-logs_enabled=$25,
-long_desc=$26,
-long_desc_1=$27,
-long_desc_2=$28,
-max_dns_answers=$29,
-mid_header_rewrite=$30,
-miss_lat=$31,
-miss_long=$32,
-multi_site_origin=$33,
-origin_shield=$34,
-profile=$35,
-protocol=$36,
-qstring_ignore=$37,
-range_request_handling=$38,
-regex_remap=$39,
-regional_geo_blocking=$40,
-remap_text=$41,
-routing_name=$42,
-signing_algorithm=$43,
-ssl_key_version=$44,
-tenant_id=$45,
-tr_request_headers=$46,
-tr_response_headers=$47,
-type=$48,
-xml_id=$49,
-anonymous_blocking_enabled=$50,
-consistent_hash_regex=$51,
-max_origin_connections=$52
-WHERE id=$53
+UPDATE deliveryservice SET
+` + fields + `
+WHERE id=:id
 RETURNING last_updated
-`
+`, nil
 }
 
 func insertQuery() string {

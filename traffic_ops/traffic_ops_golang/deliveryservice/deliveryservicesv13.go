@@ -77,7 +77,7 @@ func CreateV13(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
 		return
 	}
-	tcDS := tc.NewDeliveryServiceNullableFromV13(ds)
+	tcDS := ds.ToDeliveryServiceNullable()
 	tcDS, errCode, userErr, sysErr = create(inf, tcDS)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -126,10 +126,10 @@ func UpdateV13(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds, errCode, userErr, sysErr = update(inf, &ds)
+	tcDS, errCode, userErr, sysErr := update(inf, ds)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullable{ds})
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV13{tcDS.DeliveryServiceNullableV13})
 }

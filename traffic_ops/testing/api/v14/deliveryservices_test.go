@@ -16,6 +16,10 @@ package v14
 */
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+
 	"strconv"
 	"testing"
 	"time"
@@ -29,6 +33,7 @@ func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
+		UpdateNullableTestDeliveryServicesOldVersion(t)
 		GetTestDeliveryServices(t)
 		DeliveryServiceTenancyTest(t)
 	})
@@ -167,6 +172,61 @@ func UpdateNullableTestDeliveryServices(t *testing.T) {
 	if *resp.LongDesc != updatedLongDesc || *resp.MaxDNSAnswers != updatedMaxDNSAnswers {
 		t.Errorf("results do not match actual: %s, expected: %s\n", *resp.LongDesc, updatedLongDesc)
 		t.Fatalf("results do not match actual: %d, expected: %d\n", *resp.MaxDNSAnswers, updatedMaxDNSAnswers)
+	}
+}
+
+func UpdateNullableTestDeliveryServicesOldVersion(t *testing.T) {
+	dses, _, err := TOSession.GetDeliveryServicesNullable()
+	if err != nil {
+		t.Fatalf("cannot GET Delivery Services: %v\n", err)
+	}
+
+	oldDS := tc.DeliveryServiceNullable{}
+	found := false
+	for _, ds := range dses {
+		if ds.XMLID == nil || ds.ID == nil {
+			continue
+		}
+		if ds.TRResponseHeaders == nil || *ds.TRResponseHeaders == "" {
+			continue
+		}
+		oldDS = ds
+		found = true
+	}
+	if !found {
+		t.Fatalf("GET Delivery Services: no DS found with TRResponseHeaders (required for test)\n")
+	}
+
+	dsBts, err := json.Marshal(oldDS.DeliveryServiceNullableV12)
+	if err != nil {
+		t.Fatalf("cannot UPDATE DeliveryService, failed to marshal jSON: %v\n", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPut, TOSession.URL+"/api/1.2/deliveryservices/"+strconv.Itoa(*oldDS.ID), bytes.NewBuffer(dsBts))
+	if err != nil {
+		t.Fatalf("cannot UPDATE DeliveryService, failed to create request: %v\n", err)
+	}
+
+	resp, err := TOSession.Client.Do(req)
+	if err != nil {
+		t.Fatalf("cannot UPDATE DeliveryService to test old version: %v\n", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		t.Fatalf("Updating DeliveryService to test old version, response expected: 200 actual: %v\n", resp.StatusCode)
+	}
+
+	newDS, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*oldDS.ID))
+	if err != nil {
+		t.Fatalf("cannot GET Delivery Service by ID: %v - %v\n", oldDS.XMLID, err)
+	}
+
+	if newDS.TRResponseHeaders == nil {
+		t.Fatalf("Getting Delivery Service after PUT of old version, TRResponseHeaders expected: '%v' actual: '%v'\n", oldDS.TRResponseHeaders, "<nil>")
+	}
+	if *newDS.TRResponseHeaders != *oldDS.TRResponseHeaders {
+		t.Fatalf("Getting Delivery Service after PUT of old version, TRResponseHeaders expected: '%v' actual: '%v'\n", oldDS.TRResponseHeaders, newDS.TRResponseHeaders)
 	}
 }
 
