@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -315,7 +316,11 @@ and d.active = true
 		ds.IP6RoutingEnabled = &ip6RoutingEnabled.Bool // No Valid check, false if null
 
 		if trResponseHeaders.Valid && trResponseHeaders.String != "" {
-			hdrs := strings.Split(trResponseHeaders.String, `__RETURN__`)
+
+			re := regexp.MustCompile(`\s*__RETURN__\s*`)
+			trResponseHeaders.String = re.ReplaceAllString(trResponseHeaders.String, "\n")
+
+			hdrs := strings.Split(trResponseHeaders.String, "\n")
 			for _, hdr := range hdrs {
 				nameVal := strings.Split(hdr, `:`)
 				name := strings.TrimSpace(nameVal[0])
@@ -328,7 +333,11 @@ and d.active = true
 		}
 
 		if trRequestHeaders.Valid && trRequestHeaders.String != "" {
-			hdrs := strings.Split(trRequestHeaders.String, `__RETURN__`)
+
+			re := regexp.MustCompile(`\s*__RETURN__\s*`)
+			trRequestHeaders.String = re.ReplaceAllString(trRequestHeaders.String, "\n")
+
+			hdrs := strings.Split(trRequestHeaders.String, "\n")
 			for _, hdr := range hdrs {
 				nameVal := strings.Split(hdr, `:`)
 				name := strings.TrimSpace(nameVal[0])
