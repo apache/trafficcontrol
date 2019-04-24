@@ -74,7 +74,10 @@ under the License.
                         <option ng-value="false">Not Active</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.active, 'required')">Required</small>
-                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.active != dsCurrent.active">Current Value: [ {{dsCurrent.active ? 'Active' : 'Not Active'}} ]</small>
+                    <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.active != dsCurrent.active">
+                        <legend>Current Value</legend>
+                        <input type="text" class="form-control" readonly value="{{dsCurrent.active ? 'Active' : 'Not Active'}}">
+                    </fieldset>
                 </div>
             </div>
 
@@ -93,8 +96,11 @@ under the License.
                         <option disabled selected hidden value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
-                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.typeId != dsCurrent.typeId">Current Value: [ {{dsCurrent.type}} ]</small>
                     <small ng-show="deliveryService.typeId"><a href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.typeId != dsCurrent.typeId">
+                        <legend>Current Value</legend>
+                        <input type="text" class="form-control" readonly value="{{dsCurrent.type}}">
+                    </fieldset>
                 </div>
             </div>
 
@@ -108,8 +114,11 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
-                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.xmlId != dsCurrent.xmlId">Current Value: [ {{dsCurrent.xmlId}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.xmlId)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.xmlId != dsCurrent.xmlId">
+                        <legend>Current Value</legend>
+                        <input type="text" class="form-control" readonly value="{{dsCurrent.xmlId}}">
+                    </fieldset>
                 </div>
             </div>
 
@@ -122,8 +131,11 @@ under the License.
                     <input id="displayName" name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" maxlength="48" required>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'maxlength')">Too Long</small>
-                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.displayName != dsCurrent.displayName">Current Value: [ {{dsCurrent.displayName}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.displayName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.displayName != dsCurrent.displayName">
+                        <legend>Current Value</legend>
+                        <input type="text" class="form-control" readonly value="{{dsCurrent.displayName}}">
+                    </fieldset>
                 </div>
             </div>
 
@@ -137,8 +149,11 @@ under the License.
                         <option disabled selected hidden value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.tenantId, 'required')">Required</small>
-                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.tenantId != dsCurrent.tenantId">Current Value: [ {{dsCurrent.tenant}} ]</small>
                     <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.tenantId != dsCurrent.tenantId">
+                        <legend>Current Value</legend>
+                        <input type="text" class="form-control" readonly value="{{dsCurrent.tenant}}">
+                    </fieldset>
                 </div>
             </div>
 
@@ -152,8 +167,11 @@ under the License.
                         <option disabled selected hidden value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
-                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.cdnId != dsCurrent.cdnId">Current Value: [ {{dsCurrent.cdnName}} ]</small>
                     <small ng-show="deliveryService.cdnId"><a href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cdnId != dsCurrent.cdnId">
+                        <legend>Current Value</legend>
+                        <input type="text" class="form-control" readonly value="{{dsCurrent.cdnName}}">
+                    </fieldset>
                 </div>
             </div>
 
@@ -165,8 +183,11 @@ under the License.
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <textarea id="longDesc" name="longDesc" type="text" class="form-control" ng-model="deliveryService.longDesc" rows="3" required></textarea>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc, 'required')">Required</small>
-                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc != dsCurrent.longDesc">Current Value: [ {{dsCurrent.longDesc}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.longDesc)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc != dsCurrent.longDesc">
+                        <legend>Current Value</legend>
+                        <textarea type="text" class="form-control" rows="3" readonly>{{dsCurrent.longDesc}}</textarea>
+                    </fieldset>
                 </div>
             </div>
 
@@ -177,8 +198,11 @@ under the License.
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <textarea id="longDesc1" name="longDesc1" type="text" class="form-control" ng-model="deliveryService.longDesc1" rows="3"></textarea>
-                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc1 != dsCurrent.longDesc1">Current Value: [ {{dsCurrent.longDesc1}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.longDesc1)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc1 != dsCurrent.longDesc1">
+                        <legend>Current Value</legend>
+                        <textarea type="text" class="form-control" rows="3" readonly>{{dsCurrent.longDesc1}}</textarea>
+                    </fieldset>
                 </div>
             </div>
 
@@ -189,8 +213,11 @@ under the License.
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <textarea id="longDesc2" name="longDesc2" type="text" class="form-control" ng-model="deliveryService.longDesc2" rows="3"></textarea>
-                    <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc2 != dsCurrent.longDesc2">Current Value: [ {{dsCurrent.longDesc2}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.longDesc2)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc2 != dsCurrent.longDesc2">
+                        <legend>Current Value</legend>
+                        <textarea type="text" class="form-control" rows="3" readonly>{{dsCurrent.longDesc2}}</textarea>
+                    </fieldset>
                 </div>
             </div>
 
@@ -216,7 +243,10 @@ under the License.
                             <option ng-value="false" selected>Disabled</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.regionalGeoBlocking, 'required')">Required</small>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.regionalGeoBlocking != dsCurrent.regionalGeoBlocking">Current Value: [ {{dsCurrent.regionalGeoBlocking ? 'Enabled' : 'Disabled'}} ]</small>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.regionalGeoBlocking != dsCurrent.regionalGeoBlocking">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{dsCurrent.regionalGeoBlocking ? 'Enabled' : 'Disabled'}}">
+                        </fieldset>
                     </div>
                 </div>
 
@@ -231,7 +261,10 @@ under the License.
                             <option ng-value="false">Disabled</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.logsEnabled, 'required')">Required</small>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.logsEnabled != dsCurrent.logsEnabled">Current Value: [ {{dsCurrent.logsEnabled ? 'Enabled' : 'Disabled'}} ]</small>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.logsEnabled != dsCurrent.logsEnabled">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{dsCurrent.logsEnabled ? 'Enabled' : 'Disabled'}}">
+                        </fieldset>
                     </div>
                 </div>
 
@@ -246,7 +279,10 @@ under the License.
                             <option ng-value="1">Neustar</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoProvider != dsCurrent.geoProvider">Current Value: [ {{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}} ]</small>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoProvider != dsCurrent.geoProvider">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}}">
+                        </fieldset>
                     </div>
                 </div>
 
@@ -271,7 +307,10 @@ under the License.
                             <option ng-value="2">Coverage Zone File and Country Code(s)</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimit != dsCurrent.geoLimit">Current Value: [ {{magicNumberLabel(geoLimits, dsCurrent.geoLimit)}} ]</small>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimit != dsCurrent.geoLimit">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{magicNumberLabel(geoLimits, dsCurrent.geoLimit)}}">
+                        </fieldset>
                     </div>
                 </div>
 
@@ -283,8 +322,11 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="geoLimitCountries" name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" maxlength="255">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimitCountries, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">Current Value: [ {{dsCurrent.geoLimitCountries}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.geoLimitCountries)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{dsCurrent.geoLimitCountries}}">
+                        </fieldset>
                     </div>
                 </div>
 
@@ -300,8 +342,11 @@ under the License.
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="geoLimitRedirectURL" name="geoLimitRedirectURL" type="url" class="form-control" ng-model="deliveryService.geoLimitRedirectURL" title="Must be a valid URL.">
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitRedirectURL != dsCurrent.geoLimitRedirectURL">Current Value: [ {{dsCurrent.geoLimitRedirectURL}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.geoLimitRedirectURL)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitRedirectURL != dsCurrent.geoLimitRedirectURL">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{dsCurrent.geoLimitRedirectURL}}">
+                        </fieldset>
                     </div>
                 </div>
 
@@ -314,8 +359,11 @@ under the License.
                         <select id="profile" name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles">
                             <option selected value="">None</option>
                         </select>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.profileId != dsCurrent.profileId">Current Value: [ {{dsCurrent.profileName}} ]</small>
                         <small ng-show="deliveryService.profileId"><a href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.profileId != dsCurrent.profileId">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{dsCurrent.profileName}}">
+                        </fieldset>
                     </div>
                 </div>
 
@@ -327,10 +375,11 @@ under the License.
                     </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="trRequestHeaders" name="trRequestHeaders" type="text" class="form-control" ng-model="deliveryService.trRequestHeaders" maxlength="1024">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.trRequestHeaders, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.trRequestHeaders != dsCurrent.trRequestHeaders">Current Value: [ {{dsCurrent.trRequestHeaders}} ]</small>
-                        <span ng-show="hasError(deliveryServiceForm.trRequestHeaders)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                        <textarea id="trRequestHeaders" name="trRequestHeaders" type="text" class="form-control" ng-model="deliveryService.trRequestHeaders" rows="3" autofocus></textarea>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.trRequestHeaders != dsCurrent.trRequestHeaders">
+                            <legend>Current Value</legend>
+                            <textarea type="text" class="form-control" rows="3" readonly>{{dsCurrent.trRequestHeaders}}</textarea>
+                        </fieldset>
                     </div>
                 </div>
 
@@ -356,8 +405,11 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="cacheurl" name="cacheurl" type="text" class="form-control" ng-model="deliveryService.cacheurl" maxlength="1024">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cacheurl, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.cacheurl != dsCurrent.cacheurl">Current Value: [ {{dsCurrent.cacheurl}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.cacheurl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cacheurl != dsCurrent.cacheurl">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{dsCurrent.cacheurl}}">
+                        </fieldset>
                     </div>
                 </div>
 
@@ -368,8 +420,11 @@ under the License.
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="ccrDnsTtl" name="ccrDnsTtl" type="number" class="form-control" ng-model="deliveryService.ccrDnsTtl" min="0" step="1">
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">Current Value: [ {{dsCurrent.ccrDnsTtl}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.ccrDnsTtl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{dsCurrent.ccrDnsTtl}}">
+                        </fieldset>
                     </div>
                 </div>
 
@@ -379,10 +434,11 @@ under the License.
                     </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="remapText" name="remapText" type="text" class="form-control" ng-model="deliveryService.remapText" maxlength="2048">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.remapText, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.remapText != dsCurrent.remapText">Current Value: [ {{dsCurrent.remapText}} ]</small>
-                        <span ng-show="hasError(deliveryServiceForm.remapText)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                        <textarea id="remapText" name="remapText" type="text" class="form-control" ng-model="deliveryService.remapText" rows="3" autofocus></textarea>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.remapText != dsCurrent.remapText">
+                            <legend>Current Value</legend>
+                            <textarea type="text" class="form-control" rows="3" readonly>{{dsCurrent.remapText}}</textarea>
+                        </fieldset>
                     </div>
                 </div>
 
@@ -395,8 +451,11 @@ under the License.
                         <input id="infoUrl" name="infoUrl" type="url" class="form-control" ng-model="deliveryService.infoUrl" title="Must be a valid URL" maxlength="255">
                         <small class="input-error invalid-URL-error">Invalid URL</small>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.infoUrl, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.infoUrl != dsCurrent.infoUrl">Current Value: [ {{dsCurrent.infoUrl}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.infoUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.infoUrl != dsCurrent.infoUrl">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{dsCurrent.infoUrl}}">
+                        </fieldset>
                     </div>
                 </div>
 
@@ -408,8 +467,11 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input id="checkPath" name="checkPath" type="text" class="form-control" ng-model="deliveryService.checkPath" maxlength="255">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.checkPath, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-if="settings.isRequest" ng-show="open() && deliveryService.checkPath != dsCurrent.checkPath">Current Value: [ {{dsCurrent.checkPath}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.checkPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                        <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.checkPath != dsCurrent.checkPath">
+                            <legend>Current Value</legend>
+                            <input type="text" class="form-control" readonly value="{{dsCurrent.checkPath}}">
+                        </fieldset>
                     </div>
                 </div>
 
