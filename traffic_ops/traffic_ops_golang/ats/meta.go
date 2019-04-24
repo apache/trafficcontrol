@@ -69,6 +69,7 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 			ServerID:          server.ID,
 			ProfileName:       server.ProfileName,
 		},
+		ConfigFiles: []tc.ATSConfigMetaDataConfigFile{},
 	}
 
 	locationParams, err := GetLocationParams(inf.Tx.Tx, int(server.ProfileID))
