@@ -832,7 +832,7 @@ under the License.
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trResponseHeaders), 'has-feedback': hasError(deliveryServiceForm.trResponseHeaders)}">
                     <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trResponseHeaders">Traffic Router Additional Response Headers<div class="helptooltip">
                         <div class="helptext">
-                            List of header name:value pairs separated by <code>__RETURN__</code>. Listed pairs will be included in all Traffic Router HTTP(S) responses.
+                            List of header name:value pairs. One name:value pair per line. Listed pairs will be included in all Traffic Router HTTP(S) responses.
                         </div>
                     </div>
                     </label>
@@ -849,7 +849,7 @@ under the License.
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trRequestHeaders), 'has-feedback': hasError(deliveryServiceForm.trRequestHeaders)}">
                     <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trRequestHeaders">Traffic Router Log Request Headers<div class="helptooltip">
                         <div class="helptext">
-                            List of header keys separated by <code>__RETURN__</code>. Listed headers will be included in Traffic Router access log entries under the <samp>rh=</samp> token.
+                            List of header keys. One header key per line. Listed headers will be included in Traffic Router access log entries under the <samp>rh=</samp> token.
                         </div>
                     </div>
                     </label>
