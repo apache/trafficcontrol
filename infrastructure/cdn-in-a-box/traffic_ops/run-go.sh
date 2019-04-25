@@ -51,6 +51,14 @@ source /to-access.sh
 # Write config files
 /config.sh
 
+# Source the CIAB-CA shared SSL environment
+until [[ -n "$X509_GENERATION_COMPLETE" ]]
+do
+  echo "Waiting on X509 vars to be defined"
+  sleep 1
+  source "$X509_CA_ENV_FILE"
+done
+
 while ! nc "$TO_PERL_FQDN" $TO_PERL_PORT </dev/null 2>/dev/null; do
         echo "waiting for $TO_PERL_FQDN:$TO_PERL_PORT" 
         sleep 3
