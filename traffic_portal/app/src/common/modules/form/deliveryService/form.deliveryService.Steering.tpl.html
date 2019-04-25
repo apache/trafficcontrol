@@ -214,12 +214,12 @@ under the License.
                 </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="longDesc" name="longDesc" type="text" class="form-control" ng-model="deliveryService.longDesc" rows="3" required></textarea>
+                    <textarea id="longDesc" name="longDesc" class="form-control" ng-model="deliveryService.longDesc" rows="3" required></textarea>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc, 'required')">Required</small>
                     <span ng-show="hasError(deliveryServiceForm.longDesc)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc != dsCurrent.longDesc">
                         <legend>Current Value</legend>
-                        <textarea type="text" class="form-control" rows="3" readonly>{{dsCurrent.longDesc}}</textarea>
+                        <textarea class="form-control" rows="3" readonly>{{dsCurrent.longDesc}}</textarea>
                     </fieldset>
                 </div>
             </div>
@@ -230,11 +230,11 @@ under the License.
                 </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="longDesc1" name="longDesc1" type="text" class="form-control" ng-model="deliveryService.longDesc1" rows="3"></textarea>
+                    <textarea id="longDesc1" name="longDesc1" class="form-control" ng-model="deliveryService.longDesc1" rows="3"></textarea>
                     <span ng-show="hasError(deliveryServiceForm.longDesc1)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc1 != dsCurrent.longDesc1">
                         <legend>Current Value</legend>
-                        <textarea type="text" class="form-control" rows="3" readonly>{{dsCurrent.longDesc1}}</textarea>
+                        <textarea class="form-control" rows="3" readonly>{{dsCurrent.longDesc1}}</textarea>
                     </fieldset>
                 </div>
             </div>
@@ -245,11 +245,11 @@ under the License.
                 </div>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="longDesc2" name="longDesc2" type="text" class="form-control" ng-model="deliveryService.longDesc2" rows="3"></textarea>
+                    <textarea id="longDesc2" name="longDesc2" class="form-control" ng-model="deliveryService.longDesc2" rows="3"></textarea>
                     <span ng-show="hasError(deliveryServiceForm.longDesc2)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc2 != dsCurrent.longDesc2">
                         <legend>Current Value</legend>
-                        <textarea type="text" class="form-control" rows="3" readonly>{{dsCurrent.longDesc2}}</textarea>
+                        <textarea class="form-control" rows="3" readonly>{{dsCurrent.longDesc2}}</textarea>
                     </fieldset>
                 </div>
             </div>
@@ -425,10 +425,10 @@ under the License.
                     </div>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <textarea id="trResponseHeaders" name="trResponseHeaders" type="text" class="form-control" ng-model="deliveryService.trResponseHeaders" rows="3" autofocus></textarea>
+                        <textarea id="trResponseHeaders" name="trResponseHeaders" class="form-control" ng-model="deliveryService.trResponseHeaders" rows="3"></textarea>
                         <fieldset class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.trResponseHeaders != dsCurrent.trResponseHeaders">
                             <legend>Current Value</legend>
-                            <textarea type="text" class="form-control" rows="3" readonly>{{dsCurrent.trResponseHeaders}}</textarea>
+                            <textarea class="form-control" rows="3" readonly>{{dsCurrent.trResponseHeaders}}</textarea>
                         </fieldset>
                     </div>
                 </div>
