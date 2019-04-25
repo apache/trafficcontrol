@@ -85,7 +85,7 @@ input[type="url"]:invalid ~ small.invalid-URL-error {
 	visibility: visible;
 }
 
-textarea.readonly.autosize {
+textarea.autosize:read-only {
 	overflow: hidden;
 }
 
