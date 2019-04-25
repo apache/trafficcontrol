@@ -50,6 +50,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Issue 3275: Improved the snapshot diff performance and experience.
 - Issue #3605: Fixed Traffic Monitor custom ports in health polling URL.
 - Issue 3587: Fixed Traffic Ops Golang reverse proxy and Riak logs to be consistent with the format of other error logs.
+- Database migrations have been collapsed. Rollbacks to migrations that previously existed are no longer possible.
 
 ## [3.0.0] - 2018-10-30
 ### Added

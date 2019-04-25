@@ -149,18 +149,6 @@ CREATE TYPE workflow_states AS ENUM (
 CREATE DOMAIN deliveryservice_signature_type AS text CHECK (VALUE IN ('url_sig', 'uri_signing'));
 
 --
--- Name: latitude; Type: DOMAIN; Schema: public; Owner: traffic_ops
---
-
-CREATE DOMAIN latitude AS numeric CHECK (VALUE >= -90 AND VALUE <= 90);
-
---
--- Name: longitude; Type: DOMAIN; Schema: public; Owner: traffic_ops
---
-
-CREATE DOMAIN longitude AS numeric CHECK (VALUE >= -180 AND VALUE <= 180);
-
---
 -- Name: api_capability; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -335,8 +323,8 @@ ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 CREATE TABLE coordinate (
     id bigserial UNIQUE NOT NULL,
     name text,
-    latitude latitude NOT NULL DEFAULT 0.0,
-    longitude longitude NOT NULL DEFAULT 0.0,
+    latitude numeric NOT NULL DEFAULT 0.0,
+    longitude numeric NOT NULL DEFAULT 0.0,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
