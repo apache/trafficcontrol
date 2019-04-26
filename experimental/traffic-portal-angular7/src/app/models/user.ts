@@ -21,12 +21,12 @@ export class User {
 	city?:            string;
 	company?:         string;
 	country?:         string;
-	email:            string;
+	email?:           string;
 	fullName?:        string;
 	gid?:             number;
 	id:               number;
 	lastUpdated?:     Date;
-	localUser:        boolean;
+	localUser?:       boolean;
 	newUser:          boolean;
 	phoneNumber?:     string;
 	postalCode?:      string;

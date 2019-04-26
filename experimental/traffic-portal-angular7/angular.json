@@ -27,9 +27,6 @@
 				"@schematics/angular:class": {
 					"lintFix": "true"
 				},
-				"@schematics/angular:pipe": {
-					"lintFix": "true"
-				}
 			},
 			"architect": {
 				"build": {

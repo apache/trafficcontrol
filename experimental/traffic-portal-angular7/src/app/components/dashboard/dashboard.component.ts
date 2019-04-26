@@ -18,6 +18,7 @@ import { first } from 'rxjs/operators';
 
 import { APIService } from '../../services';
 import { DeliveryService } from '../../models/deliveryservice';
+import { orderBy } from '../../utils';
 
 @Component({
 	selector: 'dash',
@@ -39,7 +40,7 @@ export class DashboardComponent implements OnInit {
 	ngOnInit () {
 		this.api.getDeliveryServices().pipe(first()).subscribe(
 			r => {
-				this.deliveryServices = r;
+				this.deliveryServices = orderBy(r, 'displayName') as DeliveryService[];
 				this.loading = false;
 			}
 		);

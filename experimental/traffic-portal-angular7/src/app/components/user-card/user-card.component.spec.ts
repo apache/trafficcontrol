@@ -34,7 +34,7 @@ describe('UserCardComponent', () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(UserCardComponent);
 		component = fixture.componentInstance;
-		component.user = {lastUpdated: new Date(), id: 1, name: 'test'} as User;
+		component.user = {lastUpdated: new Date(), id: 1, name: 'test', username: 'test', newUser: false} as User;
 		fixture.detectChanges();
 	});
 

@@ -19,6 +19,7 @@ import { first } from 'rxjs/operators';
 
 import { APIService, AuthenticationService } from '../../services';
 import { Role, User } from '../../models/user';
+import { orderBy } from '../../utils';
 
 @Component({
 	selector: 'users',
@@ -59,7 +60,7 @@ export class UsersComponent implements OnInit {
 
 		this.api.getUsers().pipe(first()).subscribe(
 			r => {
-				this.users = r;
+				this.users = orderBy(r, 'fullName') as Array<User>;
 				this.loading = false;
 			}
 		);
