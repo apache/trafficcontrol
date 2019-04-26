@@ -49,7 +49,7 @@ insert-self-into-dns.sh
 source /to-access.sh
 
 # Write config files
-/config.sh
+. /config.sh
 
 while ! nc "$TO_PERL_FQDN" $TO_PERL_PORT </dev/null 2>/dev/null; do
         echo "waiting for $TO_PERL_FQDN:$TO_PERL_PORT" 
