@@ -147,14 +147,18 @@ dl dd {
 
 /********** styling for showing diffs on a delivery service request **********/
 
-.current-value {
-	legend {
-		color: white;
-		font-weight: bold;
-		font-size: 12px;
+aside.current-value {
+	border: 1px solid #ddd !important;
+	margin: 10px;
+	padding: 10px;
+	position: relative;
+	border-radius: 4px;
+	background-color: #f5f5f5;
+	padding-left: 10px !important;
+	label {
+		width: 100%;
 		background-color: #293F54;
+		color: white;
+		padding: 5px;
 	}
 }
-
-
-
