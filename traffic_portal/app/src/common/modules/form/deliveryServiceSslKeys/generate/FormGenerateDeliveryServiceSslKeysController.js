@@ -34,6 +34,7 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
 		return sslRequest;
 	};
 
+	$scope.useLetsEncrypt = false;
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -295,29 +296,54 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
 	];
 
 	$scope.confirmGenerate = function(sslRequest) {
-	var params = {
-		title: 'Generate New SSL Keys for Delivery Service: ' + deliveryService.xmlId ,
-		message: ' (replacing any previous keys)'
-	};
-	var modalInstance = $uibModal.open({
-		templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-		controller: 'DialogConfirmController',
-		size: 'md',
-		resolve: {
-			params: function () {
-				return params;
-			}
-		}
-	});
-	modalInstance.result.then(function() {
-		deliveryServiceSslKeysService.generateSslKeys(deliveryService, sslKeys, sslRequest).then(
-            function() {
-                locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys');
-            });
-	}, function () {
-		// do nothing
-	});
-	};
+        var params = {
+            title: 'Generate New SSL Keys for Delivery Service: ' + deliveryService.xmlId,
+            message: ' (replacing any previous keys)'
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            deliveryServiceSslKeysService.generateSslKeys(deliveryService, sslKeys, sslRequest).then(
+                function() {
+                    locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys');
+                });
+        }, function () {
+            // do nothing
+        });
+    };
+
+    $scope.confirmGenerateLetsEncrypt = function(sslRequest) {
+        var params = {
+            title: 'Generate New SSL Keys Using Let\'s Encrypt for Delivery Service: ' + deliveryService.xmlId,
+            message: ' (replacing any previous keys)'
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            deliveryServiceSslKeysService.generateSslKeysWithLetsEncrypt(deliveryService, sslKeys, sslRequest).then(
+                function() {
+                    locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys');
+                });
+        }, function () {
+            // do nothing
+        });
+    };
 
 };
 

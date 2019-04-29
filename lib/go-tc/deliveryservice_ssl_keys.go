@@ -162,6 +162,19 @@ func (r *DeliveryServiceGenSSLKeysReq) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+type DeliveryServiceLetsEncryptSSLKeysReq struct {
+	DeliveryServiceSSLKeysReq
+}
+
+func (r *DeliveryServiceLetsEncryptSSLKeysReq) Validate(tx *sql.Tx) error {
+	r.Sanitize()
+	errs := r.validateSharedRequiredRequestFields()
+	if len(errs) > 0 {
+		return errors.New("missing fields: " + strings.Join(errs, "; "))
+	}
+	return nil
+}
+
 func checkNilOrEmpty(s *string) bool {
 	return s == nil || *s == ""
 }
