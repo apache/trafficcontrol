@@ -14,8 +14,38 @@
 import { orderBy } from './order-by';
 
 describe('orderBy', () => {
-	// it('should create an instance', () => {
-	// 	const pipe = new OrderByPipe();
-	// 	expect(pipe).toBeTruthy();
-	// });
+	it('sorts single properties properly', () => {
+		const input = [{foo: 1, bar: 2}, {foo: 1, bar: 1}];
+		const output = orderBy(input, 'bar');
+		expect(output[0].bar).toEqual(1);
+		expect(output[1].bar).toEqual(2);
+	});
+
+	it('sorts multiple properties properly', () => {
+		const input = [{foo: 2, bar: 2}, {foo: 1, bar: 3}, {foo: 3, bar: 1}, {foo: 2, bar: 3}];
+		const output = orderBy(input, ['bar', 'foo']);
+		expect(output[0].bar).toEqual(1);
+		expect(output[1].bar).toEqual(2);
+		expect(output[2].bar).toEqual(3);
+		expect(output[2].foo).toEqual(1)
+		expect(output[3].bar).toEqual(3);
+		expect(output[3].foo).toEqual(2);
+	});
+
+	it('handles null properties', () => {
+		const input = [{foo: 2}, {foo: null}, {foo: 1}];
+		const output = orderBy(input, 'foo');
+		expect(output[0].foo).toEqual(1);
+		expect(output[1].foo).toEqual(2);
+		expect(output[2].foo).toBeNull();
+	});
+
+	it('ignores values of differing types', () => {
+		const input = [{foo: 2}, {foo: '1'}, {foo: 3}, {foo: 1}];
+		const output = orderBy(input, 'foo');
+		expect(output[0].foo).toEqual(2);
+		expect(output[1].foo).toEqual('1');
+		expect(output[2].foo).toEqual(1);
+		expect(output[3].foo).toEqual(3);
+	});
 });
