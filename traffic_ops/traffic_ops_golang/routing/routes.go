@@ -52,6 +52,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservicesregexes"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federations"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/foo"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/login"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/origin"
@@ -388,6 +389,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.4, http.MethodGet, `federations/all/?(\.json)?$`, federations.GetAll, auth.PrivLevelAdmin, Authenticated, nil},
 		{1.1, http.MethodGet, `federations/?(\.json)?$`, federations.Get, auth.PrivLevelFederation, Authenticated, nil},
 		{1.1, http.MethodPost, `federations/{id}/deliveryservices?(\.json)?$`, federations.PostDSes, auth.PrivLevelAdmin, Authenticated, nil},
+
+		// Foos
+		{1.5, http.MethodGet, `foos/?(\.json)?$`, api.ReadHandler(&foo.TOFoo{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.5, http.MethodGet, `foos/{id}/?(\.json)?$`, api.ReadHandler(&foo.TOFoo{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.5, http.MethodPost, `foos/?(\.json)?$`, foo.Create, auth.PrivLevelOperations, Authenticated, nil},
+		{1.5, http.MethodPut, `foos/{id}/?(\.json)?$`, foo.Update, auth.PrivLevelOperations, Authenticated, nil},
+		{1.5, http.MethodDelete, `foos/{id}/?(\.json)?$`, api.DeleteHandler(&foo.TOFoo{}), auth.PrivLevelOperations, Authenticated, nil},
 
 		////DeliveryServices
 		{1.4, http.MethodGet, `deliveryservices/?(\.json)?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil},
