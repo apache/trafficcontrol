@@ -118,7 +118,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 				} else if orgURI.Scheme == "https" {
 					orgURI.Host += ":443"
 				} else {
-					log.Errorln("parent.config generation: fds '" + string(ds.Name) + "' origin  URI: '" + orgURIStr + "' is unknown scheme '" + orgURI.Scheme + "', but has no port! Using as-is! ")
+					log.Errorln("parent.config generation: delivery service '" + string(ds.Name) + "' origin  URI: '" + orgURIStr + "' is unknown scheme '" + orgURI.Scheme + "', but has no port! Using as-is! ")
 				}
 			}
 
