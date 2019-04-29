@@ -16,6 +16,7 @@ package v14
 */
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -23,10 +24,38 @@ import (
 )
 
 func TestDivisions(t *testing.T) {
-	WithObjs(t, []TCObj{Parameters, Divisions}, func() {
+	WithObjs(t, []TCObj{Parameters, Divisions, Regions}, func() {
+		TryToDeleteDivision(t)
 		UpdateTestDivisions(t)
 		GetTestDivisions(t)
 	})
+}
+
+func TryToDeleteDivision(t *testing.T) {
+	division := testData.Divisions[0]
+
+	resp, _, err := TOSession.GetDivisionByName(division.Name)
+	if err != nil {
+		t.Errorf("cannot GET Division by name: %v - %v\n", division.Name, err)
+	}
+	division = resp[0]
+	_, _, err = TOSession.DeleteDivisionByID(division.ID)
+
+	if err == nil {
+		t.Errorf("should not be able to delete a division prematurely")
+		return
+	}
+
+	if strings.Contains(err.Error(), "Resource not found.") {
+		t.Errorf("division with name %v does not exist", division.Name)
+		return
+	}
+
+	if strings.Contains(err.Error(), "cannot delete division because it is being used by a region") {
+		return
+	}
+
+	t.Errorf("unexpected error occured: %v", err)
 }
 
 func CreateTestDivisions(t *testing.T) {
