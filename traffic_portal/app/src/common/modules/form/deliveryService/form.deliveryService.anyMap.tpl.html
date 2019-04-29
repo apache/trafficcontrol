@@ -75,8 +75,8 @@ under the License.
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.active, 'required')">Required</small>
                     <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.active != dsCurrent.active">
-                        <label for="current-value-active">Current Value</label>
-                        <pre id="current-value-active">{{::dsCurrent.active ? 'Active' : 'Not Active'}}</pre>
+                        <h3>Current Value</h3>
+                        <pre>{{::dsCurrent.active ? 'Active' : 'Not Active'}}</pre>
                     </aside>
                 </div>
             </div>
@@ -98,8 +98,8 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
                     <small ng-show="deliveryService.typeId"><a href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                     <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.typeId != dsCurrent.typeId">
-                        <label for="current-value-typeId">Current Value</label>
-                        <pre id="current-value-typeId">{{::dsCurrent.type}}</pre>
+                        <h3>Current Value</h3>
+                        <pre>{{::dsCurrent.type}}</pre>
                     </aside>
                 </div>
             </div>
@@ -116,8 +116,8 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
                     <span ng-show="hasError(deliveryServiceForm.xmlId)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.xmlId != dsCurrent.xmlId">
-                        <label for="current-value-xmlId">Current Value</label>
-                        <pre id="current-value-xmlId">{{::dsCurrent.xmlId}}</pre>
+                        <h3>Current Value</h3>
+                        <pre>{{::dsCurrent.xmlId}}</pre>
                     </aside>
                 </div>
             </div>
@@ -133,8 +133,8 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(deliveryServiceForm.displayName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.displayName != dsCurrent.displayName">
-                        <label for="current-value-displayName">Current Value</label>
-                        <pre id="current-value-displayName">{{::dsCurrent.displayName}}</pre>
+                        <h3>Current Value</h3>
+                        <pre>{{::dsCurrent.displayName}}</pre>
                     </aside>
                 </div>
             </div>
@@ -151,8 +151,8 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.tenantId, 'required')">Required</small>
                     <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                     <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.tenantId != dsCurrent.tenantId">
-                        <label for="current-value-tenantId">Current Value</label>
-                        <pre id="current-value-tenantId">{{::dsCurrent.tenant}}</pre>
+                        <h3>Current Value</h3>
+                        <pre>{{::dsCurrent.tenant}}</pre>
                     </aside>
                 </div>
             </div>
@@ -169,8 +169,8 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
                     <small ng-show="deliveryService.cdnId"><a href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                     <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cdnId != dsCurrent.cdnId">
-                        <label for="current-value-cdnId">Current Value</label>
-                        <pre id="current-value-cdnId">{{::dsCurrent.cdnName}}</pre>
+                        <h3>Current Value</h3>
+                        <pre>{{::dsCurrent.cdnName}}</pre>
                     </aside>
                 </div>
             </div>
@@ -185,8 +185,8 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc, 'required')">Required</small>
                     <span ng-show="hasError(deliveryServiceForm.longDesc)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc != dsCurrent.longDesc">
-                        <label for="current-value-longDesc">Current Value</label>
-                        <pre id="current-value-longDesc">{{::dsCurrent.longDesc}}</pre>
+                        <h3>Current Value</h3>
+                        <pre>{{::dsCurrent.longDesc}}</pre>
                     </aside>
                 </div>
             </div>
@@ -200,8 +200,8 @@ under the License.
                     <textarea id="longDesc1" name="longDesc1" class="form-control" ng-model="deliveryService.longDesc1" rows="3"></textarea>
                     <span ng-show="hasError(deliveryServiceForm.longDesc1)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc1 != dsCurrent.longDesc1">
-                        <label for="current-value-longDesc1">Current Value</label>
-                        <pre id="current-value-longDesc1">{{::dsCurrent.longDesc1}}</pre>
+                        <h3>Current Value</h3>
+                        <pre>{{::dsCurrent.longDesc1}}</pre>
                     </aside>
                 </div>
             </div>
@@ -215,8 +215,8 @@ under the License.
                     <textarea id="longDesc2" name="longDesc2" class="form-control" ng-model="deliveryService.longDesc2" rows="3"></textarea>
                     <span ng-show="hasError(deliveryServiceForm.longDesc2)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc2 != dsCurrent.longDesc2">
-                        <label for="current-value-longDesc2">Current Value</label>
-                        <pre id="current-value-longDesc2">{{::dsCurrent.longDesc2}}</pre>
+                        <h3>Current Value</h3>
+                        <pre>{{::dsCurrent.longDesc2}}</pre>
                     </aside>
                 </div>
             </div>
@@ -244,8 +244,8 @@ under the License.
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.regionalGeoBlocking, 'required')">Required</small>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.regionalGeoBlocking != dsCurrent.regionalGeoBlocking">
-                            <label for="current-value-regionalGeoBlocking">Current Value</label>
-                            <pre id="current-value-regionalGeoBlocking">{{::dsCurrent.regionalGeoBlocking ? 'Enabled' : 'Disabled'}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.regionalGeoBlocking ? 'Enabled' : 'Disabled'}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -262,8 +262,8 @@ under the License.
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.logsEnabled, 'required')">Required</small>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.logsEnabled != dsCurrent.logsEnabled">
-                            <label for="current-value-logsEnabled">Current Value</label>
-                            <pre id="current-value-logsEnabled">{{::dsCurrent.logsEnabled ? 'Enabled' : 'Disabled'}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.logsEnabled ? 'Enabled' : 'Disabled'}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -280,8 +280,8 @@ under the License.
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoProvider != dsCurrent.geoProvider">
-                            <label for="current-value-geoProvider">Current Value</label>
-                            <pre id="current-value-geoProvider">{{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -308,8 +308,8 @@ under the License.
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimit != dsCurrent.geoLimit">
-                            <label for="current-value-geoLimit">Current Value</label>
-                            <pre id="current-value-geoLimit">{{magicNumberLabel(geoLimits, dsCurrent.geoLimit)}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{magicNumberLabel(geoLimits, dsCurrent.geoLimit)}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -324,8 +324,8 @@ under the License.
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimitCountries, 'maxlength')">Too Long</small>
                         <span ng-show="hasError(deliveryServiceForm.geoLimitCountries)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">
-                            <label for="current-value-geoLimitCountries">Current Value</label>
-                            <pre id="current-value-geoLimitCountries">{{::dsCurrent.geoLimitCountries}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.geoLimitCountries}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -344,8 +344,8 @@ under the License.
                         <input id="geoLimitRedirectURL" name="geoLimitRedirectURL" type="url" class="form-control" ng-model="deliveryService.geoLimitRedirectURL" title="Must be a valid URL.">
                         <span ng-show="hasError(deliveryServiceForm.geoLimitRedirectURL)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitRedirectURL != dsCurrent.geoLimitRedirectURL">
-                            <label for="current-value-geoLimitRedirectURL">Current Value</label>
-                            <pre id="current-value-geoLimitRedirectURL">{{::dsCurrent.geoLimitRedirectURL}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.geoLimitRedirectURL}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -361,8 +361,8 @@ under the License.
                         </select>
                         <small ng-show="deliveryService.profileId"><a href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.profileId != dsCurrent.profileId">
-                            <label for="current-value-profileId">Current Value</label>
-                            <pre id="current-value-profileId">{{::dsCurrent.profileName}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.profileName}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -377,8 +377,8 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <textarea id="trRequestHeaders" name="trRequestHeaders" class="form-control" ng-model="deliveryService.trRequestHeaders" rows="3"></textarea>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.trRequestHeaders != dsCurrent.trRequestHeaders">
-                            <label for="current-value-trRequestHeaders">Current Value</label>
-                            <pre id="current-value-trRequestHeaders">{{::dsCurrent.trRequestHeaders}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.trRequestHeaders}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -407,8 +407,8 @@ under the License.
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cacheurl, 'maxlength')">Too Long</small>
                         <span ng-show="hasError(deliveryServiceForm.cacheurl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cacheurl != dsCurrent.cacheurl">
-                            <label for="current-value-cacheurl">Current Value</label>
-                            <pre id="current-value-cacheurl">{{::dsCurrent.cacheurl}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.cacheurl}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -422,8 +422,8 @@ under the License.
                         <input id="ccrDnsTtl" name="ccrDnsTtl" type="number" class="form-control" ng-model="deliveryService.ccrDnsTtl" min="0" step="1">
                         <span ng-show="hasError(deliveryServiceForm.ccrDnsTtl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">
-                            <label for="current-value-ccrDnsTtl">Current Value</label>
-                            <pre id="current-value-ccrDnsTtl">{{::dsCurrent.ccrDnsTtl}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.ccrDnsTtl}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -436,8 +436,8 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <textarea id="remapText" name="remapText" class="form-control" ng-model="deliveryService.remapText" rows="3"></textarea>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.remapText != dsCurrent.remapText">
-                            <label for="current-value-remapText">Current Value</label>
-                            <pre id="current-value-remapText">{{::dsCurrent.remapText}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.remapText}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -453,8 +453,8 @@ under the License.
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.infoUrl, 'maxlength')">Too Long</small>
                         <span ng-show="hasError(deliveryServiceForm.infoUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.infoUrl != dsCurrent.infoUrl">
-                            <label for="current-value-infoUrl">Current Value</label>
-                            <pre id="current-value-infoUrl">{{::dsCurrent.infoUrl}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.infoUrl}}</pre>
                         </aside>
                     </div>
                 </div>
@@ -469,8 +469,8 @@ under the License.
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.checkPath, 'maxlength')">Too Long</small>
                         <span ng-show="hasError(deliveryServiceForm.checkPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                         <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.checkPath != dsCurrent.checkPath">
-                            <label for="current-value-checkPath">Current Value</label>
-                            <pre id="current-value-checkPath">{{::dsCurrent.checkPath}}</pre>
+                            <h3>Current Value</h3>
+                            <pre>{{::dsCurrent.checkPath}}</pre>
                         </aside>
                     </div>
                 </div>
