@@ -1005,13 +1005,13 @@ WHERE
 	defer rows.Close()
 
 	cgServerIDs := []int{}
-	ss := []CGServer{}
+	cgServers := []CGServer{}
 	for rows.Next() {
 		s := CGServer{}
 		if err := rows.Scan(&s.ServerID, &s.ServerHost, &s.ServerIP, &s.ServerPort, &s.CacheGroupID, &s.Status, &s.Type, &s.ProfileID, &s.CDN, &s.TypeName, &s.Domain); err != nil {
 			return nil, nil, errors.New("scanning: " + err.Error())
 		}
-		ss = append(ss, s)
+		cgServers = append(cgServers, s)
 		cgServerIDs = append(cgServerIDs, int(s.ServerID))
 	}
 
@@ -1041,24 +1041,24 @@ WHERE
 		return nil, nil, errors.New("getting deliveryservice origins: " + err.Error())
 	}
 
-	for _, s := range ss {
-		if s.TypeName == tc.OriginTypeName {
-			dses := cgServerDSes[s.ServerID]
+	for _, cgServer := range cgServers {
+		if cgServer.TypeName == tc.OriginTypeName {
+			dses := cgServerDSes[cgServer.ServerID]
 			for _, ds := range dses {
 				orgURI := dsOrigins[ds]
-				originServers[orgURI.Host] = append(originServers[orgURI.Host], s)
+				originServers[orgURI.Host] = append(originServers[orgURI.Host], cgServer)
 			}
 		} else {
-			originServers[DeliveryServicesAllParentsKey] = append(originServers[DeliveryServicesAllParentsKey], s)
+			originServers[DeliveryServicesAllParentsKey] = append(originServers[DeliveryServicesAllParentsKey], cgServer)
 		}
 
-		if _, profileCachesHasProfile := profileCaches[s.ProfileID]; !profileCachesHasProfile {
+		if _, profileCachesHasProfile := profileCaches[cgServer.ProfileID]; !profileCachesHasProfile {
 			defaultProfileCache := DefaultProfileCache()
-			if profileCache, profileParamsHasProfile := profileParams[s.ProfileID]; !profileParamsHasProfile {
-				log.Warnf("cachegroup has server with profile %+v but that profile has no parameters", s.ProfileID)
-				profileCaches[s.ProfileID] = defaultProfileCache
+			if profileCache, profileParamsHasProfile := profileParams[cgServer.ProfileID]; !profileParamsHasProfile {
+				log.Warnf("cachegroup has server with profile %+v but that profile has no parameters", cgServer.ProfileID)
+				profileCaches[cgServer.ProfileID] = defaultProfileCache
 			} else {
-				profileCaches[s.ProfileID] = profileCache
+				profileCaches[cgServer.ProfileID] = profileCache
 			}
 		}
 	}
