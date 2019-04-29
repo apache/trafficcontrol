@@ -18,12 +18,18 @@ CREATE DOMAIN longitude AS numeric CHECK (VALUE >= -180 AND VALUE <= 180);
 
 UPDATE coordinate SET latitude=0 WHERE latitude>90 OR latitude<-90;
 UPDATE coordinate SET longitude=0 WHERE longitude>180 OR longitude<-180;
+UPDATE deliveryservice SET miss_lat=0 WHERE miss_lat>90 OR latitude<-90;
+UPDATE deliveryservice SET miss_long=0 WHERE miss_long>180 OR miss_long<-180;
 
 ALTER TABLE coordinate ALTER COLUMN latitude SET DATA TYPE latitude;
 ALTER TABLE coordinate ALTER COLUMN longitude SET DATA TYPE longitude;
+ALTER TABLE deliveryservice ALTER COLUMN miss_lat SET DATA TYPE miss_lat;
+ALTER TABLE deliveryservice ALTER COLUMN miss_long SET DATA TYPE miss_long;
 
 -- +goose Down
 ALTER TABLE coordinate ALTER COLUMN latitude SET DATA TYPE numeric;
 ALTER TABLE coordinate ALTER COLUMN longitude SET DATA TYPE numeric;
+ALTER TABLE deliveryservice ALTER COLUMN miss_lat SET DATA TYPE numeric;
+ALTER TABLE deliveryservice ALTER COLUMN miss_long SET DATA TYPE numeric;
 DROP DOMAIN IF EXISTS latitude;
 DROP DOMAIN IF EXISTS longitude;
