@@ -37,7 +37,7 @@ import (
 	"github.com/lib/pq"
 )
 
-const DefaultATSVersion = "5" // emulates Perl
+const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer officially supports ATS 5.
 
 const InvalidID = -1
 
