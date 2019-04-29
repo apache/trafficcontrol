@@ -84,7 +84,7 @@ insert into tenant (name, active, parent_id) values ('root', true, null) ON CONF
 insert into tenant (name, active, parent_id) values ('unassigned', true, (select id from tenant where name='root')) ON CONFLICT DO NOTHING;
 
 -- roles
--- out of the box, only 3 roles are defined. Other roles can be created by the admin as needed.
+-- out of the box, only 5 roles are defined. Other roles can be created by the admin as needed.
 insert into role (name, description, priv_level) values ('admin', 'Has access to everything.', 30) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('operations', 'Has all reads and most write capabilities', 20) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('portal', 'Portal User', 15) ON CONFLICT (name) DO NOTHING;
