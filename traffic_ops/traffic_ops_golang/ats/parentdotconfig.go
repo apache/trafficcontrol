@@ -215,7 +215,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 					}
 					textLine += ` max_simple_retries=` + ds.MSOMaxSimpleRetries + ` max_unavailable_server_retries=` + ds.MSOMaxUnavailableServerRetries
 				}
-				textLine += "\n"
+				textLine += "\n" // TODO remove, and join later on "\n" instead of ""?
 				textArr = append(textArr, textLine)
 			}
 		}
