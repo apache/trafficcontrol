@@ -41,6 +41,7 @@ var trafficPortal = angular.module('trafficPortal', [
         'chart.js',
         'angular-loading-bar',
         'moment-picker',
+        'jsonFormatter',
 
         // public modules
         require('./modules/public').name,
