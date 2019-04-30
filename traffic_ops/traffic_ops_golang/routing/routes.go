@@ -397,10 +397,12 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.6, http.MethodPost, `foos/?(\.json)?$`, foo.CreateV16, auth.PrivLevelOperations, Authenticated, nil},
 		{1.7, http.MethodPost, `foos/?(\.json)?$`, foo.CreateV17, auth.PrivLevelOperations, Authenticated, nil},
 		{1.8, http.MethodPost, `foos/?(\.json)?$`, foo.CreateV18, auth.PrivLevelOperations, Authenticated, nil},
+		{1.9, http.MethodPost, `foos/?(\.json)?$`, foo.CreateV19, auth.PrivLevelOperations, Authenticated, nil},
 		{1.5, http.MethodPut, `foos/{id}/?(\.json)?$`, foo.UpdateV15, auth.PrivLevelOperations, Authenticated, nil},
 		{1.6, http.MethodPut, `foos/{id}/?(\.json)?$`, foo.UpdateV16, auth.PrivLevelOperations, Authenticated, nil},
 		{1.7, http.MethodPut, `foos/{id}/?(\.json)?$`, foo.UpdateV17, auth.PrivLevelOperations, Authenticated, nil},
 		{1.8, http.MethodPut, `foos/{id}/?(\.json)?$`, foo.UpdateV18, auth.PrivLevelOperations, Authenticated, nil},
+		{1.9, http.MethodPut, `foos/{id}/?(\.json)?$`, foo.UpdateV19, auth.PrivLevelOperations, Authenticated, nil},
 		{1.5, http.MethodDelete, `foos/{id}/?(\.json)?$`, api.DeleteHandler(&foo.TOFoo{}), auth.PrivLevelOperations, Authenticated, nil},
 
 		////DeliveryServices

@@ -171,6 +171,34 @@ func CreateV18(w http.ResponseWriter, r *http.Request) {
 }
 
 func createV18(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV18) *tc.FooV18 {
+	fooV19 := tc.FooV19{FooV18: foo}
+	res := createV19(w, r, info, fooV19)
+	if res != nil {
+		return &res.FooV18
+	}
+	return nil
+}
+
+func CreateV19(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV19{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+	}
+	res := createV19(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV19{*res})
+	}
+
+}
+
+func createV19(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV19) *tc.FooV19 {
 	fooLatest := tc.Foo(foo) // NOTE: the "latest" subhandler might always have to do this?
 	if err := fooLatest.Validate(info.Tx.Tx); err != nil {
 		api.HandleErr(w, r, info.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
@@ -178,8 +206,8 @@ func createV18(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc
 	}
 	log.Infoln("here we would call tx.Query(insertQuery(), &foo.Name, &foo.A)")
 
-	fooV18 := tc.FooV18(fooLatest)
-	return &fooV18
+	fooV19 := tc.FooV19(fooLatest)
+	return &fooV19
 }
 
 // Read is the Foo implementation of the Reader interface. For multiple minor versions, might need to rework this to
@@ -319,6 +347,38 @@ func UpdateV18(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateV18(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV18) *tc.FooV18 {
+	fooV19 := tc.FooV19{FooV18: foo}
+
+	log.Infoln("here we would query the DB for the existing E value (a 1.9 field) to populate a 1.9 request, essentially upgrading this 1.8 request into a 1.9 request")
+
+	res := updateV19(w, r, inf, fooV19)
+	if res != nil {
+		return &res.FooV18
+	}
+	return nil
+}
+
+func UpdateV19(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV19{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+
+	res := updateV19(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV19{*res})
+	}
+}
+
+func updateV19(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV19) *tc.FooV19 {
 	fooLatest := tc.Foo(foo)
 	id := inf.IntParams["id"]
 
@@ -331,8 +391,8 @@ func updateV18(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.
 
 	log.Infoln("here we would call tx.Query(updateQuery(), &foo.Name, &foo.A, &foo.B, &foo.C, &foo.D)")
 
-	fooV18 := tc.FooV18(fooLatest)
-	return &fooV18
+	fooV19 := tc.FooV19(fooLatest)
+	return &fooV19
 }
 
 // Delete is the Foo implementation of the Deleter interface.
