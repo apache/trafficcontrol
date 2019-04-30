@@ -64,6 +64,7 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 			$scope[destination + "Count"].updated = updated;
 			$scope[destination + "Changes"] = diff;
 		} else {
+			// todo fix this
 			display.innerHTML = 'Diff failed. You may need to perform your first snapshot.';
 		}
 

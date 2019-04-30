@@ -806,16 +806,16 @@ var jsonpatch =
 					else {
 						if (oldVal !== newVal) {
 							changed = true;
-							patches.push({ op: "replace", path: path + "/" + helpers_1.escapePathComponent(key), value: helpers_1._deepClone(newVal) });
+							patches.push({ op: "replace", path: path + "/" + helpers_1.escapePathComponent(key), value: helpers_1._deepClone(newVal), oldValue: helpers_1._deepClone(oldVal) });
 						}
 					}
 				}
 				else if (Array.isArray(mirror) === Array.isArray(obj)) {
-					patches.push({ op: "remove", path: path + "/" + helpers_1.escapePathComponent(key) });
+					patches.push({ op: "remove", path: path + "/" + helpers_1.escapePathComponent(key), value: undefined, oldValue: helpers_1._deepClone(oldVal) });
 					deleted = true; // property has been deleted
 				}
 				else {
-					patches.push({ op: "replace", path: path, value: obj });
+					patches.push({ op: "replace", path: path, value: obj, oldValue: undefined });
 					changed = true;
 				}
 			}
@@ -825,7 +825,7 @@ var jsonpatch =
 			for (var t = 0; t < newKeys.length; t++) {
 				var key = newKeys[t];
 				if (!helpers_1.hasOwnProperty(mirror, key) && obj[key] !== undefined) {
-					patches.push({ op: "add", path: path + "/" + helpers_1.escapePathComponent(key), value: helpers_1._deepClone(obj[key]) });
+					patches.push({ op: "add", path: path + "/" + helpers_1.escapePathComponent(key), value: helpers_1._deepClone(obj[key]), oldValue: undefined });
 				}
 			}
 		}
