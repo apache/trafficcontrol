@@ -27,7 +27,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
@@ -70,7 +69,7 @@ func (foo *TOFoo) GetType() string {
 	return "foo"
 }
 
-func Create(w http.ResponseWriter, r *http.Request) {
+func CreateV15(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -78,40 +77,123 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	foo := tc.Foo{} // the struct to parse into would need to change for each specific minor version
-	if err := api.Parse(r.Body, inf.Tx.Tx, &foo); err != nil {
+	foo := tc.FooV15{} // the struct to parse into would need to change for each specific minor version
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-		return
 	}
-
-	if err := foo.Validate(inf.Tx.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
-		return
+	res := createV15(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV15{*res})
 	}
-	log.Infoln("here we would call tx.Query(insertQuery(), &foo.Name, &foo.A)")
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.Foo{foo})
 }
 
-// Read is the Foo implementation of the Reader interface
+func createV15(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV15) *tc.FooV15 {
+	fooV16 := tc.FooV16{FooV15: foo}
+	res := createV16(w, r, info, fooV16)
+	if res != nil {
+		return &res.FooV15
+	}
+	return nil
+}
+
+func CreateV16(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV16{} // TODO: this needed to change when we added a V17. Can we do better?
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+	}
+	res := createV16(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV16{*res})
+	}
+}
+
+func createV16(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV16) *tc.FooV16 {
+	fooV17 := tc.FooV17{FooV16: foo}
+	res := createV17(w, r, info, fooV17)
+	if res != nil {
+		return &res.FooV16
+	}
+	return nil
+}
+
+func CreateV17(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV17{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+	}
+	res := createV17(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV17{*res})
+	}
+
+}
+
+func createV17(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV17) *tc.FooV17 {
+	fooV18 := tc.FooV18{FooV17: foo}
+	res := createV18(w, r, info, fooV18)
+	if res != nil {
+		return &res.FooV17
+	}
+	return nil
+}
+
+func CreateV18(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV18{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+	}
+	res := createV18(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV18{*res})
+	}
+
+}
+
+func createV18(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV18) *tc.FooV18 {
+	fooLatest := tc.Foo(foo) // NOTE: the "latest" subhandler might always have to do this?
+	if err := fooLatest.Validate(info.Tx.Tx); err != nil {
+		api.HandleErr(w, r, info.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
+		return nil
+	}
+	log.Infoln("here we would call tx.Query(insertQuery(), &foo.Name, &foo.A)")
+
+	fooV18 := tc.FooV18(fooLatest)
+	return &fooV18
+}
+
+// Read is the Foo implementation of the Reader interface. For multiple minor versions, might need to rework this to
+// better handle minor versions with the Reader interface. Otherwise, it might make sense to just not use the Reader
+// interface for endpoints with lots of minor versions. Or, have a "shared" Read handler that each minor version calls,
+// then extracts its specific versioned struct out of the result from the shared handler. I think that is mainly how the
+// deliveryservices Read handlers work today.
 func (foo *TOFoo) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 	log.Infoln("here we could call tx.Query(selectQuery()) and rows.Scan(&foo.ID, &foo.Name, &foo.A)")
 	foos := []tc.Foo{
-		{
-			ID:   util.IntPtr(1),
-			Name: util.StrPtr("one"),
-			A:    util.StrPtr("A1"),
-		},
-		{
-			ID:   util.IntPtr(2),
-			Name: util.StrPtr("two"),
-			A:    util.StrPtr("A2"),
-		},
-		{
-			ID:   util.IntPtr(3),
-			Name: util.StrPtr("three"),
-			A:    util.StrPtr("A3"),
-		},
+		{},
+		{},
+		{},
 	}
 
 	for _, f := range foos {
@@ -120,7 +202,7 @@ func (foo *TOFoo) Read() ([]interface{}, error, error, int) {
 	return returnable, nil, nil, http.StatusOK
 }
 
-func Update(w http.ResponseWriter, r *http.Request) {
+func UpdateV15(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -128,22 +210,129 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	id := inf.IntParams["id"]
-
-	foo := tc.Foo{}
+	foo := tc.FooV15{}
 	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
-	foo.ID = &id
 
-	if err := foo.Validate(inf.Tx.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
+	res := updateV15(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV15{*res})
+	}
+}
+
+func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV15) *tc.FooV15 {
+	fooV16 := tc.FooV16{FooV15: foo}
+
+	log.Infoln("here we would query the DB for the existing B value (a 1.6 field) to populate a 1.6 request, essentially upgrading this 1.5 request into a 1.6 request")
+
+	res := updateV16(w, r, inf, fooV16)
+	if res != nil {
+		return &res.FooV15
+	}
+	return nil
+}
+
+func UpdateV16(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV16{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
 
-	log.Infoln("here we would call tx.Query(updateQuery(), &foo.Name, &foo.A)")
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.Foo{foo})
+	res := updateV16(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV16{*res})
+	}
+}
+
+func updateV16(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV16) *tc.FooV16 {
+	fooV17 := tc.FooV17{FooV16: foo}
+
+	log.Infoln("here we would query the DB for the existing C value (a 1.7 field) to populate a 1.7 request, essentially upgrading this 1.6 request into a 1.7 request")
+
+	res := updateV17(w, r, inf, fooV17)
+	if res != nil {
+		return &res.FooV16
+	}
+	return nil
+}
+
+func UpdateV17(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV17{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+
+	res := updateV17(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV17{*res})
+	}
+}
+
+func updateV17(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV17) *tc.FooV17 {
+	fooV18 := tc.FooV18{FooV17: foo}
+
+	log.Infoln("here we would query the DB for the existing D value (a 1.8 field) to populate a 1.8 request, essentially upgrading this 1.7 request into a 1.8 request")
+
+	res := updateV18(w, r, inf, fooV18)
+	if res != nil {
+		return &res.FooV17
+	}
+	return nil
+}
+
+func UpdateV18(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV18{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+
+	res := updateV18(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV18{*res})
+	}
+}
+
+func updateV18(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV18) *tc.FooV18 {
+	fooLatest := tc.Foo(foo)
+	id := inf.IntParams["id"]
+
+	foo.ID = &id
+
+	if err := fooLatest.Validate(inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
+		return nil
+	}
+
+	log.Infoln("here we would call tx.Query(updateQuery(), &foo.Name, &foo.A, &foo.B, &foo.C, &foo.D)")
+
+	fooV18 := tc.FooV18(fooLatest)
+	return &fooV18
 }
 
 // Delete is the Foo implementation of the Deleter interface.

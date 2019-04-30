@@ -42,7 +42,24 @@ type DeleteFooResponse struct {
 	Alerts
 }
 
+type FooV18 Foo // this type alias should always point to the latest minor version
+
 type Foo struct {
+	FooV17
+	D *string `json:"D"`
+}
+
+type FooV17 struct {
+	FooV16
+	C *string `json:"C"`
+}
+
+type FooV16 struct { // FooV16
+	FooV15
+	B *string `json:"B"`
+}
+
+type FooV15 struct {
 	ID   *int    `json:"id"`
 	Name *string `json:"name"`
 	A    *string `json:"A"`
@@ -53,6 +70,7 @@ func (foo *Foo) Sanitize() {
 }
 
 func (foo *Foo) Validate(tx *sql.Tx) error {
+	foo.Sanitize()
 	// TODO: add some validation
 	return nil
 }
