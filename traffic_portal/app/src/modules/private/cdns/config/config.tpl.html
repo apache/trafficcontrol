@@ -75,7 +75,7 @@ under the License.
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="cr in ::contentRoutersChanges">
+                        <tr ng-repeat="cr in ::contentRoutersChanges track by $index">
                             <td data-search="^{{::cr.op}}$">{{::cr.op}}</td>
                             <td data-search="^{{::cr.path}}$">{{::cr.path}}</td>
                             <td class="value" data-search="^{{::cr.oldValue}}$"><json-formatter open="0" json="cr.oldValue"></json-formatter></td>
@@ -101,7 +101,7 @@ under the License.
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="m in ::monitorsChanges">
+                        <tr ng-repeat="m in ::monitorsChanges track by $index">
                             <td data-search="^{{::m.op}}$">{{::m.op}}</td>
                             <td data-search="^{{::m.path}}$">{{::m.path}}</td>
                             <td class="value" data-search="^{{::m.oldValue}}$"><json-formatter open="0" json="m.oldValue"></json-formatter></td>
@@ -127,7 +127,7 @@ under the License.
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="cs in ::contentServersChanges">
+                        <tr ng-repeat="cs in ::contentServersChanges track by $index">
                             <td data-search="^{{::cs.op}}$">{{::cs.op}}</td>
                             <td data-search="^{{::cs.path}}$">{{::cs.path}}</td>
                             <td class="value" data-search="^{{::cs.oldValue}}$"><json-formatter open="0" json="cs.oldValue"></json-formatter></td>
@@ -153,7 +153,7 @@ under the License.
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="ds in ::deliveryServicesChanges">
+                        <tr ng-repeat="ds in ::deliveryServicesChanges track by $index">
                             <td data-search="^{{::ds.op}}$">{{::ds.op}}</td>
                             <td data-search="^{{::ds.path}}$">{{::ds.path}}</td>
                             <td class="value" data-search="^{{::ds.oldValue}}$"><json-formatter open="0" json="ds.oldValue"></json-formatter></td>
@@ -179,7 +179,7 @@ under the License.
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="el in ::edgeLocationsChanges">
+                        <tr ng-repeat="el in ::edgeLocationsChanges track by $index">
                             <td data-search="^{{::el.op}}$">{{::el.op}}</td>
                             <td data-search="^{{::el.path}}$">{{::el.path}}</td>
                             <td class="value" data-search="^{{::el.oldValue}}$"><json-formatter open="0" json="el.oldValue"></json-formatter></td>
@@ -205,7 +205,7 @@ under the License.
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="tl in ::trLocationsChanges">
+                        <tr ng-repeat="tl in ::trLocationsChanges track by $index">
                             <td data-search="^{{::tl.op}}$">{{::tl.op}}</td>
                             <td data-search="^{{::tl.path}}$">{{::tl.path}}</td>
                             <td class="value" data-search="^{{::tl.oldValue}}$"><json-formatter open="0" json="tl.oldValue"></json-formatter></td>
@@ -231,7 +231,7 @@ under the License.
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="s in ::statsChanges">
+                        <tr ng-repeat="s in ::statsChanges track by $index">
                             <td data-search="^{{::s.op}}$">{{::s.op}}</td>
                             <td data-search="^{{::s.path}}$">{{::s.path}}</td>
                             <td class="value" data-search="^{{::s.oldValue}}$"><json-formatter open="0" json="s.oldValue"></json-formatter></td>
