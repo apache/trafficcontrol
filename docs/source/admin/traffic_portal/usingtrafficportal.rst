@@ -171,7 +171,7 @@ This page contains a table displaying all :term:`Delivery Service`\ s visible to
 :CDN:                   The CDN to which the :term:`Delivery Service` belongs
 :IPv6 Enabled:          When set to 'true', the Traffic Router will respond to AAAA DNS requests for the routed name of this :term:`Delivery Service`, Otherwise, only A records will be served
 :DSCP:                  The :abbr:`DSCP (Differentiated Services Code Point)` value with which to mark IP packets sent to the client
-:Signing Algorithm:     See :ref:`signed-urls`
+:Signing Algorithm:     The algorithm used to sign URLs used by the Delivery Service
 :Query String Handling: Describes how the :term:`Delivery Service` treats query strings. It has one of the following possible values:
 
 	USE
@@ -302,7 +302,7 @@ A table of all :term:`origins`. These are automatically created for the :term:`o
 
 :Name:             The name of the :term:`origin`. If this :term:`origin` was created automatically for a :term:`Delivery Service`, this will be the :ref:`ds-xmlid` of that :term:`Delivery Service`.
 :Tenant:           The name of the :term:`Tenant` that owns this :term:`origin` - this is not necessarily the same as the :term:`Tenant` that owns the :term:`Delivery Service` to which this :term:`origin` belongs.
-:Primary:          Either ``true`` to indicate that this is the "primary" :term:`origin`for the :term:`Delivery Service` to which it is assigned, or ``false`` otherwise.
+:Primary:          Either ``true`` to indicate that this is the "primary" :term:`origin` for the :term:`Delivery Service` to which it is assigned, or ``false`` otherwise.
 :Delivery Service: The :ref:`ds-xmlid` of the :term:`Delivery Service` to which this :term:`origin` is assigned.
 :FQDN:             The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin server`.
 :IPv4 Address:     The :term:`origin`'s IPv4 address, if configured.
