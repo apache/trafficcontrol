@@ -294,6 +294,38 @@ Server management includes the ability to (where applicable):
 - clone :term:`Delivery Service` assignments
 - assign :term:`Delivery Service`\ s to server
 
+.. _tp-configure-origins:
+
+Origins
+-------
+A table of all :term:`origins`. These are automatically created for the :term:`origins` served by :term:`Delivery Services` throughout all CDNs, but additional ones can be created at will. The table has the following columns:
+
+:Name:             The name of the :term:`origin`. If this :term:`origin` was created automatically for a :term:`Delivery Service`, this will be the :ref:`ds-xmlid` of that :term:`Delivery Service`.
+:Tenant:           The name of the :term:`Tenant` that owns this :term:`origin` - this is not necessarily the same as the :term:`Tenant` that owns the :term:`Delivery Service` to which this :term:`origin` belongs.
+:Primary:          Either ``true`` to indicate that this is the "primary" :term:`origin`for the :term:`Delivery Service` to which it is assigned, or ``false`` otherwise.
+:Delivery Service: The :ref:`ds-xmlid` of the :term:`Delivery Service` to which this :term:`origin` is assigned.
+:FQDN:             The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin server`.
+:IPv4 Address:     The :term:`origin`'s IPv4 address, if configured.
+:IPv6 Address:     The :term:`origin`'s IPv6 address, if configured.
+:Protocol:         The protocol this :term:`origin` uses to serve content. One of
+
+	- http
+	- https
+
+:Port: The port on which the :term:`origin server` listens for incoming HTTP(S) requests.
+
+	.. note:: If this field appears blank in the table, it means that a default was chosen for the :term:`origin` based on its Protocol - ``80`` for "http", ``443`` for "https".
+
+:Coordinate: The name of the geographic coordinate pair that defines the physical location of this :term:`origin server`. :term:`Origins` created for :term:`Delivery Services` automatically will **not** have associated Coordinates. This can be rectified on the details pages for said :term:`origins`
+:Cachegroup: The name of the :term:`Cache Group` to which this :term:`origin` belongs, if any.
+:Profile:    The name of a :term:`Profile` used by this :term:`origin`.
+
+:term:`Origin` management includes the ability to (where applicable):
+
+- create a new :term:`origin`
+- update an existing :term:`origin`
+- delete an existing :term:`origin`
+
 .. _tp-profiles-page:
 
 Profiles

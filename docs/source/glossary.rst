@@ -30,7 +30,7 @@ Glossary
 
 	cache server
 	cache servers
-		The main function of a CDN is to proxy requests from clients to origin servers and cache the results. To proxy, in the CDN context, is to obtain content using HTTP from an origin server on behalf of a client. To cache is to store the results so they can be reused when other clients are requesting the same content. There are three types of proxies in use on the Internet today:
+		The main function of a CDN is to proxy requests from clients to :term:`origin servers` and cache the results. To proxy, in the CDN context, is to obtain content using HTTP from an :term:`origin server` on behalf of a client. To cache is to store the results so they can be reused when other clients are requesting the same content. There are three types of proxies in use on the Internet today:
 
 		- :term:`Reverse Proxy`: Used by Traffic Control for Edge-tier :dfn:`cache servers`.
 		- :term:`Forward Proxy`: Used by Traffic Control for Mid-tier :dfn:`cache servers`.
@@ -45,7 +45,7 @@ Glossary
 
 		.. seealso:: A :dfn:`Cache Group` serves a particular part of the network as defined in the coverage zone file. See :ref:`asn-czf` for details.
 
-		Consider the example CDN in :numref:`fig-cg_hierarchy`. Here some country/province/region has been divided into quarters: Northeast, Southeast, Northwest, and Southwest. The arrows in the diagram indicate the flow of requests. If a client in the Northwest, for example, were to make a request to the :term:`Delivery Service`, it would first be directed to some :term:`cache server` in the "Northwest" Edge-tier :dfn:`Cache Group`. Should the requested content not be in cache, the Edge-tier server will select a parent from the "West" :dfn:`Cache Group` and pass the request up, caching the result for future use. All Mid-tier :dfn:`Cache Groups` (usually) answer to a single origin that provides canonical content. If requested content is not in the Mid-tier cache, then the request will be passed up to the origin and the result cached.
+		Consider the example CDN in :numref:`fig-cg_hierarchy`. Here some country/province/region has been divided into quarters: Northeast, Southeast, Northwest, and Southwest. The arrows in the diagram indicate the flow of requests. If a client in the Northwest, for example, were to make a request to the :term:`Delivery Service`, it would first be directed to some :term:`cache server` in the "Northwest" Edge-tier :dfn:`Cache Group`. Should the requested content not be in cache, the Edge-tier server will select a parent from the "West" :dfn:`Cache Group` and pass the request up, caching the result for future use. All Mid-tier :dfn:`Cache Groups` (usually) answer to a single :term:`origin` that provides canonical content. If requested content is not in the Mid-tier cache, then the request will be passed up to the :term:`origin` and the result cached.
 
 		.. _fig-cg_hierarchy:
 
@@ -192,10 +192,12 @@ Glossary
 	Mid-tier
 	Mid-tier cache
 	Mid-tier cache server
-		The tier above the edge tier. The mid tier does not directly serves the end-user and is used as an additional layer between the edge and the origin. In a Traffic Control CDN the basic function of the mid cache is that of a :term:`forward proxy`.
+		The tier above the edge tier. The mid tier does not directly serves the end-user and is used as an additional layer between the edge and the :term:`origin`. In a Traffic Control CDN the basic function of the mid cache is that of a :term:`forward proxy`.
 
 	origin
+	origins
 	origin server
+	origin servers
 		The source of content for the CDN. Usually a redundant HTTP/1.1 webserver.
 
 	ORT
