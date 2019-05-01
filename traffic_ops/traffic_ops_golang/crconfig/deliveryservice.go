@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/lib/pq"
 )
 
 const CDNSOAMinimum = 30 * time.Second
@@ -90,15 +91,48 @@ func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeli
 		return nil, errors.New("getting static DNS entries: " + err.Error())
 	}
 
-	q := `
-select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers, d.anonymous_blocking_enabled, d.consistent_hash_regex
-from deliveryservice as d
-inner join type as t on t.id = d.type
-left outer join profile as p on p.id = d.profile
-where d.cdn_id = (select id from cdn where name = $1)
-and d.active = true
-`
-	q += fmt.Sprintf(" and t.name != '%s'", tc.DSTypeAnyMap)
+	q := fmt.Sprintf(`
+SELECT d.anonymous_blocking_enabled,
+       d.ccr_dns_ttl AS ttl,
+       d.consistent_hash_regex,
+       (SELECT ARRAY_AGG(lkey)
+		FROM (SELECT lower(name) AS lkey
+		      FROM deliveryservice_consistent_hash_query_param
+              WHERE deliveryservice_id = d.id
+              GROUP BY lkey
+              ORDER BY lkey)
+        AS sorted)
+       AS query_keys
+       d.deep_caching_type,
+       d.dns_bypass_cname,
+       d.dns_bypass_ip,
+       d.dns_bypass_ip6,
+       d.dns_bypass_ttl,
+       d.geo_limit,
+       d.geo_limit_countries,
+       d.geo_provider,
+       d.geolimit_redirect_url,
+       d.http_bypass_fqdn,
+       d.initial_dispersion,
+       d.ipv6_routing_enabled,
+       d.max_dns_answers,
+       d.miss_lat,
+       d.miss_long,
+       d.protocol,
+       d.regional_geo_blocking,
+       d.routing_name,
+       d.tr_request_headers,
+       d.tr_response_headers,
+       d.xml_id,
+       p.name AS profile,
+       t.name AS "type"
+FROM deliveryservice AS d
+INNER JOIN "type" AS t ON t.id = d.type
+LEFT OUTER JOIN profile AS p ON p.id = d.profile
+WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
+      AND d.active = TRUE
+      AND t.name != '%s'
+`, tc.DSTypeAnyMap)
 	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("querying deliveryservices: " + err.Error())
@@ -107,41 +141,73 @@ and d.active = true
 
 	for rows.Next() {
 		ds := tc.CRConfigDeliveryService{
-			Protocol:        &tc.CRConfigDeliveryServiceProtocol{},
-			ResponseHeaders: map[string]string{},
-			Soa:             cdnSOA,
-			TTLs:            &tc.CRConfigTTL{},
+			Protocol:                      &tc.CRConfigDeliveryServiceProtocol{},
+			ResponseHeaders:               map[string]string{},
+			Soa:                           cdnSOA,
+			TTLs:                          &tc.CRConfigTTL{},
 		}
 
-		missLat := sql.NullFloat64{}
-		missLon := sql.NullFloat64{}
-		protocol := sql.NullInt64{}
+		anonymousBlocking := false
 		ttl := sql.NullInt64{}
-		geoProvider := sql.NullInt64{}
-		ttype := ""
-		geoLimit := sql.NullInt64{}
-		geoLimitCountries := sql.NullString{}
-		geoLimitRedirectURL := sql.NullString{}
-		dispersion := sql.NullInt64{}
-		geoBlocking := false
-		trRespHdrsStr := sql.NullString{}
-		xmlID := ""
-		maxDNSAnswers := sql.NullInt64{}
-		profile := sql.NullString{}
+		consistentHashRegex := sql.NullString{}
+		consistentHashQueryParams := make([]string, 0)
+		deepCachingType := sql.NullString{}
+		dnsBypassCName := sql.NullString{}
 		dnsBypassIP := sql.NullString{}
 		dnsBypassIP6 := sql.NullString{}
 		dnsBypassTTL := sql.NullInt64{}
-		dnsBypassCName := sql.NullString{}
+		geoLimit := sql.NullInt64{}
+		geoLimitCountries := sql.NullString{}
+		geoProvider := sql.NullInt64{}
+		geoLimitRedirectURL := sql.NullString{}
 		httpBypassFQDN := sql.NullString{}
+		dispersion := sql.NullInt64{}
 		ip6RoutingEnabled := sql.NullBool{}
-		deepCachingType := sql.NullString{}
+		maxDNSAnswers := sql.NullInt64{}
+		missLat := sql.NullFloat64{}
+		missLon := sql.NullFloat64{}
+		protocol := sql.NullInt64{}
+		geoBlocking := false
 		trRequestHeaders := sql.NullString{}
+		trRespHdrsStr := sql.NullString{}
 		trResponseHeaders := sql.NullString{}
-		anonymousBlocking := false
-		consistentHashRegex := sql.NullString{}
-		if err := rows.Scan(&xmlID, &missLat, &missLon, &protocol, &ds.TTL, &ds.RoutingName, &geoProvider, &ttype, &geoLimit, &geoLimitCountries, &geoLimitRedirectURL, &dispersion, &geoBlocking, &trRespHdrsStr, &maxDNSAnswers, &profile, &dnsBypassIP, &dnsBypassIP6, &dnsBypassTTL, &dnsBypassCName, &httpBypassFQDN, &ip6RoutingEnabled, &deepCachingType, &trRequestHeaders, &trResponseHeaders, &anonymousBlocking, &consistentHashRegex); err != nil {
+		xmlID := ""
+		profile := sql.NullString{}
+		ttype := ""
+		if err := rows.Scan(&anonymousBlocking,
+		                    &ttl,
+		                    &consistentHashRegex,
+		                    pq.Array(&consistentHashQueryParams),
+		                    &deepCachingType,
+		                    &dnsBypassCName,
+		                    &dnsBypassIP,
+		                    &dnsBypassIP6,
+		                    &dnsBypassTTL,
+		                    &geoLimit,
+		                    &geoLimitCountries,
+		                    &geoProvider,
+		                    &geoLimitRedirectURL,
+		                    &httpBypassFQDN,
+		                    &dispersion,
+		                    &ip6RoutingEnabled,
+		                    &maxDNSAnswers,
+		                    &missLat,
+		                    &missLon,
+		                    &protocol,
+		                    &geoBlocking,
+		                    &trRequestHeaders,
+		                    &trRespHdrsStr,
+		                    &trResponseHeaders,
+		                    &xmlID,
+		                    &profile,
+		                    &ttype); err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
+
+		for _, q := range consistentHashQueryParams {
+			ds.ConsistentHashQueryParams[q] = struct{}{}
+		}
+
 		// TODO prevent (lat XOR lon) in the Tx and UI
 		if missLat.Valid && missLon.Valid {
 			ds.MissLocation = &tc.CRConfigLatitudeLongitudeShort{Lat: missLat.Float64, Lon: missLon.Float64}

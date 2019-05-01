@@ -165,6 +165,16 @@ Response Structure
 
 		.. seealso:: :ref:`anonymous_blocking-qht`
 
+	:consistentHashQueryParameters: A set of query parameters that Traffic Router should consider when determining a consistent hash for a given client request.
+
+		.. versionadded:: ATCv4
+			This endpoint does not, in general, obey the same versioning rules as all others. So this will appear in all API versions, but *only* if the Traffic Ops server is on version 4+
+
+	:consistentHashRegex: An optional regular expression that will ensure clients are consistently routed to a :term:`cache server` based on matches to it.
+
+		.. versionadded:: ATCv4
+			This endpoint does not, in general, obey the same versioning rules as all others. So this will appear in all API versions, but *only* if the Traffic Ops server is on version 4+
+
 	:coverageZoneOnly: A string containing a boolean that tells whether or not this :term:`Delivery Service` routes traffic based only on its Coverage Zone file
 	:deepCachingType:  A string that tells when Deep Caching is used by this :term:`Delivery Service`; one of:
 
