@@ -46,7 +46,7 @@ type FooV19 Foo // this type alias should always point to the latest minor versi
 
 type Foo struct {
 	FooV18
-	E *string `json"E"`
+	E *string `json:"E"`
 }
 
 type FooV18 struct {

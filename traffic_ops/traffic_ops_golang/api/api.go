@@ -289,6 +289,7 @@ type APIInfo struct {
 	ReqID     uint64
 	Tx        *sqlx.Tx
 	Config    *config.Config
+	Version   string
 }
 
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
@@ -333,6 +334,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
 	}
+	apiVersion := getRequestedAPIVersion(r.URL.Path)
 
 	user, err := auth.GetCurrentUser(r.Context())
 	if err != nil {
@@ -354,6 +356,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		IntParams: intParams,
 		User:      user,
 		Tx:        tx,
+		Version:   apiVersion,
 	}, nil, nil, http.StatusOK
 }
 
@@ -377,6 +380,25 @@ func (val *APIInfoImpl) SetInfo(inf *APIInfo) {
 
 func (val APIInfoImpl) APIInfo() *APIInfo {
 	return val.ReqInfo
+}
+
+// getRequestedAPIVersion gets the API version from the request if it exists, otherwise it returns an empty string
+func getRequestedAPIVersion(path string) string {
+	pathParts := strings.Split(path, "/")
+	if len(pathParts) < 2 {
+		return "" // path doesn't start with `/api`, so it's not an api request
+	}
+	if strings.ToLower(pathParts[1]) != "api" {
+		return "" // path doesn't start with `/api`, so it's not an api request
+	}
+	if len(pathParts) < 3 {
+		return "" // path starts with `/api` but not `/api/{version}`, so it's an api request, and an unknown/nonexistent version.
+	}
+	_, err := strconv.ParseFloat(pathParts[2], 64)
+	if err != nil {
+		return "" // path starts with `/api`, and version isn't a number, so it's an unknown/nonexistent version
+	}
+	return pathParts[2]
 }
 
 // GetDB returns the database from the context. This should very rarely be needed, rather `NewInfo` should always be used to get a transaction, except in extenuating circumstances.
