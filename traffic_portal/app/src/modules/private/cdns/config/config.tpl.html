@@ -35,7 +35,7 @@ under the License.
         <uib-tabset active="active" justified="true">
             <uib-tab index="0" class="tab">
                 <uib-tab-heading uib-popover-template="configCount.templateUrl" popover-title="{{configCount.added + configCount.removed + configCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    General Config [ {{configCount.added}} | {{configCount.removed}} | {{configCount.updated}} ]
+                    General Config<br/>[ {{configCount.added}} | {{configCount.removed}} | {{configCount.updated}} ]
                 </uib-tab-heading>
                 <div class="x_content">
                     <br>
@@ -61,7 +61,7 @@ under the License.
             </uib-tab>
             <uib-tab index="1" class="tab">
                 <uib-tab-heading uib-popover-template="contentRoutersCount.templateUrl" popover-title="{{contentRoutersCount.added + contentRoutersCount.removed + contentRoutersCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Traffic Routers [ {{contentRoutersCount.added}} | {{contentRoutersCount.removed}} | {{contentRoutersCount.updated}} ]
+                    Traffic Routers<br/>[ {{contentRoutersCount.added}} | {{contentRoutersCount.removed}} | {{contentRoutersCount.updated}} ]
                 </uib-tab-heading>
                 <div class="x_content">
                     <br>
@@ -87,7 +87,7 @@ under the License.
             </uib-tab>
             <uib-tab index="1" class="tab">
                 <uib-tab-heading uib-popover-template="monitorsCount.templateUrl" popover-title="{{monitorsCount.added + monitorsCount.removed + monitorsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Traffic Monitors [ {{monitorsCount.added}} | {{monitorsCount.removed}} | {{monitorsCount.updated}} ]
+                    Traffic Monitors<br/>[ {{monitorsCount.added}} | {{monitorsCount.removed}} | {{monitorsCount.updated}} ]
                 </uib-tab-heading>
                 <div class="x_content">
                     <br>
@@ -113,7 +113,7 @@ under the License.
             </uib-tab>
             <uib-tab index="2" class="tab">
                 <uib-tab-heading uib-popover-template="contentServersCount.templateUrl" popover-title="{{contentServersCount.added + contentServersCount.removed + contentServersCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Traffic Servers [ {{contentServersCount.added}} | {{contentServersCount.removed}} | {{contentServersCount.updated}} ]
+                    Traffic Servers<br/>[ {{contentServersCount.added}} | {{contentServersCount.removed}} | {{contentServersCount.updated}} ]
                 </uib-tab-heading>
                 <div class="x_content">
                     <br>
@@ -139,7 +139,7 @@ under the License.
             </uib-tab>
             <uib-tab index="3" class="tab">
                 <uib-tab-heading uib-popover-template="deliveryServicesCount.templateUrl" popover-title="{{deliveryServicesCount.added + deliveryServicesCount.removed + deliveryServicesCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Delivery Services [ {{deliveryServicesCount.added}} | {{deliveryServicesCount.removed}} | {{deliveryServicesCount.updated}} ]
+                    Delivery Services<br/>[ {{deliveryServicesCount.added}} | {{deliveryServicesCount.removed}} | {{deliveryServicesCount.updated}} ]
                 </uib-tab-heading>
                 <div class="x_content">
                     <br>
@@ -165,7 +165,7 @@ under the License.
             </uib-tab>
             <uib-tab index="4" class="tab">
                 <uib-tab-heading uib-popover-template="edgeLocationsCount.templateUrl" popover-title="{{edgeLocationsCount.added + edgeLocationsCount.removed + edgeLocationsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Edge Cache Groups [ {{edgeLocationsCount.added}} | {{edgeLocationsCount.removed}} | {{edgeLocationsCount.updated}} ]
+                    Edge Cache Groups<br/>[ {{edgeLocationsCount.added}} | {{edgeLocationsCount.removed}} | {{edgeLocationsCount.updated}} ]
                 </uib-tab-heading>
                 <div class="x_content">
                     <br>
@@ -190,8 +190,34 @@ under the License.
                 </div>
             </uib-tab>
             <uib-tab index="5" class="tab">
+                <uib-tab-heading uib-popover-template="trLocationsCount.templateUrl" popover-title="{{trLocationsCount.added + trLocationsCount.removed + trLocationsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    TR Cache Groups<br/>[ {{trLocationsCount.added}} | {{trLocationsCount.removed}} | {{trLocationsCount.updated}} ]
+                </uib-tab-heading>
+                <div class="x_content">
+                    <br>
+                    <table id="trLocationsChangesTable" class="table responsive-utilities jambo_table changes">
+                        <thead>
+                        <tr class="headings">
+                            <th>Change Type</th>
+                            <th>Path</th>
+                            <th>Current Value</th>
+                            <th>Pending Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="tl in ::trLocationsChanges">
+                            <td data-search="^{{::tl.op}}$">{{::tl.op}}</td>
+                            <td data-search="^{{::tl.path}}$">{{::tl.path}}</td>
+                            <td class="value" data-search="^{{::tl.oldValue}}$"><json-formatter open="0" json="tl.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::tl.value}}$"><json-formatter open="0" json="tl.value"></json-formatter></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </uib-tab>
+            <uib-tab index="6" class="tab">
                 <uib-tab-heading uib-popover-template="statsCount.templateUrl" popover-title="{{statsCount.added + statsCount.removed + statsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Stats [ {{statsCount.added}} | {{statsCount.removed}} | {{statsCount.updated}} ]
+                    Stats<br/>[ {{statsCount.added}} | {{statsCount.removed}} | {{statsCount.updated}} ]
                 </uib-tab-heading>
                 <div class="x_content">
                     <br>
@@ -222,44 +248,50 @@ under the License.
 <!--- start: templates for popovers --->
 
 <script type="text/ng-template" id="configPopoverTemplate.html">
-    <div>{{configCount.added}} additions</div>
-    <div>{{configCount.removed}} removals</div>
+    <div>{{configCount.added}} adds</div>
+    <div>{{configCount.removed}} removes</div>
     <div>{{configCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="crPopoverTemplate.html">
-    <div>{{contentRoutersCount.added}} additions</div>
-    <div>{{contentRoutersCount.removed}} removals</div>
+    <div>{{contentRoutersCount.added}} adds</div>
+    <div>{{contentRoutersCount.removed}} removes</div>
     <div>{{contentRoutersCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="mPopoverTemplate.html">
-    <div>{{monitorsCount.added}} additions</div>
-    <div>{{monitorsCount.removed}} removals</div>
+    <div>{{monitorsCount.added}} adds</div>
+    <div>{{monitorsCount.removed}} removes</div>
     <div>{{monitorsCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="csPopoverTemplate.html">
-    <div>{{contentServersCount.added}} additions</div>
-    <div>{{contentServersCount.removed}} removals</div>
+    <div>{{contentServersCount.added}} adds</div>
+    <div>{{contentServersCount.removed}} removes</div>
     <div>{{contentServersCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="dsPopoverTemplate.html">
-    <div>{{deliveryServicesCount.added}} additions</div>
-    <div>{{deliveryServicesCount.removed}} removals</div>
+    <div>{{deliveryServicesCount.added}} adds</div>
+    <div>{{deliveryServicesCount.removed}} removes</div>
     <div>{{deliveryServicesCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="elPopoverTemplate.html">
-    <div>{{edgeLocationsCount.added}} additions</div>
-    <div>{{edgeLocationsCount.removed}} removals</div>
+    <div>{{edgeLocationsCount.added}} adds</div>
+    <div>{{edgeLocationsCount.removed}} removes</div>
     <div>{{edgeLocationsCount.updated}} updates</div>
 </script>
 
+<script type="text/ng-template" id="tlPopoverTemplate.html">
+    <div>{{trLocationsCount.added}} adds</div>
+    <div>{{trLocationsCount.removed}} removes</div>
+    <div>{{trLocationsCount.updated}} updates</div>
+</script>
+
 <script type="text/ng-template" id="statsPopoverTemplate.html">
-    <div>{{statsCount.added}} additions</div>
-    <div>{{statsCount.removed}} removals</div>
+    <div>{{statsCount.added}} adds</div>
+    <div>{{statsCount.removed}} removes</div>
     <div>{{statsCount.updated}} updates</div>
 </script>
 

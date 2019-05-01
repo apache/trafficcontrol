@@ -37,6 +37,9 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 	var oldEdgeCacheGroups = currentSnapshot.edgeLocations,
 		newEdgeCacheGroups = newSnapshot.edgeLocations;
 
+	var oldTrafficRouterCacheGroups = currentSnapshot.trafficRouterLocations,
+		newTrafficRouterCacheGroups = newSnapshot.trafficRouterLocations;
+
 	var oldStats = currentSnapshot.stats,
 		newStats = newSnapshot.stats;
 
@@ -45,29 +48,25 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 			removed = 0,
 			updated = 0;
 
-		if (oldJSON) {
-			var diff = jsonpatch.compare(oldJSON, newJSON);
-			console.log(diff);
-			diff.forEach(function(change){
-				if (change.op == 'add') {
-					added++;
-				} else if (change.op == 'remove') {
-					removed++;
-				} else if (change.op == 'replace') {
-					change.op = 'update'; // changing the name to 'update'
-					updated++;
-				}
-			});
+		var oldConfig = oldJSON || {},
+			newConfig = newJSON || {};
 
-			$scope[destination + "Count"].added = added;
-			$scope[destination + "Count"].removed = removed;
-			$scope[destination + "Count"].updated = updated;
-			$scope[destination + "Changes"] = diff;
-		} else {
-			// todo fix this
-			display.innerHTML = 'Diff failed. You may need to perform your first snapshot.';
-		}
+		var diff = jsonpatch.compare(oldConfig, newConfig);
+		diff.forEach(function(change){
+			if (change.op == 'add') {
+				added++;
+			} else if (change.op == 'remove') {
+				removed++;
+			} else if (change.op == 'replace') {
+				change.op = 'update'; // changing the name to 'update'
+				updated++;
+			}
+		});
 
+		$scope[destination + "Count"].added = added;
+		$scope[destination + "Count"].removed = removed;
+		$scope[destination + "Count"].updated = updated;
+		$scope[destination + "Changes"] = diff;
 	};
 
 	var snapshot = function() {
@@ -118,6 +117,13 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		templateUrl: 'elPopoverTemplate.html'
 	};
 
+	$scope.trLocationsCount = {
+		added: 0,
+		removed: 0,
+		updated: 0,
+		templateUrl: 'tlPopoverTemplate.html'
+	};
+
 	$scope.statsCount = {
 		added: 0,
 		removed: 0,
@@ -158,8 +164,8 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 			"language": {
 				"emptyTable": "No pending changes"
 			},
-			'columnDefs': [
-				{'max-width': '50%', 'targets': 2}
+			"columnDefs": [
+				{ 'orderable': false, 'targets': [2,3] }
 			]
 		});
 
@@ -172,6 +178,7 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		performDiff(oldTrafficServers, newTrafficServers, 'contentServers');
 		performDiff(oldDeliveryServices, newDeliveryServices, 'deliveryServices');
 		performDiff(oldEdgeCacheGroups, newEdgeCacheGroups, 'edgeLocations');
+		performDiff(oldTrafficRouterCacheGroups, newTrafficRouterCacheGroups, 'trLocations');
 		performDiff(oldStats, newStats, 'stats');
 	};
 	init();
