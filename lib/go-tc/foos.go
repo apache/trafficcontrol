@@ -42,16 +42,11 @@ type DeleteFooResponse struct {
 	Alerts
 }
 
-type FooV19 Foo // this type alias should always point to the latest minor version
+type FooV19 Foo // this type alias should always point to the latest minor version of the foos endpoints
 
 type Foo struct {
-	FooV18
-	E *string `json"E"`
-}
-
-type FooV18 struct {
 	FooV17
-	D *string `json:"D"`
+	D *string `json:"E"`
 }
 
 type FooV17 struct {

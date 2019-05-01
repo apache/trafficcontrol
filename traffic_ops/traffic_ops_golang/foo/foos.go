@@ -143,38 +143,10 @@ func CreateV17(w http.ResponseWriter, r *http.Request) {
 }
 
 func createV17(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV17) *tc.FooV17 {
-	fooV18 := tc.FooV18{FooV17: foo}
-	res := createV18(w, r, info, fooV18)
+	fooV18 := tc.FooV19{FooV17: foo}
+	res := createV19(w, r, info, fooV18)
 	if res != nil {
 		return &res.FooV17
-	}
-	return nil
-}
-
-func CreateV18(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	foo := tc.FooV18{}
-	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-	}
-	res := createV18(w, r, inf, foo)
-	if res != nil {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV18{*res})
-	}
-
-}
-
-func createV18(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV18) *tc.FooV18 {
-	fooV19 := tc.FooV19{FooV18: foo}
-	res := createV19(w, r, info, fooV19)
-	if res != nil {
-		return &res.FooV18
 	}
 	return nil
 }
@@ -315,45 +287,13 @@ func UpdateV17(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateV17(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV17) *tc.FooV17 {
-	fooV18 := tc.FooV18{FooV17: foo}
+	fooV18 := tc.FooV19{FooV17: foo}
 
-	log.Infoln("here we would query the DB for the existing D value (a 1.8 field) to populate a 1.8 request, essentially upgrading this 1.7 request into a 1.8 request")
+	log.Infoln("here we would query the DB for the existing D value (a 1.9 field) to populate a 1.9 request, essentially upgrading this 1.7 request into a 1.9 request")
 
-	res := updateV18(w, r, inf, fooV18)
+	res := updateV19(w, r, inf, fooV18)
 	if res != nil {
 		return &res.FooV17
-	}
-	return nil
-}
-
-func UpdateV18(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	foo := tc.FooV18{}
-	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-		return
-	}
-
-	res := updateV18(w, r, inf, foo)
-	if res != nil {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV18{*res})
-	}
-}
-
-func updateV18(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV18) *tc.FooV18 {
-	fooV19 := tc.FooV19{FooV18: foo}
-
-	log.Infoln("here we would query the DB for the existing E value (a 1.9 field) to populate a 1.9 request, essentially upgrading this 1.8 request into a 1.9 request")
-
-	res := updateV19(w, r, inf, fooV19)
-	if res != nil {
-		return &res.FooV18
 	}
 	return nil
 }
