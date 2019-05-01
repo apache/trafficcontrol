@@ -77,7 +77,7 @@ Glossary
 		* Token-based authentication settings.
 		* Header rewrite rules.
 
-		Since Traffic Control version 2.1, :dfn:`Delivery Services` can optionally be linked to a :term:`Profile`, and have :term:`Parameter`\ s associated with them. One example of a feature that uses :dfn:`Delivery Service` :term:`Parameter`\ s is the :ref:`multi-site-origin` configuration. :dfn:`Delivery Services` are also for use in allowing multiple :term:`Tenant`\ s to coexist in a Traffic Control CDN without interfering with each other, and to keep information about their content separated.
+		Since Traffic Control version 2.1, :dfn:`Delivery Services` can optionally be linked to a :term:`Profile`, and have :term:`Parameters` associated with them. One example of a feature that uses :dfn:`Delivery Service` :term:`Parameters` is the :ref:`ds-multi-site-origin` configuration. :dfn:`Delivery Services` are also for use in allowing multiple :term:`Tenants` to coexist in a Traffic Control CDN without interfering with each other, and to keep information about their content separated.
 
 		.. seealso:: See :ref:`delivery-services` for a more in-depth explanation of :dfn:`Delivery Services`.
 
@@ -87,7 +87,9 @@ Glossary
 	Edge
 	Edge-tier
 	Edge-tier cache
+	Edge-tier caches
 	Edge-tier cache server
+	Edge-tier cache servers
 		Closest to the client or end-user. The edge tier is the tier that serves the client, edge caches are caches in the edge tier. In a Traffic Control CDN the basic function of the edge cache is that of a :term:`reverse proxy`.
 
 	Federation
@@ -191,7 +193,9 @@ Glossary
 	Mid
 	Mid-tier
 	Mid-tier cache
+	Mid-tier caches
 	Mid-tier cache server
+	Mid-tier cache servers
 		The tier above the edge tier. The mid tier does not directly serves the end-user and is used as an additional layer between the edge and the :term:`origin`. In a Traffic Control CDN the basic function of the mid cache is that of a :term:`forward proxy`.
 
 	origin
@@ -208,7 +212,8 @@ Glossary
 		Typically refers to a line in a configuration file, but in practice can represent any arbitrary configuration option
 
 	parent
-		The :dfn:`parent(s)` of a :term:`cache server` is/are the :term:`cache server`\ (s) belonging to either the "parent" or "secondary parent" :term:`Cache Group`\ (s) of the :term:`Cache Group` to which the :term:`cache server` belongs. For example, in general it is true that an Edge-tier :term:`cache server` has one or more :dfn:`parents` which are Mid-tier :term:`cache server`\ s.
+	parents
+		The :dfn:`parent(s)` of a :term:`cache server` is/are the :term:`cache server`\ (s) belonging to either the "parent" or "secondary parent" :term:`Cache Group`\ (s) of the :term:`Cache Group` to which the :term:`cache server` belongs. For example, in general it is true that an :term:`Edge-tier cache server` has one or more :dfn:`parents` which are :term:`Mid-tier cache servers`.
 
 	Physical Location
 		A pair of geographic coordinates (latitude and longitude) that is used by :term:`Cache Group`\ s to define their location. This information is used by Traffic Router to route client traffic to the geographically nearest :term:`Cache Group`.
@@ -380,6 +385,7 @@ Glossary
 		A :dfn:`Status` represents the current operating state of a server. The default :dfn:`Statuses` made available on initial startup of Traffic Ops are related to the :ref:`health-proto` and are explained in that section.
 
 	Tenant
+	Tenants
 		Users are grouped into :dfn:`Tenants` (or :dfn:`Tenancies`) to segregate ownership of and permissions over :term:`Delivery Service`\ s and their resources. To be clear, the notion of :dfn:`Tenancy` **only** applies within the context of :term:`Delivery Service`\ s and does **not** apply permissions restrictions to any other aspect of Traffic Control.
 
 	Type

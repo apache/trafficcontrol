@@ -181,7 +181,7 @@ This page contains a table displaying all :term:`Delivery Service`\ s visible to
 	DROP
 		The query string is stripped from the request URL at the Edge-tier cache, and so is not used in the :abbr:`ATS (Apache Traffic Server)` `'cache key' <https://docs.trafficserver.apache.org/en/7.1.x/appendices/glossary.en.html#term-cache-key>`_, and is not passed in requests to the origin
 
-	.. seealso:: :ref:`qstring-handling`
+	.. seealso:: :ref:`ds-qstring-handling`
 
 :Last Updated: The time at which the :term:`Delivery Service` was last updated
 
@@ -258,11 +258,11 @@ Interfaces for managing the various components of Traffic Control and how they i
 
 	The 'Configure' Menu
 
-.. _tp-servers-page:
+.. _tp-configure-servers:
 
 Servers
 -------
-A table of all servers (of all kinds) across all :term:`Delivery Service`\ s and CDNs visible to the user. It has the following columns:
+A table of all servers (of all kinds) across all :term:`Delivery Services` and CDNs visible to the user. It has the following columns:
 
 :UPD:    'true' when updates to the server's configuration are pending, 'false' otherwise
 :Host:   The hostname of the server
@@ -289,10 +289,10 @@ Server management includes the ability to (where applicable):
 - delete an existing server
 - queue/clear updates on a server
 - update server status
-- view server :term:`Delivery Service`\ s
+- view server :term:`Delivery Services`
 - view server configuration files
 - clone :term:`Delivery Service` assignments
-- assign :term:`Delivery Service`\ s to server
+- assign :term:`Delivery Services` to server(s)
 
 .. _tp-configure-origins:
 

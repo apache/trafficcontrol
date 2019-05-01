@@ -127,11 +127,11 @@ The :abbr:`DSCP (Differentiated Services Code Point)` which will be used to mark
 
 .. danger:: The :abbr:`DSCP (Differentiated Services Code Point)` setting in Traffic Portal is *only* for setting traffic towards the client, and gets applied *after* the initial TCP handshake is complete and the HTTP request has been received. Before that the cache can't determine what Delivery Service is being requested, and consequently can't know what :abbr:`DSCP (Differentiated Services Code Point)` to apply. Therefore, the :abbr:`DSCP (Differentiated Services Code Point)` feature can not be used for security settings; the IP packets that form the TCP handshake are not going to be :abbr:`DSCP (Differentiated Services Code Point)`-marked.
 
-.. impl-detail:: DSCP settings only apply on :term:`cache servers` that run :abbr:`Apache Traffic Server`. The implementation uses the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/header_rewrite.en.html>`_ to create a rule that will mark traffic bound outward from the CDN to the client.
+.. impl-detail:: DSCP settings only apply on :term:`cache servers` that run :abbr:`Apache Traffic Server`. The implementation uses the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ to create a rule that will mark traffic bound outward from the CDN to the client.
 
 Edge Header Rewrite Rules
 -------------------------
-This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Edge-tier cache server`\ s.
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Edge-tier cache server`\ s.
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
 
@@ -344,7 +344,7 @@ The maximum number of :term:`Edge-tier cache server` IP addresses that the Traff
 
 Mid Header Rewrite Rules
 ------------------------
-This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Mid-tier cache server`\ s.
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Mid-tier cache server`\ s.
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
 
@@ -407,6 +407,8 @@ The protocol with which to serve content from this Delivery Service. This define
 	|          |                         | should accept unsecured HTTP requests - this is implicitly treated as ``"true"`` by Traffic Router when it is not present.                                          |
 	+----------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+.. _ds-qstring-handling:
+
 Query String Handling
 ---------------------
 Describes how query strings should be handled by the :term:`Edge-tier cache server`\ s when serving content for this Delivery Service. This is nearly always expressed as an integral, unique identifier for each behavior, though in Traffic Portal a more descriptive value is typically used, or at least provided in addition to the integral, unique identifier. The allowed values and their meanings are:
@@ -429,6 +431,13 @@ Describes how query strings should be handled by the :term:`Edge-tier cache serv
 	+------------------+------------------------------------------------------------+-----------------------------------------------------------------------------------------+
 	| qstringIgnore    | Traffic Ops Go/Perl code, :ref:`to-api` requests/responses | unchanged (integral, unique identifier)                                                 |
 	+------------------+------------------------------------------------------------+-----------------------------------------------------------------------------------------+
+
+The Delivery Service's Query String Handling can be set directly as a field on the Delivery Service object itself, or it can be overridden by a :term:`Parameter` on a Profile_ used by this Delivery Service. The special :term:`Parameter` named ``psel.qstring_handling`` and configuration file ``parent.config`` will have it's contents directly inserted into the ``parent.config`` file on all :term:`cache servers` assigned to this Delivery Service.
+
+.. danger:: Using the ``psel.qstring_handling`` :term:`Parameter` is **strongly** discouraged for several reasons. Firstly, at a Delivery Service level it will **NOT** change the configuration of that Delivery Service's own Query String Handling - which will cause it to appear in Traffic Portal and in :ref:`to-api` responses as though it were configured one way while actually behaving a different way altogether. Also, no validation is performed on the value given to it. Because it's inserted verbatim into the ``qstring`` field of a line in :abbr:`ATS (Apache Traffic Server)` `parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_, a typo or an ignorant user can easily cause :abbr:`ATS (Apache Traffic Server)` instances on all :term:`cache servers` assigned to that Delivery Service to fail to reload their configuration, possibly grinding entire CDNs to a halt.
+
+
+.. seealso:: When implemented as a :term:`Parameter` (``psel.qstring_handling``), its value must be a valid value for the ``qstring`` field of a line in the :abbr:`ATS (Apache Traffic Server)` ``parent.config`` configuration file. For a description of valid values, see the `documentation for parent.config <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
 
 Range Request Handling
 ----------------------
@@ -468,7 +477,7 @@ For HTTP and DNS-:ref:`Routed <ds-types>` Delivery Services, this will be added 
 
 Regex remap expression
 ----------------------
-Allows remapping of incoming requests URL using regular expressions to search and replace text. In a more literal sense, this is the raw contents of a configuration file used by the `ATS regex_remap plugin  <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_.
+Allows remapping of incoming requests URL using regular expressions to search and replace text. In a more literal sense, this is the raw contents of a configuration file used by the `ATS regex_remap plugin  <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/regex_remap.en.html>`_.
 
 .. caution:: This field is not validated by Traffic Ops to be correct syntactically, and can cause Traffic Server to not start if invalid. Please use with caution.
 
@@ -589,21 +598,22 @@ STEERING
 		The value of a STEERING_ORDER target sets a strict order of preference. In cases where a response to a client contains multiple Delivery Services, those targets with a lower "value" appear earlier than those with a higher "value". In cases where two or more targets share the same value, they each have an equal chance of being presented to the client - effectively spreading traffic evenly across them.
 	STEERING_WEIGHT
 		The values of STEERING_WEIGHT targets are interpreted as "weights", which define how likely it is that any given client will be routed to a specific Delivery Service - effectively this determines the spread of traffic across each target.
-	STEERING_GEO_ORDER
-		These targets behave exactly like STEERING_ORDER targets, but Delivery Services are grouped according to the "locations" of their :term:`origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create a subset of choices by eliminating all but the closest location to the client as possibilities. Once this subset is created, the values of the targets establish a strict precedence ordering, just like STEERING_ORDER targets.
-	STEERING_GEO_WEIGHT
-		These targets behave exactly like STEERING_WEIGHT targets, but Delivery Services are grouped according to the "locations" of their :term:`origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create a subset of choices by eliminating all but the closest location to the client as possibilities. Once this subset is chosen, the values of the targets establish the likelihood that any given target within the subset will be chosen for the client - effectively determining the spread of traffic across targets within that subset.
 
 	The targets of a Delivery Service may be set using :ref:`the appropriate section of Traffic Portal <tp-services-delivery-service>` or via the :ref:`to-api-steering-id-targets` and :ref:`to-api-steering-id-targets-targetID` :ref:`to-api` endpoints.
-
-	.. important:: To make use of the STEERING_GEO_ORDER and/or STEERING_GEO_WEIGHT target types, it is first necessary to ensure that at least the "primary" :term:`origin` of the :term:`Delivery Service` has an associated geographic coordinate pair. This can be done either from the :ref:`tp-configure-origins` page in Traffic Portal, or using the :ref:`to-api-origins` :ref:`to-api` endpoint.
 
 	.. seealso:: For more information on setting up a STEERING (or CLIENT_STEERING) Delivery Service, see :ref:`steering-qht`.
 
 	.. seealso:: For implementation details about how Traffic Router routes STEERING (and CLIENT_STEERING) Delivery Services, see :ref:`tr-steering`.
 
 CLIENT_STEERING
-	A CLIENT_STEERING Delivery Service is exactly like STEERING except that it provides clients with methods of bypassing the weights, orders, and localizations of targets in order to choose any arbitrary target at will. When utilizing these methods, the client will either directly choose a target immediately or request a list of all available targets from Traffic Router and then choose one to which to send a subsequent request for actual content.
+	A CLIENT_STEERING Delivery Service is exactly like STEERING except that it provides clients with methods of bypassing the weights, orders, and localizations of targets in order to choose any arbitrary target at will. When utilizing these methods, the client will either directly choose a target immediately or request a list of all available targets from Traffic Router and then choose one to which to send a subsequent request for actual content. CLIENT_STEERING also supports two additional target types:
+
+	STEERING_GEO_ORDER
+		These targets behave exactly like STEERING_ORDER targets, but Delivery Services are grouped according to the "locations" of their :term:`origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create a subset of choices by eliminating all but the closest location to the client as possibilities. Once this subset is created, the values of the targets establish a strict precedence ordering, just like STEERING_ORDER targets.
+	STEERING_GEO_WEIGHT
+		These targets behave exactly like STEERING_WEIGHT targets, but Delivery Services are grouped according to the "locations" of their :term:`origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create a subset of choices by eliminating all but the closest location to the client as possibilities. Once this subset is chosen, the values of the targets establish the likelihood that any given target within the subset will be chosen for the client - effectively determining the spread of traffic across targets within that subset.
+
+	.. important:: To make use of the STEERING_GEO_ORDER and/or STEERING_GEO_WEIGHT target types, it is first necessary to ensure that at least the "primary" :term:`origin` of the :term:`Delivery Service` has an associated geographic coordinate pair. This can be done either from the :ref:`tp-configure-origins` page in Traffic Portal, or using the :ref:`to-api-origins` :ref:`to-api` endpoint.
 
 .. note:: "Steering" is also commonly used to collectively refer to either of the kinds of Delivery Services that can participate in steering behavior (STEERING and CLIENT_STEERING).
 
@@ -617,17 +627,68 @@ CLIENT_STEERING
 	| TypeID               | In Go code and :ref:`to-api` requests/responses | Integral, unique identifier (``bigint``, ``int`` etc.)          |
 	+----------------------+-------------------------------------------------+-----------------------------------------------------------------+
 
+.. _ds-multi-site-origin:
+
 Use Multi-Site Origin Feature
 -----------------------------
-A boolean value that indicates whether or not this Delivery Service uses :ref:`multi-site-origin`. There are very few good reasons for this to not be ``false``.
+A boolean value that indicates whether or not this Delivery Service serves content for an :term:`origin` that provides content from two or more redundant servers. There are very few good reasons for this to not be ``false``. When ``true``, Traffic Ops will configure :term:`Mid-tier cache servers` to perform load-balancing and other optimizations for redundant :term:`origin servers`.
+
+Naturally, this assumes that each redundant server is exactly identical, from request paths to actual content. If Multi-Site Origin is configured for servers that are *not* identical, the client's experience is undefined. Furthermore, the :term:`origin servers` may have differing IP addresses, but **must** serve content for a single :abbr:`FQDN (Fully Qualified Domain Name)` - as defined by the Delivery Service's `Origin Server Base URL`_. These redundant servers **must** be configured as servers (server :term:`Type` ``ORG``) in Traffic Ops - either using the :ref:`appropriate section of Traffic Portal <tp-configure-servers>` or the :ref:`to-api-servers` endpoint.
+
+.. important:: In order for a given :term:`Mid-tier cache server` to support Multi-Site Origins, the value of a :term:`Parameter` named ``http.parent_proxy_routing_enable`` in configuration file ``records.config`` must be set to ``1`` on that server's :term:`Profile`. If using an optional secondary grouping of Multi-Site Origins, the :term:`Parameter` named ``url_remap.remap_required`` in configuration file ``records.config`` must also be set to ``1`` on that :term:`Profile`. These settings must be applied to all :term:`Mid-tier cache servers`' that are the :term:`parents` of any :term:`Edge-tier cache server` assigned to this Delivery Service.
+
+	.. seealso:: These parameters are described in the :abbr:`ATS (Apache Traffic Server)` documentation sections for `Parent Proxy Configuration <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/records.config.en.html#proxy-config-http-parent-proxy-routing-enable>`_ and `URL Remap Rules <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/records.config.en.html#proxy-config-url-remap-remap-required>`_, respectively.
 
 .. table:: Aliases
 
-	+-----------------+-------------------------------------------------+----------------------------------------+
-	| Name            | Use(s)                                          | Type(s)                                |
-	+=================+=================================================+========================================+
-	| multiSiteOrigin | In Go code and :ref:`to-api` requests/responses | unchanged (``bool``, ``boolean`` etc.) |
-	+-----------------+-------------------------------------------------+----------------------------------------+
+	+---------------------------------+-----------------------------------------------------------------------------+---------------------------------------------------------+
+	| Name                            | Use(s)                                                                      | Type(s)                                                 |
+	+=================================+=============================================================================+=========================================================+
+	| multiSiteOrigin                 | In Go code and :ref:`to-api` requests/responses                             | unchanged (``bool``, ``boolean`` etc.)                  |
+	+---------------------------------+-----------------------------------------------------------------------------+---------------------------------------------------------+
+	| :abbr:`MSO (Multi-Site Origin)` | In documentation and used heavily in discussion in Slack, mailing list etc. | unchanged (usually only used where implicitly ``true``) |
+	+---------------------------------+-----------------------------------------------------------------------------+---------------------------------------------------------+
+
+A Delivery Service Profile_ can have :term:`Parameters` that affect Multi-Site Origin configuration. These are detailed in the :ref:`ds-mso-parameters` table. All of these :term:`Parameters` should have their Configuration File set to ``parent.config``. Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`ATS (Apache Traffic Server)` `parent.config file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>` (usually by almost the same name), and documentation for these fields is provided in the form of links to their entries in the :abbr:`ATS (Apache Traffic Server)` documentation.
+
+.. _round_robin: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html#parent-config-format-round-robin
+.. _max_simple_retries: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-simple-retries
+.. _max_unavailable_server_retries: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-unavailable-server-retries
+.. _parent_retry: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent-retry
+.. _unavailable_server_retry_responses: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html#parent-config-format-unavailable-server-retry-responses
+.. _parent.config: https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html
+
+.. _ds-mso-parameters:
+
+.. table:: :term:`Parameters` of a Delivery Service Profile_ that Affect :abbr:`MSO (Multi-Site-Origin)` Configuration
+
+	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| Name                                        | :abbr:`ATS (Apache Traffic Server)` `parent.config`_ field                 | Effect                                                                              |
+	+=============================================+============================================================================+=====================================================================================+
+	| mso.algorithm                               | `round_robin`_                                                             | Sets the algorithm used to determine from which :term:`origin server` content will  |
+	|                                             |                                                                            | be requested.                                                                       |
+	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| mso.max_simple_retries                      | `max_simple_retries`_                                                      | Sets a strict limit on the number of "simple retries" allowed before giving up      |
+	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| mso.max_unavailable_server_retries          | `max_unavailable_server_retries`_                                          | Sets a strict limit on the number of times the :term:`cache server` will attempt to |
+	|                                             |                                                                            | request content from an :term:`origin server` that has previously been considered   |
+	|                                             |                                                                            | "unavailable".                                                                      |
+	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| mso.parent_retry                            | `parent_retry`_                                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
+	|                                             |                                                                            | "unavailable server retries", or both.                                              |
+	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| mso.simple_retry_response_codes             | **UNKNOWN**                                                                | **UNKOWN** - supposedly defines HTTP response codes from an :term:`origin server`   |
+	|                                             |                                                                            | that necessitate a "simple retry".                                                  |
+	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| mso.unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |
+	|                                             |                                                                            | currently "unavailable".                                                            |
+	+---------------------------------------------+----------------------------------------------------------------------------+-------------------------------------------------------------------------------------+
+
+.. warning:: The ``mso.simple_retry_response_codes`` :term:`Parameter` has no apparent, possible use according to the :abbr:`ATS (Apache Traffic Server)` `parent.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_. Whether or not it has any effect - let alone the *intended* effect - is not known, and its use is therefore strongly discouraged.
+
+.. seealso:: A quick guide on setting up Multi-Site Origins is given in :ref:`multi-site-origin-qht`.
+
+.. seealso:: See the `Apache Traffic Server documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_ for more information on its implementation of Multi-Site Origins.
 
 .. _ds-xmlid:
 
@@ -642,141 +703,6 @@ A text-based unique identifier for a Delivery Service. Many :ref:`to-api` endpoi
 	+======+=================================+========================+
 	| Key  | Traffic Portal tables and forms | unchanged (``string``) |
 	+------+---------------------------------+------------------------+
-
-.. parent-selection:
-
-Parent Selection
-----------------
-
-Parameters in the Edge (child) profile that influence this feature:
-
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-|                      Name                     |    Filename    |    Default    |                      Description                      |
-+===============================================+================+===============+=======================================================+
-| CONFIG proxy.config.                          | records.config | INT 1         | enable parent selection.  This is a required setting. |
-| http.parent_proxy_routing_enable              |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 1         | required for parent selection.                        |
-| url_remap.remap_required                      |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 0         | See                                                   |
-| http.no_dns_just_forward_to_parent            |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 1         |                                                       |
-| http.uncacheable_requests_bypass_parent       |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 1         |                                                       |
-| http.parent_proxy_routing_enable              |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 300       |                                                       |
-| http.parent_proxy.retry_time                  |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 10        |                                                       |
-| http.parent_proxy.fail_threshold              |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 4         |                                                       |
-| http.parent_proxy.total_connect_attempts      |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 2         |                                                       |
-| http.parent_proxy.per_parent_connect_attempts |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 30        |                                                       |
-| http.parent_proxy.connect_attempts_timeout    |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 0         |                                                       |
-| http.forward.proxy_auth_to_parent             |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 0         |                                                       |
-| http.parent_proxy_routing_enable              |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | STRING        |                                                       |
-| http.parent_proxy.file                        |                | parent.config |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 3         |                                                       |
-| http.parent_proxy.connect_attempts_timeout    |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| algorithm                                     | parent.config  | urlhash       | The algorithm to use.                                 |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-
-
-Parameters in the Mid (parent) profile that influence this feature:
-
-+----------------+---------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|      Name      |    Filename   | Default |                                                                                 Description                                                                              |
-+================+===============+=========+==========================================================================================================================================================================+
-| domain_name    | CRConfig.json | -       | Only parents with the same value as the edge are going to be used as parents (to keep separation between CDNs)                                                           |
-+----------------+---------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| weight         | parent.config | 1.0     | The weight of this parent, translates to the number of replicas in the consistent hash ring. This parameter only has effect with algorithm at the client set to          |
-|                |               |         | "consistent_hash"                                                                                                                                                        |
-+----------------+---------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| port           | parent.config | 80      | The port this parent is listening on as a forward proxy.                                                                                                                 |
-+----------------+---------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| use_ip_address | parent.config | 0       | 1 means use IP(v4) address of this parent in the parent.config, 0 means use the host_name.domain_name concatenation.                                                     |
-+----------------+---------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
-.. _qstring-handling:
-
-Qstring Handling
-----------------
-
-Delivery services have a Query String Handling option that, when set to ignore, will automatically add a regex remap to that delivery service's config.  There may be times this is not preferred, or there may be requirements for one delivery service or server(s) to behave differently.  When this is required, the psel.qstring_handling parameter can be set in either the delivery service profile or the server profile, but it is important to note that the server profile will override ALL delivery services assigned to servers with this profile parameter.  If the parameter is not set for the server profile but is present for the :term:`Delivery Service` profile, this will override the setting in the delivery service.  A value of "ignore" will not result in the addition of regex remap configuration.
-
-+-----------------------+---------------+---------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|      Name             |    Filename   | Default |                                                                                    Description                                                                    |
-+=======================+===============+=========+===================================================================================================================================================================+
-| psel.qstring_handling | parent.config | -       | Sets qstring handling without the use of regex remap for a delivery service when assigned to a delivery service profile, and overrides qstring handling for all   |
-|                       |               |         | :term:`Delivery Service`\ s for associated servers when assigned to a server profile. Value must be "consider" or "ignore".                                       |
-+-----------------------+---------------+---------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
-.. _multi-site-origin:
-
-Multi Site Origin
------------------
-
-.. Note:: The configuration of this feature changed significantly between ATS version 5 and >= 6. Some configuration in Traffic Control is different as well. This documentation assumes ATS 6 or higher. See :ref:`multi-site-origin-qht` for more details.
-
-Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions. A prerequisite for MSO to work is that the multiple origin sites serve identical content with identical paths, and both are configured to serve the same origin hostname as is configured in the deliveryservice `Origin Server Base URL` field. See the `Apache Traffic Server docs <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/parent.config.en.html>`_ for more information on that cache's implementation.
-
-With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is "ORG".
-
-Parameters in the mid profile that influence this feature:
-
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-|                                   Name                                   |    Filename    |  Default   |                                            Description                                             |
-+==========================================================================+================+============+====================================================================================================+
-| CONFIG proxy.config. http.parent_proxy_routing_enable                    | records.config | INT 1      | enable parent selection.  This is a required setting.                                              |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config. url_remap.remap_required                            | records.config | INT 1      | required for parent selection.                                                                     |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-
-
-Parameters in the deliveryservice profile that influence this feature:
-
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-|                                   Name      |    Filename    |  Default        |                                                                         Description                                             |
-+=============================================+================+=================+=================================================================================================================================+
-| mso.parent_retry                            | parent.config  | \-              | Either ``simple_retry``, ``dead_server_retry`` or ``both``.                                                                     |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-| mso.algorithm                               | parent.config  | consistent_hash | The algorithm to use. ``consisten_hash``, ``strict``, ``true``, ``false``, or ``latched``.                                      |
-|                                             |                |                 |                                                                                                                                 |
-|                                             |                |                 | - ``consisten_hash`` - spreads requests across multiple parents simultaneously based on hash of content URL.                    |
-|                                             |                |                 | - ``strict`` - strict Round Robin spreads requests across multiple parents simultaneously based on order of requests.           |
-|                                             |                |                 | - ``true`` - same as strict, but ensures that requests from the same IP always go to the same parent if available.              |
-|                                             |                |                 | - ``false`` - uses only a single parent at any given time and switches to a new parent only if the current parent fails.        |
-|                                             |                |                 | - ``latched`` - same as false, but now, a failed parent will not be retried.                                                    |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-| mso.unavailable_server_retry_response_codes | parent.config  | "503"           | Quoted, comma separated list of HTTP status codes that count as a unavailable_server_retry_response_code.                       |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-| mso.max_unavailable_server_retries          | parent.config  | 1               | How many times an unavailable server will be retried.                                                                           |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-| mso.simple_retry_response_codes             | parent.config  | "404"           | Quoted, comma separated list of HTTP status codes that count as a simple retry response code.                                   |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-| mso.max_simple_retries                      | parent.config  | 1               | How many times a simple retry will be done.                                                                                     |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-
-
-
-see :ref:`multi-site-origin-qht` for a *quick how to* on this feature.
 
 .. _regex-remap:
 
@@ -827,7 +753,7 @@ Static DNS entries allow you to create other names *under* the delivery service 
 
 Server Assignments
 ------------------
-Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the :term:`Cache Group`, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
+Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service. Servers can be selected by drilling down in a tree, starting at the profile, then the :term:`Cache Group`, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
 
 
 .. _asn-czf:
