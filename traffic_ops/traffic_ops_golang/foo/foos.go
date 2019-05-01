@@ -69,7 +69,7 @@ func (foo *TOFoo) GetType() string {
 	return "foo"
 }
 
-func Create(w http.ResponseWriter, r *http.Request) {
+func CreateV15(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -77,64 +77,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	switch inf.Version {
-	case "1.5":
-		foo := tc.FooV15{} // the struct to parse into would need to change for each specific minor version
-		if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-		}
-		res := createV15(w, r, inf, foo)
-		if res != nil {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV15{*res})
-			return
-		}
-		return
-	case "1.6":
-		foo := tc.FooV16{}
-		if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-		}
-		res := createV16(w, r, inf, foo)
-		if res != nil {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV16{*res})
-			return
-		}
-		return
-	case "1.7":
-		foo := tc.FooV17{}
-		if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-		}
-		res := createV17(w, r, inf, foo)
-		if res != nil {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV17{*res})
-			return
-		}
-		return
-	case "1.8":
-		foo := tc.FooV18{}
-		if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-		}
-		res := createV18(w, r, inf, foo)
-		if res != nil {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV18{*res})
-			return
-		}
-		return
-	case "1.9":
-		foo := tc.FooV19{}
-		if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-		}
-		res := createV19(w, r, inf, foo)
-		if res != nil {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV19{*res})
-			return
-		}
-		return
-	default:
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("requested API version is not implemented"), nil)
+	foo := tc.FooV15{} // the struct to parse into would need to change for each specific minor version
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+	}
+	res := createV15(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV15{*res})
 	}
 }
 
@@ -147,6 +96,24 @@ func createV15(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc
 	return nil
 }
 
+func CreateV16(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV16{} // TODO: this needed to change when we added a V17. Can we do better?
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+	}
+	res := createV16(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV16{*res})
+	}
+}
+
 func createV16(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV16) *tc.FooV16 {
 	fooV17 := tc.FooV17{FooV16: foo}
 	res := createV17(w, r, info, fooV17)
@@ -154,6 +121,25 @@ func createV16(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc
 		return &res.FooV16
 	}
 	return nil
+}
+
+func CreateV17(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV17{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+	}
+	res := createV17(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV17{*res})
+	}
+
 }
 
 func createV17(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV17) *tc.FooV17 {
@@ -165,6 +151,25 @@ func createV17(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc
 	return nil
 }
 
+func CreateV18(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV18{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+	}
+	res := createV18(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV18{*res})
+	}
+
+}
+
 func createV18(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV18) *tc.FooV18 {
 	fooV19 := tc.FooV19{FooV18: foo}
 	res := createV19(w, r, info, fooV19)
@@ -172,6 +177,25 @@ func createV18(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc
 		return &res.FooV18
 	}
 	return nil
+}
+
+func CreateV19(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV19{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+	}
+	res := createV19(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo creation was successful.", []tc.FooV19{*res})
+	}
+
 }
 
 func createV19(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc.FooV19) *tc.FooV19 {
@@ -186,7 +210,11 @@ func createV19(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc
 	return &fooV19
 }
 
-// Read is the Foo implementation of the Reader interface.
+// Read is the Foo implementation of the Reader interface. For multiple minor versions, might need to rework this to
+// better handle minor versions with the Reader interface. Otherwise, it might make sense to just not use the Reader
+// interface for endpoints with lots of minor versions. Or, have a "shared" Read handler that each minor version calls,
+// then extracts its specific versioned struct out of the result from the shared handler. I think that is mainly how the
+// deliveryservices Read handlers work today.
 func (foo *TOFoo) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 	log.Infoln("here we could call tx.Query(selectQuery()) and rows.Scan(&foo.ID, &foo.Name, &foo.A)")
@@ -195,28 +223,14 @@ func (foo *TOFoo) Read() ([]interface{}, error, error, int) {
 		{},
 		{},
 	}
-	version := foo.ReqInfo.Version
 
 	for _, f := range foos {
-		switch version {
-		case "1.5":
-			returnable = append(returnable, f.FooV15)
-		case "1.6":
-			returnable = append(returnable, f.FooV16)
-		case "1.7":
-			returnable = append(returnable, f.FooV17)
-		case "1.8":
-			returnable = append(returnable, f.FooV18)
-		case "1.9":
-			returnable = append(returnable, f)
-		default:
-			return nil, errors.New("requested API version is not implemented"), nil, http.StatusBadRequest
-		}
+		returnable = append(returnable, f)
 	}
 	return returnable, nil, nil, http.StatusOK
 }
 
-func Update(w http.ResponseWriter, r *http.Request) {
+func UpdateV15(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -224,69 +238,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	switch inf.Version {
-	case "1.5":
-		foo := tc.FooV15{}
-		if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-			return
-		}
-		res := updateV15(w, r, inf, foo)
-		if res != nil {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV15{*res})
-			return
-		}
+	foo := tc.FooV15{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
-	case "1.6":
-		foo := tc.FooV16{}
-		if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-			return
-		}
-		res := updateV16(w, r, inf, foo)
-		if res != nil {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV16{*res})
-			return
-		}
-		return
-	case "1.7":
-		foo := tc.FooV17{}
-		if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-			return
-		}
-		res := updateV17(w, r, inf, foo)
-		if res != nil {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV17{*res})
-			return
-		}
-		return
-	case "1.8":
-		foo := tc.FooV18{}
-		if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-			return
-		}
-		res := updateV18(w, r, inf, foo)
-		if res != nil {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV18{*res})
-			return
-		}
-		return
-	case "1.9":
-		foo := tc.FooV19{}
-		if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-			return
-		}
-		res := updateV19(w, r, inf, foo)
-		if res != nil {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV19{*res})
-			return
-		}
-		return
-	default:
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("requested API version is not implemented"), nil)
+	}
+
+	res := updateV15(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV15{*res})
 	}
 }
 
@@ -302,6 +262,26 @@ func updateV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.
 	return nil
 }
 
+func UpdateV16(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV16{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+
+	res := updateV16(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV16{*res})
+	}
+}
+
 func updateV16(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV16) *tc.FooV16 {
 	fooV17 := tc.FooV17{FooV16: foo}
 
@@ -312,6 +292,26 @@ func updateV16(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.
 		return &res.FooV16
 	}
 	return nil
+}
+
+func UpdateV17(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV17{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+
+	res := updateV17(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV17{*res})
+	}
 }
 
 func updateV17(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV17) *tc.FooV17 {
@@ -326,6 +326,26 @@ func updateV17(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.
 	return nil
 }
 
+func UpdateV18(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV18{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+
+	res := updateV18(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV18{*res})
+	}
+}
+
 func updateV18(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV18) *tc.FooV18 {
 	fooV19 := tc.FooV19{FooV18: foo}
 
@@ -336,6 +356,26 @@ func updateV18(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.
 		return &res.FooV18
 	}
 	return nil
+}
+
+func UpdateV19(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	foo := tc.FooV19{}
+	if err := json.NewDecoder(r.Body).Decode(&foo); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+
+	res := updateV19(w, r, inf, foo)
+	if res != nil {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Foo update was successful.", []tc.FooV19{*res})
+	}
 }
 
 func updateV19(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, foo tc.FooV19) *tc.FooV19 {
