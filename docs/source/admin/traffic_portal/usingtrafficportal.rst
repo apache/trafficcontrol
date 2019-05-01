@@ -157,7 +157,7 @@ This page contains a table displaying all :term:`Delivery Service`\ s visible to
 
 	.. seealso:: :ref:`ds-types`
 
-:Protocol: The protocol which which this :term:`Delivery Service`\ serves clients. Its value is one of:
+:Protocol: The protocol which which this :term:`Delivery Service` serves clients. Its value is one of:
 
 	HTTP
 		Only insecure requests will be serviced
