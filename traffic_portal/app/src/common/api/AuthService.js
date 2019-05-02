@@ -25,8 +25,8 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
             .then(
                 function(result) {
                     $rootScope.$broadcast('authService::login');
-                    var redirect = decodeURIComponent($location.search().redirect);
-                    if (redirect !== 'undefined') {
+                    const redirect = decodeURIComponent($location.search().redirect);
+                    if (redirect !== undefined) {
                         $location.search('redirect', null); // remove the redirect query param
                         $location.url(redirect);
                     } else {
@@ -62,8 +62,8 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
             .then(
                 function(result) {
                     $rootScope.$broadcast('authService::oauthLogin');
-                    var redirect = decodeURIComponent($location.search().redirect);
-                    if (redirect !== 'undefined') {
+                    const redirect = decodeURIComponent($location.search().redirect);
+                    if (redirect !== undefined) {
                         $location.search('redirect', null); // remove the redirect query param
                         $location.url(redirect);
                     } else {
@@ -71,7 +71,7 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
                     }
                 },
                 function(fault) {
-                    // do nothing
+                    window.console.error(fault);
                 }
             );
     };
