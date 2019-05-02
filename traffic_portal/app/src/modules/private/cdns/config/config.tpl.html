@@ -52,8 +52,8 @@ under the License.
                         <tr ng-repeat="configChange in ::configChanges track by $index">
                             <td data-search="^{{::configChange.op}}$">{{::configChange.op}}</td>
                             <td data-search="^{{::configChange.path}}$">{{::configChange.path}}</td>
-                            <td class="value" data-search="^{{::configChange.oldValue}}$"><json-formatter open="0" json="configChange.oldValue"></json-formatter></td>
-                            <td class="value" data-search="^{{::configChange.value}}$"><json-formatter open="0" json="configChange.value"></json-formatter></td>
+                            <td class="value" data-search="^{{::configChange.oldValue}}$"><json-formatter open="expandLevel" json="configChange.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::configChange.value}}$"><json-formatter open="expandLevel" json="configChange.value"></json-formatter></td>
                         </tr>
                         </tbody>
                     </table>
@@ -78,8 +78,8 @@ under the License.
                         <tr ng-repeat="cr in ::contentRoutersChanges track by $index">
                             <td data-search="^{{::cr.op}}$">{{::cr.op}}</td>
                             <td data-search="^{{::cr.path}}$">{{::cr.path}}</td>
-                            <td class="value" data-search="^{{::cr.oldValue}}$"><json-formatter open="0" json="cr.oldValue"></json-formatter></td>
-                            <td class="value" data-search="^{{::cr.value}}$"><json-formatter open="0" json="cr.value"></json-formatter></td>
+                            <td class="value" data-search="^{{::cr.oldValue}}$"><json-formatter open="expandLevel" json="cr.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::cr.value}}$"><json-formatter open="expandLevel" json="cr.value"></json-formatter></td>
                         </tr>
                         </tbody>
                     </table>
@@ -104,8 +104,8 @@ under the License.
                         <tr ng-repeat="m in ::monitorsChanges track by $index">
                             <td data-search="^{{::m.op}}$">{{::m.op}}</td>
                             <td data-search="^{{::m.path}}$">{{::m.path}}</td>
-                            <td class="value" data-search="^{{::m.oldValue}}$"><json-formatter open="0" json="m.oldValue"></json-formatter></td>
-                            <td class="value" data-search="^{{::m.value}}$"><json-formatter open="0" json="m.value"></json-formatter></td>
+                            <td class="value" data-search="^{{::m.oldValue}}$"><json-formatter open="expandLevel" json="m.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::m.value}}$"><json-formatter open="expandLevel" json="m.value"></json-formatter></td>
                         </tr>
                         </tbody>
                     </table>
@@ -130,8 +130,8 @@ under the License.
                         <tr ng-repeat="cs in ::contentServersChanges track by $index">
                             <td data-search="^{{::cs.op}}$">{{::cs.op}}</td>
                             <td data-search="^{{::cs.path}}$">{{::cs.path}}</td>
-                            <td class="value" data-search="^{{::cs.oldValue}}$"><json-formatter open="0" json="cs.oldValue"></json-formatter></td>
-                            <td class="value" data-search="^{{::cs.value}}$"><json-formatter open="0" json="cs.value"></json-formatter></td>
+                            <td class="value" data-search="^{{::cs.oldValue}}$"><json-formatter open="expandLevel" json="cs.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::cs.value}}$"><json-formatter open="expandLevel" json="cs.value"></json-formatter></td>
                         </tr>
                         </tbody>
                     </table>
@@ -156,8 +156,8 @@ under the License.
                         <tr ng-repeat="ds in ::deliveryServicesChanges track by $index">
                             <td data-search="^{{::ds.op}}$">{{::ds.op}}</td>
                             <td data-search="^{{::ds.path}}$">{{::ds.path}}</td>
-                            <td class="value" data-search="^{{::ds.oldValue}}$"><json-formatter open="0" json="ds.oldValue"></json-formatter></td>
-                            <td class="value" data-search="^{{::ds.value}}$"><json-formatter open="0" json="ds.value"></json-formatter></td>
+                            <td class="value" data-search="^{{::ds.oldValue}}$"><json-formatter open="expandLevel" json="ds.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::ds.value}}$"><json-formatter open="expandLevel" json="ds.value"></json-formatter></td>
                         </tr>
                         </tbody>
                     </table>
@@ -182,8 +182,8 @@ under the License.
                         <tr ng-repeat="el in ::edgeLocationsChanges track by $index">
                             <td data-search="^{{::el.op}}$">{{::el.op}}</td>
                             <td data-search="^{{::el.path}}$">{{::el.path}}</td>
-                            <td class="value" data-search="^{{::el.oldValue}}$"><json-formatter open="0" json="el.oldValue"></json-formatter></td>
-                            <td class="value" data-search="^{{::el.value}}$"><json-formatter open="0" json="el.value"></json-formatter></td>
+                            <td class="value" data-search="^{{::el.oldValue}}$"><json-formatter open="expandLevel" json="el.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::el.value}}$"><json-formatter open="expandLevel" json="el.value"></json-formatter></td>
                         </tr>
                         </tbody>
                     </table>
@@ -208,8 +208,8 @@ under the License.
                         <tr ng-repeat="tl in ::trLocationsChanges track by $index">
                             <td data-search="^{{::tl.op}}$">{{::tl.op}}</td>
                             <td data-search="^{{::tl.path}}$">{{::tl.path}}</td>
-                            <td class="value" data-search="^{{::tl.oldValue}}$"><json-formatter open="0" json="tl.oldValue"></json-formatter></td>
-                            <td class="value" data-search="^{{::tl.value}}$"><json-formatter open="0" json="tl.value"></json-formatter></td>
+                            <td class="value" data-search="^{{::tl.oldValue}}$"><json-formatter open="expandLevel" json="tl.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::tl.value}}$"><json-formatter open="expandLevel" json="tl.value"></json-formatter></td>
                         </tr>
                         </tbody>
                     </table>
@@ -234,8 +234,8 @@ under the License.
                         <tr ng-repeat="s in ::statsChanges track by $index">
                             <td data-search="^{{::s.op}}$">{{::s.op}}</td>
                             <td data-search="^{{::s.path}}$">{{::s.path}}</td>
-                            <td class="value" data-search="^{{::s.oldValue}}$"><json-formatter open="0" json="s.oldValue"></json-formatter></td>
-                            <td class="value" data-search="^{{::s.value}}$"><json-formatter open="0" json="s.value"></json-formatter></td>
+                            <td class="value" data-search="^{{::s.oldValue}}$"><json-formatter open="expandLevel" json="s.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::s.value}}$"><json-formatter open="expandLevel" json="s.value"></json-formatter></td>
                         </tr>
                         </tbody>
                     </table>

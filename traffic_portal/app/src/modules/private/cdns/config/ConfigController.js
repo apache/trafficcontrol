@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $state, $uibModal, locationUtils, cdnService) {
+var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $state, $uibModal, locationUtils, cdnService, propertiesModel) {
 
 	var oldConfig = currentSnapshot.config,
 		newConfig = newSnapshot.config;
@@ -74,6 +74,8 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 	};
 
 	$scope.cdn = cdn;
+
+	$scope.expandLevel = propertiesModel.properties.snapshot.diff.expandLevel;
 
 	$scope.configCount = {
 		added: 0,
@@ -185,5 +187,5 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 
 };
 
-ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$uibModal', 'locationUtils', 'cdnService'];
+ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$uibModal', 'locationUtils', 'cdnService', 'propertiesModel'];
 module.exports = ConfigController;

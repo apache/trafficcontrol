@@ -38,8 +38,8 @@
     "snapshot": {
       "_comments": "These are configurable properties for a cdn snapshot",
       "diff": {
-        "_comments": "The number of lines of context provided before and after a addition or removal",
-        "context": 1000
+        "_comments": "The snapshot diff may contains nested json objects. You can specify if you want these objects expanded, and if so, how many levels. 0 = not expanded, n = expanded to n levels. Set this to a high number (i.e. 100) to ensure full expansion.",
+        "expandLevel": 0
       }
     },
     "cacheChecks": {
