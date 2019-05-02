@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $state, $uibModal, locationUtils, cdnService, propertiesModel) {
+var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $state, $uibModal, $window, locationUtils, cdnService, propertiesModel, ENV) {
 
 	var oldConfig = currentSnapshot.config,
 		newConfig = newSnapshot.config;
@@ -133,6 +133,14 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		templateUrl: 'statsPopoverTemplate.html'
 	};
 
+	$scope.viewSnapshot = function(cdn, type) {
+		var url = ENV.api['root'] + 'cdns/' + cdn.name + '/snapshot';
+		if (type == 'pending') {
+			url += '/new';
+		}
+		$window.open(url, '_blank');
+	};
+
 	$scope.confirmSnapshot = function(cdn) {
 		var params = {
 			title: 'Perform Snapshot',
@@ -187,5 +195,5 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 
 };
 
-ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$uibModal', 'locationUtils', 'cdnService', 'propertiesModel'];
+ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'cdnService', 'propertiesModel', 'ENV'];
 module.exports = ConfigController;
