@@ -155,8 +155,10 @@ func create(inf *api.APIInfo, ds tc.DeliveryServiceNullable) (tc.DeliveryService
 		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating default regex: " + err.Error())
 	}
 
-	if err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
+	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
 		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating query keys: " + err.Error())
+	} else {
+		api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("Created %d consistent hash query params for delivery service: %s", c, *ds.XMLID), user, tx)
 	}
 
 	matchlists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
@@ -257,14 +259,19 @@ func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
 	return nil
 }
 
-func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryParams []string) error {
+func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryParams []string) (int, error) {
+	if len(consistentHashQueryParams) == 0 {
+		return 0, nil
+	}
+	c := 0
 	for _, k := range consistentHashQueryParams {
 		if _, err := tx.Exec(`INSERT INTO deliveryservice_consistent_hash_query_param (name, deliveryservice_id) VALUES ($1, $2)`, k, dsID); err != nil {
-			return errors.New("insert deliveryservice_consistent_hash_query_param: " + err.Error())
+			return c, errors.New("insert deliveryservice_consistent_hash_query_param: " + err.Error())
 		}
+		c++
 	}
 
-	return nil
+	return c, nil
 }
 
 func update(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (tc.DeliveryServiceNullable, int, error, error) {
@@ -387,6 +394,20 @@ func update(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (tc.DeliveryServic
 	}
 
 	ds.LastUpdated = &lastUpdated
+
+	// the update may change or delete the query params -- delete existing and re-add if any provided
+	q := `DELETE FROM deliveryservice_consistent_hash_query_param WHERE deliveryservice_id = $1`
+	if res, err := tx.Exec(q, *ds.ID); err != nil {
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, fmt.Errorf("deleting consistent hash query params for ds %s: %s", *ds.XMLID, err.Error())
+	} else if c, _ := res.RowsAffected(); c > 0 {
+		api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("Deleted %d consistent hash query params for delivery service: %s", c, *ds.XMLID), user, tx)
+	}
+
+	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
+		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating query keys: " + err.Error())
+	} else {
+		api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("Created %d consistent hash query params for delivery service: %s", c, *ds.XMLID), user, tx)
+	}
 
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
 		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("writing change log entry: " + err.Error())
