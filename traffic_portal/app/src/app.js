@@ -474,7 +474,7 @@ trafficPortal.factory('authInterceptor', function ($rootScope, $q, $window, $loc
             if (rejection.status === 401) {
                 $rootScope.$broadcast('trafficPortal::exit');
                 userModel.resetUser();
-                if (url == '/login' || url =='/sso' || $location.search().redirect) {
+                if (url === '/login' || url ==='/sso' || $location.search().redirect) {
                     messageModel.setMessages(alerts, false);
                 } else {
                     $timeout(function () {
