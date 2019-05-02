@@ -204,9 +204,9 @@
     },
     "oAuth": {
       "_comment": "Opt-in OAuth properties for SSO login",
-      "enabled": false,
-      "oAuthUrl": "",
-      "oAuthTokenQueryParam": ""
+      "enabled": true,
+      "oAuthUrl": "https://xerxes-stage.traxion.xfinity.tv/xerxes-sp/protected/auth?client_Id=Maple",
+      "oAuthTokenQueryParam": "access_token"
     }
   }
 }

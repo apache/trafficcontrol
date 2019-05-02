@@ -43,7 +43,7 @@ Configuring Traffic Portal
 
 Configuring OAuth Through Traffic Portal
 ========================================
-See :ref:`oauth-login`.
+See :ref:`oauth_login`.
 
 
 Starting Traffic Portal

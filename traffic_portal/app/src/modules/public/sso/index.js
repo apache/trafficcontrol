@@ -25,7 +25,7 @@ module.exports = angular.module('trafficPortal.public.sso', [])
 				url: 'sso',
 				views: {
 					publicContent: {
-						templateUrl: 'modules/public/sso/sso.tpl.html',
+						templateUrl: '',
 						controller: 'SsoController',
 					}
 				}

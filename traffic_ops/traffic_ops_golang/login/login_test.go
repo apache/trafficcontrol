@@ -1,7 +1,5 @@
 package login
 
-import "testing"
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,14 +19,34 @@ import "testing"
  * under the License.
  */
 
-func TestVerifyUrlOnWhiteList(t *testing.T) {
-	url := "test.right"
-	whitelistedUrls := [][]string{[]string{}, []string{""}, []string{"*"}, []string{"test.wrong"}, []string{"test.right"}, []string{"*.right"}, []string{"test.wrong", "test.right"}}
-	expected := []bool{false, false, true, false, true, true, true}
+import "testing"
 
-	for i, urlList := range whitelistedUrls {
-		if VerifyUrlOnWhiteList(url, urlList) != expected[i] {
-			t.Errorf("expected: %v, actual: %v", expected[i], VerifyUrlOnWhiteList(url, urlList))
+func TestVerifyUrlOnWhiteList(t *testing.T) {
+	type TestResult struct {
+		Whitelist      []string
+		ExpectedResult bool
+	}
+
+	completeTestResults := struct {
+		Results []TestResult
+	}{}
+
+	completeTestResults.Results = append(completeTestResults.Results, TestResult{Whitelist: []string{}, ExpectedResult: false})
+	completeTestResults.Results = append(completeTestResults.Results, TestResult{Whitelist: []string{""}, ExpectedResult: false})
+	completeTestResults.Results = append(completeTestResults.Results, TestResult{Whitelist: []string{"*"}, ExpectedResult: true})
+	completeTestResults.Results = append(completeTestResults.Results, TestResult{Whitelist: []string{"test.wrong"}, ExpectedResult: false})
+	completeTestResults.Results = append(completeTestResults.Results, TestResult{Whitelist: []string{"test.right.com"}, ExpectedResult: true})
+	completeTestResults.Results = append(completeTestResults.Results, TestResult{Whitelist: []string{"*.right.com"}, ExpectedResult: true})
+	completeTestResults.Results = append(completeTestResults.Results, TestResult{Whitelist: []string{"test.wrong", "test.right.com"}, ExpectedResult: true})
+	completeTestResults.Results = append(completeTestResults.Results, TestResult{Whitelist: []string{"test.wrong", "*.right.*"}, ExpectedResult: true})
+	completeTestResults.Results = append(completeTestResults.Results, TestResult{Whitelist: []string{"test.wrong", "*right*"}, ExpectedResult: true})
+	completeTestResults.Results = append(completeTestResults.Results, TestResult{Whitelist: []string{"test.wrong", "*right"}, ExpectedResult: false})
+
+	url := "https://test.right.com/other/parts"
+
+	for _, result := range completeTestResults.Results {
+		if matched, _ := VerifyUrlOnWhiteList(url, result.Whitelist); matched != result.ExpectedResult {
+			t.Errorf("for whitelist: %v, expected: %v, actual: %v", result.Whitelist, result.ExpectedResult, matched)
 		}
 	}
 }

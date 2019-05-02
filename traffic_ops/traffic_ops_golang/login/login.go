@@ -24,9 +24,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/lestrrat/go-jwx/jwk"
+	"github.com/lestrrat-go/jwx/jwk"
 	"net/http"
-	"strings"
+	"net/url"
+	"path/filepath"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -109,6 +110,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	}
 }
 
+// OauthLoginHandler accepts a JSON web token previously obtained from an OAuth provider, decodes it, validates it, authorizes the user against the database, and returns the login result as either an error or success message
 func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
@@ -140,20 +142,27 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			publicKeyUrl := unverifiedToken.Header["jku"].(string)
 			publicKeyId := unverifiedToken.Header["kid"].(string)
 
-			if !VerifyUrlOnWhiteList(publicKeyUrl, cfg.ConfigTrafficOpsGolang.WhitelistedOAuthUrls) {
+			matched, err := VerifyUrlOnWhiteList(publicKeyUrl, cfg.ConfigTrafficOpsGolang.WhitelistedOAuthUrls)
+			if err != nil {
+				return nil, err
+			}
+			if !matched {
 				return nil, errors.New("Key URL from token is not included in the whitelisted urls. Received: " + publicKeyUrl)
 			}
 
 			keys, err := jwk.FetchHTTP(publicKeyUrl)
 			if err != nil {
-				return nil, err
+				return nil, errors.New("Error fetching JSON key set with message: " + err.Error())
 			}
 
 			keyById := keys.LookupKeyID(publicKeyId)
-			selectedKey, err := keyById[0].Materialize()
+			if len(keyById) == 0 {
+				return nil, errors.New("No public key found for id: " + publicKeyId + " at url: " + publicKeyUrl)
+			}
 
+			selectedKey, err := keyById[0].Materialize()
 			if err != nil {
-				return nil, err
+				return nil, errors.New("Error materializing key from JSON key set with message: " + err.Error())
 			}
 
 			return selectedKey, nil
@@ -207,20 +216,26 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	}
 }
 
-func VerifyUrlOnWhiteList(url string, whiteListedUrls []string) bool {
+func VerifyUrlOnWhiteList(urlString string, whiteListedUrls []string) (bool, error) {
 
 	for _, listing := range whiteListedUrls {
 		if listing == "" {
 			continue
 		}
-		if listing == "*" || strings.Contains(url, listing) {
-			return true
-		} else if strings.Contains(listing, "*") {
-			abbrvListing := strings.SplitAfter(listing, "*.")[1]
-			if strings.Contains(url, abbrvListing) {
-				return true
-			}
+
+		urlParsed, err := url.Parse(urlString)
+		if err != nil {
+			return false, err
+		}
+
+		matched, err := filepath.Match(listing, urlParsed.Hostname())
+		if err != nil {
+			return false, err
+		}
+
+		if matched {
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }

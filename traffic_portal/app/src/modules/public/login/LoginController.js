@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var LoginController = function($scope, $log, $uibModal, authService, userService, urlUtils, propertiesModel) {
+var LoginController = function($scope, $log, $uibModal, authService, userService, propertiesModel) {
 
     $scope.returnUrl = window.location.hostname;
     $scope.returnPort = window.location.port;
@@ -54,30 +54,27 @@ var LoginController = function($scope, $log, $uibModal, authService, userService
     };
 
     $scope.loginOauth = function() {
-        var continueURL = '';
-        const gotoUrl = propertiesModel.properties.oAuth.oAuthUrl;
-        const gotoUrlWithoutParams = gotoUrl.split('?')[0];
-        const queryParams = urlUtils.getUrlQueryParams(window.location.href);
-        const goToQueryParams = urlUtils.getUrlQueryParams(gotoUrl);
-        var returnParams = '?redirect=' + queryParams['redirect'];
-        // keeps query parameters that were added to the goToUrl
-        for (var i in goToQueryParams) {
-            returnParams = returnParams + '&' + i + '=' + goToQueryParams[i];
-        }
+        const gotoUrl = new URL(propertiesModel.properties.oAuth.oAuthUrl);
+        const currentUrl = new URL(window.location.href);
+        const afterHash = currentUrl.hash.substring(2);
+        const urlNoHash = new URL(currentUrl.protocol + '//' + currentUrl.hostname + currentUrl.pathname + afterHash);
 
-        if (returnParams) {
-            continueURL = '?continue=' + $scope.returnProtocol + '//' + $scope.returnUrl + ($scope.returnPort ? ':' + $scope.returnPort : '') + '/' + encodeURIComponent('#!') + '/sso' + returnParams;
-        } else {
-            continueURL = '?continue=' + $scope.returnProtocol + '//' + $scope.returnUrl + ($scope.returnPort ? ':' + $scope.returnPort : '') + '/' + encodeURIComponent('#!') + '/sso';
-        }
+        const redirectParam = urlNoHash.searchParams.get('redirect') !== null ? urlNoHash.searchParams.get('redirect') : '';
+        var continueParam = new URL(window.location.href);
+        continueParam.hash = '#!/sso?redirect=' + redirectParam;
 
-        window.location.href = gotoUrlWithoutParams + continueURL;
+        var continueURL = new URL(gotoUrl.protocol + '//' + gotoUrl.hostname + gotoUrl.pathname);
+        continueURL.searchParams.append('continue', continueParam);
+        gotoUrl.searchParams.forEach(function(value, key) {
+            continueURL.searchParams.append(key, value);
+        });
 
+        window.location.href = continueURL.href;
     };
 
     var init = function() {};
     init();
 };
 
-LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService', 'userService', 'urlUtils', 'propertiesModel'];
+LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService', 'userService', 'propertiesModel'];
 module.exports = LoginController;
