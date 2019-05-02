@@ -188,6 +188,10 @@ func createV19(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc
 // then extracts its specific versioned struct out of the result from the shared handler. I think that is mainly how the
 // deliveryservices Read handlers work today.
 func (foo *TOFoo) Read() ([]interface{}, error, error, int) {
+	version := foo.APIInfo().Version
+	if version == nil || version.Major != 1 || version.Minor < 5 { // endpoint was added in 1.5
+		return nil, nil, errors.New("foos Read() called with invalid API version"), http.StatusInternalServerError
+	}
 	returnable := []interface{}{}
 	log.Infoln("here we could call tx.Query(selectQuery()) and rows.Scan(&foo.ID, &foo.Name, &foo.A)")
 	foos := []tc.Foo{
@@ -197,7 +201,16 @@ func (foo *TOFoo) Read() ([]interface{}, error, error, int) {
 	}
 
 	for _, f := range foos {
-		returnable = append(returnable, f)
+		switch {
+		case version.Minor >= 9:
+			returnable = append(returnable, f)
+		case version.Minor >= 7:
+			returnable = append(returnable, f.FooV17)
+		case version.Minor >= 6:
+			returnable = append(returnable, f.FooV16)
+		case version.Minor >= 5:
+			returnable = append(returnable, f.FooV15)
+		}
 	}
 	return returnable, nil, nil, http.StatusOK
 }

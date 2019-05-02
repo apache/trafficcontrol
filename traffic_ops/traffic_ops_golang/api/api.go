@@ -287,6 +287,7 @@ type APIInfo struct {
 	IntParams map[string]int
 	User      *auth.CurrentUser
 	ReqID     uint64
+	Version   *Version
 	Tx        *sqlx.Tx
 	Config    *config.Config
 }
@@ -333,6 +334,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
 	}
+	version := getRequestedAPIVersion(r.URL.Path)
 
 	user, err := auth.GetCurrentUser(r.Context())
 	if err != nil {
@@ -350,6 +352,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	return &APIInfo{
 		Config:    cfg,
 		ReqID:     reqID,
+		Version:   version,
 		Params:    params,
 		IntParams: intParams,
 		User:      user,
@@ -377,6 +380,37 @@ func (val *APIInfoImpl) SetInfo(inf *APIInfo) {
 
 func (val APIInfoImpl) APIInfo() *APIInfo {
 	return val.ReqInfo
+}
+
+type Version struct {
+	Major uint64
+	Minor uint64
+}
+
+// getRequestedAPIVersion returns a pointer to the requested API Version from the request if it exists, otherwise nil
+func getRequestedAPIVersion(path string) *Version {
+	pathParts := strings.Split(path, "/")
+	if len(pathParts) < 2 {
+		return nil // path doesn't start with `/api`, so it's not an api request
+	}
+	if strings.ToLower(pathParts[1]) != "api" {
+		return nil // path doesn't start with `/api`, so it's not an api request
+	}
+	if len(pathParts) < 3 {
+		return nil // path starts with `/api` but not `/api/{version}`, so it's an api request, and an unknown/nonexistent version.
+	}
+	version := pathParts[2]
+
+	versionParts := strings.Split(version, ".")
+	if len(versionParts) != 2 {
+		return nil
+	}
+	majorVersion, err := strconv.ParseUint(versionParts[0], 10, 64)
+	if err != nil {
+		return nil
+	}
+	minorVersion, err := strconv.ParseUint(versionParts[1], 10, 64)
+	return &Version{Major: majorVersion, Minor: minorVersion}
 }
 
 // GetDB returns the database from the context. This should very rarely be needed, rather `NewInfo` should always be used to get a transaction, except in extenuating circumstances.
