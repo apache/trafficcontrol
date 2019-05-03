@@ -30,6 +30,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -96,6 +98,7 @@ public class DeliveryService {
 	private final boolean redirectToHttps;
 	private final DeepCachingType deepCache;
 	private String consistentHashRegex;
+	public SortedSet<String> consistentHashQueryParams = new TreeSet<String>();
 
 	public enum DeepCachingType {
 		NEVER,
@@ -124,6 +127,21 @@ public class DeliveryService {
 		this.domains = dsJo.get("domains");
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
+
+		this.consistentHashQueryParams = new TreeSet<String>();
+		if (dsJo.has("consistentHashQueryParams")) {
+			final JsonNode cqpNode = dsJo.get("consistentHashQueryParams");
+			if (!cqpNode.isArray()) {
+				LOGGER.error("Delivery Service '" + id + "' has malformed consistentHashQueryParams. Disregarding.");
+			} else {
+				for (int i=0; i<cqpNode.size(); ++i) {
+					final String s = cqpNode.get(i).asText();
+					if (!s.isEmpty()) {
+						this.consistentHashQueryParams.add(s.toLowerCase());
+					}
+				}
+			}
+		}
 
 		// missLocation: {lat: , long: }
 		final JsonNode mlJo = dsJo.get("missLocation");

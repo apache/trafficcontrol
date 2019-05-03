@@ -141,10 +141,11 @@ WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 
 	for rows.Next() {
 		ds := tc.CRConfigDeliveryService{
-			Protocol:                      &tc.CRConfigDeliveryServiceProtocol{},
-			ResponseHeaders:               map[string]string{},
-			Soa:                           cdnSOA,
-			TTLs:                          &tc.CRConfigTTL{},
+			ConsistentHashQueryParams: []string{},
+			Protocol:                  &tc.CRConfigDeliveryServiceProtocol{},
+			ResponseHeaders:           map[string]string{},
+			Soa:                       cdnSOA,
+			TTLs:                      &tc.CRConfigTTL{},
 		}
 
 		anonymousBlocking := false
@@ -204,8 +205,12 @@ WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
 
+		chqp := make(map[string]struct{})
 		for _, q := range consistentHashQueryParams {
-			ds.ConsistentHashQueryParams[q] = struct{}{}
+			chqp[q] = struct{}{}
+		}
+		for k, _ := range chqp {
+			ds.ConsistentHashQueryParams = append(ds.ConsistentHashQueryParams, k)
 		}
 
 		// TODO prevent (lat XOR lon) in the Tx and UI
