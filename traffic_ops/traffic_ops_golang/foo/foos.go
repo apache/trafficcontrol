@@ -22,6 +22,7 @@ package foo
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -189,8 +190,11 @@ func createV19(w http.ResponseWriter, r *http.Request, info *api.APIInfo, foo tc
 // deliveryservices Read handlers work today.
 func (foo *TOFoo) Read() ([]interface{}, error, error, int) {
 	version := foo.APIInfo().Version
-	if version == nil || version.Major != 1 || version.Minor < 5 { // endpoint was added in 1.5
-		return nil, nil, errors.New("foos Read() called with invalid API version"), http.StatusInternalServerError
+	if version == nil {
+		return nil, nil, errors.New("foos Read() called with nil API version"), http.StatusInternalServerError
+	}
+	if version.Major != 1 || version.Minor < 5 { // endpoint was added in 1.5
+		return nil, nil, fmt.Errorf("foos Read() called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
 	}
 	returnable := []interface{}{}
 	log.Infoln("here we could call tx.Query(selectQuery()) and rows.Scan(&foo.ID, &foo.Name, &foo.A)")
@@ -210,6 +214,8 @@ func (foo *TOFoo) Read() ([]interface{}, error, error, int) {
 			returnable = append(returnable, f.FooV16)
 		case version.Minor >= 5:
 			returnable = append(returnable, f.FooV15)
+		default:
+			return nil, nil, fmt.Errorf("foos Read() called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
 		}
 	}
 	return returnable, nil, nil, http.StatusOK
