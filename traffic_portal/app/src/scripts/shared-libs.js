@@ -59,4 +59,3 @@ require('jquery-flot-axislabels');
 // misc
 require('es5-shim');
 require('json3');
-require('json-formatter');

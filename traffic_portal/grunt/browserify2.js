@@ -43,7 +43,6 @@ module.exports = {
                                 'es5-shim/es5-shim.min.js',
                                 'jquery/jquery.min.js',
                                 'json3/lib/json3.min.js',
-                                'json-formatter/dist/json-formatter.js',
                                 'restangular/dist/restangular.min.js'
                             ]
                     },
@@ -106,7 +105,6 @@ module.exports = {
                                 'es5-shim/es5-shim.js',
                                 'jquery/jquery.js',
                                 'json3/lib/json3.js',
-                                'json-formatter/dist/json-formatter.js',
                                 'restangular/dist/restangular.js'
                             ]
                     },
