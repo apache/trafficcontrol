@@ -18,6 +18,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
+import org.junit.Assert;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -32,6 +33,26 @@ public class DeliveryServiceTest {
         final JsonNode jsonConfiguration = mapper.readTree(jsonStr);
         DeliveryService deliveryService = new DeliveryService("a-delivery-service", jsonConfiguration);
         assertThat(deliveryService.getRequestHeaders().size(), equalTo(0));
+    }
+
+    @Test
+    public void itHandlesLackOfConsistentHashQueryParamsInJSON() throws Exception {
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false}");
+        DeliveryService d = new DeliveryService("test", json);
+        assert d.consistentHashQueryParams != null;
+        assert d.consistentHashQueryParams.size() == 0;
+    }
+
+    @Test
+    public void itHandlesDuplicatesInConsistentHashQueryParams() throws Exception {
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\", \"test\"");
+        DeliveryService d = new DeliveryService("test", json);
+        assert d.consistentHashQueryParams != null;
+        assert d.consistentHashQueryParams.size() == 2;
+        assert d.consistentHashQueryParams.contains("test");
+        assert d.consistentHashQueryParams.contains("quest");
     }
 
     @Test

@@ -102,7 +102,7 @@ SELECT d.anonymous_blocking_enabled,
               GROUP BY lkey
               ORDER BY lkey)
         AS sorted)
-       AS query_keys
+       AS query_keys,
        d.deep_caching_type,
        d.dns_bypass_cname,
        d.dns_bypass_ip,

@@ -98,7 +98,7 @@ public class DeliveryService {
 	private final boolean redirectToHttps;
 	private final DeepCachingType deepCache;
 	private String consistentHashRegex;
-	public SortedSet<String> consistentHashQueryParams = new TreeSet<String>();
+	public SortedSet<String> consistentHashQueryParams;
 
 	public enum DeepCachingType {
 		NEVER,
