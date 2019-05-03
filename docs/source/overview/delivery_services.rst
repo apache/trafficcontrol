@@ -20,10 +20,6 @@ Delivery Services
 *****************
 "Delivery Services" are a very important construct in :abbr:`ATC (Apache Traffic Control)`. At their most basic, they are a source of content and a set of :term:`cache server`\ s and configuration options used to distribute that content.
 
-.. _ds-objects:
-
-Delivery Service Objects
-========================
 Delivery Services are modeled several times over, in the Traffic Ops database, in Traffic Portal forms and tables, in the legacy Perl Traffic Ops codebase, and several times for various :ref:`to-api` versions in the new Go Traffic Ops codebase. Go-specific data structures can be found in `the project's GoDoc documentation <https://godoc.org/github.com/apache/trafficcontrol/lib/go-tc#DeliveryServiceNullableV11>`_. Rather than application-specific definitions, what follows is an attempt at consolidating all of the different properties and names of properties of Delivery Service objects throughout the :abbr:`ATC (Apache Traffic Control)` suite. The names of these fields are typically chosen as the most human-readable and/or most commonly-used names for the fields, and when reading please note that in many cases these names will appear camelCased or snake_cased to be machine-readable. Any aliases of these fields that are not merely case transformations of the indicated, canonical names will be noted in a table of aliases.
 
 .. seealso:: The API reference for Delivery Service-related endpoints such as :ref:`to-api-deliveryservices` contains definitions of the Delivery Service object(s) returned and/or accepted by those endpoints.
@@ -532,6 +528,10 @@ Routing Name
 ------------
 The smallest DNS zone used to create an :abbr:`FQDN (Fully Qualified Domain Name)` used by clients to request content. All together, the constructed :abbr:`FQDN (Fully Qualified Domain Name)` looks like: :file:`{Delivery Service Routing Name}.{Delivery Service xml_id}.{CDN Subdomain}.{CDN Domain}.{Top-Level Domain}`\ [#xmlValid]_.
 
+Servers
+-------
+Servers can be assigned to Delivery Services using the :ref:`tp-configure-servers` and :ref:`tp-services-delivery-service` Traffic Portal sections, or by directly using the :ref:`to-api-deliveryserviceserver` endpoint. Only :term:`Edge-tier cache servers` can be assigned to a Delivery Service, and once they are so assigned they will begin to serve content for the Delivery Service (after updates are queued and then applied). Any servers assigned to a Delivery Service must also belong to the same CDN_ as the Delivery Service itself. At least one server must be assigned to a Delivery Service in order for it to serve any content.
+
 Signing Algorithm
 -----------------
 URLs/URIs may be signed using one of two algorithms before a request for the content to which they refer is sent to the :term:`origin` (which in practice can be any upstream network). At the time of this writing, this field is restricted within the Traffic Ops Database to one of two values (or ``NULL``/"None", to indicate no signing should be done).
@@ -553,6 +553,12 @@ uri_signing
 	+--------+------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------+
 
 Keys for either algorithm can be generated within :ref:`Traffic Portal <tp-services-delivery-service>`.
+
+Static DNS Entries
+------------------
+Static DNS Entries can be added *under* a Delivery Service's domain. These DNS records can be configured in the :ref:`tp-services-delivery-service` section of Traffic Portal, and can be any valid CNAME, A or AAAA DNS record - provided the associated hostname falls within the DNS domain for the Delivery Service. For example, a Delivery Service with xml_id_ "demo1" and belonging to a CDN_ with domain "mycdn.ciab.test" could have Static DNS Entries for hostnames "foo.demo1.mycdn.ciab.test" or "foo.bar.demo1.mycdn.ciab.test" but not "foo.bar.mycdn.ciab.test" or "foo.bar.test".
+
+.. note:: The `Routing Name`_ of a Delivery Service is not part of the :abbr:`SOA (Start of Authority)` record for the Delivery Service's domain, and so there is no need to place Static DNS Entries below a domain containing it.
 
 Tenant
 ------
@@ -742,115 +748,6 @@ A text-based unique identifier for a Delivery Service. Many :ref:`to-api` endpoi
 	+======+=================================+========================+
 	| Key  | Traffic Portal tables and forms | unchanged (``string``) |
 	+------+---------------------------------+------------------------+
-
-.. _static-dns:
-
-Static DNS Entries
-------------------
-Static DNS entries allow you to create other names *under* the delivery service domain. You can enter any valid hostname, and create a CNAME, A or AAAA record for it by clicking the **Static DNS** button at the bottom of the delivery service details screen.
-
-.. _assign-edges:
-
-Server Assignments
-------------------
-Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service. Servers can be selected by drilling down in a tree, starting at the profile, then the :term:`Cache Group`, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
-
-
-.. _asn-czf:
-
-The Coverage Zone File and ASN Table
-------------------------------------
-The Coverage Zone File (CZF) should contain a cachegroup name to network prefix mapping in the form:
-
-.. code-block:: json
-
-	{
-		"coverageZones": {
-			"cache-group-01": {
-				"coordinates": {
-					"latitude":  1.1,
-					"longitude": 2.2
-				},
-				"network6": [
-					"1234:5678::/64",
-					"1234:5679::/64"
-				],
-				"network": [
-					"192.168.8.0/24",
-					"192.168.9.0/24"
-				]
-			},
-			"cache-group-02": {
-				"coordinates": {
-					"latitude":  3.3,
-					"longitude": 4.4
-				},
-				"network6": [
-					"1234:567a::/64",
-					"1234:567b::/64"
-				],
-				"network": [
-					"192.168.4.0/24",
-					"192.168.5.0/24"
-				]
-			}
-		}
-	}
-
-.. _deep-czf:
-
-The Deep Coverage Zone File
----------------------------
-The Deep Coverage Zone File (DCZF) format is similar to the CZF format but adds a ``caches`` list under each ``deepCoverageZone``:
-
-.. code-block:: json
-
-	{
-		"deepCoverageZones": {
-			"location-01": {
-				"coordinates": {
-					"latitude":  5.5,
-					"longitude": 6.6
-				},
-				"network6": [
-					"1234:5678::/64",
-					"1234:5679::/64"
-				],
-				"network": [
-					"192.168.8.0/24",
-					"192.168.9.0/24"
-				],
-				"caches": [
-					"edge-01",
-					"edge-02"
-				]
-			},
-			"location-02": {
-				"coordinates": {
-					"latitude":  7.7,
-					"longitude": 8.8
-				},
-				"network6": [
-					"1234:567a::/64",
-					"1234:567b::/64"
-				],
-				"network": [
-					"192.168.4.0/24",
-					"192.168.5.0/24"
-				],
-				"caches": [
-					"edge-02",
-					"edge-03"
-				]
-			}
-		}
-	}
-
-Each entry in the ``caches`` list is the hostname of an edge cache registered in Traffic Ops which will be used for "deep" caching in that Deep Coverage Zone. Unlike a regular CZF, coverage zones in the DCZF do not map to a :term:`Cache Group` in Traffic Ops, so currently the deep coverage zone name only needs to be unique.
-
-If the Traffic Router gets a DCZF "hit" for a requested :term:`Delivery Service` that has Deep Caching enabled, the client will be routed to an available "deep" cache from that zone's ``caches`` list.
-
-.. note:: The ``"coordinates"`` section is optional.
 
 .. [#xmlValid] Some things to consider when choosing an xml_id and routing name: the name should be descriptive and unique, but as brief as possible to avoid creating a monstrous :abbr:`FQDN (Fully Qualified Domain Name)`. Also, because these are combined to form an :abbr:`FQDN (Fully Qualified Domain Name)`, they should not contain any characters that are illegal for a DNS subdomain, e.g. ``.`` (period/dot). Finally, the restrictions on what characters are allowable (especially in xml_id) are, in general, **NOT** enforced by the :ref:`to-api`, so take care that the name is appropriate. See :rfc:`1035` for exact guidelines.
 .. [#cardinality] In source code and :ref:`to-api` responses, the "Long Description" fields of a Delivery Service are "0-indexed" - hence the names differing slightly from the ones displayed in user-friendly UIs.
