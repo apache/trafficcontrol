@@ -236,17 +236,7 @@ For the sorttable component:
 For the jQuery component:
 ./licenses/MIT-jquery
 
-For the jQuery UI component:
-@traffic_ops/app/public/css/jquery-ui.structure.css
-./licenses/MIT-jqueryui
-
-For the jMenu component:
-@traffic_ops/app/public/*/jMenu.*
-@traffic_ops/app/public/*/jmenu.*
-./licenses/MIT-jmenu
-
 For the DataTables component:
-@traffic_ops/app/public/js/jquery.dataTables.js
 @traffic_portal/app/src/assets/css/jquery.dataTables.min_1.10.9.css
 @traffic_portal/app/src/assets/js/jquery.dataTables.min_1.10.16.js
 @traffic_portal/app/src/assets/images/sort_*
@@ -272,10 +262,6 @@ For the Chart.js component:
 For the angular-chart.js component:
 @traffic_portal/app/src/assets/js/chartjs/angular-chart.min_1.1.1.js
 ./licenses/BSD-angular-chartjs
-
-For the jquery.tree component:
-@traffic_ops/app/public/*/jquery.tree.min.*
-./licenses/MIT-jquery_tree
 
 For the downloadjs component:
 @traffic_portal/app/src/assets/js/downloadjs-min_v4.21.js
@@ -335,16 +321,6 @@ For the MaxMind DB GeoLite2 Database:
 For the gofmt github hook:
 @misc/git/pre-commit-hooks/01-gofmt
 ./licenses/BSD-go
-
-For the Select2 component:
-@traffic_ops/app/public/*/select2*
-This dual-licensed component is herein licensed under the Apache 2.0 license.
-
-Copyright (c) 2012-2015 Kevin Brown, Igor Vaynberg, and Select2 contributors
-
-For the prettyprint component:
-@traffic_ops/app/public/js/prettyprint.js
-./licenses/BSD-prettyprint
 
 For the IPv6 Perl Module component:
 @traffic_ops/app/bin/checks/NetPacket/IPv6.pm
@@ -406,15 +382,6 @@ The govalidator component is used under the MIT license:
 The ozzo-validation component is used under the MIT license:
 @vendor/github.com/go-ozzo/ozzo-validation/*
 ./vendor/github.com/go-ozzo/ozzo-validation/LICENSE
-
-The spinner-small.gif is used under the WTFPL license:
-@traffic_ops/app/public/images/spinner-small.gif
-./licenses/WTFPL
-
-For the Pixabay icons:
-@traffic_ops/app/public/images/info.png
-@traffic_ops/app/public/images/graph.png
-./licenses/CC0
 
 The bytefmt component is used under the Apache 2.0 license:
 @grove/vendor/code.cloudfoundry.org/bytefmt/*

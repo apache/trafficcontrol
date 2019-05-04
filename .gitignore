@@ -18,14 +18,6 @@ docs/.todo_cache
 docs/_build/
 traffic_ops/app/conf/ldap.conf
 traffic_ops/app/db/admin
-traffic_ops/app/public/css/images/
-traffic_ops/app/public/css/jquery-ui.css
-traffic_ops/app/public/js/bootstrap.min.js
-traffic_ops/app/public/js/fancybox/
-traffic_ops/app/public/js/flot/
-traffic_ops/app/public/js/jquery-1.11.2.min.js
-traffic_ops/app/public/js/jquery-ui.min.js
-traffic_ops/app/public/js/jquery.dataTables.min.js
 traffic_ops/**/*.log
 traffic_stats/traffic_stats
 misc/traffic-control-cdn/downloads/*.rpm
