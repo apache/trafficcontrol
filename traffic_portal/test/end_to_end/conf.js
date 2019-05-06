@@ -22,9 +22,11 @@ exports.config = {
 	seleniumAddress: 'http://localhost:4444/wd/hub',
 	baseUrl: 'https://localhost:4443',
 	getPageTimeout: 30000,
-
 	capabilities: {
-		'browserName': 'chrome'
+		browserName: 'chrome',
+		chromeOptions: {
+			args: ['--no-sandbox']
+		},
 	},
 	params: {
 		adminUser: 'admin',
