@@ -47,7 +47,7 @@ public class DeliveryServiceTest {
     @Test
     public void itHandlesDuplicatesInConsistentHashQueryParams() throws Exception {
         final ObjectMapper mapper = new ObjectMapper();
-        final JsonNode json = mapper.readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\", \"test\"");
+        final JsonNode json = mapper.readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\", \"test\"]}");
         DeliveryService d = new DeliveryService("test", json);
         assert d.consistentHashQueryParams != null;
         assert d.consistentHashQueryParams.size() == 2;
