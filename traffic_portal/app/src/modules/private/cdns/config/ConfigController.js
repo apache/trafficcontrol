@@ -17,42 +17,42 @@
  * under the License.
  */
 
-var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $state, $uibModal, locationUtils, cdnService, propertiesModel) {
+let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $state, $uibModal, locationUtils, cdnService, propertiesModel) {
 
-	var oldConfig = currentSnapshot.config,
+	const oldConfig = currentSnapshot.config,
 		newConfig = newSnapshot.config;
 
-	var oldTrafficRouters = currentSnapshot.contentRouters,
+	const oldTrafficRouters = currentSnapshot.contentRouters,
 		newTrafficRouters = newSnapshot.contentRouters;
 
-	var oldTrafficMonitors = currentSnapshot.monitors,
+	const oldTrafficMonitors = currentSnapshot.monitors,
 		newTrafficMonitors = newSnapshot.monitors;
 
-	var oldTrafficServers = currentSnapshot.contentServers,
+	const oldTrafficServers = currentSnapshot.contentServers,
 		newTrafficServers = newSnapshot.contentServers;
 
-	var oldDeliveryServices = currentSnapshot.deliveryServices,
+	const oldDeliveryServices = currentSnapshot.deliveryServices,
 		newDeliveryServices = newSnapshot.deliveryServices;
 
-	var oldEdgeCacheGroups = currentSnapshot.edgeLocations,
+	const oldEdgeCacheGroups = currentSnapshot.edgeLocations,
 		newEdgeCacheGroups = newSnapshot.edgeLocations;
 
-	var oldTrafficRouterCacheGroups = currentSnapshot.trafficRouterLocations,
+	const oldTrafficRouterCacheGroups = currentSnapshot.trafficRouterLocations,
 		newTrafficRouterCacheGroups = newSnapshot.trafficRouterLocations;
 
-	var oldStats = currentSnapshot.stats,
+	const oldStats = currentSnapshot.stats,
 		newStats = newSnapshot.stats;
 
-	var performDiff = function(oldJSON, newJSON, destination) {
-		var added = 0,
+	let performDiff = function (oldJSON, newJSON, destination) {
+		let added = 0,
 			removed = 0,
 			updated = 0;
 
-		var oldConfig = oldJSON || {},
+		let oldConfig = oldJSON || {},
 			newConfig = newJSON || {};
 
-		var diff = jsonpatch.compare(oldConfig, newConfig);
-		diff.forEach(function(change){
+		let diff = jsonpatch.compare(oldConfig, newConfig);
+		diff.forEach(function (change) {
 			if (change.op == 'add') {
 				added++;
 			} else if (change.op == 'remove') {
@@ -69,7 +69,7 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		$scope[destination + "Changes"] = diff;
 	};
 
-	var snapshot = function() {
+	let snapshot = function () {
 		cdnService.snapshot(cdn);
 	};
 
@@ -133,12 +133,12 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		templateUrl: 'statsPopoverTemplate.html'
 	};
 
-	$scope.confirmSnapshot = function(cdn) {
-		var params = {
+	$scope.confirmSnapshot = function (cdn) {
+		let params = {
 			title: 'Perform Snapshot',
 			message: 'Are you sure you want to snapshot the ' + cdn.name + ' config?'
 		};
-		var modalInstance = $uibModal.open({
+		let modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
 			controller: 'DialogConfirmController',
 			size: 'sm',
@@ -148,7 +148,7 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 				}
 			}
 		});
-		modalInstance.result.then(function() {
+		modalInstance.result.then(function () {
 			snapshot();
 		}, function () {
 			// do nothing
@@ -162,18 +162,18 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		$('table.changes').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"aaSorting": [[ 0, "asc" ]],
+			"aaSorting": [[0, "asc"]],
 			"language": {
 				"emptyTable": "No pending changes"
 			},
 			"columnDefs": [
-				{ 'orderable': false, 'targets': [2,3] }
+				{'orderable': false, 'targets': [2, 3]}
 			]
 		});
 
 	});
 
-	var init = function() {
+	let init = function () {
 		performDiff(oldConfig, newConfig, 'config');
 		performDiff(oldTrafficRouters, newTrafficRouters, 'contentRouters');
 		performDiff(oldTrafficMonitors, newTrafficMonitors, 'monitors');
