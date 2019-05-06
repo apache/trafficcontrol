@@ -23,7 +23,7 @@ describe('Traffic Portal Login Test Suite', function() {
 	var commonFunctions = new cfunc();
 
 	beforeEach(function() {
-		browser.get(browser.baseUrl);
+		browser.get(browser.baseUrl + '/#!/cdns');
 		browser.wait(function() {
 			return element(by.name('loginUsername')).isPresent();
 		}, 5000);
@@ -45,6 +45,6 @@ describe('Traffic Portal Login Test Suite', function() {
 		browser.driver.findElement(by.name('loginPass')).sendKeys(browser.params.adminPassword);
 		browser.driver.findElement(by.name('loginSubmit')).click();
 		browser.debugger();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 });
