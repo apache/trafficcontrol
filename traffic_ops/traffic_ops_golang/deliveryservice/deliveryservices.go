@@ -692,6 +692,8 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 
 	dses := []tc.DeliveryServiceNullable{}
 	dsCDNDomains := map[string]string{}
+
+	// ensure json generated from this slice won't come out as `null` if empty
 	dsQueryParams := []string{}
 
 	for rows.Next() {
@@ -764,10 +766,10 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			return nil, []error{fmt.Errorf("getting delivery services: %v", err)}, tc.SystemError
 		}
 
-		if len(dsQueryParams) > 0 {
+		ds.ConsistentHashQueryParams = []string{}
+		if len(dsQueryParams) >= 0 {
 			// ensure unique and in consistent order
 			m := make(map[string]struct{}, len(dsQueryParams))
-			sort.Strings(dsQueryParams)
 			for _, k := range dsQueryParams {
 				if _, exists := m[k]; exists {
 					continue
@@ -775,6 +777,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 				m[k] = struct{}{}
 				ds.ConsistentHashQueryParams = append(ds.ConsistentHashQueryParams, k)
 			}
+			sort.Strings(ds.ConsistentHashQueryParams)
 		}
 
 		dsCDNDomains[*ds.XMLID] = cdnDomain
