@@ -238,7 +238,7 @@ For the jQuery component:
 
 For the JSON formatter component:
 @traffic_portal/app/src/assets/css/jsonformatter.min_0.6.0.css
-@traffic_portal/app/src/assets/js/jsonformatter-min_0.6.0.js
+@traffic_portal/app/src/assets/js/jsonformatter.min_0.6.0.js
 ./licenses/AL2-jsonformatter
 
 For the DataTables component:
