@@ -13,6 +13,7 @@
 */
 import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 
 import { first } from 'rxjs/operators';
 
@@ -35,13 +36,21 @@ export class DashboardComponent implements OnInit {
 	// Fuzzy search control
 	fuzzControl = new FormControl('');
 
-	constructor (private readonly api: APIService) { }
+	constructor (private readonly api: APIService, private readonly route: ActivatedRoute) { }
 
 	ngOnInit () {
 		this.api.getDeliveryServices().pipe(first()).subscribe(
-			r => {
+			(r: DeliveryService[]) => {
 				this.deliveryServices = orderBy(r, 'displayName') as DeliveryService[];
 				this.loading = false;
+			}
+		);
+
+		this.route.queryParamMap.pipe(first()).subscribe(
+			m => {
+				if (m.has("search")) {
+					this.fuzzControl.setValue(decodeURIComponent(m.get("search")));
+				}
 			}
 		);
 	}
