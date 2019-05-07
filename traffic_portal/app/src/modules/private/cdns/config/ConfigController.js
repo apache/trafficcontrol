@@ -160,14 +160,14 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 	angular.element(document).ready(function () {
 
 		$('table.changes').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": [[0, "asc"]],
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+			"pageLength": 25,
+			"order": [[0, "asc"]],
 			"language": {
 				"emptyTable": "No pending changes"
 			},
 			"columnDefs": [
-				{'orderable': false, 'targets': [2, 3]}
+				{ 'orderable': false, 'targets': [2, 3] }
 			]
 		});
 
