@@ -38,9 +38,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class RouterFilter extends OncePerRequestFilter {
 	private static final Logger ACCESS = LogManager.getLogger("org.apache.traffic_control.traffic_router.core.access");
 	public static final String REDIRECT_QUERY_PARAM = "trred";
+	public static final String FORMAT_HEADER = "X-TC-Format";
 	private static final String HEAD = "HEAD";
 
 	@Autowired
@@ -161,9 +163,11 @@ public class RouterFilter extends OncePerRequestFilter {
 		}
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private void setSingleResponse(final HTTPRouteResult routeResult, final HttpServletRequest httpServletRequest, final HttpServletResponse response, final HTTPAccessRecord.Builder httpAccessRecordBuilder) throws IOException {
 		final String redirect = httpServletRequest.getParameter(REDIRECT_QUERY_PARAM);
 		final String format = httpServletRequest.getParameter("format");
+		final String formatHdr = httpServletRequest.getHeader(FORMAT_HEADER);
 		final URL location = routeResult.getUrl();
 
 		if (routeResult.getDeliveryService() != null) {
@@ -182,6 +186,13 @@ public class RouterFilter extends OncePerRequestFilter {
 				httpAccessRecordBuilder.responseURLs(routeResult.getUrls());
 			}
 
+			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
+		} else if ("json".equals(formatHdr) || "application/json".equals(formatHdr)) {
+			response.setContentType("application/json");
+			if (!HEAD.equals(httpServletRequest.getMethod())) {
+				response.getWriter().println(routeResult.toMultiLocationJSONString());
+				httpAccessRecordBuilder.responseURLs(routeResult.getUrls());
+			}
 			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
 		} else if ("json".equals(format)) {
 			if (!HEAD.equals(httpServletRequest.getMethod())) {
