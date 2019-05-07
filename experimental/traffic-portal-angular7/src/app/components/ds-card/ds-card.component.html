@@ -36,7 +36,7 @@ limitations under the License.
 				<li *ngFor="let url of deliveryService.exampleURLs"><a href="{{url}}">{{url}}</a></li>
 			</ul>
 			<span class="warning" *ngIf="!deliveryService.exampleURLs">No URLs configured!</span>
-			<a class="view-details" href="#" title="View Details">
+			<a class="view-details" routerLink="/deliveryservice/{{deliveryService.id}}" title="View Details">
 				<img src="assets/view-details.svg">
 			</a>
 		</div>

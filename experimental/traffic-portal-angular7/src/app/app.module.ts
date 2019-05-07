@@ -39,6 +39,7 @@ import { NewDeliveryServiceComponent } from './components/new-delivery-service/n
 import { TpHeaderComponent } from './components/tp-header/tp-header.component';
 import { LoadingComponent } from './components/loading/loading.component';
 import { UserCardComponent } from './components/user-card/user-card.component';
+import { DeliveryserviceComponent } from './components/deliveryservice/deliveryservice.component';
 
 /**
  * This is the list of available, distinct URLs, with the leading path separator omitted. Each
@@ -50,7 +51,8 @@ const appRoutes: Routes = [
 	{ path: '', component: DashboardComponent },
 	{ path: 'login', component: LoginComponent },
 	{ path: 'users', component: UsersComponent},
-	{ path: 'new.Delivery.Service', component: NewDeliveryServiceComponent}
+	{ path: 'new.Delivery.Service', component: NewDeliveryServiceComponent},
+	{ path: 'deliveryservice/:id', component: DeliveryserviceComponent}
 ];
 
 @NgModule({
@@ -65,6 +67,7 @@ const appRoutes: Routes = [
 		TpHeaderComponent,
 		LoadingComponent,
 		UserCardComponent,
+		DeliveryserviceComponent,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),

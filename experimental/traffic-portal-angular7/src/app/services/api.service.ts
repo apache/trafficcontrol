@@ -100,15 +100,33 @@ export class APIService {
 
 	/**
 	 * Gets a list of all visible Delivery Services
+	 * @param A unique identifier for a Delivery Service - either a numeric id or an "xml_id"
+	 * @throws TypeError if ``id`` is not a proper type
 	 * @returns An observable that will emit an array of `DeliveryService` objects.
 	*/
-	public getDeliveryServices (): Observable<DeliveryService[]> {
-		const path = '/api/' + this.API_VERSION + '/deliveryservices';
-		return this.get(path).pipe(map(
-			r => {
-				return r.body.response as DeliveryService[];
+	public getDeliveryServices (id?: string | number): Observable<DeliveryService[] | DeliveryService> {
+		if (id) {
+			let path = '/api/' + this.API_VERSION + '/deliveryservices?';
+			if (typeof(id) === "string") {
+				path += 'xml_id=' + encodeURIComponent(id);
+			} else if (typeof(id) === "number") {
+				path += 'id=' + String(id);
+			} else {
+				throw new TypeError("'id' must be a string or a number! (got: '" + typeof(id) + "')");
 			}
-		));
+			return this.get(path).pipe(map(
+				r => {
+					return r.body.response[0] as DeliveryService;
+				}
+			));
+		} else {
+			const path = '/api/' + this.API_VERSION + '/deliveryservices';
+			return this.get(path).pipe(map(
+				r => {
+					return r.body.response as DeliveryService[];
+				}
+			));
+		}
 	}
 
 	/**
