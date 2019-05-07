@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -116,7 +117,60 @@ func create(inf *api.APIInfo, ds tc.DeliveryServiceNullable) (tc.DeliveryService
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	resultRows, err := tx.Query(insertQuery(), &ds.Active, &ds.AnonymousBlockingEnabled, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &ds.ConsistentHashRegex, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MaxOriginConnections, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID)
+	resultRows, err := tx.Query(insertQuery(),
+		&ds.Active,
+		&ds.AnonymousBlockingEnabled,
+		&ds.CacheURL,
+		&ds.CCRDNSTTL,
+		&ds.CDNID,
+		&ds.CheckPath,
+		&ds.ConsistentHashRegex,
+		&deepCachingType,
+		&ds.DisplayName,
+		&ds.DNSBypassCNAME,
+		&ds.DNSBypassIP,
+		&ds.DNSBypassIP6,
+		&ds.DNSBypassTTL,
+		&ds.DSCP,
+		&ds.EdgeHeaderRewrite,
+		&ds.GeoLimitRedirectURL,
+		&ds.GeoLimit,
+		&ds.GeoLimitCountries,
+		&ds.GeoProvider,
+		&ds.GlobalMaxMBPS,
+		&ds.GlobalMaxTPS,
+		&ds.FQPacingRate,
+		&ds.HTTPBypassFQDN,
+		&ds.InfoURL,
+		&ds.InitialDispersion,
+		&ds.IPV6RoutingEnabled,
+		&ds.LogsEnabled,
+		&ds.LongDesc,
+		&ds.LongDesc1,
+		&ds.LongDesc2,
+		&ds.MaxDNSAnswers,
+		&ds.MaxOriginConnections,
+		&ds.MidHeaderRewrite,
+		&ds.MissLat,
+		&ds.MissLong,
+		&ds.MultiSiteOrigin,
+		&ds.OriginShield,
+		&ds.ProfileID,
+		&ds.Protocol,
+		&ds.QStringIgnore,
+		&ds.RangeRequestHandling,
+		&ds.RegexRemap,
+		&ds.RegionalGeoBlocking,
+		&ds.RemapText,
+		&ds.RoutingName,
+		&ds.SigningAlgorithm,
+		&ds.SSLKeyVersion,
+		&ds.TenantID,
+		&ds.TRRequestHeaders,
+		&ds.TRResponseHeaders,
+		&ds.TypeID,
+		&ds.XMLID)
+
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		return tc.DeliveryServiceNullable{}, code, usrErr, sysErr
@@ -315,7 +369,61 @@ func update(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (tc.DeliveryServic
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	resultRows, err := tx.Query(updateDSQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID, &ds.AnonymousBlockingEnabled, &ds.ConsistentHashRegex, &ds.MaxOriginConnections, &ds.ID)
+	resultRows,
+		err := tx.Query(updateDSQuery(),
+		&ds.Active,
+		&ds.CacheURL,
+		&ds.CCRDNSTTL,
+		&ds.CDNID,
+		&ds.CheckPath,
+		&deepCachingType,
+		&ds.DisplayName,
+		&ds.DNSBypassCNAME,
+		&ds.DNSBypassIP,
+		&ds.DNSBypassIP6,
+		&ds.DNSBypassTTL,
+		&ds.DSCP,
+		&ds.EdgeHeaderRewrite,
+		&ds.GeoLimitRedirectURL,
+		&ds.GeoLimit,
+		&ds.GeoLimitCountries,
+		&ds.GeoProvider,
+		&ds.GlobalMaxMBPS,
+		&ds.GlobalMaxTPS,
+		&ds.FQPacingRate,
+		&ds.HTTPBypassFQDN,
+		&ds.InfoURL,
+		&ds.InitialDispersion,
+		&ds.IPV6RoutingEnabled,
+		&ds.LogsEnabled,
+		&ds.LongDesc,
+		&ds.LongDesc1,
+		&ds.LongDesc2,
+		&ds.MaxDNSAnswers,
+		&ds.MidHeaderRewrite,
+		&ds.MissLat,
+		&ds.MissLong,
+		&ds.MultiSiteOrigin,
+		&ds.OriginShield,
+		&ds.ProfileID,
+		&ds.Protocol,
+		&ds.QStringIgnore,
+		&ds.RangeRequestHandling,
+		&ds.RegexRemap,
+		&ds.RegionalGeoBlocking,
+		&ds.RemapText,
+		&ds.RoutingName,
+		&ds.SigningAlgorithm,
+		&ds.SSLKeyVersion,
+		&ds.TenantID,
+		&ds.TRRequestHeaders,
+		&ds.TRResponseHeaders,
+		&ds.TypeID,
+		&ds.XMLID,
+		&ds.AnonymousBlockingEnabled,
+		&ds.ConsistentHashRegex,
+		&ds.MaxOriginConnections,
+		&ds.ID)
 
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -584,18 +692,97 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 
 	dses := []tc.DeliveryServiceNullable{}
 	dsCDNDomains := map[string]string{}
+	dsQueryParams := []string{}
+
 	for rows.Next() {
 		ds := tc.DeliveryServiceNullable{}
 		cdnDomain := ""
-		err := rows.Scan(&ds.Active, &ds.AnonymousBlockingEnabled, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CDNName, &ds.CheckPath, &ds.ConsistentHashRegex, &ds.DeepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.ID, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LastUpdated, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MaxOriginConnections, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OrgServerFQDN, &ds.OriginShield, &ds.ProfileID, &ds.ProfileName, &ds.ProfileDesc, &ds.Protocol, &ds.QStringIgnore, pq.Array(&ds.ConsistentHashQueryParams), &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.Tenant, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.Type, &ds.TypeID, &ds.XMLID, &cdnDomain)
+		err := rows.Scan(&ds.Active,
+			&ds.AnonymousBlockingEnabled,
+			&ds.CacheURL,
+			&ds.CCRDNSTTL,
+			&ds.CDNID,
+			&ds.CDNName,
+			&ds.CheckPath,
+			&ds.ConsistentHashRegex,
+			&ds.DeepCachingType,
+			&ds.DisplayName,
+			&ds.DNSBypassCNAME,
+			&ds.DNSBypassIP,
+			&ds.DNSBypassIP6,
+			&ds.DNSBypassTTL,
+			&ds.DSCP,
+			&ds.EdgeHeaderRewrite,
+			&ds.GeoLimitRedirectURL,
+			&ds.GeoLimit,
+			&ds.GeoLimitCountries,
+			&ds.GeoProvider,
+			&ds.GlobalMaxMBPS,
+			&ds.GlobalMaxTPS,
+			&ds.FQPacingRate,
+			&ds.HTTPBypassFQDN,
+			&ds.ID,
+			&ds.InfoURL,
+			&ds.InitialDispersion,
+			&ds.IPV6RoutingEnabled,
+			&ds.LastUpdated,
+			&ds.LogsEnabled,
+			&ds.LongDesc,
+			&ds.LongDesc1,
+			&ds.LongDesc2,
+			&ds.MaxDNSAnswers,
+			&ds.MaxOriginConnections,
+			&ds.MidHeaderRewrite,
+			&ds.MissLat,
+			&ds.MissLong,
+			&ds.MultiSiteOrigin,
+			&ds.OrgServerFQDN,
+			&ds.OriginShield,
+			&ds.ProfileID,
+			&ds.ProfileName,
+			&ds.ProfileDesc,
+			&ds.Protocol,
+			&ds.QStringIgnore,
+			pq.Array(&dsQueryParams),
+			&ds.RangeRequestHandling,
+			&ds.RegexRemap,
+			&ds.RegionalGeoBlocking,
+			&ds.RemapText,
+			&ds.RoutingName,
+			&ds.SigningAlgorithm,
+			&ds.SSLKeyVersion,
+			&ds.TenantID,
+			&ds.Tenant,
+			&ds.TRRequestHeaders,
+			&ds.TRResponseHeaders,
+			&ds.Type,
+			&ds.TypeID,
+			&ds.XMLID,
+			&cdnDomain)
+
 		if err != nil {
 			return nil, []error{fmt.Errorf("getting delivery services: %v", err)}, tc.SystemError
 		}
+
+		if len(dsQueryParams) > 0 {
+			// ensure unique and in consistent order
+			m := make(map[string]struct{}, len(dsQueryParams))
+			sort.Strings(dsQueryParams)
+			for _, k := range dsQueryParams {
+				if _, exists := m[k]; exists {
+					continue
+				}
+				m[k] = struct{}{}
+				ds.ConsistentHashQueryParams = append(ds.ConsistentHashQueryParams, k)
+			}
+		}
+
 		dsCDNDomains[*ds.XMLID] = cdnDomain
 		if ds.DeepCachingType != nil {
 			*ds.DeepCachingType = tc.DeepCachingTypeFromString(string(*ds.DeepCachingType))
 		}
 		ds.Signed = ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig
+
 		dses = append(dses, ds)
 	}
 
@@ -1110,8 +1297,7 @@ ds.protocol,
 ds.qstring_ignore,
 (SELECT ARRAY_AGG(lkey)
 	FROM (SELECT lower(name) AS lkey FROM deliveryservice_consistent_hash_query_param
-            WHERE deliveryservice_id = ds.id
-            GROUP BY lkey ORDER BY lkey) AS sorted) as query_keys,
+            WHERE deliveryservice_id = ds.id) AS qk) as query_keys,
 ds.range_request_handling,
 ds.regex_remap,
 ds.regional_geo_blocking,

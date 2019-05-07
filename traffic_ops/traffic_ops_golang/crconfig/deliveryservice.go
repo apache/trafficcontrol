@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -176,32 +177,32 @@ WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 		profile := sql.NullString{}
 		ttype := ""
 		if err := rows.Scan(&anonymousBlocking,
-		                    &ttl,
-		                    &consistentHashRegex,
-		                    pq.Array(&consistentHashQueryParams),
-		                    &deepCachingType,
-		                    &dnsBypassCName,
-		                    &dnsBypassIP,
-		                    &dnsBypassIP6,
-		                    &dnsBypassTTL,
-		                    &geoLimit,
-		                    &geoLimitCountries,
-		                    &geoProvider,
-		                    &geoLimitRedirectURL,
-		                    &httpBypassFQDN,
-		                    &dispersion,
-		                    &ip6RoutingEnabled,
-		                    &maxDNSAnswers,
-		                    &missLat,
-		                    &missLon,
-		                    &protocol,
-		                    &geoBlocking,
-		                    &trRequestHeaders,
-		                    &trRespHdrsStr,
-		                    &trResponseHeaders,
-		                    &xmlID,
-		                    &profile,
-		                    &ttype); err != nil {
+			&ttl,
+			&consistentHashRegex,
+			pq.Array(&consistentHashQueryParams),
+			&deepCachingType,
+			&dnsBypassCName,
+			&dnsBypassIP,
+			&dnsBypassIP6,
+			&dnsBypassTTL,
+			&geoLimit,
+			&geoLimitCountries,
+			&geoProvider,
+			&geoLimitRedirectURL,
+			&httpBypassFQDN,
+			&dispersion,
+			&ip6RoutingEnabled,
+			&maxDNSAnswers,
+			&missLat,
+			&missLon,
+			&protocol,
+			&geoBlocking,
+			&trRequestHeaders,
+			&trRespHdrsStr,
+			&trResponseHeaders,
+			&xmlID,
+			&profile,
+			&ttype); err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
 
@@ -212,6 +213,8 @@ WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 		for k, _ := range chqp {
 			ds.ConsistentHashQueryParams = append(ds.ConsistentHashQueryParams, k)
 		}
+
+		sort.Strings(ds.ConsistentHashQueryParams)
 
 		// TODO prevent (lat XOR lon) in the Tx and UI
 		if missLat.Valid && missLon.Valid {
