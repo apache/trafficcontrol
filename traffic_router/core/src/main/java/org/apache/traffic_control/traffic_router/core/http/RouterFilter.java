@@ -44,6 +44,7 @@ public class RouterFilter extends OncePerRequestFilter {
 	public static final String REDIRECT_QUERY_PARAM = "trred";
 	public static final String FORMAT_HEADER = "X-TC-Format";
 	private static final String HEAD = "HEAD";
+	public static final String GET = "GET";
 
 	@Autowired
 	private TrafficRouterManager trafficRouterManager;
@@ -187,13 +188,29 @@ public class RouterFilter extends OncePerRequestFilter {
 			}
 
 			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
-		} else if ("json".equals(formatHdr) || "application/json".equals(formatHdr)) {
-			response.setContentType("application/json");
-			if (!HEAD.equals(httpServletRequest.getMethod())) {
-				response.getWriter().println(routeResult.toMultiLocationJSONString());
-				httpAccessRecordBuilder.responseURLs(routeResult.getUrls());
+
+		} else if (formatHdr != null) {
+			if ("json".equals(formatHdr) || "application/json".equals(formatHdr)) {
+				if (HEAD.equals(httpServletRequest.getMethod()) || GET.equals(httpServletRequest.getMethod())) {
+					response.setContentType("application/json");
+					final String resp = routeResult.toMultiLocationJSONString();
+					if (!HEAD.equals(httpServletRequest.getMethod())) {
+						response.getWriter().println(resp);
+						httpAccessRecordBuilder.responseURLs(routeResult.getUrls());
+					} else {
+						response.setHeader("Content-Length", Integer.toString(resp.length()));
+					}
+					httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
+				} else {
+					response.setHeader("Allow", GET + ',' + HEAD);
+					httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+				}
+			} else {
+				response.setContentType("text/plain");
+				response.getWriter().println("Unsupported target format: " + formatHdr);
+				httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_NOT_ACCEPTABLE);
 			}
-			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
+
 		} else if ("json".equals(format)) {
 			if (!HEAD.equals(httpServletRequest.getMethod())) {
 				response.setContentType("application/json");
