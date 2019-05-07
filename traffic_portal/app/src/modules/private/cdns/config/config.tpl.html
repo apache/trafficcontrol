@@ -26,98 +26,272 @@ under the License.
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
             <button type="button" class="btn btn-default" ng-click="navigateToPath('/cdns/' + cdn.id)">Cancel</button>
-            <button class="btn btn-primary" title="Snapshot {{cdn.name}} Config" ng-click="confirmSnapshot(cdn)"><i class="fa fa-camera"></i>&nbsp;&nbsp;Perform Snapshot</button>
+            <button type="button" class="btn btn-primary" title="Perform {{cdn.name}} Snapshot" ng-click="confirmSnapshot(cdn)"><i class="fa fa-camera"></i>&nbsp;&nbsp;Perform Snapshot</button>
         </div>
-
         <div class="clearfix"></div>
     </div>
     <div id="snapshotContainer" class="x_content">
         <uib-tabset active="active" justified="true">
-            <uib-tab index="0" class="tab" ng-click="diffConfig(500)">
-                <uib-tab-heading uib-popover-template="configCount.templateUrl" popover-title="{{configCount.added + configCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    General [ {{configCount.added}} | {{configCount.removed}} ]
+            <uib-tab index="0" class="tab">
+                <uib-tab-heading uib-popover-template="configCount.templateUrl" popover-title="{{configCount.added + configCount.removed + configCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    General Config<br/>[ {{configCount.added}} | {{configCount.removed}} | {{configCount.updated}} ]
                 </uib-tab-heading>
-                <pre id="config"></pre>
+                <div class="x_content">
+                    <br>
+                    <table id="configChangesTable" class="table responsive-utilities jambo_table changes">
+                        <thead>
+                        <tr class="headings">
+                            <th>Change Type</th>
+                            <th>Path</th>
+                            <th>Current Value</th>
+                            <th>Pending Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="configChange in ::configChanges track by $index">
+                            <td data-search="^{{::configChange.op}}$">{{::configChange.op}}</td>
+                            <td data-search="^{{::configChange.path}}$">{{::configChange.path}}</td>
+                            <td class="value" data-search="^{{::configChange.oldValue}}$"><json-formatter open="expandLevel" json="configChange.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::configChange.value}}$"><json-formatter open="expandLevel" json="configChange.value"></json-formatter></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </uib-tab>
-            <uib-tab index="1" class="tab" ng-click="diffContentRouters(500)">
-                <uib-tab-heading uib-popover-template="contentRoutersCount.templateUrl" popover-title="{{contentRoutersCount.added + contentRoutersCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Traffic Routers [ {{contentRoutersCount.added}} | {{contentRoutersCount.removed}} ]
+            <uib-tab index="1" class="tab">
+                <uib-tab-heading uib-popover-template="contentRoutersCount.templateUrl" popover-title="{{contentRoutersCount.added + contentRoutersCount.removed + contentRoutersCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Traffic Routers<br/>[ {{contentRoutersCount.added}} | {{contentRoutersCount.removed}} | {{contentRoutersCount.updated}} ]
                 </uib-tab-heading>
-                <pre id="contentRouters"></pre>
+                <div class="x_content">
+                    <br>
+                    <table id="contentRoutersChangesTable" class="table responsive-utilities jambo_table changes">
+                        <thead>
+                        <tr class="headings">
+                            <th>Change Type</th>
+                            <th>Path</th>
+                            <th>Current Value</th>
+                            <th>Pending Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="cr in ::contentRoutersChanges track by $index">
+                            <td data-search="^{{::cr.op}}$">{{::cr.op}}</td>
+                            <td data-search="^{{::cr.path}}$">{{::cr.path}}</td>
+                            <td class="value" data-search="^{{::cr.oldValue}}$"><json-formatter open="expandLevel" json="cr.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::cr.value}}$"><json-formatter open="expandLevel" json="cr.value"></json-formatter></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </uib-tab>
-            <uib-tab index="1" class="tab" ng-click="diffMonitors(500)">
-                <uib-tab-heading uib-popover-template="monitorsCount.templateUrl" popover-title="{{monitorsCount.added + monitorsCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Traffic Monitors [ {{monitorsCount.added}} | {{monitorsCount.removed}} ]
+            <uib-tab index="2" class="tab">
+                <uib-tab-heading uib-popover-template="monitorsCount.templateUrl" popover-title="{{monitorsCount.added + monitorsCount.removed + monitorsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Traffic Monitors<br/>[ {{monitorsCount.added}} | {{monitorsCount.removed}} | {{monitorsCount.updated}} ]
                 </uib-tab-heading>
-                <pre id="monitors"></pre>
+                <div class="x_content">
+                    <br>
+                    <table id="monitorsChangesTable" class="table responsive-utilities jambo_table changes">
+                        <thead>
+                        <tr class="headings">
+                            <th>Change Type</th>
+                            <th>Path</th>
+                            <th>Current Value</th>
+                            <th>Pending Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="m in ::monitorsChanges track by $index">
+                            <td data-search="^{{::m.op}}$">{{::m.op}}</td>
+                            <td data-search="^{{::m.path}}$">{{::m.path}}</td>
+                            <td class="value" data-search="^{{::m.oldValue}}$"><json-formatter open="expandLevel" json="m.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::m.value}}$"><json-formatter open="expandLevel" json="m.value"></json-formatter></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </uib-tab>
-            <uib-tab index="2" class="tab" ng-click="diffContentServers(500)">
-                <uib-tab-heading uib-popover-template="contentServersCount.templateUrl" popover-title="{{contentServersCount.added + contentServersCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Traffic Servers [ {{contentServersCount.added}} | {{contentServersCount.removed}} ]
+            <uib-tab index="3" class="tab">
+                <uib-tab-heading uib-popover-template="contentServersCount.templateUrl" popover-title="{{contentServersCount.added + contentServersCount.removed + contentServersCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Traffic Servers<br/>[ {{contentServersCount.added}} | {{contentServersCount.removed}} | {{contentServersCount.updated}} ]
                 </uib-tab-heading>
-                <pre id="contentServers"></pre>
+                <div class="x_content">
+                    <br>
+                    <table id="contentServersChangesTable" class="table responsive-utilities jambo_table changes">
+                        <thead>
+                        <tr class="headings">
+                            <th>Change Type</th>
+                            <th>Path</th>
+                            <th>Current Value</th>
+                            <th>Pending Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="cs in ::contentServersChanges track by $index">
+                            <td data-search="^{{::cs.op}}$">{{::cs.op}}</td>
+                            <td data-search="^{{::cs.path}}$">{{::cs.path}}</td>
+                            <td class="value" data-search="^{{::cs.oldValue}}$"><json-formatter open="expandLevel" json="cs.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::cs.value}}$"><json-formatter open="expandLevel" json="cs.value"></json-formatter></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </uib-tab>
-            <uib-tab index="3" class="tab" ng-click="diffDeliveryServices(500)">
-                <uib-tab-heading uib-popover-template="deliveryServicesCount.templateUrl" popover-title="{{deliveryServicesCount.added + deliveryServicesCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Delivery Services [ {{deliveryServicesCount.added}} | {{deliveryServicesCount.removed}} ]
+            <uib-tab index="4" class="tab">
+                <uib-tab-heading uib-popover-template="deliveryServicesCount.templateUrl" popover-title="{{deliveryServicesCount.added + deliveryServicesCount.removed + deliveryServicesCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Delivery Services<br/>[ {{deliveryServicesCount.added}} | {{deliveryServicesCount.removed}} | {{deliveryServicesCount.updated}} ]
                 </uib-tab-heading>
-                <pre id="deliveryServices"></pre>
+                <div class="x_content">
+                    <br>
+                    <table id="deliveryServicesChangesTable" class="table responsive-utilities jambo_table changes">
+                        <thead>
+                        <tr class="headings">
+                            <th>Change Type</th>
+                            <th>Path</th>
+                            <th>Current Value</th>
+                            <th>Pending Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="ds in ::deliveryServicesChanges track by $index">
+                            <td data-search="^{{::ds.op}}$">{{::ds.op}}</td>
+                            <td data-search="^{{::ds.path}}$">{{::ds.path}}</td>
+                            <td class="value" data-search="^{{::ds.oldValue}}$"><json-formatter open="expandLevel" json="ds.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::ds.value}}$"><json-formatter open="expandLevel" json="ds.value"></json-formatter></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </uib-tab>
-            <uib-tab index="4" class="tab" ng-click="diffEdgeLocations(500)">
-                <uib-tab-heading uib-popover-template="edgeLocationsCount.templateUrl" popover-title="{{edgeLocationsCount.added + edgeLocationsCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Edge Cache Groups [ {{edgeLocationsCount.added}} | {{edgeLocationsCount.removed}} ]
+            <uib-tab index="5" class="tab">
+                <uib-tab-heading uib-popover-template="edgeLocationsCount.templateUrl" popover-title="{{edgeLocationsCount.added + edgeLocationsCount.removed + edgeLocationsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Edge Cache Groups<br/>[ {{edgeLocationsCount.added}} | {{edgeLocationsCount.removed}} | {{edgeLocationsCount.updated}} ]
                 </uib-tab-heading>
-                <pre id="edgeLocations"></pre>
+                <div class="x_content">
+                    <br>
+                    <table id="edgeLocationsChangesTable" class="table responsive-utilities jambo_table changes">
+                        <thead>
+                        <tr class="headings">
+                            <th>Change Type</th>
+                            <th>Path</th>
+                            <th>Current Value</th>
+                            <th>Pending Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="el in ::edgeLocationsChanges track by $index">
+                            <td data-search="^{{::el.op}}$">{{::el.op}}</td>
+                            <td data-search="^{{::el.path}}$">{{::el.path}}</td>
+                            <td class="value" data-search="^{{::el.oldValue}}$"><json-formatter open="expandLevel" json="el.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::el.value}}$"><json-formatter open="expandLevel" json="el.value"></json-formatter></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </uib-tab>
-            <uib-tab index="5" class="tab" ng-click="diffStats(500)">
-                <uib-tab-heading uib-popover-template="statsCount.templateUrl" popover-title="{{statsCount.added + statsCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
-                    Stats [ {{statsCount.added}} | {{statsCount.removed}} ]
+            <uib-tab index="6" class="tab">
+                <uib-tab-heading uib-popover-template="trLocationsCount.templateUrl" popover-title="{{trLocationsCount.added + trLocationsCount.removed + trLocationsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    TR Cache Groups<br/>[ {{trLocationsCount.added}} | {{trLocationsCount.removed}} | {{trLocationsCount.updated}} ]
                 </uib-tab-heading>
-                <pre id="stats"></pre>
+                <div class="x_content">
+                    <br>
+                    <table id="trLocationsChangesTable" class="table responsive-utilities jambo_table changes">
+                        <thead>
+                        <tr class="headings">
+                            <th>Change Type</th>
+                            <th>Path</th>
+                            <th>Current Value</th>
+                            <th>Pending Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="tl in ::trLocationsChanges track by $index">
+                            <td data-search="^{{::tl.op}}$">{{::tl.op}}</td>
+                            <td data-search="^{{::tl.path}}$">{{::tl.path}}</td>
+                            <td class="value" data-search="^{{::tl.oldValue}}$"><json-formatter open="expandLevel" json="tl.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::tl.value}}$"><json-formatter open="expandLevel" json="tl.value"></json-formatter></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </uib-tab>
+            <uib-tab index="7" class="tab">
+                <uib-tab-heading uib-popover-template="statsCount.templateUrl" popover-title="{{statsCount.added + statsCount.removed + statsCount.updated}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Stats<br/>[ {{statsCount.added}} | {{statsCount.removed}} | {{statsCount.updated}} ]
+                </uib-tab-heading>
+                <div class="x_content">
+                    <br>
+                    <table id="statsChangesTable" class="table responsive-utilities jambo_table changes">
+                        <thead>
+                        <tr class="headings">
+                            <th>Change Type</th>
+                            <th>Path</th>
+                            <th>Current Value</th>
+                            <th>Pending Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="s in ::statsChanges track by $index">
+                            <td data-search="^{{::s.op}}$">{{::s.op}}</td>
+                            <td data-search="^{{::s.path}}$">{{::s.path}}</td>
+                            <td class="value" data-search="^{{::s.oldValue}}$"><json-formatter open="expandLevel" json="s.oldValue"></json-formatter></td>
+                            <td class="value" data-search="^{{::s.value}}$"><json-formatter open="expandLevel" json="s.value"></json-formatter></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </uib-tab>
         </uib-tabset>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-default" ng-click="navigateToPath('/cdns/' + cdn.id)">Cancel</button>
-            <button class="btn btn-primary" title="Snapshot {{cdn.name}} Config" ng-click="confirmSnapshot(cdn)"><i class="fa fa-camera"></i>&nbsp;&nbsp;Perform Snapshot</button>
-        </div>
     </div>
 </div>
 
 <!--- start: templates for popovers --->
 
 <script type="text/ng-template" id="configPopoverTemplate.html">
-    <div>{{configCount.added}} additions (++)</div>
-    <div>{{configCount.removed}} removals (--)</div>
+    <div>{{configCount.added}} adds</div>
+    <div>{{configCount.removed}} removes</div>
+    <div>{{configCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="crPopoverTemplate.html">
-    <div>{{contentRoutersCount.added}} additions (++)</div>
-    <div>{{contentRoutersCount.removed}} removals (--)</div>
+    <div>{{contentRoutersCount.added}} adds</div>
+    <div>{{contentRoutersCount.removed}} removes</div>
+    <div>{{contentRoutersCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="mPopoverTemplate.html">
-    <div>{{monitorsCount.added}} additions (++)</div>
-    <div>{{monitorsCount.removed}} removals (--)</div>
+    <div>{{monitorsCount.added}} adds</div>
+    <div>{{monitorsCount.removed}} removes</div>
+    <div>{{monitorsCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="csPopoverTemplate.html">
-    <div>{{contentServersCount.added}} additions (++)</div>
-    <div>{{contentServersCount.removed}} removals (--)</div>
+    <div>{{contentServersCount.added}} adds</div>
+    <div>{{contentServersCount.removed}} removes</div>
+    <div>{{contentServersCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="dsPopoverTemplate.html">
-    <div>{{deliveryServicesCount.added}} additions (++)</div>
-    <div>{{deliveryServicesCount.removed}} removals (--)</div>
+    <div>{{deliveryServicesCount.added}} adds</div>
+    <div>{{deliveryServicesCount.removed}} removes</div>
+    <div>{{deliveryServicesCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="elPopoverTemplate.html">
-    <div>{{edgeLocationsCount.added}} additions (++)</div>
-    <div>{{edgeLocationsCount.removed}} removals (--)</div>
+    <div>{{edgeLocationsCount.added}} adds</div>
+    <div>{{edgeLocationsCount.removed}} removes</div>
+    <div>{{edgeLocationsCount.updated}} updates</div>
+</script>
+
+<script type="text/ng-template" id="tlPopoverTemplate.html">
+    <div>{{trLocationsCount.added}} adds</div>
+    <div>{{trLocationsCount.removed}} removes</div>
+    <div>{{trLocationsCount.updated}} updates</div>
 </script>
 
 <script type="text/ng-template" id="statsPopoverTemplate.html">
-    <div>{{statsCount.added}} additions (++)</div>
-    <div>{{statsCount.removed}} removals (--)</div>
+    <div>{{statsCount.added}} adds</div>
+    <div>{{statsCount.removed}} removes</div>
+    <div>{{statsCount.updated}} updates</div>
 </script>
 
 <!--- end: templates for popovers --->
