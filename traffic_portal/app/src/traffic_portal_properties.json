@@ -349,7 +349,7 @@
           },
           "signingAlgorithm": {
             "title": "Signing Algorithm",
-            "desc": "Type of URL signing method to sign the URLs:<br><ul><li>null: token based auth is not enabled for this delivery service.</li><li>“url_sig”: URL Sign token based auth is enabled for this delivery service.</li><li>“uri_signing”: URI Signing token based auth is enabled for this delivery service.</li></ul><br><br><a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-signed-urls\" target=\"_blank\">See Token Based Authentication</a>"
+            "desc": "Type of URL signing method to sign the URLs:<br><ul><li>null: token based auth is not enabled for this delivery service.</li><li>'url_sig': URL Sign token based auth is enabled for this delivery service.</li><li>'uri_signing': URI Signing token based auth is enabled for this delivery service.</li></ul><br><br><a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-signed-urls\" target=\"_blank\">See Token Based Authentication</a>"
           },
           "tenantId": {
             "title": "Tenant",
@@ -357,7 +357,7 @@
           },
           "trRequestHeaders": {
             "title": "Traffic Router Log Request Headers",
-            "desc": "List of header keys separated by __RETURN__. Listed headers will be included in TR access log entries under the “rh=” token."
+            "desc": "List of header keys separated by __RETURN__. Listed headers will be included in TR access log entries under the 'rh=' token."
           },
           "trResponseHeaders": {
             "title": "Traffic Router Additional Response Headers",
