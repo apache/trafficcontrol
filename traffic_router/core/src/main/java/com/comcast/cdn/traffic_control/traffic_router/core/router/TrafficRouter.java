@@ -560,14 +560,24 @@ public class TrafficRouter {
 		return routeResult;
 	}
 
+	/**
+	 * Creates a string to be used in consistent hashing
+	 *
+	 * This uses simply the request path by default, but will consider any and all Query Parameters
+	 * that are in deliveryService's {@link DeliveryService.consistentHashQueryParams} set as well.
+	 *
+	 * @param deliveryService The Delivery Service being requested
+	 * @param request An {@link HTTPRequest} representing the client's request.
+	 * @return A string appropriate to use for consistent hashing to service the request
+	*/
 	public String buildPatternBasedHashString(final DeliveryService deliveryService, final HTTPRequest request) {
 		final String requestPath = request.getPath();
 		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty() && !requestPath.isEmpty()) {
 			final StringBuilder hashString = new StringBuilder(request.getPath());
-			for (String qkey : request.getQueryString().split("&")) {
-				qkey = qkey.split("=")[0];
+			for (final String qs : request.getQueryString().split('&')) {
+				final String qkey = qs.split('=')[0];
 				if (deliveryService.consistentHashQueryParams.contains(qkey)) {
-					hashString.append(qkey);
+					hashString.append(qs);
 				}
 			}
 			return buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), hashString.toString());
