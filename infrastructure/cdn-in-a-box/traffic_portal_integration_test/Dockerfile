@@ -60,7 +60,7 @@ RUN export junit_conf_jasmine=" \
 
 RUN export junit_conf_chrome=", \
                 'chromeOptions': { \
-                      'args': ['--headless', '--disable-gpu', '--no-sandbox', '--ignore-certificate-errors'] \
+                      'args': ['--headless', '--disable-gpu', '--no-sandbox', '--ignore-certificate-errors', '--disable-extensions', '--whitelisted-ips'] \
                     } \
 " && perl -p -i -e 's/(\s*'"'"'browserName'"'"':\s*'"'"'chrome'"'"')/\1\n$ENV{junit_conf_chrome}/g' conf.js
 
@@ -68,6 +68,7 @@ RUN export junit_conf_chrome=", \
 RUN cat conf.js
 RUN cat login/conf.js
 
+RUN webdriver-manager clean
 RUN webdriver-manager update
 
 COPY ./infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh /lang/traffic_portal/test/end_to_end/
