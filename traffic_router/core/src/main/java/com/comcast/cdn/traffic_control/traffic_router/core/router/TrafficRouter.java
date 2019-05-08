@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -565,6 +567,7 @@ public class TrafficRouter {
 	 *
 	 * This uses simply the request path by default, but will consider any and all Query Parameters
 	 * that are in deliveryService's {@link DeliveryService.consistentHashQueryParams} set as well.
+	 * It will also fall back on the request path if the query parameters are not UTF-8-encoded.
 	 *
 	 * @param deliveryService The Delivery Service being requested
 	 * @param request An {@link HTTPRequest} representing the client's request.
@@ -574,13 +577,18 @@ public class TrafficRouter {
 		final String requestPath = request.getPath();
 		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty() && !requestPath.isEmpty()) {
 			final StringBuilder hashString = new StringBuilder(request.getPath());
-			for (final String qs : request.getQueryString().split('&')) {
-				final String qkey = qs.split('=')[0];
-				if (deliveryService.consistentHashQueryParams.contains(qkey)) {
-					hashString.append(qs);
+			try {
+				for (String qs : request.getQueryString().split("&")) {
+					final String qkey = URLDecoder.decode(qs.split("=")[0], "UTF-8");
+					qs = URLDecoder.decode(qs, "UTF-8");
+					if (deliveryService.consistentHashQueryParams.contains(qkey)) {
+						hashString.append(URLEncoder.encode(qs, "UTF-8"));
+					}
 				}
+				return buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), hashString.toString());
+			} catch (Exception e) {
+				return requestPath;
 			}
-			return buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), hashString.toString());
 		}
 		return requestPath;
 	}
