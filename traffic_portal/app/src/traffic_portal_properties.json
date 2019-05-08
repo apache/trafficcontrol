@@ -357,11 +357,11 @@
           },
           "trRequestHeaders": {
             "title": "Traffic Router Log Request Headers",
-            "desc": "List of header keys separated by __RETURN__. Listed headers will be included in TR access log entries under the 'rh=' token."
+            "desc": "List of header keys on separate lines (or separated by __RETURN__ to simulate a line ending). Listed headers will be included in TR access log entries under the 'rh=' token."
           },
           "trResponseHeaders": {
             "title": "Traffic Router Additional Response Headers",
-            "desc": "List of header name:value pairs separated by __RETURN__. Listed pairs will be included in all TR HTTP responses."
+            "desc": "List of header name:value pairs on separate lines (or separated by __RETURN__ to simulate a line ending). Listed pairs will be included in all TR HTTP responses."
           },
           "typeId": {
             "title": "Content Routing Type",
