@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -573,22 +575,40 @@ public class TrafficRouter {
 	 * @param request An {@link HTTPRequest} representing the client's request.
 	 * @return A string appropriate to use for consistent hashing to service the request
 	*/
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.UseStringBufferForStringAppends"})
 	public String buildPatternBasedHashString(final DeliveryService deliveryService, final HTTPRequest request) {
 		final String requestPath = request.getPath();
 		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty() && !requestPath.isEmpty()) {
 			final StringBuilder hashString = new StringBuilder(request.getPath());
+			final SortedSet<String> qparams = new TreeSet<String>();
 			try {
-				for (String qs : request.getQueryString().split("&")) {
-					final String qkey = URLDecoder.decode(qs.split("=")[0], "UTF-8");
-					qs = URLDecoder.decode(qs, "UTF-8");
-					if (deliveryService.getConsistentHashQueryParams().contains(qkey)) {
-						hashString.append(URLEncoder.encode(qs, "UTF-8"));
+				for (final String qparam : request.getQueryString().split("&")) {
+					if (qparam.isEmpty()) {
+						continue;
+					}
+
+					String[] parts = qparam.split("=");
+					for (short i = 0; i<parts.length; ++i) {
+						parts[i] = URLDecoder.decode(parts[i]);
+					}
+					parts[0] = parts[0].toLowerCase(); // I truly have no idea why this triggers `PMD.UseStringBufferForStringAppends`
+
+					if (deliveryService.getConsistentHashQueryParams().contains(parts[0])) {
+						if (parts.length == 2) {
+							parts[1] = URLDecoder.decode(parts[1]);
+						}
+						qparams.add(URLEncoder.encode(String.join("=", parts)));
 					}
 				}
-				return buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), hashString.toString());
+
+				for (final String qparam : qparams) {
+					hashString.append(URLEncoder.encode(qparam));
+				}
 			} catch (Exception e) {
 				return requestPath;
 			}
+
+			return buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), hashString.toString());
 		}
 		return requestPath;
 	}
