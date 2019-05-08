@@ -134,8 +134,8 @@ public class DeliveryService {
 			if (!cqpNode.isArray()) {
 				LOGGER.error("Delivery Service '" + id + "' has malformed consistentHashQueryParams. Disregarding.");
 			} else {
-				for (int i=0; i<cqpNode.size(); ++i) {
-					final String s = cqpNode.get(i).asText();
+				for (final JsonNode n : cqpNode) {
+					final String s = n.asText();
 					if (!s.isEmpty()) {
 						this.consistentHashQueryParams.add(s.toLowerCase());
 					}
