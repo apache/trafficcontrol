@@ -55,7 +55,7 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
         return httpService.post(ENV.api['root'] + 'user/login/oauth', { t: token})
             .then(
                 function(result) {
-                    $rootScope.$broadcast('authService::oauthLogin');
+                    $rootScope.$broadcast('authService::login');
                     const redirect = decodeURIComponent($location.search().redirect);
                     if (redirect !== undefined) {
                         $location.search('redirect', null); // remove the redirect query param
@@ -63,9 +63,6 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
                     } else {
                         $location.url('/');
                     }
-                },
-                function(fault) {
-                    window.console.error(fault);
                 }
             );
     };

@@ -17,11 +17,8 @@
  * under the License.
  */
 
-var LoginController = function($scope, $log, $uibModal, authService, userService, propertiesModel) {
+var LoginController = function($scope, $log, $uibModal, $location, authService, userService, propertiesModel) {
 
-    $scope.returnUrl = window.location.hostname;
-    $scope.returnPort = window.location.port;
-    $scope.returnProtocol = window.location.protocol;
     $scope.oAuthEnabled = propertiesModel.properties.oAuth.enabled;
 
     $scope.credentials = {
@@ -54,20 +51,18 @@ var LoginController = function($scope, $log, $uibModal, authService, userService
     };
 
     $scope.loginOauth = function() {
-        const gotoUrl = new URL(propertiesModel.properties.oAuth.oAuthUrl);
-        const currentUrl = new URL(window.location.href);
-        const afterHash = currentUrl.hash.substring(2);
-        const urlNoHash = new URL(currentUrl.protocol + '//' + currentUrl.hostname + currentUrl.pathname + afterHash);
+        const redirectUriParamKey = propertiesModel.properties.oAuth.redirectUriParameterOverride !== '' ? propertiesModel.properties.oAuth.redirectUriParameterOverride : 'redirect_uri';
+        const redirectParam = $location.search()['redirect'] !== null ? $location.search()['redirect'] : '';
 
-        const redirectParam = urlNoHash.searchParams.get('redirect') !== null ? urlNoHash.searchParams.get('redirect') : '';
-        var continueParam = new URL(window.location.href);
-        continueParam.hash = '#!/sso?redirect=' + redirectParam;
+        // Builds redirect_uri parameter value to be sent with request to OAuth provider.  This will redirect to the /sso page with any previous redirect information
+        var redirectUriParam = new URL(window.location.href);
+        redirectUriParam.hash = '#!/sso?redirect=' + redirectParam;
 
-        var continueURL = new URL(gotoUrl.protocol + '//' + gotoUrl.hostname + gotoUrl.pathname);
-        continueURL.searchParams.append('continue', continueParam);
-        gotoUrl.searchParams.forEach(function(value, key) {
-            continueURL.searchParams.append(key, value);
-        });
+        // Builds the URL to redirect to the OAuth provider including the redirect_uri (or override), client_id, and response_type fields
+        var continueURL = new URL(propertiesModel.properties.oAuth.oAuthUrl);
+        continueURL.searchParams.append(redirectUriParamKey, redirectUriParam);
+        continueURL.searchParams.append('client_id', propertiesModel.properties.oAuth.clientId);
+        continueURL.searchParams.append('response_type', 'token');
 
         window.location.href = continueURL.href;
     };
@@ -76,5 +71,5 @@ var LoginController = function($scope, $log, $uibModal, authService, userService
     init();
 };
 
-LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService', 'userService', 'propertiesModel'];
+LoginController.$inject = ['$scope', '$log', '$uibModal', '$location', 'authService', 'userService', 'propertiesModel'];
 module.exports = LoginController;
