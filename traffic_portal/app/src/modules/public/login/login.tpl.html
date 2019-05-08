@@ -48,10 +48,10 @@ under the License.
                         </div>
                     </div>
                 </form>
-                <form name="loginForm" role="form" class="form-horizontal form-label-left" novalidate ng-if="oAuthEnabled">
+                <form name="ssoLoginForm" role="form" class="form-horizontal form-label-left" novalidate ng-if="oAuthEnabled">
                     <div class="form-group">
                         <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-1">
-                            <button name="loginOauthSubmit" type="submit" class="btn btn-primary" ng-click="loginOauth()">Log in &nbsp;&nbsp;<i class="fa fa-chevron-circle-right"></i></button>
+                            <button name="loginOauthSubmit" type="button" class="btn btn-primary" ng-click="loginOauth()">Log in &nbsp;&nbsp;<i class="fa fa-chevron-circle-right"></i></button>
                         </div>
                     </div>
                 </form>

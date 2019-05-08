@@ -17,15 +17,11 @@
  * under the License.
  */
 
-var SsoController = function($scope, $state, $interval, authService, propertiesModel) {
+var SsoController = function($scope, $state, $interval, $location, authService, propertiesModel) {
 
 	var init = function () {
-	    const currentUrl = new URL(window.location.href);
-	    const afterHash = currentUrl.hash.substring(2);
-	    const urlNoHash = new URL(currentUrl.protocol + '//' + currentUrl.hostname + currentUrl.pathname + afterHash);
-
-        const tokenParameter = propertiesModel.properties.oAuth.oAuthTokenQueryParam;
-        const token = urlNoHash.searchParams.get(tokenParameter);
+        const tokenParameter = propertiesModel.properties.oAuth.oAuthTokenQueryParam !== '' ? propertiesModel.properties.oAuth.oAuthTokenQueryParam : 'access_token';
+		const token = $location.search()[tokenParameter];
 
         authService.oauthLogin(token);
 	};
@@ -33,5 +29,5 @@ var SsoController = function($scope, $state, $interval, authService, propertiesM
 
 };
 
-SsoController.$inject = ['$scope', '$state', '$interval', 'authService', 'propertiesModel'];
+SsoController.$inject = ['$scope', '$state', '$interval', '$location', 'authService', 'propertiesModel'];
 module.exports = SsoController;

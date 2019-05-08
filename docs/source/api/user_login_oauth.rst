@@ -18,10 +18,10 @@
 ********************
 ``user/login/oauth``
 ********************
+.. versionadded:: 1.4
 
 ``POST``
 ========
-.. versionadded:: 1.4
 
 Authentication of a user using an encrypted Json Web Token from an OAuth service. Traffic Ops will decode and validate the token, validate the key set domain, and send back a session cookie.
 
