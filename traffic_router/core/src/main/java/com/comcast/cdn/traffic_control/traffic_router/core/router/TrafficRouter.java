@@ -581,7 +581,7 @@ public class TrafficRouter {
 				for (String qs : request.getQueryString().split("&")) {
 					final String qkey = URLDecoder.decode(qs.split("=")[0], "UTF-8");
 					qs = URLDecoder.decode(qs, "UTF-8");
-					if (deliveryService.consistentHashQueryParams.contains(qkey)) {
+					if (deliveryService.getConsistentHashQueryParams().contains(qkey)) {
 						hashString.append(URLEncoder.encode(qs, "UTF-8"));
 					}
 				}

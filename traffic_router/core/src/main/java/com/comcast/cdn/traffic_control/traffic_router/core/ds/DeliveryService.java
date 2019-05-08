@@ -98,7 +98,7 @@ public class DeliveryService {
 	private final boolean redirectToHttps;
 	private final DeepCachingType deepCache;
 	private String consistentHashRegex;
-	public SortedSet<String> consistentHashQueryParams;
+	private final SortedSet<String> consistentHashQueryParams;
 
 	public enum DeepCachingType {
 		NEVER,
@@ -181,6 +181,10 @@ public class DeliveryService {
 		} finally {
 			this.deepCache = dct;
 		}
+	}
+
+	public SortedSet<String> getConsistentHashQueryParams() {
+		return this.consistentHashQueryParams;
 	}
 
 	public String getId() {
