@@ -927,7 +927,7 @@ CREATE TABLE profile (
     name text NOT NULL,
     description text,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    type profile_type NOT NULL DEFAULT 'UNK_PROFILE', -- That default is new, but should be non-breaking
+    type profile_type NOT NULL,
     cdn bigint NOT NULL,
     routing_disabled boolean NOT NULL DEFAULT FALSE
 );
