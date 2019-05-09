@@ -40,6 +40,7 @@ import { TpHeaderComponent } from './components/tp-header/tp-header.component';
 import { LoadingComponent } from './components/loading/loading.component';
 import { UserCardComponent } from './components/user-card/user-card.component';
 import { DeliveryserviceComponent } from './components/deliveryservice/deliveryservice.component';
+import { LinechartDirective } from './directives/linechart.directive';
 
 /**
  * This is the list of available, distinct URLs, with the leading path separator omitted. Each
@@ -68,6 +69,7 @@ const appRoutes: Routes = [
 		LoadingComponent,
 		UserCardComponent,
 		DeliveryserviceComponent,
+		LinechartDirective,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),

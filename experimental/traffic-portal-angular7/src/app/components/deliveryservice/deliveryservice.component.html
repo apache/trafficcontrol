@@ -18,5 +18,5 @@ limitations under the License.
 		<div><label>From</label><input [formControl]="fromDate" type="date" name="fromdate"/><input [formControl]="fromTime" type="time" name="fromtime" value="00:00"></div>
 		<div><label>To</label><input [formControl]="toDate" type="date" name="todate"/><input [formControl]="toTime" type="time" name="totime"></div>
 	</form>
-
+	<canvas linechart chartTitle="Bandwidth of Cache Tiers" [chartLabels]="labels" [chartDataSets]="[edgeBandwidth, midBandwidth]" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLaxel="Date/Time" [chartDisplayLegend]="true" chartType="time"></canvas>
 </main>

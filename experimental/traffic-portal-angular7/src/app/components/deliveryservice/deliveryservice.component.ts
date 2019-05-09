@@ -11,14 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 
-import { Chart } from 'chart.js';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 import { APIService } from '../../services';
 import { DeliveryService } from '../../models/deliveryservice';
+import { DataPoint } from '../../models/datapoint';
 
 @Component({
 	selector: 'deliveryservice',
@@ -30,69 +31,42 @@ export class DeliveryserviceComponent implements OnInit {
 	deliveryservice = new DeliveryService();
 	loaded = new Map([['main', false], ['bandwidth', false]]);
 
-	chart: Chart;
-	chartOptions: any;
+	private readonly bandwidthDataSubject: BehaviorSubject<Array<Array<DataPoint>>>;
+	public bandwidthData: Observable<Array<Array<DataPoint>>>;
+
 	midBandwidth: Array<number>;
-	edgeBandwidth: Array<number>;
+	edgeBandwidth: Array<DataPoint>;
 	labels: Array<Date>;
 
-	now: Date;
-	today: Date;
+	to: Date;
+	from: Date;
 	fromDate: FormControl;
 	fromTime: FormControl;
 	toDate: FormControl;
 	toTime: FormControl;
 
-	constructor(private readonly route: ActivatedRoute, private readonly api: APIService) {
+	constructor(private readonly route: ActivatedRoute, private readonly api: APIService, private readonly element: ElementRef<HTMLCanvasElement>) {
 		this.labels = new Array<Date>();
 		this.midBandwidth = new Array<number>();
-		this.edgeBandwidth = new Array<number>();
-		this.chartOptions = {
-			type: 'line',
-			data: {
-				labels: [],
-				datasets: []
-			},
-			options: {
-				legend: {
-					display: true
-				},
-				title: {
-					display: true,
-					text: "Bandwidth of Cache Tiers"
-				},
-				scales: {
-					xAxes: [{
-						display: true,
-						type: 'time',
-						callback: (v, unused_i, unused_values) => {
-							return v.toLocaleTimeString();
-						}
-					}],
-					yAxes: [{
-						display: true,
-						ticks: {
-							suggestedMin: 0
-						}
-					}]
-				}
-			}
-		};
+		this.edgeBandwidth = new Array<DataPoint>();
+		this.bandwidthData = this.bandwidthDataSubject.asObservable();
+	}
 
+	public get bandwidthDataValue (): Array<Array<DataPoint>> {
+		return this.bandwidthDataSubject.value;
 	}
 
 	ngOnInit() {
 		const DSID = this.route.snapshot.paramMap.get('id');
 
-		this.now = new Date();
-		this.now.setUTCMilliseconds(0);
-		this.today = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate());
-		const dateStr = String(this.today.getFullYear()).padStart(4, '0').concat('-', String(this.today.getMonth()).padStart(2, '0').concat('-', String(this.today.getDate()).padStart(2, '0')));
+		this.to = new Date();
+		this.to.setUTCMilliseconds(0);
+		this.from = new Date(this.to.getFullYear(), this.to.getMonth(), this.to.getDate());
+		const dateStr = String(this.from.getFullYear()).padStart(4, '0').concat('-', String(this.from.getMonth()).padStart(2, '0').concat('-', String(this.from.getDate()).padStart(2, '0')));
 		this.fromDate = new FormControl(dateStr);
 		this.fromTime = new FormControl("00:00");
 		this.toDate = new FormControl(dateStr);
-		const timeStr = String(this.now.getHours()).padStart(2, '0').concat(':', String(this.now.getMinutes()).padStart(2, '0'))
-		console.log("Loading timeStr: ", timeStr);
+		const timeStr = String(this.to.getHours()).padStart(2, '0').concat(':', String(this.to.getMinutes()).padStart(2, '0'))
 		this.toTime = new FormControl(timeStr);
 
 
@@ -107,9 +81,20 @@ export class DeliveryserviceComponent implements OnInit {
 	}
 
 	loadGraph() {
-		const now = new Date();
-		now.setUTCMilliseconds(0);
-		console.log("loaded graph");
+		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, '300s').subscribe(
+			va => {
+				if (va === null || va === undefined){
+					this.edgeBandwidth = null;
+					return;
+				}
+
+				for (const v of va) {
+					this.edgeBandwidth.push({t: new Date(v[0]), y: v[1]});
+				}
+				this.bandwidthDataSubject.next([this.edgeBandwidth]);
+				console.log("loaded graph", this.edgeBandwidth);
+			}
+		);
 	}
 
 }
