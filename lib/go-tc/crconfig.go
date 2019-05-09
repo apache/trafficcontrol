@@ -33,7 +33,7 @@ type CRConfig struct {
 }
 
 type CRConfigConfig struct {
-	APICacheControlMaxAge                      *string      `json:"api.cache-control.max_age,omitempty"`
+	APICacheControlMaxAge                      *string      `json:"api.cache-control.max-age,omitempty"`
 	ConsistentDNSRouting                       *string      `json:"consistent.dns.routing,omitempty"`
 	CoverageZonePollingIntervalSeconds         *string      `json:"coveragezone.polling.interval,omitempty"`
 	CoverageZonePollingURL                     *string      `json:"coveragezone.polling.url,omitempty"`
