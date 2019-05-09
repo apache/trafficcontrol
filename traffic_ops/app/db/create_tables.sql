@@ -63,8 +63,8 @@ SET default_with_oids = false;
 
 CREATE TYPE change_types AS ENUM (
     'create',
-    'delete',
-    'update'
+    'update',
+    'delete'
 );
 
 --
@@ -72,8 +72,8 @@ CREATE TYPE change_types AS ENUM (
 --
 
 CREATE TYPE deep_caching_type AS ENUM (
-    'ALWAYS',
-    'NEVER'
+    'NEVER',
+    'ALWAYS'
 );
 
 --
@@ -81,11 +81,11 @@ CREATE TYPE deep_caching_type AS ENUM (
 --
 
 CREATE TYPE http_method_t AS ENUM (
-    'DELETE',
     'GET',
-    'PATCH',
+    'PUT',
     'POST',
-    'PUT'
+    'PATCH',
+    'DELETE'
 );
 
 --
@@ -113,21 +113,20 @@ CREATE TYPE origin_protocol AS ENUM (
 
 CREATE TYPE profile_type AS ENUM (
     'ATS_PROFILE',
-    'DS_PROFILE',
-    'ES_PROFILE',
-    'GROVE_PROFILE',
+    'TR_PROFILE',
+    'TM_PROFILE',
+    'TS_PROFILE',
+    'TP_PROFILE',
     'INFLUXDB_PROFILE',
-    'KAFKA_PROFILE',
-    'LOGSTASH_PROFILE',
-    'ORG_PROFILE',
     'RIAK_PROFILE',
     'SPLUNK_PROFILE',
-    'TM_PROFILE',
-    'TP_PROFILE',
-    'TR_PROFILE',
-    'TS_PROFILE',
-    'TV_PROFILE',
+    'DS_PROFILE',
+    'ORG_PROFILE',
+    'KAFKA_PROFILE',
+    'LOGSTASH_PROFILE',
+    'ES_PROFILE',
     'UNK_PROFILE'
+    'GROVE_PROFILE',
 );
 
 --
@@ -135,11 +134,11 @@ CREATE TYPE profile_type AS ENUM (
 --
 
 CREATE TYPE workflow_states AS ENUM (
-    'complete',
     'draft',
-    'pending',
-    'rejected',
     'submitted'
+    'rejected',
+    'pending',
+    'complete',
 );
 
 --
