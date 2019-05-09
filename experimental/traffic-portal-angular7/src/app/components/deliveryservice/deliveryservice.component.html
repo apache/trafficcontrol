@@ -13,4 +13,10 @@ limitations under the License.
 -->
 <tp-header title="{{deliveryservice.displayName}}"></tp-header>
 
-<main>Charts and stuff here</main>
+<main>
+	<form name="timespan" (ngSubmit)="loadGraph()" ngNativeValidate>
+		<div><label>From</label><input [formControl]="fromDate" type="date" name="fromdate"/><input [formControl]="fromTime" type="time" name="fromtime" value="00:00"></div>
+		<div><label>To</label><input [formControl]="toDate" type="date" name="todate"/><input [formControl]="toTime" type="time" name="totime"></div>
+	</form>
+
+</main>
