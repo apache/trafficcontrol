@@ -73,7 +73,8 @@ app.all ("/*", function (req, res, next) {
 
 app.use(modRewrite([
     '^/api/(.*?)\\?(.*)$ ' + config.api.base_url + '$1?$2 [P]',
-    '^/api/(.*)$ ' + config.api.base_url + '$1 [P]'
+    '^/api/(.*)$ ' + config.api.base_url + '$1 [P]',
+    '^/sso\\?(.*)$ ' + '#!/sso?$1 [R]'
 ]));
 
 app.use(express.static(config.files.static));
