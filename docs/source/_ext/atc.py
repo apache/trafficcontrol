@@ -94,6 +94,7 @@ def setup(app: object) -> dict:
 	app.add_directive("impl-detail", ImplementationDetail)
 	app.add_role("issue", issue_role)
 	app.add_role("pr", pr_role)
+	app.add_role("pull-request", pr_role)
 
 	return {
 		'version': '0.1',

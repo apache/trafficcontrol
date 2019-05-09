@@ -220,4 +220,5 @@ issue
 	A text role that can be used to easily link to GitHub Issues for the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:issue:`1```" renders as: :issue:`1`.
 pr
 	A text role that can be used to easily link to GitHub Pull Requests for the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:pr:`1```" renders as :pr:`1`.
-
+pull-request
+	A synonym for ``pr``
