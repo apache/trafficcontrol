@@ -386,7 +386,6 @@ CREATE TABLE deliveryservice (
     fq_pacing_rate bigint DEFAULT 0,
     anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE,
     consistent_hash_regex text,
-    max_origin_connections bigint NOT NULL DEFAULT 0 CHECK (max_origin_connections >= 0)
 );
 
 
