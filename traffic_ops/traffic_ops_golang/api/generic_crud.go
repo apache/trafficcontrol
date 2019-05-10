@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -80,8 +81,44 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 	} else if rowsAffected > 1 {
 		return nil, errors.New("too many ids returned from " + val.GetType() + " insert"), http.StatusInternalServerError
 	}
+
 	val.SetKeys(map[string]interface{}{"id": id})
 	val.SetLastUpdated(lastUpdated)
+
+	if r, ok := val.(GenericReader); ok {
+		return ReadBack(r)
+	}
+	return nil, nil, http.StatusOK
+}
+
+func ReadBack(val GenericReader) (error, error, int) {
+
+	i := val.(Identifier)
+	keys, _ := i.GetKeys()
+	params := val.APIInfo().Params
+	params["id"] = strconv.Itoa(keys["id"].(int))
+
+	where, orderby, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, val.ParamColumns())
+	if len(errs) > 0 {
+		return util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+
+	query := val.SelectQuery() + where + orderby
+	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	if rows.Next() {
+		rows.StructScan(val)
+	} else {
+		return nil, errors.New("no rows returned back"), http.StatusInternalServerError
+	}
+
+	if rows.Next() {
+		return nil, errors.New("no rows returned back"), http.StatusInternalServerError
+	}
+
 	return nil, nil, http.StatusOK
 }
 
