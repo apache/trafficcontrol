@@ -216,6 +216,9 @@ impl-detail
 
 	.. impl-detail:: Implementation-specific information here.
 
+atc-file
+	Creates a link to the specified file on the ``master`` branch of the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:atc-file:`docs/source/development/documentation_guidelines```" renders as a link to the source of this documenting section like so: :atc-file:`docs/source/development/documentation_guidelines`. You can also link to directories as well as files.
+
 issue
 	A text role that can be used to easily link to GitHub Issues for the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:issue:`1```" renders as: :issue:`1`.
 pr

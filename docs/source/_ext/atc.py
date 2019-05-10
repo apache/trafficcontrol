@@ -12,6 +12,8 @@
 # limitations under the License.
 #
 
+REPO_URI = "https://github.com/apache/trafficcontrol/"
+
 # -- Implementation detail directive -----------------------------------------
 from docutils import nodes
 from sphinx.util.docutils import SphinxDirective
@@ -47,7 +49,7 @@ class ImplementationDetail(SphinxDirective):
 # -- Issue role --------------------------------------------------------------
 from docutils import utils
 
-ISSUE_URI = "https://github.com/apache/trafficcontrol/issues/%s"
+ISSUE_URI = REPO_URI + "issues/%s"
 
 def issue_role(unused_typ,
                unused_rawtext,
@@ -67,7 +69,7 @@ def issue_role(unused_typ,
 	return [refnode], []
 
 # -- Pull Request Role -------------------------------------------------------
-PR_URI = "https://github.com/apache/trafficcontrol/pull/%s"
+PR_URI = REPO_URI + "pull/%s"
 
 def pr_role(unused_typ,
             unused_rawtext,
@@ -86,6 +88,26 @@ def pr_role(unused_typ,
 	refnode = nodes.reference(text, text, refuri=PR_URI % pr)
 	return [refnode], []
 
+# -- ATC file role -----------------------------------------------------------
+FILE_URI = REPO_URI + "tree/master/%s"
+def atc_file_role(unused_typ,
+                  unused_rawtext,
+                  text,
+                  unused_lineno,
+                  unused_inliner,
+                  options=None,
+                  content=None):
+	if options is None:
+		options = {}
+	if content is None:
+		content = []
+
+	text = utils.unescape(text)
+	litnode = nodes.literal(text, text)
+	refnode = nodes.reference(text, '', litnode, refuri=FILE_URI % text)
+	return [refnode], []
+
+
 def setup(app: object) -> dict:
 	app.add_node(impl,
 	             html=(visit_impl_node, depart_impl_node),
@@ -95,6 +117,7 @@ def setup(app: object) -> dict:
 	app.add_role("issue", issue_role)
 	app.add_role("pr", pr_role)
 	app.add_role("pull-request", pr_role)
+	app.add_role("atc-file", atc_file_role)
 
 	return {
 		'version': '0.1',
