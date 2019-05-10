@@ -37,11 +37,14 @@ import org.junit.runners.MethodSorters;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.greaterThan;
@@ -549,6 +552,56 @@ public class SteeringTest {
 			assertThat(json.get("locations").get(5).asText(), endsWith(location6));
 			assertThat(json.get("locations").get(6).asText(), endsWith(location7));
 			assertThat(json.get("locations").get(7).asText(), endsWith(location8));
+		} finally {
+			if (response != null) { response.close(); }
+		}
+	}
+
+	@Test
+	public void itSupportsClientSteeringDiversity() throws Exception {
+		final String path = "/foo?fakeClientIpAddress=12.34.56.78";
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path);
+		httpGet.addHeader("Host", "cdn.client-steering-diversity-test.thecdn.example.com");
+
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+
+			HttpEntity entity = response.getEntity();
+			assertThat("Failed getting 302 for request " + httpGet.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(302));
+
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+			assertThat(entity.getContent(), not(nullValue()));
+
+			JsonNode json = objectMapper.readTree(entity.getContent());
+
+			assertThat(json.has("locations"), equalTo(true));
+			assertThat(json.get("locations").size(), equalTo(5));
+
+			Set<String> actualEdges = new HashSet<>();
+			Set<String> actualTargets = new HashSet<>();
+
+			for (JsonNode n : json.get("locations")) {
+				String l = n.asText();
+				String[] parts = l.split("\\.");
+				parts[0] = parts[0].replaceFirst("http://", "");
+				actualEdges.add(parts[0]);
+				actualTargets.add(parts[1]);
+			}
+
+			// with client.steering.forced.diversity = true, expect to get all 3 edges back in the locations
+			// by default (client.steering.forced.diversity = false), only one edge would be returned in the locations
+
+			String[] expectedEdgesArray = {"edge-cache-csd-1", "edge-cache-csd-2", "edge-cache-csd-3"};
+			Set<String> expectedEdges = new HashSet<>(Arrays.asList(expectedEdgesArray));
+			String[] expectedTargetsArray = {"csd-target-1", "csd-target-2", "csd-target-3", "csd-target-4", "csd-target-5"};
+			Set<String> expectedTargets = new HashSet<>(Arrays.asList(expectedTargetsArray));
+
+			assertThat(actualEdges, equalTo(expectedEdges));
+			assertThat(actualTargets, equalTo(expectedTargets));
+
 		} finally {
 			if (response != null) { response.close(); }
 		}
