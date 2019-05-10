@@ -29,9 +29,9 @@ var UserController = function($scope, $state, $location, $uibModal, formUtils, l
     };
 
     var getRoles = function() {
-        roleService.getRoles({ orderby: 'priv_level DESC' })
+        roleService.getRoles()
             .then(function(result) {
-                $scope.roles = result;
+                $scope.roles = _.sortBy(result, 'privLevel').reverse();
             });
     };
 
