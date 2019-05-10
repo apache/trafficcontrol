@@ -15,13 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# This compose file runs the traffic ops integration tests assuming
-# there is already a trafficops docker instance. When using docker,
+# This compose file runs the traffic portal integration tests assuming
+# there is already a trafficportal docker instance. When using docker,
 # make sure any container rpms you need are updated. Below is an
 # example of how to run the main compose with this file:
 # 
-# docker-compose up --build db trafficops-perl trafficops
-# docker-compose -f docker-compose.traffic-ops-test.yml up --build integration
+# docker-compose up --build db trafficops trafficops-perl trafficportal
+# docker-compose -f docker-compose.traffic-portal-test.yml up --build
 
 ---
 version: '2.1'
