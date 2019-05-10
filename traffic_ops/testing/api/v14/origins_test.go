@@ -16,6 +16,7 @@ package v14
 */
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -28,6 +29,7 @@ func TestOrigins(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Users, DeliveryServices, Coordinates, Origins}, func() {
 		UpdateTestOrigins(t)
 		GetTestOrigins(t)
+		NotFoundDeleteTest(t)
 		OriginTenancyTest(t)
 	})
 }
@@ -39,6 +41,13 @@ func CreateTestOrigins(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE origins: %v\n", err)
 		}
+	}
+}
+
+func NotFoundDeleteTest(t *testing.T) {
+	_, _, err := TOSession.DeleteOriginByID(2020)
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("deleted origin with what should be a non-existent id\n")
 	}
 }
 
