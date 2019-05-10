@@ -56,7 +56,7 @@ Manipulates the cache key of the incoming requests. Normally, the cache key is t
 
 CDN
 ---
-A CDN to which this Delivery Service belongs. Only servers and :term:`Cache Group`\ s within this CDN are available to route content for this Delivery Service. Additionally, only Traffic Routers assigned to this CDN will perform said routing. Most often ``cdn``/``CDN`` refers to the *name* of the CDN to which the Delivery Service belongs, but occasionally (most notably in the payloads and/or query parameters of certain :ref:`to-api` endpoints) it actually refers to the *integral, unique identifier* of said CDN.
+A CDN to which this Delivery Service belongs. Only :term:`cache servers` within this CDN are available to route content for this Delivery Service. Additionally, only Traffic Routers assigned to this CDN will perform said routing. Most often ``cdn``/``CDN`` refers to the *name* of the CDN to which the Delivery Service belongs, but occasionally (most notably in the payloads and/or query parameters of certain :ref:`to-api` endpoints) it actually refers to the *integral, unique identifier* of said CDN.
 
 Check Path
 ----------
