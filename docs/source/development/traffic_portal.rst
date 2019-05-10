@@ -19,7 +19,7 @@ Traffic Portal
 
 Introduction
 ============
-Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the :ref:`to-api`. Traffic Portal is the official replacement for the legacy Traffic Ops UI.
+Traffic Portal is an `AngularJS <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the :ref:`to-api`. Traffic Portal is the official replacement for the legacy Traffic Ops UI.
 
 Software Requirements
 =====================
@@ -28,11 +28,11 @@ To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly us
 	* `Ruby Devel 2.0.x or above <https://www.rpmfind.net/linux/rpm2html/search.php?query=ruby-devel>`_
 	* `Compass 1.0.x or above <http://compass-style.org/>`_
 	* `Node.js 6.0.x or above <https://nodejs.org/en/>`_
-	* `Bower 1.7.9 or above <https://nodejs.org/en/>`_
+	* `Bower 1.7.9 or above <https://www.npmjs.com/package/bower>`_
 	* `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
 	* Access to a working instance of Traffic Ops
 
-.. note:: The Traffic Portal consumes the Traffic Ops API. By default, Traffic Portal assumes Traffic Ops is running on https://localhost:8444. Temporarily modify traffic_portal/conf/config.js if you need to change the location of Traffic Ops.
+.. note:: The Traffic Portal consumes the Traffic Ops API. Modify traffic_portal/conf/config.js to specify the location of Traffic Ops.
 
 Traffic Portal Project Tree Overview
 =====================================
@@ -45,5 +45,5 @@ Installing The Traffic Portal Developer Environment
 #. Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
 #. Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
 #. Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
-#. Valid SSL certificates and keys are needed for Traffic Portal to run. Generate these (e.g. using `this SuperUser answer <https://superuser.com/questions/226192/avoid-password-prompt-for-keys-and-prompts-for-dn-information#answer-226229>`_) and edit the ``traffic_portal/conf/config.json`` file to reflect their names and locations
-#. Navigate to https://localhost:8443 (default listening address/port)
+#. Valid SSL certificates and keys are needed for Traffic Portal to run. Generate these (e.g. using `this SuperUser answer <https://superuser.com/questions/226192/avoid-password-prompt-for-keys-and-prompts-for-dn-information#answer-226229>`_) and edit the ``traffic_portal/conf/config.js`` file to reflect their names and locations
+#. Navigate to http(s)://localhost:[port|sslPort defined in ``traffic_portal/conf/config.js``]
