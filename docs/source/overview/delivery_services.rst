@@ -526,7 +526,7 @@ A boolean value that defines whether or not :ref:`Regional Geoblocking <regional
 
 Routing Name
 ------------
-The smallest DNS zone used to create an :abbr:`FQDN (Fully Qualified Domain Name)` used by clients to request content. All together, the constructed :abbr:`FQDN (Fully Qualified Domain Name)` looks like: :file:`{Delivery Service Routing Name}.{Delivery Service xml_id}.{CDN Subdomain}.{CDN Domain}.{Top-Level Domain}`\ [#xmlValid]_.
+A DNS label in the Delivery Service's domain that forms the :abbr:`FQDN (Fully Qualified Domain Name)` that is used by clients to request content. All together, the constructed :abbr:`FQDN (Fully Qualified Domain Name)` looks like: :file:`{Delivery Service Routing Name}.{Delivery Service xml_id}.{CDN Subdomain}.{CDN Domain}.{Top-Level Domain}`\ [#xmlValid]_.
 
 Servers
 -------
@@ -654,9 +654,9 @@ CLIENT_STEERING
 	A CLIENT_STEERING Delivery Service is exactly like STEERING except that it provides clients with methods of bypassing the weights, orders, and localizations of targets in order to choose any arbitrary target at will. When utilizing these methods, the client will either directly choose a target immediately or request a list of all available targets from Traffic Router and then choose one to which to send a subsequent request for actual content. CLIENT_STEERING also supports two additional target types:
 
 	STEERING_GEO_ORDER
-		These targets behave exactly like STEERING_ORDER targets, but Delivery Services are grouped according to the "locations" of their :term:`origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create a subset of choices by eliminating all but the closest location to the client as possibilities. Once this subset is created, the values of the targets establish a strict precedence ordering, just like STEERING_ORDER targets.
+		These targets behave exactly like STEERING_ORDER targets, but Delivery Services are grouped according to the "locations" of their :term:`origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create subsets of choices by according to these groupings, and ordered according to physical distance from the client. Within these subsets, the values of the targets establish a strict precedence ordering, just like STEERING_ORDER targets.
 	STEERING_GEO_WEIGHT
-		These targets behave exactly like STEERING_WEIGHT targets, but Delivery Services are grouped according to the "locations" of their :term:`origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create a subset of choices by eliminating all but the closest location to the client as possibilities. Once this subset is chosen, the values of the targets establish the likelihood that any given target within the subset will be chosen for the client - effectively determining the spread of traffic across targets within that subset.
+		These targets behave exactly like STEERING_WEIGHT targets, but Delivery Services are grouped according to the "locations" of their :term:`origins`. Before choosing a Delivery Service to which to direct the client, Traffic Router will first create subsets of choices by according to these groupings, and ordered according to physical distance from the client. Within these subsets, the values of the targets establish the likelihood that any given target within the subset will be chosen for the client - effectively determining the spread of traffic across targets within that subset.
 
 	.. important:: To make use of the STEERING_GEO_ORDER and/or STEERING_GEO_WEIGHT target types, it is first necessary to ensure that at least the "primary" :term:`origin` of the :term:`Delivery Service` has an associated geographic coordinate pair. This can be done either from the :ref:`tp-configure-origins` page in Traffic Portal, or using the :ref:`to-api-origins` :ref:`to-api` endpoint.
 
