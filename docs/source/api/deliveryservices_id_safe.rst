@@ -320,6 +320,6 @@ Response Structure
 
 .. [1] Users with the "admin" or "operations" roles will be able to edit *any*:term:`Delivery Service`, whereas other users will only be able to edit :term:`Delivery Service`\ s that their tenant has permissions to edit.
 .. [2] This only applies to HTTP-routed :term:`Delivery Service`\ s
-.. [3] See :ref:`multi-site-origin`
+.. [3] See :ref:`ds-multi-site-origin`
 .. [4] This only applies to DNS-routed :term:`Delivery Service`\ s
 .. [5] These fields are required for HTTP-routed and DNS-routed :term:`Delivery Service`\ s, but are optional for (and in fact may have no effect on) STEERING and ANY_MAP :term:`Delivery Service`\ s

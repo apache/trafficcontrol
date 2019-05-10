@@ -34,7 +34,7 @@ Join us on our `Slack <https://s.apache.org/atc-slack>`_ or send your questions 
 
 How do I get involved with the development of Traffic Control?
 ==============================================================
-See the :download:`CONTRIBUTING.md <../../CONTRIBUTING.md>` file.
+See the :atc-file:`CONTRIBUTING.md` file.
 
 What is Rascal?
 ===============
@@ -50,4 +50,4 @@ Twelve Monkeys was the the original internal name for Traffic Ops. You will some
 
 What license is Traffic Control released under?
 ===============================================
-See the :download:`LICENSE <../../LICENSE>` file.
+See the :atc-file:`LICENSE` file.

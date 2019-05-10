@@ -302,7 +302,7 @@ Response Structure
 
 .. [1] Users with the roles "admin" and/or "operation" will be able to see *all* :term:`Delivery Service`\ s, whereas any other user will only see the :term:`Delivery Service`\ s their Tenant is allowed to see.
 .. [2] This only applies to HTTP :term:`Delivery Service`\ s
-.. [3] See :ref:`multi-site-origin`
+.. [3] See :ref:`ds-multi-site-origin`
 .. [4] This only applies to DNS-routed :term:`Delivery Service`\ s
 
 ``PUT``
