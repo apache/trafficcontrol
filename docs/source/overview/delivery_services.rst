@@ -294,7 +294,7 @@ This should be a URL (though neither the :ref:`to-api` nor the Traffic Ops Datab
 
 Initial Dispersion
 ------------------
-The number of :term:`cache servers` between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses, necessitating a fresh pull of the content from the next-highest level in the CDN. For most use-cases, this should be ``1``.
+The number of :term:`Edge-tier cache servers` across which a particular asset will be distributed within each :term:`Cache Group`. For most use-cases, this should be 1, meaning that all clients requesting a particular asset will be directed to 1 :term:`cache server` per :term:`Cache Group`. Depending on the popularity and size of assets, consider increasing this number in order to spread the request load across more than 1 :term:`cache server`. The larger this number, the more copies of a particular asset are stored in a :term:`Cache Group`, which can "pollute" caches (if load distribution is unnecessary) and decreases caching efficiency (due to cache misses if the asset is not requested enough to stay "fresh" in all the caches).
 
 Logs Enabled
 ------------
@@ -363,11 +363,11 @@ STEERING_REGEXP
 
 Max DNS Answers
 ---------------
-The maximum number of :term:`Edge-tier cache server` IP addresses that the Traffic Router will include in responses to DNS requests for DNS-:ref:`Routed <ds-types>` Delivery Services. The :ref:`to-api` restricts this value to the range [1, 15], but no matching restraints are placed on the actual data as stored in the Traffic Ops Database. When provided, the :term:`cache server` IP addresses included are rotated in each response to spread traffic evenly. Ideally this number will reflect the amount of traffic - e.g. ``1`` for a trial Delivery Service with very little traffic, ``2`` for a small production Delivery Service. Add 1 for every 20 :abbr:`Gbps (Gigabits per second)` of traffic you expect at peak.
+The maximum number of :term:`Edge-tier cache server` IP addresses that the Traffic Router will include in responses to DNS requests for DNS-:ref:`Routed <ds-types>` Delivery Services. The :ref:`to-api` restricts this value to the range [1, 15], but no matching restraints are placed on the actual data as stored in the Traffic Ops Database. When provided, the :term:`cache server` IP addresses included are rotated in each response to spread traffic evenly. This number should scale according to the amount of traffic the Delivery Service is expected to serve.
 
 Mid Header Rewrite Rules
 ------------------------
-This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Mid-tier cache server`\ s.
+This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Mid-tier cache servers`.
 
 .. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
 
