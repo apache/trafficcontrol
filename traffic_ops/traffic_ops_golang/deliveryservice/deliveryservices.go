@@ -172,6 +172,11 @@ func create(inf *api.APIInfo, ds tc.DeliveryServiceNullable) (tc.DeliveryService
 
 	ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 
+	usrErr, sysErr, errCode := assignCacheAssignmentGroups(tx, *ds.ID, ds.CacheAssignmentGroups)
+	if usrErr != nil || sysErr != nil {
+		return tc.DeliveryServiceNullable{}, errCode, usrErr, sysErr
+	}
+
 	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, dsType, ds.MaxOriginConnections); err != nil {
 		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
 	}
@@ -251,6 +256,43 @@ func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
 		return errors.New("executing parameter query to insert location: " + err.Error())
 	}
 	return nil
+}
+
+func assignCacheAssignmentGroups(tx *sql.Tx, dsID int, cags []int) (error, error, int) {
+	deleteQuery := "DELETE FROM deliveryservice_cacheassignmentgroup WHERE deliveryservice = $1"
+	if _, err := tx.Exec(deleteQuery, dsID); err != nil {
+		return api.ParseDBError(err)
+	}
+
+	insertQuery := "INSERT INTO deliveryservice_cacheassignmentgroup (deliveryservice, cacheassignmentgroup) VALUES "
+	var queryParams []int
+
+	if len(cags) == 0 {
+		return nil, nil, http.StatusOK;
+	}
+
+	for idx, cag_id := range cags {
+		queryParams = append(queryParams, dsID)
+		queryParams = append(queryParams, cag_id)
+
+		paramIdx := (idx * 2) + 1
+		if idx > 0 {
+			insertQuery += ", "
+		}
+		insertQuery += "($" + strconv.Itoa(paramIdx) + ", $" + strconv.Itoa(paramIdx+1) + ")"
+	}
+
+	// ugh, go you are killing me
+	var queryParamInterface []interface{}
+	for _, p := range queryParams {
+		queryParamInterface = append(queryParamInterface, p)
+	}
+
+	if _, err := tx.Exec(insertQuery, queryParamInterface...); err != nil {
+		return api.ParseDBError(err)
+	}
+
+	return nil, nil, http.StatusOK
 }
 
 func update(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (tc.DeliveryServiceNullable, int, error, error) {
@@ -362,6 +404,11 @@ func update(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (tc.DeliveryServic
 		if err := updateSSLKeys(ds, newHostName, tx, cfg); err != nil {
 			return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("updating delivery service " + *ds.XMLID + ": updating SSL keys: " + err.Error())
 		}
+	}
+
+	usrErr, sysErr, errCode := assignCacheAssignmentGroups(tx, *ds.ID, ds.CacheAssignmentGroups)
+	if usrErr != nil || sysErr != nil {
+		return tc.DeliveryServiceNullable{}, errCode, usrErr, sysErr
 	}
 
 	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.CacheURL, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
@@ -583,6 +630,20 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 		dses[i] = ds
 	}
 
+	cacheassignmentgroups, err := GetDeliveryServiceCacheAssignmentGroups(dsNames, tx.Tx)
+	if err != nil {
+		return nil, []error{errors.New("getting delivery service cache assignment groups: " + err.Error())}, tc.SystemError
+	}
+	for i, ds := range dses {
+		cag, ok := cacheassignmentgroups[*ds.XMLID]
+		if !ok {
+			ds.CacheAssignmentGroups = make([]int, 0)
+		} else {
+			ds.CacheAssignmentGroups = cag
+		}
+		dses[i] = ds
+	}
+
 	return dses, nil, tc.NoError
 }
 
@@ -733,6 +794,34 @@ ORDER BY dsr.set_number
 	return matches, nil
 }
 
+func GetDeliveryServiceCacheAssignmentGroups(dses []string, tx *sql.Tx) (map[string][]int, error ){
+	query := `SELECT 
+ds.xml_id, 
+ds_cag.cacheassignmentgroup 
+FROM deliveryservice ds 
+INNER JOIN deliveryservice_cacheassignmentgroup AS ds_cag ON ds.id = ds_cag.deliveryservice
+WHERE ds.xml_id = ANY($1)`
+
+	rows, err := tx.Query(query, pq.Array(dses))
+	if err != nil {
+		return nil, errors.New("getting delivery service to cache assignment group associations: " + err.Error())
+	}
+	defer rows.Close()
+
+	cagAssignments := make(map[string][]int)
+	for rows.Next() {
+		var dsName string
+		var cag int
+
+		if err := rows.Scan(&dsName, &cag); err != nil {
+			return nil, errors.New("scanning DS Cache Assignment Group associations:" + err.Error())
+		}
+		cagAssignments[dsName] = append(cagAssignments[dsName], cag)
+	}
+
+	return cagAssignments, nil
+}
+
 type tierType int
 
 const (
@@ -837,7 +926,7 @@ func createDSLocationProfileParams(tx *sql.Tx, locationParamID int, deliveryServ
 	profileParameterQuery := `
 INSERT INTO profile_parameter (profile, parameter)
 SELECT DISTINCT(profile), $1::bigint FROM server
-WHERE server.id IN (SELECT server from deliveryservice_server where deliveryservice = $2)
+WHERE server.id IN (SELECT server from deliveryservice_assignedservers where deliveryservice = $2)
 ON CONFLICT DO NOTHING
 `
 	if _, err := tx.Exec(profileParameterQuery, locationParamID, deliveryServiceID); err != nil {
@@ -1022,7 +1111,7 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 }
 
 func selectQuery() string {
-	return `
+	return  `
 SELECT
 ds.active,
 ds.anonymous_blocking_enabled,

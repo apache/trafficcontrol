@@ -40,6 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachesstats"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cacheassignmentgroup"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnfederation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/coordinate"
@@ -423,6 +424,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPost, `steering/{deliveryservice}/targets/?(\.json)?$`, api.CreateHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil},
 		{1.1, http.MethodPut, `steering/{deliveryservice}/targets/{target}/?(\.json)?$`, api.UpdateHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil},
 		{1.1, http.MethodDelete, `steering/{deliveryservice}/targets/{target}/?(\.json)?$`, api.DeleteHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil},
+
+		// Cache Assignment Groups
+		{1.4, http.MethodGet, `cacheassignmentgroups/?(\.json)?$`, api.ReadHandler(&cacheassignmentgroup.TOCacheAssignmentGroup{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodGet, `cacheassignmentgroups/?$`, api.ReadHandler(&cacheassignmentgroup.TOCacheAssignmentGroup{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodPut, `cacheassignmentgroups/?$`, api.UpdateHandler(&cacheassignmentgroup.TOCacheAssignmentGroup{}), auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodPost, `cacheassignmentgroups/?$`, api.CreateHandler(&cacheassignmentgroup.TOCacheAssignmentGroup{}), auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodDelete, `cacheassignmentgroups/$`, api.DeleteHandler(&cacheassignmentgroup.TOCacheAssignmentGroup{}), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Pattern based consistent hashing endpoint
 		{1.4, http.MethodPost, `consistenthash/?$`, consistenthash.Post, auth.PrivLevelReadOnly, Authenticated, nil},

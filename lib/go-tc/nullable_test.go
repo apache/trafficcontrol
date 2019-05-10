@@ -33,6 +33,7 @@ import (
 
 func TestNullStructs(t *testing.T) {
 	compareWithNullable(t, ASN{}, ASNNullable{})
+	compareWithNullable(t, CacheAssignmentGroup{}, CacheAssignmentGroupNullable{})
 	compareWithNullable(t, CacheGroupFallback{}, CacheGroupFallbackNullable{})
 	compareWithNullable(t, CacheGroup{}, CacheGroupNullable{})
 	compareWithNullable(t, CDN{}, CDNNullable{})

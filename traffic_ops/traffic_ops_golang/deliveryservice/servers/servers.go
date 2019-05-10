@@ -171,11 +171,11 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 }
 
 func selectQuery(orderBy string, limit string, offset string) (string, error) {
-	selectStmt := `SELECT
+	selectStmt := `SELECT DISTINCT ON(deliveryservice, server)
 	s.deliveryService,
 	s.server,
 	s.last_updated
-	FROM deliveryservice_server s`
+	FROM deliveryservice_assignedservers s`
 
 	allowedOrderByCols := map[string]string{
 		"":                "",
@@ -399,9 +399,9 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool) {
 }
 
 func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServer, error) {
-	where := `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
+	where := `WHERE s.id in (select server from deliveryservice_assignedservers where deliveryservice = $1)`
 	if unassigned {
-		where = `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
+		where = `WHERE s.id not in (select server from deliveryservice_assignedservers where deliveryservice = $1)`
 	}
 	query := dssSelectQuery() + where
 	log.Debugln("Query is ", query)
@@ -519,7 +519,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	} else {
 		where = "WHERE "
 	}
-	where += "ds.id in (SELECT deliveryService FROM deliveryservice_server where server = :server)"
+	where += "ds.id in (SELECT deliveryService FROM deliveryservice_assignedservers where server = :server)"
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, user.TenantID)
 	if err != nil {
@@ -543,6 +543,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	}
 	return returnable, nil, nil, http.StatusOK
 }
+
 
 func updateQuery() string {
 	query := `UPDATE

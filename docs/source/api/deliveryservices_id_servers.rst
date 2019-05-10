@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Retrieves properties of Edge-Tier servers assigned to a :term:`Delivery Service`.
+Retrieves properties of Edge-Tier servers assigned to a :term:`Delivery Service`. This includes servers explicitly assigned to a Delivery Service and servers assigned via a :term:`Cache Assignment Group`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_

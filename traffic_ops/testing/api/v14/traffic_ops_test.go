@@ -85,7 +85,7 @@ func TestMain(m *testing.M) {
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
 	err = SetupSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 	if err != nil {
-		fmt.Printf("\nError creating session to %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
+		fmt.Printf("\nError creating session to %s - %s:%s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, err)
 		os.Exit(1)
 	}
 

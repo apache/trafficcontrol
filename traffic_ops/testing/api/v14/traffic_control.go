@@ -23,6 +23,7 @@ import (
 type TrafficControl struct {
 	ASNs                           []tc.ASN                           `json:"asns"`
 	CDNs                           []tc.CDN                           `json:"cdns"`
+	CacheAssignmentGroups          []tc.CacheAssignmentGroup          `json:"cacheAssignmentGroups"`
 	CacheGroups                    []tc.CacheGroupNullable            `json:"cachegroups"`
 	Coordinates                    []tc.Coordinate                    `json:"coordinates"`
 	DeliveryServiceRequests        []tc.DeliveryServiceRequest        `json:"deliveryServiceRequests"`

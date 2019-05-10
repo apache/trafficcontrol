@@ -268,6 +268,8 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM cdn;
 	DELETE FROM tenant;
 	ALTER SEQUENCE tenant_id_seq RESTART WITH 1;
+	ALTER SEQUENCE cdn_id_seq RESTART WITH 1;
+	ALTER SEQUENCE server_id_seq RESTART WITH 1;
 `
 	err := execSQL(db, sqlStmt, "Tearing down")
 	if err != nil {

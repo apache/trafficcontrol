@@ -74,6 +74,7 @@ type DeleteDeliveryServiceResponse struct {
 
 type DeliveryService struct {
 	DeliveryServiceV13
+	CacheAssignmentGroups []int `json:"cacheAssignmentGroups"`
 	MaxOriginConnections int `json:"maxOriginConnections" db:"max_origin_connections"`
 }
 
@@ -148,6 +149,7 @@ type DeliveryServiceV11 struct {
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV13
+	CacheAssignmentGroups []int 	`json:"cacheAssignmentGroups"`
 	ConsistentHashRegex  *string `json:"consistentHashRegex"`
 	MaxOriginConnections *int    `json:"maxOriginConnections" db:"max_origin_connections"`
 }
@@ -229,7 +231,9 @@ type DeliveryServiceNullableV11 struct {
 	ExampleURLs              []string                `json:"exampleURLs"`
 }
 
-// NewDeliveryServiceNullableFromV12 creates a new V13 DS from a V12 DS, filling new fields with appropriate defaults.
+
+
+// NewDeliveryServiceNullableFromV12 creates a new V15 DS from a V12 DS, filling new fields with appropriate defaults.
 func NewDeliveryServiceNullableFromV12(ds DeliveryServiceNullableV12) DeliveryServiceNullable {
 	newDSv13 := DeliveryServiceNullableV13{DeliveryServiceNullableV12: ds}
 	newDS := DeliveryServiceNullable{DeliveryServiceNullableV13: newDSv13}
@@ -433,6 +437,7 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 	if v12Err := ds.DeliveryServiceNullableV12.Validate(tx); v12Err != nil {
 		errs = append(errs, v12Err)
 	}
+
 	if len(errs) == 0 {
 		return nil
 	}

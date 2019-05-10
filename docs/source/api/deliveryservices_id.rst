@@ -58,11 +58,18 @@ Request Structure
 
 Response Structure
 ------------------
+.. versionchanged:: 1.4
+	Added ``cacheassignmentgroups``, ``consistentHashRegex`` and ``maxOriginConnection`` fields
+
 .. versionchanged:: 1.3
-	Removed ``fqPacingRate`` field, added fields: ``deepCachingType``, ``signingAlgorithm``, and ``tenant``.
+	Added fields: ``deepCachingType``, ``signingAlgorithm``, ``tenant``, ``fqPacingRate``, ``trResponseHeaders`` and ``trRequestHeaders``.
 
 :active:                   ``true`` if the :term:`Delivery Service` is active, ``false`` otherwise
 :anonymousBlockingEnabled: ``true`` if :ref:`Anonymous Blocking <anonymous_blocking-qht>` has been configured for the :term:`Delivery Service`, ``false`` otherwise
+:cacheAssignmentGroups:    Array of cache assignment group IDs that are assigned to this delivery service
+
+	.. versionadded:: 1.4
+
 :cacheurl:                 A setting for a deprecated feature of now-unsupported Trafficserver versions
 
 	.. deprecated:: ATCv3.0
@@ -74,7 +81,7 @@ Response Structure
 :checkPath:                The path portion of the URL to check connections to this :term:`Delivery Service`'s origin server
 :consistentHashRegex:      If defined, this is a regex used for the Pattern-Based Consistent Hashing feature. It is only applicable for HTTP and Steering Delivery Services
 
-	.. versionadded:: 1.5
+	.. versionadded:: 1.4
 
 :deepCachingType:          A string that describes when "Deep Caching" will be used by this :term:`Delivery Service` - one of:
 
@@ -94,8 +101,7 @@ Response Structure
 :edgeHeaderRewrite:        Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite :abbr:`ATS (Apache Traffic Server)` plugin
 :fqPacingRate:             The Fair-Queuing Pacing Rate in Bytes per second set on the all TCP connection sockets in the :term:`Delivery Service` (see ``man tc-fc_codel`` for more information) - Linux only
 
-	.. deprecated:: 1.3
-		This field is only present/available in API versions 1.2 and lower - it has been removed in API version 1.3
+	.. versionadded:: 1.3
 
 :geoLimit:                 The setting that determines how content is geographically limited - this is an integer on the interval [0-2] where the values have these meanings:
 :geoLimitCountries:        A string containing a comma-separated list of country codes (e.g. "US,AU") which are allowed to request content through this :term:`Delivery Service`
@@ -208,7 +214,13 @@ Response Structure
 
 :tenantId:            The integral, unique identifier of the tenant who owns this :term:`Delivery Service`
 :trRequestHeaders:    If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
+
+	.. versionadded:: 1.3
+
 :trResponseHeaders:   If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
+
+	.. versionadded:: 1.3
+
 :type:                The name of the routing type of this :term:`Delivery Service` e.g. "HTTP"
 :typeId:              The integral, unique identifier of the routing type of this :term:`Delivery Service`
 :xmlId:               A unique string that describes this :term:`Delivery Service` - exists for legacy reasons
@@ -232,6 +244,7 @@ Response Structure
 		{
 			"active": true,
 			"anonymousBlockingEnabled": false,
+			"cacheAssignmentGroups": [1, 2, 3],
 			"cacheurl": null,
 			"ccrDnsTtl": null,
 			"cdnId": 2,
@@ -317,6 +330,9 @@ Request Structure
 -----------------
 :active:                   If ``true``, the :term:`Delivery Service` will immediately become active and serves traffic
 :anonymousBlockingEnabled: An optional field which, if defined and ``true`` will cause :ref:`Anonymous Blocking <anonymous_blocking-qht>` to be used with the new :term:`Delivery Service`
+:cacheAssignmentGroups:    Array of cache assignment group IDs to be assigned to this delivery service
+	.. versionadded:: 1.4
+
 :cacheurl:                 An optional setting for a deprecated feature of now-unsupported Trafficserver versions (read: "Don't use this")
 
 	.. deprecated:: ATCv3.0
@@ -327,7 +343,7 @@ Request Structure
 :checkPath:                The path portion of the URL which will be used to check connections to this :term:`Delivery Service`'s origin server
 :consistentHashRegex:      If defined, this is a regex used for the Pattern-Based Consistent Hashing feature. It is only applicable for HTTP and Steering Delivery Services
 
-	.. versionadded:: 1.5
+	.. versionadded:: 1.4
 
 :deepCachingType:          A string describing when to do Deep Caching for this :term:`Delivery Service`:
 
@@ -461,6 +477,7 @@ Request Structure
 	{
 		"active": true,
 		"anonymousBlockingEnabled": false,
+		"cacheAssignmentGroups": [],
 		"cdnId": 2,
 		"cdnName": "CDN-in-a-Box",
 		"deepCachingType": "NEVER",
