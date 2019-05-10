@@ -69,7 +69,7 @@ Glossary
 
 	Deep Coverage Zone File
 	Deep Coverage Zone Map
-		The :abbr:`DCZF (Deep Coverage Zone File)` or :abbr:`DCZM (Deep Coverage Zone Map)` maps network prefixes to "locations" - almost like the :term:`Coverage Zone File`. Location names must be unique, and within the file are simply used to group :term:`Edge-tier cache servers`. When a mapping is performed by Traffic Router, it will only look in the :abbr:`DCZF (Deep Coverage Zone File)` if the :term:`Delivery Service` to which a client is being directed makes use of :ref:`ds-deep-caching`. If the client's IP address cannot be matched by entries in this file, Traffic Router will fall back to geographic mapping using a database provided by the :term:`Delivery Service`'s :ref:`ds-geo-provider`.
+		The :abbr:`DCZF (Deep Coverage Zone File)` or :abbr:`DCZM (Deep Coverage Zone Map)` maps network prefixes to "locations" - almost like the :term:`Coverage Zone File`. Location names must be unique, and within the file are simply used to group :term:`Edge-tier cache servers`. When a mapping is performed by Traffic Router, it will only look in the :abbr:`DCZF (Deep Coverage Zone File)` if the :term:`Delivery Service` to which a client is being directed makes use of :ref:`ds-deep-caching`. If the client's IP address cannot be matched by entries in this file, Traffic Router will first fall back to the regular :term:`Coverage Zone File`. Then, failing that, it will perform geographic mapping using a database provided by the :term:`Delivery Service`'s :ref:`ds-geo-provider`.
 
 	Delivery Service
 	Delivery Services
