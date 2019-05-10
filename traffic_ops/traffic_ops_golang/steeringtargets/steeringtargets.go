@@ -234,7 +234,7 @@ func (st *TOSteeringTargetV11) Update() (error, error, int) {
 	st.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return nil, nil, http.StatusNotFound
+			return errors.New("steering target not found"), nil, http.StatusNotFound
 		}
 		return nil, errors.New("too many ids returned from steering target update"), http.StatusInternalServerError
 	}
@@ -256,7 +256,7 @@ func (st *TOSteeringTargetV11) Delete() (error, error, int) {
 	}
 
 	if rowsAffected < 1 {
-		return nil, nil, http.StatusNotFound
+		return errors.New("steering target not found"), nil, http.StatusNotFound
 	} else if rowsAffected != 1 {
 		return nil, fmt.Errorf("this create affected too many rows: %d", rowsAffected), http.StatusInternalServerError
 	}
