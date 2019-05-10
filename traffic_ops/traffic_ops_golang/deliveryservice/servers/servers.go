@@ -171,18 +171,18 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 }
 
 func selectQuery(orderBy string, limit string, offset string) (string, error) {
-	selectStmt := `SELECT
+	selectStmt := `SELECT DISTINCT ON(deliveryservice, server)
 	s.deliveryService,
 	s.server,
 	s.last_updated
-	FROM deliveryservice_server s`
+	FROM deliveryservice_assignedservers s`
 
 	allowedOrderByCols := map[string]string{
 		"":                "",
-		"deliveryservice": "s.deliveryService",
+		"deliveryservice": "s.deliveryservice",
 		"server":          "s.server",
 		"lastupdated":     "s.last_updated",
-		"deliveryService": "s.deliveryService",
+		"deliveryService": "s.deliveryservice",
 		"lastUpdated":     "s.last_updated",
 		"last_updated":    "s.last_updated",
 	}
@@ -399,9 +399,9 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool) {
 }
 
 func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServer, error) {
-	where := `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
+	where := `WHERE s.id in (select server from deliveryservice_assignedservers where deliveryservice = $1)`
 	if unassigned {
-		where = `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
+		where = `WHERE s.id not in (select server from deliveryservice_assignedservers where deliveryservice = $1)`
 	}
 	query := dssSelectQuery() + where
 	log.Debugln("Query is ", query)
@@ -519,7 +519,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	} else {
 		where = "WHERE "
 	}
-	where += "ds.id in (SELECT deliveryService FROM deliveryservice_server where server = :server)"
+	where += "ds.id in (SELECT deliveryService FROM deliveryservice_assignedservers where server = :server)"
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, user.TenantID)
 	if err != nil {
@@ -528,7 +528,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
 
-	query := deliveryservice.GetDSSelectQuery() + where + orderBy
+	query :=  deliveryservice.GetDSSelectQuery() + where + orderBy
 	queryValues["server"] = dss.APIInfo().Params["id"]
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
@@ -543,6 +543,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	}
 	return returnable, nil, nil, http.StatusOK
 }
+
 
 func updateQuery() string {
 	query := `UPDATE

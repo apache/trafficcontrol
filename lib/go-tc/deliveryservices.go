@@ -73,6 +73,11 @@ type DeleteDeliveryServiceResponse struct {
 }
 
 type DeliveryService struct {
+	DeliveryServiceV14
+	CacheAssignmentGroups []int `json:"cacheassignmentgroups"`
+}
+
+type DeliveryServiceV14 struct {
 	DeliveryServiceV13
 	MaxOriginConnections int `json:"maxOriginConnections" db:"max_origin_connections"`
 }
@@ -147,6 +152,11 @@ type DeliveryServiceV11 struct {
 }
 
 type DeliveryServiceNullable struct {
+	DeliveryServiceNullableV14
+	CacheAssignmentGroups []int 	`json:"cacheassignmentgroups"`
+}
+
+type DeliveryServiceNullableV14 struct {
 	DeliveryServiceNullableV13
 	ConsistentHashRegex  *string `json:"consistentHashRegex"`
 	MaxOriginConnections *int    `json:"maxOriginConnections" db:"max_origin_connections"`
@@ -229,17 +239,27 @@ type DeliveryServiceNullableV11 struct {
 	ExampleURLs              []string                `json:"exampleURLs"`
 }
 
-// NewDeliveryServiceNullableFromV12 creates a new V13 DS from a V12 DS, filling new fields with appropriate defaults.
+
+
+// NewDeliveryServiceNullableFromV12 creates a new V15 DS from a V12 DS, filling new fields with appropriate defaults.
 func NewDeliveryServiceNullableFromV12(ds DeliveryServiceNullableV12) DeliveryServiceNullable {
 	newDSv13 := DeliveryServiceNullableV13{DeliveryServiceNullableV12: ds}
-	newDS := DeliveryServiceNullable{DeliveryServiceNullableV13: newDSv13}
+	newDSv14 := DeliveryServiceNullableV14{DeliveryServiceNullableV13: newDSv13}
+	newDS := DeliveryServiceNullable{DeliveryServiceNullableV14: newDSv14}
 	newDS.Sanitize()
 	return newDS
 }
 
 // NewDeliveryServiceNullableFromV13 creates a new V14 DS from a V13 DS, filling new fields with appropriate defaults.
 func NewDeliveryServiceNullableFromV13(ds DeliveryServiceNullableV13) DeliveryServiceNullable {
-	newDS := DeliveryServiceNullable{DeliveryServiceNullableV13: ds}
+	newDSv14 := DeliveryServiceNullableV14{DeliveryServiceNullableV13: ds}
+	newDS := DeliveryServiceNullable{DeliveryServiceNullableV14: newDSv14}
+	newDS.Sanitize()
+	return newDS
+}
+
+func NewDeliveryServiceNullableFromV14(ds DeliveryServiceNullableV14) DeliveryServiceNullable {
+	newDS := DeliveryServiceNullable{DeliveryServiceNullableV14: ds}
 	newDS.Sanitize()
 	return newDS
 }
@@ -433,6 +453,7 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 	if v12Err := ds.DeliveryServiceNullableV12.Validate(tx); v12Err != nil {
 		errs = append(errs, v12Err)
 	}
+
 	if len(errs) == 0 {
 		return nil
 	}

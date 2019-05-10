@@ -102,6 +102,18 @@
             ]
         }
     ],
+    "cacheassignmentgroups": [
+        { "name": "cacheassignmentgroup1",
+           "description": "cag1_description",
+           "cdnId": 1,
+           "servers": [1, 4, 5]
+        },
+        { "name": "cacheassignmentgroup2",
+          "description": "cag2_description",
+          "cdnId": 1,
+          "servers": [5]
+        }
+    ],
     "cdns": [
         {
             "dnssecEnabled": false,
@@ -233,7 +245,6 @@
             "cdnName": "cdn1",
             "cacheurl": "cacheUrl1",
             "ccrDnsTtl": 3600,
-            "cdnName": "cdn1",
             "checkPath": "",
             "deepCachingType": "NEVER",
             "displayName": "ds1DisplayName",
@@ -300,7 +311,6 @@
             "cdnName": "cdn1",
             "cacheurl": "cacheUrl2",
             "ccrDnsTtl": 3600,
-            "cdnName": "cdn1",
             "checkPath": "",
             "deepCachingType": "NEVER",
             "displayName": "d s 1",
@@ -368,7 +378,6 @@
             "cdnName": "cdn1",
             "cacheurl": "cacheUrl3",
             "ccrDnsTtl": 3600,
-            "cdnName": "cdn1",
             "checkPath": "",
             "deepCachingType": "NEVER",
             "displayName": "d s 1",

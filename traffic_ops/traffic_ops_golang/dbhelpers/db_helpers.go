@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -38,6 +39,8 @@ type WhereColumnInfo struct {
 
 const BaseWhere = "\nWHERE"
 const BaseOrderBy = "\nORDER BY"
+const BaseLimit = "\nLIMIT"
+const BaseOffset = "\nOFFSET"
 
 func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
@@ -71,6 +74,28 @@ func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map
 	}
 	log.Debugf("\n--\n Where: %s \n Order By: %s", whereClause, orderBy)
 	return whereClause, orderBy, queryValues, errs
+}
+
+func BuildLimitAndOffset(defaultLimit int, intParams map[string]int) (string, string) {
+	limit := defaultLimit
+	if plimit, ok := intParams["limit"]; ok {
+		limit = plimit
+
+	}
+	limitClause := BaseLimit + " " + strconv.Itoa(limit)
+
+	offsetClause := ""
+	if ppage, ok := intParams["page"]; ok {
+		page := ppage
+		offset := page
+		if offset > 0 {
+			offset -= 1
+		}
+		offset *= limit
+		offsetClause += BaseOffset + " " + strconv.Itoa(offset) + " ROWS "
+	} 
+
+	return limitClause, offsetClause
 }
 
 func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {

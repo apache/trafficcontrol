@@ -51,6 +51,10 @@ Response Structure
 ------------------
 :active:                   ``true`` if the :term:`Delivery Service` is active, ``false`` otherwise
 :anonymousBlockingEnabled: ``true`` if :ref:`Anonymous Blocking <anonymous_blocking-qht>` has been configured for the :term:`Delivery Service`, ``false`` otherwise
+:cacheassignmentgroups:    Array of cache assignment group IDs that are assigned to this delivery service
+
+	.. versionadded:: 1.5
+
 :cacheurl:                 A setting for a deprecated feature of now-unsupported Trafficserver versions
 
 	.. deprecated:: ATCv3.0
@@ -61,6 +65,9 @@ Response Structure
 :cdnName:                  Name of the CDN to which the :term:`Delivery Service` belongs
 :checkPath:                The path portion of the URL to check connections to this :term:`Delivery Service`'s origin server
 :consistentHashRegex:      If defined, this is a regex used for the Pattern-Based Consistent Hashing feature. It is only applicable for HTTP and Steering Delivery Services
+
+	.. versionadded:: 1.4
+
 :displayName:              The display name of the :term:`Delivery Service`
 :dnsBypassCname:           Domain name to overflow requests for HTTP :term:`Delivery Service`\ s - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
 :dnsBypassIp:              The IPv4 IP to use for bypass on a DNS :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
@@ -211,6 +218,7 @@ Response Structure
 	{
 		"active": true,
 		"anonymousBlockingEnabled": false,
+		"cacheassignmentgroups": [5],
 		"cacheurl": null,
 		"ccrDnsTtl": null,
 		"cdnId": 2,
@@ -295,6 +303,10 @@ Request Structure
 -----------------
 :active:                   If ``true``, the :term:`Delivery Service` will immediately become active and serves traffic
 :anonymousBlockingEnabled: An optional field which, if defined and ``true`` will cause :ref:`Anonymous Blocking <anonymous_blocking-qht>` to be used with the new :term:`Delivery Service`
+:cacheassignmentgroups:    Array of cache assignment group IDs that are assigned to this delivery service
+
+	.. versionadded:: 1.5
+
 :cacheurl:                 An optional setting for a deprecated feature of now-unsupported Trafficserver versions (read: "Don't use this")
 
 	.. deprecated:: ATCv3.0
@@ -429,7 +441,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/deliveryservices HTTP/1.1
+	POST /api/1.5/deliveryservices HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -441,6 +453,7 @@ Request Structure
 		"active": false,
 		"anonymousBlockingEnabled": false,
 		"cdnId": 2,
+		"cacheassignmentgroups": [6],
 		"cdnName": "CDN-in-a-Box",
 		"deepCachingType": "NEVER",
 		"displayName": "test",
@@ -480,6 +493,10 @@ Response Structure
 ------------------
 :active:                   ``true`` if the :term:`Delivery Service` is active, ``false`` otherwise
 :anonymousBlockingEnabled: ``true`` if :ref:`Anonymous Blocking <anonymous_blocking-qht>` has been configured for the :term:`Delivery Service`, ``false`` otherwise
+:cacheassignmentgroups:    Array of cache assignment group IDs to assign to this delivery service
+
+	.. versionadded:: 1.5
+
 :cacheurl:                 A setting for a deprecated feature of now-unsupported Trafficserver versions
 
 	.. deprecated:: ATCv3.0
@@ -646,6 +663,7 @@ Response Structure
 		{
 			"active": false,
 			"anonymousBlockingEnabled": false,
+			"cacheassignmentgroups": [1, 2, 3],
 			"cacheurl": null,
 			"ccrDnsTtl": null,
 			"cdnId": 2,
