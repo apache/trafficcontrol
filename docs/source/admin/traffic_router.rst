@@ -425,7 +425,6 @@ Some other points of interest
 """""""""""""""""""""""""""""
 - Steering is currently only available for HTTP :term:`Delivery Service`\ s that are a part of the same CDN.
 - A new role called STEERING has been added to the Traffic Ops database. Only users with the Steering :term:`Role` or higher can modify steering assignments for a :term:`Delivery Service`.
-- A new API has been created in Traffic Ops under ``/internal``. A Steering user can either directly access this API to modify assignments, or use the Traffic Portal UI (:menuselection:`More --> View Targets` on a Steering :term:`Delivery Service`'s details page), however a filter can only be created via the :ref:`to-api`.
 - Traffic Router uses the steering endpoints of the :ref:`to-api` to poll for steering assignments, the assignments are then used when routing traffic.
 
 A couple simple use-cases for Steering are:
