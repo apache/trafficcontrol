@@ -94,6 +94,13 @@ textarea.autosize:read-only {
 	font-size: medium;
 }
 
+.add-more-inputs {
+	margin-bottom: 0;
+	.btn {
+		margin-right: 0;
+	}
+}
+
 @media (min-width: 768px) {
 	form label.has-tooltip {
 		div.helptooltip {
@@ -164,3 +171,4 @@ aside.current-value {
 		margin-top: 10px;
 	}
 }
+

@@ -1022,6 +1022,37 @@ under the License.
                     </div>
                 </div>
 
+                <div>
+                    <ng-form name="qpForm" ng-repeat="qp in deliveryService.consistentHashQueryParams track by $index">
+                        <div class="form-group" ng-class="{'has-error': hasError(qpForm.consistentHashQueryParam), 'has-feedback': hasError(qpForm.consistentHashQueryParam)}">
+                            <div>
+                                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="consistentHashQueryParam">Consistent Hash Query Param #{{$index + 1}}<div class="helptooltip">
+                                    <div class="helptext">
+                                        Todo: add a description here
+                                    </div>
+                                </div>
+                                </label>
+                                <div class="col-md-10 col-sm-10 col-xs-12">
+                                    <div>
+                                        <div class="input-group add-more-inputs">
+                                            <input id="consistentHashQueryParam" name="consistentHashQueryParam" type="text" class="form-control" ng-model="deliveryService.consistentHashQueryParams[$index]" ng-pattern="/^\S*$/">
+                                            <span class="form-input-group-btn input-group-btn">
+                                            <button id="removeBtn" name="removeBtn" class="btn btn-default" ng-click="removeQueryParam($index)"><i class="fa fa-minus"></i></button>
+                                            <button id="addBtn" name="addBtn" class="btn btn-default" ng-show="$index == (deliveryService.consistentHashQueryParams.length - 1)" ng-click="addQueryParam()"><i class="fa fa-plus"></i></button>
+                                        </span>
+                                        </div>
+                                    </div>
+                                    <small class="input-error" ng-show="hasPropertyError(qpForm.consistentHashQueryParam, 'pattern')">No spaces</small>
+                                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && !_.isEqual(deliveryService.consistentHashQueryParams, dsCurrent.consistentHashQueryParams) && $index == (deliveryService.consistentHashQueryParams.length - 1)">
+                                        <h3>Current Value</h3>
+                                        <pre ng-repeat="i in dsCurrent.consistentHashQueryParams track by $index">Consistent Hash Query Param #{{$index + 1}}: {{::dsCurrent.consistentHashQueryParams[$index]}}</pre>
+                                    </aside>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-form>
+                </div>
+
             </div>
 
             <div class="modal-footer">

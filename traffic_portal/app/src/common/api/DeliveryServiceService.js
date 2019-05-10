@@ -30,6 +30,9 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
     this.createDeliveryService = function(ds) {
         var request = $q.defer();
 
+        // strip out any empty strings from consistentHashQueryParams
+        ds.consistentHashQueryParams = _.compact(ds.consistentHashQueryParams);
+
         $http.post(ENV.api['root'] + "deliveryservices", ds)
             .then(
                 function(response) {
@@ -45,6 +48,9 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
 
     this.updateDeliveryService = function(ds) {
         var request = $q.defer();
+
+        // strip out any empty strings from consistentHashQueryParams
+        ds.consistentHashQueryParams = _.compact(ds.consistentHashQueryParams);
 
         $http.put(ENV.api['root'] + "deliveryservices/" + ds.id, ds)
             .then(
