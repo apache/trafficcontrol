@@ -66,22 +66,6 @@ cron\.d/[^/]*$, Apache
 ^misc/logos/page_logos/traffic_router_logo\.png, Apache
 ^misc/logos/page_logos/traffic_stats_logo\.png, Apache
 ^misc/logos/page_logos/traffic_stats_logo_red\.png, Apache
-^traffic_ops/app/public/images/anchor\.gif, Apache
-^traffic_ops/app/public/images/bad\.png, Apache
-^traffic_ops/app/public/images/blank\.png, Apache
-^traffic_ops/app/public/images/clock-black., Apache
-^traffic_ops/app/public/images/clock\.png, Apache
-^traffic_ops/app/public/images/good\.png, Apache
-^traffic_ops/app/public/images/graph\.png, Apache
-^traffic_ops/app/public/images/info\.png, Apache
-^traffic_ops/app/public/images/input_field_background\.png, Apache
-^traffic_ops/app/public/images/na\.png, Apache
-^traffic_ops/app/public/images/notrun\.png, Apache
-^traffic_ops/app/public/images/tc_logo\.png, Apache
-^traffic_ops/app/public/images/tc_logo_c_only\.png, Apache
-^traffic_ops/app/public/images/traffic_operations_logo\.png, Apache
-^traffic_ops/app/public/images/warning\.png, Apache
-^traffic_ops/app/public/images/select2.*, Apache
 
 # Demo certificates
 ssl\.(crt|key)$, Apache
@@ -99,7 +83,6 @@ Lato-Bold\.ttf$, SIL OFL 1.1
 Lato-Regular\.ttf$, SIL OFL 1.1
 ssl-bundle\.crt$, MPL
 ^traffic_portal/app/src/assets/images/sort_, MIT
-^traffic_ops/app/public/images/spinner-small\.gif$, WTFPL
 
 # Code dependencies
 #
@@ -119,6 +102,9 @@ jquery\.dataTables\..*\.(css|js)$, MIT
 github\.com/basho/backoff/.*, MIT
 github\.com/dchest/siphash/.*, CC0
 traffic_portal/app/src/assets/js/chartjs/angular-chart\..*, BSD
+traffic_portal/app/src/assets/css/jsonformatter\..*, Apache
+traffic_portal/app/src/assets/js/jsonformatter\..*, Apache
+traffic_portal/app/src/assets/js/fast-json-patch\..*, MIT
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.

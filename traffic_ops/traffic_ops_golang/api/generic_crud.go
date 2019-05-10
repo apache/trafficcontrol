@@ -135,7 +135,7 @@ func GenericUpdate(val GenericUpdater) (error, error, int) {
 func GenericDelete(val GenericDeleter) (error, error, int) {
 	result, err := val.APIInfo().Tx.NamedExec(val.DeleteQuery(), val)
 	if err != nil {
-		return nil, errors.New("deleting " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
+		return ParseDBError(err)
 	}
 
 	if rowsAffected, err := result.RowsAffected(); err != nil {

@@ -73,3 +73,9 @@
 abbr {
   cursor: help;
 }
+
+/* On small screens, content can get cut off. It *should* squeeze as much as it can, but some tables
+   will refuse to squeeze beyodn a certain point. */
+html, html body {
+  overflow-x: auto;
+}

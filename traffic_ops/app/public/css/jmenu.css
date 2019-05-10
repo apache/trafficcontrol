@@ -1,4 +1,0 @@
-.jMenu{display:table;margin:0;padding:0;list-style:none;}.jMenu li{display:table-cell;background-color:#322f32;margin:0;list-style:none}.jMenu li a{padding:10px 15px;display:block;background-color:transparent;color:#fff;text-transform:uppercase;cursor:pointer;font-size:12px}.jMenu li a:hover{background-color:#3a3a3a}
-.jMenu li:hover>a{background-color:#3a3a3a}
-.jMenu li ul{display:none;position:absolute;z-index:9999;padding:0;margin:0;list-style:none}.jMenu li ul li{background-color:#322f32;display:block;border-bottom:1px solid #484548;padding:0;list-style:none;position:relative}.jMenu li ul li a{font-size:11px;text-transform:none;display:block;padding:7px;border-top:1px solid transparent;border-bottom:1px solid transparent}.jMenu li ul li a.isParent{background-color:#3a3a3a}
-.jMenu li ul li a:hover{background-color:#514c52;border-top:1px solid #322f32;border-bottom:1px solid #322f32}

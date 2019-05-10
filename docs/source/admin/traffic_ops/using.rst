@@ -64,18 +64,6 @@ Information on the health of the system. Hover over this tab to get to the follo
 |               | per CDN.                                                                                                                           |
 +---------------+------------------------------------------------------------------------------------------------------------------------------------+
 
-
-Delivery Services
------------------
-The main :term:`Delivery Service` table. This is where you Create/Read/Update/Delete :term:`Delivery Service`\ s of all types. Hover over to get the following sub option:
-
-+-------------+--------------------------------------+
-|    Option   |             Description              |
-+=============+======================================+
-| Federations | Add/Edit/Delete Federation Mappings. |
-+-------------+--------------------------------------+
-
-
 Servers
 -------
 The main Servers table. This is where you Create/Read/Update/Delete servers of all types.  Click the main tab to get to the main table, and hover over to get these sub options:
@@ -286,485 +274,110 @@ These are the types of servers that can be managed in Traffic Ops:
 | INFLUXDB      | influxDb server                             |
 +---------------+---------------------------------------------+
 
-Delivery Service
-================
-The fields in the :term:`Delivery Service` view are:
+.. _asn-czf:
+
+The Coverage Zone File and ASN Table
+------------------------------------
+The Coverage Zone File (CZF) should contain a cachegroup name to network prefix mapping in the form:
+
+.. code-block:: json
+
+	{
+		"coverageZones": {
+			"cache-group-01": {
+				"coordinates": {
+					"latitude":  1.1,
+					"longitude": 2.2
+				},
+				"network6": [
+					"1234:5678::/64",
+					"1234:5679::/64"
+				],
+				"network": [
+					"192.168.8.0/24",
+					"192.168.9.0/24"
+				]
+			},
+			"cache-group-02": {
+				"coordinates": {
+					"latitude":  3.3,
+					"longitude": 4.4
+				},
+				"network6": [
+					"1234:567a::/64",
+					"1234:567b::/64"
+				],
+				"network": [
+					"192.168.4.0/24",
+					"192.168.5.0/24"
+				]
+			}
+		}
+	}
+
+.. _deep-czf:
+
+The Deep Coverage Zone File
+---------------------------
+The Deep Coverage Zone File (DCZF) format is similar to the CZF format but adds a ``caches`` list under each ``deepCoverageZone``:
+
+.. code-block:: json
+
+	{
+		"deepCoverageZones": {
+			"location-01": {
+				"coordinates": {
+					"latitude":  5.5,
+					"longitude": 6.6
+				},
+				"network6": [
+					"1234:5678::/64",
+					"1234:5679::/64"
+				],
+				"network": [
+					"192.168.8.0/24",
+					"192.168.9.0/24"
+				],
+				"caches": [
+					"edge-01",
+					"edge-02"
+				]
+			},
+			"location-02": {
+				"coordinates": {
+					"latitude":  7.7,
+					"longitude": 8.8
+				},
+				"network6": [
+					"1234:567a::/64",
+					"1234:567b::/64"
+				],
+				"network": [
+					"192.168.4.0/24",
+					"192.168.5.0/24"
+				],
+				"caches": [
+					"edge-02",
+					"edge-03"
+				]
+			}
+		}
+	}
+
+Each entry in the ``caches`` list is the hostname of an edge cache registered in Traffic Ops which will be used for "deep" caching in that Deep Coverage Zone. Unlike a regular CZF, coverage zones in the DCZF do not map to a :term:`Cache Group` in Traffic Ops, so currently the deep coverage zone name only needs to be unique.
+
+If the Traffic Router gets a DCZF "hit" for a requested :term:`Delivery Service` that has Deep Caching enabled, the client will be routed to an available "deep" cache from that zone's ``caches`` list.
+
+.. note:: The ``"coordinates"`` section is optional.
+
+
+.. _working-with-profiles:
+
+Parameters and Profiles
+=======================
+Parameters are shared between profiles if the set of ``{ name, config_file, value }`` is the same. To change a value in one profile but not in others, the parameter has to be removed from the profile you want to change it in, and a new parameter entry has to be created (**Add Parameter** button at the bottom of the Parameters view), and assigned to that profile. It is easy to create new profiles from the **Misc > Profiles** view - just use the **Add/Copy Profile** button at the bottom of the profile view to copy an existing profile to a new one. Profiles can be exported from one system and imported to another using the profile view as well. It makes no sense for a parameter to not be assigned to a single profile - in that case it really has no function. To find parameters like that use the **Parameters > Orphaned Parameters** view. It is easy to create orphaned parameters by removing all profiles, or not assigning a profile directly after creating the parameter.
 
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Name                                       | Description                                                                                                                                                            |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Active                                     | Whether or not this delivery service is active on the CDN and is capable of traffic.                                                                                   |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Content Routing Type                       | DNS is the standard routing type for most CDN services. HTTP Redirect is a specialty routing service that is primarily used for video and large file downloads where   |
-|                                            | localization and latency are significant concerns. A "Live" routing type should be used for all live services. See :ref:`ds-types`.                                    |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Key (XML ID)                               | This id becomes a part of the CDN service domain in the form ``http://cdn.service-key.company.com/``. Must be all lowercase, no spaces or special characters. May      |
-|                                            | contain dashes.                                                                                                                                                        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Display Name                               | Name of the service that appears in the Traffic portal. No character restrictions.                                                                                     |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Tenant                                     | Name of company or division of company who owns account. Allows you to group your services and control access. Tenants are setup as a simple hierarchy where you may   |
-|                                            | create parent / child accounts.                                                                                                                                        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| CDN                                        | The CDN in which the delivery service belongs to.                                                                                                                      |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Routing Name                               | The routing name to use for the delivery FQDN, i.e. ``<routing-name>.<deliveryservice>.<cdn-domain>``. It must be a valid hostname without periods. [2]_               |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Protocol                                   | The protocol to serve this delivery service to the clients with:                                                                                                       |
-|                                            |                                                                                                                                                                        |
-|                                            |  - HTTP: Delivery only HTTP traffic                                                                                                                                    |
-|                                            |  - HTTPS: Delivery only HTTPS traffic                                                                                                                                  |
-|                                            |  - HTTP AND HTTPS: Deliver both types of traffic.                                                                                                                      |
-|                                            |  - HTTP TO HTTPS: Delivery HTTP traffic as HTTPS traffic                                                                                                               |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DSCP Tag                                   | The Differentiated Services Code Point (DSCP) value to mark IP packets to the client with.                                                                             |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Signing Algorithm                          | Type of URL signing method to sign the URLs:                                                                                                                           |
-|                                            |                                                                                                                                                                        |
-|                                            |  - null: token based auth is not enabled for this delivery service.                                                                                                    |
-|                                            |  - “url_sig”: URL Sign token based auth is enabled for this delivery service.                                                                                          |
-|                                            |  - “uri_signing”: URI Signing token based auth is enabled for this delivery service.                                                                                   |
-|                                            |                                                                                                                                                                        |
-|                                            | See :ref:`signed-urls`.                                                                                                                                                |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Deep Caching                               | Enables clients to be routed to the closest possible "deep" edge caches on a per :term:`Delivery Service` basis.                                                       |
-|                                            | See `Deep Caching <http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#deep-caching-deep-coverage-zone-topology>`_                           |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Query String Handling                      | How to treat query strings:                                                                                                                                            |
-|                                            |                                                                                                                                                                        |
-|                                            |  0. use in cache key and hand up to origin: Each unique query string is treated as a unique URL.                                                                       |
-|                                            |  1. Do not use in cache key, but pass up to origin: 2 URLs that are the same except for the query string will match and cache HIT, while the origin still sees         |
-|                                            |      original query string in the request.                                                                                                                             |
-|                                            |  2. Drop at edge: 2 URLs that are the same except for the query string will match and cache HIT, while the origin will not see original query string in the request.   |
-|                                            |                                                                                                                                                                        |
-|                                            | **Note:** Choosing to drop query strings at the edge will preclude the use of a Regex Remap Expression. See :ref:`regex-remap`.                                        |
-|                                            |                                                                                                                                                                        |
-|                                            | To set the qstring without the use of regex remap, or for further options, see :ref:`qstring-handling`.                                                                |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Geolocation Provider                       | Choose which Geolocation database provider, company that collects data on the location of IP addresses, to use.                                                        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Anonymous Blocking                         | Set to true to enable blocking of anonymous IPs for this delivery service. **Note:** Requires Geolocation provider's Anonymous IP database.                            |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Geo Limit                                  | Some services are intended to be limited by geography. The possible settings are:                                                                                      |
-|                                            |                                                                                                                                                                        |
-|                                            |  - None: Do not limit by geography.                                                                                                                                    |
-|                                            |  - CZF only: If the requesting IP is not in the Coverage Zone File, do not serve the request.                                                                          |
-|                                            |  - CZF + US: If the requesting IP is not in the Coverage Zone File or not in the United States, do not serve the request.                                              |
-|                                            |                                                                                                                                                                        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Geo Limit Countries                        | How (if at all) is this service to be limited by geography. Example Country Codes: CA, IN, PR.                                                                         |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Geo Limit Redirect URL                     | Traffic Router will redirect to this URL when Geo Limit check fails. See :ref:`tr-ngb`                                                                                 |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Regional Geoblocking                       | Define regional geo-blocking rules for delivery services in a JSON format and set it to True/False.                                                                    |
-|                                            | See `regional geo-blocking <http://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/regionalgeo.html#configure-regional-geo-blocking-rgb>`_              |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IPv6 Routing Enabled                       | Default is "True", entering "False" allows you to turn off CDN response to IPv6 requests                                                                               |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Range Request Handling                     | How to treat range requests:                                                                                                                                           |
-|                                            |                                                                                                                                                                        |
-|                                            |  0. Do not cache (ranges requested from files that are already cached due to a non range request will be a HIT)                                                        |
-|                                            |  1. Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>`_ plugin.                                 |
-|                                            |  2. Use the cache_range_requests plugin.                                                                                                                               |
-|                                            |                                                                                                                                                                        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS Bypass IP                              | IPv4 address to overflow requests when the Max Bps or Max Tps for this delivery service exceeds.                                                                       |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS Bypass IPv6                            | IPv6 address to overflow requests when the Max Bps or Max Tps for this delivery service exceeds.                                                                       |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS Bypass CNAME                           | Domain name to overflow requests when the Max Bps or Max Tps for this delivery service exceeds.                                                                        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS Bypass TTL                             | TTL for the DNS bypass domain or IP when threshold exceeds                                                                                                             |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP Bypass FQDN                           | Traffic Router will redirect to this FQDN (with the same path) when the Max Bps or Max Tps for this delivery service exceeds.                                          |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| :term:`Delivery Service` DNS TTL           | The Time To Live on the DNS record for the Traffic Router A and AAAA records. Setting too high or too low will result in poor caching performance.                     |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Fair Queuing Pacing Rate Bps               | The maximum bytes per second a cache will delivery on any single TCP connection. This uses the Linux kernel’s Fair Queuing setsockopt (SO_MAX_PACING_RATE) to limit    |
-|                                            | the rate of delivery. Traffic exceeding this speed will only be rate-limited and not diverted. This option requires net.core.default_qdisc = fq in /etc/sysctl.conf.   |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Global Max Mbps                            | The maximum bits per second this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery       |
-|                                            | service, the Bypass Ipv4 or Ipv6 will be used (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used.        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Global Max TPS                             | The maximum transactions per se this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery   |
-|                                            | service, the Bypass Ipv4 or Ipv6 will be used (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used.        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Max DNS Answers                            | It is used to restrict the number of cache IP addresses that the CCR will hand back. A numeric value from 1 to 15 which determines how many caches your content will   |
-|                                            | be spread across in a particular site. When a customer requests your content they will get 1 to 15 IP addresses back they can use. These are rotated in each response. |
-|                                            | Ideally the number will reflect the amount of traffic. 1 = trial account with very little traffic, 2 = small production service. Add 1 more server for every 20 Gbps   |
-|                                            | of traffic you expect at peak. So 20 Gbps = 3, 40 Gbps = 4, 60 Gbps = 5                                                                                                |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Initial Dispersion                         | Determines number of machines content will be placed on within a :term:`Cache Group`. Setting too high will result in poor caching performance.                        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Origin Server Base URL                     | The Origin Server’s base URL which includes the protocol (http or https). Example: ``http://movies.origin.com``                                                        |
-|                                            | Must be a domain only, no directories or IP addresses                                                                                                                  |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Use Multi Site Origin Feature              | Set True/False to enable/disable the Multi Site Origin feature for this delivery service. See :ref:`multi-site-origin`                                                 |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| :term:`Delivery Service` :term:`Profile`   | Only used if a delivery service uses configurations that specifically require a profile. Example: MSO configurations or cachekey plugin would require a ds profile to  |
-|                                            | be used.                                                                                                                                                               |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Geo Miss Default Latitude                  | Default Latitude for this delivery service. When client localization fails for both Coverage Zone and Geo Lookup, this the client will be routed as if it was at this  |
-|                                            | lat.                                                                                                                                                                   |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Geo Miss Default Longitude                 | Default Longitude for this delivery service. When client localization fails for bot Coverage Zone and Geo Lookup, this the client will be routed as if it was at this  |
-|                                            | long.                                                                                                                                                                  |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Edge Header Rewrite Rules                  | Headers can be added or altered at each layer of the CDN. You must tell us four things: the action, the header name, the header value, and the direction to apply. The |
-|                                            | action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. The direction will    |
-|                                            | determine whether we add it before we respond to a request or before we make a request further up the chain in the server hierarchy. Examples include:                 |
-|                                            |                                                                                                                                                                        |
-|                                            |  - Action: Set                                                                                                                                                         |
-|                                            |  - Header Name: X-CDN                                                                                                                                                  |
-|                                            |  - Header Value: Foo                                                                                                                                                   |
-|                                            |  - Direction: Edge Response to Client                                                                                                                                  |
-|                                            |                                                                                                                                                                        |
-|                                            | See :ref:`header-rewrite`. [1]_                                                                                                                                        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Mid Header Rewrite Rules                   | Headers can be added or altered at each layer of the CDN. You must tell us four things: the action, the header name, the header value, and the direction to apply. The |
-|                                            | action will tell us whether we are adding, removing, or replacing headers. The header name and header value will determine the full header text. The direction will    |
-|                                            | determine whether we add it before we respond to a request or before we make a request further up the chain in the server hierarchy. Examples include:                 |
-|                                            |                                                                                                                                                                        |
-|                                            |  - Action: Set                                                                                                                                                         |
-|                                            |  - Header Name: Host                                                                                                                                                   |
-|                                            |  - Header Value: code_abc123                                                                                                                                           |
-|                                            |  - Direction: Mid Request to Origin                                                                                                                                    |
-|                                            |                                                                                                                                                                        |
-|                                            | See :ref:`header-rewrite`. [1]_                                                                                                                                        |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Traffic Router Additional Response Headers | List of header name:value pairs separated by __RETURN__. Listed pairs will be included in all TR HTTP responses.                                                       |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Traffic Router Log Request Headers         | List of header keys separated by __RETURN__. Listed headers will be included in TR access log entries under the “rh=” token.                                           |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Regex remap expression                     | Allows remapping of incoming requests URL using regex pattern matching to search/replace text.                                                                         |
-|                                            | See `ATS documentation on regex_remap  <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_. [1]_                               |
-|                                            |                                                                                                                                                                        |
-|                                            | **Note:** you will not be able to save a Regex Remap Expression if you have Query String Handling set to drop query strings at the edge. See :ref:`regex-remap`.       |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Cache URL expression                       | Deprecated in Traffic Control 3.x and subject to removal in Traffic Control 4.x or later.                                                                              |
-|                                            |                                                                                                                                                                        |
-|                                            | Allows you to manipulate the cache key of the incoming requests. Normally, the cache key is the origin domain. This can be changed so that multiple services can share |
-|                                            | a cache key, can also be used to preserve cached content if service origin is changed.                                                                                 |
-|                                            |                                                                                                                                                                        |
-|                                            | **Note:** Only valid in ATS 6.X and earlier. Must be empty if using ATS 7.X and/or the                                                                                 |
-|                                            | `cachekey plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cachekey.en.html>`_. [1]_                                                        |
-|                                            |                                                                                                                                                                        |
-|                                            | See `ATS documentation on cacheurl <https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/plugins/cacheurl.en.html>`_. [1]_                                       |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Raw remap text                             | For HTTP and DNS delivery services, this will get added to the end of the remap line on the cache verbatim. For ANY_MAP delivery services this is the remap line. [1]_ |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Long Description                           | Free text field that describes the purpose of the delivery service and will be displayed in the portal as a description field. For example, you can use this field to  |
-|                                            | describe your service.                                                                                                                                                 |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Long Description 2                         | Free text field not currently used in configuration. For example, you can use this field to describe your customer type.                                               |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Long Description 3                         | Free text field not currently used in configuration.                                                                                                                   |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Info URL                                   | Free text field allowing you to enter a URL which provides information about the service.                                                                              |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Check Path                                 | A path (ex: /crossdomain.xml) to verify the connection to the origin server with. This can be used by Check Extension scripts to do periodic health checks against the |
-|                                            | delivery service.                                                                                                                                                      |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Origin Shield (Pipe Delimited String)      | Add another forward proxy upstream of the mid caches. Example: go_direct=true will allow the Mid to hit the origin directly instead of failing if the origin shield is |
-|                                            | down. Experimental Feature.                                                                                                                                            |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Logs Enabled                               | Allows you to turn on/off logging for the service                                                                                                                      |
-+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
-.. [1] These fields are not validated by Traffic Ops to be correct syntactically, and can cause Traffic Server to not start if invalid. Please use with caution.
-.. [2] It is not recommended to change the Routing Name of a :term:`Delivery Service` after deployment because this changes its Delivery FQDN (i.e. ``<routing-name>.<deliveryservice>.<cdn-domain>``), which means that SSL certificates may need to be updated and clients using the :term:`Delivery Service` will need to be transitioned to the new Delivery URL.
-
-
-.. _ds-types:
-
-Delivery Service Types
-----------------------
-One of the most important settings when creating the delivery service is the selection of the delivery service *type*. This type determines the routing method and the primary storage for the delivery service.
-
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|       Name      |                                                                                           Description                                                                                             |
-+=================+===================================================================================================================================================================================================+
-| HTTP            | HTTP Content Routing  - The Traffic Router DNS auth server returns its own IP address on DNS queries, and the client gets redirected to a specific cache                                          |
-|                 | in the nearest :term:`Cache Group` using HTTP 302.  Use this for long sessions like HLS/HDS/Smooth live streaming, where a longer setup time is not a problem.                                    |
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS             | DNS Content Routing - The Traffic Router DNS auth server returns an edge cache IP address to the client right away. The client will find the cache quickly                                        |
-|                 | but the Traffic Router can not route to a cache that already has this content in the :term:`Cache Group`. Use this for smaller objects like web page images / objects.                            |
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_NO_CACHE   | HTTP Content Routing, but the caches will not actually cache the content, they act as just proxies. The MID tier is bypassed.                                                                     |
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_LIVE       | HTTP Content routing, but where for "standard" HTTP content routing the objects are stored on disk, for this delivery service type the objects are stored                                         |
-|                 | on the RAM disks. Use this for linear TV. The MID tier is bypassed for this type.                                                                                                                 |
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_LIVE_NATNL | HTTP Content routing, same as HTTP_LIVE, but the MID tier is NOT bypassed.                                                                                                                        |
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS_LIVE_NATNL  | DNS Content routing, but where for "standard" DNS content routing the objects are stored on disk, for this delivery service type the objects are stored                                           |
-|                 | on the RAM disks. Use this for linear TV. The MID tier is NOT bypassed for this type.                                                                                                             |
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATNL, but the MID tier is bypassed.                                                                                                                        |
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ANY_MAP         | ANY_MAP is not known to Traffic Router. For this Delivery Sevice, the "Raw Remap Text" field in the input form will be used as the remap line in the cache's :file:`remap.config`.                |
-|                 | For more information see `ANY_MAP Raw Remap Text`_                                                                                                                                                |
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| STEERING        | The :term:`Delivery Service` will be used to route to other delivery services. The target delivery services and the routing weights for those delivery services will be defined by an admin or    |
-|                 | steering user. For more information see the `steering feature <../traffic_router.html#steering-feature>`_ documentation                                                                           |
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| CLIENT_STEERING | Similar to STEERING except that a client can send a request to Traffic Router with a query param of `trred=false`, and Traffic Router will return an HTTP 200 response with a body that contains  |
-|                 | a list of :term:`Delivery Service` URLs that the client can connect to. Therefore, the client is doing the steering, not the Traffic Router                                                       |
-+-----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
-.. _federations:
-
-Federations
------------
-	Federations allow for other (federated) CDNs (at a different ISP, MSO, etc) to add a list of resolvers and a CNAME to a delivery service Traffic Ops.  When a request is made from one of federated CDN's clients, Traffic Router will return the CNAME configured in the federation mapping.  This allows the federated CDN to serve the content without the content provider changing the URL, or having to manage multiple URLs.
-
-	Before adding a federation in the Traffic Ops UI, a user with the federations role needs to be created.  This user will be assigned to the federation and will be able to add resolvers to the federation via the Traffic Ops `Federation API <../../development/traffic_ops_api/v12/federation.html>`_.
-
-.. index::
-	Header Rewrite
-
-.. _header-rewrite:
-
-Header Rewrite Options and DSCP
--------------------------------
-Most header manipulation and per-delivery service configuration overrides are done using the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/header_rewrite.en.html>`_. Traffic Control allows you to enter header rewrite rules to be applied at the edge and at the mid level. The syntax used in Traffic Ops is the same as the one described in the ATS documentation, except for some special strings that will get replaced:
-
-+-------------------+--------------------------+
-| Traffic Ops Entry |    Gets Replaced with    |
-+===================+==========================+
-| __RETURN__        | A newline                |
-+-------------------+--------------------------+
-| __CACHE_IPV4__    | The cache's IPv4 address |
-+-------------------+--------------------------+
-
-The deliveryservice screen also allows you to set the DSCP value of traffic sent to the client. This setting also results in a header_rewrite rule to be generated and applied to at the edge.
-
-.. Note:: The DSCP setting in the UI is *only* for setting traffic towards the client, and gets applied *after* the initial TCP handshake is complete, and the HTTP request is received (before that the cache can't determine what deliveryservice this request is for, and what DSCP to apply), so the DSCP feature can not be used for security settings - the TCP SYN-ACK is not going to be DSCP marked.
-
-.. _raw-remap-text:
-
-ANY_MAP Raw Remap Text
-----------------------
-The Raw Remap Text may contain the following special strings that will be replaced by :program:`traffic_ops_ort` at :abbr:`ATS (Apache Traffic Server)` edge and mid levels in `remap.config <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_:
-
-.. table:: Traffic Ops ORT special strings
-
-	+---------------------+-------------------------------------------------+
-	| Traffic Ops Entry   | Gets Replaced with                              |
-	+=====================+=================================================+
-	| __CACHE_IPV4__      | The cache's IPv4 address                        |
-	+---------------------+-------------------------------------------------+
-	| __HOSTNAME__        | Short hostname (same as ``hostname -s``)        |
-	+---------------------+-------------------------------------------------+
-	| __FULL_HOSTNAME__   | Long hostname (same as :manpage:`hostname(1)`)  |
-	+---------------------+-------------------------------------------------+
-	| __SERVER_TCP_PORT__ | Server incoming TCP port number                 |
-	+---------------------+-------------------------------------------------+
-	| __RETURN__          | A newline                                       |
-	+---------------------+-------------------------------------------------+
-	| ##OVERRIDE##        | See below                                       |
-	+---------------------+-------------------------------------------------+
-
-ANY_MAP ##OVERRIDE##
-""""""""""""""""""""
-.. warning:: The ANY_MAP ``##OVERRIDE##`` special string is a temporary solution and will be deprecated once :term:`Delivery Service` Versioning is implemented.
-
-A special ``##OVERRIDE##`` string has been added to allow an ANY_MAP rule to override another :term:`Delivery Service`'s remap rule, implemented by :program:`traffic_ops_ort`.  When present, the original :term:`Delivery Service` remap rule is commented out with an ``##OVERRIDDEN##`` prefix and the ``##OVERRIDE##`` rule is activated in its place.
-
-:abbr:`ATS (Apache Traffic Server)` `remap.config <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_:
-
-.. code-block:: text
-	:caption: :term:`Delivery Service` :file:`remap.config` line:
-
-	map http://from.com/ http://to.com/
-
-.. code-block:: text
-	:caption: ANY_MAP Raw Remap Text
-
-	##OVERRIDE## map http://from.com/ http://to.com/ thundering_herd_mitigation.so
-
-.. code-block:: text
-	:caption: :program:`traffic_ops_ort` post process :file:`remap.config` lines after merge:
-
-	##OVERRIDE##
-	map http://from.com/ http://to.com/ thundering_herd_mitigation.so
-	##OVERRIDDEN## map http://from.com/ http://to.com/
-
-The ANY_MAP ``##OVERRIDE##`` may be used to incrementally deploy plugins by assigning a subset of caches to the ANY_MAP ``##OVERRIDE##`` :term:`Delivery Service` in addition to the original :term:`Delivery Service`.  This allows Traffic Router to send traffic to edges based on the original :term:`Delivery Service` but serve them using the ANY_MAP override Raw Remap Text.
-
-.. warning:: The from endpoint must exactly match for this to properly work (ie: trailing URL '/'), otherwise :abbr:`ATS (Apache Traffic Server)` may fail to initialize or reload while processing :file:`remap.config`.
-
-.. note:: Any of these ANY_MAP ``##OVERRIDE##`` rules **should** be documented in the comment fields of the original :term:`Delivery Service` to assist with troubleshooting.
-
-.. index::
-	Token Based Authentication
-	Signed URLs
-
-.. _signed-urls:
-
-Token Based Authentication
---------------------------
-Token based authentication or *signed URLs* is implemented using the Traffic Server ``url_sig`` plugin. To sign a URL at the signing portal take the full URL, without any query string, and add on a query string with the following parameters:
-
-Client IP address
-	The client IP address that this signature is valid for. e.g. ``C=<client IP address>``
-Expiration
-	The Expiration time (seconds since epoch) of this signature. e.g. ``E=<expiration time in secs since unix epoch>``
-Algorithm
-	The Algorithm used to create the signature. Only 1 (HMAC_SHA1) and 2 (HMAC_MD5) are supported at this time e.g. ``A=<algorithm number>``
-Key index
-	Index of the key used. This is the index of the key in the configuration file on the cache. The set of keys is a shared secret between the signing portal and the edge caches. There is one set of keys per reverse proxy domain (fqdn). e.g. ``K=<key index used>``
-Parts
-	Parts to use for the signature, always excluding the scheme (http://).  parts0 = fqdn, parts1..x is the directory parts of the path, if there are more parts to the path than letters in the parts param, the last one is repeated for those. Format: ``P=<parts string (0's and 1's)>`` Examples:
-
-		:1: use fqdn and all of URl path
-		:0110: use part1 and part 2 of path only
-		:01: use everything except the fqdn
-
-Signature
-	The signature over the parts + the query string up to and including "S=". e.g. ``S=<signature>``
-
-.. seealso:: The url_sig `README <https://github.com/apache/trafficserver/blob/master/plugins/experimental/url_sig/README>`_.
-
-Generate URL Sig Keys
-"""""""""""""""""""""
-To generate a set of random signed url keys for this delivery service and store them in Traffic Vault, click the **Generate URL Sig Keys** button at the bottom of the delivery service details screen.
-
-
-.. parent-selection:
-
-Parent Selection
-----------------
-
-Parameters in the Edge (child) profile that influence this feature:
-
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-|                      Name                     |    Filename    |    Default    |                      Description                      |
-+===============================================+================+===============+=======================================================+
-| CONFIG proxy.config.                          | records.config | INT 1         | enable parent selection.  This is a required setting. |
-| http.parent_proxy_routing_enable              |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 1         | required for parent selection.                        |
-| url_remap.remap_required                      |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 0         | See                                                   |
-| http.no_dns_just_forward_to_parent            |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 1         |                                                       |
-| http.uncacheable_requests_bypass_parent       |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 1         |                                                       |
-| http.parent_proxy_routing_enable              |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 300       |                                                       |
-| http.parent_proxy.retry_time                  |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 10        |                                                       |
-| http.parent_proxy.fail_threshold              |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 4         |                                                       |
-| http.parent_proxy.total_connect_attempts      |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 2         |                                                       |
-| http.parent_proxy.per_parent_connect_attempts |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 30        |                                                       |
-| http.parent_proxy.connect_attempts_timeout    |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 0         |                                                       |
-| http.forward.proxy_auth_to_parent             |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 0         |                                                       |
-| http.parent_proxy_routing_enable              |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | STRING        |                                                       |
-| http.parent_proxy.file                        |                | parent.config |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| CONFIG proxy.config.                          | records.config | INT 3         |                                                       |
-| http.parent_proxy.connect_attempts_timeout    |                |               |                                                       |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-| algorithm                                     | parent.config  | urlhash       | The algorithm to use.                                 |
-+-----------------------------------------------+----------------+---------------+-------------------------------------------------------+
-
-
-Parameters in the Mid (parent) profile that influence this feature:
-
-+----------------+---------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|      Name      |    Filename   | Default |                                                                                 Description                                                                              |
-+================+===============+=========+==========================================================================================================================================================================+
-| domain_name    | CRConfig.json | -       | Only parents with the same value as the edge are going to be used as parents (to keep separation between CDNs)                                                           |
-+----------------+---------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| weight         | parent.config | 1.0     | The weight of this parent, translates to the number of replicas in the consistent hash ring. This parameter only has effect with algorithm at the client set to          |
-|                |               |         | "consistent_hash"                                                                                                                                                        |
-+----------------+---------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| port           | parent.config | 80      | The port this parent is listening on as a forward proxy.                                                                                                                 |
-+----------------+---------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| use_ip_address | parent.config | 0       | 1 means use IP(v4) address of this parent in the parent.config, 0 means use the host_name.domain_name concatenation.                                                     |
-+----------------+---------------+---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
-.. _qstring-handling:
-
-Qstring Handling
-----------------
-
-Delivery services have a Query String Handling option that, when set to ignore, will automatically add a regex remap to that delivery service's config.  There may be times this is not preferred, or there may be requirements for one delivery service or server(s) to behave differently.  When this is required, the psel.qstring_handling parameter can be set in either the delivery service profile or the server profile, but it is important to note that the server profile will override ALL delivery services assigned to servers with this profile parameter.  If the parameter is not set for the server profile but is present for the :term:`Delivery Service` profile, this will override the setting in the delivery service.  A value of "ignore" will not result in the addition of regex remap configuration.
-
-+-----------------------+---------------+---------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|      Name             |    Filename   | Default |                                                                                    Description                                                                    |
-+=======================+===============+=========+===================================================================================================================================================================+
-| psel.qstring_handling | parent.config | -       | Sets qstring handling without the use of regex remap for a delivery service when assigned to a delivery service profile, and overrides qstring handling for all   |
-|                       |               |         | :term:`Delivery Service`\ s for associated servers when assigned to a server profile. Value must be "consider" or "ignore".                                       |
-+-----------------------+---------------+---------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
-.. _multi-site-origin:
-
-Multi Site Origin
------------------
-
-.. Note:: The configuration of this feature changed significantly between ATS version 5 and >= 6. Some configuration in Traffic Control is different as well. This documentation assumes ATS 6 or higher. See :ref:`multi-site-origin-qht` for more details.
-
-Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions. A prerequisite for MSO to work is that the multiple origin sites serve identical content with identical paths, and both are configured to serve the same origin hostname as is configured in the deliveryservice `Origin Server Base URL` field. See the `Apache Traffic Server docs <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/parent.config.en.html>`_ for more information on that cache's implementation.
-
-With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is "ORG".
-
-Parameters in the mid profile that influence this feature:
-
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-|                                   Name                                   |    Filename    |  Default   |                                            Description                                             |
-+==========================================================================+================+============+====================================================================================================+
-| CONFIG proxy.config. http.parent_proxy_routing_enable                    | records.config | INT 1      | enable parent selection.  This is a required setting.                                              |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config. url_remap.remap_required                            | records.config | INT 1      | required for parent selection.                                                                     |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-
-
-Parameters in the deliveryservice profile that influence this feature:
-
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-|                                   Name      |    Filename    |  Default        |                                                                         Description                                             |
-+=============================================+================+=================+=================================================================================================================================+
-| mso.parent_retry                            | parent.config  | \-              | Either ``simple_retry``, ``dead_server_retry`` or ``both``.                                                                     |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-| mso.algorithm                               | parent.config  | consistent_hash | The algorithm to use. ``consisten_hash``, ``strict``, ``true``, ``false``, or ``latched``.                                      |
-|                                             |                |                 |                                                                                                                                 |
-|                                             |                |                 | - ``consisten_hash`` - spreads requests across multiple parents simultaneously based on hash of content URL.                    |
-|                                             |                |                 | - ``strict`` - strict Round Robin spreads requests across multiple parents simultaneously based on order of requests.           |
-|                                             |                |                 | - ``true`` - same as strict, but ensures that requests from the same IP always go to the same parent if available.              |
-|                                             |                |                 | - ``false`` - uses only a single parent at any given time and switches to a new parent only if the current parent fails.        |
-|                                             |                |                 | - ``latched`` - same as false, but now, a failed parent will not be retried.                                                    |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-| mso.unavailable_server_retry_response_codes | parent.config  | "503"           | Quoted, comma separated list of HTTP status codes that count as a unavailable_server_retry_response_code.                       |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-| mso.max_unavailable_server_retries          | parent.config  | 1               | How many times an unavailable server will be retried.                                                                           |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-| mso.simple_retry_response_codes             | parent.config  | "404"           | Quoted, comma separated list of HTTP status codes that count as a simple retry response code.                                   |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-| mso.max_simple_retries                      | parent.config  | 1               | How many times a simple retry will be done.                                                                                     |
-+---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
-
-
-
-see :ref:`multi-site-origin-qht` for a *quick how to* on this feature.
+.. seealso:: :ref:`param-prof` in the *Configuring Traffic Ops* section.
 
 .. _ccr-profile:
 
@@ -866,166 +479,6 @@ Traffic Router Profile
 | DNSKEY.effective.multiplier             | CRConfig.json          | Used when creating an effective date for a new key set.  New keys are generated with an effective date of old key expiration - (effective        |
 |                                         |                        | multiplier * TTL).  Default is 2.                                                                                                                |
 +-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-
-
-.. index::
-	Regex Remap Expression
-
-.. _regex-remap:
-
-Regex Remap Expression
-----------------------
-The regex remap expression allows to to use a regex and resulting match group(s) in order to modify the request URIs that are sent to origin. For example: ::
-
-	^/original/(.*) http://origin.example.com/remapped/$1
-
-.. Note:: If **Query String Handling** is set to ``2 Drop at edge``, then you will not be allowed to save a regex remap expression, as dropping query strings actually relies on a regex remap of its own. However, if there is a need to both drop query strings **and** remap request URIs, this can be accomplished by setting **Query String Handling** to ``1 Do not use in cache key, but pass up to origin``, and then using a custom regex remap expression to do the necessary remapping, while simultaneously dropping query strings. The following example will capture the original request URI up to, but not including, the query string and then forward to a remapped URI: ::
-
-	^/([^?]*).* http://origin.example.com/remapped/$1
-
-
-.. _ds-regexp:
-
-Delivery Service Regexp
------------------------
-This table defines how requests are matched to the delivery service. There are 3 type of entries possible here:
-
-+---------------+----------------------------------------------------------------------+--------------+-----------+
-|      Name     |                             Description                              |   DS Type    |   Status  |
-+===============+======================================================================+==============+===========+
-| HOST_REGEXP   | This is the regular expresion to match the host part of the URL.     | DNS and HTTP | Supported |
-+---------------+----------------------------------------------------------------------+--------------+-----------+
-| PATH_REGEXP   | This is the regular expresion to match the path part of the URL.     | HTTP         | Beta      |
-+---------------+----------------------------------------------------------------------+--------------+-----------+
-| HEADER_REGEXP | This is the regular expresion to match on any header in the request. | HTTP         | Beta      |
-+---------------+----------------------------------------------------------------------+--------------+-----------+
-
-The **Order** entry defines the order in which the regular expressions get evaluated. To support ``CNAMES`` from domains outside of the Traffic Control top level DNS domain, enter multiple ``HOST_REGEXP`` lines.
-
-.. Note:: In most cases is is sufficient to have just one entry in this table that has a ``HOST_REGEXP`` Type, and Order ``0``. For the *movies* delivery service in the Kabletown CDN, the entry is simply single ``HOST_REGEXP`` set to ``.*\.movies\..*``. This will match every url that has a hostname that ends with ``movies.cdn1.kabletown.net``, since ``cdn1.kabletown.net`` is the Kabletown CDN's DNS domain.
-
-.. index::
-	Server Assignments
-
-.. _assign-edges:
-
-Server Assignments
-------------------
-Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the :term:`Cache Group`, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
-
-
-.. _asn-czf:
-
-The Coverage Zone File and ASN Table
-------------------------------------
-The Coverage Zone File (CZF) should contain a cachegroup name to network prefix mapping in the form:
-
-.. code-block:: json
-
-	{
-		"coverageZones": {
-			"cache-group-01": {
-				"coordinates": {
-					"latitude":  1.1,
-					"longitude": 2.2
-				},
-				"network6": [
-					"1234:5678::/64",
-					"1234:5679::/64"
-				],
-				"network": [
-					"192.168.8.0/24",
-					"192.168.9.0/24"
-				]
-			},
-			"cache-group-02": {
-				"coordinates": {
-					"latitude":  3.3,
-					"longitude": 4.4
-				},
-				"network6": [
-					"1234:567a::/64",
-					"1234:567b::/64"
-				],
-				"network": [
-					"192.168.4.0/24",
-					"192.168.5.0/24"
-				]
-			}
-		}
-	}
-
-The CZF is an input to the Traffic Control CDN, and as such does not get generated by Traffic Ops, but rather, it gets consumed by Traffic Router. Some popular IP management systems output a very similar file to the CZF but in stead of a cachegroup an ASN will be listed. Traffic Ops has the "Networks (ASNs)" view to aid with the conversion of files like that to a Traffic Control CZF file; this table is not used anywhere in Traffic Ops, but can be used to script the conversion using the API.
-
-The script that generates the CZF file is not part of Traffic Control, since it is different for each situation.
-
-.. note:: The ``"coordinates"`` section is optional and may be used by Traffic Router for localization in the case of a CZF "hit" where the zone name does not map to a :term:`Cache Group` name in Traffic Ops (i.e. Traffic Router will route to the closest :term:`Cache Group`\ (s) geographically).
-
-.. _deep-czf:
-
-The Deep Coverage Zone File
----------------------------
-The Deep Coverage Zone File (DCZF) format is similar to the CZF format but adds a ``caches`` list under each ``deepCoverageZone``:
-
-.. code-block:: json
-
-	{
-		"deepCoverageZones": {
-			"location-01": {
-				"coordinates": {
-					"latitude":  5.5,
-					"longitude": 6.6
-				},
-				"network6": [
-					"1234:5678::/64",
-					"1234:5679::/64"
-				],
-				"network": [
-					"192.168.8.0/24",
-					"192.168.9.0/24"
-				],
-				"caches": [
-					"edge-01",
-					"edge-02"
-				]
-			},
-			"location-02": {
-				"coordinates": {
-					"latitude":  7.7,
-					"longitude": 8.8
-				},
-				"network6": [
-					"1234:567a::/64",
-					"1234:567b::/64"
-				],
-				"network": [
-					"192.168.4.0/24",
-					"192.168.5.0/24"
-				],
-				"caches": [
-					"edge-02",
-					"edge-03"
-				]
-			}
-		}
-	}
-
-Each entry in the ``caches`` list is the hostname of an edge cache registered in Traffic Ops which will be used for "deep" caching in that Deep Coverage Zone. Unlike a regular CZF, coverage zones in the DCZF do not map to a :term:`Cache Group` in Traffic Ops, so currently the deep coverage zone name only needs to be unique.
-
-If the Traffic Router gets a DCZF "hit" for a requested :term:`Delivery Service` that has Deep Caching enabled, the client will be routed to an available "deep" cache from that zone's ``caches`` list.
-
-.. note:: The ``"coordinates"`` section is optional.
-
-
-.. _working-with-profiles:
-
-Parameters and Profiles
-=======================
-Parameters are shared between profiles if the set of ``{ name, config_file, value }`` is the same. To change a value in one profile but not in others, the parameter has to be removed from the profile you want to change it in, and a new parameter entry has to be created (**Add Parameter** button at the bottom of the Parameters view), and assigned to that profile. It is easy to create new profiles from the **Misc > Profiles** view - just use the **Add/Copy Profile** button at the bottom of the profile view to copy an existing profile to a new one. Profiles can be exported from one system and imported to another using the profile view as well. It makes no sense for a parameter to not be assigned to a single profile - in that case it really has no function. To find parameters like that use the **Parameters > Orphaned Parameters** view. It is easy to create orphaned parameters by removing all profiles, or not assigning a profile directly after creating the parameter.
-
-.. seealso:: :ref:`param-prof` in the *Configuring Traffic Ops* section.
-
-
 
 Tools
 =====

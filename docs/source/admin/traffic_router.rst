@@ -36,7 +36,7 @@ Installing Traffic Router
 
 	.. warning:: Traffic Ops will *only* recognize a profile as assignable to a Traffic Router if its name starts with the prefix ``ccr-``. The reason for this is a legacy limitation related to the old name for Traffic Router (Comcast Cloud Router), and will (hopefully) be rectified in the future as the old Perl parts of Traffic Ops are re-written in Go.
 
-#. Enter the Traffic Router server into Traffic Portal on the :ref:`tp-servers-page` (or via the :ref:`to-api`), assign to it a Traffic Router :term:`Profile`, and ensure that its status is set to ``ONLINE``.
+#. Enter the Traffic Router server into Traffic Portal on the :ref:`tp-configure-servers` page (or via the :ref:`to-api`), assign to it a Traffic Router :term:`Profile`, and ensure that its status is set to ``ONLINE``.
 #. Ensure the :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Router is resolvable in DNS. This :abbr:`FQDN (Fully Qualified Domain Name)` must be resolvable by the clients expected to use this CDN.
 #. Install a Traffic Router server package, either from source or using a :file:`traffic_router-{version string}.rpm` package generated using the instructions in :ref:`dev-building`.
 
@@ -252,7 +252,7 @@ Items within brackets are detailed under the HTTP and DNS sections
 	144140678.000 qtype=DNS chi=192.168.10.11 rhi=- ttms=789 [Fields Specific to the DNS request] rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the DNS result]
 	144140678.000 qtype=HTTP chi=192.168.10.11 rhi=- ttms=789 [Fields Specific to the HTTP request] rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the HTTP result]
 
-.. Note:: These samples contain fields that are always present for every single access event to Traffic Router
+.. note:: These samples contain fields that are always present for every single access event to Traffic Router
 
 
 ``rtype`` Meanings
@@ -386,40 +386,10 @@ DNS Specifics
 	|      |                                                                     | NXDOMAIN (the domain/name requested does not exist) |
 	+------+---------------------------------------------------------------------+-----------------------------------------------------+
 
-.. _tr-ngb:
-
-GeoLimit Failure Redirect Feature
-=================================
-
-Overview
---------
-This feature is also called :abbr:`NGB (National GeoBlock)`.
-
-In the past, if the Geolimit check fails (for example, the client IP is not in the ``US`` :term:`Region` but the Geolimit is set to 'CZF + US'), Traffic Router will respond with ``503 Service Unavailable``, but with this feature, when the check fails, it will respond with ``302 Found`` if the redirect URL is set in the :term:`Delivery Service`.
-
-The Geolimit check will fail in the following scenarios:
-	- When the GeoLimit is set to 'CZF + only' and the client IP is not in the the CZ file
-	- When the GeoLimit is set to any region e.g. 'CZF + US' and the client IP is not in such region, and the client IP is not in the CZ file
-
-Configuration
--------------
-To enable the :abbr:`NGB (National GeoBlock)` feature, the :term:`Delivery Service` must be configured with the proper redirect URL. The setting for this can be found by clicking on :guilabel:`Advanced Options` at the bottom of a :term:`Delivery Service` details page, and is specified by the 'Geo Limit Redirect URL' field. An individual :term:`Delivery Service` details page can be viewed by clicking on the desired :term:`Delivery Service` under :menuselection:`Services --> Delivery Services`. If no URL is put in this field, the feature is disabled.
-
-The URL has 3 kinds of formats, which have different meanings:
-
-URL with no domain
-	If no domain is in the URL (e.g. ``vod/dance.mp4``), Traffic Router will try to find a proper :term:`cache server` within the :term:`Delivery Service` and return the redirect URL in the format: ``http://[cache server name]. :term:`Delivery Service`'s Fully Qualified Domain]/[configured relative path]``
-
-URL with domain that matches with the :term:`Delivery Service`
-	For this URL, Traffic Router will also try to find a proper :term:`cache server` within the :term:`Delivery Service` and return a redirect URL in the format: ``http://[cache server name]. :term:`Delivery Service`'s Fully Qualified Domain Name]/[configured relative path]``
-
-URL with domain that doesn't match with the :term:`Delivery Service`
-	Traffic Router will return the configured URL directly to the client.
-
 .. _deep-cache:
 
-Deep Caching - Deep Coverage Zone Topology
-==========================================
+Deep Caching
+============
 
 Overview
 --------
@@ -447,7 +417,7 @@ Steering Feature
 
 Overview
 --------
-A Steering :term:`Delivery Service` is a :term:`Delivery Service` that is used to route a client to another :term:`Delivery Service`. The :term:`Type` of a Steering :term:`Delivery Service` is either STEERING or CLIENT_STEERING. A Steering :term:`Delivery Service` will have target :term:`Delivery Service`\ s configured for it with weights assigned to them. Traffic Router uses the weights to make a consistent hash ring which it then uses to make sure that requests are routed to a target based on the configured weights. This consistent hash ring is separate from the consistent hash ring used in cache selection.
+A Steering :term:`Delivery Service` is a :term:`Delivery Service` that is used to route a client to another :term:`Delivery Service`. The :ref:`Type <ds-types>` of a Steering :term:`Delivery Service` is either STEERING or CLIENT_STEERING. A Steering :term:`Delivery Service` will have target :term:`Delivery Service`\ s configured for it with weights assigned to them. Traffic Router uses the weights to make a consistent hash ring which it then uses to make sure that requests are routed to a target based on the configured weights. This consistent hash ring is separate from the consistent hash ring used in cache selection.
 
 Special regular expressions - referred to as 'filters' - can also be configured for target :term:`Delivery Service`\ s to pin traffic to a specific :term:`Delivery Service`. For example, if the filter :regexp:`.*/news/.*` for a target called ``target-ds-1`` is created, any requests to Traffic Router with "news" in them will be routed to ``target-ds-1``. This will happen regardless of the configured weights.
 
@@ -455,8 +425,7 @@ Some other points of interest
 """""""""""""""""""""""""""""
 - Steering is currently only available for HTTP :term:`Delivery Service`\ s that are a part of the same CDN.
 - A new role called STEERING has been added to the Traffic Ops database. Only users with the Steering :term:`Role` or higher can modify steering assignments for a :term:`Delivery Service`.
-- A new API has been created in Traffic Ops under ``/internal``. A Steering user can either directly access this API to modify assignments, or use the Traffic Portal UI (:menuselection:`More --> View Targets` on a Steering :term:`Delivery Service`'s details page), however a filter can only be created via the API.
-- Traffic Router uses the steering API in Traffic Ops to poll for steering assignments, the assignments are then used when routing traffic.
+- Traffic Router uses the steering endpoints of the :ref:`to-api` to poll for steering assignments, the assignments are then used when routing traffic.
 
 A couple simple use-cases for Steering are:
 
@@ -479,7 +448,7 @@ The following needs to be completed for Steering to work correctly:
 #. The Steering user assigns weights to the target :term:`Delivery Service`\ s.
 #. If desired, the Steering user can create filters for the target :term:`Delivery Service`\ s.
 
-.. seealso:: For more information see the `Steering how-to guide <quick_howto/steering.html>`_.
+.. seealso:: For more information see :ref:`steering-qht`.
 
 HTTPS for HTTP Delivery Services
 ================================

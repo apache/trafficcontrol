@@ -36,6 +36,8 @@ RUN	yum -y install \
 		python36 \
 		python36-pip \
 		python36-psutil \
+		git \
+		rpm-build \
 		make && \
 	yum -y clean all
 RUN	python3 -m pip install --upgrade setuptools && \

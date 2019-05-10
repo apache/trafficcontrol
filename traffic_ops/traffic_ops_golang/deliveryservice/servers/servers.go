@@ -140,21 +140,15 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 		orderby = "deliveryService"
 	}
 
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(tx.Tx)
+	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 	if err != nil {
-		return nil, errors.New("checking if tenancy is enabled: " + err.Error())
+		return nil, errors.New("getting user tenant ID list: " + err.Error())
 	}
-	if tenancyEnabled {
-		tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
-		if err != nil {
-			return nil, errors.New("getting user tenant ID list: " + err.Error())
-		}
-		for _, id := range tenantIDs {
-			dss.TenantIDs = append(dss.TenantIDs, int64(id))
-		}
+	for _, id := range tenantIDs {
+		dss.TenantIDs = append(dss.TenantIDs, int64(id))
 	}
 
-	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), tenancyEnabled)
+	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset))
 	if err != nil {
 		return nil, errors.New("creating query for DeliveryserviceServers: " + err.Error())
 	}
@@ -176,7 +170,7 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 	return &tc.DeliveryServiceServerResponse{orderby, servers, page, limit}, nil
 }
 
-func selectQuery(orderBy string, limit string, offset string, useTenancy bool) (string, error) {
+func selectQuery(orderBy string, limit string, offset string) (string, error) {
 	selectStmt := `SELECT
 	s.deliveryService,
 	s.server,
@@ -198,12 +192,10 @@ func selectQuery(orderBy string, limit string, offset string, useTenancy bool) (
 	}
 
 	// TODO refactor to use dbhelpers.AddTenancyCheck
-	if useTenancy {
-		selectStmt += `
+	selectStmt += `
 JOIN deliveryservice d on s.deliveryservice = d.id
 WHERE d.tenant_id = ANY(CAST(:accessibleTenants AS bigint[]))
 `
-	}
 
 	if orderBy != "" {
 		selectStmt += ` ORDER BY ` + orderBy

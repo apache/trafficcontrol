@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Snapshotting the CRConfig now deletes HTTPS certificates in Riak for delivery services which have been deleted in Traffic Ops.
 - Added a context menu in place of the "Actions" column from the following tables in Traffic Portal: cache group tables, CDN tables, delivery service tables, parameter tables, profile tables, server tables.
 - Traffic Portal standalone Dockerfile
+- In Traffic Portal, removes the need to specify line breaks using `__RETURN__` in delivery service edge/mid header rewrite rules, regex remap expressions, raw remap text and traffic router additional request/response headers.
 - Added an API 1.4 endpoint, /api/1.4/user/login/oauth to handle SSO login using OAuth.
 - Added /#!/sso page to Traffic Portal to catch redirects back from OAuth provider and POST token into the API.
 
@@ -47,6 +48,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Changed traffic_ops_ort.pl so that hdr_rw-<ds>.config files are compared with strict ordering and line duplication when detecting configuration changes.
 - Traffic Ops (golang), Traffic Monitor, Traffic Stats are now compiled using Go version 1.11. Grove was already being compiled with this version which improves performance for TLS when RSA certificates are used.
 - Issue 3476: Traffic Router returns partial result for CLIENT_STEERING Delivery Services when Regional Geoblocking or Anonymous Blocking is enabled.
+- Upgraded Traffic Portal to AngularJS 1.7.8
+- Issue 3275: Improved the snapshot diff performance and experience.
 - Added fields to traffic_portal_properties.json to configure SSO through OAuth.
 - Added field to cdn.conf to configure whitelisted URLs for Json Key Set URL returned from OAuth provider.
 

@@ -56,20 +56,14 @@ JOIN regex as r ON r.id = dsr.regex
 WHERE ds.active = true
 `
 	qParams := []interface{}{}
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(tx)
+	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, userTenantID)
 	if err != nil {
-		return nil, errors.New("checking tenancy enabled: " + err.Error())
+		return nil, errors.New("getting user tenant ID list: " + err.Error())
 	}
-	if tenancyEnabled {
-		tenantIDs, err := tenant.GetUserTenantIDListTx(tx, userTenantID)
-		if err != nil {
-			return nil, errors.New("getting user tenant ID list: " + err.Error())
-		}
-		q += `
+	q += `
 AND ds.tenant_id = ANY($1)
 `
-		qParams = append(qParams, pq.Array(tenantIDs))
-	}
+	qParams = append(qParams, pq.Array(tenantIDs))
 
 	q += `
 ORDER BY dsr.set_number

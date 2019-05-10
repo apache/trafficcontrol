@@ -1,2 +1,0 @@
-HEADER: host_name,domain_name,interface_name,ip_address,ip_netmask,ip_gateway,ip6_address,ip6_gateway,interface_mtu,cdn_name,cachegroup,phys_location,rack,type,profile,tcp_port,mgmt_ip_address,mgmt_ip_netmask,mgmt_ip_gateway,ilo_ip_address,ilo_ip_netmask,ilo_ip_gateway,ilo_username,ilo_password,router_host_name,router_port_name,https_port,offline_reason
-"hostname1","domain.net","eth1","127.0.0.1","255.255.255.0","127.0.0.1",,,"1500","ALL","cachegroup1","location1",,"EDGE","profile1","8088",,,,,,,,,,,,"N/A"

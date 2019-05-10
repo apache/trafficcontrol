@@ -32,7 +32,7 @@ gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub \n\
 
 RUN yum update -y
 
-RUN yum install -y java-1.8.0-openjdk git google-chrome bind-utils net-tools
+RUN yum install -y java-1.8.0-openjdk git google-chrome-stable bind-utils net-tools
 
 RUN curl -LO https://nodejs.org/dist/v10.15.0/node-v10.15.0-linux-x64.tar.xz
 

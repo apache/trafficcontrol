@@ -107,17 +107,31 @@ Notes and Footnotes
 """""""""""""""""""
 Instead of ``**NOTE**`` or similar, consider using the ``.. note`` directive, or one of the appropriate admonitions supported by :abbr:`RST (reStructuredText)`:
 
-- attention
-- caution
-- danger
-- error
-- hint
-- important
-- note
-- tip
-- warning
+attention
+	The default admonition that calls attention to something without any specific semantics or attached context. Use when none of the others seem appropriate.
+caution
+	Includes cautionary information. Should be used when advising the reader that the containing section includes instructions or information that frequently confuse people/trip people up, and how to avoid these pitfalls.
+danger
+	Advises the reader of potential security risks or system damage that could occur as a result of following instructions in the containing section, or as a result of making assumptions about and/or improperly utilizing information in the containing section.
+error
+	Denotes an error. This has limited uses in the :abbr:`ATC (Apache Traffic Control)` documentation.
+hint
+	Offers a hint to nudge readers in the direction of a solution. This has limited uses in the :abbr:`ATC (Apache Traffic Control)` documentation.
+impl-detail
+	Contains information describing the details of an implementation of a feature described in the containing section. For an example, see :ref:`the DSCP section of the Delivery Services page <ds-dscp>`.
 
-In a similar vein, instead of e.g. "(See also: some-link-or-reference)" please use the special ``.. seealso`` admonition. If the same admonition is required more than twice on the same page, it most likely ought to be a footnote instead. Footnotes should ideally be labeled sequentially in the order of appearance, and appear at the end of the major section in which they first or last appear. In practice, however, placement of the footnote is left to the writer's discretion.
+	.. note:: This is an `extension`_ provided by the :abbr:`ATC (Apache Traffic Control)` documentation build system, and will not appear in the Sphinx project documentation nor the reStructuredText standard.
+
+important
+	Contains information that is important to consider while reading the containing section. Typically content that is related to a section's content in an important way should appear as content of that section, but if a section is in danger of readers "skimming" it for information this can be useful to catch their eye.
+note
+	Used to segregate content that is only tangentially related to the containing section, but is noteworthy nonetheless. Historically the most used admonition, containing caveats, exceptions etc.
+tip
+	Provides the reader with information that can be helpful - particularly to users/administrators/developers new to :abbr:`ATC (Apache Traffic Control)` - but not strictly necessary to understand the containing section.
+warning
+	Warns the reader about possible unintended consequences of following instructions/utilizing information in the containing section. If the behavior warned about constitutes a security risk and/or serious damage to one or more systems - including clients and origins - please use ``.. danger`` instead.
+
+In a similar vein, instead of e.g. "(See also: some-link-or-reference)" please use the special ``.. seealso`` admonition. If the same admonition is required more than twice on the same page, it most likely ought to be a footnote instead. Footnotes should ideally use human-readable labels or, failing that, be labeled sequentially in the order of appearance. Footnotes should appear at the end of the major section in which they first or last appear. In practice, however, placement of the footnote is left to the writer's discretion.
 
 Section Headings
 """"""""""""""""
@@ -185,3 +199,29 @@ The "Response Example" must **always** exist. "TODO" is **not** an acceptable Re
 - API output is often beautified by inserting line breaks and indentation, which will make the ``Content-Length`` header (if any) incorrect. Don't worry about fixing that - just try to leave the output as close as possible to what will actually be returned by leaving it the way it is.
 
 File names should reflect the request path of the endpoint, e.g. a file for an endpoint of the Traffic Ops API ``/api/1.7/foo/{{fooID}}/bar/{{barID}}`` should be named ``foo_fooID_bar_barID.rst``. Similarly, reference labels linking to the document title for API route pages should follow the convention: ``<component>-api-<path>`` in all lowercase where ``<component>`` is an abbreviated Traffic Control component name e.g. ``to`` and ``<path>`` is the request path e.g. ``foo_bar``. So a label for an endpoint of the Traffic Ops API at ``/api/1.7/foo_bar/{{ID}}`` should be ``to-api-foo_bar-id``.
+
+Extension
+---------
+The :abbr:`ATC (Apache Traffic Control)` documentation provides an extension to the standard roles and directives offered by Sphinx, located at :file:`docs/source/_ext/atc.py`. It provides the following roles and directives:
+
+impl-detail
+	An admonition directive used to contain implementation-specific notes on a subject.
+
+	.. code-block:: rst
+		:caption: Example impl-detail usage
+
+		.. impl-detail:: Implementation-specific information here.
+
+	This example usage renders like so:
+
+	.. impl-detail:: Implementation-specific information here.
+
+atc-file
+	Creates a link to the specified file on the ``master`` branch of the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:atc-file:`docs/source/development/documentation_guidelines```" renders as a link to the source of this documenting section like so: :atc-file:`docs/source/development/documentation_guidelines`. You can also link to directories as well as files.
+
+issue
+	A text role that can be used to easily link to GitHub Issues for the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:issue:`1```" renders as: :issue:`1`.
+pr
+	A text role that can be used to easily link to GitHub Pull Requests for the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:pr:`1```" renders as :pr:`1`.
+pull-request
+	A synonym for ``pr``

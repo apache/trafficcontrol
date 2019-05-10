@@ -24,6 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
@@ -36,6 +37,7 @@ func TestUsers(t *testing.T) {
 		UserUpdateOwnRoleTest(t)
 		GetTestUsers(t)
 		GetTestUserCurrent(t)
+		UserTenancyTest(t)
 	})
 }
 
@@ -235,6 +237,78 @@ func GetTestUserCurrent(t *testing.T) {
 	}
 	if *user.UserName != SessionUserName {
 		t.Errorf("current user expected: %v actual: %v\n", SessionUserName, *user.UserName)
+	}
+}
+
+func UserTenancyTest(t *testing.T) {
+	users, _, err := TOSession.GetUsers()
+	if err != nil {
+		t.Errorf("cannot GET users: %v\n", err)
+	}
+	tenant3Found := false
+	tenant4Found := false
+	tenant3Username := "tenant3user"
+	tenant4Username := "tenant4user"
+	tenant3User := tc.User{}
+
+	// assert admin user can view tenant3user and tenant4user
+	for _, user := range users {
+		if *user.Username == tenant3Username {
+			tenant3Found = true
+			tenant3User = user
+		} else if *user.Username == tenant4Username {
+			tenant4Found = true
+		}
+		if tenant3Found && tenant4Found {
+			break
+		}
+	}
+	if !tenant3Found || !tenant4Found {
+		t.Error("expected admin to be able to view tenants: tenant3 and tenant4")
+	}
+
+	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	tenant4TOClient, _, err := toclient.LoginWithAgent(TOSession.URL, "tenant4user", "pa$$word", true, "to-api-v14-client-tests/tenant4user", true, toReqTimeout)
+	if err != nil {
+		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
+	}
+
+	usersReadableByTenant4, _, err := tenant4TOClient.GetUsers()
+	if err != nil {
+		t.Error("tenant4user cannot GET users")
+	}
+
+	tenant4canReadItself := false
+	for _, user := range usersReadableByTenant4 {
+		// assert that tenant4user cannot read tenant3user
+		if *user.Username == tenant3Username {
+			t.Error("expected tenant4user to be unable to read tenant3user")
+		}
+		// assert that tenant4user can read itself
+		if *user.Username == tenant4Username {
+			tenant4canReadItself = true
+		}
+	}
+	if !tenant4canReadItself {
+		t.Error("expected tenant4user to be able to read itself")
+	}
+
+	// assert that tenant4user cannot update tenant3user
+	if _, _, err = tenant4TOClient.UpdateUserByID(*tenant3User.ID, &tenant3User); err == nil {
+		t.Error("expected tenant4user to be unable to update tenant4user")
+	}
+
+	// assert that tenant4user cannot create a user outside of its tenant
+	rootTenant, _, err := TOSession.TenantByName("root")
+	if err != nil {
+		t.Error("expected to be able to GET the root tenant")
+	}
+	newUser := testData.Users[0]
+	newUser.Email = util.StrPtr("testusertenancy@example.com")
+	newUser.Username = util.StrPtr("testusertenancy")
+	newUser.TenantID = &rootTenant.ID
+	if _, _, err = tenant4TOClient.CreateUser(&newUser); err == nil {
+		t.Error("expected tenant4user to be unable to create a new user in the root tenant")
 	}
 }
 

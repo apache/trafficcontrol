@@ -270,6 +270,6 @@ Response Structure
 	]}
 
 .. [1] This only applies to HTTP-routed :term:`Delivery Service`\ s
-.. [2] See :ref:`multi-site-origin`
+.. [2] See :ref:`ds-multi-site-origin`
 .. [3] This only applies to DNS-routed :term:`Delivery Service`\ s
 .. [4] These fields are required for HTTP-routed and DNS-routed :term:`Delivery Service`\ s, but are optional for (and in fact may have no effect on) STEERING and ANY_MAP :term:`Delivery Service`\ s

@@ -85,6 +85,10 @@ input[type="url"]:invalid ~ small.invalid-URL-error {
 	visibility: visible;
 }
 
+textarea.autosize:read-only {
+	overflow: hidden;
+}
+
 .dnssec-info-text {
 	margin-bottom: 12px;
 	font-size: medium;
@@ -141,3 +145,22 @@ dl dd {
 	margin-left: 50px;
 }
 
+/********** styling for showing diffs on a delivery service request **********/
+
+aside.current-value {
+	border: 1px solid #ddd;
+	margin: 10px;
+	padding: 10px;
+	position: relative;
+	border-radius: 4px;
+	background-color: #f5f5f5;
+	padding-left: 10px;
+	h3 {
+		width: 100%;
+		background-color: #3F5468;
+		color: white;
+		padding: 5px;
+		font-size: 13px;
+		margin-top: 10px;
+	}
+}

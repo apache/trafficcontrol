@@ -315,7 +315,8 @@ and d.active = true
 		ds.IP6RoutingEnabled = &ip6RoutingEnabled.Bool // No Valid check, false if null
 
 		if trResponseHeaders.Valid && trResponseHeaders.String != "" {
-			hdrs := strings.Split(trResponseHeaders.String, `__RETURN__`)
+			trResponseHeaders.String = strings.Replace(trResponseHeaders.String, "__RETURN__", "\n", -1)
+			hdrs := strings.Split(trResponseHeaders.String, "\n")
 			for _, hdr := range hdrs {
 				nameVal := strings.Split(hdr, `:`)
 				name := strings.TrimSpace(nameVal[0])
@@ -328,7 +329,8 @@ and d.active = true
 		}
 
 		if trRequestHeaders.Valid && trRequestHeaders.String != "" {
-			hdrs := strings.Split(trRequestHeaders.String, `__RETURN__`)
+			trRequestHeaders.String = strings.Replace(trRequestHeaders.String, "__RETURN__", "\n", -1)
+			hdrs := strings.Split(trRequestHeaders.String, "\n")
 			for _, hdr := range hdrs {
 				nameVal := strings.Split(hdr, `:`)
 				name := strings.TrimSpace(nameVal[0])

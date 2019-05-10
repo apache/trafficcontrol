@@ -102,12 +102,6 @@ body.nav-sm .container.body .main-content {
   font-weight: bold;
 }
 
-.input-diff {
-  display: block;
-  color: blue;
-  font-weight: bold;
-}
-
 .input-warning {
   color: #856404;
   font-weight: bold;
@@ -183,6 +177,10 @@ table {
     color: red;
   }
 
+}
+
+.btn-group:not(:last-child) {
+  margin-right: 5px;
 }
 
 

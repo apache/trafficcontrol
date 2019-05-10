@@ -34,9 +34,9 @@ ortPath = os.path.abspath(ortPath)
 clientPath = os.path.abspath(clientPath)
 sys.path.insert(0, ortPath)
 sys.path.insert(0, clientPath)
+sys.path.insert(0, os.path.join(here, '_ext'))
 
 # -- Custom Lexical Analyzer for DNS -----------------------------------------
-
 from pygments.lexer import RegexLexer, bygroups
 from pygments.token import *
 from sphinx.highlighting import lexers
@@ -66,9 +66,6 @@ class DNSLexer(RegexLexer):
 
 lexers['DNS'] = DNSLexer(startinline=True)
 
-
-
-
 # -- Project information -----------------------------------------------------
 
 project = 'Traffic Control'
@@ -95,7 +92,7 @@ release = version
 extensions = [
 	'sphinx.ext.autodoc',
 	'sphinx_autodoc_typehints',
-    #'sphinx_js'
+    'atc'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

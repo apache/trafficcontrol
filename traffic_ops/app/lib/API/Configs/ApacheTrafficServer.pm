@@ -2893,7 +2893,7 @@ sub build_remap_line {
 		}
 		else {
 			#If we are on ats 6 and later we want to use the cachekey plugin, otherwise we have to use cacheurl
-		    	$text .= UI::DeliveryService::get_qstring_ignore_remap(UI::DeliveryService::get_ats_major_version($self, $server_obj ), $ds->{range_request_handling});
+			$text .= UI::DeliveryService::get_qstring_ignore_remap(UI::DeliveryService::get_ats_major_version($self, $server_obj ), $remap->{range_request_handling});
 		}
 	}
 	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
