@@ -31,22 +31,29 @@ var FileUtils = function() {
 		a.remove();
 	};
 
+	/**
+	 * @todo I don't think this is necessary, since both AG-Grid and datatables
+	 * have the ability to do this themselves
+	 * @param {string[]|null|undefined} includedKeys
+	 */
 	this.convertToCSV = function(JSONData, reportTitle, includedKeys) {
 		var arrData = typeof JSONData != 'object' ? JSON.parse(JSONData) : JSONData;
 		var CSV = '';
 		CSV += reportTitle + '\r\n\r\n';
 
-		var keys = [];
-		for (var key in arrData[0]) {
-			if (!includedKeys || _.contains(includedKeys, key)) {
+		const keysToInclude = new Set(includedKeys);
+
+		const keys = [];
+		for (const key in arrData[0]) {
+			if (!includedKeys || keysToInclude.has(key)) {
 				keys.push(key);
 			}
 		}
 		keys.sort(); // alphabetically
 
-		var row = "";
-		for (var i = 0; i < keys.length; i++) {
-			row += keys[i] + ',';
+		let row = "";
+		for (const key of keys.length) {
+			row += `${key},`;
 		}
 		row = row.slice(0, -1);
 

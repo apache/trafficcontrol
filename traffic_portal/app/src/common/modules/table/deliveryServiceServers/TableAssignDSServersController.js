@@ -50,15 +50,15 @@ var TableAssignDSServersController = function(deliveryService, servers, assigned
 	$scope.deliveryService = deliveryService;
 
 	$scope.servers = servers.map(server => {
-		let isAssigned = assignedServers.find(assignedServer => assignedServer.id === server.id);
+		const isAssigned = assignedServers.find(assignedServer => assignedServer.id === server.id);
 		if (isAssigned) {
-			server['selected'] = true;
+			server.selected = true;
 		}
 		return server;
 	});
 
 	$scope.submit = function() {
-		const selectedServerIds = this.selectedServers.map(s => s["id"]);
+		const selectedServerIds = this.selectedServers.map(s => s.id);
 		$uibModalInstance.close(selectedServerIds);
 	};
 

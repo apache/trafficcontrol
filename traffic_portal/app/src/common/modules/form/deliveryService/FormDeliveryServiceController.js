@@ -137,9 +137,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     var getProfiles = function() {
         profileService.getProfiles({ orderby: 'name' })
             .then(function(result) {
-                $scope.profiles = _.filter(result, function(profile) {
-                    return profile.type == 'DS_PROFILE';
-                });
+                $scope.profiles = result.filter(
+                    (profile) => {
+                        return profile.type === 'DS_PROFILE';
+                    });
             });
     };
 
@@ -182,7 +183,13 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
     $scope.edgeFQDNs = function(ds) {
-        return ds.exampleURLs.join('<br/>');
+        const urls = new Array();
+        if (ds.exampleURLs instanceof Array && ds.exampleURLs.length > 0) {
+            for (const url of ds.exampleURLs) {
+                urls.push(url);
+            }
+        }
+        return urls.join('\n');
     };
 
     $scope.DRAFT = 0;
@@ -201,21 +208,21 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         return true;
     };
 
-    $scope.types = _.filter(types, function(currentType) {
-        var category;
-        if (type.indexOf('ANY_MAP') != -1) {
+    $scope.types = types.filter( (currentType) => {
+        let category;
+        if (type.indexOf('ANY_MAP') !== -1) {
             category = 'ANY_MAP';
-        } else if (type.indexOf('DNS') != -1) {
+        } else if (type.indexOf('DNS') !== -1) {
             category = 'DNS';
-        } else if (type.indexOf('HTTP') != -1) {
+        } else if (type.indexOf('HTTP') !== -1) {
             category = 'HTTP';
-        } else if (type.indexOf('STEERING') != -1) {
+        } else if (type.indexOf('STEERING') !== -1) {
             category = 'STEERING';
         }
-        return currentType.name.indexOf(category) != -1;
+        return currentType.name.indexOf(category) !== -1;
     });
 
-    $scope.clientSteeringType = _.findWhere(types, {name: "CLIENT_STEERING"});
+    $scope.clientSteeringType = types.find( (t) => {return t.hasOwnProperty("name") && t.name === "CLIENT_STEERING";});
     $scope.isClientSteering = function(ds) {
         if (ds.typeId == $scope.clientSteeringType.id) {
             return true;

@@ -34,29 +34,33 @@ var TableAssignFedResolversController = function(federation, resolvers, assigned
                 function() {
                     return parseInt($(this).attr('id'));
                 }).get();
-        $scope.resolvers = _.map(resolvers, function(resolver) {
-            if (visibleResolverIds.includes(resolver.id)) {
-                resolver['selected'] = selected;
+        $scope.resolvers = resolvers.map(
+            (resolver) => {
+                if (visibleResolverIds.includes(resolver.id)) {
+                    resolver['selected'] = selected;
+                }
+                return resolver;
             }
-            return resolver;
-        });
+        );
         updateSelectedCount();
     };
 
     var updateSelectedCount = function() {
-        selectedResolvers = _.filter($scope.resolvers, function(resolver) { return resolver['selected'] == true; } );
+        selectedResolvers = $scope.resolvers.filter((resolver) => { return resolver['selected'] === true; } );
         $('div.selected-count').html('<b>' + selectedResolvers.length + ' resolvers selected</b>');
     };
 
     $scope.federation = federation;
 
-    $scope.resolvers = _.map(resolvers, function(resolver) {
-        var isAssigned = _.find(assignedResolvers, function(assignedResolver) { return assignedResolver.id == resolver.id });
-        if (isAssigned) {
-            resolver['selected'] = true;
+    $scope.resolvers = resolvers.map(
+        (resolver) => {
+            const isAssigned = assignedResolvers.find((assignedResolver) => { return assignedResolver.id === resolver.id });
+            if (isAssigned) {
+                resolver['selected'] = true;
+            }
+            return resolver;
         }
-        return resolver;
-    });
+    );
 
     $scope.selectAll = function($event) {
         var checkbox = $event.target;
@@ -72,7 +76,7 @@ var TableAssignFedResolversController = function(federation, resolvers, assigned
     };
 
     $scope.submit = function() {
-        var selectedResolverIds = _.pluck(selectedResolvers, 'id');
+        const selectedResolverIds = selectedResolvers.map(r => r.id);
         $uibModalInstance.close(selectedResolverIds);
     };
 

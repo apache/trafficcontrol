@@ -22,7 +22,16 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
     var getRoles = function() {
         roleService.getRoles()
             .then(function(result) {
-                $scope.roles = _.sortBy(result, 'name').reverse();
+                $scope.roles = result.sort(
+                    (r1, r2) => {
+                        if (r1.name < r2.name) {
+                            return 1;
+                        } else if (r1.name > r2.name) {
+                            return -1;
+                        }
+                        return 0;
+                    }
+                );
             });
     };
 
