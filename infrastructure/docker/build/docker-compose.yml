@@ -84,7 +84,7 @@ services:
       - ../../..:/trafficcontrol:z
 
   weasel:
-    image: licenseweasel/weasel:0.2
+    image: licenseweasel/weasel:0.3
     volumes:
       - ../../..:/trafficcontrol:z
     command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']

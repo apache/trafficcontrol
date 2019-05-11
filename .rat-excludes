@@ -21,6 +21,7 @@ testFiles(?:                         test data that is neither code nor capable 
 .*\.spec(?:                          Specifies license, among other things. ){0}
 .*\.test(?:                          test data ){0}
 .*\.txt(?:                           text data files can't handle comments, so their licenses must be documented as part of their project ){0}
+.*\.md(?:                            markdown data files can't consistently handle comments, so their licenses must be documented as part of their project ){0}
 .*\.sketch(?:                        sketch files are binary source image files and don't bear license information ){0}
 ssl\.(?:crt|key)(?:                  demo certificate ){0}
 keystore.*(?:                        keystore ){0}

@@ -13,6 +13,7 @@ CHANGELOG$, Docs
 #
 # These files cannot contain comments, so no header can be added.
 # They are nevertheless covered by the Apache license.
+\.dockerignore$, Apache
 \.gitignore$, Apache
 \.mailmap$, Apache
 \.gitattributes$, Apache

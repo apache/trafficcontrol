@@ -1,0 +1,10 @@
+out/*
+out
+*.avi
+*.crt
+*.key
+*.json
+dist/*
+dist
+docker_host/*
+docker_host

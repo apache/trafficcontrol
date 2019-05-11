@@ -1,0 +1,11 @@
+*.avi
+debug
+fakeOrigin
+config.json
+!build/config.json
+out/*
+origin/*
+*.crt
+*.key
+dist/*
+docker_host/*
