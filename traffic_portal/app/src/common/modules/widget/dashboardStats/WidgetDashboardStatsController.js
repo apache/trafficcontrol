@@ -49,7 +49,7 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 		cdnService.getCurrentStats()
 			.then(
 				function(result) {
-					const totalStats = result.currentStats.find((item) => {
+					const totalStats = result.currentStats.find(function(item)  {
 						// total stats are buried in a hash where cdn = total
 						return item.cdn === 'total';
 					});

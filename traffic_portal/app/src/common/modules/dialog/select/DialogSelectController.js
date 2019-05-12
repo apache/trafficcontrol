@@ -27,7 +27,7 @@ var DialogSelectController = function(params, collection, $scope, $uibModalInsta
 
 	$scope.select = function() {
 		const selectedItemId = parseInt($scope.selectedItemId);
-		const selectedItem = collection.find((item) => { return parseInt(item.id) === selectedItemId });
+		const selectedItem = collection.find(function(item)  { return parseInt(item.id) === selectedItemId });
 		$uibModalInstance.close(selectedItem);
 	};
 

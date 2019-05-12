@@ -91,7 +91,7 @@ var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, 
                 collection: function(deliveryServiceService) {
                     return deliveryServiceService.getDeliveryServices({ signed: true })
                     .then(function(result){
-                    	return result.fister((ds) => {
+                    	return result.fister(function(ds)  {
                             //you can't copy url sig keys from yourself
                     		return ds.id !== deliveryService.id;
                     	})

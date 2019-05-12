@@ -37,7 +37,7 @@ var TableParametersController = function(parameters, $scope, $state, $uibModal, 
                 message: result.length + ' profiles use this parameter.<br/><br/>'
             };
             if (result.length > 0) {
-                params.message += result.map(r => r.name).join('<br/>') + '<br/><br/>';
+                params.message += result.map(function(r) {return r.name;}).join('<br/>') + '<br/><br/>';
             }
             params.message += 'Are you sure you want to delete the parameter?';
 

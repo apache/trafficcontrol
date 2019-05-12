@@ -41,7 +41,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 	var getCurrentStats = function(cdnName) {
 		cdnService.getCurrentStats()
 			.then(function(result) {
-				$scope.currentStats = result.currentStats.find((item) => {
+				$scope.currentStats = result.currentStats.find(function(item)  {
 					return item.cdn === cdnName;
 				});
 			});
@@ -77,7 +77,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 		const normalizedChartData = [];
 
 		if (angular.isDefined(series)) {
-			series.values.forEach((seriesItem) => {
+			series.values.forEach(function(seriesItem)  {
 				if (moment(seriesItem[0]).isSame(start) || moment(seriesItem[0]).isAfter(start)) {
 					normalizedChartData.push([ moment(seriesItem[0]).valueOf(), numberUtils.convertTo(seriesItem[1], $scope.unitSize) ]); // converts data to appropriate unit
 				}

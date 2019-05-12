@@ -29,7 +29,7 @@ var DialogDeliveryServiceRequestController = function(params, statuses, $scope, 
 
 	$scope.select = function() {
 		const selectedStatusId = parseInt($scope.selectedStatusId);
-		const selectedStatus = statuses.find( (status) => { return parseInt(status.id) === selectedStatusId });
+		const selectedStatus = statuses.find( function(status)  { return parseInt(status.id) === selectedStatusId });
 		$uibModalInstance.close({ status: selectedStatus, comment: $scope.comment });
 	};
 

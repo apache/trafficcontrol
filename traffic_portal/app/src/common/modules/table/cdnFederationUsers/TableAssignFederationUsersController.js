@@ -35,7 +35,7 @@ var TableAssignFederationUsersController = function(federation, users, assignedU
 				return parseInt($(this).attr('id'));
 			}).get();
 		$scope.users = users.map(
-			(user) => {
+			function(user)  {
 				if (visibleUserIds.includes(user.id)) {
 					user['selected'] = selected;
 				}
@@ -46,15 +46,15 @@ var TableAssignFederationUsersController = function(federation, users, assignedU
 	};
 
 	var updateSelectedCount = function() {
-		selectedUsers = $scope.users.filter((user) => { return user['selected'] === true; } );
+		selectedUsers = $scope.users.filter(function(user)  { return user['selected'] === true; } );
 		$('div.selected-count').html('<b>' + selectedUsers.length + ' selected</b>');
 	};
 
 	$scope.federation = federation;
 
 	$scope.users = users.map(
-		(user) => {
-			const isAssigned = assignedUsers.find((assignedUser) => { return assignedUser.id === user.id });
+		function(user)  {
+			const isAssigned = assignedUsers.find(function(assignedUser)  { return assignedUser.id === user.id });
 			if (isAssigned) {
 				user['selected'] = true;
 			}
@@ -76,7 +76,7 @@ var TableAssignFederationUsersController = function(federation, users, assignedU
 	};
 
 	$scope.submit = function() {
-		var selectedUserIds = selectedUsers.map(u => u.id);
+		var selectedUserIds = selectedUsers.map(function(u) {return u.id;});
 		$uibModalInstance.close(selectedUserIds);
 	};
 

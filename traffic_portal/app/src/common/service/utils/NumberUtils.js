@@ -60,7 +60,7 @@ var NumberUtils = function($filter) {
 	this.average = function(arr)
 	{
 		if (!angular.isArray(arr) || arr.length == 0 ) return 0;
-		return arr.reduce((memo, num) => {
+		return arr.reduce(function(memo, num)  {
 				return memo + num;
 			}) / arr.length;
 	}

@@ -24,7 +24,7 @@ var TenantUtils = function () {
 	 * add a 'level' property to each item
 	 */
 	var applyLevels = function (arr, level) {
-		arr.forEach((item) => {
+		arr.forEach(function(item)  {
 			item.level = level;
 			applyLevels(item.children, level + 1);
 		});

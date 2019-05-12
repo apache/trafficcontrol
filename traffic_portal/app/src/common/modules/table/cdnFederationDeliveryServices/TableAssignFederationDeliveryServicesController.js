@@ -35,7 +35,7 @@ var TableAssignFederationDeliveryServicesController = function(federation, deliv
 				return parseInt($(this).attr('id'));
 			}).get();
 		$scope.deliveryServices = deliveryServices.map(
-			(ds) => {
+			function(ds)  {
 				if (visibleDsIds.includes(ds.id)) {
 					ds['selected'] = selected;
 				}
@@ -46,15 +46,15 @@ var TableAssignFederationDeliveryServicesController = function(federation, deliv
 	};
 
 	var updateSelectedCount = function() {
-		selectedDeliveryServices = $scope.deliveryServices.filter((ds) => { return ds['selected'] === true; } );
+		selectedDeliveryServices = $scope.deliveryServices.filter(function(ds)  { return ds['selected'] === true; } );
 		$('div.selected-count').html('<b>' + selectedDeliveryServices.length + ' selected</b>');
 	};
 
 	$scope.federation = federation;
 
 	$scope.deliveryServices = deliveryServices.map(
-		(ds) => {
-			const isAssigned = assignedDeliveryServices.find((assignedDS) => { return assignedDS.id === ds.id });
+		function(ds)  {
+			const isAssigned = assignedDeliveryServices.find(function(assignedDS)  { return assignedDS.id === ds.id });
 			if (isAssigned) {
 				ds['selected'] = true;
 			}
@@ -76,7 +76,7 @@ var TableAssignFederationDeliveryServicesController = function(federation, deliv
 	};
 
 	$scope.submit = function() {
-		const selectedDsIds = selectedDeliveryServices.map((d) => d.id);
+		const selectedDsIds = selectedDeliveryServices.map(function(d) {return d.id;});
 		$uibModalInstance.close(selectedDsIds);
 	};
 

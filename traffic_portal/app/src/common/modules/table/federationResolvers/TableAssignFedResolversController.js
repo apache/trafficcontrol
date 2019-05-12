@@ -35,7 +35,7 @@ var TableAssignFedResolversController = function(federation, resolvers, assigned
                     return parseInt($(this).attr('id'));
                 }).get();
         $scope.resolvers = resolvers.map(
-            (resolver) => {
+            function(resolver)  {
                 if (visibleResolverIds.includes(resolver.id)) {
                     resolver['selected'] = selected;
                 }
@@ -46,15 +46,15 @@ var TableAssignFedResolversController = function(federation, resolvers, assigned
     };
 
     var updateSelectedCount = function() {
-        selectedResolvers = $scope.resolvers.filter((resolver) => { return resolver['selected'] === true; } );
+        selectedResolvers = $scope.resolvers.filter(function(resolver)  { return resolver['selected'] === true; } );
         $('div.selected-count').html('<b>' + selectedResolvers.length + ' resolvers selected</b>');
     };
 
     $scope.federation = federation;
 
     $scope.resolvers = resolvers.map(
-        (resolver) => {
-            const isAssigned = assignedResolvers.find((assignedResolver) => { return assignedResolver.id === resolver.id });
+        function(resolver)  {
+            const isAssigned = assignedResolvers.find(function(assignedResolver)  { return assignedResolver.id === resolver.id });
             if (isAssigned) {
                 resolver['selected'] = true;
             }
@@ -76,7 +76,7 @@ var TableAssignFedResolversController = function(federation, resolvers, assigned
     };
 
     $scope.submit = function() {
-        const selectedResolverIds = selectedResolvers.map(r => r.id);
+        const selectedResolverIds = selectedResolvers.map(function(r) {return r.id;});
         $uibModalInstance.close(selectedResolverIds);
     };
 

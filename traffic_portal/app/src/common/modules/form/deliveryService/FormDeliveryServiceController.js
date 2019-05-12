@@ -138,7 +138,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         profileService.getProfiles({ orderby: 'name' })
             .then(function(result) {
                 $scope.profiles = result.filter(
-                    (profile) => {
+                    function(profile)  {
                         return profile.type === 'DS_PROFILE';
                     });
             });
@@ -185,8 +185,8 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.edgeFQDNs = function(ds) {
         const urls = new Array();
         if (ds.exampleURLs instanceof Array && ds.exampleURLs.length > 0) {
-            for (const url of ds.exampleURLs) {
-                urls.push(url);
+            for (var i = 0; i < ds.exampleURLs.length; ++i) {
+                urls.push(ds.exampleURLs[i]);
             }
         }
         return urls.join('\n');
@@ -208,7 +208,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         return true;
     };
 
-    $scope.types = types.filter( (currentType) => {
+    $scope.types = types.filter( function(currentType)  {
         let category;
         if (type.indexOf('ANY_MAP') !== -1) {
             category = 'ANY_MAP';
@@ -222,7 +222,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         return currentType.name.indexOf(category) !== -1;
     });
 
-    $scope.clientSteeringType = types.find( (t) => {return t.hasOwnProperty("name") && t.name === "CLIENT_STEERING";});
+    $scope.clientSteeringType = types.find( function(t)  {return t.hasOwnProperty("name") && t.name === "CLIENT_STEERING";});
     $scope.isClientSteering = function(ds) {
         if (ds.typeId == $scope.clientSteeringType.id) {
             return true;

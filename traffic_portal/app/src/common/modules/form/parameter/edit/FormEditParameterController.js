@@ -53,7 +53,7 @@ var FormEditParameterController = function(parameter, $scope, $controller, $uibM
                     message: result.length + ' profiles use this parameter.<br/><br/>'
                 };
                 if (result.length > 0) {
-                    params.message += result.map(x => x.name).join('<br/>') + '<br/><br/>';
+                    params.message += result.map(function(x) {return x.name;}).join('<br/>') + '<br/><br/>';
                 }
                 params.message += 'Are you sure you want to update the parameter?';
 
@@ -84,7 +84,7 @@ var FormEditParameterController = function(parameter, $scope, $controller, $uibM
                     message: result.length + ' profiles use this parameter.<br/><br/>'
                 };
                 if (result.length > 0) {
-                    params.message += result.map(x => x.name).join('<br/>') + '<br/><br/>';
+                    params.message += result.map(function(x) {return x.name;}).join('<br/>') + '<br/><br/>';
                 }
                 params.message += 'Are you sure you want to delete the parameter?';
 

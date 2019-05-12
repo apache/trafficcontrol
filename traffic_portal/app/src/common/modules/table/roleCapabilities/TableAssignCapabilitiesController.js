@@ -35,7 +35,7 @@ var TableAssignCapabilitiesController = function(role, capabilities, assignedCap
 				return $(this).attr('id'); // the cap name is being stored as the id on the row
 			}).get();
 		$scope.selectedCapabilities = capabilities.map(
-			(c) => {
+			function(c)  {
 				if (visibleCapabilityNames.includes(c.name)) {
 					c['selected'] = selected;
 				}
@@ -46,15 +46,15 @@ var TableAssignCapabilitiesController = function(role, capabilities, assignedCap
 	};
 
 	var updateSelectedCount = function() {
-		selectedCapabilities = $scope.selectedCapabilities.filter((c) => { return c['selected'] === true; } );
+		selectedCapabilities = $scope.selectedCapabilities.filter(function(c)  { return c['selected'] === true; } );
 		$('div.selected-count').html('<b>' + selectedCapabilities.length + ' capabilities selected</b>');
 	};
 
 	$scope.role = role;
 
 	$scope.selectedCapabilities = capabilities.map(
-		(c) => {
-			const isAssigned = assignedCapabilities.find((assignedCap) => { return assignedCap === c.name });
+		function(c)  {
+			const isAssigned = assignedCapabilities.find(function(assignedCap)  { return assignedCap === c.name });
 			if (isAssigned) {
 				c['selected'] = true;
 			}
@@ -76,7 +76,7 @@ var TableAssignCapabilitiesController = function(role, capabilities, assignedCap
 	};
 
 	$scope.submit = function() {
-		const selectedCapabilityNames = selectedCapabilities.map(c => c.name);
+		const selectedCapabilityNames = selectedCapabilities.map(function(c) {return c.name;});
 		$uibModalInstance.close(selectedCapabilityNames);
 	};
 

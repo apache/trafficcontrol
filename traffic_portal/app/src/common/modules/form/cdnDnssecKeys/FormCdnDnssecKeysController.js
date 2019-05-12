@@ -53,7 +53,7 @@ var FormCdnDnssecKeysController = function(cdn, dnssecKeys, $scope, $location, $
 
 	var init = function() {
 		if (dnssecKeys && dnssecKeys[cdn.name]) {
-			$scope.ksk_new = dnssecKeys[cdn.name].ksk.find((ksk) => { return ksk.status === 'new' });
+			$scope.ksk_new = dnssecKeys[cdn.name].ksk.find(function(ksk)  { return ksk.status === 'new' });
 		}
 	};
 	init();

@@ -34,9 +34,9 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 			function() {
 				return parseInt($(this).attr('id'));
 			}).get();
-			$scope.selectedDeliveryServices = deliveryServices.map(
-				(ds) => {
-				if (ds.topology && $scope.isCache(server)) {
+		$scope.selectedDeliveryServices = deliveryServices.map(
+			function (ds) {
+				if (ds.topology && serverUtils.isCache(server)) {
 					return ds;
 				}
 				if (visibleDSIds.includes(ds.id)) {
@@ -49,7 +49,7 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 	};
 
 	var updateSelectedCount = function() {
-		selectedDeliveryServices = $scope.selectedDeliveryServices.filter((ds) => { return ds['selected'] === true; } );
+		selectedDeliveryServices = $scope.selectedDeliveryServices.filter(function(ds)  { return ds['selected'] === true; } );
 		$('div.selected-count').html('<b>' + selectedDeliveryServices.length + ' delivery services selected</b>');
 	};
 
@@ -58,8 +58,8 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 	$scope.isCache = serverUtils.isCache;
 
 	$scope.selectedDeliveryServices = deliveryServices.map(
-		(ds) => {
-			const isAssigned = assignedDeliveryServices.find((assignedDS) => { return assignedDS.id === ds.id });
+		function(ds)  {
+			const isAssigned = assignedDeliveryServices.find(function(assignedDS)  { return assignedDS.id === ds.id });
 			if (isAssigned) {
 				ds['selected'] = true;
 			}
@@ -90,7 +90,7 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 	};
 
 	$scope.submit = function() {
-		var selectedDSIds = selectedDeliveryServices.map(d => d.id);
+		var selectedDSIds = selectedDeliveryServices.map(function(d) {return d.id;});
 		$uibModalInstance.close(selectedDSIds);
 	};
 

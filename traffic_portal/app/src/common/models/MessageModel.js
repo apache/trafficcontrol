@@ -51,7 +51,7 @@ var MessageModel = function($rootScope) {
     };
 
     this.removeMessage = function(message) {
-        model.messages.content = model.messages.content.filter(m => m !== message);
+        model.messages.content = model.messages.content.filter(function(m) {return m !== message;});
     };
 
     $rootScope.$on("$locationChangeStart", function() {

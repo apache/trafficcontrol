@@ -106,8 +106,8 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 			}
 		});
 		modalInstance.result.then(function() {
-			const resolvers = $scope.resolvers.filter( (res) => { return res.id != resolverToRemove.id; });
-			const resolverIds = resolvers.map( (r) => {return r.id;});
+			const resolvers = $scope.resolvers.filter( function(res)  { return res.id != resolverToRemove.id; });
+			const resolverIds = resolvers.map( function(r)  {return r.id;});
 			assignFederationResolvers($scope.federation.id, resolverIds)
 		}, function () {
 			// do nothing
