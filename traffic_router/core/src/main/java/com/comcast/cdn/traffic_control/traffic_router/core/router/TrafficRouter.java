@@ -20,7 +20,6 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -594,15 +593,12 @@ public class TrafficRouter {
 					parts[0] = parts[0].toLowerCase(); // I truly have no idea why this triggers `PMD.UseStringBufferForStringAppends`
 
 					if (deliveryService.getConsistentHashQueryParams().contains(parts[0])) {
-						if (parts.length == 2) {
-							parts[1] = URLDecoder.decode(parts[1]);
-						}
-						qparams.add(URLEncoder.encode(String.join("=", parts)));
+						qparams.add(String.join("=", parts));
 					}
 				}
 
 				for (final String qparam : qparams) {
-					hashString.append(URLEncoder.encode(qparam));
+					hashString.append(qparam);
 				}
 			} catch (Exception e) {
 				return requestPath;
