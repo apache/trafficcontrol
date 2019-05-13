@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Router: TR now generates a self-signed certificate at startup and uses it as the default TLS cert.
   The default certificate is used whenever a client attempts an SSL handshake for an SNI host which does not match
   any of the other certificates.
+- Client Steering Forced Diversity: force Traffic Router to return more unique edge caches in CLIENT_STEERING results instead of the default behavior which can sometimes return a result of multiple targets using the same edge cache. In the case of edge cache failures, this feature will give clients a chance to retry a different edge cache. This can be enabled with the new "client.steering.forced.diversity" Traffic Router profile parameter.
 - Traffic Ops Golang Endpoints
   - /api/1.4/deliveryservices `(GET,POST,PUT)`
   - /api/1.4/users `(GET,POST,PUT)`
