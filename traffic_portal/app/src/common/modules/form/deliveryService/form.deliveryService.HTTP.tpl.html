@@ -1035,7 +1035,7 @@ under the License.
                                 <div class="col-md-10 col-sm-10 col-xs-12">
                                     <div>
                                         <div class="input-group add-more-inputs">
-                                            <input id="consistentHashQueryParam" name="consistentHashQueryParam" type="text" class="form-control" ng-model="deliveryService.consistentHashQueryParams[$index]" ng-pattern="/^\S*$/">
+                                            <input id="consistentHashQueryParam" name="consistentHashQueryParam" type="text" class="form-control" ng-model="deliveryService.consistentHashQueryParams[$index]" pattern="\S*">
                                             <span class="form-input-group-btn input-group-btn">
                                             <button id="removeBtn" name="removeBtn" class="btn btn-default" ng-click="removeQueryParam($index)"><i class="fa fa-minus"></i></button>
                                             <button id="addBtn" name="addBtn" class="btn btn-default" ng-show="$index == (deliveryService.consistentHashQueryParams.length - 1)" ng-click="addQueryParam()"><i class="fa fa-plus"></i></button>

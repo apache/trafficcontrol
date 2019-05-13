@@ -325,7 +325,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         getCDNs();
         getProfiles();
         getTenants();
-        if (deliveryService.consistentHashQueryParams && deliveryService.consistentHashQueryParams.length < 1) {
+        if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
             // add an empty one so the dynamic form widget is visible. empty strings get stripped out on save anyhow.
             $scope.deliveryService.consistentHashQueryParams = [ '' ];
         }
