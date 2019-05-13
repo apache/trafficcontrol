@@ -574,7 +574,7 @@ public class TrafficRouter {
 	 * @param request An {@link HTTPRequest} representing the client's request.
 	 * @return A string appropriate to use for consistent hashing to service the request
 	*/
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.UseStringBufferForStringAppends"})
+	@SuppressWarnings({"PMD.CyclomaticComplexity"})
 	public String buildPatternBasedHashString(final DeliveryService deliveryService, final HTTPRequest request) {
 		final String requestPath = request.getPath();
 		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty() && !requestPath.isEmpty()) {
@@ -590,7 +590,6 @@ public class TrafficRouter {
 					for (short i = 0; i<parts.length; ++i) {
 						parts[i] = URLDecoder.decode(parts[i]);
 					}
-					parts[0] = parts[0].toLowerCase(); // I truly have no idea why this triggers `PMD.UseStringBufferForStringAppends`
 
 					if (deliveryService.getConsistentHashQueryParams().contains(parts[0])) {
 						qparams.add(String.join("=", parts));

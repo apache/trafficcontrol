@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS deliveryservice_consistent_hash_query_param (
     deliveryservice_id bigint NOT NULL,
 
     CONSTRAINT name_empty CHECK (length(name) > 0),
-    CONSTRAINT name_reserved CHECK (lower(name) NOT IN ('format','trred')),
+    CONSTRAINT name_reserved CHECK (name NOT IN ('format','trred')),
     CONSTRAINT fk_deliveryservice FOREIGN KEY (deliveryservice_id) REFERENCES deliveryservice(id) ON DELETE CASCADE,
     PRIMARY KEY (name, deliveryservice_id)
 );

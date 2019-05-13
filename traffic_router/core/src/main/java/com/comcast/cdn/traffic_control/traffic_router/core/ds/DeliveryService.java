@@ -137,7 +137,7 @@ public class DeliveryService {
 				for (final JsonNode n : cqpNode) {
 					final String s = n.asText();
 					if (!s.isEmpty()) {
-						this.consistentHashQueryParams.add(s.toLowerCase());
+						this.consistentHashQueryParams.add(s);
 					}
 				}
 			}

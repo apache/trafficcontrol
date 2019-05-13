@@ -1300,9 +1300,9 @@ profile.name as profile_name,
 profile.description  as profile_description,
 ds.protocol,
 ds.qstring_ignore,
-(SELECT ARRAY_AGG(lkey)
-	FROM (SELECT lower(name) AS lkey FROM deliveryservice_consistent_hash_query_param
-            WHERE deliveryservice_id = ds.id) AS qk) as query_keys,
+(SELECT ARRAY_AGG(name)
+	FROM deliveryservice_consistent_hash_query_param
+			WHERE deliveryservice_id = ds.id) AS query_keys,
 ds.range_request_handling,
 ds.regex_remap,
 ds.regional_geo_blocking,
