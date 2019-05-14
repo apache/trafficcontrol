@@ -190,7 +190,7 @@ export class APIService {
 	                  start: Date,
 	                  end: Date,
 	                  interval: string,
-	                  useMids?: boolean): Observable<Array<Array<any>>> {
+	                  useMids?: boolean): Observable<any> {
 		/* tslint:enable */
 		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?metricType=kbps';
 		path += '&interval=' + interval;
@@ -200,8 +200,8 @@ export class APIService {
 		path += '&serverType=' + (useMids ? 'mid' : 'edge');
 		return this.get(path).pipe(map(
 			r => {
-				if (r && r.body && r.body.response && r.body.response.series) {
-					return r.body.response.series.values;
+				if (r && r.body && r.body.response) {
+					return r.body.response;
 				}
 				return null;
 			}

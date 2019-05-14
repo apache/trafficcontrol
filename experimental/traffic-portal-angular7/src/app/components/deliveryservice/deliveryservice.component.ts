@@ -46,8 +46,8 @@ export class DeliveryserviceComponent implements OnInit {
 	bucketSize = 300; // seconds
 
 	constructor(private readonly route: ActivatedRoute, private readonly api: APIService) {
-		this.midBandwidth = {label: "Mid-Tier", borderColor: "red", backgroundColor: "red", data: new Array<DataPoint>()} as DataSet;
-		this.edgeBandwidth = {label: "Edge-Tier", borderColor: "blue", backgroundColor: "blue", data: new Array<DataPoint>()} as DataSet;
+		this.midBandwidth = {label: "Mid-Tier", borderColor: "#3CBA9F", backgroundColor: "#3CBA9F", data: new Array<DataPoint>()} as DataSet;
+		this.edgeBandwidth = {label: "Edge-Tier", borderColor: "#BA3C57", backgroundColor: "#BA3C57", data: new Array<DataPoint>()} as DataSet;
 		this.bandwidthData = new Subject<Array<DataSet>>();
 	}
 
@@ -87,13 +87,13 @@ export class DeliveryserviceComponent implements OnInit {
 	loadGraph() {
 		// Edge-tier data
 		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's').subscribe(
-			va => {
-				if (va === null || va === undefined){
+			data => {
+				if (data === undefined || data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
 					console.warn("Edge-Tier bandwidth data not found!");
 					return;
 				}
 
-				for (const v of va) {
+				for (const v of data.series.values) {
 					this.edgeBandwidth.data.push({t: new Date(v[0]), y: v[1]} as DataPoint);
 				}
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
@@ -102,13 +102,13 @@ export class DeliveryserviceComponent implements OnInit {
 
 		// Mid-tier data
 		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's', true).subscribe(
-			va => {
-				if (va === null || va === undefined) {
+			data => {
+				if (data === undefined || data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
 					console.warn("Mid-Tier bandwidth data not found!");
 					return;
 				}
 
-				for (const v of va) {
+				for (const v of data.series.values) {
 					this.midBandwidth.data.push({t: new Date(v[0]), y: v[1]} as DataPoint);
 				}
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);

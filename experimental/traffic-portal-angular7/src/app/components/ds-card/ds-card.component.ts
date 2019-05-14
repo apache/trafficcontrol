@@ -150,7 +150,7 @@ export class DsCardComponent {
 					if (this.chart === null) {
 						return;
 					}
-					if (data === undefined || data === null) {
+					if (data === undefined || data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
 						this.destroyChart();
 
 						const ctx = canvas.getContext('2d');
@@ -161,16 +161,16 @@ export class DsCardComponent {
 						this.graphDataLoaded = true;
 						return;
 					}
-					for (const d of data) {
+					for (const d of data.series.values) {
 						this.chart.data.labels.push(new Date(d[0]));
 						this.edgeBandwidth.push(d[1]);
 					}
 					this.chart.data.datasets.push({
 						label: 'Edge-tier Bandwidth',
 						data: this.edgeBandwidth,
-						borderColor: '#3cba9f',
+						borderColor: '#3CBA9F',
 						fill: true,
-						fillColor: '#3cba9f'
+						fillColor: '#3CBA9F'
 					});
 					this.graphDataLoaded = true;
 					this.chart.update();
@@ -182,7 +182,7 @@ export class DsCardComponent {
 					if (this.chart === null) {
 						return;
 					}
-					if (data === undefined || data === null) {
+					if (data === undefined || data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
 						this.destroyChart();
 
 						const ctx = canvas.getContext('2d');
@@ -193,7 +193,7 @@ export class DsCardComponent {
 						this.graphDataLoaded = true;
 						return;
 					}
-					for (const d of data) {
+					for (const d of data.series.values) {
 						this.midBandwidth.push(d[1]);
 					}
 					this.chart.data.datasets.push({
