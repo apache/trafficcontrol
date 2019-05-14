@@ -208,6 +208,27 @@ export class APIService {
 		));
 	}
 
+	public getDSTPS (d: string,
+	                 start: Date,
+	                 end: Date,
+	                 interval: string,
+	                 useMids?: boolean): Observable<any> {
+		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?metricType=tps_total';
+		path += '&interval=' + interval;
+		path += '&deliveryServiceName=' + d;
+		path += '&startDate=' + start.toISOString();
+		path += '&endDate=' + end.toISOString();
+		path += '&serverType=' + (useMids ? 'mid' : 'edge');
+		return this.get(path).pipe(map(
+			r => {
+				if (r && r.body && r.body.response) {
+					return r.body.response;
+				}
+				return null;
+			}
+		))
+	}
+
 	/**
 	 * Gets an array of all users in Traffic Ops
 	 * @returns An Observable that will emit an Array of User objects.
