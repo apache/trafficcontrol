@@ -15,11 +15,11 @@ import { Component, ElementRef, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Subject } from 'rxjs';
 
 import { APIService } from '../../services';
 import { DeliveryService } from '../../models/deliveryservice';
-import { DataPoint } from '../../models/datapoint';
+import { DataPoint, DataSet } from '../../models/data';
 
 @Component({
 	selector: 'deliveryservice',
@@ -31,12 +31,10 @@ export class DeliveryserviceComponent implements OnInit {
 	deliveryservice = new DeliveryService();
 	loaded = new Map([['main', false], ['bandwidth', false]]);
 
-	private readonly bandwidthDataSubject: BehaviorSubject<Array<Array<DataPoint>>>;
-	public bandwidthData: Observable<Array<Array<DataPoint>>>;
+	bandwidthData: Subject<Array<DataSet>>;
 
-	midBandwidth: Array<number>;
-	edgeBandwidth: Array<DataPoint>;
-	labels: Array<Date>;
+	midBandwidth: DataSet;
+	edgeBandwidth: DataSet;
 
 	to: Date;
 	from: Date;
@@ -45,15 +43,12 @@ export class DeliveryserviceComponent implements OnInit {
 	toDate: FormControl;
 	toTime: FormControl;
 
-	constructor(private readonly route: ActivatedRoute, private readonly api: APIService, private readonly element: ElementRef<HTMLCanvasElement>) {
-		this.labels = new Array<Date>();
-		this.midBandwidth = new Array<number>();
-		this.edgeBandwidth = new Array<DataPoint>();
-		this.bandwidthData = this.bandwidthDataSubject.asObservable();
-	}
+	bucketSize = 300; // seconds
 
-	public get bandwidthDataValue (): Array<Array<DataPoint>> {
-		return this.bandwidthDataSubject.value;
+	constructor(private readonly route: ActivatedRoute, private readonly api: APIService) {
+		this.midBandwidth = {label: "Mid-Tier", borderColor: "red", backgroundColor: "red", data: new Array<DataPoint>()} as DataSet;
+		this.edgeBandwidth = {label: "Edge-Tier", borderColor: "blue", backgroundColor: "blue", data: new Array<DataPoint>()} as DataSet;
+		this.bandwidthData = new Subject<Array<DataSet>>();
 	}
 
 	ngOnInit() {
@@ -69,7 +64,6 @@ export class DeliveryserviceComponent implements OnInit {
 		const timeStr = String(this.to.getHours()).padStart(2, '0').concat(':', String(this.to.getMinutes()).padStart(2, '0'))
 		this.toTime = new FormControl(timeStr);
 
-
 		this.api.getDeliveryServices(parseInt(DSID)).subscribe(
 			(d: DeliveryService) => {
 				this.deliveryservice = d;
@@ -77,22 +71,47 @@ export class DeliveryserviceComponent implements OnInit {
 				this.loadGraph();
 			}
 		);
+	}
 
+	newDateRange() {
+		this.to = new Date(this.toDate.value.concat('T', this.toTime.value));
+		this.from = new Date(this.fromDate.value.concat('T', this.fromTime.value));
+
+		// I need to set these explicitly, just in case - the API can't handle millisecond precision
+		this.to.setUTCMilliseconds(0);
+		this.from.setUTCMilliseconds(0);
+		this.bucketSize = 60;
+		this.loadGraph();
 	}
 
 	loadGraph() {
-		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, '300s').subscribe(
+		// Edge-tier data
+		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's').subscribe(
 			va => {
 				if (va === null || va === undefined){
-					this.edgeBandwidth = null;
+					console.warn("Edge-Tier bandwidth data not found!");
 					return;
 				}
 
 				for (const v of va) {
-					this.edgeBandwidth.push({t: new Date(v[0]), y: v[1]});
+					this.edgeBandwidth.data.push({t: new Date(v[0]), y: v[1]} as DataPoint);
 				}
-				this.bandwidthDataSubject.next([this.edgeBandwidth]);
-				console.log("loaded graph", this.edgeBandwidth);
+				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
+			}
+		);
+
+		// Mid-tier data
+		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's', true).subscribe(
+			va => {
+				if (va === null || va === undefined) {
+					console.warn("Mid-Tier bandwidth data not found!");
+					return;
+				}
+
+				for (const v of va) {
+					this.midBandwidth.data.push({t: new Date(v[0]), y: v[1]} as DataPoint);
+				}
+				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
 			}
 		);
 	}

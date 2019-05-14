@@ -14,9 +14,10 @@ limitations under the License.
 <tp-header title="{{deliveryservice.displayName}}"></tp-header>
 
 <main>
-	<form name="timespan" (ngSubmit)="loadGraph()" ngNativeValidate>
+	<form name="timespan" (ngSubmit)="newDateRange()" ngNativeValidate>
 		<div><label>From</label><input [formControl]="fromDate" type="date" name="fromdate"/><input [formControl]="fromTime" type="time" name="fromtime" value="00:00"></div>
 		<div><label>To</label><input [formControl]="toDate" type="date" name="todate"/><input [formControl]="toTime" type="time" name="totime"></div>
+		<button>Refresh</button>
 	</form>
-	<canvas linechart chartTitle="Bandwidth of Cache Tiers" [chartLabels]="labels" [chartDataSets]="[edgeBandwidth, midBandwidth]" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLaxel="Date/Time" [chartDisplayLegend]="true" chartType="time"></canvas>
+	<canvas linechart chartTitle="Bandwidth of Cache Tiers" [chartLabels]="labels" [chartDataSets]="bandwidthData" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLaxel="Date/Time" [chartDisplayLegend]="true" chartType="time"></canvas>
 </main>

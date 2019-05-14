@@ -11,11 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { AfterViewInit, Directive, ElementRef} from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, OnDestroy } from '@angular/core';
 
 import { Observable, Subscription } from 'rxjs';
 
 import { Chart } from 'chart.js'; // TODO: use plotly instead for WebGL-capabale browsers?
+
+import { DataSet } from '../models/data';
 
 export enum LineChartType {
 	Category = 'category',
@@ -37,14 +39,14 @@ export enum LineChartType {
 		'chartDisplayLegend'
 	]
 })
-export class LinechartDirective implements AfterViewInit {
+export class LinechartDirective implements AfterViewInit, OnDestroy {
 
 	ctx: CanvasRenderingContext2D;// | WebGLRenderingContext;
 	chart: Chart;
 
 	chartTitle?: string;
 	chartLabels?: any[];
-	chartDataSets: Observable<any[][]>;
+	chartDataSets: Observable<DataSet[]>;
 	chartType?: LineChartType;
 	chartXAxisLabel?: string;
 	chartYAxisLabel?: string;
@@ -79,8 +81,7 @@ export class LinechartDirective implements AfterViewInit {
 		this.opts = {
 			type: 'line',
 			data: {
-				labels: null,
-				datasets: null,
+				datasets: [],
 			},
 			options: {
 				legend: {
@@ -94,19 +95,27 @@ export class LinechartDirective implements AfterViewInit {
 					xAxes: [{
 						display: true,
 						type: this.chartType,
-						callback: this.chartLabelCallback ? this.chartLabelCallback : null
+						scaleLabel: {
+							display: this.chartXAxisLabel ? true : false,
+							labelString: this.chartXAxisLabel
+						}
 					}],
 					yAxes: [{
 						display: true,
 						ticks: {
 							suggestedMin: 0
+						},
+						scaleLabel: {
+							display: this.chartYAxisLabel ? true : false,
+							labelString: this.chartYAxisLabel
 						}
 					}]
 				}
 			}
 		};
 
-		this.subscription = this.chartDataSets.subscribe(this.dataLoad, this.dataError);
+		this.subscription = this.chartDataSets.subscribe((data: DataSet[]) => {this.dataLoad(data)},
+		                                                 (e: Error) => {this.dataError(e)});
 	}
 
 	private destroyChart () {
@@ -118,20 +127,20 @@ export class LinechartDirective implements AfterViewInit {
 	}
 
 
-	dataLoad(data: any[][]) {
+	dataLoad(data: DataSet[]) {
 		this.destroyChart();
 
 		if (data === null || data === undefined || data.some(x => {return x === null})) {
 			this.noData();
 			return;
 		}
+
 		this.opts.data.datasets = data;
 
 		this.chart = new Chart(this.ctx, this.opts);
 	}
 
 	dataError(e: Error) {
-		console.error(e);
 		this.destroyChart();
 		this.ctx.font = '30px serif';
 		this.ctx.fillStyle = 'black';
