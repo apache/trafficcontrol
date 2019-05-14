@@ -17,7 +17,7 @@ import { ActivatedRoute } from '@angular/router';
 
 import { Subject } from 'rxjs';
 
-import { APIService } from '../../services';
+import { AlertService, APIService } from '../../services';
 import { DeliveryService } from '../../models/deliveryservice';
 import { DataPoint, DataSet } from '../../models/data';
 
@@ -45,7 +45,7 @@ export class DeliveryserviceComponent implements OnInit {
 
 	bucketSize = 300; // seconds
 
-	constructor(private readonly route: ActivatedRoute, private readonly api: APIService) {
+	constructor(private readonly route: ActivatedRoute, private readonly api: APIService, private readonly alerts: AlertService) {
 		this.midBandwidth = {label: "Mid-Tier", borderColor: "#3CBA9F", backgroundColor: "#3CBA9F", data: new Array<DataPoint>()} as DataSet;
 		this.edgeBandwidth = {label: "Edge-Tier", borderColor: "#BA3C57", backgroundColor: "#BA3C57", data: new Array<DataPoint>()} as DataSet;
 		this.bandwidthData = new Subject<Array<DataSet>>();
@@ -57,7 +57,7 @@ export class DeliveryserviceComponent implements OnInit {
 		this.to = new Date();
 		this.to.setUTCMilliseconds(0);
 		this.from = new Date(this.to.getFullYear(), this.to.getMonth(), this.to.getDate());
-		const dateStr = String(this.from.getFullYear()).padStart(4, '0').concat('-', String(this.from.getMonth()).padStart(2, '0').concat('-', String(this.from.getDate()).padStart(2, '0')));
+		const dateStr = String(this.from.getFullYear()).padStart(4, '0').concat('-', String(this.from.getMonth() + 1).padStart(2, '0').concat('-', String(this.from.getDate()).padStart(2, '0')));
 		this.fromDate = new FormControl(dateStr);
 		this.fromTime = new FormControl("00:00");
 		this.toDate = new FormControl(dateStr);
@@ -89,13 +89,15 @@ export class DeliveryserviceComponent implements OnInit {
 		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's').subscribe(
 			data => {
 				if (data === undefined || data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
-					console.warn("Edge-Tier bandwidth data not found!");
+					this.alerts.newAlert("warning", "Edge-Tier bandwidth data not found!");
 					return;
 				}
 
+				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
-					this.edgeBandwidth.data.push({t: new Date(v[0]), y: v[1]} as DataPoint);
+					va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
 				}
+				this.edgeBandwidth.data = va;
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
 			}
 		);
@@ -104,13 +106,15 @@ export class DeliveryserviceComponent implements OnInit {
 		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's', true).subscribe(
 			data => {
 				if (data === undefined || data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
-					console.warn("Mid-Tier bandwidth data not found!");
+					this.alerts.newAlert("warning", "Mid-Tier bandwidth data not found!");
 					return;
 				}
 
+				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
-					this.midBandwidth.data.push({t: new Date(v[0]), y: v[1]} as DataPoint);
+					va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
 				}
+				this.midBandwidth.data = va;
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
 			}
 		);
