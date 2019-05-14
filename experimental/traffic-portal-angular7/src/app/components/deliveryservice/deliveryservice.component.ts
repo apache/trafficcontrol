@@ -32,9 +32,13 @@ export class DeliveryserviceComponent implements OnInit {
 	loaded = new Map([['main', false], ['bandwidth', false]]);
 
 	bandwidthData: Subject<Array<DataSet>>;
+	TPSData: Subject<Array<DataSet>>;
 
-	midBandwidth: DataSet;
 	edgeBandwidth: DataSet;
+	midBandwidth: DataSet;
+
+	edgeTPSData: DataSet;
+	midTPSData: DataSet;
 
 	to: Date;
 	from: Date;
@@ -48,7 +52,10 @@ export class DeliveryserviceComponent implements OnInit {
 	constructor(private readonly route: ActivatedRoute, private readonly api: APIService, private readonly alerts: AlertService) {
 		this.midBandwidth = {label: "Mid-Tier", borderColor: "#3CBA9F", backgroundColor: "#3CBA9F", data: new Array<DataPoint>()} as DataSet;
 		this.edgeBandwidth = {label: "Edge-Tier", borderColor: "#BA3C57", backgroundColor: "#BA3C57", data: new Array<DataPoint>()} as DataSet;
+		this.edgeTPSData = {label: "Edge-Tier", borderColor: "#BA3C57", backgroundColor: "#BA3C57", data: new Array<DataPoint>()} as DataSet;
+		this.midTPSData = {label: "Mid-Tier", borderColor: "#3CBA9F", backgroundColor: "#3CBA9F", data: new Array<DataPoint>()} as DataSet;
 		this.bandwidthData = new Subject<Array<DataSet>>();
+		this.TPSData = new Subject<Array<DataSet>>();
 	}
 
 	ngOnInit() {
@@ -68,7 +75,8 @@ export class DeliveryserviceComponent implements OnInit {
 			(d: DeliveryService) => {
 				this.deliveryservice = d;
 				this.loaded['main'] = true;
-				this.loadGraph();
+				this.loadBandwidth();
+				this.loadTPS();
 			}
 		);
 	}
@@ -81,14 +89,15 @@ export class DeliveryserviceComponent implements OnInit {
 		this.to.setUTCMilliseconds(0);
 		this.from.setUTCMilliseconds(0);
 		this.bucketSize = 60;
-		this.loadGraph();
+		this.loadBandwidth();
+		this.loadTPS();
 	}
 
-	loadGraph() {
+	loadBandwidth() {
 		// Edge-tier data
 		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's').subscribe(
 			data => {
-				if (data === undefined || data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
+				if (data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
 					this.alerts.newAlert("warning", "Edge-Tier bandwidth data not found!");
 					return;
 				}
@@ -116,6 +125,41 @@ export class DeliveryserviceComponent implements OnInit {
 				}
 				this.midBandwidth.data = va;
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
+			}
+		);
+	}
+
+	loadTPS() {
+		// Edge-tier data
+		this.api.getDSTPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's').subscribe(
+			data => {
+				if (data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
+					this.alerts.newAlert("warning", "Edge-Tier transaction data not found!");
+					return;
+				}
+
+				const va = new Array<DataPoint>();
+				for (const v of data.series.values) {
+					va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
+				}
+				this.edgeTPSData.data = va;
+				this.TPSData.next([this.edgeTPSData, this.midTPSData]);
+			}
+		);
+
+		this.api.getDSTPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's').subscribe(
+			data => {
+				if (data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
+					this.alerts.newAlert("warning", "Mid-Tier transaction data not found!");
+					return;
+				}
+
+				const va = new Array<DataPoint>();
+				for (const v of data.series.values) {
+					va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
+				}
+				this.midTPSData.data = va;
+				this.TPSData.next([this.edgeTPSData, this.midTPSData]);
 			}
 		);
 	}
