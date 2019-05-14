@@ -30,51 +30,55 @@ To configure OAuth login:
 
 - Update :file:`/opt/traffic_portal/public/traffic_portal_properties.json` and ensure the following properties are set up correctly:
 
-        .. table:: OAuth Configuration Property Definitions In traffic_portal_properties.json
+	.. table:: OAuth Configuration Property Definitions In traffic_portal_properties.json
 
-                +------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
-                | Name                         | Type       | Description                                                                                                                               |
-                +==============================+============+===========================================================================================================================================+
-                | enabled                      | boolean    | Allow OAuth SSO login                                                                                                                     |
-                +------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
-                | oAuthUrl                     | string     | URL to your OAuth provider                                                                                                                |
-                +------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
-                | oAuthTokenQueryParam         | string     | Query parameter containing token from OAuth provider, defaults to `access_token` (returned in URL when redirected to ``/sso`` endpoint)   |
-                +------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
-                | redirectUriParameterOverride | string     | Query parameter override if the oAuth provider requires a different key for the redirect_uri parameter, defaults to ``redirect_uri``      |
-                +------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
-                | clientId                     | string     | Client id registered with OAuth provider, passed in with `client_id` parameter                                                            |
-                +------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+		| Name                         | Type       | Description                                                                                                                               |
+		+==============================+============+===========================================================================================================================================+
+		| enabled                      | boolean    | Allow OAuth SSO login                                                                                                                     |
+		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+		| oAuthUrl                     | string     | URL to your OAuth provider                                                                                                                |
+		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+		| oAuthTokenQueryParam         | string     | Query parameter containing token from OAuth provider, defaults to `access_token` (returned in URL when redirected to ``/sso`` endpoint)   |
+		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+		| redirectUriParameterOverride | string     | Query parameter override if the oAuth provider requires a different key for the redirect_uri parameter, defaults to ``redirect_uri``      |
+		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+		| clientId                     | string     | Client id registered with OAuth provider, passed in with `client_id` parameter                                                            |
+		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
 
 
-        .. code-block:: json
-                :caption: Example OAuth Configuration Properties In traffic_portal_properties.json
+	.. code-block:: json
+		:caption: Example OAuth Configuration Properties In traffic_portal_properties.json
 
-                "oAuth": {
-                        "enabled": true,
-                        "oAuthUrl": "example.oauth.com",
-                        "oAuthTokenQueryParam": "access_token",
-                        "redirectUriParameterOverride": "",
-                        "clientId": ""
-                }
+		{
+			"oAuth": {
+				"enabled": true,
+				"oAuthUrl": "example.oauth.com",
+				"oAuthTokenQueryParam": "access_token",
+				"redirectUriParameterOverride": "",
+				"clientId": ""
+			}
+		}
 
 - Update :file:`/opt/traffic_ops/app/conf/cdn.conf` property traffic_ops_golang.whitelisted_oauth_urls to contain all allowed domains for the JSON key set (Use ``*`` for wildcard):
 
-        .. table:: OAuth Configuration Property Definitions In cdn.conf
+	.. table:: OAuth Configuration Property Definitions In cdn.conf
 
-                +--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
-                | Name                     | Type               | Description                                                                                                     |
-                +==========================+====================+=================================================================================================================+
-                | whitelisted_oauth_urls   | Array of strings   | List of whitelisted URLs for the Json public key set returned by OAuth provider.  Can contain ``*`` wildcards.  |
-                +--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
+		+--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
+		| Name                     | Type               | Description                                                                                                     |
+		+==========================+====================+=================================================================================================================+
+		| whitelisted_oauth_urls   | Array of strings   | List of whitelisted URLs for the Json public key set returned by OAuth provider.  Can contain ``*`` wildcards.  |
+		+--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
 
 
-        .. code-block:: json
-                :caption: Example OAuth Configuration Properties In cdn.conf
+	.. code-block:: json
+		:caption: Example OAuth Configuration Properties In cdn.conf
 
-                "traffic_ops_golang": {
-                        "whitelisted_oauth_urls": [
-                                "example.oauth.com",
-                                "*.oauth.com"
-                        ]
-                }
+		{
+			"traffic_ops_golang": {
+				"whitelisted_oauth_urls": [
+					"example.oauth.com",
+					"*.oauth.com"
+				]
+			}
+		}
