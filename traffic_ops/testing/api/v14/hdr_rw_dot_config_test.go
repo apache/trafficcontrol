@@ -31,6 +31,7 @@ func TestHdrRwDotConfig(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		GetTestHdrRwDotConfig(t)
 		GetTestHdrRwMidDotConfig(t)
+		GetTestHdrRwDotConfigWithNewline(t)
 	})
 }
 
@@ -66,7 +67,27 @@ func getExpectedLines(rwRules string) int {
 	if rwRules == "" {
 		return 1 // for the header comment
 	}
-	return 2 + strings.Count(rwRules, "__RETURN__")
+	return 2 + strings.Count(rwRules, "__RETURN__") + strings.Count(rwRules, "\n")
+}
+
+func GetTestHdrRwDotConfigWithNewline(t *testing.T) {
+	ds := getFirstDnsOrHttpDeliveryService(t)
+	*ds.EdgeHeaderRewrite = "rw1\nrw2\nedge\nheader\nre-rewrite [L]"
+	_, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), ds)
+	if err != nil {
+		t.Errorf("couldn't update delivery servie: %v\n", err)
+	}
+
+	filename := fmt.Sprintf("%s_%s.config", EdgeHdrRwPrefix, *ds.XMLID)
+	config, _, _ := TOSession.GetATSCDNConfig(*ds.CDNID, filename)
+
+	expectedLines := getExpectedLines(*ds.EdgeHeaderRewrite)
+	count := strings.Count(config, "\n")
+	if expectedLines != count {
+		t.Errorf("expected %d lines in the config (actual = %d)\n", expectedLines, count)
+	} else {
+		log.Debugf("Tested %s sucessfully\n", filename)
+	}
 }
 
 func GetTestHdrRwDotConfig(t *testing.T) {
@@ -87,8 +108,6 @@ func GetTestHdrRwDotConfig(t *testing.T) {
 	} else {
 		log.Debugf("Tested %s sucessfully\n", filename)
 	}
-
-	fmt.Printf(config)
 }
 
 func GetTestHdrRwMidDotConfig(t *testing.T) {
@@ -109,7 +128,4 @@ func GetTestHdrRwMidDotConfig(t *testing.T) {
 	} else {
 		log.Debugf("Tested %s sucessfully\n", filename)
 	}
-
-	fmt.Printf(config)
-
 }
