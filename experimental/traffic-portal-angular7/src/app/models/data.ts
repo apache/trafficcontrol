@@ -22,4 +22,5 @@ export class DataSet {
 	data: Array<DataPoint>;
 	backgroundColor?: string;
 	borderColor?: string;
+	fill: boolean = false;
 }

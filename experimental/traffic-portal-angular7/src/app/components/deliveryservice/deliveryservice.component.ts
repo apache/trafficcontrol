@@ -50,10 +50,10 @@ export class DeliveryserviceComponent implements OnInit {
 	bucketSize = 300; // seconds
 
 	constructor(private readonly route: ActivatedRoute, private readonly api: APIService, private readonly alerts: AlertService) {
-		this.midBandwidth = {label: "Mid-Tier", borderColor: "#3CBA9F", backgroundColor: "#3CBA9F", data: new Array<DataPoint>()} as DataSet;
-		this.edgeBandwidth = {label: "Edge-Tier", borderColor: "#BA3C57", backgroundColor: "#BA3C57", data: new Array<DataPoint>()} as DataSet;
-		this.edgeTPSData = {label: "Edge-Tier", borderColor: "#BA3C57", backgroundColor: "#BA3C57", data: new Array<DataPoint>()} as DataSet;
-		this.midTPSData = {label: "Mid-Tier", borderColor: "#3CBA9F", backgroundColor: "#3CBA9F", data: new Array<DataPoint>()} as DataSet;
+		this.midBandwidth = {label: "Mid-Tier", borderColor: "#3CBA9F", fill: false, backgroundColor: "#3CBA9F", data: new Array<DataPoint>()} as DataSet;
+		this.edgeBandwidth = {label: "Edge-Tier", borderColor: "#BA3C57", fill: false, backgroundColor: "#BA3C57", data: new Array<DataPoint>()} as DataSet;
+		this.edgeTPSData = {label: "Edge-Tier", borderColor: "#BA3C57", fill: false, backgroundColor: "#BA3C57", data: new Array<DataPoint>()} as DataSet;
+		this.midTPSData = {label: "Mid-Tier", borderColor: "#3CBA9F", fill: false, backgroundColor: "#3CBA9F", data: new Array<DataPoint>()} as DataSet;
 		this.bandwidthData = new Subject<Array<DataSet>>();
 		this.TPSData = new Subject<Array<DataSet>>();
 	}
