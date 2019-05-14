@@ -210,7 +210,8 @@ func create(inf *api.APIInfo, ds tc.DeliveryServiceNullable) (tc.DeliveryService
 	}
 
 	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
-		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating query keys: " + err.Error())
+		usrErr, sysErr, code := api.ParseDBError(err)
+		return tc.DeliveryServiceNullable{}, code, usrErr, sysErr
 	} else {
 		api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("Created %d consistent hash query params for delivery service: %s", c, *ds.XMLID), user, tx)
 	}
@@ -512,7 +513,8 @@ func update(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (tc.DeliveryServic
 	}
 
 	if c, err := createConsistentHashQueryParams(tx, *ds.ID, ds.ConsistentHashQueryParams); err != nil {
-		return tc.DeliveryServiceNullable{}, http.StatusInternalServerError, nil, errors.New("creating query keys: " + err.Error())
+		usrErr, sysErr, code := api.ParseDBError(err)
+		return tc.DeliveryServiceNullable{}, code, usrErr, sysErr
 	} else {
 		api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("Created %d consistent hash query params for delivery service: %s", c, *ds.XMLID), user, tx)
 	}
