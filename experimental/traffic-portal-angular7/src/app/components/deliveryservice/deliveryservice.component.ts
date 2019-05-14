@@ -104,6 +104,9 @@ export class DeliveryserviceComponent implements OnInit {
 
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
+					if (v[1] === null) {
+						continue;
+					}
 					va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
 				}
 				this.edgeBandwidth.data = va;
@@ -121,6 +124,9 @@ export class DeliveryserviceComponent implements OnInit {
 
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
+					if (v[1] === null) {
+						continue;
+					}
 					va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
 				}
 				this.midBandwidth.data = va;
@@ -140,6 +146,9 @@ export class DeliveryserviceComponent implements OnInit {
 
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
+					if (v[1] === null) {
+						continue;
+					}
 					va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
 				}
 				this.edgeTPSData.data = va;
@@ -156,6 +165,9 @@ export class DeliveryserviceComponent implements OnInit {
 
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
+					if (v[1] === null) {
+						continue;
+					}
 					va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
 				}
 				this.midTPSData.data = va;

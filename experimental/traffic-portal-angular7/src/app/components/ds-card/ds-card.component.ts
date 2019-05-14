@@ -162,6 +162,9 @@ export class DsCardComponent {
 						return;
 					}
 					for (const d of data.series.values) {
+						if (d[1] === null) {
+							continue;
+						}
 						this.chart.data.labels.push(new Date(d[0]));
 						this.edgeBandwidth.push(d[1]);
 					}
@@ -194,6 +197,9 @@ export class DsCardComponent {
 						return;
 					}
 					for (const d of data.series.values) {
+						if (d[1] === null) {
+							continue;
+						}
 						this.midBandwidth.push(d[1]);
 					}
 					this.chart.data.datasets.push({
