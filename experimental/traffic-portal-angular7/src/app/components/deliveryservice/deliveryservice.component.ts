@@ -95,13 +95,8 @@ export class DeliveryserviceComponent implements OnInit {
 
 	loadBandwidth() {
 		// Edge-tier data
-		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's').subscribe(
+		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's', false).subscribe(
 			data => {
-				if (data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
-					this.alerts.newAlert("warning", "Edge-Tier bandwidth data not found!");
-					return;
-				}
-
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
 					if (v[1] === null) {
@@ -111,17 +106,16 @@ export class DeliveryserviceComponent implements OnInit {
 				}
 				this.edgeBandwidth.data = va;
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
+			},
+			(e: Error) => {
+				this.alerts.newAlert("warning", "Edge-Tier bandwidth data not found!");
+				console.debug(e);
 			}
 		);
 
 		// Mid-tier data
 		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's', true).subscribe(
 			data => {
-				if (data === undefined || data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
-					this.alerts.newAlert("warning", "Mid-Tier bandwidth data not found!");
-					return;
-				}
-
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
 					if (v[1] === null) {
@@ -131,6 +125,10 @@ export class DeliveryserviceComponent implements OnInit {
 				}
 				this.midBandwidth.data = va;
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
+			},
+			(e: Error) => {
+				this.alerts.newAlert("warning", "Mid-Tier bandwidth data not found!");
+				console.debug(e);
 			}
 		);
 	}

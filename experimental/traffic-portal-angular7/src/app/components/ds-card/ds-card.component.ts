@@ -115,39 +115,39 @@ export class DsCardComponent {
 	}
 
 	private loadChart(now: Date, today: Date) {
-		this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s').pipe(first()).subscribe(
-			data => {
-				if (data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
-					this.graphDataLoaded = true;
-					this.chartData.next([null, this.midBandwidthData])
-					return;
-				}
-				for (const d of data.series.values) {
-					if (d[1] === null) {
+		this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s', false, true).pipe(first()).subscribe(
+			(data: Array<DataPoint>) => {
+				for (const d of data) {
+					if (d.y === null) {
 						continue;
 					}
-					this.edgeBandwidthData.data.push({t: new Date(d[0]), y: d[1]} as DataPoint);
+					this.edgeBandwidthData.data.push(d);
 				}
 				this.chartData.next([this.edgeBandwidthData, this.midBandwidthData]);
 				this.graphDataLoaded = true;
+			},
+			(e: Error) => {
+				this.graphDataLoaded = true;
+				this.chartData.next([null, this.midBandwidthData]);
+				console.debug(e);
 			}
 		);
 
-		this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s', true).pipe(first()).subscribe(
-			data => {
-				if (data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
-					this.chartData.next([this.edgeBandwidthData, null])
-					this.graphDataLoaded = true;
-					return;
-				}
-				for (const d of data.series.values) {
-					if (d[1] === null) {
+		this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s', true, true).pipe(first()).subscribe(
+			(data: Array<DataPoint>) => {
+				for (const d of data) {
+					if (d.y === null) {
 						continue;
 					}
-					this.midBandwidthData.data.push({t: new Date(d[0]), y: d[1]} as DataPoint);
+					this.midBandwidthData.data.push(d);
 				}
 				this.chartData.next([this.edgeBandwidthData, this.midBandwidthData]);
 				this.graphDataLoaded = true;
+			},
+			(e: Error) => {
+				this.chartData.next([this.edgeBandwidthData, null])
+				this.graphDataLoaded = true;
+				console.debug(e);
 			}
 		);
 	}

@@ -17,6 +17,7 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, first, catchError } from 'rxjs/operators';
 
 import { CDN } from '../models/cdn';
+import { DataPoint } from '../models/data';
 import { DeliveryService } from '../models/deliveryservice';
 import { Type } from '../models/type';
 import { Role, User } from '../models/user';
@@ -184,13 +185,15 @@ export class APIService {
 	 * @param end A date/time at which to end data collection
 	 * @param interval A unit-suffixed interval over which data will be "binned"
 	 * @param useMids Collect data regarding Mid-tier cache servers rather than Edge-tier cache servers
+	 * @param dataOnly Only returns the data series, not any supplementing meta info found in the API response
 	 * @returns An Observable that will emit an Array of datapoint Arrays (length 2 containing a date string and data value)
 	*//* tslint:disable */
 	public getDSKBPS (d: string,
 	                  start: Date,
 	                  end: Date,
 	                  interval: string,
-	                  useMids?: boolean): Observable<any> {
+	                  useMids: boolean,
+	                  dataOnly?: boolean): Observable<any | Array<DataPoint>> {
 		/* tslint:enable */
 		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?metricType=kbps';
 		path += '&interval=' + interval;
@@ -201,6 +204,14 @@ export class APIService {
 		return this.get(path).pipe(map(
 			r => {
 				if (r && r.body && r.body.response) {
+					const resp = r.body.response;
+					if (dataOnly) {
+						if (resp.hasOwnProperty('series') && (resp.series.hasOwnProperty('values'))) {
+							return resp.series.values.map(d => ({t: new Date(d[0]), y: d[1]} as DataPoint)) as Array<DataPoint>;
+						}
+					} else {
+						throw new Error("No data series found! Path was '" + path + "'");
+					}
 					return r.body.response;
 				}
 				return null;
