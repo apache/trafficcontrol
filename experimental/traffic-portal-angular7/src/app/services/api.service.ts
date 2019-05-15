@@ -14,10 +14,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { map, first, catchError } from 'rxjs/operators';
+import { merge } from 'rxjs/index';
+import { map, mergeAll, first, catchError, reduce } from 'rxjs/operators';
 
 import { CDN } from '../models/cdn';
-import { DataPoint } from '../models/data';
+import { DataPoint, DataSet, DataSetWithSummary, TPSData } from '../models/data';
 import { DeliveryService } from '../models/deliveryservice';
 import { Type } from '../models/type';
 import { Role, User } from '../models/user';
@@ -207,10 +208,10 @@ export class APIService {
 					const resp = r.body.response;
 					if (dataOnly) {
 						if (resp.hasOwnProperty('series') && (resp.series.hasOwnProperty('values'))) {
-							return resp.series.values.map(d => ({t: new Date(d[0]), y: d[1]} as DataPoint)) as Array<DataPoint>;
+							return resp.series.values.map(d => ({t: new Date(d[0]), y: d[1].toFixed(3)} as DataPoint)) as Array<DataPoint>;
+						} else {
+							throw new Error("No data series found! Path was '" + path + "'");
 						}
-					} else {
-						throw new Error("No data series found! Path was '" + path + "'");
 					}
 					return r.body.response;
 				}
@@ -237,7 +238,117 @@ export class APIService {
 				}
 				return null;
 			}
-		))
+		));
+	}
+
+	public getAllDSTPSData (d: string,
+	                        start: Date,
+	                        end: Date,
+	                        interval: string,
+	                        useMids?: boolean): Observable<TPSData> {
+		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?';
+		path += 'interval=' + interval;
+		path += '&deliveryServiceName=' + d;
+		path += '&startDate=' + start.toISOString();
+		path += '&endDate=' + end.toISOString();
+		path += '&serverType=' + (useMids ? 'mid' : 'edge');
+		path += '&metricType=';
+		const paths = [
+			path + 'tps_total',
+			path + 'tps_2xx',
+			path + 'tps_3xx',
+			path + 'tps_4xx',
+			path + 'tps_5xx',
+		];
+
+		const observables = paths.map(x => this.get(x).pipe(map(r => this.constructDataSetFromResponse(r.body.response))));
+
+		const tasks = merge(observables).pipe(mergeAll());
+		return tasks.pipe(reduce(
+			(output: TPSData, result: DataSetWithSummary): TPSData => {
+				switch (result.dataSet.label) {
+					case 'tps_total':
+						output.total = result;
+						break;
+					case 'tps_1xx':
+						output.informational = result;
+						break;
+					case 'tps_2xx':
+						output.success = result;
+						break;
+					case 'tps_3xx':
+						output.redirection = result;
+						break;
+					case 'tps_4xx':
+						output.clientError = result;
+						break;
+					case 'tps_5xx':
+						output.serverError = result;
+						break;
+					default:
+						console.debug(result);
+						throw new Error("Unknown data set type: '" + result.dataSet.label +"'");
+				}
+				return output;
+			},
+			{
+				total: null,
+				informational: null,
+				success: null,
+				redirection: null,
+				clientError: null,
+				serverError: null
+			} as TPSData
+		)) as Observable<TPSData>;
+	}
+
+	private constructDataSetFromResponse(r: any): DataSetWithSummary {
+		if (!r.series || !r.series.name) {
+			console.debug(r);
+			throw new Error("No series data for response!");
+		}
+
+		const data = new Array<DataPoint>();
+		if (r.series.values !== null && r.series.values !== undefined) {
+			for (const v of r.series.values) {
+				if (v[1] === null) {
+					continue;
+				}
+				data.push({t: new Date(v[0]), y: v[1].toFixed(3)} as DataPoint);
+			}
+		}
+
+		let min: number;
+		let max: number;
+		let fifth: number;
+		let nfifth: number;
+		let neight: number;
+		let mean: number;
+		if (r.summary) {
+			min = r.summary.min;
+			max = r.summary.max;
+			fifth = r.summary.fifthPercentile;
+			nfifth = r.summary.ninetyFifthPercentile;
+			neight = r.summary.ninetyEightPercentile;
+			mean = r.summary.mean;
+		} else {
+			min = null;
+			max = null;
+			fifth = null;
+			nfifth = null;
+			neight = null;
+			mean = null;
+		}
+
+		return {
+			dataSet: {label: r.series.name.split('.')[0], data: data} as DataSet,
+			min: min,
+			max: max,
+			fifthPercentile: fifth,
+			ninetyFifthPercentile: nfifth,
+			ninetyEighthPercentile: neight,
+			mean: mean
+		} as DataSetWithSummary;
 	}
 
 	/**

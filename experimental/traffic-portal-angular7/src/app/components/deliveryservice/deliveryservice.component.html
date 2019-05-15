@@ -20,7 +20,9 @@ limitations under the License.
 		<button>Refresh</button>
 	</form>
 	<hr/>
-	<canvas linechart chartTitle="Bandwidth of Cache Tiers" [chartDataSets]="bandwidthData" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLaxel="Date/Time" [chartDisplayLegend]="true" chartType="time"></canvas>
+	<canvas linechart chartTitle="Bandwidth of Cache Tiers" [chartDataSets]="bandwidthData" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time"></canvas>
 	<hr/>
-	<canvas linechart chartTitle="Transactions of Cache Tiers" [chartDataSets]="TPSData" chartYAxisLabel="Transactions Per Second" chartXAxisLaxel="Date/Time" [chartDisplayLegend]="true" chartType="time"></canvas>
+<!-- 	<canvas linechart chartTitle="Transactions of Cache Tiers" [chartDataSets]="TPSData" chartYAxisLabel="Transactions Per Second" chartXAxisLaxel="Date/Time" [chartDisplayLegend]="true" chartType="time"></canvas>
+ -->
+ <canvas linechart chartTitle="Transactions of Cache Tiers" [chartDataSets]="TPSChartData" chartYAxisLabel="Transactions Per Second" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time"></canvas>
 </main>

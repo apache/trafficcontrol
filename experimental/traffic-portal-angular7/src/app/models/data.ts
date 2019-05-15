@@ -22,6 +22,33 @@ export class DataSet {
 	data: Array<DataPoint>;
 	backgroundColor?: string;
 	borderColor?: string;
+	borderDash?: number[];
 	fill: boolean = false;
 	fillColor?: string;
+}
+
+export class DataSetWithSummary {
+	dataSet: DataSet;
+	min: number;
+	max: number;
+	fifthPercentile: number;
+	ninetyFifthPercentile: number;
+	ninetyEighthPercentile: number;
+	mean: number;
+
+	public get average(): number {
+		return this.mean;
+	}
+	public set average(a: number) {
+		this.mean = a;
+	}
+}
+
+export class TPSData {
+	total: DataSetWithSummary;
+	informational?: DataSetWithSummary;
+	success: DataSetWithSummary;
+	redirection: DataSetWithSummary;
+	clientError: DataSetWithSummary;
+	serverError: DataSetWithSummary;
 }

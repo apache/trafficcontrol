@@ -87,6 +87,10 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 				legend: {
 					display: true
 				},
+				tooltips: {
+					intersect: false,
+					mode: 'x'
+				},
 				title: {
 					display: this.chartTitle ? true : false,
 					text: this.chartTitle
@@ -136,6 +140,8 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 			this.noData();
 			return;
 		}
+
+		console.log("DataSets: ", data);
 
 		this.opts.data.datasets = data;
 
