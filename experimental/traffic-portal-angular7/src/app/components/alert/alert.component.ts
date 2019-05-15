@@ -30,7 +30,6 @@ export class AlertComponent implements OnInit {
 
 	ngOnInit () {
 		if (!isPlatformBrowser(this.PLATFORM)) {
-			console.log("Initializing 'Alert' component");
 			return;
 		}
 		this.dialogElement = document.getElementById('alert') as HTMLDialogElement;
