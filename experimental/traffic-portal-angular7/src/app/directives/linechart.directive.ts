@@ -141,8 +141,6 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 			return;
 		}
 
-		console.log("DataSets: ", data);
-
 		this.opts.data.datasets = data;
 
 		this.chart = new Chart(this.ctx, this.opts);
