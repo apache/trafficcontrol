@@ -20,9 +20,10 @@ import (
 )
 
 const API_V13_SERVERCHECK = "/api/1.3/servercheck"
+const API_V13_SERVERCHECK_GET = "/api/1.3/servers/checks"
 
 // Update a Server Check Status
-func (to *Session) UpdateCheckStatus(status tc.ServercheckNullable) (*tc.ServercheckPostResponse, ReqInf, error) {
+func (to *Session) UpdateCheckStatus(status tc.ServercheckPostNullable) (*tc.ServercheckPostResponse, ReqInf, error) {
 	uri := API_V13_SERVERCHECK
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -32,6 +33,19 @@ func (to *Session) UpdateCheckStatus(status tc.ServercheckNullable) (*tc.Serverc
 	}
 	resp := tc.ServercheckPostResponse{}
 	reqInf, err = post(to, uri, jsonReq, &resp)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	return &resp, reqInf, nil
+}
+
+// Get Server Check Data
+func (to *Session) GetCheckData() (*tc.ServerchecksResponse, ReqInf, error) {
+	uri := API_V13_SERVERCHECK_GET
+	var remoteAddr net.Addr
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	resp := tc.ServerchecksResponse{}
+	reqInf, err := get(to, uri, &resp)
 	if err != nil {
 		return nil, reqInf, err
 	}

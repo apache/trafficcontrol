@@ -20,19 +20,98 @@ package tc
  */
 
 // Health monitor checks for servers
-// A Single Status Response for Update and Create to depict what changed
-// swagger:response StatusResponse
+// A Single Servercheck Response for Update and Create to depict what changed
+// swagger:response ServercheckResponse
 // in: body
 type ServercheckResponse struct {
 	// in: body
-	Response Status `json:"response"`
+	Response Servercheck `json:"response"`
 }
 
-// A Single Statuses Response for Update and Create to depict what changed
-// swagger:model Statuses
+// A list of Servercheck Responses
+// swagger:response ServerchecksResponse
+// in: body
+type ServerchecksResponse struct {
+	// in: body
+	Response []Servercheck `json:"response"`
+}
+
+// A Single Servercheck struct for GET response
+// swagger:model Servercheck
 type Servercheck struct {
 
-	// The Statuses to retrieve
+	// The Servercheck response data
+	//
+	// Admin state of the checked server
+	AdminState string `json:"adminState"`
+
+	// Cache group the checked server belongs to
+	CacheGroup string `json:"cacheGroup"`
+
+	// ID number of the checked server
+	ID int `json:"id"`
+
+	// Hostname of the checked server
+	HostName string `json:"hostName"`
+
+	// Reval pending flag for checked server
+	RevalPending bool `json:"revalPending"`
+
+	// Profile name of checked server
+	Profile string `json:"profile"`
+
+	// Traffic Control type of the checked server
+	Type string `json:"type"`
+
+	// Update pending flag for the checked server
+	UpdPending bool `json:"updPending"`
+
+	// Various check types
+	Checks struct {
+
+		// IPv4 production interface (legacy name)
+		Iface10G int `json:"10G"`
+
+		// IPv6 production interface (legacy name)
+		Iface10G6 int `json:"10G6"`
+
+		// Cache Disk Usage
+		CDU int `json:"CDU"`
+
+		// Cache Hit Ratio
+		CHR int `json:"CHR"`
+
+		// DSCP check
+		DSCP int `json:"DSCP"`
+
+		// DNS check
+		FQDN int `json:"FQDN"`
+
+		// Out-of-band (BMC) interface check
+		ILO int `json:"ILO"`
+
+		// IPv4 production interface (new name)
+		IPv4 int `json:"IPv4"`
+
+		// IPv6 production interface (new name)
+		IPv6 int `json:"IPv6"`
+
+		// MTU check
+		MTU int `json:"MTU"`
+
+		// ORT check
+		ORT int `json:"ORT"`
+
+		// Traffic Router status for checked server
+		RTR int `json:"RTR"`
+	} `json:"checks"`
+}
+
+// A Single Servercheck struct for Update and Create to depict what changed
+// swagger:model ServercheckPost
+type ServercheckPost struct {
+
+	// The Servercheck data to submit
 	//
 	// Name of the server check type
 	//
@@ -53,7 +132,7 @@ type Servercheck struct {
 	Value int `json:"value" db:"value"`
 }
 
-type ServercheckNullable struct {
+type ServercheckPostNullable struct {
 	Name  string `json:"servercheck_short_name" db:"servercheck_short_name"`
 	ID    int    `json:"id" db:"id"`
 	Value int    `json:"value" db:"value"`
