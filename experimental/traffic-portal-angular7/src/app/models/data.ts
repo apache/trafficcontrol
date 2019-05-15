@@ -23,4 +23,5 @@ export class DataSet {
 	backgroundColor?: string;
 	borderColor?: string;
 	fill: boolean = false;
+	fillColor?: string;
 }

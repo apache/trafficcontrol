@@ -11,14 +11,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input, ElementRef } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
+import { Subject } from 'rxjs';
 import { first } from 'rxjs/operators';
-
-import { Chart } from 'chart.js';
 
 import { APIService } from '../../services';
 import { DeliveryService, Protocol } from '../../models/deliveryservice';
+import { DataPoint, DataSet } from '../../models/data';
 
 @Component({
 	selector: 'ds-card',
@@ -38,72 +38,40 @@ export class DsCardComponent {
 	healthy: number;
 
 	// Bandwidth data
-	chart: Chart;
-	midBandwidth: Array<number>;
-	edgeBandwidth: Array<number>;
-	labels: Array<Date>;
+	chartData: Subject<Array<DataSet>>;
+	midBandwidthData: DataSet;
+	edgeBandwidthData: DataSet;
 
 	// Need this to access merged namespace for string conversions
 	Protocol = Protocol;
 
-	chartOptions: any;
-
 	private loaded: boolean;
 	public graphDataLoaded: boolean;
 
-	constructor (private readonly api: APIService, private readonly elementRef: ElementRef) {
+	constructor (private readonly api: APIService) {
 		this.available = 100;
 		this.maintenance = 0;
 		this.utilized = 0;
 		this.loaded = false;
-		this.edgeBandwidth = new Array<number>();
-		this.midBandwidth = new Array<number>();
-		this.labels = new Array<Date>();
-		this.graphDataLoaded = false;
-		this.chartOptions = {
-			type: 'line',
-			data: {
-				labels: [],
-				datasets: []
-			},
-			options: {
-				legend: {
-					display: false
-				},
-				title: {
-					display: true,
-					text: "Today's Bandwidth"
-				},
-				scales: {
-					xAxes: [{
-						display: true,
-						type: 'time',
-						callback: (v, unused_i, unused_values) => {
-							return v.toLocaleTimeString();
-						}
-					}],
-					yAxes: [{
-						display: true,
-						ticks: {
-							suggestedMin: 0
-						}
-					}]
-				}
-			}
-		};
-	}
+		this.chartData = new Subject<Array<DataSet>>();
 
-	/**
-	 * Handles the destruction of a chart and all of its constituent data. Does nothing if
-	 * `this.chart` is `null` or `undefined`.
-	*/
-	private destroyChart () {
-		if (this.chart) {
-			this.chart.destroy();
-			this.chart = null;
-			this.graphDataLoaded = false;
-			this.chartOptions.data = {datasets: [], labels: []};
-		}
+		this.edgeBandwidthData = {
+			label: 'Edge-tier Bandwidth',
+			data: new Array<DataPoint>(),
+			borderColor: '#3CBA9F',
+			fill: true,
+			fillColor: '#3CBA9F'
+		} as DataSet;
+
+		this.midBandwidthData = {
+			label: 'Mid-tier Bandwidth',
+			data: new Array<DataPoint>(),
+			borderColor: '#BA3C57',
+			fill: true,
+			fillColor: '#BA3C57'
+		} as DataSet;
+
+		this.graphDataLoaded = false;
 	}
 
 	/**
@@ -140,82 +108,47 @@ export class DsCardComponent {
 				);
 			}
 			const now = new Date();
-			now.setUTCMilliseconds(0); // apparently `const` doesn't care about this
+			now.setUTCMilliseconds(0);
 			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-			const canvas = document.getElementById('canvas-' + String(this.deliveryService.id)) as HTMLCanvasElement;
-			this.chart = new Chart(canvas, this.chartOptions);
-
-			this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s').pipe(first()).subscribe(
-				data => {
-					if (this.chart === null) {
-						return;
-					}
-					if (data === undefined || data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
-						this.destroyChart();
-
-						const ctx = canvas.getContext('2d');
-						ctx.font = '30px serif';
-						ctx.fillStyle = 'black';
-						ctx.textAlign = 'center';
-						ctx.fillText('No Data', canvas.width / 2., canvas.height / 2.);
-						this.graphDataLoaded = true;
-						return;
-					}
-					for (const d of data.series.values) {
-						if (d[1] === null) {
-							continue;
-						}
-						this.chart.data.labels.push(new Date(d[0]));
-						this.edgeBandwidth.push(d[1]);
-					}
-					this.chart.data.datasets.push({
-						label: 'Edge-tier Bandwidth',
-						data: this.edgeBandwidth,
-						borderColor: '#3CBA9F',
-						fill: true,
-						fillColor: '#3CBA9F'
-					});
-					this.graphDataLoaded = true;
-					this.chart.update();
-				}
-			);
-
-			this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s', true).pipe(first()).subscribe(
-				data => {
-					if (this.chart === null) {
-						return;
-					}
-					if (data === undefined || data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
-						this.destroyChart();
-
-						const ctx = canvas.getContext('2d');
-						ctx.font = '30px serif';
-						ctx.fillStyle = 'black';
-						ctx.textAlign = 'center';
-						ctx.fillText('No Data', canvas.width / 2., canvas.height / 2.);
-						this.graphDataLoaded = true;
-						return;
-					}
-					for (const d of data.series.values) {
-						if (d[1] === null) {
-							continue;
-						}
-						this.midBandwidth.push(d[1]);
-					}
-					this.chart.data.datasets.push({
-						label: 'Mid-tier Bandwidth',
-						data: this.midBandwidth,
-						borderColor: '#BA3C57',
-						fill: true,
-						fillColor: '#BA3C57'
-					});
-					this.graphDataLoaded = true;
-					this.chart.update();
-				}
-			);
-		} else if (this.chart) {
-			this.destroyChart();
+			this.loadChart(now, today);
 		}
 	}
 
+	private loadChart(now: Date, today: Date) {
+		this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s').pipe(first()).subscribe(
+			data => {
+				if (data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
+					this.graphDataLoaded = true;
+					this.chartData.next([null, this.midBandwidthData])
+					return;
+				}
+				for (const d of data.series.values) {
+					if (d[1] === null) {
+						continue;
+					}
+					this.edgeBandwidthData.data.push({t: new Date(d[0]), y: d[1]} as DataPoint);
+				}
+				this.chartData.next([this.edgeBandwidthData, this.midBandwidthData]);
+				this.graphDataLoaded = true;
+			}
+		);
+
+		this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s', true).pipe(first()).subscribe(
+			data => {
+				if (data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
+					this.chartData.next([this.edgeBandwidthData, null])
+					this.graphDataLoaded = true;
+					return;
+				}
+				for (const d of data.series.values) {
+					if (d[1] === null) {
+						continue;
+					}
+					this.midBandwidthData.data.push({t: new Date(d[0]), y: d[1]} as DataPoint);
+				}
+				this.chartData.next([this.edgeBandwidthData, this.midBandwidthData]);
+				this.graphDataLoaded = true;
+			}
+		);
+	}
 }

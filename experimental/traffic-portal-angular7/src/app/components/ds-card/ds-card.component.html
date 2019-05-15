@@ -42,7 +42,7 @@ limitations under the License.
 		</div>
 		<div>
 			<div class="canvas-container" [ngClass]="{'graph-loading': !graphDataLoaded}">
-				<canvas id="canvas-{{deliveryService.id}}">{{ chart }}</canvas>
+				<canvas linechart chartTitle="Today's Bandwidth" [chartDataSets]="chartData" chartYAxisLabel="Bandwidth (Kilobytes per second)" [chartDisplayLegend]="true" chartType="time"></canvas>
 				<div class="loading" *ngIf="!graphDataLoaded"><loading></loading></div>
 			</div>
 			<fieldset>
