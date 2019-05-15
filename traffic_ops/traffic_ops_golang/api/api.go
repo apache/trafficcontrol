@@ -490,6 +490,16 @@ func parseNotNullConstraint(err *pq.Error) (error, error, int) {
 	return fmt.Errorf("%s is a required field", toCamelCase(match[1])), nil, http.StatusBadRequest
 }
 
+// parses pq errors for empty string check constraint
+func parseEmptyConstraint(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`new row for relation "[^"]*" violates check constraint "(.*)_empty"`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s cannot be ", match[1]), nil, http.StatusBadRequest
+}
+
 // parses pq errors for violated foreign key constraints
 func parseNotPresentFKConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`Key \(.+\)=\(.+\) is not present in table "(.+)"`)
@@ -552,10 +562,6 @@ func ParseDBError(ierr error) (error, error, int) {
 		return nil, ierr, http.StatusInternalServerError
 	}
 
-	if usrErr, sysErr, errCode := parseNotNullConstraint(err); errCode != http.StatusOK {
-		return usrErr, sysErr, errCode
-	}
-
 	if usrErr, sysErr, errCode := parseNotPresentFKConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
@@ -565,6 +571,14 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	if usrErr, sysErr, errCode := parseRestrictFKConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseNotNullConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseEmptyConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 

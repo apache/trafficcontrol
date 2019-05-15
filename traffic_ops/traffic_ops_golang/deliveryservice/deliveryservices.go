@@ -319,9 +319,10 @@ func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryPa
 		return 0, nil
 	}
 	c := 0
+	q := `INSERT INTO deliveryservice_consistent_hash_query_param (name, deliveryservice_id) VALUES ($1, $2)`
 	for _, k := range consistentHashQueryParams {
-		if _, err := tx.Exec(`INSERT INTO deliveryservice_consistent_hash_query_param (name, deliveryservice_id) VALUES ($1, $2)`, k, dsID); err != nil {
-			return c, errors.New("insert deliveryservice_consistent_hash_query_param: " + err.Error())
+		if _, err := tx.Exec(q, k, dsID); err != nil {
+			return c, err
 		}
 		c++
 	}
@@ -370,8 +371,7 @@ func update(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (tc.DeliveryServic
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	resultRows,
-		err := tx.Query(updateDSQuery(),
+	resultRows, err := tx.Query(updateDSQuery(),
 		&ds.Active,
 		&ds.CacheURL,
 		&ds.CCRDNSTTL,
