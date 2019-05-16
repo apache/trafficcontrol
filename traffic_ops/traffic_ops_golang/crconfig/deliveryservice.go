@@ -97,9 +97,7 @@ SELECT d.anonymous_blocking_enabled,
        d.consistent_hash_regex,
 	   (SELECT ARRAY_AGG(name)
 			  FROM deliveryservice_consistent_hash_query_param
-			  WHERE deliveryservice_id = d.id
-			  GROUP BY name
-			  ORDER BY name) AS query_keys,
+			  WHERE deliveryservice_id = d.id) AS query_keys,
        d.deep_caching_type,
        d.dns_bypass_cname,
        d.dns_bypass_ip,
