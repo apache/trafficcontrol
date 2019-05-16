@@ -42,9 +42,6 @@ require('ui-bootstrap-tpls');
 // angular bootstrap context menu
 require('contextMenu');
 
-// restangular
-require('restangular');
-
 // jquery
 require('jquery');
 
