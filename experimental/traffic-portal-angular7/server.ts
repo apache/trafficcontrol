@@ -249,17 +249,27 @@ app.use('/api/**', (req, res) => {
 		headers: req.headers
 	};
 
-
-	const proxiedRequest = request(fwdRequest, (r) => {
-		res.writeHead(r.statusCode, r.headers);
-		r.pipe(res);
-	});
-	req.pipe(proxiedRequest);
+	try {
+		const proxiedRequest = request(fwdRequest, (r) => {
+			res.writeHead(r.statusCode, r.headers);
+			r.pipe(res);
+		});
+		req.pipe(proxiedRequest);
+	} catch (e) {
+		console.error(e);
+		res.end();
+		req.end();
+	}
 });
 
 // Default route shows the dash
 app.get('*', (req, res) => {
-	res.render('index', { req });
+	try {
+		res.render('index', { req });
+	} catch (e) {
+		console.error(e);
+		res.end();
+	}
 });
 
 app.enable('trust proxy');
