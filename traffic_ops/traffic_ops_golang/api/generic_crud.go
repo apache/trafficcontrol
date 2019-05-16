@@ -85,10 +85,7 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 	val.SetKeys(map[string]interface{}{"id": id})
 	val.SetLastUpdated(lastUpdated)
 
-	// I should maybe just get rid of the GenericReader?
-	if r, ok := val.(GenericReader); ok {
-		return GenericReadBack(r)
-	} else if r, ok := val.(Reader); ok {
+	if r, ok := val.(Reader); ok {
 		return ReadBack(r)
 	}
 
@@ -110,37 +107,6 @@ func ReadBack(val Reader) (error, error, int) {
 		return nil, errors.New("bad result in reading back a POST"), http.StatusInternalServerError
 	}
 	ConvertFrom(&val, results[0])
-
-	return nil, nil, http.StatusOK
-}
-
-func GenericReadBack(val GenericReader) (error, error, int) {
-
-	i := val.(Identifier)
-	keys, _ := i.GetKeys()
-	params := val.APIInfo().Params
-	params["id"] = strconv.Itoa(keys["id"].(int))
-
-	where, orderby, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, val.ParamColumns())
-	if len(errs) > 0 {
-		return util.JoinErrs(errs), nil, http.StatusBadRequest
-	}
-
-	query := val.SelectQuery() + where + orderby
-	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		return nil, err, http.StatusInternalServerError
-	}
-
-	if rows.Next() {
-		rows.StructScan(val)
-	} else {
-		return nil, errors.New("no rows returned back"), http.StatusInternalServerError
-	}
-
-	if rows.Next() {
-		return nil, errors.New("no rows returned back"), http.StatusInternalServerError
-	}
 
 	return nil, nil, http.StatusOK
 }
@@ -189,21 +155,8 @@ func GenericUpdate(val GenericUpdater) (error, error, int) {
 		return nil, errors.New(val.GetType() + " update affected too many rows: >1"), http.StatusInternalServerError
 	}
 
-	if r, ok := val.(GenericReader); ok {
-		return GenericReadBack(r)
-	} else if r, ok := val.(Reader); ok {
+	if r, ok := val.(Reader); ok {
 		return ReadBack(r)
-
-		/*
-			results, usrErr, sysErr, errCode := r.Read()
-			if usrErr != nil || sysErr != nil {
-				return usrErr, sysErr, errCode
-			}
-			if len(results) == 0 {
-				return nil, errors.New("no result in reading back a POST"), http.StatusInternalServerError
-			}
-			ConvertFrom(&val, results[0])
-		*/
 	}
 
 	return nil, nil, http.StatusOK
