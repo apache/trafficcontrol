@@ -134,43 +134,19 @@ export class DeliveryserviceComponent implements OnInit {
 	}
 
 	loadTPS() {
-		// Edge-tier data
-		// this.api.getDSTPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's').subscribe(
-		// 	data => {
-		// 		if (data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
-		// 			this.alerts.newAlert("warning", "Edge-Tier transaction data not found!");
-		// 			return;
-		// 		}
-
-		// 		const va = new Array<DataPoint>();
-		// 		for (const v of data.series.values) {
-		// 			if (v[1] === null) {
-		// 				continue;
-		// 			}
-		// 			va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
-		// 		}
-		// 		this.edgeTPSData.data = va;
-		// 		this.TPSChartData.next([this.edgeTPSData, this.midTPSData]);
-		// 	}
-		// );
 
 		this.api.getAllDSTPSData(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's', false).subscribe(
 			(data: TPSData) => {
-				data.total.dataSet.label = "Total (edge-tier)";
+				data.total.dataSet.label = "Total";
 				data.total.dataSet.borderColor = "#3C96BA";
-				data.total.dataSet.borderDash = [5,15];
-				data.success.dataSet.label = "Successful Responses (edge-tier)";
+				data.success.dataSet.label = "Successful Responses";
 				data.success.dataSet.borderColor = "#3CBA5F";
-				data.success.dataSet.borderDash = [5, 15];
-				data.redirection.dataSet.label = "Redirection Responses (edge-tier)";
+				data.redirection.dataSet.label = "Redirection Responses";
 				data.redirection.dataSet.borderColor = "#9f3CBA";
-				data.redirection.dataSet.borderDash = [5, 15];
-				data.clientError.dataSet.label = "Client Error Responses (edge-tier)";
+				data.clientError.dataSet.label = "Client Error Responses";
 				data.clientError.dataSet.borderColor = "#BA9E3B";
-				data.clientError.dataSet.borderDash = [5, 15];
-				data.serverError.dataSet.label = "Server Error Responses (edge-tier)";
+				data.serverError.dataSet.label = "Server Error Responses";
 				data.serverError.dataSet.borderColor = "#BA3C57";
-				data.serverError.dataSet.borderDash = [5, 15];
 
 				this.TPSChartData.next([
 					data.total.dataSet,
@@ -185,25 +161,6 @@ export class DeliveryserviceComponent implements OnInit {
 				this.alerts.newAlert("warning", "Edge-Tier transaction data not found!");
 			}
 		);
-
-		// this.api.getDSTPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's').subscribe(
-		// 	data => {
-		// 		if (data === null || data.series === undefined || data.series === null || data.series.values === undefined || data.series.values === null) {
-		// 			this.alerts.newAlert("warning", "Mid-Tier transaction data not found!");
-		// 			return;
-		// 		}
-
-		// 		const va = new Array<DataPoint>();
-		// 		for (const v of data.series.values) {
-		// 			if (v[1] === null) {
-		// 				continue;
-		// 			}
-		// 			va.push({t: new Date(v[0]), y: v[1]} as DataPoint);
-		// 		}
-		// 		this.midTPSData.data = va;
-		// 		this.TPSChartData.next([this.edgeTPSData, this.midTPSData]);
-		// 	}
-		// );
 	}
 
 }

@@ -20,10 +20,11 @@ export class DataPoint {
 export class DataSet {
 	label: string;
 	data: Array<DataPoint>;
-	backgroundColor?: string;
-	borderColor?: string;
+	backgroundColor?: string | Array<string>;
+	borderColor?: string | Array<string>;
 	borderDash?: number[];
-	fill: boolean = false;
+	borderWidth?: number;
+	fill?: boolean;
 	fillColor?: string;
 }
 
