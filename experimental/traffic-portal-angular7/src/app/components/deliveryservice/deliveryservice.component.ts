@@ -88,14 +88,23 @@ export class DeliveryserviceComponent implements OnInit {
 		// I need to set these explicitly, just in case - the API can't handle millisecond precision
 		this.to.setUTCMilliseconds(0);
 		this.from.setUTCMilliseconds(0);
-		this.bucketSize = 60;
+
+		// This should set it to the number of seconds needed to bucket 500 datapoints
+		this.bucketSize = (this.to.getTime() - this.from.getTime()) / 500000;
 		this.loadBandwidth();
 		this.loadTPS();
 	}
 
 	loadBandwidth() {
+		let interval: string;
+		if (this.bucketSize < 1) {
+			interval = String(Math.round(this.bucketSize * 1000)) + 'ms';
+		} else {
+			interval = String(Math.round(this.bucketSize)) + 's';
+		}
+
 		// Edge-tier data
-		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's', false).subscribe(
+		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, interval, false).subscribe(
 			data => {
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
@@ -114,7 +123,7 @@ export class DeliveryserviceComponent implements OnInit {
 		);
 
 		// Mid-tier data
-		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's', true).subscribe(
+		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, interval, true).subscribe(
 			data => {
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
@@ -134,8 +143,14 @@ export class DeliveryserviceComponent implements OnInit {
 	}
 
 	loadTPS() {
+		let interval: string;
+		if (this.bucketSize < 1) {
+			interval = String(Math.round(this.bucketSize * 1000)) + 'ms';
+		} else {
+			interval = String(Math.round(this.bucketSize)) + 's';
+		}
 
-		this.api.getAllDSTPSData(this.deliveryservice.xmlId, this.from, this.to, String(this.bucketSize) + 's', false).subscribe(
+		this.api.getAllDSTPSData(this.deliveryservice.xmlId, this.from, this.to, interval, false).subscribe(
 			(data: TPSData) => {
 				data.total.dataSet.label = "Total";
 				data.total.dataSet.borderColor = "#3C96BA";
