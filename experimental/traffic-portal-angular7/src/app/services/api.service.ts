@@ -208,7 +208,7 @@ export class APIService {
 					const resp = r.body.response;
 					if (dataOnly) {
 						if (resp.hasOwnProperty('series') && (resp.series.hasOwnProperty('values'))) {
-							return resp.series.values.map(d => ({t: new Date(d[0]), y: d[1].toFixed(3)} as DataPoint)) as Array<DataPoint>;
+							return resp.series.values.filter(d => d[1] !== null).map(d => ({t: new Date(d[0]), y: d[1].toFixed(3)} as DataPoint)) as Array<DataPoint>;
 						} else {
 							throw new Error("No data series found! Path was '" + path + "'");
 						}
