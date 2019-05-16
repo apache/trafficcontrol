@@ -547,14 +547,18 @@ public class TrafficRouter {
 		for (final SteeringResult steeringResult : steeringResults) {
 			final DeliveryService ds = steeringResult.getDeliveryService();
 
-			final List<Cache> caches = selectCaches(request, ds, track);
+			List<Cache> caches = selectCaches(request, ds, track);
 
 			// child Delivery Services can use their query parameters
 			final String pathToHash = steeringHash + ds.extractSignificantQueryParams(request);
 
 			if (caches != null && !caches.isEmpty()) {
-				if (isClientSteeringDiversityEnabled() && caches.size() > selectedCaches.size()) {
-					caches.removeAll(selectedCaches);
+				if (isClientSteeringDiversityEnabled()) {
+				    final List<Cache> tryCaches = new ArrayList<>(caches);
+				    tryCaches.removeAll(selectedCaches);
+				    if (!tryCaches.isEmpty()) {
+						caches = tryCaches;
+					}
 				}
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
 				steeringResult.setCache(cache);
