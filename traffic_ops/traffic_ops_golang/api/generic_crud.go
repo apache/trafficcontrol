@@ -165,6 +165,11 @@ func GenericUpdate(val GenericUpdater) (error, error, int) {
 	if rows.Next() {
 		return nil, errors.New(val.GetType() + " update affected too many rows: >1"), http.StatusInternalServerError
 	}
+
+	if r, ok := val.(GenericReader); ok {
+		return ReadBack(r)
+	}
+
 	return nil, nil, http.StatusOK
 }
 
