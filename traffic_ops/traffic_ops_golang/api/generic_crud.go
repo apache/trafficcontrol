@@ -85,13 +85,36 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 	val.SetKeys(map[string]interface{}{"id": id})
 	val.SetLastUpdated(lastUpdated)
 
+	// I should maybe just get rid of the GenericReader?
 	if r, ok := val.(GenericReader); ok {
+		return GenericReadBack(r)
+	} else if r, ok := val.(Reader); ok {
 		return ReadBack(r)
 	}
+
 	return nil, nil, http.StatusOK
 }
 
-func ReadBack(val GenericReader) (error, error, int) {
+func ReadBack(val Reader) (error, error, int) {
+
+	i := val.(Identifier)
+	keys, _ := i.GetKeys()
+	inf := val.APIInfo()
+	inf.Params["id"] = strconv.Itoa(keys["id"].(int))
+
+	results, usrErr, sysErr, errCode := val.Read()
+	if usrErr != nil || sysErr != nil {
+		return usrErr, sysErr, errCode
+	}
+	if len(results) != 1 {
+		return nil, errors.New("bad result in reading back a POST"), http.StatusInternalServerError
+	}
+	ConvertFrom(&val, results[0])
+
+	return nil, nil, http.StatusOK
+}
+
+func GenericReadBack(val GenericReader) (error, error, int) {
 
 	i := val.(Identifier)
 	keys, _ := i.GetKeys()
@@ -167,7 +190,20 @@ func GenericUpdate(val GenericUpdater) (error, error, int) {
 	}
 
 	if r, ok := val.(GenericReader); ok {
+		return GenericReadBack(r)
+	} else if r, ok := val.(Reader); ok {
 		return ReadBack(r)
+
+		/*
+			results, usrErr, sysErr, errCode := r.Read()
+			if usrErr != nil || sysErr != nil {
+				return usrErr, sysErr, errCode
+			}
+			if len(results) == 0 {
+				return nil, errors.New("no result in reading back a POST"), http.StatusInternalServerError
+			}
+			ConvertFrom(&val, results[0])
+		*/
 	}
 
 	return nil, nil, http.StatusOK
