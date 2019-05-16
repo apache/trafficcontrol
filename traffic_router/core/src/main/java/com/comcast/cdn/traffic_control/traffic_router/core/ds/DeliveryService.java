@@ -18,9 +18,11 @@ package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -98,7 +100,7 @@ public class DeliveryService {
 	private final boolean redirectToHttps;
 	private final DeepCachingType deepCache;
 	private String consistentHashRegex;
-	private final SortedSet<String> consistentHashQueryParams;
+	private final Set<String> consistentHashQueryParams;
 
 	public enum DeepCachingType {
 		NEVER,
@@ -128,7 +130,7 @@ public class DeliveryService {
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
 
-		this.consistentHashQueryParams = new TreeSet<String>();
+		this.consistentHashQueryParams = new HashSet<String>();
 		if (dsJo.has("consistentHashQueryParams")) {
 			final JsonNode cqpNode = dsJo.get("consistentHashQueryParams");
 			if (!cqpNode.isArray()) {
@@ -183,7 +185,7 @@ public class DeliveryService {
 		}
 	}
 
-	public SortedSet<String> getConsistentHashQueryParams() {
+	public Set<String> getConsistentHashQueryParams() {
 		return this.consistentHashQueryParams;
 	}
 
@@ -679,5 +681,62 @@ public class DeliveryService {
 
 	public void setConsistentHashRegex(final String consistentHashRegex) {
 		this.consistentHashRegex = consistentHashRegex;
+	}
+
+	/**
+	 * Extracts the significant parts of a request's query string based on this
+	 * Delivery Service's Consistent Hashing Query Parameters
+	 * @param r The request from which to extract query parameters
+	 * @return The parts of the request's query string relevant to consistent
+	 *	hashing. The result is URI-decoded - if decoding fails it will return
+	 *	a blank string instead.
+	 */
+	public String extractSignificantQueryParams(HTTPRequest r) {
+		if (r.getQueryString() == null || r.getQueryString().isEmpty()) {
+			return "";
+		}
+
+		final SortedSet<String> qparams = new TreeSet<String>();
+		for (final String qparam : r.getQueryString().split("&")) {
+			if (qparam.isEmpty()) {
+				continue;
+			}
+
+			String[] parts = qparam.split("=");
+			for (short i = 0; i < parts.length; ++i) {
+				try {
+					parts[i] = URLDecoder.decode(parts[i], "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					final StringBuffer err = new StringBuffer();
+					err.append("Error decoding query prameters - ");
+					err.append(this.toString());
+					err.append(" - Exception: ");
+					err.append(e.toString());
+					LOGGER.error(err.toString());
+					return "";
+				}
+			}
+
+			if (this.getConsistentHashQueryParams().contains(parts[0])) {
+				qparams.add(String.join("=", parts));
+			}
+		}
+
+		final StringBuilder s = new StringBuilder();
+		for (final String q : qparams) {
+			s.append(q);
+		}
+
+		try {
+			return URLDecoder.decode(s.toString(), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			final StringBuffer err = new StringBuffer();
+			err.append("Error decoding query prameters - ");
+			err.append(this.toString());
+			err.append(" - Exception: ");
+			err.append(e.toString());
+			LOGGER.error(err.toString());
+			return "";
+		}
 	}
 }

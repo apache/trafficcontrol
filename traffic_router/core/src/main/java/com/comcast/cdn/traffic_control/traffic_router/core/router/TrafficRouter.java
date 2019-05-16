@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -519,6 +516,13 @@ public class TrafficRouter {
 		return caches;
 	}
 
+	/**
+	 * Gets multiple routes for STEERING Delivery Services
+	 *
+	 * @param request The client's HTTP Request
+	 * @param track A {@link Track} object used to track routing statistics
+	 * @return The list of routes available to service the client's request.
+	 */
 	public HTTPRouteResult multiRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request, true);
 
@@ -534,11 +538,14 @@ public class TrafficRouter {
 		final List<SteeringResult> resultsToRemove = new ArrayList<>();
 
 		// Pattern based consistent hashing - use consistentHashRegex from steering DS instead of targets
-		final String pathToHash = buildPatternBasedHashString(entryDeliveryService, request);
+		final String steeringHash = buildPatternBasedHashString(entryDeliveryService.getConsistentHashRegex(), request.getPath());
 		for (final SteeringResult steeringResult : steeringResults) {
 			final DeliveryService ds = steeringResult.getDeliveryService();
 
 			final List<Cache> caches = selectCaches(request, ds, track);
+
+			// child Delivery Services can use their query parameters
+			final String pathToHash = steeringHash + ds.extractSignificantQueryParams(request);
 
 			if (caches != null && !caches.isEmpty()) {
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
@@ -564,50 +571,35 @@ public class TrafficRouter {
 	}
 
 	/**
-	 * Creates a string to be used in consistent hashing
-	 *
+	 * Creates a string to be used in consistent hashing.
+	 *<p>
 	 * This uses simply the request path by default, but will consider any and all Query Parameters
 	 * that are in deliveryService's {@link DeliveryService.consistentHashQueryParams} set as well.
 	 * It will also fall back on the request path if the query parameters are not UTF-8-encoded.
-	 *
-	 * @param deliveryService The Delivery Service being requested
+	 *</p>
+	 * @param deliveryService The {@link DeliveryService} being requested
 	 * @param request An {@link HTTPRequest} representing the client's request.
 	 * @return A string appropriate to use for consistent hashing to service the request
 	*/
 	@SuppressWarnings({"PMD.CyclomaticComplexity"})
 	public String buildPatternBasedHashString(final DeliveryService deliveryService, final HTTPRequest request) {
 		final String requestPath = request.getPath();
+		final StringBuilder hashString = new StringBuilder();
 		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty() && !requestPath.isEmpty()) {
-			final StringBuilder hashString = new StringBuilder(request.getPath());
-			final SortedSet<String> qparams = new TreeSet<String>();
-			try {
-				for (final String qparam : request.getQueryString().split("&")) {
-					if (qparam.isEmpty()) {
-						continue;
-					}
-
-					String[] parts = qparam.split("=");
-					for (short i = 0; i<parts.length; ++i) {
-						parts[i] = URLDecoder.decode(parts[i]);
-					}
-
-					if (deliveryService.getConsistentHashQueryParams().contains(parts[0])) {
-						qparams.add(String.join("=", parts));
-					}
-				}
-
-				for (final String qparam : qparams) {
-					hashString.append(qparam);
-				}
-			} catch (Exception e) {
-				return requestPath;
-			}
-
-			return buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), hashString.toString());
+			hashString.append(buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), requestPath));
 		}
-		return requestPath;
+
+		hashString.append(deliveryService.extractSignificantQueryParams(request));
+
+		return hashString.toString();
 	}
 
+	/**
+	 * Constructs a string to be used in consistent hashing
+	 * @param regex A regular expression matched against the client's request path to extract information important to consistent hashing
+	 * @param requestPath The client's request path - e.g. '/some/path' from 'https://example.com/some/path'
+	 * @return The parts of requestPath that matched regex
+	 */
 	public String buildPatternBasedHashString(final String regex, final String requestPath) {
 		try {
 			final Pattern pattern = Pattern.compile(regex);
@@ -623,6 +615,13 @@ public class TrafficRouter {
 			}
 			return requestPath;
 		} catch (final Exception e) {
+			final StringBuilder error = new StringBuilder("Failed to construct hash string using regular expression: '");
+			error.append(regex);
+			error.append("' against request path: '");
+			error.append(requestPath);
+			error.append("' Exception: ");
+			error.append(e.toString());
+			LOGGER.error(error.toString());
 			return requestPath;
 		}
 
@@ -916,10 +915,6 @@ public class TrafficRouter {
 		return consistentHashForCoverageZone(ip, deliveryServiceId, r, useDeep);
 	}
 
-	public Cache consistentHashForCoverageZone(final String ip, final String deliveryServiceId, final HTTPRequest request) {
-		return consistentHashForCoverageZone(ip, deliveryServiceId, request, false);
-	}
-
 	public Cache consistentHashForCoverageZone(final String ip, final String deliveryServiceId, final HTTPRequest request, final boolean useDeep) {
 		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 		if (deliveryService == null) {
@@ -987,10 +982,6 @@ public class TrafficRouter {
 		r.setPath(requestPath);
 		r.setQueryString("");
 		return buildPatternBasedHashString(cacheRegister.getDeliveryService(deliveryServiceId), r);
-	}
-
-	public String buildPatternBasedHashStringDeliveryService(final String deliveryServiceId, final HTTPRequest request) {
-		return buildPatternBasedHashString(cacheRegister.getDeliveryService(deliveryServiceId), request);
 	}
 
 	private boolean isSteeringDeliveryService(final DeliveryService deliveryService) {
@@ -1186,7 +1177,7 @@ public class TrafficRouter {
 		return null;
 	}
 
-	/*
+	/**
 	 * Selects a {@link Cache} from the {@link CacheLocation} provided.
 	 *
 	 * @param location

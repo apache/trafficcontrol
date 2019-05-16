@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -139,7 +138,7 @@ WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 
 	for rows.Next() {
 		ds := tc.CRConfigDeliveryService{
-			ConsistentHashQueryParams: []string{},
+			ConsistentHashQueryParams: make([]string, 0),
 			Protocol:                  &tc.CRConfigDeliveryServiceProtocol{},
 			ResponseHeaders:           map[string]string{},
 			Soa:                       cdnSOA,
@@ -149,7 +148,6 @@ WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 		anonymousBlocking := false
 		ttl := sql.NullInt64{}
 		consistentHashRegex := sql.NullString{}
-		consistentHashQueryParams := make([]string, 0)
 		deepCachingType := sql.NullString{}
 		dnsBypassCName := sql.NullString{}
 		dnsBypassIP := sql.NullString{}
@@ -176,7 +174,7 @@ WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 		if err := rows.Scan(&anonymousBlocking,
 			&ttl,
 			&consistentHashRegex,
-			pq.Array(&consistentHashQueryParams),
+			pq.Array(&ds.ConsistentHashQueryParams),
 			&deepCachingType,
 			&dnsBypassCName,
 			&dnsBypassIP,
@@ -194,6 +192,7 @@ WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 			&missLon,
 			&protocol,
 			&geoBlocking,
+			&ds.RoutingName,
 			&trRequestHeaders,
 			&trRespHdrsStr,
 			&trResponseHeaders,
@@ -202,16 +201,6 @@ WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 			&ttype); err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
-
-		chqp := make(map[string]struct{})
-		for _, q := range consistentHashQueryParams {
-			chqp[q] = struct{}{}
-		}
-		for k, _ := range chqp {
-			ds.ConsistentHashQueryParams = append(ds.ConsistentHashQueryParams, k)
-		}
-
-		sort.Strings(ds.ConsistentHashQueryParams)
 
 		// TODO prevent (lat XOR lon) in the Tx and UI
 		if missLat.Valid && missLon.Valid {

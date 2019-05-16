@@ -1028,7 +1028,7 @@ under the License.
                             <div>
                                 <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="consistentHashQueryParam">Consistent Hash Query Param #{{$index + 1}}<div class="helptooltip">
                                     <div class="helptext">
-                                        Todo: add a description here
+                                        When Traffic Router performs a "consistent hash" on a client request to find an Edge-tier cache server to which to redirect them, it can optionally take into account any number of query parameters. This field defines them, formally as a Set but often represented as an Array/List due to encoding limitations. That is, if the Consistent Hashing Query Parameters on a Delivery Service are <math><mfenced open="{" close="}"><ms>test</ms></mfenced></math> and a client makes a request for <code>/?test=something</code> they will be directed to a different cache server than a different client that requests <code>/?test=somethingElse</code>, but the <em>same</em> cache server as a client that requests <code>/?test=something&quest=somethingToo</code>.
                                     </div>
                                 </div>
                                 </label>

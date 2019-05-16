@@ -16,6 +16,30 @@
 
 */
 
+@supports not(-moz-animation: auto) {
+	math {
+		mfenced::before {
+			content: "(";
+		}
+		mfenced::after {
+			content: ")";
+		}
+		mfenced[open]::before {
+			content: attr(open);
+		}
+		mfenced[close]::after {
+			content: attr(close);
+		}
+
+		ms::before {
+			content: open-quote;
+		}
+		ms::after {
+			content: close-quote;
+		}
+	}
+}
+
 .btn-link.request-status {
 	font-size: 20px;
 	color: #cd1323;

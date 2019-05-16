@@ -18,8 +18,6 @@
 ***************************************
 ``deliveryservices/{{xml_id}}/servers``
 ***************************************
-.. deprecated:: 1.1
-	Use :ref:`to-api-deliveryserviceserver` instead
 
 ``POST``
 ========
