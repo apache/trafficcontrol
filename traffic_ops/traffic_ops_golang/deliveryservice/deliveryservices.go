@@ -25,7 +25,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -779,7 +778,6 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 				m[k] = struct{}{}
 				ds.ConsistentHashQueryParams = append(ds.ConsistentHashQueryParams, k)
 			}
-			sort.Strings(ds.ConsistentHashQueryParams)
 		}
 
 		dsCDNDomains[*ds.XMLID] = cdnDomain
