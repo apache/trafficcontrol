@@ -23,6 +23,55 @@ import { DeliveryService } from '../models/deliveryservice';
 import { Type } from '../models/type';
 import { Role, User } from '../models/user';
 
+function constructDataSetFromResponse (r: any): DataSetWithSummary {
+	if (!r.series || !r.series.name) {
+		console.debug(r);
+		throw new Error('No series data for response!');
+	}
+
+	const data = new Array<DataPoint>();
+	if (r.series.values !== null && r.series.values !== undefined) {
+		for (const v of r.series.values) {
+			if (v[1] === null) {
+				continue;
+			}
+			data.push({t: new Date(v[0]), y: v[1].toFixed(3)} as DataPoint);
+		}
+	}
+
+	let min: number;
+	let max: number;
+	let fifth: number;
+	let nfifth: number;
+	let neight: number;
+	let mean: number;
+	if (r.summary) {
+		min = r.summary.min;
+		max = r.summary.max;
+		fifth = r.summary.fifthPercentile;
+		nfifth = r.summary.ninetyFifthPercentile;
+		neight = r.summary.ninetyEightPercentile;
+		mean = r.summary.mean;
+	} else {
+		min = null;
+		max = null;
+		fifth = null;
+		nfifth = null;
+		neight = null;
+		mean = null;
+	}
+
+	return {
+		dataSet: {label: r.series.name.split('.')[0], data: data} as DataSet,
+		min: min,
+		max: max,
+		fifthPercentile: fifth,
+		ninetyFifthPercentile: nfifth,
+		ninetyEighthPercentile: neight,
+		mean: mean
+	} as DataSetWithSummary;
+}
+
 @Injectable({ providedIn: 'root' })
 /**
  * The APIService provides access to the Traffic Ops API. Its methods should be kept API-version
@@ -107,12 +156,12 @@ export class APIService {
 	 * @returns An observable that will emit an array of `DeliveryService` objects.
 	*/
 	public getDeliveryServices (id?: string | number): Observable<DeliveryService[] | DeliveryService> {
+		let path = '/api/' + this.API_VERSION + '/deliveryservices';
 		if (id) {
-			let path = '/api/' + this.API_VERSION + '/deliveryservices?';
-			if (typeof(id) === "string") {
-				path += 'xml_id=' + encodeURIComponent(id);
-			} else if (typeof(id) === "number") {
-				path += 'id=' + String(id);
+			if (typeof(id) === 'string') {
+				path += '?xml_id=' + encodeURIComponent(id);
+			} else if (typeof(id) === 'number') {
+				path += '?id=' + String(id);
 			} else {
 				throw new TypeError("'id' must be a string or a number! (got: '" + typeof(id) + "')");
 			}
@@ -121,14 +170,12 @@ export class APIService {
 					return r.body.response[0] as DeliveryService;
 				}
 			));
-		} else {
-			const path = '/api/' + this.API_VERSION + '/deliveryservices';
-			return this.get(path).pipe(map(
-				r => {
-					return r.body.response as DeliveryService[];
-				}
-			));
 		}
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response as DeliveryService[];
+			}
+		));
 	}
 
 	/**
@@ -208,10 +255,13 @@ export class APIService {
 					const resp = r.body.response;
 					if (dataOnly) {
 						if (resp.hasOwnProperty('series') && (resp.series.hasOwnProperty('values'))) {
-							return resp.series.values.filter(d => d[1] !== null).map(d => ({t: new Date(d[0]), y: d[1].toFixed(3)} as DataPoint)) as Array<DataPoint>;
-						} else {
-							throw new Error("No data series found! Path was '" + path + "'");
+							return resp.series.values.filter(d => d[1] !== null).map(
+								d => ({
+									t: new Date(d[0]),
+									y: d[1].toFixed(3)
+								} as DataPoint)) as Array<DataPoint>;
 						}
+						throw new Error("No data series found! Path was '" + path + "'");
 					}
 					return r.body.response;
 				}
@@ -261,7 +311,7 @@ export class APIService {
 			path + 'tps_5xx',
 		];
 
-		const observables = paths.map(x => this.get(x).pipe(map(r => this.constructDataSetFromResponse(r.body.response))));
+		const observables = paths.map(x => this.get(x).pipe(map(r => constructDataSetFromResponse(r.body.response))));
 
 		const tasks = merge(observables).pipe(mergeAll());
 		return tasks.pipe(reduce(
@@ -287,7 +337,7 @@ export class APIService {
 						break;
 					default:
 						console.debug(result);
-						throw new Error("Unknown data set type: '" + result.dataSet.label +"'");
+						throw new Error("Unknown data set type: '" + result.dataSet.label + "'");
 				}
 				return output;
 			},
@@ -300,55 +350,6 @@ export class APIService {
 				serverError: null
 			} as TPSData
 		)) as Observable<TPSData>;
-	}
-
-	private constructDataSetFromResponse(r: any): DataSetWithSummary {
-		if (!r.series || !r.series.name) {
-			console.debug(r);
-			throw new Error("No series data for response!");
-		}
-
-		const data = new Array<DataPoint>();
-		if (r.series.values !== null && r.series.values !== undefined) {
-			for (const v of r.series.values) {
-				if (v[1] === null) {
-					continue;
-				}
-				data.push({t: new Date(v[0]), y: v[1].toFixed(3)} as DataPoint);
-			}
-		}
-
-		let min: number;
-		let max: number;
-		let fifth: number;
-		let nfifth: number;
-		let neight: number;
-		let mean: number;
-		if (r.summary) {
-			min = r.summary.min;
-			max = r.summary.max;
-			fifth = r.summary.fifthPercentile;
-			nfifth = r.summary.ninetyFifthPercentile;
-			neight = r.summary.ninetyEightPercentile;
-			mean = r.summary.mean;
-		} else {
-			min = null;
-			max = null;
-			fifth = null;
-			nfifth = null;
-			neight = null;
-			mean = null;
-		}
-
-		return {
-			dataSet: {label: r.series.name.split('.')[0], data: data} as DataSet,
-			min: min,
-			max: max,
-			fifthPercentile: fifth,
-			ninetyFifthPercentile: nfifth,
-			ninetyEighthPercentile: neight,
-			mean: mean
-		} as DataSetWithSummary;
 	}
 
 	/**
@@ -454,13 +455,13 @@ export class APIService {
 	 * @returns An Observable that will emit an array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service
 	 * 	types.
 	*/
-	public getDSTypes(): Observable<Array<Type>> {
+	public getDSTypes (): Observable<Array<Type>> {
 		if (this.deliveryServiceTypes) {
 			return new Observable(
 				o => {
 					o.next(this.deliveryServiceTypes);
 					o.complete();
-					return {unsubscribe() {}};
+					return {unsubscribe () {}};
 				}
 			);
 		}

@@ -41,7 +41,7 @@ export enum LineChartType {
 })
 export class LinechartDirective implements AfterViewInit, OnDestroy {
 
-	ctx: CanvasRenderingContext2D;// | WebGLRenderingContext;
+	ctx: CanvasRenderingContext2D; // | WebGLRenderingContext;
 	chart: Chart;
 
 	chartTitle?: string;
@@ -56,16 +56,16 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	private subscription: Subscription;
 	private opts: any;
 
-	constructor(private readonly element: ElementRef) { }
+	constructor (private readonly element: ElementRef) { }
 
-	ngAfterViewInit() {
+	ngAfterViewInit () {
 		if (this.element.nativeElement === null) {
-			console.warn("Use of DOM directive in non-DOM context!");
+			console.warn('Use of DOM directive in non-DOM context!');
 			return;
 		}
 
 		if (!(this.element.nativeElement instanceof HTMLCanvasElement)) {
-			throw new Error("[linechart] Directive can only be used on a canvas!");
+			throw new Error('[linechart] Directive can only be used on a canvas!');
 		}
 
 		this.ctx = (this.element.nativeElement as HTMLCanvasElement).getContext('2d');
@@ -118,8 +118,8 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 			}
 		};
 
-		this.subscription = this.chartDataSets.subscribe((data: DataSet[]) => {this.dataLoad(data)},
-		                                                 (e: Error) => {this.dataError(e)});
+		this.subscription = this.chartDataSets.subscribe((data: DataSet[]) => {this.dataLoad(data); },
+		                                                 (e: Error) => {this.dataError(e); });
 	}
 
 	private destroyChart () {
@@ -133,10 +133,10 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	}
 
 
-	dataLoad(data: DataSet[]) {
+	dataLoad (data: DataSet[]) {
 		this.destroyChart();
 
-		if (data === null || data === undefined || data.some(x => {return x === null})) {
+		if (data === null || data === undefined || data.some(x => x === null)) {
 			this.noData();
 			return;
 		}
@@ -146,7 +146,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		this.chart = new Chart(this.ctx, this.opts);
 	}
 
-	dataError(e: Error) {
+	dataError (e: Error) {
 		this.destroyChart();
 		this.ctx.font = '30px serif';
 		this.ctx.fillStyle = 'black';
@@ -154,7 +154,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		this.ctx.fillText('Error Fetching Data', this.element.nativeElement.width / 2., this.element.nativeElement.height / 2.);
 	}
 
-	noData() {
+	noData () {
 		this.destroyChart();
 		this.ctx.font = '30px serif';
 		this.ctx.fillStyle = 'black';
@@ -162,7 +162,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		this.ctx.fillText('No Data', this.element.nativeElement.width / 2., this.element.nativeElement.height / 2.);
 	}
 
-	ngOnDestroy() {
+	ngOnDestroy () {
 		this.destroyChart();
 
 		if (this.subscription) {

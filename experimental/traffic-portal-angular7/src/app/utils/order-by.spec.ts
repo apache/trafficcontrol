@@ -27,7 +27,7 @@ describe('orderBy', () => {
 		expect(output[0].bar).toEqual(1);
 		expect(output[1].bar).toEqual(2);
 		expect(output[2].bar).toEqual(3);
-		expect(output[2].foo).toEqual(1)
+		expect(output[2].foo).toEqual(1);
 		expect(output[3].bar).toEqual(3);
 		expect(output[3].foo).toEqual(2);
 	});

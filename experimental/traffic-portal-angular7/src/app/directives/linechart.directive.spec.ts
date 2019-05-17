@@ -17,5 +17,5 @@ describe('LinechartDirective', () => {
 	it('should create an instance', () => {
 		const directive = new LinechartDirective(null);
 		expect(directive).toBeTruthy();
-  });
+	});
 });

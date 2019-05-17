@@ -17,13 +17,15 @@
  @returns 0 if ``a===b`` or if both a and b are ``null``, -1 if ``a<b`` or b is ``null`` and a is not, otherwise `1`
  @throws whenever an attempt is made to compare values of different types. This is calculated using ``typeof``, and so only primitive type is considered
 */
-function cmpr(a, b): number {
+function cmpr (a, b): number {
 	if (a === null) {
 		if (b === null) {
 			return 0;
 		}
 		return 1;
-	} else if (b === null) {
+	}
+
+	if (b === null) {
 		return -1;
 	}
 
@@ -68,7 +70,7 @@ export function orderBy (value: Array<any>, property: string | Array<string>): A
 			props = property;
 		}
 
-		for (let p of props) {
+		for (const p of props) {
 
 			let aProp;
 			let bProp;
@@ -102,7 +104,7 @@ export function orderBy (value: Array<any>, property: string | Array<string>): A
 			try {
 				result = cmpr(aProp, bProp);
 			} catch (e) {
-				console.error("property '" + p + "' is not the same type on objects", a, 'and', b, '! (' + e.toString() + ')');
+				console.error(`property ${p} is not the same type on objects ${a} and ${b}! (${e.toString()})`);
 				return 0;
 			}
 

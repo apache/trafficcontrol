@@ -37,10 +37,10 @@ export class DataSetWithSummary {
 	ninetyEighthPercentile: number;
 	mean: number;
 
-	public get average(): number {
+	public get average (): number {
 		return this.mean;
 	}
-	public set average(a: number) {
+	public set average (a: number) {
 		this.mean = a;
 	}
 }

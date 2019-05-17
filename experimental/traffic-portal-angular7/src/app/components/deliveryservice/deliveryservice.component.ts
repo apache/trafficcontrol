@@ -37,9 +37,6 @@ export class DeliveryserviceComponent implements OnInit {
 	edgeBandwidth: DataSet;
 	midBandwidth: DataSet;
 
-	edgeTPSData: DataSet;
-	midTPSData: DataSet;
-
 	to: Date;
 	from: Date;
 	fromDate: FormControl;
@@ -49,39 +46,55 @@ export class DeliveryserviceComponent implements OnInit {
 
 	bucketSize = 300; // seconds
 
-	constructor(private readonly route: ActivatedRoute, private readonly api: APIService, private readonly alerts: AlertService) {
-		this.midBandwidth = {label: "Mid-Tier", borderColor: "#3CBA9F", fill: false, backgroundColor: "#3CBA9F", data: new Array<DataPoint>()} as DataSet;
-		this.edgeBandwidth = {label: "Edge-Tier", borderColor: "#BA3C57", fill: false, backgroundColor: "#BA3C57", data: new Array<DataPoint>()} as DataSet;
-		this.edgeTPSData = {label: "Edge-Tier", borderColor: "#BA3C57", fill: false, backgroundColor: "#BA3C57", data: new Array<DataPoint>()} as DataSet;
-		this.midTPSData = {label: "Mid-Tier", borderColor: "#3CBA9F", fill: false, backgroundColor: "#3CBA9F", data: new Array<DataPoint>()} as DataSet;
+	constructor (private readonly route: ActivatedRoute, private readonly api: APIService, private readonly alerts: AlertService) {
+		this.midBandwidth = {
+			label: 'Mid-Tier',
+			borderColor: '#3CBA9F',
+			fill: false,
+			backgroundColor: '#3CBA9F',
+			data: new Array<DataPoint>()
+		} as DataSet;
+
+		this.edgeBandwidth = {
+			label: 'Edge-Tier',
+			borderColor: '#BA3C57',
+			fill: false,
+			backgroundColor: '#BA3C57',
+			data: new Array<DataPoint>()
+		} as DataSet;
+
 		this.bandwidthData = new Subject<Array<DataSet>>();
 		this.TPSChartData = new Subject<Array<DataSet>>();
 	}
 
-	ngOnInit() {
+	ngOnInit () {
 		const DSID = this.route.snapshot.paramMap.get('id');
 
 		this.to = new Date();
 		this.to.setUTCMilliseconds(0);
 		this.from = new Date(this.to.getFullYear(), this.to.getMonth(), this.to.getDate());
-		const dateStr = String(this.from.getFullYear()).padStart(4, '0').concat('-', String(this.from.getMonth() + 1).padStart(2, '0').concat('-', String(this.from.getDate()).padStart(2, '0')));
+
+		const dateStr = String(this.from.getFullYear()).padStart(4, '0').concat(
+			'-', String(this.from.getMonth() + 1).padStart(2, '0').concat(
+				'-', String(this.from.getDate()).padStart(2, '0')));
+
 		this.fromDate = new FormControl(dateStr);
-		this.fromTime = new FormControl("00:00");
+		this.fromTime = new FormControl('00:00');
 		this.toDate = new FormControl(dateStr);
-		const timeStr = String(this.to.getHours()).padStart(2, '0').concat(':', String(this.to.getMinutes()).padStart(2, '0'))
+		const timeStr = String(this.to.getHours()).padStart(2, '0').concat(':', String(this.to.getMinutes()).padStart(2, '0'));
 		this.toTime = new FormControl(timeStr);
 
-		this.api.getDeliveryServices(parseInt(DSID)).subscribe(
+		this.api.getDeliveryServices(parseInt(DSID, 10)).subscribe(
 			(d: DeliveryService) => {
 				this.deliveryservice = d;
-				this.loaded['main'] = true;
+				this.loaded.set('main', true);
 				this.loadBandwidth();
 				this.loadTPS();
 			}
 		);
 	}
 
-	newDateRange() {
+	newDateRange () {
 		this.to = new Date(this.toDate.value.concat('T', this.toTime.value));
 		this.from = new Date(this.fromDate.value.concat('T', this.fromTime.value));
 
@@ -95,7 +108,7 @@ export class DeliveryserviceComponent implements OnInit {
 		this.loadTPS();
 	}
 
-	loadBandwidth() {
+	loadBandwidth () {
 		let interval: string;
 		if (this.bucketSize < 1) {
 			interval = String(Math.round(this.bucketSize * 1000)) + 'ms';
@@ -117,7 +130,7 @@ export class DeliveryserviceComponent implements OnInit {
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
 			},
 			(e: Error) => {
-				this.alerts.newAlert("warning", "Edge-Tier bandwidth data not found!");
+				this.alerts.newAlert('warning', 'Edge-Tier bandwidth data not found!');
 				console.debug(e);
 			}
 		);
@@ -136,13 +149,13 @@ export class DeliveryserviceComponent implements OnInit {
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
 			},
 			(e: Error) => {
-				this.alerts.newAlert("warning", "Mid-Tier bandwidth data not found!");
+				this.alerts.newAlert('warning', 'Mid-Tier bandwidth data not found!');
 				console.debug(e);
 			}
 		);
 	}
 
-	loadTPS() {
+	loadTPS () {
 		let interval: string;
 		if (this.bucketSize < 1) {
 			interval = String(Math.round(this.bucketSize * 1000)) + 'ms';
@@ -152,16 +165,16 @@ export class DeliveryserviceComponent implements OnInit {
 
 		this.api.getAllDSTPSData(this.deliveryservice.xmlId, this.from, this.to, interval, false).subscribe(
 			(data: TPSData) => {
-				data.total.dataSet.label = "Total";
-				data.total.dataSet.borderColor = "#3C96BA";
-				data.success.dataSet.label = "Successful Responses";
-				data.success.dataSet.borderColor = "#3CBA5F";
-				data.redirection.dataSet.label = "Redirection Responses";
-				data.redirection.dataSet.borderColor = "#9f3CBA";
-				data.clientError.dataSet.label = "Client Error Responses";
-				data.clientError.dataSet.borderColor = "#BA9E3B";
-				data.serverError.dataSet.label = "Server Error Responses";
-				data.serverError.dataSet.borderColor = "#BA3C57";
+				data.total.dataSet.label = 'Total';
+				data.total.dataSet.borderColor = '#3C96BA';
+				data.success.dataSet.label = 'Successful Responses';
+				data.success.dataSet.borderColor = '#3CBA5F';
+				data.redirection.dataSet.label = 'Redirection Responses';
+				data.redirection.dataSet.borderColor = '#9f3CBA';
+				data.clientError.dataSet.label = 'Client Error Responses';
+				data.clientError.dataSet.borderColor = '#BA9E3B';
+				data.serverError.dataSet.label = 'Server Error Responses';
+				data.serverError.dataSet.borderColor = '#BA3C57';
 
 				this.TPSChartData.next([
 					data.total.dataSet,
@@ -173,7 +186,7 @@ export class DeliveryserviceComponent implements OnInit {
 			},
 			(e: Error) => {
 				console.debug(e);
-				this.alerts.newAlert("warning", "Edge-Tier transaction data not found!");
+				this.alerts.newAlert('warning', 'Edge-Tier transaction data not found!');
 			}
 		);
 	}

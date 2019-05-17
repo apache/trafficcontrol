@@ -55,19 +55,19 @@ export class DashboardComponent implements OnInit {
 
 		this.route.queryParamMap.pipe(first()).subscribe(
 			m => {
-				if (m.has("search")) {
-					this.fuzzControl.setValue(decodeURIComponent(m.get("search")));
+				if (m.has('search')) {
+					this.fuzzControl.setValue(decodeURIComponent(m.get('search')));
 				}
 			}
 		);
 	}
 
-	updateURL(e: Event) {
+	updateURL (e: Event) {
 		e.preventDefault();
-		if (this.fuzzControl.value === "") {
+		if (this.fuzzControl.value === '') {
 			this.router.navigate([], {replaceUrl: true, queryParams: null});
 		} else if (this.fuzzControl.value) {
-			this.router.navigate([], {replaceUrl: true, queryParams: {search: this.fuzzControl.value}})
+			this.router.navigate([], {replaceUrl: true, queryParams: {search: this.fuzzControl.value}});
 		}
 	}
 
@@ -92,7 +92,7 @@ export class DashboardComponent implements OnInit {
 		return true;
 	}
 
-	tracker(unused_item: number, d: DeliveryService) {
+	tracker (unused_item: number, d: DeliveryService) {
 		return d.id;
 	}
 

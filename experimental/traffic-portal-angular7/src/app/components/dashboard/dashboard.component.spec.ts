@@ -52,7 +52,7 @@ describe('DashboardComponent', () => {
 			{
 				displayName: 'fooBAR'
 			} as DeliveryService
-		]
+		];
 		fixture.detectChanges();
 	});
 

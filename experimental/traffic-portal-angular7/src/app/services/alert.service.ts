@@ -31,12 +31,13 @@ export class AlertService {
 		this.alerts = this.alertsSubject.asObservable();
 	}
 
-	newAlert(levelOrAlert: string | Alert, text?: string) {
+	newAlert (levelOrAlert: string | Alert, text?: string) {
 		if (levelOrAlert instanceof Alert) {
 			this.alertsSubject.next(levelOrAlert);
-		} else if (text === null || text === undefined) {
-			throw new Error("Can't pass raw level without raw text!");
 		} else {
+			if (text === null || text === undefined) {
+				throw new Error("Can't pass raw level without raw text!");
+			}
 			this.alertsSubject.next({level: levelOrAlert, text: text} as Alert);
 		}
 	}

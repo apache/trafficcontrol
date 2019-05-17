@@ -25,7 +25,7 @@ import { DataPoint, DataSet } from '../../models/data';
 	templateUrl: './ds-card.component.html',
 	styleUrls: ['./ds-card.component.scss']
 })
-export class DsCardComponent {
+export class DsCardComponent implements OnInit {
 
 	@Input() deliveryService: DeliveryService;
 	@Input() now?: Date;
@@ -79,7 +79,7 @@ export class DsCardComponent {
 		this.graphDataLoaded = false;
 	}
 
-	ngOnInit() {
+	ngOnInit () {
 		if (!this.now || !this.today) {
 			this.now = new Date();
 			this.now.setUTCMilliseconds(0);
@@ -129,7 +129,7 @@ export class DsCardComponent {
 		}
 	}
 
-	private loadChart() {
+	private loadChart () {
 		this.api.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '60s', false, true).pipe(first()).subscribe(
 			(data: Array<DataPoint>) => {
 				for (const d of data) {
@@ -160,7 +160,7 @@ export class DsCardComponent {
 				this.graphDataLoaded = true;
 			},
 			(e: Error) => {
-				this.chartData.next([this.edgeBandwidthData, null])
+				this.chartData.next([this.edgeBandwidthData, null]);
 				this.graphDataLoaded = true;
 				console.debug(e);
 			}

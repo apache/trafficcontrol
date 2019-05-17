@@ -221,7 +221,7 @@ export class DeliveryService {
 	 * Determines if the Delivery Service is a candidate for bypassing
 	 * @returns `true` if it can have bypass settings, `false` otherwise.
 	*/
-	public bypassable(): boolean {
+	public bypassable (): boolean {
 		if (!this.type) {
 			return false;
 		}

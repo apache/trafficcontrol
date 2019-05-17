@@ -35,17 +35,17 @@ const VALID_XML_ID = /^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$/;
  * A regular expression that matches IPv4 addresses
 */
 const VALID_IPv4 = /^(1\d\d|2[0-4]\d|25[0-5]|\d\d?)(\.(1\d\d|2[0-4]\d|25[0-5]|\d\d?)){3}$/;
-
+/** tslint:disable **/
 /**
  * A regular expression that matches IPv6 addresses
  * This is huge and ugly, but there's no JS built-in for address parsing afaik.
 */
-const VALID_IPv6 = /^((((((([\da-fA-F]{1,4})):){6})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((::((([\da-fA-F]{1,4})):){5})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((((([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){4})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,1}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){3})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,2}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){2})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,3}(([\da-fA-F]{1,4}))):(([\da-fA-F]{1,4})):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,4}(([\da-fA-F]{1,4}))):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,5}(([\da-fA-F]{1,4}))):)(([\da-fA-F]{1,4})))|(((((([\da-fA-F]{1,4})):){0,6}(([\da-fA-F]{1,4}))):))))$/
-
+const VALID_IPv6 = /^((((((([\da-fA-F]{1,4})):){6})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((::((([\da-fA-F]{1,4})):){5})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|((((([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){4})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,1}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){3})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,2}(([\da-fA-F]{1,4}))):((([\da-fA-F]{1,4})):){2})((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,3}(([\da-fA-F]{1,4}))):(([\da-fA-F]{1,4})):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,4}(([\da-fA-F]{1,4}))):)((((([\da-fA-F]{1,4})):(([\da-fA-F]{1,4})))|(((((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d]))\.){3}((25[0-5]|([1-9]|1[\d]|2[0-4])?[\d])))))))|(((((([\da-fA-F]{1,4})):){0,5}(([\da-fA-F]{1,4}))):)(([\da-fA-F]{1,4})))|(((((([\da-fA-F]{1,4})):){0,6}(([\da-fA-F]{1,4}))):))))$/;
+/** tslint:enable **/
 /**
  * A regular expression that matches a valid hostname
 */
-const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])*(\.[A-z\d]([A-z0-9\-]*[A-z0-9])*)*$/
+const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])*(\.[A-z\d]([A-z0-9\-]*[A-z0-9])*)*$/;
 
 @Component({
 	selector: 'app-new-delivery-service',
@@ -192,15 +192,15 @@ export class NewDeliveryServiceComponent implements OnInit {
 		switch (parser.protocol) {
 			case 'http:':
 				this.deliveryService.protocol = Protocol.HTTP_AND_HTTPS;
-				this.protocol.setValue(Protocol.HTTP_AND_HTTPS)
+				this.protocol.setValue(Protocol.HTTP_AND_HTTPS);
 				break;
 			case 'https:':
 				this.deliveryService.protocol = Protocol.HTTP_TO_HTTPS;
-				this.protocol.setValue(Protocol.HTTP_TO_HTTPS)
+				this.protocol.setValue(Protocol.HTTP_TO_HTTPS);
 				break;
 			default:
 				this.deliveryService.protocol = Protocol.HTTP_AND_HTTPS;
-				this.protocol.setValue(Protocol.HTTP_AND_HTTPS)
+				this.protocol.setValue(Protocol.HTTP_AND_HTTPS);
 				break;
 		}
 
@@ -270,7 +270,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 				case 'DNS_LIVE':
 				case 'DNS_LIVE_NATNL':
 					try {
-						this.setDNSBypass(this.bypassLoc.value)
+						this.setDNSBypass(this.bypassLoc.value);
 					} catch (e) {
 						console.error(e);
 						const nativeBypassElement = document.getElementById('bypass-loc') as HTMLInputElement;
