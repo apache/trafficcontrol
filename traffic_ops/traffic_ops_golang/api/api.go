@@ -131,6 +131,7 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
 		return
 	}
+	log.Debugln(userErr.Error())
 	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, statusCode))
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
 	w.Write(respBts)
