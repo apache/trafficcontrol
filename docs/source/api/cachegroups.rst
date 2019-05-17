@@ -91,8 +91,8 @@ Response Structure
 			"parentCachegroupId": 6,
 			"secondaryParentCachegroupName": null,
 			"secondaryParentCachegroupId": null,
-			"fallbackToClosest": null,
-			"localizationMethods": null,
+			"fallbackToClosest": [],
+			"localizationMethods": [],
 			"typeName": "EDGE_LOC",
 			"typeId": 23,
 			"lastUpdated": "2018-11-07 14:45:43+00"
@@ -115,8 +115,9 @@ Request Structure
 	.. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
 :latitude:                    An optional field which, if present, will define the latitude for the :term:`Cache Group` to ISO-standard double specification\ [1]_
-:localizationMethods:         Array of enabled localization methods (as strings)
 :longitude:                   An optional field which, if present, will define the longitude for the :term:`Cache Group` to ISO-standard double specification\ [1]_
+:localizationMethods:         Array of enabled localization methods (as strings)
+:fallbacks:                   Array of fallback server hostnames.
 :name:                        The name of the :term:`Cache Group`
 :parentCachegroupId:          An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`\ 's primary parent
 :secondaryParentCachegroupId: An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`\ 's secondary parent
@@ -148,6 +149,7 @@ Request Structure
 		"latitude": 0,
 		"longitude": 0,
 		"localizationMethods": [],
+		"fallbacks": [],
 		"name": "test",
 		"parentCachegroupId": 7,
 		"shortName": "test",
@@ -161,6 +163,8 @@ Response Structure
 :lastUpdated:                   The time and date at which this entry was last updated in ISO format
 :latitude:                      Latitude for the :term:`Cache Group`
 :longitude:                     Longitude for the :term:`Cache Group`
+:localizationMethods:           Array of enabled localization methods (as strings)
+:fallbacks:                     Array of fallback server hostnames
 :name:                          The name of the :term:`Cache Group` entry
 :parentCachegroupId:            ID of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
 :parentCachegroupName:          Name of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
@@ -188,7 +192,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "cg was created.",
+			"text": "cachegroup was created.",
 			"level": "success"
 		}
 	],
@@ -198,13 +202,14 @@ Response Structure
 		"shortName": "test",
 		"latitude": 0,
 		"longitude": 0,
-		"parentCachegroupName": null,
+		"parentCachegroupName": "CDN_in_a_Box_Mid",
 		"parentCachegroupId": 7,
 		"secondaryParentCachegroupName": null,
 		"secondaryParentCachegroupId": null,
 		"fallbackToClosest": false,
 		"localizationMethods": [],
-		"typeName": null,
+		"fallbacks": [],
+		"typeName": "EDGE_LOC",
 		"typeId": 23,
 		"lastUpdated": "2018-11-07 22:11:50+00"
 	}}

@@ -32,11 +32,34 @@ func TestCacheGroups(t *testing.T) {
 }
 
 func CreateTestCacheGroups(t *testing.T) {
+
+	var err error
+	var resp *tc.CacheGroupDetailResponse
+
 	for _, cg := range testData.CacheGroups {
-		_, _, err := TOSession.CreateCacheGroupNullable(cg)
+
+		resp, _, err = TOSession.CreateCacheGroupNullable(cg)
 		if err != nil {
 			t.Errorf("could not CREATE cachegroups: %v, request: %v\n", err, cg)
 		}
+
+		// Testing 'join' fields during create
+		if cg.ParentName != nil && resp.Response.ParentName == nil {
+			t.Errorf("Parent cachegroup is null in response when it should have a value\n")
+		}
+		if cg.SecondaryParentName != nil && resp.Response.SecondaryParentName == nil {
+			t.Error("Secondary parent cachegroup is null in response when it should have a value\n")
+		}
+		if cg.Type != nil && resp.Response.Type == nil {
+			t.Error("Type is null in response when it should have a value\n")
+		}
+		if resp.Response.LocalizationMethods == nil {
+			t.Errorf("Localization methods are null\n")
+		}
+		if resp.Response.Fallbacks == nil {
+			t.Errorf("Fallbacks are null\n")
+		}
+
 	}
 }
 
@@ -69,6 +92,23 @@ func UpdateTestCacheGroups(t *testing.T) {
 	updResp, _, err := TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
 		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, updResp)
+	}
+
+	// Check response to make sure fields aren't null
+	if cg.ParentName != nil && updResp.Response.ParentName == nil {
+		t.Errorf("Parent cachegroup is null in response when it should have a value\n")
+	}
+	if cg.SecondaryParentName != nil && updResp.Response.SecondaryParentName == nil {
+		t.Error("Secondary parent cachegroup is null in response when it should have a value\n")
+	}
+	if cg.Type != nil && updResp.Response.Type == nil {
+		t.Error("Type is null in response when it should have a value\n")
+	}
+	if updResp.Response.LocalizationMethods == nil {
+		t.Errorf("Localization methods are null\n")
+	}
+	if updResp.Response.Fallbacks == nil {
+		t.Errorf("Fallbacks are null\n")
 	}
 
 	// Retrieve the CacheGroup to check CacheGroup name got updated
