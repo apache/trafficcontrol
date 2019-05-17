@@ -1300,7 +1300,7 @@ profile.name as profile_name,
 profile.description  as profile_description,
 ds.protocol,
 ds.qstring_ignore,
-(SELECT ARRAY_AGG(name)
+(SELECT ARRAY_AGG(name ORDER BY name)
 	FROM deliveryservice_consistent_hash_query_param
 			WHERE deliveryservice_id = ds.id) AS query_keys,
 ds.range_request_handling,

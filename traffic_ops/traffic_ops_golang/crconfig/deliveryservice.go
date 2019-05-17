@@ -95,7 +95,7 @@ func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeli
 SELECT d.anonymous_blocking_enabled,
        d.ccr_dns_ttl AS ttl,
        d.consistent_hash_regex,
-	   (SELECT ARRAY_AGG(name)
+       (SELECT ARRAY_AGG(name ORDER BY name)
 			  FROM deliveryservice_consistent_hash_query_param
 			  WHERE deliveryservice_id = d.id) AS query_keys,
        d.deep_caching_type,
