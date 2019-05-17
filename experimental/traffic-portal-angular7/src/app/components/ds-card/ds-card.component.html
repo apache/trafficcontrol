@@ -20,7 +20,7 @@ limitations under the License.
 	</g>
 </svg>
 </a><span>{{deliveryService.type ? deliveryService.type : ''}}</span></summary>
-	<div class="card-content">
+	<div class="card-content" *ngIf="open">
 		<div>
 			<span>Key:&nbsp;{{deliveryService.xmlId}}&nbsp;({{deliveryService.id}})</span><br/>
 			<span *ngIf="deliveryService.protocol">Protocol:&nbsp;{{Protocol.toString(deliveryService.protocol)}}</span>

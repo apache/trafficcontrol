@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 
 import { Subject } from 'rxjs';
 import { first } from 'rxjs/operators';
@@ -28,6 +28,8 @@ import { DataPoint, DataSet } from '../../models/data';
 export class DsCardComponent {
 
 	@Input() deliveryService: DeliveryService;
+	@Input() now?: Date;
+	@Input() today?: Date;
 
 	// Capacity measures
 	available: number;
@@ -45,6 +47,8 @@ export class DsCardComponent {
 	// Need this to access merged namespace for string conversions
 	Protocol = Protocol;
 
+	open: boolean;
+
 	private loaded: boolean;
 	public graphDataLoaded: boolean;
 
@@ -53,6 +57,7 @@ export class DsCardComponent {
 		this.maintenance = 0;
 		this.utilized = 0;
 		this.loaded = false;
+		this.open = false;
 		this.chartData = new Subject<Array<DataSet>>();
 
 		this.edgeBandwidthData = {
@@ -72,6 +77,14 @@ export class DsCardComponent {
 		} as DataSet;
 
 		this.graphDataLoaded = false;
+	}
+
+	ngOnInit() {
+		if (!this.now || !this.today) {
+			this.now = new Date();
+			this.now.setUTCMilliseconds(0);
+			this.today = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate());
+		}
 	}
 
 	/**
@@ -107,15 +120,17 @@ export class DsCardComponent {
 					}
 				);
 			}
-			const now = new Date();
-			now.setUTCMilliseconds(0);
-			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-			this.loadChart(now, today);
+			this.open = true;
+			this.loadChart();
+		} else {
+			this.open = false;
+			this.graphDataLoaded = false;
+			this.chartData.next([]);
 		}
 	}
 
-	private loadChart(now: Date, today: Date) {
-		this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s', false, true).pipe(first()).subscribe(
+	private loadChart() {
+		this.api.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '60s', false, true).pipe(first()).subscribe(
 			(data: Array<DataPoint>) => {
 				for (const d of data) {
 					if (d.y === null) {
@@ -133,7 +148,7 @@ export class DsCardComponent {
 			}
 		);
 
-		this.api.getDSKBPS(this.deliveryService.xmlId, today, now, '60s', true, true).pipe(first()).subscribe(
+		this.api.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '60s', true, true).pipe(first()).subscribe(
 			(data: Array<DataPoint>) => {
 				for (const d of data) {
 					if (d.y === null) {

@@ -13,7 +13,7 @@
 */
 import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { first } from 'rxjs/operators';
 
@@ -33,10 +33,17 @@ export class DashboardComponent implements OnInit {
 	deliveryServices: DeliveryService[];
 	loading = true;
 
+	now: Date;
+	today: Date;
+
 	// Fuzzy search control
 	fuzzControl = new FormControl('');
 
-	constructor (private readonly api: APIService, private readonly route: ActivatedRoute) { }
+	constructor (private readonly api: APIService, private readonly route: ActivatedRoute, private readonly router: Router) {
+		this.now = new Date();
+		this.now.setUTCMilliseconds(0);
+		this.today = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate());
+	}
 
 	ngOnInit () {
 		this.api.getDeliveryServices().pipe(first()).subscribe(
@@ -53,6 +60,15 @@ export class DashboardComponent implements OnInit {
 				}
 			}
 		);
+	}
+
+	updateURL(e: Event) {
+		e.preventDefault();
+		if (this.fuzzControl.value === "") {
+			this.router.navigate([], {replaceUrl: true, queryParams: null});
+		} else if (this.fuzzControl.value) {
+			this.router.navigate([], {replaceUrl: true, queryParams: {search: this.fuzzControl.value}})
+		}
 	}
 
 	/**
@@ -74,6 +90,10 @@ export class DashboardComponent implements OnInit {
 			}
 		}
 		return true;
+	}
+
+	tracker(unused_item: number, d: DeliveryService) {
+		return d.id;
 	}
 
 }
