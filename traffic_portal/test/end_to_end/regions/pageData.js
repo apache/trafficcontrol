@@ -17,33 +17,13 @@
  * under the License.
  */
 
-exports.config = {
-	framework: 'jasmine',
-	seleniumAddress: 'http://localhost:4444/wd/hub',
-	baseUrl: 'https://localhost:4443',
-	getPageTimeout: 30000,
-
-	capabilities: {
-		'browserName': 'chrome'
-	},
-	params: {
-		adminUser: 'admin',
-		adminPassword: 'twelve'
-	},
-	jasmineNodeOpts: {defaultTimeoutInterval: 600000},
-
-	suites: {
-		loginTests: 'login/login-spec.js',
-		allTests: [
-			'login/login-spec.js',
-			'CDNs/cdns-spec.js',
-			'cacheGroups/cache-groups-spec.js',
-			'profiles/profiles-spec.js',
-			'divisions/divisions-spec.js',
-			'regions/regions-spec.js',
-			'physLocations/phys-locations-spec.js',
-			'DeliveryServices/delivery-services-spec.js',
-			'Servers/servers-spec.js'
-		]
-	}
+module.exports = function(){
+	this.name=element(by.name('name'));
+	this.division=element(by.name('division'));
+	this.createButton=element(by.buttonText('Create'));
+	this.deleteButton=element(by.buttonText('Delete'));
+	this.updateButton=element(by.buttonText('Update'));
+	this.searchFilter=element(by.id('regionsTable_filter')).element(by.css('label')).element(by.css('input'));
+	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
+	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
 };

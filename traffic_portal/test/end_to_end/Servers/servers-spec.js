@@ -26,7 +26,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	var commonFunctions = new cfunc();
 	var mockVals = {
 		status: "OFFLINE",
-		hostName: "testHost",
+		hostName: "testHost-" + Math.random().toString(36).substring(2, 15),
 		domainName: "servertest.com",
 		interfaceName: "testInterfaceName",
 		ipAddress: "10.42.80.118",
