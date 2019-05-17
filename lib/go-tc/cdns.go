@@ -1,5 +1,7 @@
 package tc
 
+import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api/impl"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -83,7 +85,7 @@ type CDNNullable struct {
 	// ID of the CDN
 	//
 	// required: true
-	ID *int `json:"id" db:"id"`
+	impl.ID
 
 	// LastUpdated
 	//

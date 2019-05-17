@@ -58,14 +58,6 @@ func (cdn TOCDN) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
-func (cdn TOCDN) GetKeys() (map[string]interface{}, bool) {
-	if cdn.ID == nil {
-		return map[string]interface{}{"id": 0}, false
-	}
-	return map[string]interface{}{"id": *cdn.ID}, true
-}
-
 func (cdn TOCDN) GetAuditName() string {
 	if cdn.Name != nil {
 		return *cdn.Name
@@ -78,11 +70,6 @@ func (cdn TOCDN) GetAuditName() string {
 
 func (cdn TOCDN) GetType() string {
 	return "cdn"
-}
-
-func (cdn *TOCDN) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	cdn.ID = &i
 }
 
 func isValidCDNchar(r rune) bool {
