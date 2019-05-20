@@ -125,7 +125,7 @@ CREATE TYPE profile_type AS ENUM (
     'KAFKA_PROFILE',
     'LOGSTASH_PROFILE',
     'ES_PROFILE',
-    'UNK_PROFILE'
+    'UNK_PROFILE',
     'GROVE_PROFILE'
 );
 
@@ -135,7 +135,7 @@ CREATE TYPE profile_type AS ENUM (
 
 CREATE TYPE workflow_states AS ENUM (
     'draft',
-    'submitted'
+    'submitted',
     'rejected',
     'pending',
     'complete'
