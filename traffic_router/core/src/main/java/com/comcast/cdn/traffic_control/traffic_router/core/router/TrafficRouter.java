@@ -282,11 +282,15 @@ public class TrafficRouter {
 		return null;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track) throws GeolocationException {
+		return selectCaches(request, ds, track, true);
+	}
+
+	@SuppressWarnings("PMD.CyclomaticComplexity")
+	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track, final boolean enableDeep) throws GeolocationException {
 		CacheLocation cacheLocation;
 		ResultType result = ResultType.CZ;
-		final boolean useDeep = (ds.getDeepCache() == DeliveryService.DeepCachingType.ALWAYS);
+		final boolean useDeep = enableDeep && (ds.getDeepCache() == DeliveryService.DeepCachingType.ALWAYS);
 
 		if (useDeep) {
 			// Deep caching is enabled. See if there are deep caches available
@@ -526,6 +530,7 @@ public class TrafficRouter {
 	 * @param track A {@link Track} object used to track routing statistics
 	 * @return The list of routes available to service the client's request.
 	 */
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public HTTPRouteResult multiRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request, true);
 
@@ -554,10 +559,17 @@ public class TrafficRouter {
 
 			if (caches != null && !caches.isEmpty()) {
 				if (isClientSteeringDiversityEnabled()) {
-				    final List<Cache> tryCaches = new ArrayList<>(caches);
-				    tryCaches.removeAll(selectedCaches);
-				    if (!tryCaches.isEmpty()) {
+					List<Cache> tryCaches = new ArrayList<>(caches);
+					tryCaches.removeAll(selectedCaches);
+					if (!tryCaches.isEmpty()) {
 						caches = tryCaches;
+					} else if (track.result == ResultType.DEEP_CZ) {
+						// deep caches have been selected already, try non-deep selection
+						tryCaches = selectCaches(request, ds, track, false);
+						tryCaches.removeAll(selectedCaches);
+						if (!tryCaches.isEmpty()) {
+							caches = tryCaches;
+						}
 					}
 				}
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
