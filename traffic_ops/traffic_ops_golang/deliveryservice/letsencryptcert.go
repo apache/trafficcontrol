@@ -1,20 +1,5 @@
 package deliveryservice
 
-import (
-	"crypto"
-	"crypto/rand"
-	"crypto/rsa"
-	"errors"
-	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
-	"github.com/go-acme/lego/certcrypto"
-	"github.com/go-acme/lego/certificate"
-	"github.com/go-acme/lego/lego"
-	"net/http"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -35,7 +20,22 @@ import (
  */
 
 import (
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"errors"
+	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/go-acme/lego/certcrypto"
+	"github.com/go-acme/lego/certificate"
+	"github.com/go-acme/lego/challenge"
+	"github.com/go-acme/lego/challenge/dns01"
+	"github.com/go-acme/lego/lego"
 	"github.com/go-acme/lego/registration"
+	"net/http"
 )
 
 type MyUser struct {
@@ -56,7 +56,48 @@ func (u *MyUser) GetPrivateKey() crypto.PrivateKey {
 	return u.key
 }
 
+type DNSProviderTrafficRouter struct {
+	r *http.Request
+}
+
+func NewDNSProviderTrafficRouter(r *http.Request) (*DNSProviderTrafficRouter, error) {
+	return &DNSProviderTrafficRouter{r: r}, nil
+}
+
+func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error {
+	inf, userErr, sysErr, _ := api.NewInfo(d.r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		log.Errorf("Getting api info. UserErr = " + userErr.Error() + " and SysErr = " + sysErr.Error())
+		return errors.New("Getting api info. UserErr = " + userErr.Error() + " and SysErr = " + sysErr.Error())
+	}
+	defer inf.Close()
+
+	fqdn, value := dns01.GetRecord(domain, keyAuth)
+
+	if response, err := inf.Tx.Tx.Exec(`INSERT INTO dnschallenges (fqdn, record) VALUES ($1, $2)`, fqdn, value); err != nil {
+		log.Errorf("Inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+		return errors.New("Inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+	} else {
+		rows, err := response.RowsAffected()
+		if err != nil {
+			log.Errorf("Determining rows affected dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+			return errors.New("Determining rows affected dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+		}
+		if rows == 0 {
+			log.Errorf("Zero rows affected when inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+			return errors.New("Zero rows affected when inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+		}
+	}
+
+	return nil
+}
+
+func (d *DNSProviderTrafficRouter) CleanUp(domain, token, keyAuth string) error {
+	return nil
+}
+
 func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
+
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -92,6 +133,14 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
 		return
 	}
+
+	client.Challenge.Remove(challenge.HTTP01)
+	client.Challenge.Remove(challenge.TLSALPN01)
+	trafficRouterDns, err := NewDNSProviderTrafficRouter(r)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+	}
+	client.Challenge.SetDNS01Provider(trafficRouterDns)
 
 	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
 	if err != nil {

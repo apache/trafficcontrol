@@ -190,6 +190,19 @@ CREATE SEQUENCE asn_id_seq
 
 ALTER TABLE asn_id_seq OWNER TO traffic_ops;
 
+
+--
+-- Name: dnschallenges; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE dnschallenges (
+  fqdn text NOT NULL,
+  record text NOT NULL
+);
+
+ALTER TABLE dnschallenges OWNER TO traffic_ops;
+
+
 --
 -- Name: asn_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
