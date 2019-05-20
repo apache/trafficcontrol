@@ -224,12 +224,12 @@ export namespace DeliveryService {
 	 * Determines if the Delivery Service is a candidate for bypassing
 	 * @returns `true` if it can have bypass settings, `false` otherwise.
 	*/
-	export function bypassable (): boolean {
-		if (!this.type) {
+	export function bypassable (ds: DeliveryService): boolean {
+		if (!ds.type) {
 			return false;
 		}
 
-		switch (this.type) {
+		switch (ds.type) {
 			case 'HTTP':
 			case 'HTTP_LIVE':
 			case 'HTTP_LIVE_NATNL':
