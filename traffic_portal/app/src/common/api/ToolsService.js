@@ -17,52 +17,40 @@
  * under the License.
  */
 
-var ToolsService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
+var ToolsService = function($http, messageModel, ENV) {
 
 	this.getOSVersions = function() {
-		var request = $q.defer();
-
-		$http.get(ENV.api['root'] + "osversions")
-			.then(
+		return $http.get(ENV.api['root'] + "osversions").then(
 				function(result) {
-					request.resolve(result.data.response);
+					return result.data.response;
 				},
-				function() {
-					request.reject();
+				function(err) {
+					console.error(err);
 				}
 			);
-
-		return request.promise;
 	};
 
 	this.generateISO = function(iso) {
-		var request = $q.defer();
-
-
-		var respType = 'json';
-		if (iso.stream == 'yes') {
+		let respType = 'json';
+		if (iso.stream === 'yes') {
 			respType = 'arraybuffer';
 		}
 
-		$http.post(ENV.api['root'] + "isos", iso, { responseType:respType })
-			.then(
-				function(result) {
-					request.resolve(result.data.response);
-					if (iso.stream == 'yes') {
-						var isoName = iso.hostName + "." + iso.domainName + "-" + iso.osversionDir + ".iso";
-						download(result.data, isoName);
-					}
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
+		return $http.post(ENV.api['root'] + "isos", iso, { responseType:respType }).then(
+			function(result) {
+				if (iso.stream === 'yes') {
+					const isoName = iso.hostName + "." + iso.domainName + "-" + iso.osversionDir + ".iso";
+					download(result.data, isoName);
 				}
-			);
-
-		return request.promise;
+				return result.data.response;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+			}
+		);
 	};
 
 };
 
-ToolsService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
+ToolsService.$inject = ['$http', 'messageModel', 'ENV'];
 module.exports = ToolsService;

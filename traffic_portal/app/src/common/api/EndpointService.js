@@ -17,55 +17,66 @@
  * under the License.
  */
 
-var EndpointService = function(Restangular, locationUtils, messageModel) {
+var EndpointService = function($http, ENV, locationUtils, messageModel) {
 
 	this.getEndpoints = function(queryParams) {
-		return Restangular.all('api_capabilities').getList(queryParams);
+		return $http.get(ENV.api['root'] + 'api_capabilities', {params: queryParams}).then(
+			function (result) {
+				return result.data.response;
+			},
+			function (err) {
+				console.error(err);
+			}
+		);
 	};
 
 	this.getEndpoint = function(id) {
-		return Restangular.one("api_capabilities", id).get();
+		return $http.get(ENV.api['root'] + 'api_capabilities/' + id).then(
+			function (result) {
+				return result.data.response[0];
+			},
+			function (err) {
+				console.error(err);
+			}
+		);
 	};
 
 	this.createEndpoint = function(endpoint) {
-		return Restangular.service('api_capabilities').post(endpoint)
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Endpoint created' } ], true);
-					locationUtils.navigateToPath('/endpoints');
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.post(ENV.api['root'] + 'api_capabilities', endpoint).then(
+			function() {
+				messageModel.setMessages([{level: 'success', text: 'Endpoint created'}], true);
+				locationUtils.navigateToPath('/endpoints');
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+			}
+		);
 	};
 
 	this.updateEndpoint = function(endpoint) {
-		return endpoint.put()
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Endpoint updated' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.put(ENV.api['root'] + 'api_capabilities/' + endpoint.id, endpoint).then(
+			function() {
+				messageModel.setMessages([{level: 'success', text: 'Endpoint updated'}], false);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+			}
+		);
 	};
 
 	this.deleteEndpoint = function(id) {
-		return Restangular.one("api_capabilities", id).remove()
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Endpoint deleted' } ], true);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, true);
-				}
-			);
+		return $http.delete(ENV.api['root'] + 'api_capabilities/' + id).then(
+			function() {
+				messageModel.setMessages([{level: 'success', text: 'Endpoint deleted'}], true);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, true);
+			}
+		);
 	};
 
 
 };
 
-EndpointService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+EndpointService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
 module.exports = EndpointService;

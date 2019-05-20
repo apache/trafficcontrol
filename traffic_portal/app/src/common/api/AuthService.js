@@ -21,56 +21,48 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
 
     this.login = function(username, password) {
         userModel.resetUser();
-        return httpService.post(ENV.api['root'] + 'user/login', { u: username, p: password })
-            .then(
-                function(result) {
-                    $rootScope.$broadcast('authService::login');
-                    var redirect = decodeURIComponent($location.search().redirect);
-                    if (redirect !== 'undefined') {
-                        $location.search('redirect', null); // remove the redirect query param
-                        $location.url(redirect);
-                    } else {
-                        $location.url('/');
-                    }
-                },
-                function(fault) {
-                    // do nothing
+        return httpService.post(ENV.api['root'] + 'user/login', { u: username, p: password }).then(
+            function(result) {
+                $rootScope.$broadcast('authService::login');
+                const redirect = decodeURIComponent($location.search().redirect);
+                if (redirect !== 'undefined') {
+                    $location.search('redirect', null); // remove the redirect query param
+                    $location.url(redirect);
+                } else {
+                    $location.url('/');
                 }
-            );
+            },
+            function(err) {
+               console.error(err);
+            }
+        );
     };
 
     this.tokenLogin = function(token) {
-        var deferred = $q.defer();
-
         userModel.resetUser();
-
-        $http.post(ENV.api['root'] + "user/login/token", { t: token })
-            .then(
-                function() {
-                    deferred.resolve();
-                },
-                function() {
-                    deferred.reject();
-                }
-            );
-
-        return deferred.promise;
+        return $http.post(ENV.api['root'] + "user/login/token", { t: token }).then(
+            function(result) {
+                return result;
+            },
+            function(err) {
+                console.error(err);
+            }
+        );
     };
 
     this.logout = function() {
         userModel.resetUser();
-        httpService.post(ENV.api['root'] + 'user/logout').
-            then(
-                function(result) {
-                    $rootScope.$broadcast('trafficPortal::exit');
-                    if ($state.current.name == 'trafficPortal.public.login') {
-                        messageModel.setMessages(result.alerts, false);
-                    } else {
-                        messageModel.setMessages(result.alerts, true);
-                        $state.go('trafficPortal.public.login');
-                    }
-                    return result;
+        httpService.post(ENV.api['root'] + 'user/logout').then(
+            function(result) {
+                $rootScope.$broadcast('trafficPortal::exit');
+                if ($state.current.name == 'trafficPortal.public.login') {
+                    messageModel.setMessages(result.alerts, false);
+                } else {
+                    messageModel.setMessages(result.alerts, true);
+                    $state.go('trafficPortal.public.login');
                 }
+                return result;
+            }
         );
     };
 

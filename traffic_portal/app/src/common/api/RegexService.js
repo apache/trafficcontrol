@@ -17,13 +17,21 @@
  * under the License.
  */
 
-var RegexService = function(Restangular, locationUtils, messageModel) {
+var RegexService = function($http, ENV) {
 
+	// This appears to never be used - and I don't think it works anyway.
 	this.getRegexes = function(dsId) {
-		return Restangular.all('deliveryservices_regexes').getList({ dsId: dsId });
+		return $http.get(ENV.api['root'] + 'deliveryservices_regexes', {params: {dsId: dsId}}).then(
+			function (result) {
+				return result.data.response;
+			},
+			function (err) {
+				console.error(err);
+			}
+		);
 	};
 
 };
 
-RegexService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+RegexService.$inject = ['$http', 'ENV'];
 module.exports = RegexService;

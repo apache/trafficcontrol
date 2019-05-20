@@ -17,54 +17,65 @@
  * under the License.
  */
 
-var TypeService = function(Restangular, locationUtils, messageModel) {
+var TypeService = function($http, ENV, locationUtils, messageModel) {
 
     this.getTypes = function(queryParams) {
-        return Restangular.all('types').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'types', {params: queryParams}).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                console.error(err);
+            }
+        )
     };
 
     this.getType = function(id) {
-        return Restangular.one("types", id).get();
+        return $http.get(ENV.api['root'] + 'types', {params: {id: id}}).then(
+            function (result) {
+                return result.data.response[0];
+            },
+            function (err) {
+                console.error(err);
+            }
+        )
     };
 
     this.createType = function(type) {
-        return Restangular.service('types').post(type)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Type created' } ], true);
-                    locationUtils.navigateToPath('/types');
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'types', type).then(
+            function() {
+                messageModel.setMessages([ { level: 'success', text: 'Type created' } ], true);
+                locationUtils.navigateToPath('/types');
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
     this.updateType = function(type) {
-        return type.put()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Type updated' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
+        return $http.put(ENV.api['root'] + 'types/' + type.id, type).then(
+            function() {
+                messageModel.setMessages([ { level: 'success', text: 'Type updated' } ], false);
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
         );
     };
 
     this.deleteType = function(id) {
-        return Restangular.one("types", id).remove()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Type deleted' } ], true);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
-                }
+        return $http.delete(ENV.api['root'] + "types/" + id).then(
+            function() {
+                messageModel.setMessages([ { level: 'success', text: 'Type deleted' } ], true);
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, true);
+            }
         );
     };
 
 };
 
-TypeService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+TypeService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
 module.exports = TypeService;

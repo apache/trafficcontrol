@@ -17,69 +17,73 @@
  * under the License.
  */
 
-var DeliveryServiceStatsService = function($http, $q, ENV, messageModel) {
+var DeliveryServiceStatsService = function($http, ENV, messageModel) {
 
 	this.getBPS = function(xmlId, start, end) {
-		var request = $q.defer();
+		const url = ENV.api['root'] + "deliveryservice_stats";
+		const params = {
+			deliveryServiceName: xmlId,
+			metricType: 'kbps',
+			serverType: 'edge',
+			startDate: start.seconds(0).format(),
+			endDate: end.seconds(0).format(),
+			interval: '60s'
+		};
 
-		var url = ENV.api['root'] + "deliveryservice_stats",
-			params = { deliveryServiceName: xmlId, metricType: 'kbps', serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '60s' };
-
-		$http.get(url, { params: params })
-			.then(
+		return $http.get(url, { params: params }).then(
 				function(result) {
-					request.resolve(result.data.response);
+					return result.data.response;
 				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
+				function(err) {
+					messageModel.setMessages(err.data.alerts, false);
 				}
 			);
-
-		return request.promise;
 	};
 
 	this.getTPS = function(xmlId, start, end) {
-		var request = $q.defer();
+		const url = ENV.api['root'] + "deliveryservice_stats";
+		const params = {
+			deliveryServiceName: xmlId,
+			metricType: 'tps_total',
+			serverType: 'edge',
+			startDate: start.seconds(0).format(),
+			endDate: end.seconds(0).format(),
+			interval: '60s'
+		};
 
-		var url = ENV.api['root'] + "deliveryservice_stats",
-			params = { deliveryServiceName: xmlId, metricType: 'tps_total', serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '60s' };
-
-		$http.get(url, { params: params })
-			.then(
-				function(result) {
-					request.resolve(result.data.response);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
-				}
-			);
-
-		return request.promise;
+		return $http.get(url, { params: params }).then(
+			function(result) {
+				request.resolve(result.data.response);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				request.reject();
+			}
+		);
 	};
 
 	this.getHttpStatusByGroup = function(xmlId, httpStatus, start, end) {
-		var request = $q.defer();
+		const url = ENV.api['root'] + "deliveryservice_stats";
+		const params = {
+			deliveryServiceName: xmlId,
+			metricType: 'tps_' + httpStatus,
+			serverType: 'edge',
+			startDate: start.seconds(0).format(),
+			endDate: end.seconds(0).format(),
+			interval: '60s'
+		};
 
-		var url = ENV.api['root'] + "deliveryservice_stats",
-			params = { deliveryServiceName: xmlId, metricType: 'tps_' + httpStatus, serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '60s' };
-
-		$http.get(url, { params: params })
-			.then(
-				function(result) {
-					request.resolve(result.data.response);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
-				}
-			);
-
-		return request.promise;
+		return $http.get(url, { params: params }).then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+			}
+		);
 	};
 
 };
 
-DeliveryServiceStatsService.$inject = ['$http', '$q', 'ENV', 'messageModel'];
+DeliveryServiceStatsService.$inject = ['$http', 'ENV', 'messageModel'];
 module.exports = DeliveryServiceStatsService;

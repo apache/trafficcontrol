@@ -17,54 +17,65 @@
  * under the License.
  */
 
-var DeliveryServiceRegexService = function(Restangular, locationUtils, messageModel) {
+var DeliveryServiceRegexService = function($http, locationUtils, messageModel, ENV) {
 
 	this.getDeliveryServiceRegexes = function(dsId) {
-		return Restangular.one('deliveryservices', dsId).getList('regexes');
+		return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes').then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				console.error(err);
+			}
+		);
 	};
 
 	this.getDeliveryServiceRegex = function(dsId, regexId) {
-		return Restangular.one('deliveryservices', dsId).one('regexes', regexId).get();
+		return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes/' + regexId).then(
+			function(result) {
+				return result.data.response[0];
+			},
+			function(err) {
+				console.error(err);
+			}
+		);
 	};
 
 	this.createDeliveryServiceRegex = function(dsId, regex) {
-		return Restangular.one('deliveryservices', dsId).all('regexes').post(regex)
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Regex created' } ], true);
-					locationUtils.navigateToPath('/delivery-services/' + dsId + '/regexes');
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.post(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes', regex).then(
+			function(result) {
+				messageModel.setMessages(result.data.alerts, true);
+				locationUtils.navigateToPath('/delivery-services/' + dsId + '/regexes');
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+			}
+		);
 	};
 
-	this.updateDeliveryServiceRegex = function(regex) {
-		return regex.put()
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Regex updated' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+	this.updateDeliveryServiceRegex = function(dsId, regex) {
+		return $http.put(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes/' + regex.id, regex).then(
+			function(result) {
+				messageModel.setMessages([{level: 'success', text:'Regex updated'}], false);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+			}
+		);
 	};
 
 	this.deleteDeliveryServiceRegex = function(dsId, regexId) {
-		return Restangular.one('deliveryservices', dsId).one('regexes', regexId).remove()
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Regex deleted' } ], true);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, true);
-				}
-			);
+		return $http.delete(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes/' + regexId).then(
+			function(result) {
+				messageModel.setMessages(result.data.alerts, true);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, true);
+			}
+		);
 	};
 
 };
 
-DeliveryServiceRegexService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+DeliveryServiceRegexService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceRegexService;

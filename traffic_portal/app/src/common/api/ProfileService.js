@@ -17,109 +17,123 @@
  * under the License.
  */
 
-var ProfileService = function(Restangular, $http, $q, locationUtils, messageModel, ENV) {
+var ProfileService = function($http, locationUtils, messageModel, ENV) {
 
     this.getProfiles = function(queryParams) {
-        return Restangular.all('profiles').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'profiles', {params: queryParams}).then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                console.error(err);
+            }
+        );
     };
 
     this.getProfile = function(id, queryParams) {
-        return Restangular.one("profiles", id).get(queryParams);
+        return $http.get(ENV.api['root'] + 'profiles', {params: {id: id}}).then(
+            function (result) {
+                return result.data.response[0];
+            },
+            function (err) {
+                console.error(err);
+            }
+        );
     };
 
     this.createProfile = function(profile) {
-        return Restangular.service('profiles').post(profile)
-            .then(
+        return $http.post(ENV.api['root'] + 'profiles', profile).then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Profile created' } ], true);
                 locationUtils.navigateToPath('/profiles');
             },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, false);
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
             }
         );
     };
 
     this.updateProfile = function(profile) {
-        return profile.put()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Profile updated' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
+        return $http.put(ENV.api['root'] + 'profiles/' + profile.id, profile).then(
+            function() {
+                messageModel.setMessages([ { level: 'success', text: 'Profile updated' } ], false);
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
         );
     };
 
     this.deleteProfile = function(id) {
-        var request = $q.defer();
-
-        $http.delete(ENV.api['root'] + "profiles/" + id)
-            .then(
-                function(result) {
-                    request.resolve(result.data);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.delete(ENV.api['root'] + "profiles/" + id).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                return err;
+            }
+        );
     };
 
     this.getParameterProfiles = function(paramId) {
-        return Restangular.one('parameters', paramId).getList('profiles');
+        return $http.get(ENV.api['root'] + 'parameters/' + paramId + '/profiles').then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                console.error(err);
+            }
+        );
     };
 
     this.getParamUnassignedProfiles = function(paramId) {
-        return Restangular.one('parameters', paramId).getList('unassigned_profiles');
+        return $http.get(ENV.api['root'] + 'parameters/' + paramId + '/unassigned_profiles').then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                console.error(err);
+            }
+        );
     };
 
     this.cloneProfile = function(sourceName, cloneName) {
-        return $http.post(ENV.api['root'] + "profiles/name/" + cloneName + "/copy/" + sourceName)
-            .then(
-                function(result) {
-                    messageModel.setMessages(result.data.alerts, true);
-                    locationUtils.navigateToPath('/profiles/' + result.data.response.id);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + "profiles/name/" + cloneName + "/copy/" + sourceName).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, true);
+                locationUtils.navigateToPath('/profiles/' + result.data.response.id);
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
     this.exportProfile = function(id) {
-        var deferred = $q.defer();
-
-        $http.get(ENV.api['root'] + "profiles/" + id + "/export")
-            .then(
-                function(result) {
-                    deferred.resolve(result.data);
-                },
-                function(fault) {
-                    deferred.reject(fault);
-                }
-            );
-
-        return deferred.promise;
+        return $http.get(ENV.api['root'] + "profiles/" + id + "/export").then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                return err;
+            }
+        );
     };
 
     this.importProfile = function(importJSON) {
-        return $http.post(ENV.api['root'] + "profiles/import", importJSON)
-            .then(
-                function(result) {
-                    messageModel.setMessages(result.data.alerts, true);
-                    locationUtils.navigateToPath('/profiles/' + result.data.response.id);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + "profiles/import", importJSON).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, true);
+                locationUtils.navigateToPath('/profiles/' + result.data.response.id);
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
 };
 
-ProfileService.$inject = ['Restangular', '$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
+ProfileService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ProfileService;

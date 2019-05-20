@@ -17,45 +17,42 @@
  * under the License.
  */
 
-var ProfileParameterService = function(Restangular, httpService, messageModel, ENV) {
+var ProfileParameterService = function($http, messageModel, ENV) {
 
 	this.unlinkProfileParameter = function(profileId, paramId) {
-		return httpService.delete(ENV.api['root'] + 'profileparameters/' + profileId + '/' + paramId)
-			.then(
+		return $http.delete(ENV.api['root'] + 'profileparameters/' + profileId + '/' + paramId).then(
 				function() {
 					messageModel.setMessages([ { level: 'success', text: 'Profile and parameter were unlinked.' } ], false);
 				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, true);
+				function(err) {
+					messageModel.setMessages(err.data.alerts, true);
 				}
 			);
 	};
 
 	this.linkProfileParameters = function(profileId, params) {
-		return Restangular.service('profileparameter').post({ profileId: profileId, paramIds: params, replace: true })
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Parameters linked to profile' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.post(ENV.api['root'] + 'profileparameter', { profileId: profileId, paramIds: params, replace: true }).then(
+			function() {
+				messageModel.setMessages([ { level: 'success', text: 'Parameters linked to profile' } ], false);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+			}
+		);
 	};
 
 	this.linkParamProfiles = function(paramId, profiles) {
-		return Restangular.service('parameterprofile').post({ paramId: paramId, profileIds: profiles, replace: true })
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Profiles linked to parameter' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.post(ENV.api['root'] + 'parameterprofile', { paramId: paramId, profileIds: profiles, replace: true }).then(
+			function() {
+				messageModel.setMessages([ { level: 'success', text: 'Profiles linked to parameter' } ], false);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+			}
+		);
 	};
 
 };
 
-ProfileParameterService.$inject = ['Restangular', 'httpService', 'messageModel', 'ENV'];
+ProfileParameterService.$inject = ['messageModel', 'ENV'];
 module.exports = ProfileParameterService;

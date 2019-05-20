@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -35,7 +35,6 @@ var trafficPortal = angular.module('trafficPortal', [
         'ui.router',
         'ui.bootstrap',
         'ui.bootstrap.contextMenu',
-        'restangular',
         'app.templates',
         'angular-jwt',
         'chart.js',
@@ -155,7 +154,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/physLocations/new').name,
         require('./modules/private/physLocations/servers').name,
         require('./modules/private/parameters').name,
-        require('./modules/private/parameters/cacheGroups').name,
         require('./modules/private/parameters/edit').name,
         require('./modules/private/parameters/list').name,
         require('./modules/private/parameters/new').name,
@@ -363,7 +361,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/physLocations').name,
         require('./common/modules/table/physLocationServers').name,
         require('./common/modules/table/parameters').name,
-        require('./common/modules/table/parameterCacheGroups').name,
         require('./common/modules/table/parameterProfiles').name,
         require('./common/modules/table/profileDeliveryServices').name,
         require('./common/modules/table/profileParameters').name,
@@ -416,25 +413,11 @@ var trafficPortal = angular.module('trafficPortal', [
 
     ], App)
 
-        .config(function($stateProvider, $logProvider, RestangularProvider, momentPickerProvider, ENV) {
+        .config(function($stateProvider, $logProvider, momentPickerProvider, ENV) {
 
             momentPickerProvider.options({
                 minutesStep: 1,
                 maxView: 'hour'
-            });
-
-            RestangularProvider.setBaseUrl(ENV.api['root']);
-
-            RestangularProvider.setResponseInterceptor(function(data, operation, what) {
-
-                if (angular.isDefined(data.response)) { // todo: this should not be needed. need better solution.
-                    if (operation == 'getList') {
-                        return data.response;
-                    }
-                    return data.response[0];
-                } else {
-                    return data;
-                }
             });
 
             $logProvider.debugEnabled(true);

@@ -17,65 +17,75 @@
  * under the License.
  */
 
-var ASNService = function($http, $q, Restangular, locationUtils, messageModel) {
+var ASNService = function($http, $q, locationUtils, messageModel, ENV) {
 
     this.getASNs = function(queryParams) {
-        const deferred = $q.defer();
-
-        $http.get(ENV.api['root'] + 'asns').then(
+        return $http.get(ENV.api['root'] + 'asns', {params: queryParams}).then(
             function(result) {
-                deferred.resolve(result.data.response);;
+                return result.data.response;
             },
-            function(fault) {
-                deferred.reject(fault);
+            function(err) {
+                console.error(err);
+                return err;
             }
         );
-
-        return deferred.promise;
     };
 
     this.getASN = function(id) {
-        return Restangular.one("asns", id).get();
+        return $http.get(ENV.api['root'] + 'asns', {params: {'id': id}}).then(
+            function(result) {
+                return result.data.response[0];
+            },
+            function(err) {
+                console.error(err);
+                return err;
+            }
+        );
     };
 
     this.createASN = function(asn) {
-        return Restangular.service('asns').post(asn)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'ASN created' } ], true);
-                    locationUtils.navigateToPath('/asns');
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'asns', asn).then(
+            function(result) {
+                messageModel.setMessages([{level: 'success', text: 'ASN created' }], true);
+                console.info("created new ASN: ", result.data.response);
+                return result;
+                locationUtils.navigateToPath('/asns');
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                return err;
+            }
+        );
     };
 
     this.updateASN = function(asn) {
-        return asn.put()
-            .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'ASN updated' } ], false);
+        return $http.put(ENV.api['root'] + 'asns/' + asn.id, asn).then(
+            function(result) {
+                messageModel.setMessages([{level: 'success', text: 'ASN updated'}], false);
+                console.info('updated ASN: ', result.data.response);
+                return result;
             },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, false);
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                return err;
             }
         );
     };
 
     this.deleteASN = function(id) {
-        return Restangular.one("asns", id).remove()
-            .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'ASN deleted' } ], true);
+        return $http.delete(ENV.api['root'] + 'asns/' + id).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, true);
+                return result;
             },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, true);
+            function(err) {
+                messageModel.setMessages(err.data.alerts, true);
+                return err;
             }
         );
     };
 
 };
 
-ASNService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel'];
+ASNService.$inject = ['$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ASNService;

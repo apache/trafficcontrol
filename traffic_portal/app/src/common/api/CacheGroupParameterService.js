@@ -17,37 +17,42 @@
  * under the License.
  */
 
-var CacheGroupParameterService = function(Restangular, messageModel, httpService, ENV) {
+var CacheGroupParameterService = function($q, $http, messageModel, httpService, ENV) {
 
 	this.getCacheGroupParameters = function(cachegroupId) {
-		return Restangular.one('cachegroups', cachegroupId).getList('parameters')
+		return $http.get(ENV.api['root'] + 'cachegroups/' + cachegroupId + '/parameters').then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				console.error(err);
+			}
+		);
 	};
 
 	this.unlinkCacheGroupParameter = function(cgId, paramId) {
-		return httpService.delete(ENV.api['root'] + 'cachegroupparameters/' + cgId + '/' + paramId)
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Cachegroup and parameter were unlinked.' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, true);
-				}
-			);
+		return httpService.delete(ENV.api['root'] + 'cachegroupparameters/' + cgId + '/' + paramId).then(
+			function() {
+				messageModel.setMessages([ { level: 'success', text: 'Cachegroup and parameter were unlinked.' } ], false);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, true);
+			}
+		);
 	};
 
 	this.linkCacheGroupParameters = function(cgParamMappings) {
-		return Restangular.service('cachegroupparameters').post(cgParamMappings)
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Parameters linked to cache group' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.post(ENV.api['root'] + 'cachegroupparameters', cgParamMappings).then(
+			function() {
+				messageModel.setMessages([{level: 'success', text: 'Parameters linked to cache group'}], false);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+			}
+		);
 	};
 
 };
 
-CacheGroupParameterService.$inject = ['Restangular', 'messageModel', 'httpService', 'ENV'];
+CacheGroupParameterService.$inject = ['$q', '$http', 'messageModel', 'httpService', 'ENV'];
 module.exports = CacheGroupParameterService;

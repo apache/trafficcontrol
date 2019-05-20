@@ -17,152 +17,127 @@
  * under the License.
  */
 
-var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUtils, messageModel, ENV) {
+var DeliveryServiceRequestService = function($http, locationUtils, messageModel, ENV) {
 
 	this.getDeliveryServiceRequests = function(queryParams) {
-		return Restangular.all('deliveryservice_requests').getList(queryParams);
+		return $http.get(ENV.api['root'] + 'deliveryservice_requests', {params: queryParams}).then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				console.error(err);
+			}
+		);
 	};
 
 	this.createDeliveryServiceRequest = function(dsRequest) {
-		var request = $q.defer();
-
-		$http.post(ENV.api['root'] + "deliveryservice_requests", dsRequest)
-			.then(
-				function(result) {
-					request.resolve(result.data.response);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject(fault);
-				}
-			);
-
-		return request.promise;
+		return $http.post(ENV.api['root'] + "deliveryservice_requests", dsRequest).then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				return err;
+			}
+		);
 	};
 
 	this.updateDeliveryServiceRequest = function(id, dsRequest) {
-		var request = $q.defer();
-
-		$http.put(ENV.api['root'] + "deliveryservice_requests?id=" + id, dsRequest)
-			.then(
-				function() {
-					request.resolve();
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
-				}
-			);
-
-		return request.promise;
+		return $http.put(ENV.api['root'] + "deliveryservice_requests", dsRequest, {params: {id: id}}).then(
+			function(result) {
+				console.info("updated delivery service request: ", result);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				return err;
+			}
+		);
 	};
 
 	this.deleteDeliveryServiceRequest = function(id, delay) {
-		var deferred = $q.defer();
-
-		$http.delete(ENV.api['root'] + "deliveryservice_requests?id=" + id)
-			.then(
-				function(response) {
-					deferred.resolve(response);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					deferred.reject(fault);
-				}
-			);
-
-		return deferred.promise;
+		return $http.delete(ENV.api['root'] + "deliveryservice_requests", {params: {id: id}}).then(
+			function(response) {
+				return response;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				return err;
+			}
+		);
 	};
 
 	this.assignDeliveryServiceRequest = function(id, userId) {
-		var request = $q.defer();
-
-		$http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/assign", { id: id, assigneeId: userId })
-			.then(
-				function() {
-					request.resolve();
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
-				}
-			);
-
-		return request.promise;
+		return $http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/assign", { id: id, assigneeId: userId }).then(
+			function(result) {
+				console.info("delivery service request assigned: ", result);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				return err;
+			}
+		);
 	};
 
 	this.updateDeliveryServiceRequestStatus = function(id, status) {
-		var request = $q.defer();
-
-		$http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/status", { id: id, status: status })
-			.then(
-				function() {
-					request.resolve();
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
-				}
-			);
-
-		return request.promise;
+		return $http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/status", { id: id, status: status }).then(
+			function(result) {
+				console.info("Delivery service request status updated: ", result);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				return err;
+			}
+		);
 	};
 
 	this.getDeliveryServiceRequestComments = function(queryParams) {
-		return Restangular.all('deliveryservice_request_comments').getList(queryParams);
+		return $http.get(ENV.api['root'] + 'deliveryservice_request_comments', {params: queryParams}).then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				console.error(err);
+				return err;
+			}
+		);
 	};
 
 	this.createDeliveryServiceRequestComment = function(comment) {
-		var request = $q.defer();
-
-		$http.post(ENV.api['root'] + "deliveryservice_request_comments", comment)
-			.then(
-				function(response) {
-					request.resolve(response);
-				},
-				function(fault) {
-					request.reject(fault);
-				}
-			);
-
-		return request.promise;
+		return $http.post(ENV.api['root'] + "deliveryservice_request_comments", comment).then(
+			function(response) {
+				return response;
+			},
+			function(err) {
+				console.error(err);
+				return err;
+			}
+		);
 	};
 
 	this.updateDeliveryServiceRequestComment = function(comment) {
-		var request = $q.defer();
-
-		$http.put(ENV.api['root'] + "deliveryservice_request_comments?id=" + comment.id, comment)
-			.then(
-				function() {
-					request.resolve();
+		return $http.put(ENV.api['root'] + "deliveryservice_request_comments", comment, {params: {id: comment.id}}).then(
+				function(result) {
+					console.info('Delivery Service request comment updated: ', result);
 				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
+				function(err) {
+					messageModel.setMessages(err.data.alerts, false);
+					return err;
 				}
 			);
-
-		return request.promise;
 	};
 
 	this.deleteDeliveryServiceRequestComment = function(comment) {
-		var deferred = $q.defer();
-
-		$http.delete(ENV.api['root'] + "deliveryservice_request_comments?id=" + comment.id)
-			.then(
-				function(response) {
-					deferred.resolve(response);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					deferred.reject(fault);
-				}
-			);
-
-		return deferred.promise;
+		return $http.delete(ENV.api['root'] + "deliveryservice_request_comments", {params: {id: comment.id}}).then(
+			function(response) {
+				return response;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				return err;
+			}
+		);
 	};
-
 };
 
-DeliveryServiceRequestService.$inject = ['Restangular', '$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
+DeliveryServiceRequestService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceRequestService;

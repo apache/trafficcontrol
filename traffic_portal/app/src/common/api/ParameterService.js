@@ -17,72 +17,100 @@
  * under the License.
  */
 
-var ParameterService = function(Restangular, $http, $q, locationUtils, messageModel, ENV) {
+var ParameterService = function($http, locationUtils, messageModel, ENV) {
 
     this.getParameters = function(queryParams) {
-        return Restangular.all('parameters').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'parameters', {params: queryParams}).then(
+            function (result) {
+                return result.data.response
+            },
+            function (err) {
+                console.error(err);
+            }
+        );
     };
 
     this.getParameter = function(id) {
-        return Restangular.one("parameters", id).get();
+        return $http.get(ENV.api['root'] + 'parameters', {params: {id: id}}).then(
+            function (result) {
+                return result.data.response[0];
+            },
+            function (err) {
+                console.error(err);
+            }
+        );
     };
 
     this.createParameter = function(parameter) {
-        return Restangular.service('parameters').post(parameter)
-            .then(
+        return $http.post(ENV.api['root'] + 'parameters', parameter).then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter created' } ], true);
                 locationUtils.navigateToPath('/parameters');
             },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, false);
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
             }
         );
     };
 
     this.updateParameter = function(parameter) {
-        return parameter.put()
-            .then(
+        return $http.put(ENV.api['root'] + 'parameters/' + parameter.id, parameter).then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter updated' } ], false);
             },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, false);
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
             }
         );
     };
 
     this.deleteParameter = function(id) {
-        var request = $q.defer();
-
-        $http.delete(ENV.api['root'] + "parameters/" + id)
-            .then(
-                function(result) {
-                    request.resolve(result.data);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.delete(ENV.api['root'] + "parameters/" + id).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                return err;
+            }
+        );
     };
 
 
     this.getProfileParameters = function(profileId) {
-        return Restangular.one('profiles', profileId).getList('parameters');
+        return $http.get(ENV.api['root'] + 'profiles/' + profileId + '/parameters').then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                console.error(err);
+            }
+        );
     };
 
     this.getProfileUnassignedParams = function(profileId) {
-        return Restangular.one('profiles', profileId).getList('unassigned_parameters');
+        return $http.get(ENV.api['root'] + 'profiles/' + profileId + 'unassigned_parameters').then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                console.error(err);
+            }
+        );
     };
 
     this.getCacheGroupUnassignedParams = function(cgId) {
-        return Restangular.one('cachegroups', cgId).getList('unassigned_parameters');
+        return $http.get(ENV.api['root'] + 'cachegroups/' + cgId + '/unassigned_parameters').then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                console.error(err);
+            }
+        );
     };
 
 };
 
-ParameterService.$inject = ['Restangular', '$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
+ParameterService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ParameterService;

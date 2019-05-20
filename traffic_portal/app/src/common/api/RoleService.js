@@ -17,64 +17,55 @@
  * under the License.
  */
 
-var RoleService = function(Restangular, $http, $q, messageModel, ENV) {
+var RoleService = function($http, messageModel, ENV) {
 
     this.getRoles = function(queryParams) {
-        return Restangular.all('roles').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'roles', {params: queryParams}).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                console.error(err);
+            }
+        )
     };
 
     this.createRole = function(role) {
-        var request = $q.defer();
-
-        $http.post(ENV.api['root'] + "roles", role)
-            .then(
-                function(result) {
-                    request.resolve(result.data);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.post(ENV.api['root'] + "roles", role).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                return err;
+            }
+        );
     };
 
     this.updateRole = function(role) {
-        var request = $q.defer();
-
-        $http.put(ENV.api['root'] + "roles?id=" + role.id, role)
-            .then(
-                function(result) {
-                    request.resolve(result.data);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        return $http.put(ENV.api['root'] + "roles", role, {params: {id: role.id}}).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
     this.deleteRole = function(id) {
-        var request = $q.defer();
-
-        $http.delete(ENV.api['root'] + "roles?id=" + id)
-            .then(
-                function(result) {
-                    request.resolve(result.data);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.delete(ENV.api['root'] + "roles", {params: {id: id}}).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                return err;
+            }
+        );
     };
 
 };
 
-RoleService.$inject = ['Restangular', '$http', '$q', 'messageModel', 'ENV'];
+RoleService.$inject = ['$http', 'messageModel', 'ENV'];
 module.exports = RoleService;

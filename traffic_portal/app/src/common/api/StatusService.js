@@ -17,54 +17,65 @@
  * under the License.
  */
 
-var StatusService = function(Restangular, locationUtils, messageModel) {
+var StatusService = function($http, ENV, locationUtils, messageModel) {
 
     this.getStatuses = function(queryParams) {
-        return Restangular.all('statuses').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'statuses', {params: queryParams}).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                console.error(err);
+            }
+        )
     };
 
     this.getStatus = function(id) {
-        return Restangular.one("statuses", id).get();
+        return $http.get(ENV.api['root'] + 'statuses', {params: {id: id}}).then(
+            function (result) {
+                return result.data.response[0];
+            },
+            function (err) {
+                console.error(err);
+            }
+        )
     };
 
     this.createStatus = function(status) {
-        return Restangular.service('statuses').post(status)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Status created' } ], true);
-                    locationUtils.navigateToPath('/statuses');
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'statuses', status).then(
+            function() {
+                messageModel.setMessages([ { level: 'success', text: 'Status created' } ], true);
+                locationUtils.navigateToPath('/statuses');
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
     this.updateStatus = function(status) {
-        return status.put()
-            .then(
+        return $http.put(ENV.api['root'] + 'statuses/' + status.id, status).then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Status updated' } ], false);
             },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, false);
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
             }
         );
     };
 
     this.deleteStatus = function(id) {
-        return Restangular.one("statuses", id).remove()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Status deleted' } ], true);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
-                }
+        return $http.get(ENZ.api['root'] + "statuses/" + id).then(
+            function() {
+                messageModel.setMessages([ { level: 'success', text: 'Status deleted' } ], true);
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, true);
+            }
         );
     };
 
 };
 
-StatusService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+StatusService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
 module.exports = StatusService;

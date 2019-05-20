@@ -17,252 +17,199 @@
  * under the License.
  */
 
-var CDNService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
+var CDNService = function($http, locationUtils, messageModel, ENV) {
 
     this.getCDNs = function(all) {
-        var request = $q.defer();
-
-        $http.get(ENV.api['root'] + "cdns")
-            .then(
-                function(result) {
-                    var response;
-                    if (all) { // there is a CDN called "ALL" that is not really a CDN but you might want it...
-                        response = result.data.response;
-                    } else {
-                        response = _.filter(result.data.response, function(cdn) {
-                            return cdn.name != 'ALL';
-                        });
-                    }
-                    request.resolve(response);
-                },
-                function(fault) {
-                    request.reject();
+        return $http.get(ENV.api['root'] + 'cdns').then(
+            function(result) {
+                let response;
+                if (all) { // there is a CDN called "ALL" that is not really a CDN but you might want it...
+                    response = result.data.response;
+                } else {
+                    response = result.data.response.filter(function(cdn) {
+                        return cdn.name != 'ALL';
+                    });
                 }
-            );
-
-        return request.promise;
+                return response;
+            },
+            function(err) {
+                console.error(err);
+                return err;
+            }
+        );
     };
 
 
     this.getCDN = function(id) {
-        return Restangular.one("cdns", id).get();
+        return $http.get(ENV.api['root'] + 'cdns', {params: {id: id}}).then(
+            function(result) {
+                return result.data.response[0];
+            },
+            function(err) {
+                console.error(err);
+                return err;
+            }
+        );
     };
 
     this.createCDN = function(cdn) {
-        return Restangular.service('cdns').post(cdn)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'CDN created' } ], true);
-                    locationUtils.navigateToPath('/cdns');
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'cdns', cdn).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, true);
+                locationUtils.navigateToPath('/cdns');
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
     this.updateCDN = function(cdn) {
-        return cdn.put()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'CDN updated' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.put(ENV.api['root'] + 'cdns/' + cdn.id, cdn).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, false);
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
     this.deleteCDN = function(id) {
-        var request = $q.defer();
-
-        $http.delete(ENV.api['root'] + "cdns/" + id)
-            .then(
-                function(result) {
-                    request.resolve(result.data);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.delete(ENV.api['root'] + 'cdns/' + id).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                return err;
+            }
+        );
     };
 
     this.queueServerUpdates = function(id) {
-        return Restangular.one("cdns", id).customPOST( { action: "queue"}, "queue_update" )
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Queued CDN server updates' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'cdns/' + id + '/queue_update', {action: "queue"}).then(
+            function() {
+                messageModel.setMessages([{level: 'success', text: 'Queued CDN server updates'}], false);
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
     this.clearServerUpdates = function(id) {
-        return Restangular.one("cdns", id).customPOST( { action: "dequeue"}, "queue_update" )
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Cleared CDN server updates' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'cdns/' + id + '/queue_update', {action: "dequeue"}).then(
+            function() {
+                messageModel.setMessages([{ level: 'success', text: 'Cleared CDN server updates'}], false);
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
     this.getCapacity = function() {
-        var request = $q.defer();
-
-        $http.get(ENV.api['root'] + "cdns/capacity")
-            .then(
-                function(result) {
-                    request.resolve(result.data.response);
-                },
-                function(fault) {
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        return $http.get(ENV.api['root'] + 'cdns/capacity').then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                console.error(err);
+            }
+        );
     };
 
     this.getRoutingMethods = function() {
-        var request = $q.defer();
-
-        $http.get(ENV.api['root'] + "cdns/routing")
-            .then(
-                function(result) {
-                    request.resolve(result.data.response);
-                },
-                function(fault) {
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        return $http.get(ENV.api['root'] + 'cdns/routing').then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                console.error(err);
+            }
+        );
     };
 
     this.getCurrentStats = function() {
-        var request = $q.defer();
-
-        $http.get(ENV.api['root'] + "current_stats")
-            .then(
-                function(result) {
-                    request.resolve(result.data.response);
-                },
-                function(fault) {
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        return $http.get(ENV.api['root'] + 'current_stats').then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                console.error(err);
+            }
+        );
     };
 
     this.getCurrentSnapshot = function(cdnName) {
-        var request = $q.defer();
-
-        $http.get(ENV.api['root'] + "cdns/" + cdnName + "/snapshot")
-            .then(
-                function(result) {
-                    request.resolve(result.data.response);
-                },
-                function(fault) {
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+       return $http.get(ENV.api['root'] + 'cdns/' + cdnName + '/snapshot').then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                console.error(err);
+            }
+        );
     };
 
     this.getNewSnapshot = function(cdnName) {
-        var request = $q.defer();
-
-        $http.get(ENV.api['root'] + "cdns/" + cdnName + "/snapshot/new")
-            .then(
-                function(result) {
-                    request.resolve(result.data.response);
-                },
-                function(fault) {
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        return $http.get(ENV.api['root'] + 'cdns/' + cdnName + '/snapshot/new').then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                console.error(err);
+            }
+        );
     };
 
     this.snapshot = function(cdn) {
-        var request = $q.defer();
-
-        $http.put(ENV.api['root'] + "cdns/" + cdn.id + "/snapshot")
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Snapshot performed' } ], true);
-                    locationUtils.navigateToPath('/cdns/' + cdn.id);
-
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
-
-        return request.promise;
+        return $http.put(ENV.api['root'] + 'cdns/' + cdn.id + '/snapshot').then(
+            function() {
+                messageModel.setMessages([{level: 'success', text: 'Snapshot performed'}], true);
+                locationUtils.navigateToPath('/cdns/' + cdn.id);
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
     this.getDNSSECKeys = function(cdnName) {
-        var request = $q.defer();
-
-        $http.get(ENV.api['root'] + "cdns/name/" + cdnName + "/dnsseckeys")
-            .then(
-                function(result) {
-                    request.resolve(result.data.response);
-                },
-                function(fault) {
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        return $http.get(ENV.api['root'] + 'cdns/name/' + cdnName + '/dnsseckeys').then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                console.error(err);
+            }
+        );
     };
 
     this.generateDNSSECKeys = function(dnssecKeysRequest) {
-        var request = $q.defer();
-
-        $http.post(ENV.api['root'] + "cdns/dnsseckeys/generate", dnssecKeysRequest)
-            .then(
-                function(result) {
-                    request.resolve(result);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        $http.post(ENV.api['root'] + 'cdns/dnsseckeys/generate', dnssecKeysRequest).then(
+            function(result) {
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
 	this.regenerateKSK = function(kskRequest, cdnKey) {
-		var request = $q.defer();
-
-		$http.post(ENV.api['root'] + "cdns/" + cdnKey + "/dnsseckeys/ksk/generate", kskRequest)
-			.then(
-				function(result) {
-					request.resolve(result);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
-				}
-			);
-
-		return request.promise;
+		$http.post(ENV.api['root'] + 'cdns/' + cdnKey + '/dnsseckeys/ksk/generate', kskRequest).then(
+			function(result) {
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+			}
+		);
 	};
 
 };
 
-CDNService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
+CDNService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = CDNService;
