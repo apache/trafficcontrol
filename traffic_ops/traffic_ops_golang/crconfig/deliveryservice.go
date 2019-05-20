@@ -91,43 +91,44 @@ func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeli
 		return nil, errors.New("getting static DNS entries: " + err.Error())
 	}
 
-	q := fmt.Sprintf(`
-SELECT d.anonymous_blocking_enabled,
-       d.ccr_dns_ttl AS ttl,
-       d.consistent_hash_regex,
-       (SELECT ARRAY_AGG(name ORDER BY name)
-			  FROM deliveryservice_consistent_hash_query_param
-			  WHERE deliveryservice_id = d.id) AS query_keys,
-       d.deep_caching_type,
-       d.dns_bypass_cname,
-       d.dns_bypass_ip,
-       d.dns_bypass_ip6,
-       d.dns_bypass_ttl,
-       d.geo_limit,
-       d.geo_limit_countries,
-       d.geo_provider,
-       d.geolimit_redirect_url,
-       d.http_bypass_fqdn,
-       d.initial_dispersion,
-       d.ipv6_routing_enabled,
-       d.max_dns_answers,
+	q := `
+SELECT d.xml_id,
        d.miss_lat,
        d.miss_long,
        d.protocol,
-       d.regional_geo_blocking,
+       d.ccr_dns_ttl AS ttl,
        d.routing_name,
+       d.geo_provider,
+       t.name AS type,
+       d.geo_limit,
+       d.geo_limit_countries,
+       d.geolimit_redirect_url,
+       d.initial_dispersion,
+       d.regional_geo_blocking,
+       d.tr_response_headers,
+       d.max_dns_answers,
+       p.name AS profile,
+       d.dns_bypass_ip,
+       d.dns_bypass_ip6,
+       d.dns_bypass_ttl,
+       d.dns_bypass_cname,
+       d.http_bypass_fqdn,
+       d.ipv6_routing_enabled,
+       d.deep_caching_type,
        d.tr_request_headers,
        d.tr_response_headers,
-       d.xml_id,
-       p.name AS profile,
-       t.name AS "type"
+       d.anonymous_blocking_enabled,
+       d.consistent_hash_regex,
+       (SELECT ARRAY_AGG(name ORDER BY name)
+			  FROM deliveryservice_consistent_hash_query_param
+			  WHERE deliveryservice_id = d.id) AS query_keys
 FROM deliveryservice AS d
-INNER JOIN "type" AS t ON t.id = d.type
+INNER JOIN type AS t ON t.id = d.type
 LEFT OUTER JOIN profile AS p ON p.id = d.profile
-WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
-      AND d.active = TRUE
-      AND t.name != '%s'
-`, tc.DSTypeAnyMap)
+WHERE d.cdn_id = (select id FROM cdn WHERE name = $1)
+AND d.active = true
+`
+	q += fmt.Sprintf(" and t.name != '%s'", tc.DSTypeAnyMap)
 	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("querying deliveryservices: " + err.Error())
@@ -143,60 +144,63 @@ WHERE d.cdn_id = (SELECT id FROM cdn WHERE name = $1)
 			TTLs:                      &tc.CRConfigTTL{},
 		}
 
-		anonymousBlocking := false
-		ttl := sql.NullInt64{}
-		consistentHashRegex := sql.NullString{}
-		deepCachingType := sql.NullString{}
-		dnsBypassCName := sql.NullString{}
-		dnsBypassIP := sql.NullString{}
-		dnsBypassIP6 := sql.NullString{}
-		dnsBypassTTL := sql.NullInt64{}
-		geoLimit := sql.NullInt64{}
-		geoLimitCountries := sql.NullString{}
-		geoProvider := sql.NullInt64{}
-		geoLimitRedirectURL := sql.NullString{}
-		httpBypassFQDN := sql.NullString{}
-		dispersion := sql.NullInt64{}
-		ip6RoutingEnabled := sql.NullBool{}
-		maxDNSAnswers := sql.NullInt64{}
 		missLat := sql.NullFloat64{}
 		missLon := sql.NullFloat64{}
 		protocol := sql.NullInt64{}
-		geoBlocking := false
-		trRequestHeaders := sql.NullString{}
-		trRespHdrsStr := sql.NullString{}
-		trResponseHeaders := sql.NullString{}
-		xmlID := ""
-		profile := sql.NullString{}
+		ttl := sql.NullInt64{}
+		geoProvider := sql.NullInt64{}
 		ttype := ""
-		if err := rows.Scan(&anonymousBlocking,
-			&ttl,
-			&consistentHashRegex,
-			pq.Array(&ds.ConsistentHashQueryParams),
-			&deepCachingType,
-			&dnsBypassCName,
-			&dnsBypassIP,
-			&dnsBypassIP6,
-			&dnsBypassTTL,
-			&geoLimit,
-			&geoLimitCountries,
-			&geoProvider,
-			&geoLimitRedirectURL,
-			&httpBypassFQDN,
-			&dispersion,
-			&ip6RoutingEnabled,
-			&maxDNSAnswers,
+		geoLimit := sql.NullInt64{}
+		geoLimitCountries := sql.NullString{}
+		geoLimitRedirectURL := sql.NullString{}
+		dispersion := sql.NullInt64{}
+		geoBlocking := false
+		trRespHdrsStr := sql.NullString{}
+		xmlID := ""
+		maxDNSAnswers := sql.NullInt64{}
+		profile := sql.NullString{}
+		dnsBypassIP := sql.NullString{}
+		dnsBypassIP6 := sql.NullString{}
+		dnsBypassTTL := sql.NullInt64{}
+		dnsBypassCName := sql.NullString{}
+		httpBypassFQDN := sql.NullString{}
+		ip6RoutingEnabled := sql.NullBool{}
+		deepCachingType := sql.NullString{}
+		trRequestHeaders := sql.NullString{}
+		trResponseHeaders := sql.NullString{}
+		anonymousBlocking := false
+		consistentHashRegex := sql.NullString{}
+		err := rows.Scan(
+			&xmlID,
 			&missLat,
 			&missLon,
 			&protocol,
-			&geoBlocking,
+			&ds.TTL,
 			&ds.RoutingName,
-			&trRequestHeaders,
+			&geoProvider,
+			&ttype,
+			&geoLimit,
+			&geoLimitCountries,
+			&geoLimitRedirectURL,
+			&dispersion,
+			&geoBlocking,
 			&trRespHdrsStr,
-			&trResponseHeaders,
-			&xmlID,
+			&maxDNSAnswers,
 			&profile,
-			&ttype); err != nil {
+			&dnsBypassIP,
+			&dnsBypassIP6,
+			&dnsBypassTTL,
+			&dnsBypassCName,
+			&httpBypassFQDN,
+			&ip6RoutingEnabled,
+			&deepCachingType,
+			&trRequestHeaders,
+			&trResponseHeaders,
+			&anonymousBlocking,
+			&consistentHashRegex,
+			pq.Array(&ds.ConsistentHashQueryParams),
+		)
+		if err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
 
