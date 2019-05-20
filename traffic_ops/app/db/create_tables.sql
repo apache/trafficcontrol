@@ -126,7 +126,7 @@ CREATE TYPE profile_type AS ENUM (
     'LOGSTASH_PROFILE',
     'ES_PROFILE',
     'UNK_PROFILE'
-    'GROVE_PROFILE',
+    'GROVE_PROFILE'
 );
 
 --
@@ -138,7 +138,7 @@ CREATE TYPE workflow_states AS ENUM (
     'submitted'
     'rejected',
     'pending',
-    'complete',
+    'complete'
 );
 
 --
@@ -385,7 +385,7 @@ CREATE TABLE deliveryservice (
     deep_caching_type deep_caching_type NOT NULL DEFAULT 'NEVER',
     fq_pacing_rate bigint DEFAULT 0,
     anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE,
-    consistent_hash_regex text,
+    consistent_hash_regex text
 );
 
 
