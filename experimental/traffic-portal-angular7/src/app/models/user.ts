@@ -15,7 +15,7 @@
 /**
  * Reprents a Traffic Ops user (`tm_user` in the database)
 */
-export class User {
+export interface User {
 	addressLine1?:    string;
 	addressLine2?:    string;
 	city?:            string;
@@ -44,7 +44,7 @@ export class User {
 /**
  * Represents a role that a user may have
 */
-export class Role {
+export interface Role {
 	capabilities: Array<string>;
 	description?: string;
 	id:           number;

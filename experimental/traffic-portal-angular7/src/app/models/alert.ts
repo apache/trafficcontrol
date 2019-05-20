@@ -15,7 +15,7 @@
 /**
  * Represents a single `alert` object returned by the Traffic Ops API
 */
-export class Alert {
+export interface Alert {
 	level: string;
 	text: string;
 }

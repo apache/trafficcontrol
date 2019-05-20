@@ -19,7 +19,7 @@
 /**
  * Models an arbitrary Type of some object in the database
 */
-export class Type {
+export interface Type {
 	description?: string;
 	id:           number;
 	lastUpdated?: Date;

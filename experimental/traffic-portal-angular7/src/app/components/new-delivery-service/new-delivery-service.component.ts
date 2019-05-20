@@ -55,7 +55,7 @@ const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])*(\.[A-z\d]([A-z0-9\-]*[A-z
 export class NewDeliveryServiceComponent implements OnInit {
 
 	/** The Delivery Service being created */
-	deliveryService = new DeliveryService();
+	deliveryService = {} as DeliveryService;
 
 	/** A bunch of form controls */
 	activeImmediately = new FormControl();

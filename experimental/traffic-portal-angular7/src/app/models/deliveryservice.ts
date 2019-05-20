@@ -58,7 +58,7 @@ export enum GeoProvider {
 /**
  * Represents a single entry in a Delivery Service's `matchList` field.
 */
-export class DeliveryServiceMatch {
+export interface DeliveryServiceMatch {
 	pattern: string;
 	setNumber: number;
 	type: string;
@@ -154,7 +154,7 @@ export namespace RangeRequestHandling {
 /**
  * Represents a single Delivery Service of arbitrary type
 */
-export class DeliveryService {
+export interface DeliveryService {
 	active:                   boolean;
 	anonymousBlockingEnabled: boolean;
 	cacheurl?:                string;
@@ -216,12 +216,15 @@ export class DeliveryService {
 	type?:                    string;
 	typeId:                   number;
 	xmlId:                    string;
+}
+
+export namespace DeliveryService {
 
 	/**
 	 * Determines if the Delivery Service is a candidate for bypassing
 	 * @returns `true` if it can have bypass settings, `false` otherwise.
 	*/
-	public bypassable (): boolean {
+	export function bypassable (): boolean {
 		if (!this.type) {
 			return false;
 		}

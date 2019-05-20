@@ -12,8 +12,15 @@
 * limitations under the License.
 */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientModule } from '@angular/common/http';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { DeliveryserviceComponent } from './deliveryservice.component';
+import { TpHeaderComponent } from '../tp-header/tp-header.component';
+
+import { LinechartDirective } from '../../directives/linechart.directive';
+
 
 describe('DeliveryserviceComponent', () => {
 	let component: DeliveryserviceComponent;
@@ -21,7 +28,17 @@ describe('DeliveryserviceComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ DeliveryserviceComponent ]
+			declarations: [
+				DeliveryserviceComponent,
+				TpHeaderComponent,
+				LinechartDirective
+			],
+			imports: [
+				FormsModule,
+				HttpClientModule,
+				ReactiveFormsModule,
+				RouterTestingModule
+			]
 		})
 		.compileComponents();
 	}));
@@ -34,5 +51,25 @@ describe('DeliveryserviceComponent', () => {
 
 	it('should exist', () => {
 		expect(component).toBeTruthy();
+	});
+
+	it('sets the "to" and "from" values to "so far today"', () => {
+		const now = new Date();
+		now.setUTCMilliseconds(0);
+		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+		expect(component.to).toEqual(now);
+		expect(component.from).toEqual(today);
+
+		let nowParts: any[] = now.toISOString().split('T');
+		nowParts[1] = now.toTimeString().split(':');
+		nowParts[1] = [nowParts[1][0], nowParts[1][1]].join(':');
+		let todayParts: any[] = today.toISOString().split('T');
+		todayParts[1] = today.toTimeString().split(':');
+		todayParts[1] = [todayParts[1][0], todayParts[1][1]].join(':');
+		expect(nowParts[0]).toEqual(component.toDate.value);
+		expect(nowParts[1]).toEqual(component.toTime.value);
+		expect(todayParts[0]).toEqual(component.fromDate.value);
+		expect(todayParts[1]).toEqual(component.fromTime.value);
 	});
 });

@@ -19,7 +19,7 @@
 /**
  * Represents a CDN as exposed by the Traffic Ops API
 */
-export class CDN {
+export interface CDN {
 	dnssecEnabled: boolean;
 	domainName:    string;
 	id:            number;

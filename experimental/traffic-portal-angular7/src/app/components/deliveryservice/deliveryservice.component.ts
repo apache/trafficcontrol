@@ -28,7 +28,7 @@ import { DataPoint, DataSet, TPSData } from '../../models/data';
 })
 export class DeliveryserviceComponent implements OnInit {
 
-	deliveryservice = new DeliveryService();
+	deliveryservice = {} as DeliveryService;
 	loaded = new Map([['main', false], ['bandwidth', false]]);
 
 	bandwidthData: Subject<Array<DataSet>>;

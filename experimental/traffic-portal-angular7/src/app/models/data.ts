@@ -11,13 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export class DataPoint {
+export interface DataPoint {
 	t?: Date;
 	x?: number;
 	y: number;
 }
 
-export class DataSet {
+export interface DataSet {
 	label: string;
 	data: Array<DataPoint>;
 	backgroundColor?: string | Array<string>;
@@ -28,7 +28,7 @@ export class DataSet {
 	fillColor?: string;
 }
 
-export class DataSetWithSummary {
+export interface DataSetWithSummary {
 	dataSet: DataSet;
 	min: number;
 	max: number;
@@ -37,15 +37,16 @@ export class DataSetWithSummary {
 	ninetyEighthPercentile: number;
 	mean: number;
 
-	public get average (): number {
-		return this.mean;
-	}
-	public set average (a: number) {
-		this.mean = a;
-	}
+	// Interfaces can't have implementations - I just wanted a property alias...
+	// public get average (): number {
+	// 	return this.mean;
+	// }
+	// public set average (a: number) {
+	// 	this.mean = a;
+	// }
 }
 
-export class TPSData {
+export interface TPSData {
 	total: DataSetWithSummary;
 	informational?: DataSetWithSummary;
 	success: DataSetWithSummary;

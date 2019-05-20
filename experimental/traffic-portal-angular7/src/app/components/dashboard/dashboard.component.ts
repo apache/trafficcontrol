@@ -37,7 +37,7 @@ export class DashboardComponent implements OnInit {
 	today: Date;
 
 	// Fuzzy search control
-	fuzzControl = new FormControl('');
+	fuzzControl = new FormControl('', {updateOn: 'change'});
 
 	constructor (private readonly api: APIService, private readonly route: ActivatedRoute, private readonly router: Router) {
 		this.now = new Date();

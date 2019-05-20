@@ -18,6 +18,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { DsCardComponent } from './ds-card.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { DeliveryService } from '../../models/deliveryservice';
+import { LinechartDirective } from '../../directives/linechart.directive';
 
 describe('DsCardComponent', () => {
 	let component: DsCardComponent;
@@ -27,7 +28,8 @@ describe('DsCardComponent', () => {
 		TestBed.configureTestingModule({
 			declarations: [
 				DsCardComponent,
-				LoadingComponent
+				LoadingComponent,
+				LinechartDirective
 			],
 			imports: [
 				HttpClientModule,
@@ -40,7 +42,7 @@ describe('DsCardComponent', () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(DsCardComponent);
 		component = fixture.componentInstance;
-		component.deliveryService = new DeliveryService();
+		component.deliveryService = {} as DeliveryService;
 		fixture.detectChanges();
 	});
 
