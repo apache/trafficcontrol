@@ -566,6 +566,7 @@ public class TrafficRouter {
 					} else if (track.result == ResultType.DEEP_CZ) {
 						// deep caches have been selected already, try non-deep selection
 						tryCaches = selectCaches(request, ds, track, false);
+						track.setResult(ResultType.DEEP_CZ); // request should still be tracked as a DEEP_CZ hit
 						tryCaches.removeAll(selectedCaches);
 						if (!tryCaches.isEmpty()) {
 							caches = tryCaches;
