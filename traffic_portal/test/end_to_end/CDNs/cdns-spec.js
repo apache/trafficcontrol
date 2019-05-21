@@ -21,11 +21,11 @@ var pd = require('./pageData.js');
 var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal CDNs Test Suite', function() {
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var myNewCDN = 'cdn-' + Math.random().toString(36).substring(2, 15);
-	var myDomainName = myNewCDN + '.com';
-	var mydnssec = 'true';
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const myNewCDN = 'cdn-' + Math.random().toString(36).substring(2, 15);
+	const myDomainName = myNewCDN + '.com';
+	const mydnssec = 'true';
 
 	it('should go to the CDNs page', function() {
 		console.log("Go to the CDNs page");

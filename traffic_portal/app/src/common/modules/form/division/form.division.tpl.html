@@ -32,9 +32,9 @@ under the License.
         <br>
         <form name="divisionForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group" ng-class="{'has-error': hasError(divisionForm.name), 'has-feedback': hasError(divisionForm.name)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
+                <label for="name" class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="name" type="text" class="form-control" ng-model="division.name" required autofocus>
+                    <input id="name" name="name" type="text" class="form-control" ng-model="division.name" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(divisionForm.name, 'required')">Required</small>
                     <span ng-show="hasError(divisionForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>

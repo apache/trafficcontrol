@@ -26,7 +26,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	var commonFunctions = new cfunc();
 	var mockVals = {
 		status: "OFFLINE",
-		hostName: "testHost-" + Math.random().toString(36).substring(2, 15),
+		hostName: "testHost-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		domainName: "servertest.com",
 		interfaceName: "testInterfaceName",
 		ipAddress: "10.42.80.118",
@@ -55,17 +55,34 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.hostName.sendKeys(mockVals.hostName);
 		pageData.domainName.sendKeys(mockVals.domainName);
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
+		browser.sleep(1000);
 		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
+		browser.sleep(1000);
 		commonFunctions.selectDropdownbyNum(pageData.type, 1);
+		browser.sleep(1000);
 		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
+		browser.sleep(1000);
 		pageData.interfaceName.sendKeys(mockVals.interfaceName);
+		browser.sleep(1000);
+
 		pageData.ipAddress.sendKeys(mockVals.ipAddress);
+		browser.sleep(1000);
+
 		pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
+		browser.sleep(1000);
+
 		pageData.ipGateway.sendKeys(mockVals.ipGateway);
+		browser.sleep(1000);
+
 		pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
+		browser.sleep(1000);
+
 		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
+		browser.sleep(1000);
+
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
+		browser.sleep(1000);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 

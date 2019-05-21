@@ -21,9 +21,9 @@ var pd = require('./pageData.js');
 var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Divisions Test Suite', function() {
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var myNewDiv = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const myNewDiv = {
 		name: 'division-' + Math.random().toString(36).substring(2, 15)
 	};
 

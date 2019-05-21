@@ -21,9 +21,9 @@ var pd = require('./pageData.js');
 var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Cache Groups Test Suite', function() {
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var myNewCG = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const myNewCG = {
 		name: 'pTestCacheGroup' + Math.random().toString(36).substring(2, 15),
 		latitude: 45,
 		longitude: 45
