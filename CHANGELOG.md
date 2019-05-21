@@ -47,6 +47,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Issue 3476: Traffic Router returns partial result for CLIENT_STEERING Delivery Services when Regional Geoblocking or Anonymous Blocking is enabled.
 - Upgraded Traffic Portal to AngularJS 1.7.8
 - Issue 3275: Improved the snapshot diff performance and experience.
+- Removed Traffic Portal dependency on Restangular
 
 
 ## [3.0.0] - 2018-10-30
