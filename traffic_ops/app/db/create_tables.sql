@@ -384,8 +384,7 @@ CREATE TABLE deliveryservice (
     routing_name text NOT NULL DEFAULT 'cdn' CHECK (length(routing_name) > 0),
     deep_caching_type deep_caching_type NOT NULL DEFAULT 'NEVER',
     fq_pacing_rate bigint DEFAULT 0,
-    anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE,
-    consistent_hash_regex text
+    anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE
 );
 
 
@@ -1221,9 +1220,8 @@ ALTER SEQUENCE servercheck_id_seq OWNED BY servercheck.id;
 
 CREATE TABLE snapshot (
     cdn text NOT NULL,
-    crconfig json NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    monitoring json NOT NULL
+    content json NOT NULL,
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 ALTER TABLE snapshot OWNER TO traffic_ops;
