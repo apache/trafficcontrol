@@ -21,9 +21,9 @@ var pd = require('./pageData.js');
 var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Phys Locations Test Suite', function() {
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var myNewPhysLoc = {
+	const pageData = new pd();
+	const  commonFunctions = new cfunc();
+	const myNewPhysLoc = {
 		name: 'phys-loc-' + Math.random().toString(36).substring(2, 15),
 		address: '1200 sycamore lane',
 		city: 'Pottersville',

@@ -21,9 +21,9 @@ var pd = require('./pageData.js');
 var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Profiles Test Suite', function() {
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var myNewProfile = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const myNewProfile = {
 		name: 'profile-' + Math.random().toString(36).substring(2, 15),
 	};
 

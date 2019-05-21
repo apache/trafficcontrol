@@ -21,9 +21,9 @@ var pd = require('./pageData.js');
 var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Regions Test Suite', function() {
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var myNewRegion = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const myNewRegion = {
 		name: 'region-' + Math.random().toString(36).substring(2, 15),
 	};
 
