@@ -42,7 +42,9 @@ limitations under the License.
 		</div>
 		<div>
 			<div class="canvas-container" [ngClass]="{'graph-loading': !graphDataLoaded}">
-				<canvas linechart chartTitle="Today's Bandwidth" [chartDataSets]="chartData" chartYAxisLabel="Bandwidth (Kilobytes per second)" [chartDisplayLegend]="true" chartType="time"></canvas>
+				<canvas linechart chartTitle="Today's Bandwidth" [chartDataSets]="chartData" chartYAxisLabel="Bandwidth (Kilobytes per second)" [chartDisplayLegend]="true" chartType="time">
+					Your browser does not support canvases or Javascript. Normally, this would be a graph of the bandwidth data so far today.
+				</canvas>
 				<div class="loading" *ngIf="!graphDataLoaded"><loading></loading></div>
 			</div>
 			<fieldset>

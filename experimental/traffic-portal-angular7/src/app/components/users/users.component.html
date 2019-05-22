@@ -13,7 +13,7 @@ limitations under the License.
 -->
 <tp-header [title]="'Users'"></tp-header>
 <main>
-	<div><input type="text" autofocus inputmode="search" name="fuzzControl" [formControl]="fuzzControl" accesskey="/" placeholder="Fuzzy Search"/></div>
+	<div><input type="search" role="search" aria-label="Fuzzy Search User(s)" autofocus inputmode="search" name="fuzzControl" [formControl]="fuzzControl" accesskey="/" placeholder="Fuzzy Search"/></div>
 	<article id="users" [hidden]="loading">
 		<user-card *ngFor="let user of users" [hidden]="!fuzzy(user)" [user]="user" [roleMap]="rolesMap"></user-card>
 	</article>
