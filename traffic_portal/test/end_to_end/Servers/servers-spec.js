@@ -26,7 +26,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	const commonFunctions = new cfunc();
 	const mockVals = {
 		status: "OFFLINE",
-		hostName: "testHost-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
+		hostName: "testHost-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		domainName: "servertest.com",
 		interfaceName: "testInterfaceName",
 		ipAddress: "10.42.80.118",

@@ -24,7 +24,7 @@ describe('Traffic Portal Cache Groups Test Suite', function() {
 	const pageData = new pd();
 	const commonFunctions = new cfunc();
 	const myNewCG = {
-		name: 'pTestCacheGroup' + Math.random().toString(36).substring(2, 15),
+		name: 'cache-group-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		latitude: 45,
 		longitude: 45
 	};

@@ -24,7 +24,7 @@ describe('Traffic Portal Profiles Test Suite', function() {
 	const pageData = new pd();
 	const commonFunctions = new cfunc();
 	const myNewProfile = {
-		name: 'profile-' + Math.random().toString(36).substring(2, 15),
+		name: 'profile-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 	};
 
 	it('should go to the profiles page', function() {

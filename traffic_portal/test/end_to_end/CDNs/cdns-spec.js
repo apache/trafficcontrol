@@ -23,7 +23,7 @@ var cfunc = require('../common/commonFunctions.js');
 describe('Traffic Portal CDNs Test Suite', function() {
 	const pageData = new pd();
 	const commonFunctions = new cfunc();
-	const myNewCDN = 'cdn-' + Math.random().toString(36).substring(2, 15);
+	const myNewCDN = 'cdn-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789');
 	const myDomainName = myNewCDN + '.com';
 	const mydnssec = 'true';
 

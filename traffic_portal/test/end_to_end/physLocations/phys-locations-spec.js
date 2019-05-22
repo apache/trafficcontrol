@@ -24,7 +24,7 @@ describe('Traffic Portal Phys Locations Test Suite', function() {
 	const pageData = new pd();
 	const  commonFunctions = new cfunc();
 	const myNewPhysLoc = {
-		name: 'phys-loc-' + Math.random().toString(36).substring(2, 15),
+		name: 'phys-loc-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		address: '1200 sycamore lane',
 		city: 'Pottersville',
 		state: 'AK',
