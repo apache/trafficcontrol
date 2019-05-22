@@ -55,7 +55,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.StringProtector;
 
-@SuppressWarnings({"PMD.TooManyFields","PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals"})
+@SuppressWarnings({"PMD.TooManyFields","PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals", "PMD.ExcessivePublicCount"})
 public class DeliveryService {
 	protected static final Logger LOGGER = Logger.getLogger(DeliveryService.class);
 	private final String id;
@@ -691,7 +691,7 @@ public class DeliveryService {
 	 *	hashing. The result is URI-decoded - if decoding fails it will return
 	 *	a blank string instead.
 	 */
-	public String extractSignificantQueryParams(HTTPRequest r) {
+	public String extractSignificantQueryParams(final HTTPRequest r) {
 		if (r.getQueryString() == null || r.getQueryString().isEmpty()) {
 			return "";
 		}
@@ -708,7 +708,7 @@ public class DeliveryService {
 					parts[i] = URLDecoder.decode(parts[i], "UTF-8");
 				} catch (UnsupportedEncodingException e) {
 					final StringBuffer err = new StringBuffer();
-					err.append("Error decoding query prameters - ");
+					err.append("Error decoding query parameters - ");
 					err.append(this.toString());
 					err.append(" - Exception: ");
 					err.append(e.toString());
@@ -731,7 +731,7 @@ public class DeliveryService {
 			return URLDecoder.decode(s.toString(), "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			final StringBuffer err = new StringBuffer();
-			err.append("Error decoding query prameters - ");
+			err.append("Error decoding query parameters - ");
 			err.append(this.toString());
 			err.append(" - Exception: ");
 			err.append(e.toString());
