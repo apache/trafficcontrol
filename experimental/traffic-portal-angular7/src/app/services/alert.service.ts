@@ -31,7 +31,13 @@ export class AlertService {
 		this.alerts = this.alertsSubject.asObservable();
 	}
 
-	newAlert (levelOrAlert: string | Alert, text?: string) {
+	/**
+	 * Directly constructs a new UI alert
+	 * @param levelOrAlert Either an {@link Alert} or the level of alert
+	 * @param text Must be defined if `levelOrAlert` is a String - gives the text of the new alert.
+	 * @throws when `levelOrAlert` is a string, but `text` was not provided.
+	 */
+	public newAlert (levelOrAlert: string | Alert, text?: string) {
 		if (typeof levelOrAlert === 'string') {
 			if (text === null || text === undefined) {
 				throw new Error("Can't pass raw level without raw text!");

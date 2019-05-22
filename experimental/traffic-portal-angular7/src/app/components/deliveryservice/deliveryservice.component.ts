@@ -108,7 +108,7 @@ export class DeliveryserviceComponent implements OnInit {
 		this.loadTPS();
 	}
 
-	loadBandwidth () {
+	private loadBandwidth () {
 		let interval: string;
 		if (this.bucketSize < 1) {
 			interval = String(Math.round(this.bucketSize * 1000)) + 'ms';
@@ -130,7 +130,7 @@ export class DeliveryserviceComponent implements OnInit {
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
 			},
 			(e: Error) => {
-				this.alerts.newAlert('warning', 'Edge-Tier bandwidth data not found!');
+				this.alerts.newAlert('warning','Edge-Tier bandwidth data not found!');
 				console.debug(e);
 			}
 		);
@@ -155,7 +155,7 @@ export class DeliveryserviceComponent implements OnInit {
 		);
 	}
 
-	loadTPS () {
+	private loadTPS () {
 		let interval: string;
 		if (this.bucketSize < 1) {
 			interval = String(Math.round(this.bucketSize * 1000)) + 'ms';

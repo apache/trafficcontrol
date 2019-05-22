@@ -18,7 +18,7 @@ import { first } from 'rxjs/operators';
 
 import { APIService, AuthenticationService } from '../../services';
 import { CDN } from '../../models/cdn';
-import { DeliveryService, GeoLimit, GeoProvider, Protocol, QStringHandling, RangeRequestHandling } from '../../models/deliveryservice';
+import { bypassable, DeliveryService, GeoLimit, GeoProvider, Protocol, QStringHandling, RangeRequestHandling } from '../../models/deliveryservice';
 import { Type } from '../../models/type';
 
 /**
@@ -53,8 +53,6 @@ const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])*(\.[A-z\d]([A-z0-9\-]*[A-z
 	styleUrls: ['./new-delivery-service.component.scss']
 })
 export class NewDeliveryServiceComponent implements OnInit {
-
-	DeliveryService = DeliveryService;
 
 	/** The Delivery Service being created */
 	deliveryService = {} as DeliveryService;
@@ -179,6 +177,8 @@ export class NewDeliveryServiceComponent implements OnInit {
 			}
 		);
 	}
+
+	public bypassable = bypassable;
 
 	/**
 	 * When a user submits their origin URL, this parses that out into the related DS fields

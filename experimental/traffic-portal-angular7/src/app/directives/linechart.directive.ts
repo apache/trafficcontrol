@@ -68,7 +68,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 			throw new Error('[linechart] Directive can only be used on a canvas!');
 		}
 
-		this.ctx = (this.element.nativeElement as HTMLCanvasElement).getContext('2d');
+		this.ctx = (this.element.nativeElement as HTMLCanvasElement).getContext('2d', {alpha: false});
 
 		if (!this.chartType) {
 			this.chartType = LineChartType.Linear;
@@ -133,7 +133,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	}
 
 
-	dataLoad (data: DataSet[]) {
+	private dataLoad (data: DataSet[]) {
 		this.destroyChart();
 
 		if (data === null || data === undefined || data.some(x => x === null)) {
@@ -146,7 +146,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		this.chart = new Chart(this.ctx, this.opts);
 	}
 
-	dataError (e: Error) {
+	private dataError (e: Error) {
 		this.destroyChart();
 		this.ctx.font = '30px serif';
 		this.ctx.fillStyle = 'black';
@@ -154,7 +154,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		this.ctx.fillText('Error Fetching Data', this.element.nativeElement.width / 2., this.element.nativeElement.height / 2.);
 	}
 
-	noData () {
+	private noData () {
 		this.destroyChart();
 		this.ctx.font = '30px serif';
 		this.ctx.fillStyle = 'black';

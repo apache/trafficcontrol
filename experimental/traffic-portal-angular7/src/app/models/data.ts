@@ -11,12 +11,23 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+/**
+ * A single point of data compatible with chart.js's configuration and API
+ */
 export interface DataPoint {
+
+	/**
+	 * Defines a time position - {@link DataPoint.x} should not exist on @{link Datapoint}s that define 't'
+	 */
 	t?: Date;
 	x?: number;
 	y: number;
 }
 
+/**
+ * A chart.js-compatible data set that includes an array of {@link DataPoint} data as well as chart.js configuration options
+ */
 export interface DataSet {
 	label: string;
 	data: Array<DataPoint>;
@@ -28,6 +39,9 @@ export interface DataSet {
 	fillColor?: string;
 }
 
+/**
+ * Encapsulates a {@link DataSet} with aggregate information as returned by the Traffic Ops API
+ */
 export interface DataSetWithSummary {
 	dataSet: DataSet;
 	min: number;
@@ -36,16 +50,11 @@ export interface DataSetWithSummary {
 	ninetyFifthPercentile: number;
 	ninetyEighthPercentile: number;
 	mean: number;
-
-	// Interfaces can't have implementations - I just wanted a property alias...
-	// public get average (): number {
-	// 	return this.mean;
-	// }
-	// public set average (a: number) {
-	// 	this.mean = a;
-	// }
 }
 
+/**
+ * Contains all possible "TPS" data that can be returned by the Traffic Ops API
+ */
 export interface TPSData {
 	total: DataSetWithSummary;
 	informational?: DataSetWithSummary;

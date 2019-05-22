@@ -72,12 +72,17 @@ function constructDataSetFromResponse (r: any): DataSetWithSummary {
 	} as DataSetWithSummary;
 }
 
-@Injectable({ providedIn: 'root' })
 /**
  * The APIService provides access to the Traffic Ops API. Its methods should be kept API-version
  * agnostic (from the caller's perspective), and always return `Observable`s.
 */
+@Injectable({ providedIn: 'root' })
 export class APIService {
+
+	/**
+	 * The current API version to use
+	 * @todo Get this from the environment
+	 */
 	public API_VERSION = '1.4';
 
 	private deliveryServiceTypes: Array<Type>;
@@ -198,11 +203,23 @@ export class APIService {
 	/**
 	 * Retrieves capacity statistics for the Delivery Service identified by a given, unique,
 	 * integral value.
-	 * @param d The integral, unique identifier of a Delivery Service
+	 * @param d Either a {@link DeliveryService} or an integral, unique identifier of a Delivery Service
 	 * @returrns An Observable that emits an object that hopefully has the right keys to represent capacity.
+	 * @throws If `d` is a {@link DeliveryService} that has no (valid) id
 	*/
-	public getDSCapacity (d: number): Observable<any> {
-		const path = '/api/' + this.API_VERSION + '/deliveryservices/' + String(d) + '/capacity';
+	public getDSCapacity (d: number | DeliveryService): Observable<any> {
+		let id: number;
+		if (typeof d === 'number'){
+			id = d;
+		} else {
+			d = d as DeliveryService;
+			if (!d.id || d.id < 0) {
+				throw new Error("Delivery Service id must be defined!");
+			}
+			id = d.id;
+		}
+
+		const path = '/api/' + this.API_VERSION + '/deliveryservices/' + String(id) + '/capacity';
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response;
@@ -270,6 +287,14 @@ export class APIService {
 		));
 	}
 
+	/**
+	 * Gets total TPS data for a Delivery Service. To get TPS data broken down by HTTP status, use {@link getAllDSTPSData}.
+	 * @param d The name (xmlid) of the Delivery Service for which TPS stats will be fetched
+	 * @param start The desired start date/time of the data range (must not have nonzero milliseconds!)
+	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
+	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
+	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior)
+	 */
 	public getDSTPS (d: string,
 	                 start: Date,
 	                 end: Date,
@@ -291,6 +316,14 @@ export class APIService {
 		));
 	}
 
+	/**
+	 * Gets total TPS data for a Delivery Service, as well as TPS data by HTTP response type.
+	 * @param d The name (xmlid) of the Delivery Service for which TPS stats will be fetched
+	 * @param start The desired start date/time of the data range (must not have nonzero milliseconds!)
+	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
+	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
+	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior)
+	 */
 	public getAllDSTPSData (d: string,
 	                        start: Date,
 	                        end: Date,
