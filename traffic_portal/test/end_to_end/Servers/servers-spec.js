@@ -22,9 +22,9 @@ var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Servers Test Suite', function() {
 
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var mockVals = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const mockVals = {
 		status: "OFFLINE",
 		hostName: "testHost-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		domainName: "servertest.com",

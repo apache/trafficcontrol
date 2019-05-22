@@ -22,9 +22,9 @@ var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Delivery Service Requests', function() {
 
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var mockVals = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const mockVals = {
 		dsType: ["ANY MAP", "DNS", "HTTP", "STEERING"],
 		active: "Active",
 		xmlId: "thisisonlyadstest",
