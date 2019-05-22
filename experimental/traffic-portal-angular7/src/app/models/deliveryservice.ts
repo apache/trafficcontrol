@@ -162,6 +162,7 @@ export interface DeliveryService {
 	cdnId:                    number;
 	cdnName?:                 string;
 	checkPath?:               string;
+	consistentHashRegex?:     RegExp;
 	deepCachingType?:         string;
 	displayName:              string;
 	dnsBypassCname?:          string;
@@ -190,6 +191,7 @@ export interface DeliveryService {
 	longDesc2?:               string;
 	matchList?:               DeliveryServiceMatch[];
 	maxDnsAnswers?:           number;
+	maxQriginConnections?:    number;
 	midHeaderRewrite?:        string;
 	missLat:                  number;
 	missLong:                 number;
