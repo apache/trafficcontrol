@@ -22,12 +22,12 @@ var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Delivery Service Requests', function() {
 
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var mockVals = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const mockVals = {
 		dsType: ["ANY MAP", "DNS", "HTTP", "STEERING"],
 		active: "Active",
-		xmlId: "thisisonlyadstest",
+		xmlId: "xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		displayName: "dsTest",
 		orgServerFqdn: "http://dstest.com",
 		longDesc: "This is only a test that should be disposed of by Automated UI Testing.",

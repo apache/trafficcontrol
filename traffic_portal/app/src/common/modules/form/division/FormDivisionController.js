@@ -21,10 +21,6 @@ var FormDivisionController = function(division, $scope, $location, formUtils, st
 
     $scope.division = division;
 
-    $scope.props = [
-        { name: 'name', type: 'text', required: true, maxLength: 45 }
-    ];
-
     $scope.labelize = stringUtils.labelize;
 
     $scope.viewRegions = function() {
