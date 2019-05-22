@@ -21,10 +21,10 @@
 
 ``POST``
 ========
-Assigns :term:`cache server`\ s to a :term:`Delivery Service`.
+Assigns :term:`cache servers` to a :term:`Delivery Service`.
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [1]_
+:Roles Required: "admin" or "operations"\ [#tenancy]_
 :Response Type:  Object
 
 Request Structure
@@ -37,7 +37,7 @@ Request Structure
 	| xml_id | The 'xml_id' of the :term:`Delivery Service` whose server assignments are being edited |
 	+--------+----------------------------------------------------------------------------------------+
 
-:serverNames: An array of hostname of :term:`cache server`\ s to assign to this :term:`Delivery Service`
+:serverNames: An array of hostname of :term:`cache servers` to assign to this :term:`Delivery Service`
 
 .. code-block:: http
 	:caption: Request Example
@@ -54,8 +54,8 @@ Request Structure
 
 Response Structure
 ------------------
-:xml_id:      The 'xml_id' of the :term:`Delivery Service` to which the servers in ``serverNames`` have been assigned
-:serverNames: An array of hostnames of :term:`cache server`\ s assigned to :term:`Delivery Service` identified by ``xml_id``
+:xml_id:      The :ref:`ds-xmlid` of the :term:`Delivery Service` to which the servers in ``serverNames`` have been assigned
+:serverNames: An array of hostnames of :term:`cache servers` assigned to :term:`Delivery Service` identified by ``xml_id``
 
 .. code-block:: http
 	:caption: Response Example
@@ -79,4 +79,4 @@ Response Structure
 		"xmlId": "test"
 	}}
 
-.. [1] Users with the roles "admin" and/or "operation" will be able to edit the server assignments of *all* :term:`Delivery Service`\ s, whereas any other user will only be able to edit the server assignments of the :term:`Delivery Service`\ s their Tenant is allowed to edit.
+.. [#tenancy] Users can only assign servers to :term:`Delivery Services` that are visible to their :term:`Tenant`.

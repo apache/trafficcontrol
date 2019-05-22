@@ -26,7 +26,7 @@
 Retrieves the usage percentages of a servers associated with a :term:`Delivery Service`
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [1]_
+:Roles Required: "admin" or "operations"\ [#tenancy]_
 :Response Type:  Object
 
 Request Structure
@@ -41,8 +41,8 @@ Request Structure
 
 Response Structure
 ------------------
-:availablePercent:   The percent of servers assigned to this :term:`Delivery Service` that is available - the allowed traffic level in terms of data per time period for all :term:`cache server`\ s that remains unused
-:unavailablePercent: The percent of servers assigned to this :term:`Delivery Service` that is unavailable - the allowed traffic level in terms of data per time period for all :term:`cache server`\ s that can't be used because the servers are deemed unhealthy
+:availablePercent:   The percent of servers assigned to this :term:`Delivery Service` that is available - the allowed traffic level in terms of data per time period for all :term:`cache servers` that remains unused
+:unavailablePercent: The percent of servers assigned to this :term:`Delivery Service` that is unavailable - the allowed traffic level in terms of data per time period for all :term:`cache servers` that can't be used because the servers are deemed unhealthy
 :utilizedPercent:    The percent of servers assigned to this :term:`Delivery Service` that is currently in use - the allowed traffic level in terms of data per time period that is currently devoted to servicing requests
 :maintenancePercent: The percent of servers assigned to this :term:`Delivery Service` that is unavailable due to server maintenance - the allowed traffic level in terms of data per time period that is unavailable because servers have intentionally been marked offline by administrators
 
@@ -70,4 +70,4 @@ Response Structure
 		"maintenancePercent": 0
 	}}
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to see details for *all* :term:`Delivery Service`\ s, whereas any other user will only see details for the :term:`Delivery Service`\ s their Tenant is allowed to see.
+.. [#tenancy] Users will only be able to see capacity details for the :term:`Delivery Services` their :term:`Tenant` is allowed to see.
