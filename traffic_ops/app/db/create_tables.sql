@@ -152,10 +152,10 @@ CREATE DOMAIN deliveryservice_signature_type AS text CHECK (VALUE IN ('url_sig',
 --
 
 CREATE TABLE api_capability (
-    id bigserial NOT NULL,
-    http_method http_method_t,
-    route text,
-    capability text,
+    id bigserial PRIMARY KEY,
+    http_method http_method_t NOT NULL,
+    route text NOT NULL,
+    capability text NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     UNIQUE (http_method, route, capability)
 );
@@ -240,8 +240,8 @@ ALTER SEQUENCE cachegroup_id_seq OWNED BY cachegroup.id;
 --
 
 CREATE TABLE cachegroup_fallbacks (
-    primary_cg bigint,
-    backup_cg bigint CHECK (primary_cg != backup_cg),
+    primary_cg bigint NOT NULL,
+    backup_cg bigint NOT NULL CHECK (primary_cg != backup_cg),
     set_order bigint NOT NULL,
     UNIQUE (primary_cg, backup_cg),
     UNIQUE (primary_cg, set_order)
@@ -254,8 +254,8 @@ ALTER TABLE cachegroup_fallbacks OWNER TO traffic_ops;
 --
 
 CREATE TABLE cachegroup_localization_method (
-    cachegroup bigint,
-    method localization_method,
+    cachegroup bigint NOT NULL,
+    method localization_method NOT NULL,
     UNIQUE (cachegroup, method)
 );
 
@@ -277,7 +277,7 @@ ALTER TABLE cachegroup_parameter OWNER TO traffic_ops;
 --
 
 CREATE TABLE capability (
-    name text,
+    name text NOT NULL,
     description text,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
@@ -326,7 +326,7 @@ ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 
 CREATE TABLE coordinate (
     id bigserial,
-    name text UNIQUE,
+    name text NOT NULL,
     latitude numeric NOT NULL DEFAULT 0.0,
     longitude numeric NOT NULL DEFAULT 0.0,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -827,7 +827,7 @@ ALTER SEQUENCE log_id_seq OWNED BY log.id;
 
 CREATE TABLE origin (
     id bigserial NOT NULL,
-    name text UNIQUE,
+    name text UNIQUE NULL,
     fqdn text NOT NULL,
     protocol origin_protocol NOT NULL DEFAULT 'http',
     is_primary boolean NOT NULL DEFAULT FALSE,
@@ -1087,8 +1087,8 @@ ALTER SEQUENCE role_id_seq OWNED BY role.id;
 --
 
 CREATE TABLE role_capability (
-    role_id bigint,
-    cap_name text,
+    role_id bigint NOT NULL,
+    cap_name text NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     UNIQUE (role_id, cap_name)
 );
@@ -1716,13 +1716,6 @@ ALTER TABLE ONLY to_extension ALTER COLUMN id SET DEFAULT nextval('to_extension_
 ALTER TABLE ONLY type ALTER COLUMN id SET DEFAULT nextval('type_id_seq'::regclass);
 
 --
--- Name: pk_api_capability; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY api_capability
-    ADD CONSTRAINT pk_api_capability PRIMARY KEY (id);
-
---
 -- Name: idx_89468_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
@@ -1736,13 +1729,6 @@ ALTER TABLE ONLY asn
 
 ALTER TABLE ONLY cachegroup
     ADD CONSTRAINT idx_89476_primary PRIMARY KEY (id, type);
-
---
--- Name: pk_cachegroup_fallbacks; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup_fallbacks
-    ADD CONSTRAINT pk_cachegroup_fallbacks PRIMARY KEY (primary_cg, backup_cg);
 
 --
 -- Name: idx_89484_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1895,13 +1881,6 @@ ALTER TABLE ONLY job_agent
 
 ALTER TABLE ONLY job_status
     ADD CONSTRAINT idx_89624_primary PRIMARY KEY (id);
-
---
--- Name: pk_cachegroup_localization_method; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cachegroup_localization_method
-    ADD CONSTRAINT pk_cachegroup_localization_method PRIMARY KEY (cachegroup, method);
 
 --
 -- Name: idx_89634_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
