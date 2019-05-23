@@ -22,7 +22,7 @@ var HttpService = function($http, $q) {
     this.get = function(resource) {
         const deferred = $q.defer();
 
-        $http.get(resource)
+        return $http.get(resource)
             .then(
                 function(result) {
                     deferred.resolve(result);
@@ -38,7 +38,7 @@ var HttpService = function($http, $q) {
     this.post = function(resource, payload) {
         const deferred = $q.defer();
 
-        $http.post(resource, payload)
+        return $http.post(resource, payload)
             .then(
                 function(result) {
                     deferred.resolve(result);
@@ -54,7 +54,7 @@ var HttpService = function($http, $q) {
     this.put = function(resource, payload) {
         const deferred = $q.defer();
 
-        $http.put(resource, payload)
+        return $http.put(resource, payload)
             .then(
                 function(result) {
                     deferred.resolve(result.response);
@@ -70,7 +70,7 @@ var HttpService = function($http, $q) {
     this.delete = function(resource) {
         const deferred = $q.defer();
 
-        $http.delete(resource)
+        return $http.delete(resource)
             .then(
                 function(result) {
                     deferred.resolve(result.response);
