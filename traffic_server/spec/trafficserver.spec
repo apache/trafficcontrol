@@ -25,7 +25,7 @@ Summary:	Apache Traffic Server
 Vendor:		Comcast
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
-URL:		http://trafficserver.apache.org/
+URL:		https://trafficserver.apache.org/
 Source0:        %{name}-%{version}.tar.bz2
 Patch:		%{name}-%{version}-791ddc4.patch
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
