@@ -692,43 +692,34 @@ public class DeliveryService {
 	 *	a blank string instead.
 	 */
 	public String extractSignificantQueryParams(final HTTPRequest r) {
-		if (r.getQueryString() == null || r.getQueryString().isEmpty()) {
+		if (r.getQueryString() == null || r.getQueryString().isEmpty() || this.getConsistentHashQueryParams().isEmpty()) {
 			return "";
 		}
 
 		final SortedSet<String> qparams = new TreeSet<String>();
-		for (final String qparam : r.getQueryString().split("&")) {
-			if (qparam.isEmpty()) {
-				continue;
-			}
+		try {
+			for (final String qparam : r.getQueryString().split("&")) {
+				if (qparam.isEmpty()) {
+					continue;
+				}
 
-			String[] parts = qparam.split("=");
-			for (short i = 0; i < parts.length; ++i) {
-				try {
+				String[] parts = qparam.split("=");
+				for (short i = 0; i < parts.length; ++i) {
 					parts[i] = URLDecoder.decode(parts[i], "UTF-8");
-				} catch (UnsupportedEncodingException e) {
-					final StringBuffer err = new StringBuffer();
-					err.append("Error decoding query parameters - ");
-					err.append(this.toString());
-					err.append(" - Exception: ");
-					err.append(e.toString());
-					LOGGER.error(err.toString());
-					return "";
+				}
+
+				if (this.getConsistentHashQueryParams().contains(parts[0])) {
+					qparams.add(String.join("=", parts));
 				}
 			}
 
-			if (this.getConsistentHashQueryParams().contains(parts[0])) {
-				qparams.add(String.join("=", parts));
+			final StringBuilder s = new StringBuilder();
+			for (final String q : qparams) {
+				s.append(q);
 			}
-		}
 
-		final StringBuilder s = new StringBuilder();
-		for (final String q : qparams) {
-			s.append(q);
-		}
-
-		try {
 			return URLDecoder.decode(s.toString(), "UTF-8");
+
 		} catch (UnsupportedEncodingException e) {
 			final StringBuffer err = new StringBuffer();
 			err.append("Error decoding query parameters - ");
