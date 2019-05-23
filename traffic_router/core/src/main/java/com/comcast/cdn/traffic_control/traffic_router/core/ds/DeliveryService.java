@@ -713,13 +713,6 @@ public class DeliveryService {
 				}
 			}
 
-			final StringBuilder s = new StringBuilder();
-			for (final String q : qparams) {
-				s.append(q);
-			}
-
-			return URLDecoder.decode(s.toString(), "UTF-8");
-
 		} catch (UnsupportedEncodingException e) {
 			final StringBuffer err = new StringBuffer();
 			err.append("Error decoding query parameters - ");
@@ -729,5 +722,12 @@ public class DeliveryService {
 			LOGGER.error(err.toString());
 			return "";
 		}
+
+		final StringBuilder s = new StringBuilder();
+		for (final String q : qparams) {
+			s.append(q);
+		}
+
+		return s.toString();
 	}
 }
