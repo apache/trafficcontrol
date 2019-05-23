@@ -82,8 +82,8 @@ CREATE TYPE deep_caching_type AS ENUM (
 
 CREATE TYPE http_method_t AS ENUM (
     'GET',
-    'PUT',
     'POST',
+    'PUT',
     'PATCH',
     'DELETE'
 );
@@ -156,7 +156,8 @@ CREATE TABLE api_capability (
     http_method http_method_t,
     route text,
     capability text,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    UNIQUE (http_method, route, capability)
 );
 
 ALTER TABLE api_capability OWNER TO traffic_ops;
@@ -241,7 +242,9 @@ ALTER SEQUENCE cachegroup_id_seq OWNED BY cachegroup.id;
 CREATE TABLE cachegroup_fallbacks (
     primary_cg bigint,
     backup_cg bigint CHECK (primary_cg != backup_cg),
-    set_order bigint NOT NULL
+    set_order bigint NOT NULL,
+    UNIQUE (primary_cg, backup_cg),
+    UNIQUE (primary_cg, set_order)
 );
 
 ALTER TABLE cachegroup_fallbacks OWNER TO traffic_ops;
@@ -252,7 +255,8 @@ ALTER TABLE cachegroup_fallbacks OWNER TO traffic_ops;
 
 CREATE TABLE cachegroup_localization_method (
     cachegroup bigint,
-    method localization_method
+    method localization_method,
+    UNIQUE (cachegroup, method)
 );
 
 --
@@ -286,10 +290,11 @@ ALTER TABLE capability OWNER TO traffic_ops;
 
 CREATE TABLE cdn (
     id bigint,
-    name text UNIQUE NOT NULL,
+    name text NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
     dnssec_enabled boolean DEFAULT false NOT NULL,
-    domain_name text UNIQUE NOT NULL
+    domain_name text NOT NULL,
+    CONSTRAINT cdn_domain_name_unique UNIQUE (domain_name)
 );
 
 
@@ -320,8 +325,8 @@ ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 --
 
 CREATE TABLE coordinate (
-    id bigserial UNIQUE NOT NULL,
-    name text,
+    id bigserial,
+    name text UNIQUE,
     latitude numeric NOT NULL DEFAULT 0.0,
     longitude numeric NOT NULL DEFAULT 0.0,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -336,7 +341,7 @@ CREATE TABLE deliveryservice (
     xml_id text NOT NULL,
     active boolean DEFAULT false NOT NULL,
     dscp bigint NOT NULL,
-    signing_algorithm deliveryservice_signature_type DEFAULT NULL,
+    signing_algorithm deliveryservice_signature_type,
     qstring_ignore smallint,
     geo_limit smallint DEFAULT '0'::smallint,
     http_bypass_fqdn text,
@@ -352,7 +357,7 @@ CREATE TABLE deliveryservice (
     long_desc text,
     long_desc_1 text,
     long_desc_2 text,
-    max_dns_answers bigint DEFAULT 5,
+    max_dns_answers bigint DEFAULT '5'::bigint,
     info_url text,
     miss_lat numeric,
     miss_long numeric,
@@ -381,10 +386,11 @@ CREATE TABLE deliveryservice (
     multi_site_origin_algorithm smallint,
     geolimit_redirect_url text,
     tenant_id bigint NOT NULL,
-    routing_name text NOT NULL DEFAULT 'cdn' CHECK (length(routing_name) > 0),
+    routing_name text NOT NULL DEFAULT 'cdn',
     deep_caching_type deep_caching_type NOT NULL DEFAULT 'NEVER',
     fq_pacing_rate bigint DEFAULT 0,
-    anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE
+    anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE,
+    CONSTRAINT routing_name_not_empty CHECK ((length(routing_name) > 0))
 );
 
 
@@ -432,9 +438,10 @@ ALTER TABLE deliveryservice_regex OWNER TO traffic_ops;
 CREATE TABLE deliveryservice_request (
     assignee_id bigint,
     author_id bigint NOT NULL,
+    change_type change_types NOT NULL,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     id bigserial,
-    last_edited_by bigint NOT NULL,
+    last_edited_by_id bigint NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     deliveryservice jsonb NOT NULL,
     status workflow_states NOT NULL
@@ -461,7 +468,7 @@ CREATE TABLE deliveryservice_request_comment (
 CREATE TABLE deliveryservice_server (
     deliveryservice bigint NOT NULL,
     server bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -691,10 +698,11 @@ ALTER TABLE job OWNER TO traffic_ops;
 
 CREATE TABLE job_agent (
     id bigint NOT NULL,
-    name text UNIQUE,
+    name text,
     description text,
     active integer DEFAULT 0 NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT job_agent_name_unique UNIQUE (name)
 );
 
 
@@ -747,9 +755,10 @@ ALTER SEQUENCE job_id_seq OWNED BY job.id;
 
 CREATE TABLE job_status (
     id bigint NOT NULL,
-    name text UNIQUE,
+    name text,
     description text,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT job_status_name_unique UNIQUE (name)
 );
 
 
@@ -817,8 +826,8 @@ ALTER SEQUENCE log_id_seq OWNED BY log.id;
 --
 
 CREATE TABLE origin (
-    id bigserial UNIQUE NOT NULL,
-    name text,
+    id bigserial NOT NULL,
+    name text UNIQUE,
     fqdn text NOT NULL,
     protocol origin_protocol NOT NULL DEFAULT 'http',
     is_primary boolean NOT NULL DEFAULT FALSE,
@@ -845,7 +854,8 @@ CREATE TABLE parameter (
     config_file text,
     value text NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    secure boolean DEFAULT false NOT NULL
+    secure boolean DEFAULT false NOT NULL,
+    CONSTRAINT unique_param UNIQUE (name, config_file, value)
 );
 
 
@@ -1042,10 +1052,11 @@ ALTER SEQUENCE region_id_seq OWNED BY region.id;
 
 CREATE TABLE role (
     id bigint,
-    name text UNIQUE NOT NULL,
+    name text NOT NULL,
     description text,
     priv_level bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT role_name_unique UNIQUE (name)
 );
 
 
@@ -1078,7 +1089,8 @@ ALTER SEQUENCE role_id_seq OWNED BY role.id;
 CREATE TABLE role_capability (
     role_id bigint,
     cap_name text,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    UNIQUE (role_id, cap_name)
 );
 
 ALTER TABLE role_capability OWNER TO traffic_ops;
@@ -1309,9 +1321,10 @@ ALTER SEQUENCE stats_summary_id_seq OWNED BY stats_summary.id;
 
 CREATE TABLE status (
     id bigint NOT NULL,
-    name text UNIQUE NOT NULL,
+    name text NOT NULL,
     description text,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT status_name_unique UNIQUE (name)
 );
 
 
@@ -1346,8 +1359,8 @@ CREATE TABLE steering_target (
     deliveryservice bigint NOT NULL,
     target bigint NOT NULL,
     value bigint NOT NULL,
-    type bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    type bigint NOT NULL
 );
 
 
@@ -1468,10 +1481,11 @@ ALTER SEQUENCE to_extension_id_seq OWNED BY to_extension.id;
 
 CREATE TABLE type (
     id bigint NOT NULL,
-    name text UNIQUE NOT NULL,
+    name text NOT NULL,
     description text,
     use_in_table text,
-    last_updated timestamp with time zone NOT NULL DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT type_name_unique UNIQUE(name)
 );
 
 
@@ -1509,6 +1523,16 @@ CREATE TABLE user_role (
 
 ALTER TABLE user_role OWNER TO traffic_ops;
 
+--
+-- Name: profile_type_values; Type: VIEW; Schema: public; Owner: traffic_ops
+--
+
+CREATE VIEW profile_type_values AS
+    SELECT unnest(enum_range(NULL::profile_type)) AS VALUE
+        ORDER BY (unnest(enum_range(NULL::profile_type)));
+
+
+ALTER TABLE profile_type_values OWNER TO traffic_ops;
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
@@ -1696,7 +1720,7 @@ ALTER TABLE ONLY type ALTER COLUMN id SET DEFAULT nextval('type_id_seq'::regclas
 --
 
 ALTER TABLE ONLY api_capability
-    ADD CONSTRAINT pk_api_capability PRIMARY KEY (http_method, route, capability);
+    ADD CONSTRAINT pk_api_capability PRIMARY KEY (id);
 
 --
 -- Name: idx_89468_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1728,11 +1752,11 @@ ALTER TABLE ONLY cachegroup_parameter
     ADD CONSTRAINT idx_89484_primary PRIMARY KEY (cachegroup, parameter);
 
 --
--- Name: pk_capability; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: capability_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY capability
-    ADD CONSTRAINT pk_capability PRIMARY KEY (name);
+    ADD CONSTRAINT capability_pkey PRIMARY KEY (name);
 
 --
 -- Name: idx_89491_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1742,11 +1766,11 @@ ALTER TABLE ONLY cdn
     ADD CONSTRAINT idx_89491_primary PRIMARY KEY (id);
 
 --
--- Name: pk_coordinate; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: coordinate_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY coordinate
-    ADD CONSTRAINT pk_coordinate PRIMARY KEY (name);
+    ADD CONSTRAINT coordinate_pkey PRIMARY KEY (id);
 
 --
 -- Name: idx_89502_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1764,18 +1788,18 @@ ALTER TABLE ONLY deliveryservice_regex
     ADD CONSTRAINT idx_89517_primary PRIMARY KEY (deliveryservice, regex);
 
 --
--- Name: pk_deliveryservice_request; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: deliveryservice_request_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_request
-    ADD CONSTRAINT pk_deliveryservice_request PRIMARY KEY (id);
+    ADD CONSTRAINT deliveryservice_request_pkey PRIMARY KEY (id);
 
 --
--- Name: pk_deliveryservice_request_comment; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: deliveryservice_request_comment_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_request_comment
-    ADD CONSTRAINT pk_deliveryservice_request_comment PRIMARY KEY (id);
+    ADD CONSTRAINT deliveryservice_request_comment_pkey PRIMARY KEY (id);
 
 --
 -- Name: idx_89521_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1887,11 +1911,11 @@ ALTER TABLE ONLY log
     ADD CONSTRAINT idx_89634_primary PRIMARY KEY (id, tm_user);
 
 --
--- Name: pk_origin; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: origin_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY origin
-    ADD CONSTRAINT pk_origin PRIMARY KEY (name);
+    ADD CONSTRAINT origin_pkey PRIMARY KEY (id);
 
 --
 -- Name: idx_89644_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1971,11 +1995,11 @@ ALTER TABLE ONLY servercheck
     ADD CONSTRAINT idx_89722_primary PRIMARY KEY (id, server);
 
 --
--- Name: pk_snapshot; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: snapshot_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY snapshot
-    ADD CONSTRAINT pk_snapshot PRIMARY KEY (cdn);
+    ADD CONSTRAINT snapshot_pkey PRIMARY KEY (cdn);
 
 --
 -- Name: idx_89729_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -2009,11 +2033,11 @@ ALTER TABLE ONLY steering_target
     ADD CONSTRAINT idx_89759_primary PRIMARY KEY (deliveryservice, target);
 
 --
--- Name: pk_tenant; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: tenant_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY tenant
-    ADD CONSTRAINT pk_tenant PRIMARY KEY (id);
+    ADD CONSTRAINT tenant_pkey PRIMARY KEY (id);
 
 --
 -- Name: idx_89765_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -2037,13 +2061,6 @@ ALTER TABLE ONLY to_extension
 
 ALTER TABLE ONLY type
     ADD CONSTRAINT idx_89786_primary PRIMARY KEY (id);
-
---
--- Name: pk_user_role; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY user_role
-    ADD CONSTRAINT pk_user_role PRIMARY KEY (user_id, role_id);
 
 --
 -- Name: idx_89468_cr_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -2332,7 +2349,7 @@ CREATE UNIQUE INDEX idx_89665_name_unique ON profile USING btree (name);
 -- Name: idx_181818_fk_cdn1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
-CREATE INDEX idx_181818_fk_cdn1 ON profile USING btree (id);
+CREATE INDEX idx_181818_fk_cdn1 ON profile USING btree (cdn);
 
 
 --
@@ -2538,12 +2555,6 @@ CREATE UNIQUE INDEX idx_89776_id_unique ON to_extension USING btree (id);
 --
 
 CREATE INDEX cachegroup_coordinate_fkey ON cachegroup USING btree (coordinate);
-
---
--- Name: cachegroup_localization_method_cachegroup_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
---
-
-CREATE INDEX cachegroup_localization_method_cachegroup_fkey ON cachegroup_localization_method USING btree (cachegroup);
 
 --
 -- Name: origin_is_primary_deliveryservice_constraint; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -3296,46 +3307,46 @@ ALTER TABLE ONLY deliveryservice_request_comment
     ADD CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES tm_user (id) ON DELETE CASCADE;
 
 --
--- Name: fk_profile; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: origin_profile_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY origin
-    ADD CONSTRAINT fk_profile FOREIGN KEY (profile) REFERENCES profile (id) ON DELETE RESTRICT;
+    ADD CONSTRAINT origin_profile_fkey FOREIGN KEY (profile) REFERENCES profile (id) ON DELETE RESTRICT;
 
 --
--- Name: fk_deliveryservice; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY origin
-    ADD CONSTRAINT fk_deliveryservice FOREIGN KEY (deliveryservice) REFERENCES deliveryservice (id) ON DELETE CASCADE;
-
---
--- Name: fk_coordinate; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: origin_deliveryservice_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY origin
-    ADD CONSTRAINT fk_coordinate FOREIGN KEY (coordinate) REFERENCES coordinate (id) ON DELETE RESTRICT;
+    ADD CONSTRAINT origin_deliveryservice_fkey FOREIGN KEY (deliveryservice) REFERENCES deliveryservice (id) ON DELETE CASCADE;
 
 --
--- Name: fk_cachegroup; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY origin
-    ADD CONSTRAINT fk_cachegroup FOREIGN KEY (cachegroup) REFERENCES cachegroup (id) ON DELETE RESTRICT;
-
---
--- Name: fk_tenant; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: origin_coordinate_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY origin
-    ADD CONSTRAINT fk_tenant FOREIGN KEY (tenant) REFERENCES tenant (id) ON DELETE RESTRICT;
+    ADD CONSTRAINT origin_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id) ON DELETE RESTRICT;
 
 --
--- Name: fk_coordinate; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: origin_cachegroup_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY origin
+    ADD CONSTRAINT origin_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup (id) ON DELETE RESTRICT;
+
+--
+-- Name: origin_tenant_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY origin
+    ADD CONSTRAINT origin_tenant_fkey FOREIGN KEY (tenant) REFERENCES tenant (id) ON DELETE RESTRICT;
+
+--
+-- Name: cachegroup_coordinate_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup
-    ADD CONSTRAINT fk_coordinate FOREIGN KEY (coordinate) REFERENCES coordinate (id);
+    ADD CONSTRAINT cachegroup_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id);
 
 --
 -- Name: fk_primary_cg; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3349,14 +3360,14 @@ ALTER TABLE ONLY cachegroup_fallbacks
 --
 
 ALTER TABLE ONLY cachegroup_fallbacks
-    ADD CONSTRAINT fk_backup_cg FOREIGN KEY (backup_cg) REFERENCES cachegroup (id);
+    ADD CONSTRAINT fk_backup_cg FOREIGN KEY (backup_cg) REFERENCES cachegroup (id) ON DELETE CASCADE;
 
 --
--- Name: fk_cachegroup; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: cachegroup_localization_method_cachegroup_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup_localization_method
-    ADD CONSTRAINT fk_cachegroup FOREIGN KEY (cachegroup) REFERENCES cachegroup (id) ON DELETE CASCADE;
+    ADD CONSTRAINT cachegroup_localization_method_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup (id) ON DELETE CASCADE;
 
 --
 -- Name: fk_deliveryservice_request; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3366,11 +3377,11 @@ ALTER TABLE ONLY deliveryservice_request_comment
     ADD CONSTRAINT fk_deliveryservice_request FOREIGN KEY (deliveryservice_request_id) REFERENCES deliveryservice_request (id) ON DELETE CASCADE;
 
 --
--- Name: fk_cdn; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: fk_cdn1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY profile
-    ADD CONSTRAINT fk_cdn FOREIGN KEY (cdn) REFERENCES cdn (id) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+    ADD CONSTRAINT fk_cdn1 FOREIGN KEY (cdn) REFERENCES cdn (id) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 --
 -- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3387,11 +3398,11 @@ ALTER TABLE ONLY role_capability
     ADD CONSTRAINT fk_cap_name FOREIGN KEY (cap_name) REFERENCES capability (name) ON DELETE RESTRICT;
 
 --
--- Name: fk_cdn; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: snapshot_cdn_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY snapshot
-    ADD CONSTRAINT fk_cdn FOREIGN KEY (cdn) REFERENCES cdn (name) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT snapshot_cdn_fkey FOREIGN KEY (cdn) REFERENCES cdn (name) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
 -- Name: fk_parent_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3401,25 +3412,25 @@ ALTER TABLE ONLY tenant
     ADD CONSTRAINT fk_parent_id FOREIGN KEY (parent_id) REFERENCES tenant (id);
 
 --
--- Name: fk_tenant_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: fk_tenantid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY tm_user
-    ADD CONSTRAINT fk_tenant_id FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL;
+    ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL;
 
 --
--- Name: fk_tm_user; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY user_role
-    ADD CONSTRAINT fk_tm_user FOREIGN KEY (user_id) REFERENCES tm_user (id) ON DELETE CASCADE;
-
---
--- Name: fk_role; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY user_role
-    ADD CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE RESTRICT;
+    ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES tm_user (id) ON DELETE CASCADE;
+
+--
+-- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY user_role
+    ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE RESTRICT;
 
 
 --
