@@ -166,11 +166,11 @@ func LoadAndGenerateDefaultConfig(path string) (Config, error) {
 			//if !contains(ep.ManualCommand, "%MASTERMANIFEST%") {
 			//	return out, errors.New("Manual commands must include the %MASTERMANIFEST% token")
 			//}
-			if !contains(ep.ManualCommand, "%OUTPUTDIRECTORY%") {
-				return out, errors.New("Manual commands must include the %OUTPUTDIRECTORY% token")
+			if !contains(ep.ManualCommand, `%OUTPUTDIRECTORY%`) {
+				return out, errors.New(`Manual commands must include the %OUTPUTDIRECTORY% token`)
 			}
-			if !contains(ep.ManualCommand, "%SOURCE%") {
-				return out, errors.New("Manual commands must include the %SOURCE% token")
+			if !contains(ep.ManualCommand, `%SOURCE%`) {
+				return out, errors.New(`Manual commands must include the %SOURCE% token`)
 			}
 		}
 		if len(ep.ABRManifests) > 0 {
@@ -191,12 +191,12 @@ func GetTranscoderCommand(ep Endpoint) (string, []string, error) {
 		out = "dir"
 	} else if len(ep.ManualCommand) > 0 {
 		tokenmap := map[string]string{
-			"%DISKID%":          ep.DiskID,
-			"%ENDPOINTTYPE%":    ep.EndpointType.String(),
-			"%ID%":              ep.ID,
-			"%MASTERMANIFEST%":  ep.OutputDirectory + "/" + ep.DiskID + ".m3u8",
-			"%OUTPUTDIRECTORY%": ep.OutputDirectory,
-			"%SOURCE%":          ep.Source,
+			`%DISKID%`:          ep.DiskID,
+			`%ENDPOINTTYPE%`:    ep.EndpointType.String(),
+			`%ID%`:              ep.ID,
+			`%MASTERMANIFEST%`:  ep.OutputDirectory + "/" + ep.DiskID + ".m3u8",
+			`%OUTPUTDIRECTORY%`: ep.OutputDirectory,
+			`%SOURCE%`:          ep.Source,
 		}
 		for _, cmdPart := range ep.ManualCommand {
 			args = append(args, replace(tokenmap, cmdPart))
