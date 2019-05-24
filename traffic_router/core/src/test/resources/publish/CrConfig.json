@@ -790,6 +790,7 @@
         "MyHeader",
         "Date"
       ],
+      "deepCachingType": "ALWAYS",
       "dispersion": {
         "limit": 1,
         "shuffled": "true"
@@ -840,6 +841,7 @@
         "MyHeader",
         "Date"
       ],
+      "deepCachingType": "ALWAYS",
       "dispersion": {
         "limit": 1,
         "shuffled": "true"
@@ -890,6 +892,7 @@
         "MyHeader",
         "Date"
       ],
+      "deepCachingType": "ALWAYS",
       "dispersion": {
         "limit": 1,
         "shuffled": "true"
@@ -1856,6 +1859,7 @@
       "refresh": "28800"
     },
     "coveragezone.polling.url": "http://localhost:8889/czf.json",
+    "deepcoveragezone.polling.url": "http://localhost:8889/dczmap.json",
     "api.auth.url": "http://${toHostname}/api/1.3/user/login",
     "certificates.polling.interval": "10000",
     "dnssec.enabled": "false"

@@ -559,7 +559,7 @@ public class SteeringTest {
 
 	@Test
 	public void itSupportsClientSteeringDiversity() throws Exception {
-		final String path = "/foo?fakeClientIpAddress=12.34.56.78";
+		final String path = "/foo?fakeClientIpAddress=192.168.42.10"; // this IP should get a DEEP_CZ hit (via dczmap.json)
 		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path);
 		httpGet.addHeader("Host", "cdn.client-steering-diversity-test.thecdn.example.com");
 
@@ -580,26 +580,36 @@ public class SteeringTest {
 			assertThat(json.has("locations"), equalTo(true));
 			assertThat(json.get("locations").size(), equalTo(5));
 
-			Set<String> actualEdges = new HashSet<>();
+			List<String> actualEdgesList = new ArrayList<>();
 			Set<String> actualTargets = new HashSet<>();
 
 			for (JsonNode n : json.get("locations")) {
 				String l = n.asText();
+				l = l.replaceFirst("http://", "");
 				String[] parts = l.split("\\.");
-				parts[0] = parts[0].replaceFirst("http://", "");
-				actualEdges.add(parts[0]);
+				actualEdgesList.add(parts[0]);
 				actualTargets.add(parts[1]);
 			}
 
-			// with client.steering.forced.diversity = true, expect to get all 3 edges back in the locations
-			// by default (client.steering.forced.diversity = false), only one edge would be returned in the locations
+			// assert that:
+			// - 1st and 2nd targets are edges from the deep cachegroup (because this is a deep hit)
+			// - 3rd target is the last unselected edge, which is *not* in the deep cachegroup
+			//   (because once all the deep edges have been selected, we select from the regular cachegroup)
+			// - 4th and 5th targets are any of the three edges (because all available edges have already been selected)
+			Set<String> deepEdges = new HashSet<>();
+			deepEdges.add("edge-cache-csd-1");
+			deepEdges.add("edge-cache-csd-2");
+			Set<String> allEdges = new HashSet<>(deepEdges);
+			allEdges.add("edge-cache-csd-3");
+			assertThat(actualEdgesList.get(0), isIn(deepEdges));
+			assertThat(actualEdgesList.get(1), isIn(deepEdges));
+			assertThat(actualEdgesList.get(2), equalTo("edge-cache-csd-3"));
+			assertThat(actualEdgesList.get(3), isIn(allEdges));
+			assertThat(actualEdgesList.get(4), isIn(allEdges));
 
-			String[] expectedEdgesArray = {"edge-cache-csd-1", "edge-cache-csd-2", "edge-cache-csd-3"};
-			Set<String> expectedEdges = new HashSet<>(Arrays.asList(expectedEdgesArray));
+			// assert that all 5 steering targets are included in the response
 			String[] expectedTargetsArray = {"csd-target-1", "csd-target-2", "csd-target-3", "csd-target-4", "csd-target-5"};
 			Set<String> expectedTargets = new HashSet<>(Arrays.asList(expectedTargetsArray));
-
-			assertThat(actualEdges, equalTo(expectedEdges));
 			assertThat(actualTargets, equalTo(expectedTargets));
 
 		} finally {
