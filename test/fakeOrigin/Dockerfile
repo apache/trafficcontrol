@@ -30,8 +30,8 @@ WORKDIR /go/src/github.com/apache/trafficcontrol
 COPY . .
 WORKDIR /go/src/github.com/apache/trafficcontrol/test/fakeOrigin
 
-RUN go get -d -v ./...
-RUN go install -v ./...
+RUN go get -d -v ./... && \
+    go install -v ./...
 RUN go build
 
 RUN groupadd -g 999 fakeOrigin && \
