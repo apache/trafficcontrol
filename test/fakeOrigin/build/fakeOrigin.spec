@@ -28,8 +28,6 @@ License: Apache License, Version 2.0
 URL: https://github.com/apache/trafficcontrol
 Vendor:	Apache Software Foundation
 
-# %define PACKAGEDIR %{prefix}
-
 %description
 A fake HTTP CDN Origin for testing
 
