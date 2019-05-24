@@ -20,7 +20,6 @@ Summary: fakeOrigin CDN Origin
 Name: fakeOrigin
 Version: %{_version}
 Release: %{_release}
-Group: Base System/System Tools
 Prefix: /usr/sbin/%{name}
 Source: %{_sourcedir}/%{name}-%{_version}-%{_release}.tgz
 Distribution: CentOS Linux
