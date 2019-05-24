@@ -233,6 +233,8 @@ public class ConfigHandler {
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.get("requestHeaders")));
 				trafficRouterManager.getTrafficRouter().configurationChanged();
 
+				letsEncryptDnsChallengeWatcher.setTrafficRouter(trafficRouterManager.getTrafficRouter());
+
 				/*
 				 * NetworkNode uses lazy loading to associate CacheLocations with NetworkNodes at request time in TrafficRouter.
 				 * Therefore this must be done last, as any thread that holds a reference to the CacheRegister might contain a reference

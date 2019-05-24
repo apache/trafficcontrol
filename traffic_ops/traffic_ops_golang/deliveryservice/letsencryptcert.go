@@ -97,7 +97,6 @@ func (d *DNSProviderTrafficRouter) CleanUp(domain, token, keyAuth string) error 
 }
 
 func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
-
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -107,6 +106,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	req := tc.DeliveryServiceLetsEncryptSSLKeysReq{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
+		log.Errorf("Error parsing request: %s", err.Error())
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
 		return
 	}
@@ -116,6 +116,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
+		log.Errorf("Error generating private key: %s", err.Error())
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
 		return
 	}
@@ -130,6 +131,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	client, err := lego.NewClient(config)
 	if err != nil {
+		log.Errorf("Error creating lets encrypt client: %s", err.Error())
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
 		return
 	}
@@ -138,12 +140,14 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	client.Challenge.Remove(challenge.TLSALPN01)
 	trafficRouterDns, err := NewDNSProviderTrafficRouter(r)
 	if err != nil {
+		log.Errorf("Error creating Traffic Router DNS provider: %s", err.Error())
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
 	}
 	client.Challenge.SetDNS01Provider(trafficRouterDns)
 
 	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
 	if err != nil {
+		log.Errorf("Error registering lets encrypt client: %s", err.Error())
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
 		return
 	}
@@ -155,6 +159,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 	certificates, err := client.Certificate.Obtain(request)
 	if err != nil {
+		log.Errorf("Error obtaining lets encrypt certificate: %s", err.Error())
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
 		return
 	}
@@ -178,6 +183,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(certificates.Certificate), Key: string(certificates.PrivateKey), CSR: string(certificates.CSR)}
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
+		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("putting riak keys: "+err.Error()), nil)
 		return
 	}
@@ -228,6 +234,18 @@ func RenewLetsEncryptCert(w http.ResponseWriter, r *http.Request) {
 	config.Certificate.KeyType = certcrypto.RSA2048
 
 	client, err := lego.NewClient(config)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		return
+	}
+
+	client.Challenge.Remove(challenge.HTTP01)
+	client.Challenge.Remove(challenge.TLSALPN01)
+	trafficRouterDns, err := NewDNSProviderTrafficRouter(r)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+	}
+	client.Challenge.SetDNS01Provider(trafficRouterDns)
 
 	renewedCert, err := client.Certificate.Renew(oldCert, true, false)
 	if err != nil {
