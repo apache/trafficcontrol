@@ -49,6 +49,7 @@ var TrafficPortalService = function($http, messageModel, ENV) {
         return $http.get(ENV.api['root'] + 'dbdump', { responseType:'arraybuffer' } ).then(
             function(result) {
                 download(result.data, moment().format() + '.pg_dump');
+                return result;
             },
             function(err) {
                 if (err && err.alerts && err.alerts.length > 0) {
