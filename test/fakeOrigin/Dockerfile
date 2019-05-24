@@ -18,10 +18,6 @@
 FROM golang:1.11
 MAINTAINER dev@trafficcontrol.apache.org
 
-WORKDIR /go/src/github.com/apache/trafficcontrol
-COPY . .
-WORKDIR /go/src/github.com/apache/trafficcontrol/test/fakeOrigin
-
 RUN apt-get update && \
     apt-get install -y ffmpeg \
       openssl \
@@ -29,6 +25,10 @@ RUN apt-get update && \
     apt-get autoremove -y && \
     apt-get autoclean -y && \
     rm -rf /var/lib/apt/lists/*
+
+WORKDIR /go/src/github.com/apache/trafficcontrol
+COPY . .
+WORKDIR /go/src/github.com/apache/trafficcontrol/test/fakeOrigin
 
 RUN go get -d -v ./...
 RUN go install -v ./...
