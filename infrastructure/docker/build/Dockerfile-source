@@ -24,10 +24,6 @@ MAINTAINER Dan Kirkwood
 VOLUME /trafficcontrol
 
 RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
-<<<<<<< HEAD
-=======
-	rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
->>>>>>> 6bd490fec... Https bump (#3637)
 	yum -y update ca-certificates && \
 	yum -y install \
 		git && \

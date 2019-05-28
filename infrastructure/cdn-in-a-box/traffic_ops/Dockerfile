@@ -23,16 +23,8 @@
 
 FROM centos:7
 
-<<<<<<< HEAD
 RUN yum install -y epel-release && \
     yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm && \
-=======
-RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
-    rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
-    rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG && \
-    yum -y update ca-certificates && \
-    yum-config-manager --add-repo https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64 && \
->>>>>>> 6bd490fec... Https bump (#3637)
     yum install -y \
         cpanminus \
         bind-utils \
