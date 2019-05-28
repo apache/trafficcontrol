@@ -17,33 +17,29 @@
  * under the License.
  */
 
-var TrafficPortalService = function($http, $q, messageModel, ENV) {
+var TrafficPortalService = function($http, messageModel, ENV) {
 
     this.getReleaseVersionInfo = function() {
-        var deferred = $q.defer();
-        $http.get('traffic_portal_release.json')
-            .then(
-                function(result) {
-                    deferred.resolve(result);
-                },
-                function(fault) {
-                    deferred.reject(fault);
-                }
-            );
-
-        return deferred.promise;
+        return $http.get('traffic_portal_release.json').then(
+            function(result) {
+                return result;
+            },
+            function(err) {
+                console.error(err);
+                throw err;
+            }
+        );
     };
 
     this.getProperties = function() {
-        var deferred = $q.defer();
-        $http.get('traffic_portal_properties.json')
-            .then(
-                function(result) {
-                    deferred.resolve(result.data.properties);
-                }
-            );
-
-        return deferred.promise;
+        return $http.get('traffic_portal_properties.json').then(
+            function(result) {
+                return result.data.properties;
+            },
+            function (err) {
+                console.error(err);
+            }
+        );
     };
 
     this.dbDump = function() {
@@ -51,22 +47,22 @@ var TrafficPortalService = function($http, $q, messageModel, ENV) {
         responseType=arraybuffer is important if you want to create a blob of your data
         See: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Sending_and_Receiving_Binary_Data
         */
-        $http.get(ENV.api['root'] + 'dbdump', { responseType:'arraybuffer' } )
-            .then(
-                function(result) {
-                    download(result.data, moment().format() + '.pg_dump');
-                },
-                function(fault) {
-                    if (fault && fault.alerts && fault.alerts.length > 0) {
-                        messageModel.setMessages(fault.alerts, false);
-                    } else {
-                        messageModel.setMessages([ { level: 'error', text: fault.status.toString() + ': ' + fault.statusText } ], false);
-                    }
+        return $http.get(ENV.api['root'] + 'dbdump', { responseType:'arraybuffer' } ).then(
+            function(result) {
+                download(result.data, moment().format() + '.pg_dump');
+                return result;
+            },
+            function(err) {
+                if (err && err.alerts && err.alerts.length > 0) {
+                    messageModel.setMessages(err.alerts, false);
+                } else {
+                    messageModel.setMessages([ { level: 'error', text: err.status.toString() + ': ' + err.statusText } ], false);
                 }
-            );
+            }
+        );
     };
 
 };
 
-TrafficPortalService.$inject = ['$http', '$q', 'messageModel', 'ENV'];
+TrafficPortalService.$inject = ['$http', 'messageModel', 'ENV'];
 module.exports = TrafficPortalService;
