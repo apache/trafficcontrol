@@ -17,17 +17,32 @@
  * under the License.
  */
 
-var JobService = function(Restangular) {
+var JobService = function($http, ENV) {
 
 	this.getJobs = function(queryParams) {
-		return Restangular.all('jobs').getList(queryParams);
+		return $http.get(ENV.api['root'] + 'jobs', {params: queryParams}).then(
+			function(result) {
+				return result.data.response;
+			},
+			function (err) {
+				console.error(err);
+			}
+		);
 	};
 
 	this.createJob = function(job) {
-		return Restangular.service('user/current/jobs').post(job);
+		return $http.post(ENV.api['root'] + 'user/current/jobs', job).then(
+			function (result) {
+				console.info('new job created: ', result);
+				return result;
+			},
+			function (err) {
+				console.error(err);
+			}
+		);
 	};
 
 };
 
-JobService.$inject = ['Restangular'];
+JobService.$inject = ['$http', 'ENV'];
 module.exports = JobService;
