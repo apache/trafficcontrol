@@ -17,69 +17,69 @@
  * under the License.
  */
 
-var StaticDnsEntryService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
+var StaticDnsEntryService = function($http, locationUtils, messageModel, ENV) {
 
 	this.getStaticDnsEntries = function(queryParams) {
-		return Restangular.all('staticdnsentries').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'staticdnsentries', {params: queryParams}).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                console.error(err);
+            }
+        )
 	};
 
 	this.getStaticDnsEntry = function(id) {
-        return Restangular.one('staticdnsentries?id=' + id).get();
+        return $http.get(ENV.api['root'] + 'staticdnsentries', {params: {id: id}}).then(
+            function (result) {
+                return result.data.response[0];
+            },
+            function (err) {
+                console.error(err);
+            }
+        )
     };
 
     this.createDeliveryServiceStaticDnsEntry = function(staticDnsEntry) {
-        var request = $q.defer();
-
-        $http.post(ENV.api['root'] + "staticdnsentries", staticDnsEntry)
-            .then(
-                function(response) {
-                    messageModel.setMessages(response.data.alerts, true);
-                    locationUtils.navigateToPath('/delivery-services/' + staticDnsEntry.deliveryServiceId + '/static-dns-entries');
-                    request.resolve(response);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false)
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.post(ENV.api['root'] + "staticdnsentries", staticDnsEntry).then(
+            function(response) {
+                messageModel.setMessages(response.data.alerts, true);
+                locationUtils.navigateToPath('/delivery-services/' + staticDnsEntry.deliveryServiceId + '/static-dns-entries');
+                return response;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false)
+                throw err;
+            }
+        );
     };
 
     this.deleteDeliveryServiceStaticDnsEntry = function(id) {
-        var deferred = $q.defer();
-
-        $http.delete(ENV.api['root'] + "staticdnsentries?id=" + id)
-            .then(
-                function(response) {
-                    messageModel.setMessages(response.data.alerts, true);
-                    deferred.resolve(response);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    deferred.reject(fault);
-                }
-            );
-        return deferred.promise;
+        return $http.delete(ENV.api['root'] + "staticdnsentries", {params: {id: id}}).then(
+            function(response) {
+                messageModel.setMessages(response.data.alerts, true);
+                return response;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.updateDeliveryServiceStaticDnsEntry = function(id, staticDnsEntry) {
-        var request = $q.defer();
-
-        $http.put(ENV.api['root'] + "staticdnsentries?id=" + id, staticDnsEntry)
-            .then(
-                function(response) {
-                    messageModel.setMessages(response.data.alerts, false);
-                    request.resolve();
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject();
-                }
-            );
-        return request.promise;
+        return $http.put(ENV.api['root'] + "staticdnsentries", staticDnsEntry, {params: {id: id}}).then(
+            function(response) {
+                messageModel.setMessages(response.data.alerts, false);
+                return response;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 };
 
-StaticDnsEntryService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
+StaticDnsEntryService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = StaticDnsEntryService;
