@@ -17,55 +17,43 @@
  * under the License.
  */
 
-var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $http, $q, ENV) {
+var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $http, ENV) {
 
 	this.generateUrlSigKeys = function(dsXmlId) {
-		var request = $q.defer();
-		$http.post(ENV.api['root'] + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/generate')
-		.then(
+		return $http.post(ENV.api['root'] + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/generate').then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, false);
-				request.resolve();
+				return result;
 			},
 			function(fault) {
 				messageModel.setMessages(fault.data.alerts, false);
-				request.reject();
 			}
 		);
-		return request.promise;
 	};
 
 	this.copyUrlSigKeys = function(dsXmlId, copyFromXmlId) {
-		var request = $q.defer();
-		 $http.post(ENV.api['root'] + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/copyFromXmlId/' + copyFromXmlId)
-		.then(
+		return $http.post(ENV.api['root'] + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/copyFromXmlId/' + copyFromXmlId).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, false);
-				request.resolve();
+				return result;
 			},
 			function(fault) {
 				messageModel.setMessages(fault.data.alerts, false);
-				request.reject();
 			}
 		);
-		return request.promise;
 	};
 
 	this.getDeliveryServiceUrlSigKeys = function(dsId) {
-		var request = $q.defer();
-        $http.get(ENV.api['root'] + "deliveryservices/" + dsId + "/urlkeys")
-        .then(
+        return $http.get(ENV.api['root'] + "deliveryservices/" + dsId + "/urlkeys").then(
             function(result) {
-                request.resolve(result.data.response);
+                return result.data.response;
             },
             function(fault) {
             	messageModel.setMessages(fault.data.alerts, false);
-                request.reject();
             }
         );
-        return request.promise;
 	};
 };
 
-DeliveryServiceUrlSigKeysService.$inject = ['locationUtils', 'messageModel', '$http', '$q', 'ENV'];
+DeliveryServiceUrlSigKeysService.$inject = ['locationUtils', 'messageModel', '$http', 'ENV'];
 module.exports = DeliveryServiceUrlSigKeysService;
