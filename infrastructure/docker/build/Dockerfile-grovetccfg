@@ -23,8 +23,14 @@ MAINTAINER John Rushford
 VOLUME /trafficcontrol
 
 ### Common for all sub-component builds
+<<<<<<< HEAD
 RUN	yum -y update ca-certificates &&\
  rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+=======
+RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+	rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
+	yum -y update ca-certificates && \
+>>>>>>> 6bd490fec... Https bump (#3637)
 	yum -y install \
 		epel-release && \
 	yum -y clean all
