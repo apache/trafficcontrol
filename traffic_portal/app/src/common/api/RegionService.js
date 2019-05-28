@@ -17,53 +17,67 @@
  * under the License.
  */
 
-var RegionService = function(Restangular, messageModel) {
+var RegionService = function($http, ENV, messageModel) {
 
     this.getRegions = function(queryParams) {
-        return Restangular.all('regions').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'regions', {params: queryParams}).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                console.error(err);
+            }
+        );
     };
 
     this.getRegion = function(id) {
-        return Restangular.one("regions", id).get();
+        return $http.get(ENV.api['root'] + 'regions', {params: {id: id}}).then(
+            function (result) {
+                return result.data.response[0];
+            },
+            function (err) {
+                console.error(err);
+            }
+        )
     };
 
     this.createRegion = function(region) {
-        return Restangular.service('regions').post(region)
-            .then(
-            function() {
+        return $http.post(ENV.api['root'] + 'regions', region).then(
+            function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Region created' } ], true);
+                return result;
             },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, false);
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
             }
         );
     };
 
     this.updateRegion = function(region) {
-        return region.put()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Region updated' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.put(ENV.api['root'] + 'regions/' + region.id, region).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Region updated' } ], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+            }
+        );
     };
 
     this.deleteRegion = function(id) {
-        return Restangular.one("regions", id).remove()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Region deleted' } ], true);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
-                }
-            );
+        return $http.delete(ENV.api['root'] + "regions/" + id).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Region deleted' } ], true);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, true);
+            }
+        );
     };
 
 };
 
-RegionService.$inject = ['Restangular', 'messageModel'];
+RegionService.$inject = ['$http', 'ENV', 'messageModel'];
 module.exports = RegionService;
