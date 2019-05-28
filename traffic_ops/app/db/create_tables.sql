@@ -326,7 +326,7 @@ ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 
 CREATE TABLE coordinate (
     id bigserial,
-    name text NOT NULL,
+    name text UNIQUE NOT NULL,
     latitude numeric NOT NULL DEFAULT 0.0,
     longitude numeric NOT NULL DEFAULT 0.0,
     last_updated timestamp with time zone NOT NULL DEFAULT now()
@@ -2536,6 +2536,12 @@ CREATE UNIQUE INDEX idx_89776_id_unique ON to_extension USING btree (id);
 CREATE INDEX cachegroup_coordinate_fkey ON cachegroup USING btree (coordinate);
 
 --
+-- Name: cachegroup_localization_method_cachegroup_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX cachegroup_localization_method_cachegroup_fkey ON cachegroup_localization_method USING btree(cachegroup);
+
+--
 -- Name: origin_is_primary_deliveryservice_constraint; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
@@ -3325,7 +3331,7 @@ ALTER TABLE ONLY origin
 --
 
 ALTER TABLE ONLY cachegroup
-    ADD CONSTRAINT cachegroup_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id);
+    ADD CONSTRAINT cachegroup_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id) ON DELETE CASCADE;
 
 --
 -- Name: fk_primary_cg; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3360,7 +3366,7 @@ ALTER TABLE ONLY deliveryservice_request_comment
 --
 
 ALTER TABLE ONLY profile
-    ADD CONSTRAINT fk_cdn1 FOREIGN KEY (cdn) REFERENCES cdn (id) MATCH SIMPLE ON UPDATE RESTRICT ON DELETE RESTRICT;
+    ADD CONSTRAINT fk_cdn1 FOREIGN KEY (cdn) REFERENCES cdn (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 --
 -- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
