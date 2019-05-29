@@ -39,9 +39,11 @@
   yum:
     name: traffic_router
     state: absent
+    lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
   become: yes
-  retries: 10
+  retries: 5
+  delay: 5
 
 - name: Purge old configs
   file:

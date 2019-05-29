@@ -17,7 +17,10 @@
     name:
       - postgresql96
     state: present
+    lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
+  retries: 5
+  delay: 5
 
 - name: Add Postgres96 bin dir to system-wide $PATH.
   copy:
@@ -28,8 +31,11 @@
   yum:
     name: "{{ to_pkg_name }}"
     state: installed
+    lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
   notify: Restart Traffic Ops
+  retries: 5
+  delay: 5
 
 - name: Check if Postinstall has already been run
   stat:

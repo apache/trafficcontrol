@@ -20,13 +20,19 @@
       - golang-src-1.9.4-1.el7
       - golang-bin-1.9.4-1.el7
     enablerepo: "{{ additional_yum_repos | default([]) }}"
+    lock_timeout: 300
+  retries: 5
+  delay: 5
 
 - name: Install Traffic Stats
   yum:
     state: present
     name: "{{ ts_pkg_name }}"
+    lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
   notify: Restart Traffic Stats
+  retries: 5
+  delay: 5
 
 - name: Render Traffic Stats configs
   template:

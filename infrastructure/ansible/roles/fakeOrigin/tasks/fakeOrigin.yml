@@ -17,8 +17,11 @@
     name: "{{ fo_pkg_name }}"
     state: installed
     update_cache : yes
+    lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
   notify: Restart fakeOrigin
+  retries: 5
+  delay: 5
 
 - name: Copy config.json file
   template:

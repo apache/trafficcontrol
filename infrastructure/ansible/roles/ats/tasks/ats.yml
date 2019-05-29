@@ -17,7 +17,10 @@
     name:
       - "{{ ort_pkg_name }}"
     state: present
+    lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
+  retries: 5
+  delay: 5
 
 - name: Deploy ORT Crontab
   template:

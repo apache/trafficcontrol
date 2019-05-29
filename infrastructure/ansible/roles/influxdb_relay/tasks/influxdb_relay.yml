@@ -16,8 +16,11 @@
   yum:
     name: "{{ influxdb_relay_pkg_name }}"
     state: installed
+    lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
   notify: Restart influxdb-relay
+  retries: 5
+  delay: 5
 
 - name: Copy influx-relay.conf file
   template:

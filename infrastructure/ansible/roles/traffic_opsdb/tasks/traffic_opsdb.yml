@@ -26,7 +26,10 @@
       - gcc
       - python-devel
     state: present
+    lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
+  retries: 5
+  delay: 5
 
 - name: Ensure postgres data directory exists
   file:

@@ -18,10 +18,12 @@
     state: present
     update_cache: yes
     use_backend: yum
+    lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
   notify: Restart Traffic Monitor
   become: yes
-  retries: 10
+  retries: 5
+  delay: 5
 
 - name: Copy traffic_monitor config
   template:

@@ -17,7 +17,10 @@
       - "{{ g_pkg_name }}"
       - "{{ gtccfg_pkg_name }}"
     state: installed
+    lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
+  retries: 5
+  delay: 5
 
 - name: Configure Grove
   template:
