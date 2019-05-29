@@ -56,15 +56,15 @@ Traffic Monitor is configured via two JSON configuration files, :file:`traffic_o
 Cache Polling URL
 -----------------------------------
 
-Caches are polled at the URL specified in the ``health.polling.url`` Parameter, on the cache's Server Profile.
+The :term:`cache servers` are polled at the URL specified in the ``health.polling.url`` :term:`parameter`, on the :term:`cache server`'s :term:`profile`.
 
-This Parameter must have the config file ``rascal.properties``.
+This :term:`parameter` must have the config file ``rascal.properties``.
 
-The value is a template with the text ``${hostname}`` being replaced with the cache server's Network IP (IPv4), and ``${interface_name}`` being replaced with the server's network Interface Name. For example, ``http://${hostname}/_astats?application=&inf.name=${interface_name}``.
+The value is a template with the text ``${hostname}`` being replaced with the :term:`cache server`'s Network IP (IPv4), and ``${interface_name}`` being replaced with the :term:`cache server`'s network Interface Name. For example, ``http://${hostname}/_astats?application=&inf.name=${interface_name}``.
 
-If the template contains a port, that port will be used, and the cache server's HTTPS and TCP Ports will not be added.
+If the template contains a port, that port will be used, and the :term:`cache server`'s HTTPS and TCP Ports will not be added.
 
-If the template does not contain a port, then if the template starts with ``https`` the cache server's HTTPS Port will be added, and if the template doesn't start with ``https`` the cache server's TCP Port will be added.
+If the template does not contain a port, then if the template starts with ``https`` the :term:`cache server`'s HTTPS Port will be added, and if the template doesn't start with ``https`` the :term:`cache server`'s TCP Port will be added.
 
 Examples:
 
