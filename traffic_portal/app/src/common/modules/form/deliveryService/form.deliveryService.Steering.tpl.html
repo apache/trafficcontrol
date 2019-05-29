@@ -37,9 +37,12 @@ under the License.
                 </ul>
             </div>
         </div>
-        <div class="pull-right" role="group" ng-show="!settings.isRequest && !settings.isNew">
-            <button type="button" class="btn btn-primary" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>
-            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+        <div class="pull-right" role="group">
+            <button type="button" class="btn btn-danger" ng-if="!settings.isNew" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
+            <button class="btn btn-success" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
+            <button class="btn btn-primary" ng-if="settings.isRequest && fulfillable()" ng-disabled="deliveryServiceForm.$invalid" ng-click="fulfillRequest(deliveryService)">Fulfill Request</button>
+            <button type="button" class="btn btn-primary" ng-show="!settings.isRequest && !settings.isNew" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>
+            <div class="btn-group" ng-show="!settings.isRequest && !settings.isNew" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
                     <span class="caret"></span>
@@ -61,452 +64,388 @@ under the License.
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
-        <br>
-        <form name="deliveryServiceForm" class="form-horizontal form-label-left">
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.active), 'has-feedback': hasError(deliveryServiceForm.active)}">
-                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="active">Active *<div class="helptooltip">
-                    <div class="helptext">Whether or not this Delivery Service is active on the CDN and is capable of traffic.</div>
-                </div>
-                </label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="active" name="active" class="form-control" ng-model="deliveryService.active" required autofocus>
-                        <option hidden disabled value="">Select...</option>
-                        <option ng-value="true">Active</option>
-                        <option ng-value="false">Not Active</option>
-                    </select>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.active, 'required')">Required</small>
-                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.active != dsCurrent.active">
-                        <h3>Current Value</h3>
-                        <pre>{{::dsCurrent.active ? 'Active' : 'Not Active'}}</pre>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.type), 'has-feedback': hasError(deliveryServiceForm.type)}">
-                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="type">Content Routing Type *<div class="helptooltip">
-                    <div class="helptext">
-                        DNS is the standard routing type for most CDN services. HTTP Redirect is a specialty routing service that is primarily used for video and large file downloads where localization and latency are significant concerns. A "Live" routing type should be used for all live services.
-                        <br>
-                        <br>
-                        <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#ds-types" target="_blank">See Delivery Service Types.</a>
-                    </div>
-                </div>
-                </label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="type" name="type" class="form-control" ng-model="deliveryService.typeId" ng-options="type.id as type.name for type in types" required>
-                        <option hidden disabled selected value="">Select...</option>
-                    </select>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
-                    <small ng-show="deliveryService.typeId"><a href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.typeId != dsCurrent.typeId">
-                        <h3>Current Value</h3>
-                        <pre>{{::dsCurrent.type}}</pre>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
-                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="xmlId">XML_ID (Key) *<div class="helptooltip">
-                    <div class="helptext">This id becomes a part of the CDN service domain in the form <samp>http://cdn.service-key.company.com/</samp>. Must be all lowercase, no spaces or special characters. May contain dashes.</div>
-                </div>
-                </label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="xmlId" name="xmlId" type="text" class="form-control" placeholder="Unique id used for the delivery service" ng-model="deliveryService.xmlId" required maxlength="48" pattern="[a-z]([a-z0-9\-]*[a-z0-9])?" ng-readonly="(!settings.isRequest && !settings.isNew) || (settings.isRequest && changeType == 'update')">
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
-                    <span ng-show="hasError(deliveryServiceForm.xmlId)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.xmlId != dsCurrent.xmlId">
-                        <h3>Current Value</h3>
-                        <pre>{{::dsCurrent.xmlId}}</pre>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.displayName), 'has-feedback': hasError(deliveryServiceForm.displayName)}">
-                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="displayName">Display Name *<div class="helptooltip">
-                    <div class="helptext">Name of the service that appears in the Traffic portal. No character restrictions.</div>
-                </div>
-                </label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="displayName" name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" maxlength="48" required>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'maxlength')">Too Long</small>
-                    <span ng-show="hasError(deliveryServiceForm.displayName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.displayName != dsCurrent.displayName">
-                        <h3>Current Value</h3>
-                        <pre>{{::dsCurrent.displayName}}</pre>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.tenantId), 'has-feedback': hasError(deliveryServiceForm.tenantId)}">
-                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="tenantId">Tenant *<div class="helptooltip">
-                    <div class="helptext">Name of company or division of company who owns account. Allows you to group your services and control access. Tenants are setup as a simple hierarchy where you may create parent / child accounts.</div>
-                </div>
-                </label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="tenantId" name="tenantId" class="form-control" ng-model="deliveryService.tenantId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
-                        <option hidden disabled selected value="">Select...</option>
-                    </select>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.tenantId, 'required')">Required</small>
-                    <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.tenantId != dsCurrent.tenantId">
-                        <h3>Current Value</h3>
-                        <pre>{{::dsCurrent.tenant}}</pre>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cdn), 'has-feedback': hasError(deliveryServiceForm.cdn)}">
-                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="cdn">CDN *<div class="helptooltip">
-                    <div class="helptext">The CDN to which the Delivery Service belongs.</div>
-                </div>
-                </label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="cdn" name="cdn" class="form-control" ng-model="deliveryService.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required>
-                        <option hidden disabled selected value="">Select...</option>
-                    </select>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
-                    <small ng-show="deliveryService.cdnId"><a href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cdnId != dsCurrent.cdnId">
-                        <h3>Current Value</h3>
-                        <pre>{{::dsCurrent.cdnName}}</pre>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.protocol), 'has-feedback': hasError(deliveryServiceForm.protocol)}">
-                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="protocol">Protocol *<div class="helptooltip">
-                    <div class="helptext">
-                        The protocol with which to serve this Delivery Service to the clients:
-                        <br>
-                        <br>
-                        <dl>
-                            <dt>HTTP</dt><dd>Deliver only HTTP traffic</dd>
-                            <dt>HTTPS</dt><dd>Deliver only HTTPS traffic</dd>
-                            <dt>HTTP AND HTTPS</dt><dd>Deliver both types of traffic</dd>
-                            <dt>HTTP TO HTTPS</dt><dd>Redirect HTTP traffic to use HTTPS</dd>
-                        </dl>
-                    </div>
-                </div>
-                </label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="protocol" name="protocol" class="form-control" ng-model="deliveryService.protocol" required>
-                        <option hidden disabled value="">Select...</option>
-                        <option ng-value="0">HTTP</option>
-                        <option ng-value="1">HTTPS</option>
-                        <option ng-value="2">HTTP and HTTPS</option>
-                        <option ng-value="3">HTTP to HTTPS</option>
-                    </select>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.protocol, 'required')">Required</small>
-                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.protocol != dsCurrent.protocol">
-                        <h3>Current Value</h3>
-                        <pre>{{magicNumberLabel(protocols, dsCurrent.protocol)}}</pre>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc), 'has-feedback': hasError(deliveryServiceForm.longDesc)}">
-                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">Long Description *<div class="helptooltip">
-                    <div class="helptext">Free text field that describes the purpose of the Delivery Service and will be displayed in the portal as a description field.</div>
-                </div>
-                </label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="longDesc" name="longDesc" class="form-control" ng-model="deliveryService.longDesc" rows="3" required></textarea>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc, 'required')">Required</small>
-                    <span ng-show="hasError(deliveryServiceForm.longDesc)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc != dsCurrent.longDesc">
-                        <h3>Current Value</h3>
-                        <pre>{{::dsCurrent.longDesc}}</pre>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc1), 'has-feedback': hasError(deliveryServiceForm.longDesc1)}">
-                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc1">Long Description 2<div class="helptooltip">
-                    <div class="helptext">Free text field not currently used in configuration. For example, you can use this field to describe your customer type.</div>
-                </div>
-                </label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="longDesc1" name="longDesc1" class="form-control" ng-model="deliveryService.longDesc1" rows="3"></textarea>
-                    <span ng-show="hasError(deliveryServiceForm.longDesc1)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc1 != dsCurrent.longDesc1">
-                        <h3>Current Value</h3>
-                        <pre>{{::dsCurrent.longDesc1}}</pre>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc2), 'has-feedback': hasError(deliveryServiceForm.longDesc2)}">
-                <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Long Description 3<div class="helptooltip">
-                    <div class="helptext">Free text field not currently used in configuration.</div>
-                </div>
-                </label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="longDesc2" name="longDesc2" class="form-control" ng-model="deliveryService.longDesc2" rows="3"></textarea>
-                    <span ng-show="hasError(deliveryServiceForm.longDesc2)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                    <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc2 != dsCurrent.longDesc2">
-                        <h3>Current Value</h3>
-                        <pre>{{::dsCurrent.longDesc2}}</pre>
-                    </aside>
-                </div>
-            </div>
-
-            <div class="form-group" ng-if="!settings.isNew && !settings.isRequest">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12" for="edgeFQDNs">Delivery Service URL(s)</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="edgeFQDNs" name="edgeFQDNs" rows="{{deliveryService.exampleURLs.length}}" class="form-control autosize" readonly>{{edgeFQDNs(deliveryService)}}</textarea>
-                </div>
-            </div>
-
-            <div ng-show="advancedShowing">
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.routingName), 'has-feedback': hasError(deliveryServiceForm.routingName)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="routingName">Routing Name *<div class="helptooltip">
-                        <div class="helptext">The routing name to use for the delivery <abbr title="Fully Qualified Domain Name">FQDN</abbr>, e.g. <samp>routing-name.deliveryservice.cdn-domain</samp>. It must be a valid hostname without periods.</div>
-                    </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <small class="input-warning" ng-show="!settings.isNew && deliveryServiceForm.routingName.$dirty">Warning: Changing the routing name may require SSL certificates to be updated.</small>
-                        <input id="routingName" name="routingName" type="text" class="form-control" placeholder="Routing name used for the delivery service resulting in FQDN = <routing name>.<key>.<CDN domain>" ng-model="deliveryService.routingName" maxlength="48" pattern="[a-z0-9]([a-z0-9\-]*[a-z0-9])?" required>
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.routingName, 'required')">Required</small>
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.routingName, 'maxlength')">Too Long</small>
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.routingName, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
-                        <span ng-show="hasError(deliveryServiceForm.routingName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.routingName != dsCurrent.routingName">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.routingName}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ipv6RoutingEnabled), 'has-feedback': hasError(deliveryServiceForm.ipv6RoutingEnabled)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ipv6RoutingEnabled">IPv6 Routing Enabled *<div class="helptooltip">
-                        <div class="helptext">Enabeld by default, disabling this allows you to turn off CDN responses to IPv6 requests</div>
-                    </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <select id="ipv6RoutingEnabled" name="ipv6RoutingEnabled" class="form-control" ng-model="deliveryService.ipv6RoutingEnabled" required>
-                            <option ng-value="true">Enabled</option>
-                            <option ng-value="false">Disabled</option>
-                        </select>
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.ipv6RoutingEnabled, 'required')">Required</small>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ipv6RoutingEnabled != dsCurrent.ipv6RoutingEnabled">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.ipv6RoutingEnabled ? 'Enabled' : 'Disabled'}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.logsEnabled), 'has-feedback': hasError(deliveryServiceForm.logsEnabled)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="logsEnabled">Logs Enabled *<div class="helptooltip">
-                        <div class="helptext">Allows you to turn on/off logging for this Delivery Service</div>
-                    </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <select id="logsEnabled" name="logsEnabled" class="form-control" ng-model="deliveryService.logsEnabled" required>
-                            <option ng-value="true" selected>Enabled</option>
-                            <option ng-value="false">Disabled</option>
-                        </select>
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.logsEnabled, 'required')">Required</small>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.logsEnabled != dsCurrent.logsEnabled">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.logsEnabled ? 'Enabled' : 'Disabled'}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoProvider), 'has-feedback': hasError(deliveryServiceForm.geoProvider)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoProvider">Geolocation Provider *<div class="helptooltip">
-                        <div class="helptext">Choose which Geolocation database provider - company that collects data on the location of IP addresses - to use.</div>
-                    </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <select id="geoProvider" name="geoProvider" class="form-control" ng-model="deliveryService.geoProvider" required>
-                            <option ng-value="0" selected>MaxMind</option>
-                            <option ng-value="1">Neustar</option>
-                        </select>
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoProvider != dsCurrent.geoProvider">
-                            <h3>Current Value</h3>
-                            <pre>{{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimit), 'has-feedback': hasError(deliveryServiceForm.geoLimit)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimit">Geo Limit *<div class="helptooltip">
-                        <div class="helptext">
-                            Some services are intended to be limited by geography. The possible settings are:
-                            <br>
-                            <br>
-                            <dl>
-                                <dt>None</dt><dd>Do not limit by geography.</dd>
-                                <dt>Coverage Zone File only</dt><dd>If the requesting IP is not in the Coverage Zone File, do not serve the request.</dd>
-                                <dt>Coverage Zone File and Country Code(s)</dt><dd>If the requesting IP is not in the Coverage Zone File or not in the United States, do not serve the request.</dd>
-                            </dl>
+        <div id="deliveryServiceURLs">
+            <fieldset ng-if="!settings.isNew && !settings.isRequest">
+                <legend>Delivery Service URL(s)</legend>
+                <p ng-repeat="url in deliveryService.exampleURLs"><a href="{{::url}}" target="_blank">{{::url}}</a> </p>
+            </fieldset>
+        </div>
+        <form id="deliveryServiceForm" name="deliveryServiceForm" class="form-horizontal form-label-left">
+            <fieldset>
+                <legend ng-class="{'fieldset-error': generalConfig.$invalid}" ng-click="showGeneralConfig = !showGeneralConfig">General Configuration Settings <i class="fa fa-caret-up" ng-show="!showGeneralConfig"></i><i class="fa fa-caret-down" ng-show="showGeneralConfig"></i></legend>
+                <ng-form name="generalConfig" ng-show="showGeneralConfig">
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.xmlId), 'has-feedback': hasError(generalConfig.xmlId)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="xmlId">XML_ID (Key) *<div class="helptooltip">
+                            <div class="helptext">This id becomes a part of the CDN service domain in the form <samp>http://cdn.service-key.company.com/</samp>. Must be all lowercase, no spaces or special characters. May contain dashes.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="xmlId" name="xmlId" type="text" class="form-control" placeholder="Unique id used for the delivery service" ng-model="deliveryService.xmlId" required maxlength="48" pattern="[a-z0-9]([a-z0-9\-]*[a-z0-9])?" ng-readonly="(!settings.isRequest && !settings.isNew) || (settings.isRequest && changeType == 'update')">
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.xmlId, 'required')">Required</small>
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.xmlId, 'maxlength')">Too Long</small>
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.xmlId, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.xmlId != dsCurrent.xmlId">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.xmlId}}</pre>
+                            </aside>
                         </div>
                     </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <select id="geoLimit" name="geoLimit" class="form-control" ng-model="deliveryService.geoLimit" required>
-                            <option ng-value="0" selected>None</option>
-                            <option ng-value="1">Coverage Zone File only</option>
-                            <option ng-value="2">Coverage Zone File and Country Code(s)</option>
-                        </select>
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimit != dsCurrent.geoLimit">
-                            <h3>Current Value</h3>
-                            <pre>{{magicNumberLabel(geoLimits, dsCurrent.geoLimit)}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimitCountries), 'has-feedback': hasError(deliveryServiceForm.geoLimitCountries)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitCountries">Geo Limit Countries<div class="helptooltip">
-                        <div class="helptext">How (if at all) is this service to be limited by geography. Example Country Codes: <abbr title="Canada">CA</abbr>, <abbr title="India">IN</abbr>, <abbr title="Puerto Rico">PR</abbr>.</div>
-                    </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="geoLimitCountries" name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" maxlength="255">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimitCountries, 'maxlength')">Too Long</small>
-                        <span ng-show="hasError(deliveryServiceForm.geoLimitCountries)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.geoLimitCountries}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimitRedirectURL), 'has-feedback': hasError(deliveryServiceForm.geoLimitRedirectURL)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitRedirectURL">Geo Limit Redirect URL<div class="helptooltip">
-                        <div class="helptext">
-                            Traffic Router will redirect to this URL when Geo Limit check fails.
-                            <br>
-                            <br>
-                            See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-ngb" target="_blank">GeoLimit Failure Redirect</a> feature...
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.displayName), 'has-feedback': hasError(generalConfig.displayName)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="displayName">Display Name *<div class="helptooltip">
+                            <div class="helptext">Name of the service that appears in the Traffic portal. No character restrictions.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="displayName" name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" maxlength="48" required>
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.displayName, 'required')">Required</small>
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.displayName, 'maxlength')">Too Long</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.displayName != dsCurrent.displayName">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.displayName}}</pre>
+                            </aside>
                         </div>
                     </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="geoLimitRedirectURL" name="geoLimitRedirectURL" title="Must be a valid URL" type="url" class="form-control" ng-model="deliveryService.geoLimitRedirectURL">
-                        <span ng-show="hasError(deliveryServiceForm.geoLimitRedirectURL)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitRedirectURL != dsCurrent.geoLimitRedirectURL">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.geoLimitRedirectURL}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.profile), 'has-feedback': hasError(deliveryServiceForm.profile)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="profile">Delivery Service Profile<div class="helptooltip">
-                        <div class="helptext">Only used if a Delivery Service uses configurations that specifically require a profile. Example: Multi-Site Origin configurations would require a Delivery Service Profile to be used.</div>
-                    </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <select id="profile" name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles">
-                            <option selected value="">None</option>
-                        </select>
-                        <small ng-show="deliveryService.profileId"><a href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.profileId != dsCurrent.profileId">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.profileName}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div ng-if="isClientSteering(deliveryService)" class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trResponseHeaders), 'has-feedback': hasError(deliveryServiceForm.trResponseHeaders)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="trResponseHeaders">Traffic Router Additional Response Headers<div class="helptooltip">
-                        <div class="helptext">
-                            List of header name:value pairs. One name:value pair per line. Listed pairs will be included in all Traffic Router HTTP(S) responses.
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.active), 'has-feedback': hasError(generalConfig.active)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="active">Active *<div class="helptooltip">
+                            <div class="helptext">Whether or not this Delivery Service is active on the CDN and is capable of traffic.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="active" name="active" class="form-control" ng-model="deliveryService.active" required autofocus>
+                                <option disabled hidden value="">Select...</option>
+                                <option ng-value="true">Active</option>
+                                <option ng-value="false">Not Active</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.active, 'required')">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.active != dsCurrent.active">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.active ? 'Active' : 'Not Active'}}</pre>
+                            </aside>
                         </div>
                     </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <textarea id="trResponseHeaders" name="trResponseHeaders" class="form-control" ng-model="deliveryService.trResponseHeaders" rows="3"></textarea>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.trResponseHeaders != dsCurrent.trResponseHeaders">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.trResponseHeaders}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ccrDnsTtl), 'has-feedback': hasError(deliveryServiceForm.ccrDnsTtl)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ccrDnsTtl">Delivery Service DNS TTL<div class="helptooltip">
-                        <div class="helptext">The <abbr title="Time To Live">TTL</abbr> on the DNS record for the Traffic Router A and AAAA records. Setting too high or too low will result in poor caching performance.</div>
-                    </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="ccrDnsTtl" name="ccrDnsTtl" type="number" class="form-control" ng-model="deliveryService.ccrDnsTtl" min="0" step="1">
-                        <span ng-show="hasError(deliveryServiceForm.ccrDnsTtl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.ccrDnsTtl}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.infoUrl), 'has-feedback': hasError(deliveryServiceForm.infoUrl)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="infoUrl">Info URL<div class="helptooltip">
-                        <div class="helptext">Free text field used to enter a URL which provides information about the service.</div>
-                    </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="infoUrl" name="infoUrl" type="url" title="Must be a valid URL" class="form-control" ng-model="deliveryService.infoUrl" maxlength="255">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.infoUrl, 'maxlength')">Too Long</small>
-                        <small class="input-error invalid-URL-error">Invalid URL</small>
-                        <span ng-show="hasError(deliveryServiceForm.infoUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.infoUrl != dsCurrent.infoUrl">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.infoUrl}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.checkPath), 'has-feedback': hasError(deliveryServiceForm.checkPath)}">
-                    <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="checkPath">Check Path<div class="helptooltip">
-                        <div class="helptext">A path (e.g. <samp>/crossdomain.xml</samp>) with which to verify the connection to the origin server. This can be used by Check Extension scripts to do periodic health checks against the Delivery Service.</div>
-                    </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="checkPath" name="checkPath" type="text" class="form-control" ng-model="deliveryService.checkPath" maxlength="255">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.checkPath, 'maxlength')">Too Long</small>
-                        <span ng-show="hasError(deliveryServiceForm.checkPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.checkPath != dsCurrent.checkPath">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.checkPath}}</pre>
-                        </aside>
-                    </div>
-                </div>
-
-                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.consistentHashRegex), 'has-feedback': hasError(deliveryServiceForm.consistentHashRegex)}">
-                    <label for="consistentHashRegex" class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Consistent Hash Regex<div class="helptooltip">
-                        <div class="helptext">
-                            Regex used to extract parts of the request path using grouping in order to build a consistent request string to be used for cache selection. If this field is set on a steering delivery service, it will override the regex set on the target delivery services.
-                            <br>
-                            <br>
-                            <a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#pattern-based-consistenthash" target="_blank">See Pattern-Based Consistent Hashing</a>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.type), 'has-feedback': hasError(generalConfig.type)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="type">Content Routing Type *<div class="helptooltip">
+                            <div class="helptext">
+                                DNS is the standard routing type for most CDN services. HTTP Redirect is a specialty routing service that is primarily used for video and large file downloads where localization and latency are significant concerns. A "Live" routing type should be used for all live services.
+                                <br>
+                                <br>
+                                <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#ds-types" target="_blank">See Delivery Service Types.</a>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="type" name="type" class="form-control" ng-model="deliveryService.typeId" ng-options="type.id as type.name for type in types" required>
+                                <option selected disabled hidden value="">Select...</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.type, 'required')">Required</small>
+                            <small ng-show="deliveryService.typeId"><a href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.typeId != dsCurrent.typeId">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.type}}</pre>
+                            </aside>
                         </div>
                     </div>
-                    </label>
-                    <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input id="consistentHashRegex" name="consistentHashRegex" type="text" class="form-control" ng-model="deliveryService.consistentHashRegex" maxlength="1024">
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.consistentHashRegex, 'maxlength')">Too Long</small>
-                        <small><a ng-click="encodeRegex(deliveryService.consistentHashRegex)" href="/#!/delivery-services/{{deliveryService.id}}/consistent-hash?pattern={{encodedRegex}}" target="_blank">Test Regex&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                        <span ng-show="hasError(deliveryServiceForm.consistentHashRegex)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.consistentHashRegex != dsCurrent.consistentHashRegex">
-                            <h3>Current Value</h3>
-                            <pre>{{::dsCurrent.consistentHashRegex}}</pre>
-                        </aside>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.tenantId), 'has-feedback': hasError(generalConfig.tenantId)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="tenantId">Tenant *<div class="helptooltip">
+                            <div class="helptext">Name of company or division of company who owns account. Allows you to group your services and control access. Tenants are setup as a simple hierarchy where you may create parent / child accounts.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="tenantId" name="tenantId" class="form-control" ng-model="deliveryService.tenantId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
+                                <option disabled hidden selected value="">Select...</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.tenantId, 'required')">Required</small>
+                            <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.tenantId != dsCurrent.tenantId">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.tenant}}</pre>
+                            </aside>
+                        </div>
                     </div>
-                </div>
-
-            </div>
-
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.cdn), 'has-feedback': hasError(generalConfig.cdn)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="cdn">CDN *<div class="helptooltip">
+                            <div class="helptext">The CDN to which the Delivery Service belongs.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="cdn" name="cdn" class="form-control" ng-model="deliveryService.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                                <option hidden disabled selected value="">Select...</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.cdnId, 'required')">Required</small>
+                            <small ng-show="deliveryService.cdnId"><a href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cdnId != dsCurrent.cdnId">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.cdnName}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.protocol), 'has-feedback': hasError(generalConfig.protocol)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="protocol">Protocol *<div class="helptooltip">
+                            <div class="helptext">
+                                The protocol with which to serve this Delivery Service to the clients:
+                                <br>
+                                <br>
+                                <dl>
+                                    <dt>HTTP</dt><dd>Deliver only HTTP traffic</dd>
+                                    <dt>HTTPS</dt><dd>Deliver only HTTPS traffic</dd>
+                                    <dt>HTTP AND HTTPS</dt><dd>Deliver both types of traffic</dd>
+                                    <dt>HTTP TO HTTPS</dt><dd>Redirect HTTP traffic to use HTTPS</dd>
+                                </dl>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="protocol" name="protocol" class="form-control" ng-model="deliveryService.protocol" required>
+                                <option hidden disabled value="">Select...</option>
+                                <option ng-value="0">HTTP</option>
+                                <option ng-value="1">HTTPS</option>
+                                <option ng-value="2">HTTP and HTTPS</option>
+                                <option ng-value="3">HTTP to HTTPS</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.protocol, 'required')">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.protocol != dsCurrent.protocol">
+                                <h3>Current Value</h3>
+                                <pre>{{magicNumberLabel(protocols, dsCurrent.protocol)}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc), 'has-feedback': hasError(generalConfig.longDesc)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">Long Description 1<div class="helptooltip">
+                            <div class="helptext">Free text field not currently used in configuration.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="longDesc" name="longDesc" class="form-control" ng-model="deliveryService.longDesc" spellcheck="true" rows="3"></textarea>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc != dsCurrent.longDesc">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.longDesc}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc1), 'has-feedback': hasError(generalConfig.longDesc1)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc1">Long Description 2<div class="helptooltip">
+                            <div class="helptext">Free text field not currently used in configuration.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="longDesc1" name="longDesc1" class="form-control" ng-model="deliveryService.longDesc1" spellcheck="true" rows="3"></textarea>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc1 != dsCurrent.longDesc1">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.longDesc1}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc2), 'has-feedback': hasError(generalConfig.longDesc2)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Long Description 3<div class="helptooltip">
+                            <div class="helptext">Free text field not currently used in configuration.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <textarea id="longDesc2" name="longDesc2" class="form-control" ng-model="deliveryService.longDesc2" rows="3" spellcheck="true"></textarea>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc2 != dsCurrent.longDesc2">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.longDesc2}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.profile), 'has-feedback': hasError(generalConfig.profile)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="profile">Profile<div class="helptooltip">
+                            <div class="helptext">Only used if a Delivery Service uses configurations that specifically require a profile. Example: Multi-Site Origin configurations would require a Delivery Service Profile to be used.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="profile" name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles">
+                                <option selected value="">None</option>
+                            </select>
+                            <small ng-show="deliveryService.profileId"><a href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.profileId != dsCurrent.profileId">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.profileName}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.infoUrl), 'has-feedback': hasError(generalConfig.infoUrl)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="infoUrl">Info URL<div class="helptooltip">
+                            <div class="helptext">Free text field used to enter a URL which provides information about the service.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="infoUrl" name="infoUrl" type="url" title="Must be a valid URL." class="form-control" ng-model="deliveryService.infoUrl" maxlength="255">
+                            <small class="input-error invalid-URL-error">Invalid URL</small>
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.infoUrl, 'maxlength')">Too Long</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.infoUrl != dsCurrent.infoUrl">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.infoUrl}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.checkPath), 'has-feedback': hasError(generalConfig.checkPath)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="checkPath">Check Path<div class="helptooltip">
+                            <div class="helptext">A path (e.g. <samp>/crossdomain.xml</samp>) with which to verify the connection to the origin server. This can be used by Check Extension scripts to do periodic health checks against the Delivery Service.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="checkPath" name="checkPath" type="text" class="form-control" ng-model="deliveryService.checkPath" maxlength="255">
+                            <small class="input-error" ng-show="hasPropertyError(generalConfig.checkPath, 'maxlength')">Too Long</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.checkPath != dsCurrent.checkPath">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.checkPath}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                </ng-form>
+            </fieldset>
+            <fieldset>
+                <legend ng-class="{'fieldset-error': routingConfig.$invalid}" ng-click="showRoutingConfig = !showRoutingConfig">Routing Configuration Settings <i class="fa fa-caret-up" ng-show="!showRoutingConfig"></i><i class="fa fa-caret-down" ng-show="showRoutingConfig"></i></legend>
+                <ng-form name="routingConfig" ng-show="showRoutingConfig">
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.routingName), 'has-feedback': hasError(routingConfig.routingName)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="routingName">Routing Name *<div class="helptooltip">
+                            <div class="helptext">The routing name to use for the delivery <abbr title="Fully Qualified Domain Name">FQDN</abbr>, e.g. <samp>routing-name.deliveryservice.cdn-domain</samp>. It must be a valid hostname without periods.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <small class="input-warning" ng-show="!settings.isNew && routingConfig.routingName.$dirty">Warning: Changing the routing name may require SSL certificates to be updated.</small>
+                            <input id="routingName" name="routingName" type="text" class="form-control" placeholder="Routing name used for the delivery service resulting in FQDN = <routing name>.<key>.<CDN domain>" ng-model="deliveryService.routingName" maxlength="48" pattern="[a-z0-9]([a-z\-0-9]*[a-z0-9])?" required>
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'required')">Required</small>
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'maxlength')">Too Long</small>
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.routingName != dsCurrent.routingName">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.routingName}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.ipv6RoutingEnabled), 'has-feedback': hasError(routingConfig.ipv6RoutingEnabled)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ipv6RoutingEnabled">IPv6 Routing Enabled *<div class="helptooltip">
+                            <div class="helptext">Enabeld by default, disabling this allows you to turn off CDN responses to IPv6 requests</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="ipv6RoutingEnabled" name="ipv6RoutingEnabled" class="form-control" ng-model="deliveryService.ipv6RoutingEnabled" required>
+                                <option ng-value="true">Enabled</option>
+                                <option ng-value="false">Disabled</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.ipv6RoutingEnabled, 'required')">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ipv6RoutingEnabled != dsCurrent.ipv6RoutingEnabled">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.ipv6RoutingEnabled ? 'Enabled' : 'Disabled'}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoProvider), 'has-feedback': hasError(routingConfig.geoProvider)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoProvider">Geolocation Provider *<div class="helptooltip">
+                            <div class="helptext">Choose which Geolocation database provider - company that collects data on the location of IP addresses - to use.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="geoProvider" name="geoProvider" class="form-control" ng-model="deliveryService.geoProvider" required>
+                                <option ng-value="0" selected>MaxMind</option>
+                                <option ng-value="1">Neustar</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.geoProvider, 'required')">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoProvider != dsCurrent.geoProvider">
+                                <h3>Current Value</h3>
+                                <pre>{{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoLimit), 'has-feedback': hasError(routingConfig.geoLimit)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimit">Geo Limit *<div class="helptooltip">
+                            <div class="helptext">
+                                Some services are intended to be limited by geography. The possible settings are:
+                                <br>
+                                <br>
+                                <dl>
+                                    <dt>None</dt><dd>Do not limit by geography.</dd>
+                                    <dt>Coverage Zone File only</dt><dd>If the requesting IP is not in the Coverage Zone File, do not serve the request.</dd>
+                                    <dt>Coverage Zone File and Country Code(s)</dt><dd>If the requesting IP is not in the Coverage Zone File or not in the United States, do not serve the request.</dd>
+                                </dl>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="geoLimit" name="geoLimit" class="form-control" ng-model="deliveryService.geoLimit" required>
+                                <option ng-value="0" selected>None</option>
+                                <option ng-value="1">Coverage Zone File only</option>
+                                <option ng-value="2">Coverage Zone File and Country Code(s)</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.geoLimit, 'required')">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimit != dsCurrent.geoLimit">
+                                <h3>Current Value</h3>
+                                <pre>{{magicNumberLabel(geoLimits, dsCurrent.geoLimit)}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoLimitCountries), 'has-feedback': hasError(routingConfig.geoLimitCountries)}" ng-show="deliveryService.geoLimit === 1 || deliveryService.geoLimit === 2">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitCountries">Geo Limit Countries<div class="helptooltip">
+                            <div class="helptext">How (if at all) is this service to be limited by geography. Example Country Codes: <abbr title="Canada">CA</abbr>, <abbr title="India">IN</abbr>, <abbr title="Puerto Rico">PR</abbr>.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="geoLimitCountries" name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" maxlength="255" pattern="[A-Z]+(,[A-Z]+)*">
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.geoLimitCountries, 'maxlength')">Too Long</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.geoLimitCountries}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoLimitRedirectURL), 'has-feedback': hasError(routingConfig.geoLimitRedirectURL)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitRedirectURL">Geo Limit Redirect URL<div class="helptooltip">
+                            <div class="helptext">
+                                Traffic Router will redirect to this URL when Geo Limit check fails.
+                                <br>
+                                <br>
+                                See <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#tr-ngb" target="_blank">GeoLimit Failure Redirect</a> feature...
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="geoLimitRedirectURL" name="geoLimitRedirectURL" title="Must be a valid URL" type="url" class="form-control" ng-model="deliveryService.geoLimitRedirectURL">
+                            <small class="input-error invalid-URL-error">Invalid URL</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitRedirectURL != dsCurrent.geoLimitRedirectURL">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.geoLimitRedirectURL}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.ccrDnsTtl), 'has-feedback': hasError(routingConfig.ccrDnsTtl)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ccrDnsTtl">Delivery Service DNS TTL<div class="helptooltip">
+                            <div class="helptext">The <abbr title="Time To Live">TTL</abbr> on the DNS record for the Traffic Router A and AAAA records. Setting too high or too low will result in poor caching performance.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="ccrDnsTtl" name="ccrDnsTtl" type="number" class="form-control" ng-model="deliveryService.ccrDnsTtl" step="1" min="0">
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.ccrDnsTtl}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.consistentHashRegex), 'has-feedback': hasError(routingConfig.consistentHashRegex)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="consistentHashRegex">Consistent Hash Regex<div class="helptooltip">
+                            <div class="helptext">
+                                Regex used to extract parts of the request path using grouping in order to build a consistent request string to be used for cache selection. If this field is set on a steering delivery service, it will override the regex set on the target delivery services.
+                                <br>
+                                <br>
+                                <a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#pattern-based-consistenthash" target="_blank">See Pattern-Based Consistent Hashing</a>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="consistentHashRegex" name="consistentHashRegex" type="text" class="form-control" ng-model="deliveryService.consistentHashRegex" maxlength="1024">
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.consistentHashRegex, 'maxlength')">Too Long</small>
+                            <small><a ng-click="encodeRegex(deliveryService.consistentHashRegex)" href="/#!/delivery-services/{{deliveryService.id}}/consistent-hash?pattern={{encodedRegex}}" target="_blank">Test Regex&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                            <span ng-show="hasError(routingConfig.consistentHashRegex)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.consistentHashRegex != dsCurrent.consistentHashRegex">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.consistentHashRegex}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                </ng-form>
+            </fieldset>
             <div class="modal-footer">
-                <button type="button" class="btn btn-link" ng-click="advancedShowing = !advancedShowing"><span ng-show="!advancedShowing">Show</span><span ng-show="advancedShowing">Hide</span> Advanced</button>
                 <button type="button" class="btn btn-danger" ng-if="!settings.isNew" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
                 <button class="btn btn-success" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
                 <button class="btn btn-primary" ng-if="settings.isRequest && fulfillable()" ng-disabled="deliveryServiceForm.$invalid" ng-click="fulfillRequest(deliveryService)">Fulfill Request</button>
