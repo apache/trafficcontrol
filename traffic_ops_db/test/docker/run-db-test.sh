@@ -63,7 +63,11 @@ get_current_db_version() {
     echo "$version"
 }
 
-for d in /db_dumps/*; do
+get_db_dumps() {
+    ls /db_dumps | grep '\.dump'
+}
+
+for d in $(get_db_dumps); do
     echo "checking integrity of DB dump: $d"
     pg_restore -l "$d" > /dev/null || { echo "invalid DB dump: $d. Unable to list contents"; exit 1; }
 done
@@ -106,7 +110,7 @@ if [[ "$run_db_downgrades" = true ]]; then
 fi
 
 # test full restoration of the initial DB dump
-for d in /db_dumps/*; do
+for d in $(get_db_dumps); do
     echo "testing restoration of DB dump: $d"
     pg_restore --verbose --clean --if-exists --create -h $DB_SERVER -p $DB_PORT -U postgres < "$d" > /dev/null || { echo "DB restoration failed: $d"; exit 1; }
 done
