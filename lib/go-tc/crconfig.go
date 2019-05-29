@@ -102,7 +102,7 @@ type CRConfigTrafficOpsServer struct {
 //TODO: drichardson - reconcile this with the DeliveryService struct in deliveryservices.go
 type CRConfigDeliveryService struct {
 	AnonymousBlockingEnabled  *string                               `json:"anonymousBlockingEnabled,omitempty"`
-	ConsistentHashQueryParams []string                              `json:"consistentHashQueryParams"`
+	ConsistentHashQueryParams []string                              `json:"consistentHashQueryParams,omitempty"`
 	ConsistentHashRegex       *string                               `json:"consistentHashRegex,omitempty"`
 	CoverageZoneOnly          bool                                  `json:"coverageZoneOnly,string"`
 	Dispersion                *CRConfigDispersion                   `json:"dispersion,omitempty"`

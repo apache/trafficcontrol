@@ -137,7 +137,7 @@ AND d.active = true
 
 	for rows.Next() {
 		ds := tc.CRConfigDeliveryService{
-			ConsistentHashQueryParams: make([]string, 0),
+			ConsistentHashQueryParams: []string{},
 			Protocol:                  &tc.CRConfigDeliveryServiceProtocol{},
 			ResponseHeaders:           map[string]string{},
 			Soa:                       cdnSOA,
