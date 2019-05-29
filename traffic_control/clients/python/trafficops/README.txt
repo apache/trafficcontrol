@@ -4,6 +4,10 @@ This directory contains the Traffic Ops Python Client for Python 2.x and Python 
 
 NOTE: This client has only been tested against Python 2.7 and Python 3.6.  Other versions
       may work, so, you mileage may vary.
+      
+NOTICE: As of Apache Traffic Control release version 4.0.0, Python 2 will no longer be supported! Developers are encouraged
+        to switch to version 3 as soon as possible. The CPython project has a free tool for automating much of the process of
+        translating Python2 code to Python3, read more about it here: https://docs.python.org/3/library/2to3.html
 
 - Installation
 
