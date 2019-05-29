@@ -351,6 +351,11 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing HashId field\n", name)
 		}
+		if srv.HttpsPort != nil {
+			s.HTTPSPort = *srv.HttpsPort
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing HttpsPort field\n", name)
+		}
 		mc.TrafficServer[name] = s
 	}
 
