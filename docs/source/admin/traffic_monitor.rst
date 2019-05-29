@@ -52,6 +52,27 @@ Configuration Overview
 ----------------------
 Traffic Monitor is configured via two JSON configuration files, :file:`traffic_ops.cfg` and :file:`traffic_monitor.cfg`, by default located in the ``conf`` directory in the install location. :file:`traffic_ops.cfg` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. :file:`traffic_monitor.cfg` contains log file locations, as well as detailed application configuration variables such as processing flush times and initial poll intervals. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
 
+
+Cache Polling URL
+-----------------------------------
+
+The :term:`cache servers` are polled at the URL specified in the ``health.polling.url`` :term:`parameter`, on the :term:`cache server`'s :term:`profile`.
+
+This :term:`parameter` must have the config file ``rascal.properties``.
+
+The value is a template with the text ``${hostname}`` being replaced with the :term:`cache server`'s Network IP (IPv4), and ``${interface_name}`` being replaced with the :term:`cache server`'s network Interface Name. For example, ``http://${hostname}/_astats?application=&inf.name=${interface_name}``.
+
+If the template contains a port, that port will be used, and the :term:`cache server`'s HTTPS and TCP Ports will not be added.
+
+If the template does not contain a port, then if the template starts with ``https`` the :term:`cache server`'s HTTPS Port will be added, and if the template doesn't start with ``https`` the :term:`cache server`'s TCP Port will be added.
+
+Examples:
+
+Template ``http://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://192.0.2.42:8080/_astats?application=&inf.name=${interface_name}``.
+Template ``https://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``https://192.0.2.42:8443/_astats?application=&inf.name=${interface_name}``.
+Template ``http://${hostname}:1234/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://192.0.2.42:1234/_astats?application=&inf.name=${interface_name}``.
+Template ``https://${hostname}:1234/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``https://192.0.2.42:1234/_astats?application=&inf.name=${interface_name}``.
+
 Stat and Health Flush Configuration
 -----------------------------------
 The Monitor has a health flush interval, a stat flush interval, and a stat buffer interval. Recall that the monitor polls both stats and health. The health poll is so small and fast, a buffer is largely unnecessary. However, in a large CDN, the stat poll may involve thousands of :term:`cache server` s with thousands of stats each, or more, and CPU may be a bottleneck.
