@@ -318,7 +318,8 @@ func processStatResults(
 		lastStats.Set(*lastStatsCopy)
 	}
 
-	health.CalcAvailabilityWithStats(results, "stat", statResultHistoryThreadsafe, mc, toData, localCacheStatusThreadsafe, localStates, events)
+	pollerName := "stat"
+	health.CalcAvailability(results, pollerName, &statResultHistoryThreadsafe, mc, toData, localCacheStatusThreadsafe, localStates, events)
 	combineState()
 
 	endTime := time.Now()
