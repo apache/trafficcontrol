@@ -658,12 +658,12 @@ sub setupMaxMind {
     if ( $setupMaxmind =~ /^y(?:es)?/ ) {
         InstallUtils::logger( "Downloading Maxmind data", "info" );
         chdir("/opt/traffic_ops/app/public/routing");
-        $result = InstallUtils::execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
+        $result = InstallUtils::execCommand("/usr/bin/wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
         if ( $result != 0 ) {
             InstallUtils::logger( "Failed to download MaxMind data", "error" );
         }
 
-        $result = InstallUtils::execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz");
+        $result = InstallUtils::execCommand("/usr/bin/wget https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz");
         if ( $result != 0 ) {
             InstallUtils::logger( "Failed to download MaxMind data", "error" );
         }

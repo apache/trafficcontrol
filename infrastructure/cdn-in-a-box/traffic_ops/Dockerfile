@@ -69,7 +69,7 @@ RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/insta
 	&& /opt/traffic_ops/install/bin/download_web_deps -i || \
 	true # keep a failure here from failing all..
 
-ADD http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /
+ADD https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /
 
 EXPOSE 443
 WORKDIR /opt/traffic_ops/app
