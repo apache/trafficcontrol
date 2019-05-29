@@ -25,7 +25,7 @@ var StatusService = function($http, ENV, locationUtils, messageModel) {
                 return result.data.response;
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         )
     };
@@ -36,7 +36,7 @@ var StatusService = function($http, ENV, locationUtils, messageModel) {
                 return result.data.response[0];
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         )
     };
@@ -50,6 +50,7 @@ var StatusService = function($http, ENV, locationUtils, messageModel) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -62,18 +63,20 @@ var StatusService = function($http, ENV, locationUtils, messageModel) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
 
     this.deleteStatus = function(id) {
-        return $http.get(ENZ.api['root'] + "statuses/" + id).then(
+        return $http.delete(ENV.api['root'] + "statuses/" + id).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Status deleted' } ], true);
                 return result;
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, true);
+                throw err;
             }
         );
     };
