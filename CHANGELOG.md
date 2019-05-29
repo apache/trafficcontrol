@@ -24,7 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Correct FQDN case mismatch when generating DNSSEC.
 - Issue 3223 - cannot add steering targets to steering delivery service.
 - Issue 3466 - docs fail to build in python 3.6.
-
+- Issue #3605: Fixed Traffic Monitor custom ports in health polling URL.
 
 ## [3.0.0] - 2019-02-13
 ### Added
