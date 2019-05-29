@@ -584,8 +584,8 @@ public class TrafficRouter {
 	@SuppressWarnings({"PMD.CyclomaticComplexity"})
 	public String buildPatternBasedHashString(final DeliveryService deliveryService, final HTTPRequest request) {
 		final String requestPath = request.getPath();
-		final StringBuilder hashString = new StringBuilder();
-		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty() && !requestPath.isEmpty()) {
+		final StringBuilder hashString = new StringBuilder("");
+		if (deliveryService.getConsistentHashRegex() != null && !requestPath.isEmpty()) {
 			hashString.append(buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), requestPath));
 		}
 
@@ -596,16 +596,23 @@ public class TrafficRouter {
 
 	/**
 	 * Constructs a string to be used in consistent hashing
+	 * <p>
+	 * If `regex` is `null` or empty - or if an error occurs applying it -, returns `requestPath` unaltered.
+	 * </p>
 	 * @param regex A regular expression matched against the client's request path to extract information important to consistent hashing
 	 * @param requestPath The client's request path - e.g. '/some/path' from 'https://example.com/some/path'
 	 * @return The parts of requestPath that matched regex
 	 */
 	public String buildPatternBasedHashString(final String regex, final String requestPath) {
+		if (regex == null || regex.isEmpty()) {
+			return requestPath;
+		}
+
 		try {
 			final Pattern pattern = Pattern.compile(regex);
 			final Matcher matcher = pattern.matcher(requestPath);
 
-			final StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder("");
 			if (matcher.find() && matcher.groupCount() > 0) {
 				for (int i = 1; i <= matcher.groupCount(); i++) {
 					final String text = matcher.group(i);
@@ -613,7 +620,6 @@ public class TrafficRouter {
 				}
 				return sb.toString();
 			}
-			return requestPath;
 		} catch (final Exception e) {
 			final StringBuilder error = new StringBuilder("Failed to construct hash string using regular expression: '");
 			error.append(regex);
@@ -622,9 +628,8 @@ public class TrafficRouter {
 			error.append("' Exception: ");
 			error.append(e.toString());
 			LOGGER.error(error.toString());
-			return requestPath;
 		}
-
+		return requestPath;
 	}
 
 	@SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.NPathComplexity" })

@@ -15,10 +15,10 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
-import org.junit.Assert;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -40,8 +40,8 @@ public class DeliveryServiceTest {
         final ObjectMapper mapper = new ObjectMapper();
         final JsonNode json = mapper.readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false}");
         DeliveryService d = new DeliveryService("test", json);
-        assert d.consistentHashQueryParams != null;
-        assert d.consistentHashQueryParams.size() == 0;
+        assert d.getConsistentHashQueryParams() != null;
+        assert d.getConsistentHashQueryParams().size() == 0;
     }
 
     @Test
@@ -49,10 +49,19 @@ public class DeliveryServiceTest {
         final ObjectMapper mapper = new ObjectMapper();
         final JsonNode json = mapper.readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\", \"test\"]}");
         DeliveryService d = new DeliveryService("test", json);
-        assert d.consistentHashQueryParams != null;
-        assert d.consistentHashQueryParams.size() == 2;
-        assert d.consistentHashQueryParams.contains("test");
-        assert d.consistentHashQueryParams.contains("quest");
+        assert d.getConsistentHashQueryParams() != null;
+        assert d.getConsistentHashQueryParams().size() == 2;
+        assert d.getConsistentHashQueryParams().contains("test");
+        assert d.getConsistentHashQueryParams().contains("quest");
+    }
+
+    @Test
+    public void itExtractsQueryParams() throws Exception {
+        final JsonNode json = (new ObjectMapper()).readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\"]}");
+        final HTTPRequest r = new HTTPRequest();
+		r.setPath("/path1234/some_stream_name1234/some_other_info.m3u8");
+        r.setQueryString("test=value&foo=fizz&quest=oth%20ervalue&bar=buzz");
+        assert (new DeliveryService("test", json)).extractSignificantQueryParams(r).equals("quest=oth ervaluetest=value");
     }
 
     @Test

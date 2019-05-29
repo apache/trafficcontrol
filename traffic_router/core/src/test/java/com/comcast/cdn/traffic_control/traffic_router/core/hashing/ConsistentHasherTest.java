@@ -22,6 +22,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.Hashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunction;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.NumberSearcher;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,9 +41,11 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -82,6 +85,7 @@ public class ConsistentHasherTest {
 
 		trafficRouter = mock(TrafficRouter.class);
 		when(trafficRouter.buildPatternBasedHashString(anyString(), anyString())).thenCallRealMethod();
+		when(trafficRouter.buildPatternBasedHashString(any(DeliveryService.class), any(HTTPRequest.class))).thenCallRealMethod();
 
 		initMocks(this);
 	}
@@ -208,7 +212,7 @@ public class ConsistentHasherTest {
 
 	@Test
 	public void itHashesQueryParams() throws Exception {
-		final JsonNode j = new ObjectMapper("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\"]}");
+		final JsonNode j = (new ObjectMapper()).readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\"]}");
 		final DeliveryService d = new DeliveryService("test", j);
 
 		final HTTPRequest r1 = new HTTPRequest();
@@ -216,11 +220,11 @@ public class ConsistentHasherTest {
 		r1.setQueryString("test=value");
 
 		final HTTPRequest r2 = new HTTPRequest();
-		r2.setPath(r1.getPath);
+		r2.setPath(r1.getPath());
 		r2.setQueryString("quest=other_value");
 
-		p1 = trafficRouter.buildPatternBasedHashString(d, r1);
-		p2 = trafficRouter.buildPatternBasedHashString(d, r2);
+		final String p1 = trafficRouter.buildPatternBasedHashString(d, r1);
+		final String p2 = trafficRouter.buildPatternBasedHashString(d, r2);
 		assert !p1.equals(p2);
 	}
 
