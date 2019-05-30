@@ -20,8 +20,10 @@ package httpService
  */
 
 import (
+	"bytes"
 	"fmt"
 	"hash/fnv"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -33,7 +35,7 @@ import (
 // BodyInterceptor is a container for a http writer body so we can write headers after the real writes are issued
 type BodyInterceptor struct {
 	w            http.ResponseWriter
-	body         []byte
+	body         bytes.Buffer
 	responseCode int
 }
 
@@ -44,8 +46,8 @@ func (i *BodyInterceptor) WriteHeader(rc int) {
 
 // Write is used for interface compatability with http response writer
 func (i *BodyInterceptor) Write(b []byte) (int, error) {
-	i.body = append(i.body, b...)
-	return len(b), nil
+	i.body.Write(b)
+	return i.body.Len(), nil
 }
 
 // Header is used for interface compatability with http response writer
@@ -58,13 +60,14 @@ func (i *BodyInterceptor) RealWrite() (int, error) {
 	if i.responseCode != 0 {
 		i.w.WriteHeader(i.responseCode)
 	}
-	wi, werr := i.w.Write(i.body)
-	return wi, werr
+	c := i.body.Len()
+	io.Copy(i.w, &i.body)
+	return c, nil
 }
 
 // Body is used for interface compatability with http response writer
 func (i *BodyInterceptor) Body() []byte {
-	return i.body
+	return i.body.Bytes()
 }
 
 // ParseHTTPDate parses the given RFC7231§7.1.1 HTTP-date
@@ -103,6 +106,11 @@ func log(handler http.Handler) http.Handler {
 		startTime := time.Now()
 		iw := &BodyInterceptor{w: w}
 		handler.ServeHTTP(iw, r)
+		size := iw.body.Len()
+		rc := iw.responseCode
+		if rc == 0 {
+			rc = http.StatusOK
+		}
 		iw.RealWrite()
 		finishTime := time.Now()
 		remoteAddr := r.RemoteAddr
@@ -110,11 +118,6 @@ func log(handler http.Handler) http.Handler {
 		method := r.Method
 		rURI := r.URL.EscapedPath()
 		proto := r.Proto
-		rc := iw.responseCode
-		if rc == 0 {
-			rc = http.StatusOK
-		}
-		size := len(iw.body)
 		dur := finishTime.Sub(startTime)
 		refer := strings.Replace(r.Referer(), `"`, `\"`, -1)
 		uas := strings.Replace(r.UserAgent(), `"`, `\"`, -1)
@@ -257,12 +260,12 @@ func cacheOptimization(handler http.Handler, startTime time.Time, ep httpEndpoin
 		if rrange != "" && checkIfRange(irrange, eTag, ep.LastTranscodeTime) && !checkIsFullRange(rrange, len(iw.Body())) {
 			// Generate a 206 Paritial Content Range Request
 			if ranges, err := parseRange(rrange, int64(len(iw.Body()))); err != nil {
-				iw.body = []byte{}
+				iw.body.Reset()
 				iw.responseCode = http.StatusRequestedRangeNotSatisfiable
 			} else {
-				b, headers, err := clipToRange(ranges, iw.body, w.Header().Get("Content-Type"))
+				b, headers, err := clipToRange(ranges, iw.body.Bytes(), w.Header().Get("Content-Type"))
 				if err != nil {
-					iw.body = []byte{}
+					iw.body.Reset()
 					iw.responseCode = http.StatusRequestedRangeNotSatisfiable
 				} else {
 					AddFullDefaultHeader(w, r, "Cache-Control", []string{})
@@ -270,7 +273,9 @@ func cacheOptimization(handler http.Handler, startTime time.Time, ep httpEndpoin
 					AddFullDefaultHeader(w, r, "Content-Location", []string{})
 					AddFullDefaultHeader(w, r, "Vary", []string{})
 					iw.responseCode = http.StatusPartialContent
-					iw.body = b
+					// Reset the body in the body interceptor chain since we're explicitly clipping it to the requested ranges, otherwise it's just appending
+					iw.body.Reset()
+					iw.body.Write(b)
 					for key, val := range headers {
 						w.Header().Set(key, val)
 					}
