@@ -64,7 +64,7 @@ get_current_db_version() {
 }
 
 get_db_dumps() {
-    ls /db_dumps | grep '\.dump'
+    find /db_dumps -name '*.dump'
 }
 
 for d in $(get_db_dumps); do
