@@ -259,7 +259,7 @@ func cacheOptimization(handler http.Handler, startTime time.Time, ep httpEndpoin
 		// TODO: ensure this doesn't trigger on anything but 200
 		if rrange != "" && checkIfRange(irrange, eTag, ep.LastTranscodeTime) && !checkIsFullRange(rrange, len(iw.Body())) {
 			// Generate a 206 Paritial Content Range Request
-			if ranges, err := parseRange(rrange, int64(len(iw.Body()))); err != nil {
+			if ranges, err := parseRange(rrange, uint64(len(iw.Body()))); err != nil {
 				iw.body.Reset()
 				iw.responseCode = http.StatusRequestedRangeNotSatisfiable
 			} else {

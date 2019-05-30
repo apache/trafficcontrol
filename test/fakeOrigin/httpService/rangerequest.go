@@ -27,13 +27,13 @@ import (
 )
 
 type httpRange struct {
-	startOffset int64
-	length      int64
+	startOffset uint64
+	length      uint64
 }
 
 const multipartSeparator = "3d6b6a416f9b5fakeOrigin"
 
-func parseRange(rawRange string, size int64) ([]httpRange, error) {
+func parseRange(rawRange string, size uint64) ([]httpRange, error) {
 	var out []httpRange
 	if rawRange == "" {
 		return nil, nil
@@ -54,14 +54,14 @@ func parseRange(rawRange string, size int64) ([]httpRange, error) {
 			return nil, errors.New("invalid range")
 		}
 		start := strings.TrimSpace(offsets[0])
-		startI, err := strconv.ParseInt(start, 10, 64)
-		if err != nil || startI >= size || startI < 0 {
+		startI, err := strconv.ParseUint(start, 10, 64)
+		if err != nil || startI >= size {
 			return nil, errors.New("invalid range")
 		}
 		end := strings.TrimSpace(offsets[1])
-		var endI int64
+		var endI uint64
 		if end != "" {
-			endI, err = strconv.ParseInt(end, 10, 64)
+			endI, err = strconv.ParseUint(end, 10, 64)
 			if err != nil || endI < startI {
 				return nil, errors.New("invalid range")
 			}
@@ -91,8 +91,8 @@ func parseRange(rawRange string, size int64) ([]httpRange, error) {
 	return out, nil
 }
 
-func getContentRangeHeader(start, length, totalSize int64) string {
-	var end int64
+func getContentRangeHeader(start, length, totalSize uint64) string {
+	var end uint64
 	if start+length > totalSize-1 {
 		end = totalSize - 1
 	} else {
@@ -102,7 +102,7 @@ func getContentRangeHeader(start, length, totalSize int64) string {
 }
 
 func clipToRange(ranges []httpRange, obody []byte, contentHeader string) ([]byte, map[string]string, error) {
-	totalSize := len(obody)
+	totalSize := uint64(len(obody))
 	// need to use existing instead of appending since we have to lookup 206 time mismatches
 	// this also means we have to start dealing with slice string values
 
@@ -113,14 +113,14 @@ func clipToRange(ranges []httpRange, obody []byte, contentHeader string) ([]byte
 		r := ranges[0]
 		b := obody[r.startOffset : r.startOffset+r.length]
 		// Update response code and other headers based on isTimeMatch
-		return b, map[string]string{"Content-Range": getContentRangeHeader(r.startOffset, r.startOffset+r.length-1, int64(totalSize))}, nil
+		return b, map[string]string{"Content-Range": getContentRangeHeader(r.startOffset, r.startOffset+r.length-1, totalSize)}, nil
 	}
 	// multipart
 	var b []byte
 	for i := range ranges {
 		b = append(b, []byte("--"+multipartSeparator+"\n")...)
 		b = append(b, []byte("Content-Type: "+contentHeader+"\n")...)
-		b = append(b, []byte("Content-Range: "+getContentRangeHeader(ranges[i].startOffset, ranges[i].startOffset+ranges[i].length-1, int64(totalSize))+"\n\n")...)
+		b = append(b, []byte("Content-Range: "+getContentRangeHeader(ranges[i].startOffset, ranges[i].startOffset+ranges[i].length-1, totalSize)+"\n\n")...)
 		b = append(b, obody[ranges[i].startOffset:ranges[i].startOffset+ranges[i].length]...)
 		b = append(b, []byte("\n")...)
 	}
