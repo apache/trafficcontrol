@@ -15,12 +15,12 @@
 
 .. _ansiblelab:
 
-##########################
+**************************
 Ansible-based Lab Creation
-##########################
+**************************
 
 The scope of the Ansible work presented is a set of generic roles an implementor could use to expose the common installation and configuration tasks of each component.
-Additionally, some suggestions and sample scaffolding on how to divide the full end-to-end lab construction.
+Additionally,  it provides some suggestions and sample scaffolding on how to divide the full end-to-end lab construction.
 
 .. topic:: Why Ansible?
 
@@ -33,9 +33,8 @@ Additionally, some suggestions and sample scaffolding on how to divide the full 
   Each organization should review the instructions being performed in each Ansible playbook to determine if they satisfy their security requirements.
   Additionally, each implementor should select and implement their secret store of choice such as the built-in ``ansible-vault`` or a more advanced secret-as-a-service solution for any sensitive variables.
 
-***************************
 Lab Implementation Concepts
-***************************
+===========================
 
 .. image:: ATC.lab.layers.png
    :scale: 100 %
@@ -44,7 +43,7 @@ Lab Implementation Concepts
 The basic idea is to separate responsibilities to allow each implementation to use the tools/technologies that are already in use within their organizations.
 
 Provisioning Layer
-==================
+------------------
 
 The provisioning layer deals with the lowest levels of compute/network/storage/load balancer resources.
 Its objective is to bring systems from nothingness to a functional operating system (at least minimally).
@@ -54,7 +53,7 @@ Since DNS is a part of this layer, this unfortunately necessitates a small numbe
 It is expected that upon completion of this layer, a compatible Ansible inventory file is generated and placed in the lab's Ansible inventory directory.
 
 The Provisioning Layer Output
------------------------------
+"""""""""""""""""""""""""""""
 
 Ansible supports inventory files in several formats such as JSON, YAML, INI, or TOML.
 An example output is located at ``infrastructure/ansible/sample.lab/inventory/provisioning.inventory``.
@@ -70,19 +69,19 @@ As a workaround to this it is better for a lab to create DNS CNAME for each ::te
 These names will later be translated to additional inventory hosts used only for the creation of server objects in Traffic Ops and assignment to ::term::`delivery services`.
 
 Steady-state OS Layer
-=====================
+---------------------
 
 The steady-state layer deals with the adaptation of a generic OS image to something that meets the organization's requirements.
 For a CDN lab, it is also important to consider the deployment of necessary SSL data to known locations.
 
 Application Layer
-=================
+-----------------
 
 This is the primary area for contribution within Apache Traffic Control.  Ansible has built-in variable precedence and role inclusion.
 Conceptually these playbooks are split into implementation specific driver playbooks versus a generic core.
 
 Implementation Specific Driver Playbook
----------------------------------------
+"""""""""""""""""""""""""""""""""""""""
 
 Generally, this should handle some basic lab variable plumbing as well as any implementation specific tasks not generally useful to other ATC implementations.
 For example, an implementation might use an internal application as their application alerting engine which wouldn't make sense to others.
@@ -90,18 +89,17 @@ Sticking with the example of an application alerting engine, even if it were an 
 as not all implementations make use of that tool and maintaining it after contribution would incur ongoing costs.
 
 Generic Core Playbook
----------------------
+"""""""""""""""""""""
 
 This is the important piece for collaboration as it's based on the question, "Is this task/feature/function something all ATC implementations would benefit from?".
 Typically, the yes answers involve exposing or simplifying application functionality on the part of the lab environment maintainer or developer.
 Generally, the default values of a generic core role match or improve upon those present inside the RPM of the software.
 
-*************************
 Lab Implementation Layout
-*************************
+=========================
 
 Ansible variable hierarchy
-==========================
+--------------------------
 
 This is a topic better covered by `Ansible documentation <https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable>`_, but the short version to keep in mind if you follow the sample lab design and markdown readme is:
 
@@ -111,7 +109,7 @@ Each of the generic core roles uses a prefix on its variables to avoid collision
 This makes keeping track of what variables were intentionally overwritten from the role defaults clearer.
 
 Sample Driver Playbooks
-=======================
+-----------------------
 
 There are a few sample playbooks located at ``infrastructure/ansible``.
 
@@ -121,7 +119,7 @@ There are a few sample playbooks located at ``infrastructure/ansible``.
 * ``test.urls.yml`` is just a simple playbook to query a known asset list on all delivery service urls to ensure a basic 200 http response for every asset and url.
 
 The Lab directory
-=================
+-----------------
 
 A simple scaffold for a lab directory is included at ``infrastructure/ansible/sample.lab``.
 
@@ -132,7 +130,7 @@ A simple scaffold for a lab directory is included at ``infrastructure/ansible/sa
 * ``manual.run.sh`` is a scaffold for the entrypoint for performing a lab rebuild from your local system.
 
 Gilt
-----
+""""
 
 Traditionally when distributing application playbooks for Ansible, many people use the built-in Ansible Galaxy repository.
 There is a design limitation to the Ansible Galaxy though in that one git repository may only contain one role.
@@ -142,7 +140,7 @@ There are many solutions to this problem, but one of the better and easier once 
 As another alternative you can simply extract the roles from an Apache Traffic Control (ATC) source tarball from a build.
 
 The Roles directory
-======================
+-------------------
 
 The generic core roles for each component live at ``infrastructure/ansible/roles``.
 Each role contains a README.md with more information, but this is not a replacement for existing documentation on the components themselves.
@@ -154,20 +152,19 @@ If you're attempting to optimize the wallclock time needed to deploy all the com
    :scale: 100 %
    :align: center
 
-***************
 Ansible Bonuses
-***************
+===============
 
 These roles don't require a lab environment to be useful to operations (ops) teams.
 
 The to_api role
-===============
+---------------
 
 When reviewing the generic core roles, you'll notice that ``infrastructure/ansible/roles/to_api`` is a little different and doesn't map to an ATC component.
 This role was developed for Ops teams to integrate around daily workflows if desired.
 
 Using Traffic Ops as an Ansible Dynamic Inventory source
-========================================================
+--------------------------------------------------------
 
 ``infrastructure/ansible/dynamic.inventory`` contains a python script that is compatible with Ansible as a dynamic inventory.
 It leverages the python native client in ATC to expose lots of Traffic Ops server related data to the operator to make powerful and precise Ansible host patterns without the need of maintaining static files.

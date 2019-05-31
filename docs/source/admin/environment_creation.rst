@@ -15,9 +15,9 @@
 
 .. _env-creation:
 
-####################
+********************
 Environment Creation
-####################
+********************
 
 Apache Traffic Control is a complex set of components to construct a functional CDN.
 To help users get started more quickly, two paths exist to help based on the audience and needs.
@@ -26,7 +26,7 @@ These tools are optional and administrators may use whatever means are at their 
 CDN-in-a-Box (CIAB)
 ===================
 Audience for CIAB
-*****************
+-----------------
 * Developers who need a local full-stack to aid in development using Docker
 * A common platform for developers to write tests against and executed by a CI system
 * New users who are learning how a CDN using Apache Traffic Control works
@@ -41,7 +41,7 @@ Audience for CIAB
 Ansible-based Lab Deployment
 ============================
 Audience for Ansible-based Lab Deployment
-*****************************************
+-----------------------------------------
 * DevOps engineers building more production-like lab environments
 * DevOps engineers building an initial greenfield production environment
 * Developers who need test environments that cannot be modeled on local resources
