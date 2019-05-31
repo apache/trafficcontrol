@@ -21,7 +21,7 @@ Environment Creation
 
 Apache Traffic Control is a complex set of components to construct a functional CDN.
 To help users get started more quickly, two paths exist to help based on the audience and needs.
-These tools are optional and administrators may use whatever means are at their disposal to perform thier deployments.
+These tools are optional and administrators may use whatever means are at their disposal to perform their deployments.
 
 CDN-in-a-Box (CIAB)
 ===================

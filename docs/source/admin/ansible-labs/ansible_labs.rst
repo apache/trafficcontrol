@@ -31,7 +31,7 @@ Additionally, some suggestions and sample scaffolding on how to divide the full 
 .. topic:: What about Security?
 
   Each organization should review the instructions being performed in each Ansible playbook to determine if they satisfy their security requirements.
-  Additionally, each implementor should select and implement their secret store of choice such as the built-in ``ansible-vault`` or a more advanced secret-as-a-service solution such as HashiCorp Vault for any sensitive variables.
+  Additionally, each implementor should select and implement their secret store of choice such as the built-in ``ansible-vault`` or a more advanced secret-as-a-service solution for any sensitive variables.
 
 ***************************
 Lab Implementation Concepts
@@ -47,7 +47,7 @@ Provisioning Layer
 ==================
 
 The provisioning layer deals with the lowest levels of compute/network/storage/load balancer resources.
-Its objective is to bring systems from nothingness to a functional OS (at least minimally).
+Its objective is to bring systems from nothingness to a functional operating system (at least minimally).
 Additionally, it is responsible for setting up proper DNS for each system, CDN components, and DNS NS record delegations.
 
 Since DNS is a part of this layer, this unfortunately necessitates a small number of CDN concepts being present in the provisioning configuration.
@@ -63,11 +63,11 @@ When creating systems, each will probably be designated for some particular comp
 Ansible groups and hostvars specifying the component name must be provided and will be mapped to server types later on in the dataset loader.
 
 Like the systems being allocated to a particular component name, they must also be assigned to a particular DNS NS Delegation name where relevant or the ``ALL`` cdn as needed by the component.
-The NS Delegation name is what you would find in DNS for TR to be authoritative for.  In this example it's ``MKGA`` rather than the CDN Name which is ``Kabletown2.0``.
+The NS Delegation name is what you would find in DNS for Traffic Router to be authoritative for.  In this example it's ``MKGA`` rather than the CDN Name which is ``Kabletown2.0``.
 
-It is not recommended that an origin be used by more than one delivery service or it could lead to inconsistent behavior and conflated log data at the mid tier.
-As a workaround to this it is better for a lab to create DNS CNAME for each delivery service pointing at a particular origin and return that set of names as a CSV hostvar ds_names on each origin.
-These names will later be translated to additional inventory hosts used only for the creation of server objects in Traffic Ops and assignment to delivery services.
+It is not recommended that an ::term::`origin` be used by more than one ::term::`delivery service` or it could lead to inconsistent behavior and conflated log data at the ::term::`Mid-tier`.
+As a workaround to this it is better for a lab to create DNS CNAME for each ::term::`delivery service` pointing at a particular ::term::`origin` and return that set of names as a CSV hostvar ds_names on each ::term::`origin`.
+These names will later be translated to additional inventory hosts used only for the creation of server objects in Traffic Ops and assignment to ::term::`delivery services`.
 
 Steady-state OS Layer
 =====================
@@ -139,7 +139,7 @@ There is a design limitation to the Ansible Galaxy though in that one git reposi
 In the case of Apache Traffic Control, there are many components each with their own roles.
 At the end of the day, the generic core roles must exist in a valid Ansible role directory location.
 There are many solutions to this problem, but one of the better and easier once that's been run across is using the 3rd-party tool `Gilt <https://github.com/metacloud/gilt>`_.
-As another alternative you can simply extract the roles from an ATC source tarball from a build.
+As another alternative you can simply extract the roles from an Apache Traffic Control (ATC) source tarball from a build.
 
 The Roles directory
 ======================
@@ -158,7 +158,7 @@ If you're attempting to optimize the wallclock time needed to deploy all the com
 Ansible Bonuses
 ***************
 
-These roles don't require a lab environment to be useful to Ops teams.
+These roles don't require a lab environment to be useful to operations (ops) teams.
 
 The to_api role
 ===============
@@ -166,8 +166,8 @@ The to_api role
 When reviewing the generic core roles, you'll notice that ``infrastructure/ansible/roles/to_api`` is a little different and doesn't map to an ATC component.
 This role was developed for Ops teams to integrate around daily workflows if desired.
 
-Using TO as an Ansible Dynamic Inventory source
-===============================================
+Using Traffic Ops as an Ansible Dynamic Inventory source
+========================================================
 
 ``infrastructure/ansible/dynamic.inventory`` contains a python script that is compatible with Ansible as a dynamic inventory.
-It leverages the python native client in ATC to expose lots of TO server related data to the operator to make powerful and precise Ansible host patterns without the need of maintaining static files.
+It leverages the python native client in ATC to expose lots of Traffic Ops server related data to the operator to make powerful and precise Ansible host patterns without the need of maintaining static files.
