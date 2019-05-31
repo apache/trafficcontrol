@@ -24,22 +24,22 @@ Additionally,  it provides some suggestions and sample scaffolding on how to div
 
 .. topic:: Why Ansible?
 
-  There are many excellent tools to facilitate application installation and configuration.
-  Ansible is a leading open-source tool in this marketspace backed by major corporate sponsorship and adoption.
-  Most importantly it facilitates the abstractions desired without creating technological conflicts with existing infrastructure management solutions.
+	There are many excellent tools to facilitate application installation and configuration.
+	Ansible is a leading open-source tool in this marketspace backed by major corporate sponsorship and adoption.
+	Most importantly it facilitates the abstractions desired without creating technological conflicts with existing infrastructure management solutions.
 
 .. topic:: What about Security?
 
-  Each organization should review the instructions being performed in each Ansible playbook to determine if they satisfy their security requirements.
-  Additionally, each implementor should select and implement their secret store of choice such as the built-in ``ansible-vault`` or a more advanced secret-as-a-service solution for any sensitive variables.
+	Each organization should review the instructions being performed in each Ansible playbook to determine if they satisfy their security requirements.
+	Additionally, each implementor should select and implement their secret store of choice such as the built-in ``ansible-vault`` or a more advanced secret-as-a-service solution for any sensitive variables.
 
 Lab Implementation Concepts
 ===========================
 
 .. figure:: ATC.lab.layers.svg
-   :scale: 100 %
-   :align: center
-   :figclass: align-center
+	 :scale: 100 %
+	 :align: center
+	 :figclass: align-center
 
 The basic idea is to separate responsibilities to allow each implementation to use the tools/technologies that are already in use within their organizations.
 
@@ -150,9 +150,9 @@ It's very useful to still review the Administrator's Guide in the documentation 
 If you're attempting to optimize the wallclock time needed to deploy all the components in parallel, they should be installed like the following:
 
 .. figure:: ATC.installation.dependencies.svg
-   :scale: 100 %
-   :align: center
-   :figclass: align-center
+	 :scale: 100 %
+	 :align: center
+	 :figclass: align-center
 
 Ansible Bonuses
 ===============
