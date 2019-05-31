@@ -64,7 +64,7 @@ Installation
 
 		yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
 
-#. Install the Traffic Ops RPM. The Traffic Ops RPM file should have been built in an earlier step.
+#. Install the Traffic Ops RPM. The Traffic Ops RPM file should have been built-in an earlier step.
 
 	.. code-block:: shell
 		:caption: Installing a Generated Traffic Ops RPM

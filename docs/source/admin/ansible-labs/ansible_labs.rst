@@ -25,13 +25,13 @@ Additionally, some suggestions and sample scaffolding on how to divide the full 
 .. topic:: Why Ansible?
 
   There are many excellent tools to facilitate application installation and configuration.
-  Ansible is a leading opensource tool in this marketspace backed by major corporate sponsorship and adoption.
+  Ansible is a leading open-source tool in this marketspace backed by major corporate sponsorship and adoption.
   Most importantly it facilitates the abstractions desired without creating technological conflicts with existing infrastructure management solutions.
 
 .. topic:: What about Security?
 
-  Each organization should review the instructions being performed in each ansible playbook to determine if they satisfy their security requirements.
-  Additionally, each implementor should select and implement their secret store of choice such as the built in ``ansible-vault`` or a more advanced secret-as-a-service solution such as HashiCorp Vault for any sensitive variables.
+  Each organization should review the instructions being performed in each Ansible playbook to determine if they satisfy their security requirements.
+  Additionally, each implementor should select and implement their secret store of choice such as the built-in ``ansible-vault`` or a more advanced secret-as-a-service solution such as HashiCorp Vault for any sensitive variables.
 
 ***************************
 Lab Implementation Concepts
@@ -51,12 +51,12 @@ Its objective is to bring systems from nothingness to a functional OS (at least 
 Additionally, it is responsible for setting up proper DNS for each system, CDN components, and DNS NS record delegations.
 
 Since DNS is a part of this layer, this unfortunately necessitates a small number of CDN concepts being present in the provisioning configuration.
-It is expected that upon completion of this layer, a compatible Ansible inventory file is generated and placed in the lab's ansible inventory directory.
+It is expected that upon completion of this layer, a compatible Ansible inventory file is generated and placed in the lab's Ansible inventory directory.
 
 The Provisioning Layer Output
 -----------------------------
 
-Ansible supports inventory files in several formats such as json, yaml, or ini.
+Ansible supports inventory files in several formats such as JSON, YAML, INI, or TOML.
 An example output is located at ``infrastructure/ansible/sample.lab/inventory/provisioning.inventory``.
 
 When creating systems, each will probably be designated for some particular component in the CDN.
@@ -125,19 +125,19 @@ The Lab directory
 
 A simple scaffold for a lab directory is included at ``infrastructure/ansible/sample.lab``.
 
-* The ``ansible`` subdirectory should be used to hold variables specific to a particular lab in either ``vars.yml`` or an encrypted ansible ``vault``
-* The ``inventory`` directory is where it's recommended for your provisioning layer to drop a valid ansible inventory file describing what was allocated.  When using ansible, it's important to point the inventory source to this directory so that it will merge all available inventory files together for you.
+* The ``ansible`` subdirectory should be used to hold variables specific to a particular lab in either ``vars.yml`` or an encrypted Ansible ``vault``
+* The ``inventory`` directory is where it's recommended for your provisioning layer to drop a valid Ansible inventory file describing what was allocated.  When using Ansible, it's important to point the inventory source to this directory so that it will merge all available inventory files together for you.
 * The ``out/ssl`` directory is generated with the first run of the lab and holds your local copy of the lab SSL data
-* The docker and docker-compose related files are present as an optional wrapper for Linux hosts (doesn't work on OSX) around all the lab plumbing dependencies for ansible.  This is particularly handy for automated systems who perform regular redeployments.
+* The docker and docker-compose related files are present as an optional wrapper for Linux hosts (doesn't work on OSX) around all the lab plumbing dependencies for Ansible.  This is particularly handy for automated systems who perform regular redeployments.
 * ``manual.run.sh`` is a scaffold for the entrypoint for performing a lab rebuild from your local system.
 
 Gilt
 ----
 
-Traditionally when distributing application playbooks for Ansible, many people use the builtin ansible-galaxy repository.
+Traditionally when distributing application playbooks for Ansible, many people use the built-in Ansible Galaxy repository.
 There is a design limitation to the Ansible Galaxy though in that one git repository may only contain one role.
 In the case of Apache Traffic Control, there are many components each with their own roles.
-At the end of the day, the generic core roles must exist in a valid ansible role directory location.
+At the end of the day, the generic core roles must exist in a valid Ansible role directory location.
 There are many solutions to this problem, but one of the better and easier once that's been run across is using the 3rd-party tool `Gilt <https://github.com/metacloud/gilt>`_.
 As another alternative you can simply extract the roles from an ATC source tarball from a build.
 
@@ -169,5 +169,5 @@ This role was developed for Ops teams to integrate around daily workflows if des
 Using TO as an Ansible Dynamic Inventory source
 ===============================================
 
-``infrastructure/ansible/dynamic.inventory`` contains a python script that is compatible with ansible as a dynamic inventory.
-It leverages the python native client in ATC to expose lots of TO server related data to the operator to make powerful and precise ansible host patterns without the need of maintaining static files.
+``infrastructure/ansible/dynamic.inventory`` contains a python script that is compatible with Ansible as a dynamic inventory.
+It leverages the python native client in ATC to expose lots of TO server related data to the operator to make powerful and precise Ansible host patterns without the need of maintaining static files.

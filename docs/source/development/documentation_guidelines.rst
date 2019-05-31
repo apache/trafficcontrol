@@ -30,7 +30,7 @@ Writing
 =======
 When writing documentation, the most important things to remember are:
 
-- Spell Check. Most text editors have this built in (e.g. :kbd:`F6` in Sublime Text) or have plugins that will do this for you.
+- Spell Check. Most text editors have this built-in (e.g. :kbd:`F6` in Sublime Text) or have plugins that will do this for you.
 - Proof-Read. Spell-checkers won't catch grammatical errors or poor wording, so it's very important to actually proof-read all documentation *before* submitting it in a Pull Request.
 - Make Sure the Documentation Actually Builds. Please actually verify the documentation not only builds, but builds *correctly*. That means there probably shouldn't be any warnings, no malformed tables etc. and it also means that new documentation is actually accessible once built. It's not enough to create a new :file:`{something}.rst` file, that file must actually be linked to from some other, already included document. Some warnings may be considered acceptable, but do be prepared to defend them.
 - Traffic Ops UI is Dead. Do not ever create documentation that references or includes images of the Traffic Ops UI. That is officially dead now, and if the documentation being created is best made with references to a user-friendly UI, such references, examples and/or images should all be to/of Traffic Portal.

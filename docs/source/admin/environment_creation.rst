@@ -28,7 +28,7 @@ CDN-in-a-Box (CIAB)
 Audience for CIAB
 *****************
 * Developers who need a local full-stack to aid in development using Docker
-* A common platform for devlopers to write tests against and executed by a CI system
+* A common platform for developers to write tests against and executed by a CI system
 * New users who are learning how a CDN using Apache Traffic Control works
 * Functional demonstrations
 
