@@ -29,7 +29,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner:
 --
 
 CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
@@ -58,6 +58,111 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
+-- Name: change_types; Type: TYPE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TYPE change_types AS ENUM (
+    'create',
+    'update',
+    'delete'
+);
+
+--
+-- Name: deep_caching_type; Type: TYPE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TYPE deep_caching_type AS ENUM (
+    'NEVER',
+    'ALWAYS'
+);
+
+--
+-- Name: http_method_t; Type: TYPE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TYPE http_method_t AS ENUM (
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE'
+);
+
+--
+-- Name: localization_method; Type: TYPE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TYPE localization_method AS ENUM (
+    'CZ',
+    'DEEP_CZ',
+    'GEO'
+);
+
+--
+-- Name: origin_protocol; Type: TYPE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TYPE origin_protocol AS ENUM (
+    'http',
+    'https'
+);
+
+--
+-- Name: profile_type; Type: TYPE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TYPE profile_type AS ENUM (
+    'ATS_PROFILE',
+    'TR_PROFILE',
+    'TM_PROFILE',
+    'TS_PROFILE',
+    'TP_PROFILE',
+    'INFLUXDB_PROFILE',
+    'RIAK_PROFILE',
+    'SPLUNK_PROFILE',
+    'DS_PROFILE',
+    'ORG_PROFILE',
+    'KAFKA_PROFILE',
+    'LOGSTASH_PROFILE',
+    'ES_PROFILE',
+    'UNK_PROFILE',
+    'GROVE_PROFILE'
+);
+
+--
+-- Name: workflow_states; Type: TYPE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TYPE workflow_states AS ENUM (
+    'draft',
+    'submitted',
+    'rejected',
+    'pending',
+    'complete'
+);
+
+--
+-- Name: deliveryservice_signature_type; Type: DOMAIN; Schema: public; Owner: traffic_ops
+--
+
+CREATE DOMAIN deliveryservice_signature_type AS text CHECK (VALUE IN ('url_sig', 'uri_signing'));
+
+--
+-- Name: api_capability; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE api_capability (
+    id bigserial PRIMARY KEY,
+    http_method http_method_t NOT NULL,
+    route text NOT NULL,
+    capability text NOT NULL,
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    UNIQUE (http_method, route, capability)
+);
+
+ALTER TABLE api_capability OWNER TO traffic_ops;
+
+--
 -- Name: asn; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -65,7 +170,7 @@ CREATE TABLE asn (
     id bigint NOT NULL,
     asn bigint NOT NULL,
     cachegroup bigint DEFAULT '0'::bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -91,21 +196,20 @@ ALTER TABLE asn_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE asn_id_seq OWNED BY asn.id;
 
-
 --
 -- Name: cachegroup; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE cachegroup (
-    id bigint NOT NULL,
+    id bigint,
     name text NOT NULL,
     short_name text NOT NULL,
-    latitude numeric,
-    longitude numeric,
     parent_cachegroup_id bigint,
     secondary_parent_cachegroup_id bigint,
     type bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    fallback_to_closest boolean DEFAULT TRUE,
+    coordinate bigint
 );
 
 
@@ -131,6 +235,29 @@ ALTER TABLE cachegroup_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE cachegroup_id_seq OWNED BY cachegroup.id;
 
+--
+-- Name: cachegroup_fallbacks; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE cachegroup_fallbacks (
+    primary_cg bigint NOT NULL,
+    backup_cg bigint NOT NULL CHECK (primary_cg != backup_cg),
+    set_order bigint NOT NULL,
+    UNIQUE (primary_cg, backup_cg),
+    UNIQUE (primary_cg, set_order)
+);
+
+ALTER TABLE cachegroup_fallbacks OWNER TO traffic_ops;
+
+--
+-- Name: cachegroup_localization_method; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE cachegroup_localization_method (
+    cachegroup bigint NOT NULL,
+    method localization_method NOT NULL,
+    UNIQUE (cachegroup, method)
+);
 
 --
 -- Name: cachegroup_parameter; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -139,21 +266,35 @@ ALTER SEQUENCE cachegroup_id_seq OWNED BY cachegroup.id;
 CREATE TABLE cachegroup_parameter (
     cachegroup bigint DEFAULT '0'::bigint NOT NULL,
     parameter bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
 ALTER TABLE cachegroup_parameter OWNER TO traffic_ops;
 
 --
+-- Name: capability; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE capability (
+    name text NOT NULL,
+    description text,
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
+);
+
+ALTER TABLE capability OWNER TO traffic_ops;
+
+--
 -- Name: cdn; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE cdn (
-    id bigint NOT NULL,
-    name text,
+    id bigint,
+    name text NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
-    dnssec_enabled boolean DEFAULT false NOT NULL
+    dnssec_enabled boolean DEFAULT false NOT NULL,
+    domain_name text NOT NULL,
+    CONSTRAINT cdn_domain_name_unique UNIQUE (domain_name)
 );
 
 
@@ -179,26 +320,36 @@ ALTER TABLE cdn_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 
+--
+-- Name: coordinate; Type: TABLE; Schema: public: Owner: traffic_ops
+--
+
+CREATE TABLE coordinate (
+    id bigserial,
+    name text UNIQUE NOT NULL,
+    latitude numeric NOT NULL DEFAULT 0.0,
+    longitude numeric NOT NULL DEFAULT 0.0,
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
+);
 
 --
 -- Name: deliveryservice; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE deliveryservice (
-    id bigint NOT NULL,
+    id bigint,
     xml_id text NOT NULL,
     active boolean DEFAULT false NOT NULL,
     dscp bigint NOT NULL,
-    signed boolean DEFAULT false,
+    signing_algorithm deliveryservice_signature_type,
     qstring_ignore smallint,
     geo_limit smallint DEFAULT '0'::smallint,
     http_bypass_fqdn text,
     dns_bypass_ip text,
     dns_bypass_ip6 text,
     dns_bypass_ttl bigint,
-    org_server_fqdn text,
     type bigint NOT NULL,
-    profile bigint NOT NULL,
+    profile bigint,
     cdn_id bigint NOT NULL,
     ccr_dns_ttl bigint,
     global_max_mbps bigint,
@@ -211,7 +362,7 @@ CREATE TABLE deliveryservice (
     miss_lat numeric,
     miss_long numeric,
     check_path text,
-    last_updated timestamp with time zone DEFAULT now(),
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
     protocol smallint DEFAULT '0'::smallint,
     ssl_key_version bigint DEFAULT '0'::bigint,
     ipv6_routing_enabled boolean DEFAULT false,
@@ -233,7 +384,13 @@ CREATE TABLE deliveryservice (
     geo_limit_countries text,
     logs_enabled boolean DEFAULT false,
     multi_site_origin_algorithm smallint,
-    geolimit_redirect_url text
+    geolimit_redirect_url text,
+    tenant_id bigint NOT NULL,
+    routing_name text NOT NULL DEFAULT 'cdn',
+    deep_caching_type deep_caching_type NOT NULL DEFAULT 'NEVER',
+    fq_pacing_rate bigint DEFAULT 0,
+    anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE,
+    CONSTRAINT routing_name_not_empty CHECK ((length(routing_name) > 0))
 );
 
 
@@ -267,11 +424,42 @@ ALTER SEQUENCE deliveryservice_id_seq OWNED BY deliveryservice.id;
 CREATE TABLE deliveryservice_regex (
     deliveryservice bigint NOT NULL,
     regex bigint NOT NULL,
-    set_number bigint DEFAULT '0'::bigint
+    set_number bigint DEFAULT '0'::bigint,
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
 ALTER TABLE deliveryservice_regex OWNER TO traffic_ops;
+
+--
+-- Name: deliveryservice_request; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE deliveryservice_request (
+    assignee_id bigint,
+    author_id bigint NOT NULL,
+    change_type change_types NOT NULL,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    id bigserial,
+    last_edited_by_id bigint NOT NULL,
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    deliveryservice jsonb NOT NULL,
+    status workflow_states NOT NULL
+);
+
+ALTER TABLE deliveryservice_request OWNER TO traffic_ops;
+
+--
+-- Name: deliveryservice_request_comment; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE deliveryservice_request_comment (
+    author_id bigint NOT NULL,
+    deliveryservice_request_id bigint NOT NULL,
+    id bigserial,
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    value text NOT NULL
+);
 
 --
 -- Name: deliveryservice_server; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -280,7 +468,7 @@ ALTER TABLE deliveryservice_regex OWNER TO traffic_ops;
 CREATE TABLE deliveryservice_server (
     deliveryservice bigint NOT NULL,
     server bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -293,7 +481,7 @@ ALTER TABLE deliveryservice_server OWNER TO traffic_ops;
 CREATE TABLE deliveryservice_tmuser (
     deliveryservice bigint NOT NULL,
     tm_user_id bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -306,7 +494,7 @@ ALTER TABLE deliveryservice_tmuser OWNER TO traffic_ops;
 CREATE TABLE division (
     id bigint NOT NULL,
     name text NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -342,7 +530,7 @@ CREATE TABLE federation (
     cname text NOT NULL,
     description text,
     ttl integer NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -355,7 +543,7 @@ ALTER TABLE federation OWNER TO traffic_ops;
 CREATE TABLE federation_deliveryservice (
     federation bigint NOT NULL,
     deliveryservice bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -368,7 +556,7 @@ ALTER TABLE federation_deliveryservice OWNER TO traffic_ops;
 CREATE TABLE federation_federation_resolver (
     federation bigint NOT NULL,
     federation_resolver bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -403,7 +591,7 @@ CREATE TABLE federation_resolver (
     id bigint NOT NULL,
     ip_address text NOT NULL,
     type bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -437,8 +625,8 @@ ALTER SEQUENCE federation_resolver_id_seq OWNED BY federation_resolver.id;
 CREATE TABLE federation_tmuser (
     federation bigint NOT NULL,
     tm_user bigint NOT NULL,
-    role bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    role bigint,
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -453,7 +641,7 @@ CREATE TABLE hwinfo (
     serverid bigint NOT NULL,
     description text NOT NULL,
     val text NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -497,7 +685,7 @@ CREATE TABLE job (
     start_time timestamp with time zone NOT NULL,
     entered_time timestamp with time zone NOT NULL,
     job_user bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now(),
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
     job_deliveryservice bigint
 );
 
@@ -513,7 +701,8 @@ CREATE TABLE job_agent (
     name text,
     description text,
     active integer DEFAULT 0 NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT job_agent_name_unique UNIQUE (name)
 );
 
 
@@ -561,42 +750,6 @@ ALTER TABLE job_id_seq OWNER TO traffic_ops;
 ALTER SEQUENCE job_id_seq OWNED BY job.id;
 
 --
--- Name: job_result; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE job_result (
-    id bigint NOT NULL,
-    job bigint NOT NULL,
-    agent bigint NOT NULL,
-    result text NOT NULL,
-    description text,
-    last_updated timestamp with time zone DEFAULT now()
-);
-
-
-ALTER TABLE job_result OWNER TO traffic_ops;
-
---
--- Name: job_result_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
---
-
-CREATE SEQUENCE job_result_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE job_result_id_seq OWNER TO traffic_ops;
-
---
--- Name: job_result_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
---
-
-ALTER SEQUENCE job_result_id_seq OWNED BY job_result.id;
-
---
 -- Name: job_status; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -604,7 +757,8 @@ CREATE TABLE job_status (
     id bigint NOT NULL,
     name text,
     description text,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT job_status_name_unique UNIQUE (name)
 );
 
 
@@ -641,7 +795,7 @@ CREATE TABLE log (
     message text NOT NULL,
     tm_user bigint NOT NULL,
     ticketnum text,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -667,6 +821,28 @@ ALTER TABLE log_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE log_id_seq OWNED BY log.id;
 
+--
+-- Name: origin; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE origin (
+    id bigserial NOT NULL,
+    name text UNIQUE NOT NULL,
+    fqdn text NOT NULL,
+    protocol origin_protocol NOT NULL DEFAULT 'http',
+    is_primary boolean NOT NULL DEFAULT FALSE,
+    port bigint, -- TODO: port numbers have a max of 65535 - this could be just an integer
+    ip_address text, -- TODO: these should be inet type, not text
+    ip6_address text,
+    deliveryservice bigint NOT NULL,
+    coordinate bigint,
+    profile bigint,
+    cachegroup bigint,
+    tenant bigint NOT NULL,
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
+);
+
+ALTER TABLE origin OWNER TO traffic_ops;
 
 --
 -- Name: parameter; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -677,8 +853,9 @@ CREATE TABLE parameter (
     name text NOT NULL,
     config_file text,
     value text NOT NULL,
-    last_updated timestamp with time zone DEFAULT now(),
-    secure boolean DEFAULT false NOT NULL
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    secure boolean DEFAULT false NOT NULL,
+    CONSTRAINT unique_param UNIQUE (name, config_file, value)
 );
 
 
@@ -722,7 +899,7 @@ CREATE TABLE phys_location (
     email text,
     comments text,
     region bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -748,7 +925,6 @@ ALTER TABLE phys_location_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE phys_location_id_seq OWNED BY phys_location.id;
 
-
 --
 -- Name: profile; Type: TABLE; Schema: public; Owner: traffic_ops
 --
@@ -757,7 +933,10 @@ CREATE TABLE profile (
     id bigint NOT NULL,
     name text NOT NULL,
     description text,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    type profile_type NOT NULL,
+    cdn bigint NOT NULL,
+    routing_disabled boolean NOT NULL DEFAULT FALSE
 );
 
 
@@ -791,7 +970,7 @@ ALTER SEQUENCE profile_id_seq OWNED BY profile.id;
 CREATE TABLE profile_parameter (
     profile bigint NOT NULL,
     parameter bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -805,7 +984,7 @@ CREATE TABLE regex (
     id bigint NOT NULL,
     pattern text DEFAULT ''::text NOT NULL,
     type bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -840,7 +1019,7 @@ CREATE TABLE region (
     id bigint NOT NULL,
     name text NOT NULL,
     division bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -872,10 +1051,12 @@ ALTER SEQUENCE region_id_seq OWNED BY region.id;
 --
 
 CREATE TABLE role (
-    id bigint NOT NULL,
+    id bigint,
     name text NOT NULL,
     description text,
-    priv_level bigint NOT NULL
+    priv_level bigint NOT NULL,
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT role_name_unique UNIQUE (name)
 );
 
 
@@ -901,6 +1082,18 @@ ALTER TABLE role_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE role_id_seq OWNED BY role.id;
 
+--
+-- Name: role_capability; Type TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE role_capability (
+    role_id bigint NOT NULL,
+    cap_name text NOT NULL,
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    UNIQUE (role_id, cap_name)
+);
+
+ALTER TABLE role_capability OWNER TO traffic_ops;
 
 --
 -- Name: server; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -940,8 +1133,9 @@ CREATE TABLE server (
     router_host_name text,
     router_port_name text,
     guid text,
-    last_updated timestamp with time zone DEFAULT now(),
-    https_port bigint
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    https_port bigint,
+    reval_pending boolean NOT NULL DEFAULT FALSE
 );
 
 
@@ -1006,7 +1200,7 @@ CREATE TABLE servercheck (
     bc bigint,
     bd bigint,
     be bigint,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -1032,6 +1226,17 @@ ALTER TABLE servercheck_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE servercheck_id_seq OWNED BY servercheck.id;
 
+--
+-- Name: snapshot; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE snapshot (
+    cdn text NOT NULL,
+    content json NOT NULL,
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
+);
+
+ALTER TABLE snapshot OWNER TO traffic_ops;
 
 --
 -- Name: staticdnsentry; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -1045,7 +1250,7 @@ CREATE TABLE staticdnsentry (
     ttl bigint DEFAULT '3600'::bigint NOT NULL,
     deliveryservice bigint NOT NULL,
     cachegroup bigint,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
 );
 
 
@@ -1118,7 +1323,8 @@ CREATE TABLE status (
     id bigint NOT NULL,
     name text NOT NULL,
     description text,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT status_name_unique UNIQUE (name)
 );
 
 
@@ -1152,12 +1358,25 @@ ALTER SEQUENCE status_id_seq OWNED BY status.id;
 CREATE TABLE steering_target (
     deliveryservice bigint NOT NULL,
     target bigint NOT NULL,
-    weight bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now()
+    value bigint NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    type bigint NOT NULL
 );
 
 
 ALTER TABLE steering_target OWNER TO traffic_ops;
+
+--
+-- Name: tenant; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE tenant (
+    id bigserial,
+    name text UNIQUE NOT NULL,
+    active boolean NOT NULL DEFAULT FALSE,
+    parent_id bigint DEFAULT 1 CHECK (id != parent_id),
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
+);
 
 --
 -- Name: tm_user; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -1172,7 +1391,7 @@ CREATE TABLE tm_user (
     gid bigint,
     local_passwd text,
     confirm_local_passwd text,
-    last_updated timestamp with time zone DEFAULT now(),
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
     company text,
     email text,
     full_name text,
@@ -1185,7 +1404,8 @@ CREATE TABLE tm_user (
     postal_code text,
     country text,
     token text,
-    registration_sent timestamp with time zone
+    registration_sent timestamp with time zone,
+    tenant_id bigint NOT NULL
 );
 
 
@@ -1264,7 +1484,8 @@ CREATE TABLE type (
     name text NOT NULL,
     description text,
     use_in_table text,
-    last_updated timestamp with time zone DEFAULT now()
+    last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT type_name_unique UNIQUE(name)
 );
 
 
@@ -1290,6 +1511,28 @@ ALTER TABLE type_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE type_id_seq OWNED BY type.id;
 
+--
+-- Name: user_role; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE user_role (
+    user_id bigint NOT NULL,
+    role_id bigint NOT NULL,
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
+);
+
+ALTER TABLE user_role OWNER TO traffic_ops;
+
+--
+-- Name: profile_type_values; Type: VIEW; Schema: public; Owner: traffic_ops
+--
+
+CREATE VIEW profile_type_values AS
+    SELECT unnest(enum_range(NULL::profile_type)) AS VALUE
+        ORDER BY (unnest(enum_range(NULL::profile_type)));
+
+
+ALTER TABLE profile_type_values OWNER TO traffic_ops;
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
@@ -1472,7 +1715,6 @@ ALTER TABLE ONLY to_extension ALTER COLUMN id SET DEFAULT nextval('to_extension_
 
 ALTER TABLE ONLY type ALTER COLUMN id SET DEFAULT nextval('type_id_seq'::regclass);
 
-
 --
 -- Name: idx_89468_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
@@ -1488,7 +1730,6 @@ ALTER TABLE ONLY asn
 ALTER TABLE ONLY cachegroup
     ADD CONSTRAINT idx_89476_primary PRIMARY KEY (id, type);
 
-
 --
 -- Name: idx_89484_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
@@ -1496,6 +1737,12 @@ ALTER TABLE ONLY cachegroup
 ALTER TABLE ONLY cachegroup_parameter
     ADD CONSTRAINT idx_89484_primary PRIMARY KEY (cachegroup, parameter);
 
+--
+-- Name: capability_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY capability
+    ADD CONSTRAINT capability_pkey PRIMARY KEY (name);
 
 --
 -- Name: idx_89491_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1504,6 +1751,12 @@ ALTER TABLE ONLY cachegroup_parameter
 ALTER TABLE ONLY cdn
     ADD CONSTRAINT idx_89491_primary PRIMARY KEY (id);
 
+--
+-- Name: coordinate_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY coordinate
+    ADD CONSTRAINT coordinate_pkey PRIMARY KEY (id);
 
 --
 -- Name: idx_89502_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1520,6 +1773,19 @@ ALTER TABLE ONLY deliveryservice
 ALTER TABLE ONLY deliveryservice_regex
     ADD CONSTRAINT idx_89517_primary PRIMARY KEY (deliveryservice, regex);
 
+--
+-- Name: deliveryservice_request_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY deliveryservice_request
+    ADD CONSTRAINT deliveryservice_request_pkey PRIMARY KEY (id);
+
+--
+-- Name: deliveryservice_request_comment_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY deliveryservice_request_comment
+    ADD CONSTRAINT deliveryservice_request_comment_pkey PRIMARY KEY (id);
 
 --
 -- Name: idx_89521_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1616,7 +1882,6 @@ ALTER TABLE ONLY job_agent
 ALTER TABLE ONLY job_status
     ADD CONSTRAINT idx_89624_primary PRIMARY KEY (id);
 
-
 --
 -- Name: idx_89634_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
@@ -1624,6 +1889,12 @@ ALTER TABLE ONLY job_status
 ALTER TABLE ONLY log
     ADD CONSTRAINT idx_89634_primary PRIMARY KEY (id, tm_user);
 
+--
+-- Name: origin_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY origin
+    ADD CONSTRAINT origin_pkey PRIMARY KEY (id);
 
 --
 -- Name: idx_89644_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1680,7 +1951,6 @@ ALTER TABLE ONLY region
 ALTER TABLE ONLY role
     ADD CONSTRAINT idx_89700_primary PRIMARY KEY (id);
 
-
 --
 -- Name: idx_89709_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
@@ -1696,6 +1966,12 @@ ALTER TABLE ONLY server
 ALTER TABLE ONLY servercheck
     ADD CONSTRAINT idx_89722_primary PRIMARY KEY (id, server);
 
+--
+-- Name: snapshot_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY snapshot
+    ADD CONSTRAINT snapshot_pkey PRIMARY KEY (cdn);
 
 --
 -- Name: idx_89729_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1728,6 +2004,12 @@ ALTER TABLE ONLY status
 ALTER TABLE ONLY steering_target
     ADD CONSTRAINT idx_89759_primary PRIMARY KEY (deliveryservice, target);
 
+--
+-- Name: tenant_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY tenant
+    ADD CONSTRAINT tenant_pkey PRIMARY KEY (id);
 
 --
 -- Name: idx_89765_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -1751,7 +2033,6 @@ ALTER TABLE ONLY to_extension
 
 ALTER TABLE ONLY type
     ADD CONSTRAINT idx_89786_primary PRIMARY KEY (id);
-
 
 --
 -- Name: idx_89468_cr_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -1822,13 +2103,17 @@ CREATE INDEX idx_89484_fk_parameter ON cachegroup_parameter USING btree (paramet
 
 CREATE UNIQUE INDEX idx_89491_cdn_cdn_unique ON cdn USING btree (name);
 
-
 --
 -- Name: idx_89502_ds_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89502_ds_id_unique ON deliveryservice USING btree (id);
 
+--
+-- Name: idx_k_deliveryservice_tenant_idx; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX idx_k_deliveryservice_tenant_idx ON deliveryservice USING btree (tenant_id);
 
 --
 -- Name: idx_89502_ds_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -2032,6 +2317,12 @@ CREATE UNIQUE INDEX idx_89655_short_name_unique ON phys_location USING btree (sh
 
 CREATE UNIQUE INDEX idx_89665_name_unique ON profile USING btree (name);
 
+--
+-- Name: idx_181818_fk_cdn1; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX idx_181818_fk_cdn1 ON profile USING btree (cdn);
+
 
 --
 -- Name: idx_89673_fk_atsprofile_atsparameters_atsparameters1; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -2186,6 +2477,11 @@ CREATE INDEX idx_89729_fk_staticdnsentry_ds ON staticdnsentry USING btree (deliv
 
 CREATE INDEX idx_89729_fk_staticdnsentry_type ON staticdnsentry USING btree (type);
 
+--
+-- Name: idx_k_tenant_parent_tenant_idx; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX idx_k_tenant_parent_tenant_idx ON tenant USING btree (parent_id);
 
 --
 -- Name: idx_89765_fk_user_1; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -2193,6 +2489,11 @@ CREATE INDEX idx_89729_fk_staticdnsentry_type ON staticdnsentry USING btree (typ
 
 CREATE INDEX idx_89765_fk_user_1 ON tm_user USING btree (role);
 
+--
+-- Name: idx_k_tm_user_tenant_idx; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX idx_k_tm_user_tenant_idx ON tm_user USING btree (tenant_id);
 
 --
 -- Name: idx_89765_tmuser_email_unique; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -2221,6 +2522,60 @@ CREATE INDEX idx_89776_fk_ext_type_idx ON to_extension USING btree (type);
 
 CREATE UNIQUE INDEX idx_89776_id_unique ON to_extension USING btree (id);
 
+--
+-- Name: cachegroup_coordinate_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX cachegroup_coordinate_fkey ON cachegroup USING btree (coordinate);
+
+--
+-- Name: cachegroup_localization_method_cachegroup_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX cachegroup_localization_method_cachegroup_fkey ON cachegroup_localization_method USING btree(cachegroup);
+
+--
+-- Name: origin_is_primary_deliveryservice_constraint; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE UNIQUE INDEX origin_is_primary_deliveryservice_constraint ON origin (is_primary, deliveryservice) WHERE is_primary;
+
+--
+-- Name: origin_deliveryservice_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX origin_deliveryservice_fkey ON origin USING btree (deliveryservice);
+
+--
+-- Name: origin_coordinate_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX origin_coordinate_fkey ON origin USING btree (coordinate);
+
+--
+-- Name: origin_profile_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX origin_profile_fkey ON origin USING btree (profile);
+
+--
+-- Name: origin_cachegroup_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX origin_cachegroup_fkey ON origin USING btree (cachegroup);
+
+--
+-- Name: origin_tenant_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+--
+
+CREATE INDEX origin_tenant_fkey ON origin USING btree (tenant);
+
+
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON api_capability FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: idx_89786_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -2242,6 +2597,11 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cachegroup FOR EACH 
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cachegroup_parameter FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON capability FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
@@ -2249,6 +2609,11 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cachegroup_parameter
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cdn FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON coordinate FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
@@ -2256,6 +2621,23 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cdn FOR EACH ROW EXE
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_regex FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
+
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_request FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
+
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_request_comment FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
@@ -2333,7 +2715,6 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job FOR EACH ROW EXE
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_agent FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
-
 --
 -- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
@@ -2347,6 +2728,11 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_status FOR EACH 
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON log FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON origin FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
@@ -2389,6 +2775,17 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON regex FOR EACH ROW E
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON region FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON role FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
+
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON role_capability FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
@@ -2403,6 +2800,11 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON server FOR EACH ROW 
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON servercheck FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON snapshot FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
@@ -2424,6 +2826,11 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON status FOR EACH ROW 
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON steering_target FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON tenant FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
@@ -2438,6 +2845,11 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON tm_user FOR EACH ROW
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON type FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
+--
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON user_role FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 --
 -- Name: fk_atsprofile_atsparameters_atsparameters1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -2684,7 +3096,7 @@ ALTER TABLE ONLY job
 --
 
 ALTER TABLE ONLY job
-    ADD CONSTRAINT fk_job_deliveryservice1 FOREIGN KEY (job_deliveryservice) REFERENCES deliveryservice(id);
+    ADD CONSTRAINT fk_job_deliveryservice1 FOREIGN KEY (job_deliveryservice) REFERENCES deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 
 --
@@ -2748,7 +3160,7 @@ ALTER TABLE ONLY region
 --
 
 ALTER TABLE ONLY server
-    ADD CONSTRAINT fk_server_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id) ON UPDATE RESTRICT ON DELETE CASCADE;
+    ADD CONSTRAINT fk_server_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 
 --
@@ -2772,7 +3184,7 @@ ALTER TABLE ONLY staticdnsentry
 --
 
 ALTER TABLE ONLY staticdnsentry
-    ADD CONSTRAINT fk_staticdnsentry_ds FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id);
+    ADD CONSTRAINT fk_staticdnsentry_ds FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 
 --
@@ -2796,7 +3208,7 @@ ALTER TABLE ONLY steering_target
 --
 
 ALTER TABLE ONLY steering_target
-    ADD CONSTRAINT fk_steering_target_target FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_steering_target_target FOREIGN KEY (target) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -2821,6 +3233,182 @@ ALTER TABLE ONLY deliveryservice_tmuser
 
 ALTER TABLE ONLY tm_user
     ADD CONSTRAINT fk_user_1 FOREIGN KEY (role) REFERENCES role(id) ON DELETE SET NULL;
+
+
+--
+-- Name: fk_capability; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY api_capability
+    ADD CONSTRAINT fk_capability FOREIGN KEY (capability) REFERENCES capability (name) ON DELETE RESTRICT;
+
+--
+-- Name: steering_target_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY steering_target
+    ADD CONSTRAINT steering_target_type_fkey FOREIGN KEY (type) REFERENCES type (id);
+
+--
+-- Name: fk_tenantid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY deliveryservice
+    ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL;
+
+--
+-- Name: fk_author; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY deliveryservice_request
+    ADD CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES tm_user(id) ON DELETE CASCADE;
+
+--
+-- Name: fk_assignee; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY deliveryservice_request
+    ADD CONSTRAINT fk_assignee FOREIGN KEY (assignee_id) REFERENCES tm_user(id) ON DELETE SET NULL;
+
+--
+-- Name: fk_last_edited_by; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY deliveryservice_request
+    ADD CONSTRAINT fk_last_edited_by FOREIGN KEY (last_edited_by_id) REFERENCES tm_user (id) ON DELETE CASCADE;
+
+--
+-- Name: fk_author; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY deliveryservice_request_comment
+    ADD CONSTRAINT fk_author FOREIGN KEY (author_id) REFERENCES tm_user (id) ON DELETE CASCADE;
+
+--
+-- Name: origin_profile_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY origin
+    ADD CONSTRAINT origin_profile_fkey FOREIGN KEY (profile) REFERENCES profile (id) ON DELETE RESTRICT;
+
+--
+-- Name: origin_deliveryservice_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY origin
+    ADD CONSTRAINT origin_deliveryservice_fkey FOREIGN KEY (deliveryservice) REFERENCES deliveryservice (id) ON DELETE CASCADE;
+
+--
+-- Name: origin_coordinate_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY origin
+    ADD CONSTRAINT origin_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id) ON DELETE RESTRICT;
+
+--
+-- Name: origin_cachegroup_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY origin
+    ADD CONSTRAINT origin_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup (id) ON DELETE RESTRICT;
+
+--
+-- Name: origin_tenant_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY origin
+    ADD CONSTRAINT origin_tenant_fkey FOREIGN KEY (tenant) REFERENCES tenant (id) ON DELETE RESTRICT;
+
+--
+-- Name: cachegroup_coordinate_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cachegroup
+    ADD CONSTRAINT cachegroup_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id);
+
+--
+-- Name: fk_primary_cg; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cachegroup_fallbacks
+    ADD CONSTRAINT fk_primary_cg FOREIGN KEY (primary_cg) REFERENCES cachegroup (id) ON DELETE CASCADE;
+
+--
+-- Name: fk_backup_cg; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cachegroup_fallbacks
+    ADD CONSTRAINT fk_backup_cg FOREIGN KEY (backup_cg) REFERENCES cachegroup (id) ON DELETE CASCADE;
+
+--
+-- Name: cachegroup_localization_method_cachegroup_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cachegroup_localization_method
+    ADD CONSTRAINT cachegroup_localization_method_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup (id) ON DELETE CASCADE;
+
+--
+-- Name: fk_deliveryservice_request; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY deliveryservice_request_comment
+    ADD CONSTRAINT fk_deliveryservice_request FOREIGN KEY (deliveryservice_request_id) REFERENCES deliveryservice_request (id) ON DELETE CASCADE;
+
+--
+-- Name: fk_cdn1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY profile
+    ADD CONSTRAINT fk_cdn1 FOREIGN KEY (cdn) REFERENCES cdn (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+
+--
+-- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY role_capability
+    ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE CASCADE;
+
+--
+-- Name: fk_cap_name; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY role_capability
+    ADD CONSTRAINT fk_cap_name FOREIGN KEY (cap_name) REFERENCES capability (name) ON DELETE RESTRICT;
+
+--
+-- Name: snapshot_cdn_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY snapshot
+    ADD CONSTRAINT snapshot_cdn_fkey FOREIGN KEY (cdn) REFERENCES cdn (name) ON UPDATE CASCADE ON DELETE CASCADE;
+
+--
+-- Name: fk_parentid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY tenant
+    ADD CONSTRAINT fk_parentid FOREIGN KEY (parent_id) REFERENCES tenant (id);
+
+--
+-- Name: fk_tenantid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY tm_user
+    ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL;
+
+--
+-- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY user_role
+    ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES tm_user (id) ON DELETE CASCADE;
+
+--
+-- Name: fk_role_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY user_role
+    ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE RESTRICT;
 
 
 --
