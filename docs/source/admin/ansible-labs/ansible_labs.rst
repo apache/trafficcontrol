@@ -137,7 +137,7 @@ Traditionally when distributing application playbooks for Ansible, many people u
 There is a design limitation to the Ansible Galaxy though in that one git repository may only contain one role.
 In the case of Apache Traffic Control, there are many components each with their own roles.
 At the end of the day, the generic core roles must exist in a valid Ansible role directory location.
-There are many solutions to this problem, but one of the better and easier once that's been run across is using the 3rd-party tool `Gilt <https://github.com/metacloud/gilt>`_.
+There are many solutions to this problem, but one of the better and easier once that's been run across is using the 3\ :sup:`rd`-party tool `Gilt <https://github.com/metacloud/gilt>`_.
 As another alternative you can simply extract the roles from an Apache Traffic Control (ATC) source tarball from a build.
 
 The Roles directory
