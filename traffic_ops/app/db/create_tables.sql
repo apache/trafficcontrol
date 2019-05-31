@@ -827,7 +827,7 @@ ALTER SEQUENCE log_id_seq OWNED BY log.id;
 
 CREATE TABLE origin (
     id bigserial NOT NULL,
-    name text UNIQUE NULL,
+    name text UNIQUE NOT NULL,
     fqdn text NOT NULL,
     protocol origin_protocol NOT NULL DEFAULT 'http',
     is_primary boolean NOT NULL DEFAULT FALSE,
@@ -1950,13 +1950,6 @@ ALTER TABLE ONLY region
 
 ALTER TABLE ONLY role
     ADD CONSTRAINT idx_89700_primary PRIMARY KEY (id);
-
---
--- Name: pk_role_capability; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY role_capability
-    ADD CONSTRAINT pk_role_capability PRIMARY KEY (role_id, cap_name);
 
 --
 -- Name: idx_89709_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3331,14 +3324,14 @@ ALTER TABLE ONLY origin
 --
 
 ALTER TABLE ONLY cachegroup
-    ADD CONSTRAINT cachegroup_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id) ON DELETE CASCADE;
+    ADD CONSTRAINT cachegroup_coordinate_fkey FOREIGN KEY (coordinate) REFERENCES coordinate (id);
 
 --
 -- Name: fk_primary_cg; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup_fallbacks
-    ADD CONSTRAINT fk_primary_cg FOREIGN KEY (primary_cg) REFERENCES cachegroup (id);
+    ADD CONSTRAINT fk_primary_cg FOREIGN KEY (primary_cg) REFERENCES cachegroup (id) ON DELETE CASCADE;
 
 --
 -- Name: fk_backup_cg; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3390,11 +3383,11 @@ ALTER TABLE ONLY snapshot
     ADD CONSTRAINT snapshot_cdn_fkey FOREIGN KEY (cdn) REFERENCES cdn (name) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
--- Name: fk_parent_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: fk_parentid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY tenant
-    ADD CONSTRAINT fk_parent_id FOREIGN KEY (parent_id) REFERENCES tenant (id);
+    ADD CONSTRAINT fk_parentid FOREIGN KEY (parent_id) REFERENCES tenant (id);
 
 --
 -- Name: fk_tenantid; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
