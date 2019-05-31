@@ -3282,7 +3282,7 @@ ALTER TABLE ONLY deliveryservice_request
 --
 
 ALTER TABLE ONLY deliveryservice_request
-    ADD CONSTRAINT fk_last_edited_by FOREIGN KEY (last_edited_by) REFERENCES tm_user (id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_last_edited_by FOREIGN KEY (last_edited_by_id) REFERENCES tm_user (id) ON DELETE CASCADE;
 
 --
 -- Name: fk_author; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
