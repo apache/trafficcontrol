@@ -57,7 +57,7 @@ The Provisioning Layer Output
 """""""""""""""""""""""""""""
 
 Ansible supports inventory files in several formats such as JSON, YAML, INI, or TOML.
-An example output is located at ``infrastructure/ansible/sample.lab/inventory/provisioning.inventory``.
+An example output is located at :atc-file:`infrastructure/ansible/sample.lab/inventory/provisioning.inventory`.
 
 When creating systems, each will probably be designated for some particular component in the CDN.
 Ansible groups and hostvars specifying the component name must be provided and will be mapped to server types later on in the dataset loader.
@@ -104,7 +104,7 @@ Ansible variable hierarchy
 
 This is a topic better covered by `Ansible documentation <https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable>`_, but the short version to keep in mind if you follow the sample lab design and markdown readme is:
 
-(Highest precedent) CLI → Lab Vault → Lab Vars → Playbook Vars → Task Vars → Role Defaults (Lowest precedent)
+(Highest precedence) CLI → Lab Vault → Lab Vars → Playbook Vars → Task Vars → Role Defaults (Lowest precedence)
 
 Each of the generic core roles uses a prefix on its variables to avoid collision, and to make life easier it's recommended that you map them on the associated import role task variables.
 This makes keeping track of what variables were intentionally overwritten from the role defaults clearer.
@@ -112,23 +112,23 @@ This makes keeping track of what variables were intentionally overwritten from t
 Sample Driver Playbooks
 -----------------------
 
-There are a few sample playbooks located at ``infrastructure/ansible``.
+There are a few sample playbooks located at :atc-file:`infrastructure/ansible/`.  As an implementor develops their implementation specific driver playbooks they should go here.
 
-* ``steady-state.yml`` is an example of a playbook that can deal with generating SSL certificates and distributing them across a lab as well as dynamically generating a secondary inventory file with additional data.
-* ``sample.driver.playbook.yml`` shows a general skeleton to leverage when building out your implementation's driver playbooks around the generic core roles.
-* ``influxdb_relay.yml`` shows a more advanced example of a driver playbook that involves querying Traffic Ops for supplementary information in a secondary play.
-* ``test.urls.yml`` is just a simple playbook to query a known asset list on all delivery service urls to ensure a basic 200 http response for every asset and url.
+* :atc-file:`infrastructure/ansible/steady-state.yml` is an example of a playbook that can deal with generating SSL certificates and distributing them across a lab as well as dynamically generating a secondary inventory file with additional data.
+* :atc-file:`infrastructure/ansible/sample.driver.playbook.yml` shows a general skeleton to leverage when building out your implementation's driver playbooks around the generic core roles.
+* :atc-file:`infrastructure/ansible/influxdb_relay.yml` shows a more advanced example of a driver playbook that involves querying Traffic Ops for supplementary information in a secondary play.
+* :atc-file:`infrastructure/ansible/test.urls.yml` is just a simple playbook to query a known asset list on all delivery service urls to ensure a basic 200 http response for every asset and url.
 
 The Lab directory
 -----------------
 
-A simple scaffold for a lab directory is included at ``infrastructure/ansible/sample.lab``.
+A simple scaffold for a lab directory is included at :atc-file:`infrastructure/ansible/sample.lab`.  This directory should encapsulate all pieces that make one environment unique from another.  Ideally making new environments is as simple as copy-paste this directory and tweak the variables desired inside.
 
-* The ``ansible`` subdirectory should be used to hold variables specific to a particular lab in either ``vars.yml`` or an encrypted Ansible ``vault``
-* The ``inventory`` directory is where it's recommended for your provisioning layer to drop a valid Ansible inventory file describing what was allocated.  When using Ansible, it's important to point the inventory source to this directory so that it will merge all available inventory files together for you.
-* The ``out/ssl`` directory is generated with the first run of the lab and holds your local copy of the lab SSL data
-* The docker and docker-compose related files are present as an optional wrapper for Linux hosts (doesn't work on OSX) around all the lab plumbing dependencies for Ansible.  This is particularly handy for automated systems who perform regular redeployments.
-* ``manual.run.sh`` is a scaffold for the entrypoint for performing a lab rebuild from your local system.
+* The :atc-file:`infrastructure/ansible/sample.lab/ansible` subdirectory should be used to hold variables specific to a particular lab in either ``vars.yml`` or an encrypted Ansible ``vault``
+* The :atc-file:`infrastructure/ansible/sample.lab/inventory` directory is where it's recommended for your provisioning layer to drop a valid Ansible inventory file describing what was allocated.  When using Ansible, it's important to point the inventory source to this directory so that it will merge all available inventory files together for you.
+* The :atc-file:`infrastructure/ansible/sample.lab/out/ssl` directory is generated with the first run of the lab and holds your local copy of the lab SSL data.  The out directory is also handy for holding temporary data from the provisioning or steady-state layers to help triage failures.
+* The docker and docker-compose related files are present as an optional wrapper for Linux hosts (doesn't work on OSX) around all the lab plumbing dependencies for Ansible.  This is particularly handy for automated systems who perform regular redeployments such as in a CI/CD tool.
+* :atc-file:`infrastructure/ansible/sample.lab/manual.run.sh` is a scaffold for the entrypoint for performing a lab rebuild from your local system.
 
 Gilt
 """"
@@ -143,7 +143,7 @@ As another alternative you can simply extract the roles from an Apache Traffic C
 The Roles directory
 -------------------
 
-The generic core roles for each component live at ``infrastructure/ansible/roles``.
+The generic core roles for each component live at :atc-file:`infrastructure/ansible/roles`.
 Each role contains a README.md with more information, but this is not a replacement for existing documentation on the components themselves.
 It's very useful to still review the Administrator's Guide in the documentation as you develop your implementation around the component's generic core.
 
@@ -162,11 +162,11 @@ These roles don't require a lab environment to be useful to operations (ops) tea
 The to_api role
 ---------------
 
-When reviewing the generic core roles, you'll notice that ``infrastructure/ansible/roles/to_api`` is a little different and doesn't map to an ATC component.
+When reviewing the generic core roles, you'll notice that :atc-file:`infrastructure/ansible/roles/to_api` is a little different and doesn't map to an ATC component.
 This role was developed for Ops teams to integrate around daily workflows if desired.
 
 Using Traffic Ops as an Ansible Dynamic Inventory source
 --------------------------------------------------------
 
-``infrastructure/ansible/dynamic.inventory`` contains a python script that is compatible with Ansible as a dynamic inventory.
+:atc-file:`infrastructure/ansible/dynamic.inventory` contains a python script that is compatible with Ansible as a dynamic inventory.
 It leverages the python native client in ATC to expose lots of Traffic Ops server related data to the operator to make powerful and precise Ansible host patterns without the need of maintaining static files.
