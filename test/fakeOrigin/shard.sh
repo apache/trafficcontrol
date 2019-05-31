@@ -16,7 +16,7 @@
 # under the License.
 
 #!/bin/bash
-set -ex
+set -e
 
 # brew install ffmpeg --with-rtmp-dump
 # brew install mp4box
@@ -27,6 +27,7 @@ set -ex
 #   ./shard.sh ./example/video/kelloggs.mp4 ./out/shard.dash.vod DASH_VOD
 #   ./shard.sh ./example/video/kelloggs.mp4 ./out/shard.dash.live DASH_LIVE
 
+# This script is to serve as an example of external transcoder for VOD assets that may be plumbed inside fakeOrigin as a VOD endpoint or static Directory of files
 
 
 src=$1
@@ -34,13 +35,14 @@ destination=$2
 format=$3
 filename=$(basename "${destination}")
 
-echo $1
-echo $filename
-echo $2
-echo $3
+if [ $# -ne 3 ]; then
+  echo 1>&2 "Usage: $0 <Sourcefile> <Destdirectory> <Type (HLS_VOD|HLS_LIVE|DASH_VOD|DASH_LIVE)>"
+  exit 3
+fi
 
 mkdir -p $destination
 
+set -x
 # HLS VOD
 if [[ $format == "HLS_VOD" ]]; then
 ffmpeg -y -i "${src}" \
