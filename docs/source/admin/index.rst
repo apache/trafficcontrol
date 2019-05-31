@@ -22,7 +22,7 @@ Traffic Control is distributed in source form for the developer, but also as a b
 When installing a complete CDN from scratch, a sample recommended order is:
 
 #. Traffic Ops DB (Postgresql)
-#. InfluxDB [Optional]
+#. `InfluxDB [Optional] <https://github.com/influxdata/influxdb>`_
 #. Traffic Vault (Riak) [Optional]
 #. Fake Origin [Optional]
 #. Traffic Ops
@@ -33,7 +33,7 @@ When installing a complete CDN from scratch, a sample recommended order is:
 #. Apache Traffic Server Edge-Tier Caches
 #. Grove [Optional]
 #. Traffic Router
-#. InfluxDB-relay [Optional]
+#. `InfluxDB-relay [Optional] <https://github.com/influxdata/influxdb-relay>`_
 #. Traffic Stats [Optional]
 
 Once everything is installed, you will need to configure the servers to talk to each other. You will also need Origin server(s), from which the Mid-Tier Cache(s) will obtain content. An Origin server is simply an HTTP(S) server which serves the content you wish to cache on the CDN.
