@@ -36,9 +36,10 @@ Additionally,  it provides some suggestions and sample scaffolding on how to div
 Lab Implementation Concepts
 ===========================
 
-.. image:: ATC.lab.layers.png
+.. figure:: ATC.lab.layers.svg
    :scale: 100 %
    :align: center
+   :figclass: align-center
 
 The basic idea is to separate responsibilities to allow each implementation to use the tools/technologies that are already in use within their organizations.
 
@@ -148,9 +149,10 @@ It's very useful to still review the Administrator's Guide in the documentation 
 
 If you're attempting to optimize the wallclock time needed to deploy all the components in parallel, they should be installed like the following:
 
-.. image:: ATC.installation.dependencies.png
+.. figure:: ATC.installation.dependencies.svg
    :scale: 100 %
    :align: center
+   :figclass: align-center
 
 Ansible Bonuses
 ===============
