@@ -11,20 +11,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 - name: Install dependencies
-  package:
-    name: "{{ item }}"
-    state: installed
-  with_items: |
-    java-1.8.0-openjdk,
-    python-wheel,
-    python2-pip
+  yum:
+    state: present
+    name:
+      - java-1.8.0-openjdk
+      - python-wheel
+      - python2-pip
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+    lock_timeout: 300
+  retries: 5
+  delay: 5
   become: yes
 
 - name: Install riak
-  package:
+  yum:
+    state: present
     name: "{{ riak_pkg_name }}"
-    state: installed
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+    lock_timeout: 300
+  retries: 5
+  delay: 5
   become: yes
 
 - name: Install self-signed SSL cert if a real cert not defined
