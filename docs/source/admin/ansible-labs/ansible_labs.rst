@@ -104,7 +104,7 @@ Ansible variable hierarchy
 
 This is a topic better covered by `Ansible documentation <https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable>`_, but the short version to keep in mind if you follow the sample lab design and markdown readme is:
 
-(Highest precedent) CLI -> Lab Vault -> Lab Vars -> Playbook Vars -> Task Vars -> Role Defaults (Lowest precedent)
+(Highest precedent) CLI → Lab Vault → Lab Vars → Playbook Vars → Task Vars → Role Defaults (Lowest precedent)
 
 Each of the generic core roles uses a prefix on its variables to avoid collision, and to make life easier it's recommended that you map them on the associated import role task variables.
 This makes keeping track of what variables were intentionally overwritten from the role defaults clearer.
