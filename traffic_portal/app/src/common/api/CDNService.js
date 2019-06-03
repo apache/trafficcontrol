@@ -33,7 +33,6 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
                 return response;
             },
             function(err) {
-                console.error(err);
                 throw err;
             }
         );
@@ -46,7 +45,6 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response[0];
             },
             function(err) {
-                console.error(err);
                 throw err;
             }
         );
@@ -61,6 +59,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -73,6 +72,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -97,6 +97,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -109,6 +110,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -119,7 +121,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -130,7 +132,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -144,7 +146,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
                 console.warn("Failed to fetch stats: ", result);
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -155,7 +157,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -166,7 +168,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -180,6 +182,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -190,7 +193,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -202,6 +205,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -213,6 +217,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
 			},
 			function(err) {
 				messageModel.setMessages(err.data.alerts, false);
+                throw err;
 			}
 		);
 	};
