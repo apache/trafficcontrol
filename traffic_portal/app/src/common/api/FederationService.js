@@ -27,7 +27,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 				return result.data.response;
 			},
 			function (err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	};
@@ -38,7 +38,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 				return result.data.response[0];
 			},
 			function (err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	};
@@ -66,6 +66,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 			},
 			function(err) {
 				messageModel.setMessages(err.data.alerts, false);
+				throw err;
 			}
 		);
 	};
@@ -76,11 +77,15 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 				service.assignFederationDeliveryServices(fed.id, [ fed.dsId ], true).then(
 					function() {
 						messageModel.setMessages([{level: 'success', text: 'Federation updated'}], false);
+					},
+					function(err) {
+						console.error(err);
 					}
 				);
 			},
 			function(err) {
 				messageModel.setMessages(err.data.alerts, false);
+				throw err;
 			}
 		);
 	};
@@ -93,6 +98,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 			},
 			function(err) {
 				messageModel.setMessages(err.data.alerts, true);
+				throw err;
 			}
 		);
 	};
@@ -103,7 +109,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 				return result.data.response;
 			},
 			function (err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	};
@@ -116,6 +122,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 			},
 			function(err) {
 				messageModel.setMessages(err.data.alerts, false);
+				throw err;
 			}
 		);
 	};
@@ -128,6 +135,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 				},
 				function(err) {
 					messageModel.setMessages(err.data.alerts, true);
+					throw err;
 				}
 			);
 	};
@@ -138,7 +146,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 				return result.data.response;
 			},
 			function (err) {
-				return console.error(err);
+				return throw err;
 			}
 		);
 	};
@@ -151,6 +159,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 			},
 			function(err) {
 				messageModel.setMessages(err.data.alerts, false);
+				throw err;
 			}
 		);
 	};
@@ -163,6 +172,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 			},
 			function(err) {
 				messageModel.setMessages(err.data.alerts, false);
+				throw err;
 			}
 		);
 	};
@@ -173,7 +183,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 				return result.data.response;
 			},
 			function (err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	};
