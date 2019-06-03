@@ -25,7 +25,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 				return result.data.response;
 			},
 			function(err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	};
@@ -107,7 +107,6 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 				return result.data.response;
 			},
 			function(err) {
-				console.error(err);
 				throw err;
 			}
 		);
@@ -119,7 +118,6 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 				return response;
 			},
 			function(err) {
-				console.error(err);
 				throw err;
 			}
 		);
