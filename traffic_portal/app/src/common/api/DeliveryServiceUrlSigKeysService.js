@@ -25,8 +25,9 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
 				messageModel.setMessages(result.data.alerts, false);
 				return result;
 			},
-			function(fault) {
-				messageModel.setMessages(fault.data.alerts, false);
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
 			}
 		);
 	};
@@ -37,8 +38,9 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
 				messageModel.setMessages(result.data.alerts, false);
 				return result;
 			},
-			function(fault) {
-				messageModel.setMessages(fault.data.alerts, false);
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
 			}
 		);
 	};
@@ -48,8 +50,9 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
             function(result) {
                 return result.data.response;
             },
-            function(fault) {
-            	messageModel.setMessages(fault.data.alerts, false);
+            function(err) {
+            	messageModel.setMessages(err.data.alerts, false);
+            	throw err;
             }
         );
 	};
