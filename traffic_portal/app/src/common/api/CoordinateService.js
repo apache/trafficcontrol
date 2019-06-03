@@ -25,7 +25,7 @@ var CoordinateService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function (err) {
-                console.error(error);
+                throw err;
             }
         );
     };
