@@ -25,7 +25,7 @@ var JobService = function($http, ENV) {
 				return result.data.response;
 			},
 			function (err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	};
@@ -37,7 +37,7 @@ var JobService = function($http, ENV) {
 				return result;
 			},
 			function (err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	};
