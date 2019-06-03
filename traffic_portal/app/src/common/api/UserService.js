@@ -119,7 +119,6 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
                 throw err;
             }
         );
