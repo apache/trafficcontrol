@@ -42,6 +42,17 @@ import { UserCardComponent } from './components/user-card/user-card.component';
 import { DeliveryserviceComponent } from './components/deliveryservice/deliveryservice.component';
 import { LinechartDirective } from './directives/linechart.directive';
 
+import { Chart } from 'chart.js';
+
+Chart.plugins.register({
+	id: 'whiteBackground',
+	beforeDraw: (chartInstance: any) => {
+		const ctx = chartInstance.chart.ctx;
+		ctx.fillStyle = 'white';
+		ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
+	}
+});
+
 /**
  * This is the list of available, distinct URLs, with the leading path separator omitted. Each
  * element should contain a `path` key for the path value, a component which will be inserted at the
