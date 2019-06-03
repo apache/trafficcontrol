@@ -25,7 +25,7 @@ var ChangeLogService = function($http, $rootScope, ENV) {
 				return result;
 			},
 			function(err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	};
@@ -37,7 +37,7 @@ var ChangeLogService = function($http, $rootScope, ENV) {
 				return result;
 			},
 			function(err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	};
