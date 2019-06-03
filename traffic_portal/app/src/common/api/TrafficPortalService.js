@@ -25,7 +25,6 @@ var TrafficPortalService = function($http, messageModel, ENV) {
                 return result;
             },
             function(err) {
-                console.error(err);
                 throw err;
             }
         );
@@ -37,7 +36,7 @@ var TrafficPortalService = function($http, messageModel, ENV) {
                 return result.data.properties;
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -58,6 +57,7 @@ var TrafficPortalService = function($http, messageModel, ENV) {
                 } else {
                     messageModel.setMessages([ { level: 'error', text: err.status.toString() + ': ' + err.statusText } ], false);
                 }
+                throw err;
             }
         );
     };
