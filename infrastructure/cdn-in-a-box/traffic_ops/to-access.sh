@@ -75,7 +75,7 @@ to-auth() {
 	# if cookiejar is current, nothing to do..
 	cookie_current $COOKIEJAR && return
 
-	local url=$TO_URL/api/1.3/user/login
+	local url=$TO_URL/api/1.4/user/login
 	local datatype='Accept: application/json'
 	cat >"$login" <<-CREDS
 { "u" : "$TO_USER", "p" : "$TO_PASSWORD" }
@@ -89,7 +89,7 @@ CREDS
 
 to-ping() {
 	# ping endpoint does not require authentication
-	curl $CURLAUTH $CURLOPTS -X GET "$TO_URL/api/1.3/ping"
+	curl $CURLAUTH $CURLOPTS -X GET "$TO_URL/api/1.4/ping"
 }
 
 to-get() {

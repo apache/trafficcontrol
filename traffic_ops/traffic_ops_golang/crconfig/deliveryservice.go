@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/lib/pq"
 )
 
 const CDNSOAMinimum = 30 * time.Second
@@ -91,12 +92,41 @@ func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeli
 	}
 
 	q := `
-select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers, d.anonymous_blocking_enabled, d.consistent_hash_regex
-from deliveryservice as d
-inner join type as t on t.id = d.type
-left outer join profile as p on p.id = d.profile
-where d.cdn_id = (select id from cdn where name = $1)
-and d.active = true
+SELECT d.xml_id,
+       d.miss_lat,
+       d.miss_long,
+       d.protocol,
+       d.ccr_dns_ttl AS ttl,
+       d.routing_name,
+       d.geo_provider,
+       t.name AS type,
+       d.geo_limit,
+       d.geo_limit_countries,
+       d.geolimit_redirect_url,
+       d.initial_dispersion,
+       d.regional_geo_blocking,
+       d.tr_response_headers,
+       d.max_dns_answers,
+       p.name AS profile,
+       d.dns_bypass_ip,
+       d.dns_bypass_ip6,
+       d.dns_bypass_ttl,
+       d.dns_bypass_cname,
+       d.http_bypass_fqdn,
+       d.ipv6_routing_enabled,
+       d.deep_caching_type,
+       d.tr_request_headers,
+       d.tr_response_headers,
+       d.anonymous_blocking_enabled,
+       d.consistent_hash_regex,
+       (SELECT ARRAY_AGG(name ORDER BY name)
+			  FROM deliveryservice_consistent_hash_query_param
+			  WHERE deliveryservice_id = d.id) AS query_keys
+FROM deliveryservice AS d
+INNER JOIN type AS t ON t.id = d.type
+LEFT OUTER JOIN profile AS p ON p.id = d.profile
+WHERE d.cdn_id = (select id FROM cdn WHERE name = $1)
+AND d.active = true
 `
 	q += fmt.Sprintf(" and t.name != '%s'", tc.DSTypeAnyMap)
 	rows, err := tx.Query(q, cdn)
@@ -107,10 +137,11 @@ and d.active = true
 
 	for rows.Next() {
 		ds := tc.CRConfigDeliveryService{
-			Protocol:        &tc.CRConfigDeliveryServiceProtocol{},
-			ResponseHeaders: map[string]string{},
-			Soa:             cdnSOA,
-			TTLs:            &tc.CRConfigTTL{},
+			ConsistentHashQueryParams: []string{},
+			Protocol:                  &tc.CRConfigDeliveryServiceProtocol{},
+			ResponseHeaders:           map[string]string{},
+			Soa:                       cdnSOA,
+			TTLs:                      &tc.CRConfigTTL{},
 		}
 
 		missLat := sql.NullFloat64{}
@@ -139,9 +170,40 @@ and d.active = true
 		trResponseHeaders := sql.NullString{}
 		anonymousBlocking := false
 		consistentHashRegex := sql.NullString{}
-		if err := rows.Scan(&xmlID, &missLat, &missLon, &protocol, &ds.TTL, &ds.RoutingName, &geoProvider, &ttype, &geoLimit, &geoLimitCountries, &geoLimitRedirectURL, &dispersion, &geoBlocking, &trRespHdrsStr, &maxDNSAnswers, &profile, &dnsBypassIP, &dnsBypassIP6, &dnsBypassTTL, &dnsBypassCName, &httpBypassFQDN, &ip6RoutingEnabled, &deepCachingType, &trRequestHeaders, &trResponseHeaders, &anonymousBlocking, &consistentHashRegex); err != nil {
+		err := rows.Scan(
+			&xmlID,
+			&missLat,
+			&missLon,
+			&protocol,
+			&ds.TTL,
+			&ds.RoutingName,
+			&geoProvider,
+			&ttype,
+			&geoLimit,
+			&geoLimitCountries,
+			&geoLimitRedirectURL,
+			&dispersion,
+			&geoBlocking,
+			&trRespHdrsStr,
+			&maxDNSAnswers,
+			&profile,
+			&dnsBypassIP,
+			&dnsBypassIP6,
+			&dnsBypassTTL,
+			&dnsBypassCName,
+			&httpBypassFQDN,
+			&ip6RoutingEnabled,
+			&deepCachingType,
+			&trRequestHeaders,
+			&trResponseHeaders,
+			&anonymousBlocking,
+			&consistentHashRegex,
+			pq.Array(&ds.ConsistentHashQueryParams),
+		)
+		if err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
+
 		// TODO prevent (lat XOR lon) in the Tx and UI
 		if missLat.Valid && missLon.Valid {
 			ds.MissLocation = &tc.CRConfigLatitudeLongitudeShort{Lat: missLat.Float64, Lon: missLon.Float64}

@@ -152,7 +152,8 @@
           "missLong": -87.627778,
           "signingAlgorithm": null,
           "ccrDnsTtl": 3600,
-          "anonymousBlockingEnabled": false
+          "anonymousBlockingEnabled": false,
+          "consistentHashQueryParams": []
         },
         "STEERING": {
           "dscp": 0,

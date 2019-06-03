@@ -74,7 +74,8 @@ type DeleteDeliveryServiceResponse struct {
 
 type DeliveryService struct {
 	DeliveryServiceV13
-	MaxOriginConnections int `json:"maxOriginConnections" db:"max_origin_connections"`
+	MaxOriginConnections      int      `json:"maxOriginConnections" db:"max_origin_connections"`
+	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
 }
 
 type DeliveryServiceV13 struct {
@@ -148,8 +149,9 @@ type DeliveryServiceV11 struct {
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV13
-	ConsistentHashRegex  *string `json:"consistentHashRegex"`
-	MaxOriginConnections *int    `json:"maxOriginConnections" db:"max_origin_connections"`
+	ConsistentHashRegex       *string  `json:"consistentHashRegex"`
+	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
+	MaxOriginConnections      *int     `json:"maxOriginConnections" db:"max_origin_connections"`
 }
 
 type DeliveryServiceNullableV13 struct {
@@ -423,6 +425,32 @@ func (ds *DeliveryServiceNullable) Sanitize() {
 	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
 }
 
+func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
+	// Validate the TypeName related fields below
+	err := error(nil)
+
+	typeName, err := ValidateTypeID(tx, ds.TypeID, "deliveryservice")
+	if err != nil {
+		return err
+	}
+
+	errs := validation.Errors{
+		"consistentHashQueryParams": validation.Validate(ds,
+			validation.By(func(dsi interface{}) error {
+				ds := dsi.(*DeliveryServiceNullable)
+				if len(ds.ConsistentHashQueryParams) == 0 || DSType(typeName).IsHTTP() {
+					return nil
+				}
+				return fmt.Errorf("consistentHashQueryParams not allowed for '%s' deliveryservice type", typeName)
+			})),
+	}
+	toErrs := tovalidate.ToErrors(errs)
+	if len(toErrs) > 0 {
+		return errors.New(util.JoinErrsStr(toErrs))
+	}
+	return nil
+}
+
 func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 	ds.Sanitize()
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
@@ -432,6 +460,9 @@ func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 	})
 	if v12Err := ds.DeliveryServiceNullableV12.Validate(tx); v12Err != nil {
 		errs = append(errs, v12Err)
+	}
+	if err := ds.validateTypeFields(tx); err != nil {
+		errs = append(errs, errors.New("type fields: "+err.Error()))
 	}
 	if len(errs) == 0 {
 		return nil

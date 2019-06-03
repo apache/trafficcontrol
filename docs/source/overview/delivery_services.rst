@@ -62,6 +62,38 @@ Check Path
 ----------
 A request path on the :term:`origin server` which is used to by certain :ref:`Traffic Ops Extensions <admin-to-ext-script>` to indicate the "health" of the :term:`origin`.
 
+.. _ds-consistent-hashing-regex:
+
+Consistent Hashing Regular Expression
+-------------------------------------
+When Traffic Router performs :ref:`consistent-hashing` on a client request to find an :term:`Edge-tier cache server` to which to redirect them, it can optionally first modify the request path by extracting the pieces that match this regular expression.
+
+.. seealso:: :ref:`pattern-based-consistenthash`
+
+.. table:: Aliases
+
+	+----------------------------------+---------------------------------------------------------+----------------------------------------------------------------------------------------------------+
+	| Name                             | Use(s)                                                  | Type(s)                                                                                            |
+	+==================================+=========================================================+====================================================================================================+
+	| consistentHashRegex              | In source code and :ref:`to-api` requests and responses | unchanged (regular expression)                                                                     |
+	+----------------------------------+---------------------------------------------------------+----------------------------------------------------------------------------------------------------+
+	| pattern-based consistent hashing | documentation and the Traffic Portal UI                 | unchanged (regular expression), but usually used when discussing the concept rather than the field |
+	+----------------------------------+---------------------------------------------------------+----------------------------------------------------------------------------------------------------+
+
+.. _ds-consistent-hashing-qparams:
+
+Consistent Hashing Query Parameters
+-----------------------------------
+When Traffic Router performs :ref:`consistent-hashing` on a client request to find an :term:`Edge-tier cache server` to which to redirect them, it can optionally take into account any number of query parameters. This field defines them, formally as a Set but often represented as an Array/List due to encoding limitations. That is, if the Consistent Hashing Query Parameters on a Delivery Service are ``{test}`` and a client makes a request for ``/?test=something`` they will be directed to a different :term:`cache server` than a different client that requests ``/?test=somethingElse``, but the *same* :term:`cache server` as a client that requests ``/?test=something&quest=somethingToo``.
+
+.. table:: Aliases
+
+	+---------------------------+--------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
+	| Name                      | Use(s)                                                                   | Type(s)                                                                                        |
+	+===========================+==========================================================================+================================================================================================+
+	| consistentHashQueryParams | In source code, Traffic Portal, and :ref:`to-api` requests and responses | unchanged (Array of strings - should ALWAYS be unique, thus treated as a Set in most contexts) |
+	+---------------------------+--------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
+
 .. _ds-deep-caching:
 
 Deep Caching
@@ -291,6 +323,8 @@ A boolean value that controls whether or not clients using IPv6 can be routed to
 Info URL
 --------
 This should be a URL (though neither the :ref:`to-api` nor the Traffic Ops Database in any way enforce the validity of said URL) to which administrators or others may refer for further information regarding a Delivery Service - e.g. a related JIRA ticket.
+
+.. _ds-initial-dispersion:
 
 Initial Dispersion
 ------------------
