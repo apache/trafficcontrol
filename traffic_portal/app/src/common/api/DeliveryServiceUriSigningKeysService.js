@@ -25,7 +25,7 @@ var DeliveryServiceUriSigningKeysService = function($http, ENV) {
 				return result.data;
 			},
 			function(err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	};
@@ -36,7 +36,7 @@ var DeliveryServiceUriSigningKeysService = function($http, ENV) {
 				return result.data;
 			},
 			function(err) {
-				console.error(err);
+				throw err;
 			}
 		);
 	}
