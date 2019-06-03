@@ -71,12 +71,6 @@ RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/car
 
 RUN /opt/traffic_ops/install/bin/install_goose.sh
 
-RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
-	&& export TERM=xterm \
-	&& export USER=root \
-	&& /opt/traffic_ops/install/bin/download_web_deps -i || \
-	true # keep a failure here from failing all..
-
 ADD https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /
 
 EXPOSE 443
