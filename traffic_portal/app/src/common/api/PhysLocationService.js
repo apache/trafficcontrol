@@ -25,7 +25,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
                 return result.data.response;
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -36,7 +36,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
                 return result.data.response[0];
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -50,6 +50,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -62,6 +63,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -74,6 +76,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, true);
+                throw err;
             }
         );
     };
