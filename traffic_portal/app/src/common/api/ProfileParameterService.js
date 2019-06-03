@@ -27,6 +27,7 @@ var ProfileParameterService = function($http, messageModel, ENV) {
 				},
 				function(err) {
 					messageModel.setMessages(err.data.alerts, true);
+					throw err;
 				}
 			);
 	};
@@ -39,6 +40,7 @@ var ProfileParameterService = function($http, messageModel, ENV) {
 			},
 			function(err) {
 				messageModel.setMessages(err.data.alerts, false);
+				throw err;
 			}
 		);
 	};
@@ -51,11 +53,12 @@ var ProfileParameterService = function($http, messageModel, ENV) {
 			},
 			function(err) {
 				messageModel.setMessages(err.data.alerts, false);
+				throw err;
 			}
 		);
 	};
 
 };
 
-ProfileParameterService.$inject = ['messageModel', 'ENV'];
+ProfileParameterService.$inject = ['$http', 'messageModel', 'ENV'];
 module.exports = ProfileParameterService;
