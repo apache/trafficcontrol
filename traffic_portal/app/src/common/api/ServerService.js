@@ -25,7 +25,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         )
     };
@@ -36,7 +36,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response[0];
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         )
     };
@@ -50,6 +50,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -62,6 +63,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -84,7 +86,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result.data;
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         )
     };
@@ -95,7 +97,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result.data;
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -114,7 +116,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         )
     };
@@ -125,7 +127,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         )
     };
@@ -138,6 +140,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -150,6 +153,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -162,6 +166,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -172,7 +177,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -183,7 +188,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -194,7 +199,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -205,7 +210,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
                 return result;
             },
             function(err) {
-                console.error(err);
+                throw err;
                 throw err;
             }
         );
