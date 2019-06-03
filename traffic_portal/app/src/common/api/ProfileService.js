@@ -25,7 +25,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function(err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -36,7 +36,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response[0];
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -50,6 +50,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -62,6 +63,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -84,7 +86,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -95,7 +97,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
                 return result.data.response;
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         );
     };
@@ -109,6 +111,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -133,6 +136,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
