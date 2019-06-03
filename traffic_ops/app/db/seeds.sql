@@ -57,9 +57,9 @@ $do$;
 
 -- parameters
 ---------------------------------
-INSERT INTO parameter (name, config_file, value) VALUES ('mso.parent_retry', 'parent.config', 'simple_retry');
-INSERT INTO parameter (name, config_file, value) VALUES ('mso.parent_retry', 'parent.config', 'unavailable_server_retry');
-INSERT INTO parameter (name, config_file, value) VALUES ('mso.parent_retry', 'parent.config', 'both');
+INSERT INTO parameter (name, config_file, value) VALUES ('mso.parent_retry', 'parent.config', 'simple_retry') ON CONFLICT DO NOTHING;
+INSERT INTO parameter (name, config_file, value) VALUES ('mso.parent_retry', 'parent.config', 'unavailable_server_retry') ON CONFLICT DO NOTHING;
+INSERT INTO parameter (name, config_file, value) VALUES ('mso.parent_retry', 'parent.config', 'both') ON CONFLICT DO NOTHING;
 
 -- profiles
 ---------------------------------
