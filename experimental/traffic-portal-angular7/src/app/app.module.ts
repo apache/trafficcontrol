@@ -43,6 +43,7 @@ import { DeliveryserviceComponent } from './components/deliveryservice/deliverys
 import { LinechartDirective } from './directives/linechart.directive';
 
 import { Chart } from 'chart.js';
+import { InvalidationJobsComponent } from './components/invalidation-jobs/invalidation-jobs.component';
 
 Chart.plugins.register({
 	id: 'whiteBackground',
@@ -64,7 +65,8 @@ const appRoutes: Routes = [
 	{ path: 'login', component: LoginComponent },
 	{ path: 'users', component: UsersComponent},
 	{ path: 'new.Delivery.Service', component: NewDeliveryServiceComponent},
-	{ path: 'deliveryservice/:id', component: DeliveryserviceComponent}
+	{ path: 'deliveryservice/:id', component: DeliveryserviceComponent},
+	{ path: 'deliveryservice/:id/invalidation-jobs', component: InvalidationJobsComponent}
 ];
 
 @NgModule({
@@ -81,6 +83,7 @@ const appRoutes: Routes = [
 		UserCardComponent,
 		DeliveryserviceComponent,
 		LinechartDirective,
+		InvalidationJobsComponent,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),

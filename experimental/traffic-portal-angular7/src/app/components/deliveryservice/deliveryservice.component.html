@@ -15,8 +15,17 @@ limitations under the License.
 
 <main>
 	<form name="timespan" (ngSubmit)="newDateRange()" ngNativeValidate>
-		<div><label>From</label><input [formControl]="fromDate" type="date" name="fromdate"/><input [formControl]="fromTime" type="time" name="fromtime" value="00:00"></div>
-		<div><label>To</label><input [formControl]="toDate" type="date" name="todate"/><input [formControl]="toTime" type="time" name="totime"></div>
+		<div>
+			<label for="fromdate">From</label>
+			<input [formControl]="fromDate" type="date" id="fromdate" title="From (date)" name="fromdate"/>
+			<label for="fromtime">At</label>
+			<input [formControl]="fromTime" type="time" id="fromtime" title="From (time)" name="fromtime" value="00:00">
+		</div>
+		<div>
+			<label for="todate">To</label>
+			<input [formControl]="toDate" type="date" id="todate" title="To (date)" name="todate"/>
+			<label for="totime">At</label>
+			<input [formControl]="toTime" type="time" id="totime" title="To (time)" name="totime"></div>
 		<button>Refresh</button>
 	</form>
 	<hr/>
@@ -27,4 +36,7 @@ limitations under the License.
 	 <canvas linechart chartTitle="Transactions at the Edge Tier" [chartDataSets]="TPSChartData" chartYAxisLabel="Transactions Per Second" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
 		Your browser does not support canvases or Javascript. Normally, this would be a graph of transaction data.
 	</canvas>
+	<a id="invalidate" routerLink="/deliveryservice/{{deliveryservice.id}}/invalidation-jobs">
+		<img src="assets/invalidate.svg" title="Invalidate Content">
+	</a>
 </main>

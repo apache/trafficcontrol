@@ -20,6 +20,7 @@ import { map, mergeAll, first, catchError, reduce } from 'rxjs/operators';
 import { CDN } from '../models/cdn';
 import { DataPoint, DataSet, DataSetWithSummary, TPSData } from '../models/data';
 import { DeliveryService } from '../models/deliveryservice';
+import { InvalidationJob } from '../models/invalidation';
 import { Type } from '../models/type';
 import { Role, User } from '../models/user';
 
@@ -534,6 +535,33 @@ export class APIService {
 					ret.set(c.name, c);
 				}
 				return ret;
+			}
+		));
+	}
+
+	public getInvalidationJobs (opts?: {id: number} |
+	                                   {userId: number} |
+	                                   {user: User} |
+	                                   {dsId: number} |
+	                                   {deliveryService: DeliveryService}): Observable<Array<InvalidationJob>> {
+		let path = '/api/' + this.API_VERSION + '/jobs';
+		if (opts) {
+			path += '?';
+			if (opts.hasOwnProperty('id')) {
+				path += 'id=' + String(opts.id);
+			} else if (opts.hasOwnProperty('dsId')) {
+				path += 'dsId=' + String(opts.dsId);
+			} else if (opts.hasOwnProperty('userId')) {
+				path += 'userId=' + String(opts.userId);
+			} else if (opts.hasOwnProperty('deliveryService')) {
+				path += 'dsId=' + String(opts.deliveryService.id);
+			} else {
+				path += 'userId=' + String(opts.user.id);
+			}
+		}
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response as Array<InvalidationJob>;
 			}
 		));
 	}
