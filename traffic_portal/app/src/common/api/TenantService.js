@@ -25,7 +25,7 @@ var TenantService = function($http, ENV, messageModel) {
                 return result.data.response;
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         )
     };
@@ -36,7 +36,7 @@ var TenantService = function($http, ENV, messageModel) {
                 return result.data.response[0];
             },
             function (err) {
-                console.error(err);
+                throw err;
             }
         )
     };
@@ -49,6 +49,7 @@ var TenantService = function($http, ENV, messageModel) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, true);
+                throw err;
             }
         );
     };
@@ -61,6 +62,7 @@ var TenantService = function($http, ENV, messageModel) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
@@ -73,6 +75,7 @@ var TenantService = function($http, ENV, messageModel) {
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, true);
+                throw err;
             }
         );
     };
