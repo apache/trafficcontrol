@@ -44,6 +44,7 @@ import { LinechartDirective } from './directives/linechart.directive';
 
 import { Chart } from 'chart.js';
 import { InvalidationJobsComponent } from './components/invalidation-jobs/invalidation-jobs.component';
+import { OpenableDirective } from './directives/openable.directive';
 
 Chart.plugins.register({
 	id: 'whiteBackground',
@@ -84,6 +85,7 @@ const appRoutes: Routes = [
 		DeliveryserviceComponent,
 		LinechartDirective,
 		InvalidationJobsComponent,
+		OpenableDirective,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),
