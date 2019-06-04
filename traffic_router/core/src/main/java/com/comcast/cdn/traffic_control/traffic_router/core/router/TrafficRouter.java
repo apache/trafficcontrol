@@ -81,6 +81,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDataba
 public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
 	public static final String XTC_STEERING_OPTION = "x-tc-steering-option";
+	public static final String CLIENT_STEERING_DIVERSITY = "client.steering.forced.diversity";
 
 	private final CacheRegister cacheRegister;
 	private final ZoneManager zoneManager;
@@ -89,6 +90,7 @@ public class TrafficRouter {
 	private final AnonymousIpDatabaseService anonymousIpService;
 	private final FederationRegistry federationRegistry;
 	private final boolean consistentDNSRouting;
+	private final boolean clientSteeringDiversityEnabled;
 
 	private final Random random = new Random(System.nanoTime());
 	private Set<String> requestHeaders = new HashSet<String>();
@@ -114,6 +116,7 @@ public class TrafficRouter {
 		this.anonymousIpService = anonymousIpService;
 		this.federationRegistry = federationRegistry;
 		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing");
+		this.clientSteeringDiversityEnabled = JsonUtils.optBoolean(cr.getConfig(), CLIENT_STEERING_DIVERSITY);
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
 
 		if (cr.getConfig() != null) {
@@ -279,11 +282,15 @@ public class TrafficRouter {
 		return null;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track) throws GeolocationException {
+		return selectCaches(request, ds, track, true);
+	}
+
+	@SuppressWarnings("PMD.CyclomaticComplexity")
+	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track, final boolean enableDeep) throws GeolocationException {
 		CacheLocation cacheLocation;
 		ResultType result = ResultType.CZ;
-		final boolean useDeep = (ds.getDeepCache() == DeliveryService.DeepCachingType.ALWAYS);
+		final boolean useDeep = enableDeep && (ds.getDeepCache() == DeliveryService.DeepCachingType.ALWAYS);
 
 		if (useDeep) {
 			// Deep caching is enabled. See if there are deep caches available
@@ -523,6 +530,7 @@ public class TrafficRouter {
 	 * @param track A {@link Track} object used to track routing statistics
 	 * @return The list of routes available to service the client's request.
 	 */
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public HTTPRouteResult multiRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request, true);
 
@@ -537,19 +545,37 @@ public class TrafficRouter {
 
 		final List<SteeringResult> resultsToRemove = new ArrayList<>();
 
+		final Set<Cache> selectedCaches = new HashSet<>();
+
 		// Pattern based consistent hashing - use consistentHashRegex from steering DS instead of targets
 		final String steeringHash = buildPatternBasedHashString(entryDeliveryService.getConsistentHashRegex(), request.getPath());
 		for (final SteeringResult steeringResult : steeringResults) {
 			final DeliveryService ds = steeringResult.getDeliveryService();
 
-			final List<Cache> caches = selectCaches(request, ds, track);
+			List<Cache> caches = selectCaches(request, ds, track);
 
 			// child Delivery Services can use their query parameters
 			final String pathToHash = steeringHash + ds.extractSignificantQueryParams(request);
 
 			if (caches != null && !caches.isEmpty()) {
+				if (isClientSteeringDiversityEnabled()) {
+					List<Cache> tryCaches = new ArrayList<>(caches);
+					tryCaches.removeAll(selectedCaches);
+					if (!tryCaches.isEmpty()) {
+						caches = tryCaches;
+					} else if (track.result == ResultType.DEEP_CZ) {
+						// deep caches have been selected already, try non-deep selection
+						tryCaches = selectCaches(request, ds, track, false);
+						track.setResult(ResultType.DEEP_CZ); // request should still be tracked as a DEEP_CZ hit
+						tryCaches.removeAll(selectedCaches);
+						if (!tryCaches.isEmpty()) {
+							caches = tryCaches;
+						}
+					}
+				}
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
 				steeringResult.setCache(cache);
+				selectedCaches.add(cache);
 			} else {
 				resultsToRemove.add(steeringResult);
 			}
@@ -1224,6 +1250,10 @@ public class TrafficRouter {
 
 	public boolean isConsistentDNSRouting() {
 		return consistentDNSRouting;
+	}
+
+	public boolean isClientSteeringDiversityEnabled() {
+		return clientSteeringDiversityEnabled;
 	}
 
 	private List<Cache> enforceGeoRedirect(final Track track, final DeliveryService ds, final String clientIp, final Geolocation queriedClientLocation) {

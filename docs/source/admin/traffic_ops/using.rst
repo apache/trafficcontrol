@@ -413,6 +413,8 @@ Traffic Router Profile
 +-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
 | deepcoveragezone.polling.url            | CRConfig.json          | The location (URL) to retrieve the deep coverage zone map file in JSON format from.                                                              |
 +-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| client.steering.forced.diversity        | CRConfig.json          | Enable the Client Steering Forced Diversity feature (value = "true") to diversify CLIENT_STEERING results by including more unique edge caches   |
++-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
 | tld.soa.expire                          | CRConfig.json          | The value for the expire field the Traffic Router DNS Server will respond with on Start of Authority (SOA) records.                              |
 +-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
 | tld.soa.minimum                         | CRConfig.json          | The value for the minimum field the Traffic Router DNS Server will respond with on SOA records.                                                  |
