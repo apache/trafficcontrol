@@ -48,7 +48,7 @@ var TenantService = function($http, ENV, messageModel) {
                 return result;
             },
             function(err) {
-                messageModel.setMessages(err.data.alerts, true);
+                messageModel.setMessages(err.data.alerts, false);
                 throw err;
             }
         );
@@ -74,7 +74,7 @@ var TenantService = function($http, ENV, messageModel) {
                 return result;
             },
             function(err) {
-                messageModel.setMessages(err.data.alerts, true);
+                messageModel.setMessages(err.data.alerts, false);
                 throw err;
             }
         );
