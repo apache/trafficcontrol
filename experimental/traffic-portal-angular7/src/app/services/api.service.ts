@@ -548,21 +548,29 @@ export class APIService {
 		if (opts) {
 			path += '?';
 			if (opts.hasOwnProperty('id')) {
-				path += 'id=' + String(opts.id);
+				path += 'id=' + String((opts as {id: number}).id);
 			} else if (opts.hasOwnProperty('dsId')) {
-				path += 'dsId=' + String(opts.dsId);
+				path += 'dsId=' + String((opts as {dsId: number}).dsId);
 			} else if (opts.hasOwnProperty('userId')) {
-				path += 'userId=' + String(opts.userId);
+				path += 'userId=' + String((opts as {userId: number}).userId);
 			} else if (opts.hasOwnProperty('deliveryService')) {
-				path += 'dsId=' + String(opts.deliveryService.id);
+				path += 'dsId=' + String((opts as {deliveryService: DeliveryService}).deliveryService.id);
 			} else {
-				path += 'userId=' + String(opts.user.id);
+				path += 'userId=' + String((opts as {user: User}).user.id);
 			}
 		}
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response as Array<InvalidationJob>;
 			}
+		));
+	}
+
+	public createInvalidationJob (job: InvalidationJob): Observable<boolean> {
+		const path = '/api/' + this.API_VERSION + '/user/current/jobs';
+		return this.post(path, job).pipe(map(
+			r => true,
+			e => false
 		));
 	}
 }
