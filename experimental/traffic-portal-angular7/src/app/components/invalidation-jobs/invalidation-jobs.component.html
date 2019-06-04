@@ -13,5 +13,16 @@ limitations under the License.
 -->
 <tp-header title="{{deliveryservice ? deliveryservice.displayName : 'Loading'}} - Content Invalidation Jobs"></tp-header>
 <ul>
-	<li *ngFor="let j of jobs">{{j.assetUrl}}</li>
+	<li *ngFor="let j of jobs" [hidden]="endDate(j) < now">{{j.assetUrl}} (active from <time [dateTime]="j.startTime">{{j.startTime | date:'medium'}}</time> to <time [dateTime]="endDate(j)">{{endDate(j) | date:'medium'}})</time></li>
 </ul>
+<button [disabled]="showDialog" type="button" id="new" title="Create a new content invalidation job for this Delivery Service" (click)="newJob($event)">+</button>
+
+<dialog [openable] [toggle]="showDialog">
+	<form method="dialog" (ngSubmit)="closeDialog($event)" ngNativeValidate>
+		<input type="text" name="regexp" id="regexp" required/>
+		<input type="number" name="ttl" id="ttl" min="1" step="1" required/>
+		<input type="date" name="startDate" id="startDate" required/><input type="time" name="startTime" id="startTime" required/>
+		<button value="cancel">Cancel</button>
+		<button value="default">Submit</button>
+	</form>
+</dialog>

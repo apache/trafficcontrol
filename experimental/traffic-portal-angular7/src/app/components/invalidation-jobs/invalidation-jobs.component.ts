@@ -14,8 +14,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
+import { Subject } from 'rxjs';
+
 import { APIService } from '../../services';
-import { DeliveryService } from '../../deliveryservice';
+import { DeliveryService } from '../../models/deliveryservice';
 import { InvalidationJob } from '../../models/invalidation';
 
 @Component({
@@ -25,26 +27,60 @@ import { InvalidationJob } from '../../models/invalidation';
 })
 export class InvalidationJobsComponent implements OnInit {
 
-	deliveryservice: DeliveryService = {};
+	deliveryservice: DeliveryService ;
 	jobs: Array<InvalidationJob>;
-	xmlid: string;
+	now: Date;
+	showDialog: Subject<boolean>;
 
-	constructor (private readonly route: ActivatedRoute, private readonly api: APIService) { }
+	constructor (private readonly route: ActivatedRoute, private readonly api: APIService) {
+		this.deliveryservice = {active: true} as DeliveryService;
+		this.jobs = new Array<InvalidationJob>();
+		this.showDialog = new Subject<boolean>();
+	}
 
 	ngOnInit () {
+		this.now = new Date();
 		const id = parseInt(this.route.snapshot.paramMap.get('id'), 10);
 		this.api.getInvalidationJobs({dsId: id}).subscribe(
 			r => {
-				this.jobs = r;
-				console.log(r);
-				console.log(this.jobs);
+				// The values returned by the API are not RFC-compliant at the time of this writing,
+				// so we need to do some pre-processing on them.
+				for (const j of r) {
+					const tmp = Array.from(String(j.startTime).split(' ').join('T'));
+					tmp.splice(-3, 3);
+					j.startTime = new Date(tmp.join(''));
+					this.jobs.push(j);
+				}
 			}
 		);
 		this.api.getDeliveryServices(id).subscribe(
-			r => {
+			(r: DeliveryService) => {
 				this.deliveryservice = r;
 			}
 		);
+	}
+
+	public endDate (j: InvalidationJob): Date {
+		const tmp = j.parameters.split(':');
+		if (tmp.length !== 2) {
+			throw new Error('Malformed job parameters: "' + j.parameters + '" (id: ' + String(j.id) + ')');
+		}
+		const ttl = parseInt(tmp[1], 10);
+		if (isNaN(ttl)) {
+			throw new Error('Invalid TTL: "' + tmp[1] + '" (job id: ' + String(j.id) + ')');
+		}
+		return new Date(new Date(j.startTime.getTime() + ttl*60*60*1000));
+	}
+
+	public newJob (e?: Event) {
+		if (e) {
+			e.preventDefault();
+		}
+		this.showDialog.next(true);
+	}
+
+	public closeDialog (e?: Event) {
+		console.log(e);
 	}
 
 }
