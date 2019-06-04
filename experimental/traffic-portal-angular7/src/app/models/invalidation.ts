@@ -17,11 +17,19 @@ export enum JobType {
 }
 
 export interface InvalidationJob {
-	assetURL: RegExp;
-	createdBy: string;
-	deliveryService: string;
-	id: number;
-	keyword: string;
-	parameters: string;
+	assetURL?: RegExp;
+	createdBy?: string;
+	deliveryService?: string;
+	dsId?: number;
+	id?: number;
+	keyword?: string;
+
+	/**
+	 * though not enforced by the API (or database), this should ALWAYS have the format 'TTL:nh',
+	 * describing the job's TTL in hours (`n` can be any integer value > 0).
+	**/
+	parameters?: string;
+	regex?: RegExp;
 	startTime: Date;
+	ttl?: number;
 }
