@@ -84,9 +84,9 @@ func GetTestJobs(t *testing.T) {
 			if !strings.HasSuffix(toJob.AssetURL, testJob.Request.Regex) {
 				continue
 			}
-			toJobTime, err := time.Parse(tc.JobTimeFormat, toJob.StartTime)
+			toJobTime, err := time.Parse(tc.TimeLayout, toJob.StartTime)
 			if err != nil {
-				t.Errorf("job ds %v regex %v start time expected format '%+v' actual '%+v' error '%+v'", testJob.Request.DeliveryServiceID, testJob.Request.Regex, tc.JobTimeFormat, toJob.StartTime, err)
+				t.Errorf("job ds %v regex %v start time expected format '%+v' actual '%+v' error '%+v'", testJob.Request.DeliveryServiceID, testJob.Request.Regex, tc.TimeLayout, toJob.StartTime, err)
 				continue
 			}
 			toJobTime = toJobTime.Round(time.Minute)

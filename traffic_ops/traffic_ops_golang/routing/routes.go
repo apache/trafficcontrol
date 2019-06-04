@@ -57,6 +57,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federations"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/invalidationjobs"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/login"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/logs"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/origin"
@@ -176,6 +177,16 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//HWInfo
 		{1.1, http.MethodGet, `hwinfo-wip/?(\.json)?$`, hwinfo.Get, auth.PrivLevelReadOnly, Authenticated, nil},
+
+		//Content invalidation jobs
+		{1.1, http.MethodGet, `jobs(/|\.json/?)?$`, api.ReadHandler(&invalidationjobs.InvalidationJob{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodDelete, `jobs/?$`, invalidationjobs.Delete, auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodPut, `jobs/?$`, invalidationjobs.Update, auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodPatch, `jobs/?$`, invalidationjobs.Patch, auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodPost, `jobs/?`, invalidationjobs.Create, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `jobs/{id}(/|\.json/?)?$`, api.ReadHandler(&invalidationjobs.InvalidationJob{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPost, `user/current/jobs(/|\.json/?)?$`, invalidationjobs.CreateUserJob, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `user/current/jobs(/|\.json/?)?$`, invalidationjobs.GetUserJobs, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Login
 		{1.1, http.MethodGet, `users/{id}/deliveryservices/?(\.json)?$`, user.GetDSes, auth.PrivLevelReadOnly, Authenticated, nil},

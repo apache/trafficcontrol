@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.jobs.new
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
 							job: function($stateParams) {
-								return { dsId: $stateParams.deliveryServiceId, startTime: moment().utc().format('YYYY-MM-DD HH:mm:ss') };
+								return { dsId: parseInt($stateParams.deliveryServiceId, 10), startTime: moment().utc().format('YYYY-MM-DD HH:mm:ss') };
 							}
 						}
 					}
