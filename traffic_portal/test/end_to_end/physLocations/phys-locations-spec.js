@@ -33,7 +33,7 @@ describe('Traffic Portal Phys Locations Test Suite', function() {
 
 	it('should go to the phys locations page', function() {
 		console.log("Go to the phys locations page");
-		browser.get(browser.baseUrl + "/#!/phys-locations");
+		browser.setLocation("phys-locations");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/phys-locations");
 	});
 

@@ -31,7 +31,7 @@ describe('Traffic Portal Cache Groups Test Suite', function() {
 
 	it('should go to the cache groups page', function() {
 		console.log("Go to the cache groups page");
-		browser.get(browser.baseUrl + "/#!/cache-groups");
+		browser.setLocation("cache-groups");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cache-groups");
 	});
 

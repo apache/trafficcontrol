@@ -29,7 +29,7 @@ describe('Traffic Portal Divisions Test Suite', function() {
 
 	it('should go to the divisions page', function() {
 		console.log("Go to the divisions page");
-		browser.get(browser.baseUrl + "/#!/divisions");
+		browser.setLocation("divisions");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/divisions");
 	});
 

@@ -29,7 +29,8 @@ describe('Traffic Portal CDNs Test Suite', function() {
 
 	it('should go to the CDNs page', function() {
 		console.log("Go to the CDNs page");
-		browser.get(browser.baseUrl + "/#!/cdns");
+		browser.setLocation("cdns");
+		browser.getCurrentUrl().then(x => console.log(x));
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 

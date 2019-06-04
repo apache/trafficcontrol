@@ -36,7 +36,7 @@ describe('Traffic Portal Delivery Service Requests', function() {
 
 	it('should open ds services page and click button to create a new one', function() {
 		console.log('Opening delivery service requests page');
-		browser.get(browser.baseUrl + "/#!/delivery-services");
+		browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
