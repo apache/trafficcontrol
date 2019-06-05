@@ -73,293 +73,312 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	atsMajorVer, err := GetATSMajorVersion(inf.Tx.Tx, serverInfo.ProfileID)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting ATS major version: "+err.Error()))
-		return
-	}
-
 	hdr, err := headerComment(inf.Tx.Tx, serverInfo.HostName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting header comment: "+err.Error()))
 		return
 	}
 
-	textArr := []string{}
-	text := ""
-	// TODO put these in separate functions. No if-statement should be this long.
-	if serverInfo.IsTopLevelCache() {
-		uniqueOrigins := map[string]struct{}{}
-
-		data, err := getParentConfigDSTopLevel(inf.Tx.Tx, serverInfo.CDN)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting parent config DS data: "+err.Error()))
-			return
-		}
-
-		parentInfos := map[string][]ParentInfo{} // TODO better names (this was transliterated from Perl)
-
-		for _, ds := range data {
-			parentQStr := "ignore"
-			if ds.QStringHandling == "" && ds.MSOAlgorithm == AlgorithmConsistentHash && ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp {
-				parentQStr = "consider"
-			}
-
-			orgURIStr := ds.OriginFQDN
-			orgURI, err := url.Parse(orgURIStr) // TODO verify origin is always a host:port
-			if err != nil {
-				log.Errorln("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + orgURIStr + "', skipping! : " + err.Error())
-				continue
-			}
-			// TODO put in function, to remove duplication
-			if orgURI.Port() == "" {
-				if orgURI.Scheme == "http" {
-					orgURI.Host += ":80"
-				} else if orgURI.Scheme == "https" {
-					orgURI.Host += ":443"
-				} else {
-					log.Errorln("parent.config generation: delivery service '" + string(ds.Name) + "' origin  URI: '" + orgURIStr + "' is unknown scheme '" + orgURI.Scheme + "', but has no port! Using as-is! ")
-				}
-			}
-
-			if _, ok := uniqueOrigins[ds.OriginFQDN]; ok {
-				continue // TODO warn?
-			}
-			uniqueOrigins[ds.OriginFQDN] = struct{}{}
-
-			textLine := ""
-
-			if ds.OriginShield != "" {
-				// TODO fix to only call once
-				serverParams, err := getParentConfigServerProfileParams(inf.Tx.Tx, serverInfo.ID)
-				if err != nil {
-					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting server params: "+err.Error()))
-					return
-				}
-
-				algorithm := ""
-				if parentSelectAlg := serverParams[ParentConfigParamAlgorithm]; strings.TrimSpace(parentSelectAlg) != "" {
-					algorithm = "round_robin=" + parentSelectAlg
-				}
-				textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " parent=" + ds.OriginShield + " " + algorithm + " go_direct=true\n"
-			} else if ds.MultiSiteOrigin {
-				textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " "
-				if len(parentInfos) == 0 {
-					// If we have multi-site origin, get parent_data once
-					parentInfos, err = getParentInfo(inf.Tx.Tx, serverInfo)
-					if err != nil {
-						api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting server parent info: "+err.Error()))
-						return
-					}
-				}
-
-				if len(parentInfos[orgURI.Hostname()]) == 0 {
-					// TODO error? emulates Perl
-					log.Warnln("ParentInfo: delivery service " + ds.Name + " has no parent servers")
-				}
-
-				rankedParents := ParentInfoSortByRank(parentInfos[orgURI.Hostname()])
-				sort.Sort(rankedParents)
-
-				parentInfo := []string{}
-				secondaryParentInfo := []string{}
-				nullParentInfo := []string{}
-				for _, parent := range ([]ParentInfo)(rankedParents) {
-					if parent.PrimaryParent {
-						parentInfo = append(parentInfo, parent.Format())
-					} else if parent.SecondaryParent {
-						secondaryParentInfo = append(secondaryParentInfo, parent.Format())
-					} else {
-						nullParentInfo = append(nullParentInfo, parent.Format())
-					}
-				}
-
-				if len(parentInfo) == 0 {
-					// If no parents are found in the secondary parent either, then set the null parent list (parents in neither secondary or primary)
-					// as the secondary parent list and clear the null parent list.
-					if len(secondaryParentInfo) == 0 {
-						secondaryParentInfo = nullParentInfo
-						nullParentInfo = []string{}
-					}
-					parentInfo = secondaryParentInfo
-					secondaryParentInfo = []string{} // TODO should thi be '= secondary'? Currently emulates Perl
-				}
-
-				// TODO benchmark, verify this isn't slow. if it is, it could easily be made faster
-				seen := map[string]struct{}{} // TODO change to host+port? host isn't unique
-				parentInfo, seen = util.RemoveStrDuplicates(parentInfo, seen)
-				secondaryParentInfo, seen = util.RemoveStrDuplicates(secondaryParentInfo, seen)
-				nullParentInfo, seen = util.RemoveStrDuplicates(nullParentInfo, seen)
-
-				// If the ats version supports it and the algorithm is consistent hash, put secondary and non-primary parents into secondary parent group.
-				// This will ensure that secondary and tertiary parents will be unused unless all hosts in the primary group are unavailable.
-
-				parents := ""
-
-				if atsMajorVer >= 6 && ds.MSOAlgorithm == "consistent_hash" && (len(secondaryParentInfo) > 0 || len(nullParentInfo) > 0) {
-					parents = `parent="` + strings.Join(parentInfo, "") + `" secondary_parent="` + strings.Join(secondaryParentInfo, "") + strings.Join(nullParentInfo, "") + `"`
-				} else {
-					parents = `parent="` + strings.Join(parentInfo, "") + strings.Join(secondaryParentInfo, "") + strings.Join(nullParentInfo, "") + `"`
-				}
-				textLine += parents + ` round_robin=` + ds.MSOAlgorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
-
-				parentRetry := ds.MSOParentRetry
-				if atsMajorVer >= 6 && parentRetry != "" {
-					if unavailableServerRetryResponsesValid(ds.MSOUnavailableServerRetryResponses) {
-						textLine += ` parent_retry=` + parentRetry + ` unavailable_server_retry_responses=` + ds.MSOUnavailableServerRetryResponses
-					} else {
-						if ds.MSOUnavailableServerRetryResponses != "" {
-							log.Errorln("Malformed unavailable_server_retry_responses parameter '" + ds.MSOUnavailableServerRetryResponses + "', not using!")
-						}
-						textLine += ` parent_retry=` + parentRetry
-					}
-					textLine += ` max_simple_retries=` + ds.MSOMaxSimpleRetries + ` max_unavailable_server_retries=` + ds.MSOMaxUnavailableServerRetries
-				}
-				textLine += "\n" // TODO remove, and join later on "\n" instead of ""?
-				textArr = append(textArr, textLine)
-			}
-		}
-		sort.Sort(sort.StringSlice(textArr))
-		text = hdr + strings.Join(textArr, "")
-	} else {
-		// not a top level cache
-		parentConfigDSes, err := getParentConfigDS(inf.Tx.Tx, serverInfo.ID) // "data" in Perl
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting parent config DS data (non-top-level): "+err.Error()))
-			return
-		}
-
-		parentInfos, err := getParentInfo(inf.Tx.Tx, serverInfo)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting server parent info (non-top-level: "+err.Error()))
-			return
-		}
-
-		processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
-
-		serverParams, err := getParentConfigServerProfileParams(inf.Tx.Tx, serverInfo.ID)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting parent config server profile params: "+err.Error()))
-			return
-		}
-
-		queryStringHandling := serverParams[ParentConfigParamQStringHandling] // "qsh" in Perl
-		parentInfo := []string{}
-		secondaryParentInfo := []string{}
-
-		parentInfosAllParents := parentInfos[DeliveryServicesAllParentsKey]
-		sort.Sort(ParentInfoSortByRank(parentInfosAllParents))
-
-		for _, parent := range parentInfosAllParents { // TODO fix magic key
-			pTxt := parent.Format()
-			if parent.PrimaryParent {
-				parentInfo = append(parentInfo, pTxt)
-			} else if parent.SecondaryParent {
-				secondaryParentInfo = append(secondaryParentInfo, pTxt)
-			}
-		}
-
-		if len(parentInfo) == 0 {
-			parentInfo = secondaryParentInfo
-			secondaryParentInfo = []string{}
-		}
-
-		// TODO remove duplicate code with top level if block
-		seen := map[string]struct{}{} // TODO change to host+port? host isn't unique
-		parentInfo, seen = util.RemoveStrDuplicates(parentInfo, seen)
-		secondaryParentInfo, seen = util.RemoveStrDuplicates(secondaryParentInfo, seen)
-
-		parents := ""
-		secondaryParents := "" // "secparents" in Perl
-		sort.Sort(sort.StringSlice(parentInfo))
-		sort.Sort(sort.StringSlice(secondaryParentInfo))
-		if atsMajorVer >= 6 && len(secondaryParentInfo) > 0 {
-			parents = `parent="` + strings.Join(parentInfo, "") + `"`
-			secondaryParents = ` secondary_parent="` + strings.Join(secondaryParentInfo, "") + `"`
-		} else {
-			parents = `parent="` + strings.Join(parentInfo, "") + strings.Join(secondaryParentInfo, "") + `"`
-		}
-
-		roundRobin := `round_robin=consistent_hash`
-		goDirect := `go_direct=false`
-
-		sort.Sort(ParentConfigDSSortByName(parentConfigDSes))
-		for _, ds := range parentConfigDSes {
-			text := ""
-			originFQDN := ds.OriginFQDN
-			if originFQDN == "" {
-				continue // TODO warn? (Perl doesn't)
-			}
-
-			orgURI, err := url.Parse(originFQDN) // TODO verify
-			if err != nil {
-				log.Errorln("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + originFQDN + "': skipping!" + err.Error())
-				continue
-			}
-
-			if existingDS, ok := processedOriginsToDSNames[originFQDN]; ok {
-				log.Errorln("parent.config generation: duplicate origin! services '" + string(ds.Name) + "' and '" + string(existingDS) + "' share origin '" + orgURI.Host + "': skipping '" + string(ds.Name) + "'!")
-				continue
-			}
-
-			// TODO put in function, to remove duplication
-			if orgURI.Port() == "" {
-				if orgURI.Scheme == "http" {
-					orgURI.Host += ":80"
-				} else if orgURI.Scheme == "https" {
-					orgURI.Host += ":443"
-				} else {
-					log.Errorln("parent.config generation non-top-level: ds '" + string(ds.Name) + "' origin  URI: '" + originFQDN + "' is unknown scheme '" + orgURI.Scheme + "', but has no port! Using as-is! ")
-				}
-			}
-
-			// TODO encode this in a DSType func, IsGoDirect() ?
-			if dsType := tc.DSType(ds.Type); dsType == tc.DSTypeHTTPNoCache || dsType == tc.DSTypeHTTPLive || dsType == tc.DSTypeDNSLive {
-				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
-			} else {
-
-				// check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
-				// then edges will use the qstring handling value specified in the parameter for all profiles.
-
-				// If there is no defined parameter in the profile, then check the delivery service profile.
-				// If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
-				// This is used only if not overridden by a server profile qstring handling parameter.
-
-				// TODO refactor this logic, hard to understand (transliterated from Perl)
-				dsQSH := queryStringHandling
-				if dsQSH == "" {
-					dsQSH = ds.QStringHandling
-				}
-				parentQStr := dsQSH
-				if parentQStr == "" {
-					parentQStr = "ignore"
-				}
-				if ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp && dsQSH == "" {
-					parentQStr = "consider"
-				}
-
-				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
-			}
-			textArr = append(textArr, text)
-			processedOriginsToDSNames[originFQDN] = ds.Name
-		}
-
-		defaultDestText := `dest_domain=. ` + parents
-		if serverParams[ParentConfigParamAlgorithm] == AlgorithmConsistentHash {
-			defaultDestText += secondaryParents
-		}
-		defaultDestText += ` round_robin=consistent_hash go_direct=false`
-
-		if qStr := serverParams[ParentConfigParamQString]; qStr != "" {
-			defaultDestText += ` qstring=` + qStr
-		}
-		defaultDestText += "\n"
-
-		sort.Sort(sort.StringSlice(textArr))
-		text = hdr + strings.Join(textArr, "") + defaultDestText
+	atsMajorVer, err := GetATSMajorVersion(inf.Tx.Tx, serverInfo.ProfileID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting ATS major version: "+err.Error()))
+		return
 	}
+
+	text := ""
+	if serverInfo.IsTopLevelCache() {
+		text, userErr, sysErr, errCode = generateTopLevelParentFile(inf.Tx.Tx, serverInfo, atsMajorVer)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+	} else {
+		text, userErr, sysErr, errCode = generateMidEdgeParentFile(inf.Tx.Tx, serverInfo, atsMajorVer)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+	}
+
+	text = hdr + text
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte(text))
+}
+
+func generateTopLevelParentFile(tx *sql.Tx, serverInfo *ServerInfo, atsMajorVer int) (string, error, error, int){
+	textArr := []string{}
+	uniqueOrigins := map[string]struct{}{}
+
+	data, err := getParentConfigDSTopLevel(tx, serverInfo.CDN)
+	if err != nil {
+		return "", nil, errors.New("Getting parent config DS data: "+err.Error()), http.StatusInternalServerError
+	}
+
+	parentInfos := map[string][]ParentInfo{} // TODO better names (this was transliterated from Perl)
+
+	for _, ds := range data {
+		parentQStr := "ignore"
+		if ds.QStringHandlingFromProfile == "" && ds.MSOAlgorithm == AlgorithmConsistentHash && ds.QStringIgnore == tc.QStringIgnoreUseInCacheKeyAndPassUp {
+			parentQStr = "consider"
+		}
+
+		orgURIStr := ds.OriginFQDN
+		orgURI, err := url.Parse(orgURIStr) // TODO verify origin is always a host:port
+		if err != nil {
+			log.Errorln("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + orgURIStr + "', skipping! : " + err.Error())
+			continue
+		}
+
+		err = setParentPortNumber(orgURI)
+		if err != nil {
+			log.Errorln("parent.config generation non-top-level: ds '" + string(ds.Name) + "' origin  URI: '" + orgURIStr + "' is unknown scheme '" + orgURI.Scheme + "', but has no port! Using as-is! ")
+		}
+
+		if _, ok := uniqueOrigins[ds.OriginFQDN]; ok {
+			continue // TODO warn?
+		}
+		uniqueOrigins[ds.OriginFQDN] = struct{}{}
+
+		textLine := ""
+
+		if ds.OriginShield != "" {
+			// TODO fix to only call once
+			serverParams, err := getParentConfigServerProfileParams(tx, serverInfo.ID)
+			if err != nil {
+				return "", nil, errors.New("Getting server params: "+err.Error()), http.StatusInternalServerError
+			}
+
+			algorithm := ""
+			if parentSelectAlg := serverParams[ParentConfigParamAlgorithm]; strings.TrimSpace(parentSelectAlg) != "" {
+				algorithm = "round_robin=" + parentSelectAlg
+			}
+			textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " parent=" + ds.OriginShield + " " + algorithm + " go_direct=true\n"
+		} else if ds.MultiSiteOrigin {
+			textLine += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port() + " "
+			if len(parentInfos) == 0 {
+				// If we have multi-site origin, get parent_data once
+				parentInfos, err = getParentInfo(tx, serverInfo)
+				if err != nil {
+					return "", nil, errors.New("Getting server parent info: "+err.Error()), http.StatusInternalServerError
+				}
+			}
+
+			if len(parentInfos[orgURI.Hostname()]) == 0 {
+				// TODO error? emulates Perl
+				log.Warnln("ParentInfo: delivery service " + ds.Name + " has no parent servers")
+			}
+
+			rankedParents := ParentInfoSortByRank(parentInfos[orgURI.Hostname()])
+			sort.Sort(rankedParents)
+
+			parentInfo := []string{}
+			secondaryParentInfo := []string{}
+			nullParentInfo := []string{}
+			for _, parent := range ([]ParentInfo)(rankedParents) {
+				if parent.PrimaryParent {
+					parentInfo = append(parentInfo, parent.Format())
+				} else if parent.SecondaryParent {
+					secondaryParentInfo = append(secondaryParentInfo, parent.Format())
+				} else {
+					nullParentInfo = append(nullParentInfo, parent.Format())
+				}
+			}
+
+			if len(parentInfo) == 0 {
+				// If no parents are found in the secondary parent either, then set the null parent list (parents in neither secondary or primary)
+				// as the secondary parent list and clear the null parent list.
+				if len(secondaryParentInfo) == 0 {
+					secondaryParentInfo = nullParentInfo
+					nullParentInfo = []string{}
+				}
+				parentInfo = secondaryParentInfo
+				secondaryParentInfo = []string{} // TODO should thi be '= secondary'? Currently emulates Perl
+			}
+
+			removeDupeParents(&parentInfo, &secondaryParentInfo, &nullParentInfo)
+
+
+			// If the ats version supports it and the algorithm is consistent hash, put secondary and non-primary parents into secondary parent group.
+			// This will ensure that secondary and tertiary parents will be unused unless all hosts in the primary group are unavailable.
+
+			parents := ""
+
+			if atsMajorVer >= 6 && ds.MSOAlgorithm == "consistent_hash" && (len(secondaryParentInfo) > 0 || len(nullParentInfo) > 0) {
+				parents = `parent="` + strings.Join(parentInfo, "") + `" secondary_parent="` + strings.Join(secondaryParentInfo, "") + strings.Join(nullParentInfo, "") + `"`
+			} else {
+				parents = `parent="` + strings.Join(parentInfo, "") + strings.Join(secondaryParentInfo, "") + strings.Join(nullParentInfo, "") + `"`
+			}
+			textLine += parents + ` round_robin=` + ds.MSOAlgorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
+
+			parentRetry := ds.MSOParentRetry
+			if atsMajorVer >= 6 && parentRetry != "" {
+				if unavailableServerRetryResponsesValid(ds.MSOUnavailableServerRetryResponses) {
+					textLine += ` parent_retry=` + parentRetry + ` unavailable_server_retry_responses=` + ds.MSOUnavailableServerRetryResponses
+				} else {
+					if ds.MSOUnavailableServerRetryResponses != "" {
+						log.Errorln("Malformed unavailable_server_retry_responses parameter '" + ds.MSOUnavailableServerRetryResponses + "', not using!")
+					}
+					textLine += ` parent_retry=` + parentRetry
+				}
+				textLine += ` max_simple_retries=` + ds.MSOMaxSimpleRetries + ` max_unavailable_server_retries=` + ds.MSOMaxUnavailableServerRetries
+			}
+			textLine += "\n" // TODO remove, and join later on "\n" instead of ""?
+			textArr = append(textArr, textLine)
+		}
+	}
+	sort.Sort(sort.StringSlice(textArr))
+	return strings.Join(textArr, ""), nil, nil, http.StatusOK
+}
+
+func generateMidEdgeParentFile(tx *sql.Tx, serverInfo *ServerInfo, atsMajorVer int) (string, error, error, int) {
+	textArr := []string{}
+
+	parentConfigDSes, err := getParentConfigDS(tx, serverInfo.ID) // "data" in Perl
+	if err != nil {
+		return "", nil, errors.New("Getting parent config DS data (non-top-level): "+err.Error()), http.StatusInternalServerError
+	}
+
+	parentInfos, err := getParentInfo(tx, serverInfo)
+	if err != nil {
+		return "", nil, errors.New("Getting server parent info (non-top-level): "+err.Error()), http.StatusInternalServerError
+	}
+
+	processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
+
+	serverParams, err := getParentConfigServerProfileParams(tx, serverInfo.ID)
+	if err != nil {
+		return "", nil, errors.New("Getting parent config server profile params: "+err.Error()), http.StatusInternalServerError
+	}
+
+	parentInfo := []string{}
+	secondaryParentInfo := []string{}
+
+	parentInfosAllParents := parentInfos[DeliveryServicesAllParentsKey]
+	sort.Sort(ParentInfoSortByRank(parentInfosAllParents))
+
+	for _, parent := range parentInfosAllParents { // TODO fix magic key
+		pTxt := parent.Format()
+		if parent.PrimaryParent {
+			parentInfo = append(parentInfo, pTxt)
+		} else if parent.SecondaryParent {
+			secondaryParentInfo = append(secondaryParentInfo, pTxt)
+		}
+	}
+
+	if len(parentInfo) == 0 {
+		parentInfo = secondaryParentInfo
+		secondaryParentInfo = []string{}
+	}
+
+	removeDupeParents(&parentInfo, &secondaryParentInfo, nil)
+
+	parents := ""
+	secondaryParents := "" // "secparents" in Perl
+	sort.Sort(sort.StringSlice(parentInfo))
+	sort.Sort(sort.StringSlice(secondaryParentInfo))
+	if atsMajorVer >= 6 && len(secondaryParentInfo) > 0 {
+		parents = `parent="` + strings.Join(parentInfo, "") + `"`
+		secondaryParents = ` secondary_parent="` + strings.Join(secondaryParentInfo, "") + `"`
+	} else {
+		parents = `parent="` + strings.Join(parentInfo, "") + strings.Join(secondaryParentInfo, "") + `"`
+	}
+
+	roundRobin := `round_robin=consistent_hash`
+	goDirect := `go_direct=false`
+
+	sort.Sort(ParentConfigDSSortByName(parentConfigDSes))
+	for _, ds := range parentConfigDSes {
+		text := ""
+		originFQDN := ds.OriginFQDN
+		if originFQDN == "" {
+			continue // TODO warn? (Perl doesn't)
+		}
+
+		orgURI, err := url.Parse(originFQDN) // TODO verify
+		if err != nil {
+			log.Errorln("Malformed ds '" + string(ds.Name) + "' origin  URI: '" + originFQDN + "': skipping!" + err.Error())
+			continue
+		}
+
+		if existingDS, ok := processedOriginsToDSNames[originFQDN]; ok {
+			log.Errorln("parent.config generation: duplicate origin! services '" + string(ds.Name) + "' and '" + string(existingDS) + "' share origin '" + orgURI.Host + "': skipping '" + string(ds.Name) + "'!")
+			continue
+		}
+
+		err = setParentPortNumber(orgURI)
+		if err != nil {
+			log.Errorln("parent.config generation non-top-level: ds '" + string(ds.Name) + "' origin  URI: '" + originFQDN + "' is unknown scheme '" + orgURI.Scheme + "', but has no port! Using as-is! ")
+		}
+
+		if dsType := tc.DSType(ds.Type); dsType.IsGoDirect() {
+			text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
+		} else {
+			parentQStr := getQueryStringHandling(serverParams, ds)
+			text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` ` + parents + ` ` + secondaryParents + ` ` + roundRobin + ` ` + goDirect + ` qstring=` + parentQStr + "\n"
+		}
+		textArr = append(textArr, text)
+		processedOriginsToDSNames[originFQDN] = ds.Name
+	}
+
+	defaultDestText := `dest_domain=. ` + parents
+	if serverParams[ParentConfigParamAlgorithm] == AlgorithmConsistentHash {
+		defaultDestText += secondaryParents
+	}
+	defaultDestText += ` round_robin=consistent_hash go_direct=false`
+
+	if qStr := serverParams[ParentConfigParamQString]; qStr != "" {
+		defaultDestText += ` qstring=` + qStr
+	}
+	defaultDestText += "\n"
+
+	sort.Sort(sort.StringSlice(textArr))
+	return strings.Join(textArr, "") + defaultDestText, nil, nil, http.StatusOK
+}
+func setParentPortNumber(orgURI *url.URL) error {
+	if orgURI.Port() == "" {
+		if orgURI.Scheme == "http" {
+			orgURI.Host += ":80"
+		} else if orgURI.Scheme == "https" {
+			orgURI.Host += ":443"
+		} else {
+			return errors.New("unknown scheme")
+		}
+	}
+	return nil
+}
+
+func getQueryStringHandling(serverParams map[string]string, ds ParentConfigDS) string {
+
+	if serverParams[ParentConfigParamQStringHandling] != "" {
+		return serverParams[ParentConfigParamQStringHandling]
+	}
+
+	if ds.QStringHandlingFromProfile != "" {
+		return ds.QStringHandlingFromProfile
+	}
+
+	if ds.QStringIgnore == tc.QStringIgnoreIgnoreInCacheKeyAndPassUp {
+		return "consider"
+	}
+
+	return "ignore"
+}
+
+// TODO benchmark, verify this isn't slow. if it is, it could easily be made faster
+func removeDupeParents(parentInfo *[]string, secondaryParentInfo *[]string, nullParentInfo *[]string) {
+	seen := map[string]struct{}{} // TO DO change to host+port? host isn't unique
+
+	if parentInfo != nil {
+		*parentInfo, seen = util.RemoveStrDuplicates(*parentInfo, seen)
+	}
+
+	if secondaryParentInfo != nil {
+		*secondaryParentInfo, seen = util.RemoveStrDuplicates(*secondaryParentInfo, seen)
+	}
+
+	if nullParentInfo != nil {
+		*nullParentInfo, seen = util.RemoveStrDuplicates(*nullParentInfo, seen)
+	}
 }
 
 // unavailableServerRetryResponsesValid returns whether a unavailable_server_retry_responses parameter is valid for an ATS parent rule.
@@ -528,7 +547,7 @@ type ParentConfigDS struct {
 	OriginShield    string
 	Type            tc.DSType
 
-	QStringHandling string
+	QStringHandlingFromProfile string
 }
 
 type ParentConfigDSTopLevel struct {
@@ -762,7 +781,7 @@ func getParentConfigDSParams(tx *sql.Tx, dses []ParentConfigDS) ([]ParentConfigD
 			continue
 		}
 		if v, ok := dsParams[ParentConfigParamQStringHandling]; ok {
-			ds.QStringHandling = v
+			ds.QStringHandlingFromProfile = v
 			dses[i] = ds
 		}
 	}
@@ -783,7 +802,7 @@ func getParentConfigDSParamsTopLevel(tx *sql.Tx, dses []ParentConfigDSTopLevel) 
 	for i, ds := range dses {
 		dsParams := params[ds.Name] // it's acceptable for this to not exist, if there are no params for the DS. If so, we still need to continue below, to set all the defaults.
 		if v, ok := dsParams[ParentConfigParamQStringHandling]; ok {
-			ds.QStringHandling = v
+			ds.QStringHandlingFromProfile = v
 		}
 		if v, ok := dsParams[ParentConfigParamMSOAlgorithm]; ok && strings.TrimSpace(v) != "" {
 			ds.MSOAlgorithm = v
@@ -1286,7 +1305,8 @@ WHERE
 type ParentConfigServerParams struct {
 	QString         string
 	Algorithm       string
-	QStringHandling bool
+//	QStringHandling bool TODO: EF Rename to ...FromProfile?
+
 }
 
 func getCDNDomainByProfileID(tx *sql.Tx, profileID ProfileID) (string, bool, error) {
