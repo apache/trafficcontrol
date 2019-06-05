@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 import { Component, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 
 import { Subject } from 'rxjs';
@@ -31,6 +32,12 @@ export class InvalidationJobsComponent implements OnInit {
 	jobs: Array<InvalidationJob>;
 	now: Date;
 	showDialog: Subject<boolean>;
+
+	regexp = new FormControl('/');
+	ttl = new FormControl(178);
+	startDate = new FormControl('');
+	startTime = new FormControl('');
+
 
 	constructor (private readonly route: ActivatedRoute, private readonly api: APIService) {
 		this.deliveryservice = {active: true} as DeliveryService;
@@ -80,7 +87,47 @@ export class InvalidationJobsComponent implements OnInit {
 	}
 
 	public closeDialog (e?: Event) {
-		console.log(e);
+		if (e) {
+			e.preventDefault();
+		}
+
+
+		let job: InvalidationJob;
+		try {
+			job = {
+				dsId: this.deliveryservice.id,
+				parameters: 'TTL:' + String(this.ttl.value),
+				regex: (new RegExp(this.regexp.value)).toString().replace(/^\/|\/$/g, '').replace('\\/', '/'),
+				startTime: this.startDate.value.concat(' ', this.startTime.value + ':00'),
+				ttl: this.ttl.value
+			};
+		} catch (err) {
+			console.error(err);
+			return;
+		}
+
+		this.api.createInvalidationJob(job).subscribe(
+			r => {
+				if (r) {
+					this.api.getInvalidationJobs({dsId: this.deliveryservice.id}).subscribe(
+						r => {
+							this.jobs = new Array<InvalidationJob>();
+							for (const j of r) {
+								const tmp = Array.from(String(j.startTime).replace(' ', 'T'));
+								tmp.splice(-3, 3);
+								j.startTime = new Date(tmp.join(''));
+								this.jobs.push(j);
+							}
+						}
+					);
+				} else {
+					console.warn("failure");
+				}
+			},
+			e => {
+				console.error("error: ", e);
+			}
+		)
 	}
 
 }

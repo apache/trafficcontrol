@@ -14,7 +14,8 @@
 
 /**
  * This file contains the definition for the entire app. Its syntax is a bit arcane, but hopefully
- * by copy/pasting any novice can add a new component.
+ * by copy/pasting any novice can add a new component - though honestly you should just use
+ * `ng generate` to create new things (and then fix formatting/missing license)
 */
 
 import { BrowserModule } from '@angular/platform-browser';
@@ -22,6 +23,8 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
+
+import { Chart } from 'chart.js';
 
 // Routing
 import { AppRoutingModule } from './app-routing.module';
@@ -40,10 +43,10 @@ import { TpHeaderComponent } from './components/tp-header/tp-header.component';
 import { LoadingComponent } from './components/loading/loading.component';
 import { UserCardComponent } from './components/user-card/user-card.component';
 import { DeliveryserviceComponent } from './components/deliveryservice/deliveryservice.component';
-import { LinechartDirective } from './directives/linechart.directive';
-
-import { Chart } from 'chart.js';
 import { InvalidationJobsComponent } from './components/invalidation-jobs/invalidation-jobs.component';
+
+// Directives
+import { LinechartDirective } from './directives/linechart.directive';
 import { OpenableDirective } from './directives/openable.directive';
 
 Chart.plugins.register({

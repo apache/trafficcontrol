@@ -29,7 +29,7 @@ export interface InvalidationJob {
 	 * describing the job's TTL in hours (`n` can be any integer value > 0).
 	**/
 	parameters?: string;
-	regex?: RegExp;
+	regex?: RegExp | string;
 	startTime: Date;
 	ttl?: number;
 }
