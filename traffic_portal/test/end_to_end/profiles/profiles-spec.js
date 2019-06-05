@@ -29,7 +29,7 @@ describe('Traffic Portal Profiles Test Suite', function() {
 
 	it('should go to the profiles page', function() {
 		console.log("Go to the profiles page");
-		browser.get(browser.baseUrl + "/#!/profiles");
+		browser.setLocation("profiles");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles");
 	});
 

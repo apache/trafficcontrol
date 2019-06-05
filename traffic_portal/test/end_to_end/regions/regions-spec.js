@@ -29,7 +29,7 @@ describe('Traffic Portal Regions Test Suite', function() {
 
 	it('should go to the regions page', function() {
 		console.log("Go to the regions page");
-		browser.get(browser.baseUrl + "/#!/regions");
+		browser.setLocation("regions");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/regions");
 	});
 

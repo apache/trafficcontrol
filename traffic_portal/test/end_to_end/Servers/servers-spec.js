@@ -37,7 +37,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 
 	it('should go to the Servers page', function() {
 		console.log('Looading Configure/Servers');
-		browser.get(browser.baseUrl + "/#!/servers");
+		browser.setLocation("servers");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 

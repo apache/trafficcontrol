@@ -34,7 +34,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 
 	it('should open ds page and click button to create a new one', function() {
 		console.log('Opening delivery services page');
-		browser.get(browser.baseUrl + "/#!/delivery-services");
+		browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
@@ -70,7 +70,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 
 	it('should back out to ds page and verify new ds and update it', function() {
 		console.log('Backing out and verifying ' + mockVals.xmlId + ' exists');
-		browser.get(browser.baseUrl + "/#!/delivery-services");
+		browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
