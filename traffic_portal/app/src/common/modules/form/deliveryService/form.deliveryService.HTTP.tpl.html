@@ -975,9 +975,9 @@ under the License.
                                             </div>
                                         </div>
                                         <small class="input-error" ng-show="hasPropertyError(qpForm.consistentHashQueryParam, 'pattern')">No spaces</small>
-                                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && !_.isEqual(deliveryService.consistentHashQueryParams, dsCurrent.consistentHashQueryParams) && $index == (deliveryService.consistentHashQueryParams.length - 1)">
+                                        <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.consistentHashQueryParams[$index] != dsCurrent.consistentHashQueryParams[$index]">
                                             <h3>Current Value</h3>
-                                            <pre ng-repeat="i in dsCurrent.consistentHashQueryParams track by $index">Consistent Hash Query Param #{{$index + 1}}: {{::dsCurrent.consistentHashQueryParams[$index]}}</pre>
+                                            <pre>Consistent Hash Query Param #{{$index + 1}}: {{::dsCurrent.consistentHashQueryParams[$index]}}</pre>
                                         </aside>
                                     </div>
                                 </div>
