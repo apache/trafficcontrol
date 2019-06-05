@@ -16,7 +16,7 @@ import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 
 @Directive({
-	selector: 'dialog[openable]'
+	selector: "dialog[openable]"
 })
 export class OpenableDirective implements AfterViewInit {
 	@Input('toggle') toggle: Observable<boolean>;
@@ -29,10 +29,6 @@ export class OpenableDirective implements AfterViewInit {
 		if (!this.element.nativeElement) {
 			console.warn('Use of DOM directive in non-DOM context!');
 			return;
-		}
-
-		if (!(this.element.nativeElement instanceof HTMLDialogElement)) {
-			throw new Error('[openable] Directive can only be used on a <dialog>!');
 		}
 
 		this.subscription = this.toggle.subscribe(
