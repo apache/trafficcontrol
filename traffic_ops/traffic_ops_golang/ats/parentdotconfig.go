@@ -438,7 +438,6 @@ func getServerInfoByHost(tx *sql.Tx, host string) (*ServerInfo, bool, error) {
 
 // getServerInfo returns the necessary info about the server, whether the server exists, and any error.
 func getServerInfo(tx *sql.Tx, qry string, qryParams []interface{}) (*ServerInfo, bool, error) {
-	log.Errorf("getServerInfo qq "+qry+" p %++v\n", qryParams)
 	s := ServerInfo{}
 	if err := tx.QueryRow(qry, qryParams...).Scan(&s.CDN, &s.CDNID, &s.ID, &s.HostName, &s.DomainName, &s.IP, &s.ProfileID, &s.ProfileName, &s.Port, &s.Type, &s.CacheGroupID, &s.ParentCacheGroupID, &s.SecondaryParentCacheGroupID, &s.ParentCacheGroupType, &s.SecondaryParentCacheGroupType); err != nil {
 		if err == sql.ErrNoRows {
@@ -463,8 +462,8 @@ SELECT
   s.tcp_port,
   t.name as type,
   s.cachegroup,
-  COALESCE(cg.parent_cachegroup_id, ` + strconv.Itoa(InvalidID) + `),
-  COALESCE(cg.secondary_parent_cachegroup_id, ` + strconv.Itoa(InvalidID) + `),
+  COALESCE(cg.parent_cachegroup_id, ` + strconv.Itoa(InvalidID) + `) as parent_cachegroup_id,
+  COALESCE(cg.secondary_parent_cachegroup_id, ` + strconv.Itoa(InvalidID) + `) as secondary_parent_cachegroup_id,
   COALESCE(parentt.name, '') as parent_cachegroup_type,
   COALESCE(sparentt.name, '') as secondary_parent_cachegroup_type
 FROM
