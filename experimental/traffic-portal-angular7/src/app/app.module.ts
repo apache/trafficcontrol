@@ -48,6 +48,7 @@ import { InvalidationJobsComponent } from './components/invalidation-jobs/invali
 // Directives
 import { LinechartDirective } from './directives/linechart.directive';
 import { OpenableDirective } from './directives/openable.directive';
+import { CustomvalidityDirective } from './directives/customvalidity.directive';
 
 Chart.plugins.register({
 	id: 'whiteBackground',
@@ -89,6 +90,7 @@ const appRoutes: Routes = [
 		LinechartDirective,
 		InvalidationJobsComponent,
 		OpenableDirective,
+		CustomvalidityDirective,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),

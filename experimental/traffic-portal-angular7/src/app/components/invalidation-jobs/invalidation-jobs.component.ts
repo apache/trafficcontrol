@@ -37,12 +37,14 @@ export class InvalidationJobsComponent implements OnInit {
 	ttl = new FormControl(178);
 	startDate = new FormControl('');
 	startTime = new FormControl('');
+	regexpIsValid: Subject<string>;
 
 
 	constructor (private readonly route: ActivatedRoute, private readonly api: APIService) {
 		this.deliveryservice = {active: true} as DeliveryService;
 		this.jobs = new Array<InvalidationJob>();
 		this.showDialog = new Subject<boolean>();
+		this.regexpIsValid = new Subject<string>();
 	}
 
 	ngOnInit () {
@@ -83,28 +85,39 @@ export class InvalidationJobsComponent implements OnInit {
 		if (e) {
 			e.preventDefault();
 		}
+
+		const now = new Date();
+		now.setUTCMilliseconds(0);
+
+		this.startDate.setValue(String(now.getFullYear()).padStart(4, '0') + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0'));
+		this.startTime.setValue(String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'));
+
 		this.showDialog.next(true);
 	}
 
-	public closeDialog (e?: Event) {
-		if (e) {
-			e.preventDefault();
-		}
+	public closeDialog (e: Event) {
+		e.preventDefault();
+		this.showDialog.next(false);
+	}
 
+	public submitDialog (e: Event) {
+		e.preventDefault();
 
-		let job: InvalidationJob;
+		let re: RegExp;
 		try {
-			job = {
-				dsId: this.deliveryservice.id,
-				parameters: 'TTL:' + String(this.ttl.value),
-				regex: (new RegExp(this.regexp.value)).toString().replace(/^\/|\/$/g, '').replace('\\/', '/'),
-				startTime: this.startDate.value.concat(' ', this.startTime.value + ':00'),
-				ttl: this.ttl.value
-			};
-		} catch (err) {
-			console.error(err);
+			re = new RegExp(this.regexp.value);
+		} catch (e) {
+			this.regexpIsValid.next('Must be a valid regular expression! (' + e.toString() + ')');
 			return;
 		}
+
+		const job = {
+			dsId: this.deliveryservice.id,
+			parameters: 'TTL:' + String(this.ttl.value),
+			regex: re.toString().replace(/^\/|\/$/g, '').replace('\\/', '/'),
+			startTime: this.startDate.value.concat(' ', this.startTime.value + ':00'),
+			ttl: this.ttl.value
+		};
 
 		this.api.createInvalidationJob(job).subscribe(
 			r => {
@@ -120,6 +133,7 @@ export class InvalidationJobsComponent implements OnInit {
 							}
 						}
 					);
+					this.showDialog.next(false);
 				} else {
 					console.warn("failure");
 				}
