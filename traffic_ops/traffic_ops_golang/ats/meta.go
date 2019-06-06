@@ -107,12 +107,9 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetConfigMetaData getting scope: "+err.Error()))
 			return
 		}
-		if cfgParams.URL != "" {
-			scope = tc.ATSConfigMetaDataConfigFileScopeCDNs
-		}
-		atsCfg.Scope = string(scope)
 
 		if cfgParams.URL != "" {
+			scope = tc.ATSConfigMetaDataConfigFileScopeCDNs
 			atsCfg.URL = cfgParams.URL
 		} else {
 			scopeID := ""
@@ -125,6 +122,8 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 			}
 			atsCfg.APIURI = "/api/1.2/" + string(scope) + "/" + scopeID + "/configfiles/ats/" + cfgFile
 		}
+
+		atsCfg.Scope = string(scope)
 
 		atsData.ConfigFiles = append(atsData.ConfigFiles, atsCfg)
 	}
