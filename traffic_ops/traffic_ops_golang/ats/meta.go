@@ -53,7 +53,7 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if tmParams.URL == "" {
-		log.Warnln("ats.GetConfigMetadata: global tm.url parameter missing or empty!")
+		log.Errorln("ats.GetConfigMetadata: global tm.url parameter missing or empty! Setting empty in meta config!")
 	}
 
 	atsData := tc.ATSConfigMetaData{
