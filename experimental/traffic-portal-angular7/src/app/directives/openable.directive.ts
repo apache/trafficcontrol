@@ -11,14 +11,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 
 import { Observable, Subscription } from 'rxjs';
 
 @Directive({
 	selector: "dialog[openable]"
 })
-export class OpenableDirective implements AfterViewInit {
+export class OpenableDirective implements AfterViewInit, OnDestroy {
 	@Input('toggle') toggle: Observable<boolean>;
 
 	private subscription: Subscription;
@@ -49,5 +49,9 @@ export class OpenableDirective implements AfterViewInit {
 				console.error(e);
 			}
 		);
+	}
+
+	ngOnDestroy () {
+		this.subscription.unsubscribe();
 	}
 }
