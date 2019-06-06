@@ -40,7 +40,7 @@ RUN yum install -y epel-release && \
     yum clean all
 
 RUN mkdir -p /opt/traffic_monitor/conf
-ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/
+ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/traffic_monitor.cfg.template
 
 ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
