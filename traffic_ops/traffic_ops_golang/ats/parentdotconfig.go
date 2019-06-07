@@ -73,15 +73,15 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hdr, err := headerComment(inf.Tx.Tx, serverInfo.HostName)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting header comment: "+err.Error()))
-		return
-	}
-
 	atsMajorVer, err := GetATSMajorVersion(inf.Tx.Tx, serverInfo.ProfileID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting ATS major version: "+err.Error()))
+		return
+	}
+
+	hdr, err := headerComment(inf.Tx.Tx, serverInfo.HostName)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Getting header comment: "+err.Error()))
 		return
 	}
 
