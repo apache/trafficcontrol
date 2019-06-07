@@ -86,3 +86,18 @@ func (to *Session) getConfigFile(uri string) (string, ReqInf, error) {
 	bts, err := ioutil.ReadAll(resp.Body)
 	return string(bts), reqInf, err
 }
+
+func (to *Session) GetATSServerConfigList(serverID int) (tc.ATSConfigMetaData, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+"/servers/"+strconv.Itoa(serverID)+"/configfiles/ats", nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.ATSConfigMetaData{}, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	data := tc.ATSConfigMetaData{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return tc.ATSConfigMetaData{}, reqInf, err
+	}
+	return data, reqInf, nil
+}
