@@ -27,7 +27,7 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 		var request = $q.defer();
 
 		// strip out any falsy values or duplicates from consistentHashQueryParams
-		dsRequest.deliveryService.consistentHashQueryParams = _.compact(Array.from(new Set(dsRequest.deliveryService.consistentHashQueryParams)));
+		dsRequest.deliveryService.consistentHashQueryParams = Array.from(new Set(dsRequest.deliveryService.consistentHashQueryParams)).filter(function(i){return i;});
 
 		$http.post(ENV.api['root'] + "deliveryservice_requests", dsRequest)
 			.then(
@@ -47,7 +47,7 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 		var request = $q.defer();
 
 		// strip out any falsy values or duplicates from consistentHashQueryParams
-		dsRequest.deliveryService.consistentHashQueryParams = _.compact(Array.from(new Set(dsRequest.deliveryService.consistentHashQueryParams)));
+		dsRequest.deliveryService.consistentHashQueryParams = Array.from(new Set(dsRequest.deliveryService.consistentHashQueryParams)).filter(function(i){return i;});
 
 		$http.put(ENV.api['root'] + "deliveryservice_requests?id=" + id, dsRequest)
 			.then(
