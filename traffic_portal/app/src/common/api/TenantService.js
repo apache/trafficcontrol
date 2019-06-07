@@ -17,53 +17,70 @@
  * under the License.
  */
 
-var TenantService = function(Restangular, messageModel) {
+var TenantService = function($http, ENV, messageModel) {
 
     this.getTenants = function(queryParams) {
-        return Restangular.all('tenants').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'tenants', {params: queryParams}).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        )
     };
 
     this.getTenant = function(id) {
-        return Restangular.one("tenants", id).get();
+        return $http.get(ENV.api['root'] + 'tenants', {params: {id: id}}).then(
+            function (result) {
+                return result.data.response[0];
+            },
+            function (err) {
+                throw err;
+            }
+        )
     };
 
     this.createTenant = function(tenant) {
-        return Restangular.service('tenants').post(tenant)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Tenant created' } ], true);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
-                }
+        return $http.post(ENV.api['root'] + 'tenants', tenant).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Tenant created' } ], true);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
         );
     };
 
     this.updateTenant = function(tenant) {
-        return tenant.put()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Tenant updated' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.put(ENV.api['root'] + 'tenants/' + tenant.id, tenant).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Tenant updated' } ], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.deleteTenant = function(id) {
-        return Restangular.one("tenants", id).remove()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Tenant deleted' } ], true);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
-                }
-            );
+        return $http.delete(ENV.api['root'] + "tenants/" + id).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Tenant deleted' } ], true);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
 };
 
-TenantService.$inject = ['Restangular', 'messageModel'];
+TenantService.$inject = ['$http', 'ENV', 'messageModel'];
 module.exports = TenantService;
