@@ -242,7 +242,7 @@ Glossary
 		TS_PROFILE
 			A Traffic Stats Profile
 
-			.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``TRAFFIC_STATS``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
+			.. warning:: For legacy reasons, the names of Profiles of this type *must* be ``TRAFFIC_STATS``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
 		TP_PROFILE
 			A Traffic Portal Profile
