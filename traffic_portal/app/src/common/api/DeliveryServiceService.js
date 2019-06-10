@@ -31,7 +31,7 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
         var request = $q.defer();
 
         // strip out any falsy values or duplicates from consistentHashQueryParams
-        ds.consistentHashQueryParams = _.compact(Array.from(new Set(ds.consistentHashQueryParams)));
+        ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(function(i){return i;});
 
         $http.post(ENV.api['root'] + "deliveryservices", ds)
             .then(
@@ -50,7 +50,7 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
         var request = $q.defer();
 
         // strip out any falsy values or duplicates from consistentHashQueryParams
-        ds.consistentHashQueryParams = _.compact(Array.from(new Set(ds.consistentHashQueryParams)));
+        ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(function(i){return i;});
 
         $http.put(ENV.api['root'] + "deliveryservices/" + ds.id, ds)
             .then(
