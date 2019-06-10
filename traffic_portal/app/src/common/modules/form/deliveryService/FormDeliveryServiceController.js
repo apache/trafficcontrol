@@ -65,13 +65,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
     $scope.edgeFQDNs = function(ds) {
-        var urlString = '';
-        if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
-            for (var i = 0; i < ds.exampleURLs.length; i++) {
-                urlString += ds.exampleURLs[i] + '<br>';
-            }
-        }
-        return urlString;
+        return ds.exampleURLs.join('<br/>');
     };
 
     $scope.DRAFT = 0;
