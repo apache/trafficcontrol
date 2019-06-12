@@ -230,6 +230,29 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 	return domain, true, nil
 }
 
+// ServerExists returns true if the server exists.
+func ServerExists(serverName string, tx *sql.Tx) (bool, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id FROM server WHERE host_name = $1`, serverName).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, errors.New("querying server name: " + err.Error())
+	}
+	return true, nil
+}
+
+func GetServerNameFromID(tx *sql.Tx, id int64) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT host_name FROM server WHERE id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying server name: " + err.Error())
+	}
+	return name, true, nil
+}
+
 func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}, error) {
 	dses := map[tc.DeliveryServiceName]struct{}{}
 	qry := `SELECT xml_id from deliveryservice where cdn_id = (select id from cdn where name = $1)`
