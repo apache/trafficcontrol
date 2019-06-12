@@ -31,14 +31,20 @@ import (
 )
 
 func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"server-name-or-id"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	server, ok, err := getServerInfoByID(inf.Tx.Tx, inf.IntParams["id"])
+	serverName, userErr, sysErr, errCode := getServerNameFromNameOrID(inf.Tx.Tx, inf.Params["server-name-or-id"])
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	server, ok, err := getServerInfoByHost(inf.Tx.Tx, serverName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetConfigMetaData getting server info: "+err.Error()))
 		return
