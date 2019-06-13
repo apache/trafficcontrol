@@ -50,9 +50,9 @@ func (v *TORole) NewReadObj() interface{}       { return &TORole{} }
 func (v *TORole) SelectQuery() string           { return selectQuery() }
 func (v *TORole) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"name": dbhelpers.WhereColumnInfo{"name", nil},
-		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},
-	}
+		"name":      dbhelpers.WhereColumnInfo{"name", nil},
+		"id":        dbhelpers.WhereColumnInfo{"id", api.IsInt},
+		"privLevel": dbhelpers.WhereColumnInfo{"priv_level", api.IsInt}}
 }
 func (v *TORole) UpdateQuery() string { return updateQuery() }
 func (v *TORole) DeleteQuery() string { return deleteQuery() }
