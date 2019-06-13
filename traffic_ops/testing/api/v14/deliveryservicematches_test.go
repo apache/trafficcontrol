@@ -39,7 +39,7 @@ func GetTestDeliveryServiceMatches(t *testing.T) {
 	}
 
 	for _, ds := range testData.DeliveryServices {
-		if ds.Type == tc.DSTypeAnyMap {
+		if ds.Type == tc.DSTypeAnyMap || len(ds.MatchList) == 0 {
 			continue // ANY_MAP DSes don't require matchLists
 		}
 		if _, ok := dsMatchMap[tc.DeliveryServiceName(ds.XMLID)]; !ok {
