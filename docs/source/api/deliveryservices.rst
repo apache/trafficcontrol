@@ -51,7 +51,7 @@ Response Structure
 ------------------
 :active:                   ``true`` if the :term:`Delivery Service` is active, ``false`` otherwise
 :anonymousBlockingEnabled: ``true`` if :ref:`Anonymous Blocking <anonymous_blocking-qht>` has been configured for the :term:`Delivery Service`, ``false`` otherwise
-:cacheAssignmentGroups:    Array of cache assignment group IDs that are assigned to this delivery service
+:cacheAssignmentGroups:    Array of :term:`Cache Assignment Group` IDs that are assigned to this delivery service
 
 	.. versionadded:: 1.4
 

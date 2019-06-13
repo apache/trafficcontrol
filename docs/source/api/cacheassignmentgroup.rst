@@ -15,14 +15,14 @@
 
 .. _to-api-cacheassignmentgroups:
 
-***************
+*************************
 ``cacheassignmentgroups``
-***************
+*************************
 .. versionadded:: 1.4
 
 ``GET``
 =======
-Gets a list of all cache assignment groups in the Traffic Ops database
+Gets a list of all :term:`Cache Assignment Groups` in the Traffic Ops database
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -60,15 +60,16 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Content-Type: application/json
 
 	{ "response": [
 		{
-            "id": 5,		
-            "name": "Live Caches",            
-            "description": "All Live Caches",
-	        "cdnId": 1,
-            "servers": [1, 2, 3],
-  			"lastUpdated": "2018-10-24 16:07:05+00"
+			"id": 5,		
+			"name": "Live Caches",            
+			"description": "All Live Caches",
+			"cdnId": 1,
+			"servers": [1, 2, 3],
+			"lastUpdated": "2018-10-24 16:07:05+00"
 		}
 	]}
 
@@ -95,12 +96,12 @@ Request Structure
 	Cookie: mojolicious=...
 	Content-Type: application/json
 
-    {
-       "name": "East Coast Edge Caches",
-       "description": "All Edge Caches on East Coast of US",
-       "cdnId": 1,
-       "servers": [10, 12, 14]
-    }
+	{
+	   "name": "East Coast Edge Caches",
+	   "description": "All Edge Caches on East Coast of US",
+	   "cdnId": 1,
+	   "servers": [10, 12, 14]
+	}
 
 Response Structure
 ------------------
@@ -115,15 +116,16 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Content-Type: application/json
 
 	{ "response": [
 		{
-            "id": 5,		
-            "name": "Live Caches",            
-            "description": "All Live Caches",
-	        "cdnId": 1,
-            "servers": [1, 2, 3],
-  			"lastUpdated": "2018-10-24 16:07:05+00"
+			"id": 5,		
+			"name": "Live Caches",            
+			"description": "All Live Caches",
+			"cdnId": 1,
+			"servers": [1, 2, 3],
+			"lastUpdated": "2018-10-24 16:07:05+00"
 		}
 	  ], 
 	 "alerts": [
@@ -166,12 +168,12 @@ Request Structure
 	Cookie: mojolicious=...
 	Content-Type: application/json
 
-    {
-       "name": "East Coast Edge Caches",
-       "description": "All Edge Caches on East Coast of US",
-       "cdnId": 1,
-       "servers": [10, 12, 14]
-    }
+	{
+	   "name": "East Coast Edge Caches",
+	   "description": "All Edge Caches on East Coast of US",
+	   "cdnId": 1,
+	   "servers": [10, 12, 14]
+	}
 
 Response Structure
 ------------------
@@ -186,15 +188,16 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Content-Type: application/json
 
 	{ "response": [
 		{
-            "id": 5,		
-            "name": "Live Caches",            
-            "description": "All Live Caches",
-	        "cdnId": 1,
-            "servers": [1, 2, 3],
-  			"lastUpdated": "2018-10-24 16:07:05+00"
+			"id": 5,		
+			"name": "Live Caches",            
+			"description": "All Live Caches",
+			"cdnId": 1,
+			"servers": [1, 2, 3],
+			"lastUpdated": "2018-10-24 16:07:05+00"
 		}
 	  ], 
 	 "alerts": [
@@ -229,6 +232,7 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Content-Type: application/json
 	
 
 	{ "alerts": [

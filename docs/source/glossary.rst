@@ -35,6 +35,10 @@ Glossary
 		- :term:`Reverse Proxy`: Used by Traffic Control for Edge-tier :dfn:`cache servers`.
 		- :term:`Forward Proxy`: Used by Traffic Control for Mid-tier :dfn:`cache servers`.
 		- Transparent Proxy: These are not used by Traffic Control. If you are interested you can learn more about transparent proxies on `wikipedia <http://en.wikipedia.org/wiki/Proxy_server#Transparent_proxy>`_.
+		  
+	Cache Assignment Group
+	Cache Assignment Groups
+		Cache Assignment Groups are a logical grouping of servers outside the traditional Edge Cache Group/Mid Cache Group hierarchy. CAGS simplify assigning overlapping subsets of caches to Delivery Services. Cache Assignment Groups also provide a way to override which mid caches are used on a per-delivery service basis.
 
 	Cache Group
 	Cache Groups
