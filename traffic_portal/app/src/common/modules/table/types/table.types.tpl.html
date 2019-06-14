@@ -25,6 +25,34 @@ under the License.
         <div class="pull-right">
             <button class="btn btn-primary" title="Create Type" ng-click="createType()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <div class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-columns"></i>&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem">
+                        <div class="checkbox">
+                            <label><input type="checkbox" data-column="name" ng-model="columns[0].visible"> Name</label>
+                        </div>
+                    </li>
+                    <li role="menuitem">
+                        <div class="checkbox">
+                            <label><input type="checkbox" data-column="useInTable" ng-model="columns[1].visible"> Use In Table</label>
+                        </div>
+                    </li>
+                    <li role="menuitem">
+                        <div class="checkbox">
+                            <label><input type="checkbox" data-column="description" ng-model="columns[2].visible"> Description</label>
+                        </div>
+                    </li>
+                    <li role="menuitem">
+                        <div class="checkbox">
+                            <label><input type="checkbox" data-column="lastUpdated" ng-model="columns[3].visible"> Last Updated</label>
+                        </div>
+                    </li>
+                </ul>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -36,16 +64,17 @@ under the License.
                     <th>Name</th>
                     <th>Use In Table</th>
                     <th>Description</th>
+                    <th>Last Updated</th>
                 </tr>
             </thead>
             <tbody>
                 <tr ng-click="editType(t.id)" ng-repeat="t in ::types">
-                    <td data-search="^{{::t.name}}$">{{::t.name}}</td>
-                    <td data-search="^{{::t.useInTable}}$">{{::t.useInTable}}</td>
-                    <td data-search="^{{::t.description}}$">{{::t.description}}</td>
+                    <td name="name" data-search="^{{::t.name}}$">{{::t.name}}</td>
+                    <td name="useInTable" data-search="^{{::t.useInTable}}$">{{::t.useInTable}}</td>
+                    <td name="description" data-search="^{{::t.description}}$">{{::t.description}}</td>
+                    <td name="lastUpdated" data-search="^{{::getRelativeTime(t.lastUpdated)}}$" data-order="{{::t.lastUpdated}}">{{::getRelativeTime(t.lastUpdated)}}</td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
-

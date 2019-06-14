@@ -17,9 +17,11 @@
  * under the License.
  */
 
-var TableTypesController = function(types, $scope, $state, locationUtils) {
+var TableTypesController = function(types, $scope, $state, $window, dateUtils, locationUtils) {
 
     $scope.types = types;
+
+    $scope.getRelativeTime = dateUtils.getRelativeTime;
 
     $scope.editType = function(id) {
         locationUtils.navigateToPath('/types/' + id);
@@ -34,14 +36,43 @@ var TableTypesController = function(types, $scope, $state, locationUtils) {
     };
 
     angular.element(document).ready(function () {
-        $('#typesTable').dataTable({
-            "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": 25,
-            "aaSorting": []
+        const table = $('#typesTable').DataTable({
+                "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+                "iDisplayLength": 25,
+                "aaSorting": [],
+                "columns": [
+                    { "name": "name", "visible": true, "searchable": true },
+                    { "name": "useInTable", "visible": true, "searchable": true },
+                    { "name": "description", "visible": true, "searchable": true },
+                    { "name": "lastUpdated", "visible": false, "searchable": false }
+                ],
+                "colReorder": {
+                    realtime: false
+                },
+                "initComplete": function(settings, json) {
+                    // need to bind the show/hide column checkboxes to the saved visibility
+                    $scope.columns = JSON.parse($window.localStorage['DataTables_typesTable_/'])['columns'];
+                    // also, need to reset column searchable to the column's saved visibility
+                    $scope.columns.forEach(function(column, index) {
+                        settings.aoColumns[index].bSearchable = column.visible;
+                    });
+                    // redraw so each column's searchable value is taken into account
+                    this.api().rows().invalidate().draw();
+                }
+            });
+
+        $('.column-settings input:checkbox').click(function() {
+            const column = table.column($(this).data('column') + ':name');
+            // toggle visibility of the selected table column
+            column.visible(!column.visible());
+            // hack alert: there is no api to set searchable on a column but if the column is visible, then it's searchable
+            table.context[0].aoColumns[column.index()].bSearchable = column.visible();
+            // redraw so the column's searchable value is taken into account
+            table.rows().invalidate().draw();
         });
     });
 
 };
 
-TableTypesController.$inject = ['types', '$scope', '$state', 'locationUtils'];
+TableTypesController.$inject = ['types', '$scope', '$state', '$window', 'dateUtils', 'locationUtils'];
 module.exports = TableTypesController;
