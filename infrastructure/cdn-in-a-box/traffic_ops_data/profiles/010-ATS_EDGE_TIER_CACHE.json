@@ -252,6 +252,12 @@
 			"value": ""
 		},
 		{
+			"configFile": "plugin.config",
+			"name": "remap_stats.so",
+			"secure": false,
+			"value": ""
+		},
+		{
 			"configFile": "astats.config",
 			"name": "allow_ip",
 			"secure": false,
