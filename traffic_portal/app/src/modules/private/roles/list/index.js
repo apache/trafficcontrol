@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.roles.list', [])
 						controller: 'TableRolesController',
 						resolve: {
 							roles: function(roleService) {
-								return roleService.getRoles({ orderby: 'privLevel', orderbydown : '' });
+								return roleService.getRoles({ orderby: 'privLevel', sortOrder : 'desc' });
 							}
 						}
 					}

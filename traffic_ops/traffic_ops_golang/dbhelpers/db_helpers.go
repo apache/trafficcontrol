@@ -94,8 +94,14 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 			}
 			paginationClause += BaseOffset + " " + strconv.Itoa((page-1)*limitInt)
 		}
-	if _, exists := parameters["orderbydown"]; exists {
-		orderBy += " DESC"
+
+	if sortOrder, exists := parameters["sortOrder"]; exists {
+		log.Debugln("sortOrder: ", sortOrder)
+		if sortOrder == "desc" {
+			orderBy += " DESC"
+		} else if sortOrder != "asc" {
+			log.Debugln("Incorrect name for sortOrder: ", sortOrder)
+		}
 	}
 
 	if whereClause == BaseWhere {
