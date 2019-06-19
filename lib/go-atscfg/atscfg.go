@@ -28,6 +28,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const InvalidID = -1
+
+const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer officially supports ATS 5.
+
 const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
 
 type ServerInfo struct {
@@ -36,6 +40,7 @@ type ServerInfo struct {
 	CDNID                         int
 	DomainName                    string
 	HostName                      string
+	HTTPSPort                     int
 	ID                            int
 	IP                            string
 	ParentCacheGroupID            int

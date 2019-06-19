@@ -1,4 +1,4 @@
-package ats
+package atsserver
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 
 	"github.com/lib/pq"
 )
@@ -72,7 +73,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	toolName, toURL, err := GetToolNameAndURL(inf.Tx.Tx)
+	toolName, toURL, err := ats.GetToolNameAndURL(inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting toolname and TO url parameters: "+err.Error()))
 		return
@@ -166,7 +167,7 @@ FROM
 // GetATSMajorVersion returns the major version of the given profile's package trafficserver parameter.
 // If no parameter exists, this does not return an error, but rather logs a warning and uses DefaultATSVersion.
 func GetATSMajorVersion(tx *sql.Tx, serverProfileID int) (int, error) {
-	atsVersion, _, err := GetProfileParamValue(tx, serverProfileID, "package", "trafficserver")
+	atsVersion, _, err := ats.GetProfileParamValue(tx, serverProfileID, "package", "trafficserver")
 	if err != nil {
 		return 0, errors.New("getting profile param value: " + err.Error())
 	}
