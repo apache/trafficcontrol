@@ -19,6 +19,8 @@
 
 var TableTypesController = function(types, $scope, $state, $window, dateUtils, locationUtils) {
 
+    let table;
+
     $scope.types = types;
 
     $scope.getRelativeTime = dateUtils.getRelativeTime;
@@ -35,8 +37,17 @@ var TableTypesController = function(types, $scope, $state, $window, dateUtils, l
         $state.reload(); // reloads all the resolves for the view
     };
 
+    $scope.toggleVisibility = function(colName) {
+        const col = table.column(colName + ':name');
+        col.visible(!col.visible());
+        // hack alert: there is no api to set searchable on a column but if the column is visible, then it's searchable
+        table.context[0].aoColumns[col.index()].bSearchable = col.visible();
+        // redraw so the column's searchable value is taken into account
+        table.rows().invalidate().draw();
+    };
+
     angular.element(document).ready(function () {
-        const table = $('#typesTable').DataTable({
+        table = $('#typesTable').DataTable({
                 "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
                 "iDisplayLength": 25,
                 "aaSorting": [],
@@ -52,7 +63,7 @@ var TableTypesController = function(types, $scope, $state, $window, dateUtils, l
                 "initComplete": function(settings, json) {
                     // need to bind the show/hide column checkboxes to the saved visibility
                     $scope.columns = JSON.parse($window.localStorage['DataTables_typesTable_/'])['columns'];
-                    // also, need to reset column searchable to the column's saved visibility
+                    // if the column is visible, then it's searchable so set searchability == visibility
                     $scope.columns.forEach(function(column, index) {
                         settings.aoColumns[index].bSearchable = column.visible;
                     });
@@ -60,16 +71,6 @@ var TableTypesController = function(types, $scope, $state, $window, dateUtils, l
                     this.api().rows().invalidate().draw();
                 }
             });
-
-        $('.column-settings input:checkbox').click(function() {
-            const column = table.column($(this).data('column') + ':name');
-            // toggle visibility of the selected table column
-            column.visible(!column.visible());
-            // hack alert: there is no api to set searchable on a column but if the column is visible, then it's searchable
-            table.context[0].aoColumns[column.index()].bSearchable = column.visible();
-            // redraw so the column's searchable value is taken into account
-            table.rows().invalidate().draw();
-        });
     });
 
 };

@@ -31,24 +31,9 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem">
+                    <li role="menuitem" ng-repeat="c in columns">
                         <div class="checkbox">
-                            <label><input type="checkbox" data-column="name" ng-model="columns[0].visible"> Name</label>
-                        </div>
-                    </li>
-                    <li role="menuitem">
-                        <div class="checkbox">
-                            <label><input type="checkbox" data-column="useInTable" ng-model="columns[1].visible"> Use In Table</label>
-                        </div>
-                    </li>
-                    <li role="menuitem">
-                        <div class="checkbox">
-                            <label><input type="checkbox" data-column="description" ng-model="columns[2].visible"> Description</label>
-                        </div>
-                    </li>
-                    <li role="menuitem">
-                        <div class="checkbox">
-                            <label><input type="checkbox" data-column="lastUpdated" ng-model="columns[3].visible"> Last Updated</label>
+                            <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
                         </div>
                     </li>
                 </ul>
