@@ -6310,6 +6310,7 @@
 			search:  _fnSearchToCamel( settings.oPreviousSearch ),
 			columns: $.map( settings.aoColumns, function ( col, i ) {
 				return {
+					name: col.name,
 					visible: col.bVisible,
 					search: _fnSearchToCamel( settings.aoPreSearchCols[i] )
 				};
