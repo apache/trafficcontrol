@@ -1,4 +1,4 @@
-package ats
+package atsserver
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
 
 func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
@@ -38,13 +39,13 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	serverName, userErr, sysErr, errCode := getServerNameFromNameOrID(inf.Tx.Tx, inf.Params["server-name-or-id"])
+	serverName, userErr, sysErr, errCode := ats.GetServerNameFromNameOrID(inf.Tx.Tx, inf.Params["server-name-or-id"])
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
-	server, ok, err := getServerInfoByHost(inf.Tx.Tx, serverName)
+	server, ok, err := ats.GetServerInfoByHost(inf.Tx.Tx, serverName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetConfigMetaData getting server info: "+err.Error()))
 		return
@@ -53,7 +54,7 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmParams, err := GetTMParams(inf.Tx.Tx)
+	tmParams, err := ats.GetTMParams(inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetConfigMetaData getting tm.url parameter: "+err.Error()))
 		return
@@ -78,7 +79,7 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 		ConfigFiles: []tc.ATSConfigMetaDataConfigFile{},
 	}
 
-	locationParams, err := GetLocationParams(inf.Tx.Tx, int(server.ProfileID))
+	locationParams, err := ats.GetLocationParams(inf.Tx.Tx, int(server.ProfileID))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetConfigMetaData getting location parameters: "+err.Error()))
 		return
@@ -86,7 +87,7 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 
 	if locationParams["remap.config"].Location != "" {
 		configLocation := locationParams["remap.config"].Location
-		uriSignedDSes, err := GetServerURISignedDSes(inf.Tx.Tx, server.HostName, server.Port)
+		uriSignedDSes, err := ats.GetServerURISignedDSes(inf.Tx.Tx, server.HostName, server.Port)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("GetConfigMetaData getting server uri-signed dses: "+err.Error()))
 			return
@@ -135,104 +136,6 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteRespRaw(w, r, atsData)
-}
-
-// GetTMParams returns the global "tm.url" and "tm.rev_proxy.url" parameters, and any error. If either param doesn't exist, an empty string is returned without error.
-func GetTMParams(tx *sql.Tx) (TMParams, error) {
-	rows, err := tx.Query(`SELECT name, value from parameter where config_file = 'global' AND (name = 'tm.url' OR name = 'tm.rev_proxy.url')`)
-	if err != nil {
-		return TMParams{}, errors.New("querying: " + err.Error())
-	}
-	defer rows.Close()
-
-	p := TMParams{}
-	for rows.Next() {
-		name := ""
-		val := ""
-		if err := rows.Scan(&name, &val); err != nil {
-			return TMParams{}, errors.New("scanning: " + err.Error())
-		}
-		if name == "tm.url" {
-			p.URL = val
-		} else if name == "tm.rev_proxy.url" {
-			p.ReverseProxyURL = val
-		} else {
-			return TMParams{}, errors.New("querying got unexpected parameter: " + name + " (value: '" + val + "')") // should never happen
-		}
-	}
-	return p, nil
-}
-
-// GetLocationParams returns a map[configFile]locationParams, and any error. If either param doesn't exist, an empty string is returned without error.
-func GetLocationParams(tx *sql.Tx, profileID int) (map[string]ConfigProfileParams, error) {
-	qry := `
-SELECT
-  p.name,
-  p.config_file,
-  p.value
-FROM
-  parameter p
-  JOIN profile_parameter pp ON pp.parameter = p.id
-WHERE
-  pp.profile = $1
-`
-	rows, err := tx.Query(qry, profileID)
-	if err != nil {
-		return nil, errors.New("querying: " + err.Error())
-	}
-	defer rows.Close()
-
-	params := map[string]ConfigProfileParams{}
-	for rows.Next() {
-		name := ""
-		file := ""
-		val := ""
-		if err := rows.Scan(&name, &file, &val); err != nil {
-			return nil, errors.New("scanning: " + err.Error())
-		}
-		if name == "location" {
-			p := params[file]
-			p.FileNameOnDisk = file
-			p.Location = val
-			params[file] = p
-		} else if name == "URL" {
-			p := params[file]
-			p.URL = val
-			params[file] = p
-		}
-	}
-	return params, nil
-}
-
-// GetServerURISignedDSes returns a list of delivery service names which have the given server assigned and have URI signing enabled, and any error.
-func GetServerURISignedDSes(tx *sql.Tx, serverHostName string, serverPort int) ([]tc.DeliveryServiceName, error) {
-	qry := `
-SELECT
-  ds.xml_id
-FROM
-  deliveryservice ds
-  JOIN deliveryservice_server dss ON ds.id = dss.deliveryservice
-  JOIN server s ON s.id = dss.server
-WHERE
-  s.host_name = $1
-  AND s.tcp_port = $2
-  AND ds.signing_algorithm = 'uri_signing'
-`
-	rows, err := tx.Query(qry, serverHostName, serverPort)
-	if err != nil {
-		return nil, errors.New("querying: " + err.Error())
-	}
-	defer rows.Close()
-
-	dses := []tc.DeliveryServiceName{}
-	for rows.Next() {
-		ds := tc.DeliveryServiceName("")
-		if err := rows.Scan(&ds); err != nil {
-			return nil, errors.New("scanning: " + err.Error())
-		}
-		dses = append(dses, ds)
-	}
-	return dses, nil
 }
 
 func getServerScope(tx *sql.Tx, cfgFile string, serverType string) (tc.ATSConfigMetaDataConfigFileScope, error) {
@@ -306,7 +209,7 @@ func getScope(tx *sql.Tx, cfgFile string) (tc.ATSConfigMetaDataConfigFileScope, 
 		return tc.ATSConfigMetaDataConfigFileScopeCDNs, nil
 	}
 
-	scope, ok, err := GetFirstScopeParameter(tx, cfgFile)
+	scope, ok, err := ats.GetFirstScopeParameter(tx, cfgFile)
 	if err != nil {
 		return tc.ATSConfigMetaDataConfigFileScopeInvalid, errors.New("getting scope parameter: " + err.Error())
 	}
@@ -314,28 +217,4 @@ func getScope(tx *sql.Tx, cfgFile string) (tc.ATSConfigMetaDataConfigFileScope, 
 		scope = string(tc.ATSConfigMetaDataConfigFileScopeServers)
 	}
 	return tc.ATSConfigMetaDataConfigFileScope(scope), nil
-}
-
-type TMParams struct {
-	URL             string
-	ReverseProxyURL string
-}
-
-type ConfigProfileParams struct {
-	FileNameOnDisk string
-	Location       string
-	URL            string
-	APIURI         string
-}
-
-// GetFirstScopeParameter returns the value of the arbitrarily-first parameter with the name 'scope' and the given config file, whether a parameter was found, and any error.
-func GetFirstScopeParameter(tx *sql.Tx, cfgFile string) (string, bool, error) {
-	v := ""
-	if err := tx.QueryRow(`SELECT p.value FROM parameter p WHERE p.config_file = $1 AND p.name = 'scope'`, cfgFile).Scan(&v); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("querying first scope parameter: " + err.Error())
-	}
-	return v, true, nil
 }

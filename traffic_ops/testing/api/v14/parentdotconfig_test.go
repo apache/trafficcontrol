@@ -20,8 +20,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func TestParentDotConfig(t *testing.T) {
@@ -71,8 +69,6 @@ func GetTestParentDotConfig(t *testing.T) {
 }
 
 func CreateTestDeliveryServiceServers(t *testing.T) {
-	log.Debugln("DeleteTestDeliveryServiceServers")
-
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServices: %v\n", err)
@@ -80,7 +76,6 @@ func CreateTestDeliveryServiceServers(t *testing.T) {
 	if len(dses) < 1 {
 		t.Errorf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
-	ds := dses[0]
 
 	servers, _, err := TOSession.GetServers()
 	if err != nil {
@@ -89,11 +84,17 @@ func CreateTestDeliveryServiceServers(t *testing.T) {
 	if len(servers) < 1 {
 		t.Errorf("GET Servers returned no dses, must have at least 1 to test ds-servers")
 	}
-	server := servers[0]
 
-	_, err = TOSession.CreateDeliveryServiceServers(ds.ID, []int{server.ID}, true)
-	if err != nil {
-		t.Errorf("POST delivery service servers: %v\n", err)
+	for _, ds := range dses {
+		serverIDs := []int{}
+		for _, server := range servers {
+			serverIDs = append(serverIDs, server.ID)
+		}
+
+		_, err = TOSession.CreateDeliveryServiceServers(ds.ID, serverIDs, true)
+		if err != nil {
+			t.Errorf("POST delivery service servers: %v\n", err)
+		}
 	}
 }
 
@@ -117,7 +118,7 @@ func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
 	}
 	server := servers[0]
 
-	dsServers, _, err := TOSession.GetDeliveryServiceServers()
+	dsServers, _, err := TOSession.GetDeliveryServiceServersN(1000000)
 	if err != nil {
 		t.Errorf("GET delivery service servers: %v\n", err)
 	}
