@@ -6400,6 +6400,8 @@
 					// Visibility
 					if ( col.visible !== undefined ) {
 						columns[i].bVisible = col.visible;
+						// searchability is based on visibility
+						columns[i].bSearchable = col.visible;
 					}
 
 					// Search
@@ -8576,6 +8578,8 @@
 
 		// Common actions
 		col.bVisible = vis;
+		// set searchable to same value as visible
+		col.bSearchable = vis;
 		_fnDrawHead( settings, settings.aoHeader );
 		_fnDrawHead( settings, settings.aoFooter );
 

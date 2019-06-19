@@ -40,9 +40,6 @@ var TableTypesController = function(types, $scope, $state, $window, dateUtils, l
     $scope.toggleVisibility = function(colName) {
         const col = table.column(colName + ':name');
         col.visible(!col.visible());
-        // hack alert: there is no api to set searchable on a column but if the column is visible, then it's searchable
-        table.context[0].aoColumns[col.index()].bSearchable = col.visible();
-        // redraw so the column's searchable value is taken into account
         table.rows().invalidate().draw();
     };
 
@@ -63,12 +60,6 @@ var TableTypesController = function(types, $scope, $state, $window, dateUtils, l
                 "initComplete": function(settings, json) {
                     // need to bind the show/hide column checkboxes to the saved visibility
                     $scope.columns = JSON.parse($window.localStorage['DataTables_typesTable_/'])['columns'];
-                    // if the column is visible, then it's searchable so set searchability == visibility
-                    $scope.columns.forEach(function(column, index) {
-                        settings.aoColumns[index].bSearchable = column.visible;
-                    });
-                    // redraw so each column's searchable value is taken into account
-                    this.api().rows().invalidate().draw();
                 }
             });
     });
