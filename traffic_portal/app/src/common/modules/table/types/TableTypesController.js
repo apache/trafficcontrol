@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTypesController = function(types, $scope, $state, $window, dateUtils, locationUtils) {
+var TableTypesController = function(types, $scope, $state, dateUtils, locationUtils) {
 
     let table;
 
@@ -58,13 +58,13 @@ var TableTypesController = function(types, $scope, $state, $window, dateUtils, l
                     realtime: false
                 },
                 "initComplete": function(settings, json) {
-                    // need to bind the show/hide column checkboxes to the saved visibility
-                    $scope.columns = JSON.parse($window.localStorage['DataTables_typesTable_/'])['columns'];
+                    // need to create the show/hide column checkboxes and bind to the current visibility
+                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_typesTable_/')).columns;
                 }
             });
     });
 
 };
 
-TableTypesController.$inject = ['types', '$scope', '$state', '$window', 'dateUtils', 'locationUtils'];
+TableTypesController.$inject = ['types', '$scope', '$state', 'dateUtils', 'locationUtils'];
 module.exports = TableTypesController;
