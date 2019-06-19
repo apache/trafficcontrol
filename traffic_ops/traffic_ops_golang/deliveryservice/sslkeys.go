@@ -56,6 +56,7 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating SSL keys for delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %s, ACTION: Generate SSL keys", +*req.DeliveryService, **req.Key), user, tx)
 	api.WriteResp(w, r, "Successfully created ssl keys for "+*req.DeliveryService)
 }
 

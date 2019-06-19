@@ -106,6 +106,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.WriteRespAlert(w, r, tc.WarnLevel, "WARNING: SSL keys were successfully added for '"+*req.DeliveryService+"', but the input certificate may be invalid (certificate verification produced a different chain)")
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %s, ACTION: Add SSL keys", +*req.DeliveryService, **req.Key), user, tx)
 	api.WriteResp(w, r, "Successfully added ssl keys for "+*req.DeliveryService)
 }
 
@@ -247,6 +248,7 @@ func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %s, ACTION: Add SSL keys", xmlID, xmlID), user, tx)
 	api.WriteResp(w, r, "Successfully deleted ssl keys for "+xmlID)
 }
 
