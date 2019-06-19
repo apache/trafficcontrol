@@ -162,7 +162,7 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		"tenant":          dbhelpers.WhereColumnInfo{"o.tenant", api.IsInt},
 	}
 
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
+	where, orderBy, limit, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
@@ -174,7 +174,7 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "o.tenant", tenantIDs)
 
-	query := selectQuery() + where + orderBy
+	query := selectQuery() + where + orderBy + limit
 	log.Debugln("Query is ", query)
 
 	rows, err = tx.NamedQuery(query, queryValues)

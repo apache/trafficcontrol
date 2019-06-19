@@ -86,12 +86,12 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 }
 
 func GenericRead(val GenericReader) ([]interface{}, error, error, int) {
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(val.APIInfo().Params, val.ParamColumns())
+	where, orderBy, limit, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
-	query := val.SelectQuery() + where + orderBy
+	query := val.SelectQuery() + where + orderBy + limit
 	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("querying " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError

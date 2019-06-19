@@ -38,10 +38,12 @@ type WhereColumnInfo struct {
 
 const BaseWhere = "\nWHERE"
 const BaseOrderBy = "\nORDER BY"
+const BaseLimit = "\nLIMIT"
 
-func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, map[string]interface{}, []error) {
+func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
 	orderBy := BaseOrderBy
+	limit := BaseLimit
 	var criteria string
 	var queryValues map[string]interface{}
 	var errs []error
@@ -51,7 +53,7 @@ func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map
 		whereClause += " " + criteria
 	}
 	if len(errs) > 0 {
-		return "", "", queryValues, errs
+		return "", "", "", queryValues, errs
 	}
 
 	if orderby, ok := parameters["orderby"]; ok {
@@ -59,18 +61,40 @@ func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map
 		if colInfo, ok := queryParamsToSQLCols[orderby]; ok {
 			log.Debugln("orderby column ", colInfo)
 			orderBy += " " + colInfo.Column
+
+			// if orderby is specified and valid, also check for sortOrder
+			if sortOrder, exists := parameters["sortOrder"]; exists {
+				log.Debugln("sortOrder: ", sortOrder)
+				if sortOrder == "desc" {
+					orderBy += " DESC"
+				} else if sortOrder != "asc" {
+					log.Debugln("Incorrect name for sortOrder: ", sortOrder)
+				}
+			}
 		} else {
 			log.Debugln("Incorrect name for orderby: ", orderby)
 		}
 	}
+	if limitParam, exists := parameters["limit"]; exists {
+		log.Debugln("limit: ", limitParam)
+		//if err := IsInt(limitParam); err != nil {
+		//	log.Debugln("Invalid value for limit: ", limitParam)
+		//} else {
+		limit += " " + limitParam
+		//}
+	}
+
 	if whereClause == BaseWhere {
 		whereClause = ""
 	}
 	if orderBy == BaseOrderBy {
 		orderBy = ""
 	}
-	log.Debugf("\n--\n Where: %s \n Order By: %s", whereClause, orderBy)
-	return whereClause, orderBy, queryValues, errs
+	if limit == BaseLimit {
+		limit = ""
+	}
+	log.Debugf("\n--\n Where: %s \n Order By: %s \n Limit: %s", whereClause, orderBy, limit)
+	return whereClause, orderBy, limit, queryValues, errs
 }
 
 func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {

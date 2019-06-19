@@ -388,12 +388,12 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 		"shortName": dbhelpers.WhereColumnInfo{"short_name", nil},
 		"type":      dbhelpers.WhereColumnInfo{"cachegroup.type", nil},
 	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(cg.ReqInfo.Params, queryParamsToQueryCols)
+	where, orderBy, limit, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
-	query := SelectQuery() + where + orderBy
+	query := SelectQuery() + where + orderBy + limit
 	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("cachegroup read: querying: " + err.Error()), http.StatusInternalServerError
