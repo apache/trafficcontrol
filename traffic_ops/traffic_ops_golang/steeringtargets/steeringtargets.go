@@ -111,11 +111,11 @@ func read(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser) ([]
 		"deliveryservice": dbhelpers.WhereColumnInfo{"st.deliveryservice", api.IsInt},
 		"target":          dbhelpers.WhereColumnInfo{"st.target", api.IsInt},
 	}
-	where, orderBy, limit, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, nil, util.JoinErrs(errs), http.StatusBadRequest
 	}
-	query := selectQuery() + where + orderBy + limit
+	query := selectQuery() + where + orderBy + pagination
 
 	userTenants, err := tenant.GetUserTenantListTx(*user, tx.Tx)
 	if err != nil {

@@ -48,8 +48,8 @@ FROM table t
 		"param1": WhereColumnInfo{"t.col1", nil},
 		"param2": WhereColumnInfo{"t.col2", nil},
 	}
-	where, orderBy, queryValues, _ := BuildWhereAndOrderByAndPagination(v, queryParamsToSQLCols)
-	query := selectStmt + where + orderBy + limit
+	where, orderBy, pagination, queryValues, _ := BuildWhereAndOrderByAndPagination(v, queryParamsToSQLCols)
+	query := selectStmt + where + orderBy + pagination
 	actualQuery := stripAllWhitespace(query)
 
 	if queryValues == nil {

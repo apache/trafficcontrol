@@ -233,12 +233,12 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
 	}
 
-	where, orderBy, limit, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectQuery() + queryAddition + where + orderBy + limit
+	query := selectQuery() + queryAddition + where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
 	rows, err := tx.NamedQuery(query, queryValues)

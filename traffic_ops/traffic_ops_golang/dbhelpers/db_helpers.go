@@ -39,11 +39,12 @@ type WhereColumnInfo struct {
 const BaseWhere = "\nWHERE"
 const BaseOrderBy = "\nORDER BY"
 const BaseLimit = "\nLIMIT"
+const BaseOffset = "\nOFFSET"
 
 func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
 	orderBy := BaseOrderBy
-	limit := BaseLimit
+	paginationClause := BaseLimit
 	var criteria string
 	var queryValues map[string]interface{}
 	var errs []error
@@ -75,13 +76,13 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 			log.Debugln("Incorrect name for orderby: ", orderby)
 		}
 	}
-	if limitParam, exists := parameters["limit"]; exists {
-		log.Debugln("limit: ", limitParam)
-		//if err := IsInt(limitParam); err != nil {
-		//	log.Debugln("Invalid value for limit: ", limitParam)
-		//} else {
-		limit += " " + limitParam
-		//}
+	// needs error checking
+	if limit, exists := parameters["limit"]; exists {
+		log.Debugln("limit: ", limit)
+		paginationClause += " " + limit
+		if offset, exists := parameters["offset"]; exists {
+			paginationClause += " " + BaseOffset + " " + offset
+		}
 	}
 
 	if whereClause == BaseWhere {
@@ -90,11 +91,11 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 	if orderBy == BaseOrderBy {
 		orderBy = ""
 	}
-	if limit == BaseLimit {
-		limit = ""
+	if paginationClause == BaseLimit {
+		paginationClause = ""
 	}
-	log.Debugf("\n--\n Where: %s \n Order By: %s \n Limit: %s", whereClause, orderBy, limit)
-	return whereClause, orderBy, limit, queryValues, errs
+	log.Debugf("\n--\n Where: %s \n Order By: %s \n Limit+Offset: %s", whereClause, orderBy, paginationClause)
+	return whereClause, orderBy, paginationClause, queryValues, errs
 }
 
 func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {

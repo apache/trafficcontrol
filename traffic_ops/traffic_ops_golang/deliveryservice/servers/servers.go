@@ -509,7 +509,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 		"xml_id": dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
 		"xmlId":  dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
 	}
-	where, orderBy, limit, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
 		return nil, nil, errors.New("reading server dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
 	}
@@ -528,7 +528,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
 
-	query := deliveryservice.GetDSSelectQuery() + where + orderBy + limit
+	query := deliveryservice.GetDSSelectQuery() + where + orderBy + pagination
 	queryValues["server"] = dss.APIInfo().Params["id"]
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
