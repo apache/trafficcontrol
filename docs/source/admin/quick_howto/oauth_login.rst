@@ -18,7 +18,7 @@
 Configure OAuth Login
 *********************
 
-An opt-in configuration for SSO using OAuth is supported and can be configured through the :file:`/opt/traffic_portal/public/traffic_portal_properties.json` and :file:`/opt/traffic_ops/app/conf/cdn.conf` files. OAuth uses a third party provider to authenticate the user. Once enabled, the Traffic Portal Login page will no longer accept username and password but instead will authenticate using OAuth. This will redirect to the ``oAuthUrl`` from :file:`/opt/traffic_portal/public/traffic_portal_properties.json` which will authenticate the user then redirect to the new ``/sso`` page with a JSON Web Token added as a query parameter. The new ``/sso`` page will parse the token from the URL and ``POST`` this information to the :ref:`to-api-user-login-oauth` API endpoint. The :ref:`to-api-user-login-oauth` API endpoint will decode the token, validate that it is between the issued time and the expiration time, and validate that the public key set URL is allowed by the list of whitelisted URLs read from :file:`/opt/traffic_ops/app/conf/cdn.conf`. It will then authorize the user from the database and return a mojolicious cookie as per the normal login workflow.
+An opt-in configuration for SSO using OAuth is supported and can be configured through the :file:`/opt/traffic_portal/public/traffic_portal_properties.json` and :file:`/opt/traffic_ops/app/conf/cdn.conf` files. OAuth uses a third party provider to authenticate the user. Once enabled, the Traffic Portal Login page will no longer accept username and password but instead will authenticate using OAuth. This will redirect to the ``oAuthUrl`` from :file:`/opt/traffic_portal/public/traffic_portal_properties.json` which will authenticate the user then redirect to the new ``/sso`` page with an authorization code. The new ``/sso`` page will then construct the full URL to exchange the authorization code for a JSON Web Token, and ``POST`` this information to the :ref:`to-api-user-login-oauth` API endpoint. The :ref:`to-api-user-login-oauth` API endpoint will ``POST`` to the URL provided and receive JSON Web Token. The :ref:`to-api-user-login-oauth` API endpoint will decode the token, validate that it is between the issued time and the expiration time, and validate that the public key set URL is allowed by the list of whitelisted URLs read from :file:`/opt/traffic_ops/app/conf/cdn.conf`. It will then authorize the user from the database and return a mojolicious cookie as per the normal login workflow.
 
 .. Note:: Ensure that the user names in the Traffic Ops database match the value returned in the `sub` field in the response from the OAuth provider when setting up with the OAuth provider.  The `sub` field is used to reference the roles in the Traffic Ops database in order to authorize the user.
 
@@ -39,11 +39,13 @@ To configure OAuth login:
 		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
 		| oAuthUrl                     | string     | URL to your OAuth provider                                                                                                                |
 		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
-		| oAuthTokenQueryParam         | string     | Query parameter containing token from OAuth provider, defaults to `access_token` (returned in URL when redirected to ``/sso`` endpoint)   |
-		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
 		| redirectUriParameterOverride | string     | Query parameter override if the oAuth provider requires a different key for the redirect_uri parameter, defaults to ``redirect_uri``      |
 		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
 		| clientId                     | string     | Client id registered with OAuth provider, passed in with `client_id` parameter                                                            |
+		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+		| oAuthCodeTokenUrl            | string     | URL to your OAuth provider's endpoint for exchanging the code (from oAuthUrl) for a token                                                 |
+		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+		| clientSecret                 | string     | Client secret registered with OAuth provider to verify client, passed in with `client_secret` parameter                                   |
 		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -52,11 +54,13 @@ To configure OAuth login:
 
 		{
 			"oAuth": {
+				"_comment": "Opt-in OAuth properties for SSO login. See http://traffic-control-cdn.readthedocs.io/en/release-4.0.0/admin/quick_howto/oauth_login.html for more details. redirectUriParameterOverride defaults to redirect_uri if left blank.",
 				"enabled": true,
 				"oAuthUrl": "example.oauth.com",
-				"oAuthTokenQueryParam": "access_token",
 				"redirectUriParameterOverride": "",
-				"clientId": ""
+				"clientId": "",
+				"oAuthCodeTokenUrl": "example.oauth.com/oauth/token",
+				"clientSecret": ""
 			}
 		}
 

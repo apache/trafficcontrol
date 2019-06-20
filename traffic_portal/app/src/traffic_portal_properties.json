@@ -409,12 +409,14 @@
       ]
     },
     "oAuth": {
-      "_comment": "Opt-in OAuth properties for SSO login. See http://traffic-control-cdn.readthedocs.io/en/release-4.0.0/admin/quick_howto/oauth_login.html for more details. oAuthTokenQueryParam defaults to 'access_token' if left blank. redirectUriParameterOverride defaults to redirect_uri if left blank.",
+      "_comment": "Opt-in OAuth properties for SSO login. See http://traffic-control-cdn.readthedocs.io/en/release-4.0.0/admin/quick_howto/oauth_login.html for more details. redirectUriParameterOverride defaults to redirect_uri if left blank.",
       "enabled": false,
       "oAuthUrl": "https://oauthProvider.example.com/auth",
       "oAuthTokenQueryParam": "example_token_key",
       "redirectUriParameterOverride": "example_redirect_url_key",
-      "clientId": "exampleClient"
+      "clientId": "exampleClient",
+      "oAuthCodeTokenUrl": "https://oauthProvider.example.com/auth/token",
+      "clientSecret": "AbCd123"
     }
   }
 }
