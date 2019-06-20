@@ -193,7 +193,8 @@ func (s *Server) redirectTLS(w http.ResponseWriter, r *http.Request) {
 			host = r.Host
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"error": "marshalling: ` + err.Error() + `"}`))
+			w.Write([]byte(`{"error": "getting host from request: ` + err.Error() + `"}`))
+			return
 		}
 	}
 	http.Redirect(w, r, "https://"+host+s.addrToRedirect+r.RequestURI, http.StatusMovedPermanently)
