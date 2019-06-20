@@ -180,12 +180,12 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Content invalidation jobs
 		{1.1, http.MethodGet, `jobs(/|\.json/?)?$`, api.ReadHandler(&invalidationjobs.InvalidationJob{}), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.4, http.MethodDelete, `jobs/?$`, invalidationjobs.Delete, auth.PrivLevelOperations, Authenticated, nil},
-		{1.4, http.MethodPut, `jobs/?$`, invalidationjobs.Update, auth.PrivLevelOperations, Authenticated, nil},
-		{1.4, http.MethodPatch, `jobs/?$`, invalidationjobs.Patch, auth.PrivLevelOperations, Authenticated, nil},
-		{1.4, http.MethodPost, `jobs/?`, invalidationjobs.Create, auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodDelete, `jobs/?$`, invalidationjobs.Delete, auth.PrivLevelPortal, Authenticated, nil},
+		{1.4, http.MethodPut, `jobs/?$`, invalidationjobs.Update, auth.PrivLevelPortal, Authenticated, nil},
+		{1.4, http.MethodPatch, `jobs/?$`, invalidationjobs.Patch, auth.PrivLevelPortal, Authenticated, nil},
+		{1.4, http.MethodPost, `jobs/?`, invalidationjobs.Create, auth.PrivLevelPortal, Authenticated, nil},
 		{1.1, http.MethodGet, `jobs/{id}(/|\.json/?)?$`, api.ReadHandler(&invalidationjobs.InvalidationJob{}), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPost, `user/current/jobs(/|\.json/?)?$`, invalidationjobs.CreateUserJob, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPost, `user/current/jobs(/|\.json/?)?$`, invalidationjobs.CreateUserJob, auth.PrivLevelPortal, Authenticated, nil},
 		{1.1, http.MethodGet, `user/current/jobs(/|\.json/?)?$`, invalidationjobs.GetUserJobs, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Login
