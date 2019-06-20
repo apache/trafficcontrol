@@ -191,14 +191,15 @@ This page contains a table displaying all :term:`Delivery Service`\ s visible to
 - clone an existing :term:`Delivery Service`
 - update an existing :term:`Delivery Service`
 - delete an existing :term:`Delivery Service`
-- compare :term:`Delivery Service`\ s
+- compare :term:`Delivery Services`
 - manage :term:`Delivery Service` SSL keys
 - manage :term:`Delivery Service` URL signature keys
 - manage :term:`Delivery Service` URI signing keys
-- view and assign :term:`Delivery Service`\ servers
+- view and assign :term:`Delivery Service` servers
 - create, update and delete :term:`Delivery Service` regular expressions
 - view and create :term:`Delivery Service` invalidate content jobs
 - manage steering targets
+- test :ref:`pattern-based-consistenthash`
 - view and manage static DNS records within a :term:`Delivery Service` subdomain
 
 	.. seealso:: :ref:`static-dns-qht`

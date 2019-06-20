@@ -21,6 +21,7 @@ package manager
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -250,8 +251,8 @@ func monitorConfigListen(
 				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: false})
 			}
 
-			url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
-			if url == "" {
+			pollURLStr := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
+			if pollURLStr == "" {
 				log.Errorf("monitor config server %v profile %v has no polling URL; can't poll", srv.HostName, srv.Profile)
 				continue
 			}
@@ -268,18 +269,7 @@ func monitorConfigListen(
 				log.Infof("health.polling.type for '%v' is empty, using default '%v'", srv.HostName, pollType)
 			}
 
-			port := ""
-			if srv.Port != 0 {
-				port = ":" + strconv.Itoa(srv.Port)
-			}
-
-			r := strings.NewReplacer(
-				"${hostname}", srv.IP+port,
-				"${interface_name}", srv.InterfaceName,
-				"application=plugin.remap", "application=system",
-				"application=", "application=system",
-			)
-			url = r.Replace(url)
+			pollURLStr = createServerHealthPollURL(pollURLStr, srv)
 
 			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
 			if connTimeout == 0 {
@@ -287,9 +277,9 @@ func monitorConfigListen(
 				log.Warnln("profile " + srv.Profile + " health.connection.timeout Parameter is missing or zero, using default " + DefaultHealthConnectionTimeout.String())
 			}
 
-			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
-			r = strings.NewReplacer("application=system", "application=")
-			statURL := r.Replace(url)
+			healthURLs[srv.HostName] = poller.PollConfig{URL: pollURLStr, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
+
+			statURL := createServerStatPollURL(pollURLStr)
 			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 		}
 
@@ -340,4 +330,44 @@ func monitorConfigListen(
 			}
 		}
 	}
+}
+
+// createServerHealthPollURL takes the template pollingURLStr, and replaces variables with data from srv, and returns the polling URL for srv.
+func createServerHealthPollURL(pollingURLStr string, srv tc.TrafficServer) string {
+	pollingURLStr = strings.NewReplacer(
+		"${hostname}", srv.IP,
+		"${interface_name}", srv.InterfaceName,
+		"application=plugin.remap", "application=system",
+		"application=", "application=system",
+	).Replace(pollingURLStr)
+
+	if strings.HasPrefix(strings.ToLower(pollingURLStr), "https") {
+		if srv.HTTPSPort != 0 {
+			pollURL, err := url.Parse(pollingURLStr)
+			if err != nil {
+				log.Warnln("profile " + srv.Profile + " cache '" + srv.FQDN + "' polling URL '" + pollingURLStr + "' failed to parse, may not be a valid URL! Using anyway, not using custom HTTPS Port " + strconv.Itoa(srv.HTTPSPort) + "!")
+			} else if pollURL.Port() == "" { // if there's both an HTTPS Port and a port in the polling URL, the polling URL takes precedence
+				pollURL.Host += ":" + strconv.Itoa(srv.HTTPSPort)
+				pollingURLStr = pollURL.String()
+			}
+		}
+	} else {
+		if srv.Port != 0 {
+			pollURL, err := url.Parse(pollingURLStr)
+			if err != nil {
+				log.Warnln("profile " + srv.Profile + " cache '" + srv.FQDN + "' polling URL '" + pollingURLStr + "' failed to parse, may not be a valid URL! Using anyway, not using custom TCP Port " + strconv.Itoa(srv.Port) + "!")
+			} else if pollURL.Port() == "" { // if there's both a TCP Port and a port in the polling URL, the polling URL takes precedence
+				pollURL.Host += ":" + strconv.Itoa(srv.Port)
+				pollingURLStr = pollURL.String()
+			}
+		}
+	}
+
+	return pollingURLStr
+}
+
+// createServerStatPollURL takes the health polling URL string, and modifies it to be the stat poll URL.
+// Note this does not replace template variables with server values, healthPollURLStr must be the health URL for a given server, not a template.
+func createServerStatPollURL(healthPollURLStr string) string {
+	return strings.NewReplacer("application=system", "application=").Replace(healthPollURLStr)
 }

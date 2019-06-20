@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Router: TR now generates a self-signed certificate at startup and uses it as the default TLS cert.
   The default certificate is used whenever a client attempts an SSL handshake for an SNI host which does not match
   any of the other certificates.
+- Client Steering Forced Diversity: force Traffic Router to return more unique edge caches in CLIENT_STEERING results instead of the default behavior which can sometimes return a result of multiple targets using the same edge cache. In the case of edge cache failures, this feature will give clients a chance to retry a different edge cache. This can be enabled with the new "client.steering.forced.diversity" Traffic Router profile parameter.
 - Traffic Ops Golang Endpoints
   - /api/1.4/deliveryservices `(GET,POST,PUT)`
   - /api/1.4/users `(GET,POST,PUT)`
@@ -29,6 +30,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added a context menu in place of the "Actions" column from the following tables in Traffic Portal: cache group tables, CDN tables, delivery service tables, parameter tables, profile tables, server tables.
 - Traffic Portal standalone Dockerfile
 - In Traffic Portal, removes the need to specify line breaks using `__RETURN__` in delivery service edge/mid header rewrite rules, regex remap expressions, raw remap text and traffic router additional request/response headers.
+- In Traffic Portal, provides the ability to clone delivery service assignments from one cache to another cache of the same type. Issue #2963.
+- Traffic Ops now allows each delivery service to have a set of query parameter keys to be retained for consistent hash generation by Traffic Router.
 - Added an API 1.4 endpoint, /api/1.4/user/login/oauth to handle SSO login using OAuth.
 - Added /#!/sso page to Traffic Portal to catch redirects back from OAuth provider and POST token into the API.
 
@@ -50,6 +53,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Issue 3476: Traffic Router returns partial result for CLIENT_STEERING Delivery Services when Regional Geoblocking or Anonymous Blocking is enabled.
 - Upgraded Traffic Portal to AngularJS 1.7.8
 - Issue 3275: Improved the snapshot diff performance and experience.
+- Issue #3605: Fixed Traffic Monitor custom ports in health polling URL.
+- Issue 3587: Fixed Traffic Ops Golang reverse proxy and Riak logs to be consistent with the format of other error logs.
+- Database migrations have been collapsed. Rollbacks to migrations that previously existed are no longer possible.
+- Issue #3646: Fixed Traffic Monitor Thresholds.
 - Added fields to traffic_portal_properties.json to configure SSO through OAuth.
 - Added field to cdn.conf to configure whitelisted URLs for Json Key Set URL returned from OAuth provider.
 

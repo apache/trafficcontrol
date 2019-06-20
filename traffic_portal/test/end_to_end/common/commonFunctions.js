@@ -31,4 +31,12 @@ module.exports = function() {
 	this.urlPath = function ( url ) {
 		return '/' + String(url).split('/').slice(3).join('/');
 	};
+
+	this.shuffle = (string) => {
+		return [...string].sort(
+			(a, b) => {
+				return Math.floor(Math.random() * 3) - 1;
+			}
+		).join("");
+	}
 };

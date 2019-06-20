@@ -166,6 +166,16 @@ Response Structure
 
 		.. seealso:: :ref:`anonymous_blocking-qht`
 
+	:consistentHashQueryParameters: A set of query parameters that Traffic Router should consider when determining a consistent hash for a given client request.
+
+		.. versionadded:: ATCv4
+			This endpoint does not, in general, obey the same versioning rules as all others. So this will appear in all API versions, but *only* if the Traffic Ops server is on version 4+
+
+	:consistentHashRegex: An optional regular expression that will ensure clients are consistently routed to a :term:`cache server` based on matches to it.
+
+		.. versionadded:: ATCv4
+			This endpoint does not, in general, obey the same versioning rules as all others. So this will appear in all API versions, but *only* if the Traffic Ops server is on version 4+
+
 	:coverageZoneOnly: A string containing a boolean that tells whether or not this :term:`Delivery Service` routes traffic based only on its Coverage Zone file
 	:deepCachingType:  A string that tells when Deep Caching is used by this :term:`Delivery Service`; one of:
 
@@ -203,13 +213,13 @@ Response Structure
 		:type:      The type of match performed using ``pattern`` to determine whether or not to use this :term:`Delivery Service`
 
 			HOST_REGEXP
-				Use the :term:`Delivery Service` if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request\ [1]_
+				Use the :term:`Delivery Service` if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request, or the name requested for resolution in a DNS request
 			HEADER_REGEXP
-				Use the :term:`Delivery Service` if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [1]_
+				Use the :term:`Delivery Service` if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [#httpOnly]_
 			PATH_REGEXP
-				Use the :term:`Delivery Service` if ``pattern`` matches the request path of this :term:`Delivery Service`'s URL
+				Use the :term:`Delivery Service` if ``pattern`` matches the request path of this :term:`Delivery Service`'s URL\ [#httpOnly]_
 			STEERING_REGEXP
-				Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Service`\ s
+				Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Services`
 
 	:missLocation: An object representing the default geographic coordinates to use for a client when lookup of their IP has failed in both the Coverage Zone file(s) and the IP-to-geographic-location database
 
@@ -537,4 +547,4 @@ Response Structure
 		}
 	}}
 
-.. [1] These only apply to HTTP-routed :term:`Delivery Service`\ s
+.. [#httpOnly] These only apply to HTTP-:ref:`routed <ds-types>` :term:`Delivery Services`

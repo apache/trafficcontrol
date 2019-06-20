@@ -23,15 +23,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"io"
-	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"runtime"
 	"time"
 
-	tclog "github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -56,6 +54,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federations"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/login"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/origin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/physlocation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ping"
@@ -73,7 +72,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/urisigning"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/user"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/origin"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 )
@@ -380,9 +378,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandler, auth.PrivLevelOperations, Authenticated, nil},
 
 		// ATS config files
+		{1.1, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/?(\.json)?$`, ats.GetConfigMetaData, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/regex_revalidate.config/?(\.json)?$`, ats.GetRegexRevalidateDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_mid_{xml-id}.config/?(\.json)?$`, ats.GetMidHeaderRewriteDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_{xml-id}.config/?(\.json)?$`, ats.GetEdgeHeaderRewriteDotConfig, auth.PrivLevelOperations, Authenticated, nil},
+
+		// Cache Configs
+		{1.1, http.MethodGet, `servers/{id-or-host}/configfiles/ats/parent.config/?(\.json)?$`, ats.GetParentDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 
 		// Federations
 		{1.4, http.MethodGet, `federations/all/?(\.json)?$`, federations.GetAll, auth.PrivLevelAdmin, Authenticated, nil},
@@ -452,7 +454,7 @@ func MemoryStatsHandler() http.HandlerFunc {
 
 		bytes, err := json.Marshal(stats)
 		if err != nil {
-			tclog.Errorln("unable to marshal stats: " + err.Error())
+			log.Errorln("unable to marshal stats: " + err.Error())
 			handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
 			return
 		}
@@ -468,7 +470,7 @@ func DBStatsHandler(db *sqlx.DB) http.HandlerFunc {
 
 		bytes, err := json.Marshal(stats)
 		if err != nil {
-			tclog.Errorln("unable to marshal stats: " + err.Error())
+			log.Errorln("unable to marshal stats: " + err.Error())
 			handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
 			return
 		}
@@ -493,25 +495,12 @@ func rootHandler(d ServerData) http.Handler {
 	rp := httputil.NewSingleHostReverseProxy(d.URL)
 	rp.Transport = tr
 
-	var errorLogger interface{}
-	errorLogger, err := tclog.GetLogWriter(d.Config.ErrorLog())
-	if err != nil {
-		tclog.Errorln("could not create error log writer for proxy: ", err)
-	}
-	if errorLogger != nil {
-		rp.ErrorLog = log.New(errorLogger.(io.Writer), "proxy error: ", log.Ldate|log.Ltime|log.Lmicroseconds|log.LUTC) //if we don't provide a logger to the reverse proxy it logs to stdout/err and is lost when ran by a script.
-		riak.SetErrorLogger(log.New(errorLogger.(io.Writer), "riak error: ", log.Ldate|log.Ltime|log.Lmicroseconds|log.LUTC))
-	}
-	var infoLogger interface{}
-	infoLogger, err = tclog.GetLogWriter(d.Config.InfoLog())
-	if err != nil {
-		tclog.Errorln("could not create info log writer for proxy: ", err)
-	}
-	if infoLogger != nil {
-		riak.SetLogger(log.New(infoLogger.(io.Writer), "riak info: ", log.Ldate|log.Ltime|log.Lmicroseconds|log.LUTC))
-	}
-	tclog.Debugf("our reverseProxy: %++v\n", rp)
-	tclog.Debugf("our reverseProxy's transport: %++v\n", tr)
+	rp.ErrorLog = log.StandardLogger(log.Error, "proxy error: ")
+	riak.SetErrorLogger(log.StandardLogger(log.Error, "riak error: "))
+	riak.SetLogger(log.StandardLogger(log.Info, "riak info: "))
+
+	log.Debugf("our reverseProxy: %++v\n", rp)
+	log.Debugf("our reverseProxy's transport: %++v\n", tr)
 	loggingProxyHandler := wrapAccessLog(d.Secrets[0], rp)
 
 	managerHandler := CreateThrottledHandler(loggingProxyHandler, d.BackendMaxConnections["mojolicious"])

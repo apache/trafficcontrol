@@ -48,10 +48,10 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 
 	$scope.isEdge = serverUtils.isEdge;
 
-	$scope.cloneDsAssignments = function() {
+	$scope.cloneDsAssignments = function(server) {
 		var params = {
 			title: 'Clone Delivery Service Assignments',
-			message: "Please select an edge cache to assign these " + deliveryServices.length + " delivery services to.<br><br>Warning - Any delivery services currently assigned to the selected edge cache will be lost and replaced with these delivery service assignments...",
+			message: "Please select an " + server.type + " cache to assign these " + deliveryServices.length + " delivery services to.<br><br>Warning - Any delivery services currently assigned to the target cache will be lost and replaced with these delivery service assignments...",
 			labelFunction: function(item) { return item['hostName'] + '.' + item['domainName'] }
 		};
 		var modalInstance = $uibModal.open({
@@ -63,7 +63,7 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 					return params;
 				},
 				collection: function(serverService) {
-					return serverService.getServers({ type: 'EDGE', orderby: 'hostName' });
+					return serverService.getServers({ type: server.type, orderby: 'hostName' });
 				}
 			}
 		});

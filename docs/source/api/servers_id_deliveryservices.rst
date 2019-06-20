@@ -98,8 +98,8 @@ Response Structure
 :httpBypassFqdn:      The HTTP destination to use for bypass on an HTTP :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`
 :id:                  An integral, unique identifier for this :term:`Delivery Service`
 :infoUrl:             This is a string which is expected to contain at least one URL pointing to more information about the :term:`Delivery Service`. Historically, this has been used to link relevant JIRA tickets
-:initialDispersion:  The number of :term:`cache server`\ s between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses. For most use-cases, this should be 1\ [1]_
-:ipv6RoutingEnabled: If ``true``, clients that connect to Traffic Router using IPv6 will be given the IPv6 address of a suitable Edge-tier :term:`cache server`; if ``false`` all addresses will be IPv4, regardless of the client connection\ [1]_
+:initialDispersion:  The number of :term:`cache server`\ s between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses. For most use-cases, this should be 1\ [#httpOnly]_
+:ipv6RoutingEnabled: If ``true``, clients that connect to Traffic Router using IPv6 will be given the IPv6 address of a suitable :term:`Edge-tier cache server`; if ``false`` all addresses will be IPv4, regardless of the client connection
 :lastUpdated:        The date and time at which this :term:`Delivery Service` was last updated, in a :manpage:`ctime(3)`-like format
 :logsEnabled:        If ``true``, logging is enabled for this :term:`Delivery Service`, otherwise it is disabled
 :longDesc:           A description of the :term:`Delivery Service`
@@ -112,13 +112,13 @@ Response Structure
 	:type:      The :term:`Type` of match performed using ``pattern`` to determine whether or not to use this :term:`Delivery Service`
 
 		HOST_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request\ [1]_
+			Use the :term:`Delivery Service` if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request, or the name requested for resolution in a DNS request
 		HEADER_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [1]_
+			Use the :term:`Delivery Service` if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [#httpOnly]_
 		PATH_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches the request path of this :term:`Delivery Service`'s URL
+			Use the :term:`Delivery Service` if ``pattern`` matches the request path of this :term:`Delivery Service`'s URL\ [#httpOnly]_
 		STEERING_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Service`\ s
+			Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Services`
 
 :maxDnsAnswers:    The maximum number of IPs to put in responses to A/AAAA DNS record requests (0 means all available)\ [3]_
 :midHeaderRewrite: Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite :abbr:`ATS (Apache Traffic Server)` plugin
@@ -133,7 +133,7 @@ Response Structure
 :profileDescription: The description of the Traffic Router :term:`Profile` with which this :term:`Delivery Service` is associated
 :profileId:          The integral, unique identifier for the Traffic Router :term:`Profile` with which this :term:`Delivery Service` is associated
 :profileName:        The name of the Traffic Router :term:`Profile` with which this :term:`Delivery Service` is associated
-:protocol:           The protocol which clients will use to communicate with Edge-tier :term:`cache server`\ s\ [1]_ - this is an integer on the interval [0-2] where the values have these meanings:
+:protocol:           The protocol which clients will use to communicate with Edge-tier :term:`cache server`\ s\ [#httpOnly]_ - this is an integer on the interval [0-2] where the values have these meanings:
 
 	0
 		HTTP
@@ -189,8 +189,8 @@ Response Structure
 	.. warning:: This number will not be correct if keys are manually replaced using the API, as the key generation API does not increment it!
 
 :tenantId:            The integral, unique identifier of the :term:`Tenant` who owns this :term:`Delivery Service`
-:trRequestHeaders:    If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [1]_
-:trResponseHeaders:   If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [1]_
+:trRequestHeaders:    If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [#httpOnly]_
+:trResponseHeaders:   If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [#httpOnly]_
 :type:                The name of the routing type of this :term:`Delivery Service` e.g. "HTTP"
 :typeId:              The integral, unique identifier of the routing type of this :term:`Delivery Service`
 :xmlId:               A unique string that describes this :term:`Delivery Service` - exists for legacy reasons, but is used heavily by Traffic Control components
@@ -269,7 +269,7 @@ Response Structure
 		}
 	]}
 
-.. [1] This only applies to HTTP-routed :term:`Delivery Service`\ s
+.. [#httpOnly] This only applies to HTTP-:ref:`routed <ds-types>` :term:`Delivery Services`
 .. [2] See :ref:`ds-multi-site-origin`
-.. [3] This only applies to DNS-routed :term:`Delivery Service`\ s
-.. [4] These fields are required for HTTP-routed and DNS-routed :term:`Delivery Service`\ s, but are optional for (and in fact may have no effect on) STEERING and ANY_MAP :term:`Delivery Service`\ s
+.. [3] This only applies to DNS-routed :term:`Delivery Services`
+.. [4] These fields are required for HTTP-routed and DNS-routed :term:`Delivery Services`, but are optional for (and in fact may have no effect on) STEERING and ANY_MAP :term:`Delivery Services`

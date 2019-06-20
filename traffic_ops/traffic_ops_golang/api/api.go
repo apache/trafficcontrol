@@ -131,6 +131,7 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
 		return
 	}
+	log.Debugln(userErr.Error())
 	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, statusCode))
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
 	w.Write(respBts)
@@ -490,6 +491,16 @@ func parseNotNullConstraint(err *pq.Error) (error, error, int) {
 	return fmt.Errorf("%s is a required field", toCamelCase(match[1])), nil, http.StatusBadRequest
 }
 
+// parses pq errors for empty string check constraint
+func parseEmptyConstraint(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`new row for relation "[^"]*" violates check constraint "(.*)_empty"`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s cannot be ", match[1]), nil, http.StatusBadRequest
+}
+
 // parses pq errors for violated foreign key constraints
 func parseNotPresentFKConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`Key \(.+\)=\(.+\) is not present in table "(.+)"`)
@@ -507,7 +518,7 @@ func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 	if match == nil {
 		return nil, nil, http.StatusOK
 	}
-	return fmt.Errorf("%s %s already exists.", match[1], match[2]), nil, http.StatusBadRequest
+	return fmt.Errorf("%v %s '%s' already exists.", err.Table, match[1], match[2]), nil, http.StatusBadRequest
 }
 
 // parses pq errors for ON DELETE RESTRICT fk constraint violations
@@ -548,11 +559,8 @@ func ParseDBError(ierr error) (error, error, int) {
 
 	err, ok := ierr.(*pq.Error)
 	if !ok {
-		return nil, errors.New("database returned non pq error: " + err.Error()), http.StatusInternalServerError
-	}
-
-	if usrErr, sysErr, errCode := parseNotNullConstraint(err); errCode != http.StatusOK {
-		return usrErr, sysErr, errCode
+		log.Errorf("a non-pq error was given")
+		return nil, ierr, http.StatusInternalServerError
 	}
 
 	if usrErr, sysErr, errCode := parseNotPresentFKConstraint(err); errCode != http.StatusOK {
@@ -564,6 +572,14 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	if usrErr, sysErr, errCode := parseRestrictFKConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseNotNullConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseEmptyConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 

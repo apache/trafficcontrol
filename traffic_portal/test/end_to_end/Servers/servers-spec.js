@@ -22,11 +22,11 @@ var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Servers Test Suite', function() {
 
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var mockVals = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const mockVals = {
 		status: "OFFLINE",
-		hostName: "testHost",
+		hostName: "testHost-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		domainName: "servertest.com",
 		interfaceName: "testInterfaceName",
 		ipAddress: "10.42.80.118",
@@ -37,7 +37,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 
 	it('should go to the Servers page', function() {
 		console.log('Looading Configure/Servers');
-		browser.get(browser.baseUrl + "/#!/servers");
+		browser.setLocation("servers");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 

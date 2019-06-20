@@ -89,7 +89,7 @@ Response Structure
 			"parentCachegroupId": 6,
 			"secondaryParentCachegroupName": null,
 			"secondaryParentCachegroupId": null,
-			"fallbackToClosest": null,
+			"fallbackToClosest": [],
 			"localizationMethods": [
 				"DEEP_CZ",
 				"CZ"
@@ -197,7 +197,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "cg was updated.",
+			"text": "cachegroup was updated.",
 			"level": "success"
 		}
 	],
@@ -211,11 +211,11 @@ Response Structure
 		"parentCachegroupId": null,
 		"secondaryParentCachegroupName": null,
 		"secondaryParentCachegroupId": null,
-		"fallbackToClosest": null,
+		"fallbackToClosest": [],
 		"localizationMethods": [
 			"GEO"
 		],
-		"typeName": null,
+		"typeName": "EDGE_LOC",
 		"typeId": 23,
 		"lastUpdated": "2018-11-14 19:14:28+00"
 	}}
@@ -240,9 +240,18 @@ Request Structure
 	| ID           | The integral, unique identifier of a :term:`Cache Group` to be deleted |
 	+--------------+------------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.4/cachegroups/42 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
-.. code block:: http
+.. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
@@ -259,7 +268,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "cg was deleted.",
+			"text": "cachegroup was deleted.",
 			"level": "success"
 		}
 	]}

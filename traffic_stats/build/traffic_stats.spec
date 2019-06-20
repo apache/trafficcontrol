@@ -179,7 +179,7 @@ fi
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/*
 
 %preun
-# args for hooks: http://www.ibm.com/developerworks/library/l-rpm2/
+# args for hooks: https://www.ibm.com/developerworks/library/l-rpm2/
 # if $1 = 0, this is an uninstallation, if $1 = 1, this is an upgrade (don't do anything)
 if [ "$1" = "0" ]; then
 	/sbin/chkconfig traffic_stats off

@@ -24,7 +24,7 @@
 FROM centos:7
 
 RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
-    rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
+    rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
     rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG && \
     yum -y update ca-certificates && \
     yum-config-manager --add-repo https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64 && \
@@ -71,13 +71,7 @@ RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/car
 
 RUN /opt/traffic_ops/install/bin/install_goose.sh
 
-RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
-	&& export TERM=xterm \
-	&& export USER=root \
-	&& /opt/traffic_ops/install/bin/download_web_deps -i || \
-	true # keep a failure here from failing all..
-
-ADD http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /
+ADD https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /
 
 EXPOSE 443
 WORKDIR /opt/traffic_ops/app

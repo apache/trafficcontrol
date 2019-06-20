@@ -43,7 +43,7 @@ Installation
 		su - postgres -c '/usr/pgsql-9.6/bin/initdb -A md5 -W' #-W forces the user to provide a superuser (postgres) password
 
 
-#. Edit ``/var/lib/pgsql/9.6/data/pg_hba.conf`` to allow the Traffic Ops instance to access the PostgreSQL server. For example, if the IP address of the machine to be used as the Traffic Ops host is ``99.33.99.1`` add the line ``host  all   all     99.33.99.1/32 md5`` to the appropriate section of this file.
+#. Edit ``/var/lib/pgsql/9.6/data/pg_hba.conf`` to allow the Traffic Ops instance to access the PostgreSQL server. For example, if the IP address of the machine to be used as the Traffic Ops host is ``192.0.2.1`` add the line ``host  all   all     192.0.2.1/32 md5`` to the appropriate section of this file.
 
 #. Edit the ``/var/lib/pgsql/9.6/data/postgresql.conf`` file to add the appropriate listen_addresses or ``listen_addresses = '*'``, set ``timezone = 'UTC'``, and start the database
 
@@ -91,10 +91,10 @@ Installation
 	.. code-block:: console
 		:caption: Creating the Traffic Ops User and Database
 
-		to-# psql -U postgres -h 99.33.99.1 -c "CREATE USER traffic_ops WITH ENCRYPTED PASSWORD 'tcr0cks';"
+		to-# psql -U postgres -h pg -c "CREATE USER traffic_ops WITH ENCRYPTED PASSWORD 'tcr0cks';"
 		Password for user postgres:
 		CREATE ROLE
-		to-# createdb traffic_ops --owner traffic_ops -U postgres -h 99.33.99.1
+		to-# createdb traffic_ops --owner traffic_ops -U postgres -h pg
 		Password:
 		to-#
 
@@ -111,8 +111,8 @@ Installation
 		Database type: Pg
 		Database name [traffic_ops]:
 		Database name: traffic_ops
-		Database server hostname IP or FQDN [localhost]: 99.33.99.1
-		Database server hostname IP or FQDN: 99.33.99.1
+		Database server hostname IP or FQDN [localhost]: pg
+		Database server hostname IP or FQDN: pg
 		Database port number [5432]:
 		Database port number: 5432
 		Traffic Ops database user [traffic_ops]:
@@ -217,6 +217,8 @@ Traffic Ops is now installed!
 Upgrading Traffic Ops
 =====================
 To upgrade from older Traffic Ops versions, stop the service, use :manpage:`yum(8)` to upgrade to the latest available Traffic Ops package, and use the ``admin`` tool to perform the database upgrade.
+
+.. tip:: In order to upgrade to the latest version of Traffic Ops, please be sure that you have first upgraded to the latest available minor or patch version of your current release. For example, if your current Traffic Ops version is 3.0.0 and version 3.1.0 is available, you must first upgrade to 3.1.0 before proceeding to upgrade to 4.0.0. (Specifically, this means running all migrations, :file:`traffic_ops/app/db/seeds.sql`, and :file:`traffic_ops/app/db/patches.sql` for the latest of your current major version - which should be handled by the :program:`app/db/admin` tool). The latest migration available before the release of 4.0.0 (pending at the time of this writing) was :file:`traffic_ops/app/db/migrations/20180814000625_remove_capabilities_for_reseed.sql`, so be sure that migrations up to this point have been run before attempting to upgrade Traffic Ops.
 
 .. seealso:: :ref:`database-management` for more details about `admin`.
 

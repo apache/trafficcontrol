@@ -61,10 +61,21 @@ func GetTestDeliveryServices(t *testing.T) {
 	for _, ds := range actualDSes {
 		actualDSMap[ds.XMLID] = ds
 	}
+	cnt := 0
 	for _, ds := range testData.DeliveryServices {
 		if _, ok := actualDSMap[ds.XMLID]; !ok {
 			t.Errorf("GET DeliveryService missing: %v\n", ds.XMLID)
 		}
+		// exactly one ds should have exactly 3 query params. the rest should have none
+		if c := len(ds.ConsistentHashQueryParams); c > 0 {
+			if c != 3 {
+				t.Errorf("deliveryservice %s has %d query params; expected %d or %d", ds.XMLID, c, 3, 0)
+			}
+			cnt++
+		}
+	}
+	if cnt > 1 {
+		t.Errorf("exactly 1 deliveryservice should have more than one query param; found %d", cnt)
 	}
 }
 

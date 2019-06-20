@@ -2405,6 +2405,17 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	@api_request(u'put', u'users/{user_id:d}', (u'1.1', u'1.2', u'1.3', u'1.4',))
+	def update_user_by_id(self, user_id=None, data=None):
+		"""
+		Update a user.
+		:ref:`to-api-users`
+		:param data: The user update data payload.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 	@api_request(u'post', u'users/register', (u'1.1', u'1.2', u'1.3',))
 	def create_user_with_registration(self, data=None):
 		"""

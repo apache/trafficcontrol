@@ -22,27 +22,25 @@ var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Delivery Services Suite', function() {
 
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var mockVals = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const mockVals = {
 		dsType: ["ANY MAP", "DNS", "HTTP", "STEERING"],
 		active: "Active",
-		xmlId: "thisisonlyatest",
-		displayName: "dsTest",
+		xmlId: "xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		orgServerFqdn: "http://dstest.com",
 		longDesc: "This is only a test that should be disposed of by Automated UI Testing."
 	};
 
 	it('should open ds page and click button to create a new one', function() {
 		console.log('Opening delivery services page');
-		browser.get(browser.baseUrl + "/#!/delivery-services");
+		browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
 	it('should create and select type of ds from the dropdown and confirm', function() {
 		console.log('Clicked Create New and selecting a type');
 		browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
-		browser.sleep(1000);
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
 		browser.driver.findElement(by.name('selectFormDropdown')).sendKeys(mockVals.dsType[1]);
 		browser.sleep(250);
@@ -59,7 +57,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		pageData.active.sendKeys(mockVals.active);
 		commonFunctions.selectDropdownbyNum(pageData.type, 1);
 		pageData.xmlId.sendKeys(mockVals.xmlId);
-		pageData.displayName.sendKeys(mockVals.displayName);
+		pageData.displayName.sendKeys(mockVals.xmlId);
 		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
 		pageData.orgServerFqdn.sendKeys(mockVals.orgServerFqdn);
@@ -72,7 +70,7 @@ describe('Traffic Portal Delivery Services Suite', function() {
 
 	it('should back out to ds page and verify new ds and update it', function() {
 		console.log('Backing out and verifying ' + mockVals.xmlId + ' exists');
-		browser.get(browser.baseUrl + "/#!/delivery-services");
+		browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
@@ -88,11 +86,11 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		}).get(0).click();
 		browser.sleep(250);
 		expect(pageData.updateButton.isEnabled()).toBe(false);
-		pageData.displayName.sendKeys(mockVals.displayName + "updated");
+		pageData.displayName.sendKeys(mockVals.xmlId + "updated");
 		expect(pageData.updateButton.isEnabled()).toBe(true);
 		pageData.updateButton.click();
 		browser.sleep(250);
-		expect(pageData.displayName.getText() === mockVals.displayName + "updated");
+		expect(pageData.displayName.getText() === mockVals.name + "updated");
 	});
 
 	it('should delete the ds', function() {

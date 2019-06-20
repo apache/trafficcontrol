@@ -38,7 +38,7 @@ with open(os.path.join(HERE, "README.rst")) as fd:
 	       author_email="dev@trafficcontrol.apache.org",
 	       description="Python API Client for Traffic Control",
 	       long_description='\n'.join((fd.read(), about["__doc__"])),
-	       url="http://trafficcontrol.apache.org/",
+	       url="https://trafficcontrol.apache.org/",
 	       license="http://www.apache.org/licenses/LICENSE-2.0",
 	       classifiers=[
 	           'Development Status :: 4 - Beta',

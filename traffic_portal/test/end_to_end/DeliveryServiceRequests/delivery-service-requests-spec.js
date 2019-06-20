@@ -22,12 +22,12 @@ var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Delivery Service Requests', function() {
 
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var mockVals = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const mockVals = {
 		dsType: ["ANY MAP", "DNS", "HTTP", "STEERING"],
 		active: "Active",
-		xmlId: "thisisonlyadstest",
+		xmlId: "xml-id-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz'),
 		displayName: "dsTest",
 		orgServerFqdn: "http://dstest.com",
 		longDesc: "This is only a test that should be disposed of by Automated UI Testing.",
@@ -36,7 +36,7 @@ describe('Traffic Portal Delivery Service Requests', function() {
 
 	it('should open ds services page and click button to create a new one', function() {
 		console.log('Opening delivery service requests page');
-		browser.get(browser.baseUrl + "/#!/delivery-services");
+		browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 

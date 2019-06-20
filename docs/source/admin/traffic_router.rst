@@ -169,6 +169,62 @@ For the most part, the configuration files and :term:`Parameter`\ s used by Traf
 	|                            |                                           | of Tomcat                                                                        |                                                    |
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 
+
+.. _consistent-hashing:
+
+Consistent Hashing
+==================
+Traffic Router does special optimization for some requests to ensure that requests for specific content are consistently fetched from a small number (often exactly one, but dependent on :ref:`ds-initial-dispersion`) of :term:`cache servers` - thus ensuring it stays "fresh" in the cache. This is done by performing "consistent hashing" on request paths (when HTTP routing) or names requested for resolution (when DNS routing). To an extent, this behavior is configurable by modifying fields on :term:`Delivery Services`. Consistent hashing acts differently on a :term:`Delivery Service` based on how :term:`Delivery Services` of its :ref:`ds-types` route content.
+
+- HTTP, HTTP_NO_CACHE, HTTP_LIVE, HTTP_LIVE_NATNL, DNS, DNS_LIVE, and DNS_NATNL
+	These :ref:`Delivery Service Types <ds-types>` route directly to :term:`cache servers`, so consistent hashing is used to choose a :term:`cache server` to which the client will be redirected.
+
+- STEERING and CLIENT_STEERING
+	These :ref:`Delivery Service Types <ds-types>` route to "target" :term:`Delivery Services`, so consistent hashing is used to choose a "target" which will service the client request.
+
+.. seealso:: See `the Wikipedia article on consistent hashing <http://en.wikipedia.org/wiki/Consistent_hashing>`_.
+
+.. _pattern-based-consistenthash:
+
+Consistent Hashing Patterns
+---------------------------
+.. versionadded:: 4.0
+
+Regular expressions ("patterns") can be provided in the :ref:`ds-consistent-hashing-regex` field of an HTTP-:ref:`routed <ds-types>` Delivery Service to influence what parts of an HTTP request path are considered when performing consistent hashing. These patterns propagate to Traffic Router through :term:`Snapshots`.
+
+.. important:: Consistent Hashing Patterns on STEERING-:ref:`ds-types` :term:`Delivery Services` will be used for Consistent Hashing - the Consistent Hashing Pattern(s) of said :term:`Delivery Service`'s target(s) will **not** be considered. If Consistent Hashing Patterns are important to the routing of content on a STEERING-:ref:`ds-types` or CLIENT_STEERING-:ref:`ds-types` :term:`Delivery Service`, they **must** be defined *on that* :term:`Delivery Service` *itself, and* **not** *on its target(s)*.
+
+How it Works
+""""""""""""
+The supplied :ref:`ds-consistent-hashing-regex` is applied to the request path to extract matching elements to build a new string *before* consistent hashing is done. For example, using the pattern :regexp:`/.*?(/.*?/).*?(m3u8)` and given the request paths ``/test/path/asset.m3u8`` and ``/other/path/asset.m3u8`` the resulting string used for consistent hashing will be ``/path/m3u8``
+
+.. seealso:: See Oracle's `documentation for the java.util.regex.Pattern <https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html>`_ implementation in Java.
+
+Testing Pattern-Based Consistent Hashing
+""""""""""""""""""""""""""""""""""""""""
+In order to test this feature without affecting the delivery of traffic through a CDN, there are several test tools in place.
+
+- :ref:`tr-api`
+	Several Traffic Router endpoints exist to test regular expression application against a request path, :term:`cache server` selection, and :term:`Delivery Service` selection.
+- :ref:`to-api`
+	The :ref:`to-api-consistenthash` endpoint will proxy request data through to one of the Traffic Router endpoints in order to test regular expression application against a request path, in the event that direct access to the :ref:`tr-api` is not possible and/or desired.
+- Traffic Portal
+	On the :term:`Delivery Service` creation/modification form in Traffic Portal (under :ref:`tp-services-delivery-service`), there is a :guilabel:`Test Regex` section that the user can use to validate a regular expression before saving it to a :term:`Delivery Service`.
+
+Consistent Hash Query Parameters
+--------------------------------
+Normally, when performing consistent hashing for an HTTP-:ref:`routed <ds-types>` :term:`Delivery Service`, any query parameters present in the request are ignored. That is, if a client requests ``/some/path?key=value`` consistent hashing is only performed on the string '``/some/path``'. However, query parameters that are part of uniquely identifying content can be specified by adding them to the set of :ref:`ds-consistent-hashing-qparams` of a :term:`Delivery Service`. For example, suppose that the file ``/video.mp4`` is available on the :term:`origin server` in different resolutions, which are specified by the ``resolution`` query parameter. This means that ``/video.mp4?resolution=480p`` and ``/video.mp4?resolution=720p`` share a *request path*, but represent different *content*. In that case, adding ``resolution`` to the :term:`Delivery Service`'s :ref:`ds-consistent-hashing-qparams` will cause consistent hashing to be done on e.g. ``/video.mp4?resolution=480p`` instead of just ``/video.mp4`` - however if the client requests e.g. ``/video.mp4?resolution=480p&bitrate=120kbps`` consistent hashing will *only* consider ``/video.mp4?resolution=480p``.
+
+.. note:: `Consistent Hashing Patterns`_ are applied *before* query parameters are considered - i.e. a pattern cannot match against query parameters, and need not worry about query parameters contaminating matches.
+
+.. important:: Consistent Hash Query Parameters on the *targets* of STEERING-:ref:`ds-types` :term:`Delivery Services` will be used for Consistent Hashing - the Consistent Hash Query Parameters of said :term:`Delivery Services` themselves will **not** be considered. If Consistent Hash Query Parameters are important to the routing of content on a STEERING-:ref:`ds-types` or CLIENT_STEERING-:ref:`ds-types` :term:`Delivery Service`, they **must** be defined *on that* :term:`Delivery Service`'s' *target(s), and* **not** *on the* :term:`Delivery Service` *itself*.
+
+.. caution:: Certain query parameters are reserved by Traffic Router for its own use, and thus cannot be present in any Consistent Hash Query Parameters. These reserved parameters are:
+
+	 - trred
+	 - format
+	 - fakeClientIPAddress
+
 .. _tr-dnssec:
 
 DNSSEC
@@ -569,40 +625,3 @@ The following is an example of the command line parameters set in :file:`/opt/tr
 	-XX:+UseG1GC \
 	-XX:+UnlockExperimentalVMOptions \
 	-XX:InitiatingHeapOccupancyPercent=30"
-
-.. _pattern-based-consistenthash:
-
-Pattern-Based Consistent Hashing Feature
-========================================
-
-.. versionadded:: 3.1
-	Traffic Router now has the ability to influence consisting hashing using a regular expression on a per-HTTP :term:`Delivery Service` basis.
-
-Overview
---------
-Pattern-Based Consistent Hashing is a feature to modify the request path given to Traffic Router's consistent hasher for Cache selection (and :term:`Delivery Service` selection for Steering Delivery Services) using a regular expression. This new regular expression field 'Consistent Hash Regex' is applied on a per-Delivery Service basis and is given to Traffic Router via the CDN :term:`Snapshot`. The purpose of this feature is to increase cache efficiency by directing requests for the same asset, but with varying request paths, to the same Cache.
-
-.. Note:: Pattern-Based Consistent Hashing is only available for HTTP and Steering Delivery Services
-
-How it Works
-------------
-
-With Pattern-Based Consistent Hashing, a regular expression (Consistent Hash Regex) is applied to the request path to extract matching elements to build a new string to pass to the consistent hasher. i.e.: using the Consistent Hash Regex :regexp:`/.*?(/.*?/).*?(m3u8)` given the request paths ``/test/path/asset.m3u8`` and ``/other/path/asset.m3u8`` the resulting path to hash will be ``/path/m3u8``
-
-.. seealso:: See Oracle's `documentation for the java.util.regex.Pattern <https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html>`_ implementation in Java.
-
-HTTP
-	When routing requests for an HTTP Delivery Service, Traffic Router compiles a list of eligible caches and uses consistent hashing on the request path to select one. With Pattern-Based Consistent Hashing, the request path is rebuilt prior to consistent hashing for Cache Selection.
-Steering
-	For a Steering Delivery Service, Traffic Router uses consistent hashing on the request path to select a Target Delivery Service. In the case of Pattern-Based Consistent Hashing, the request path is rebuilt using the Consistent Hash Regex assigned to the Steering Delivery Service prior to consistent hashing. Then, the Target Delivery Service inherits the Consistent Hash Regex from the Steering Delivery Service and uses it for Cache selection.
-
-Testing Pattern-Based Consistent Hashing
-----------------------------------------
-In order to test this feature without affecting the delivery of traffic through a CDN, there are several test tools in place.
-
-Traffic Router API
-	Several Traffic Router endpoints have been added to test regular expression application against a request path, Cache selection, and Delivery Service selection using Pattern-Based Consistent Hashing. For more information see the :ref:`Traffic Router API documentation <tr-api>`.
-Traffic Ops API
-	A Traffic Ops endpoint has been added that will proxy request data through to one of the Traffic Router endpoints in order to test regular expression application against a request path. For more information see the :ref:`Traffic Ops API documentation <to-api-consistenthash>`.
-Traffic Portal Test Tool
-	On the Delivery Service (HTTP and Steering) form in Traffic Portal, a "Test Regex" link has been added so that the user can validate a regular expression before saving it to a Delivery Service.

@@ -18,9 +18,11 @@ package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -30,6 +32,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -51,7 +55,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.StringProtector;
 
-@SuppressWarnings({"PMD.TooManyFields","PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals"})
+@SuppressWarnings({"PMD.TooManyFields","PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals", "PMD.ExcessivePublicCount"})
 public class DeliveryService {
 	protected static final Logger LOGGER = Logger.getLogger(DeliveryService.class);
 	private final String id;
@@ -96,6 +100,7 @@ public class DeliveryService {
 	private final boolean redirectToHttps;
 	private final DeepCachingType deepCache;
 	private String consistentHashRegex;
+	private final Set<String> consistentHashQueryParams;
 
 	public enum DeepCachingType {
 		NEVER,
@@ -124,6 +129,21 @@ public class DeliveryService {
 		this.domains = dsJo.get("domains");
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
+
+		this.consistentHashQueryParams = new HashSet<String>();
+		if (dsJo.has("consistentHashQueryParams")) {
+			final JsonNode cqpNode = dsJo.get("consistentHashQueryParams");
+			if (!cqpNode.isArray()) {
+				LOGGER.error("Delivery Service '" + id + "' has malformed consistentHashQueryParams. Disregarding.");
+			} else {
+				for (final JsonNode n : cqpNode) {
+					final String s = n.asText();
+					if (!s.isEmpty()) {
+						this.consistentHashQueryParams.add(s);
+					}
+				}
+			}
+		}
 
 		// missLocation: {lat: , long: }
 		final JsonNode mlJo = dsJo.get("missLocation");
@@ -163,6 +183,10 @@ public class DeliveryService {
 		} finally {
 			this.deepCache = dct;
 		}
+	}
+
+	public Set<String> getConsistentHashQueryParams() {
+		return this.consistentHashQueryParams;
 	}
 
 	public String getId() {
@@ -657,5 +681,53 @@ public class DeliveryService {
 
 	public void setConsistentHashRegex(final String consistentHashRegex) {
 		this.consistentHashRegex = consistentHashRegex;
+	}
+
+	/**
+	 * Extracts the significant parts of a request's query string based on this
+	 * Delivery Service's Consistent Hashing Query Parameters
+	 * @param r The request from which to extract query parameters
+	 * @return The parts of the request's query string relevant to consistent
+	 *	hashing. The result is URI-decoded - if decoding fails it will return
+	 *	a blank string instead.
+	 */
+	public String extractSignificantQueryParams(final HTTPRequest r) {
+		if (r.getQueryString() == null || r.getQueryString().isEmpty() || this.getConsistentHashQueryParams().isEmpty()) {
+			return "";
+		}
+
+		final SortedSet<String> qparams = new TreeSet<String>();
+		try {
+			for (final String qparam : r.getQueryString().split("&")) {
+				if (qparam.isEmpty()) {
+					continue;
+				}
+
+				String[] parts = qparam.split("=");
+				for (short i = 0; i < parts.length; ++i) {
+					parts[i] = URLDecoder.decode(parts[i], "UTF-8");
+				}
+
+				if (this.getConsistentHashQueryParams().contains(parts[0])) {
+					qparams.add(String.join("=", parts));
+				}
+			}
+
+		} catch (UnsupportedEncodingException e) {
+			final StringBuffer err = new StringBuffer();
+			err.append("Error decoding query parameters - ");
+			err.append(this.toString());
+			err.append(" - Exception: ");
+			err.append(e.toString());
+			LOGGER.error(err.toString());
+			return "";
+		}
+
+		final StringBuilder s = new StringBuilder();
+		for (final String q : qparams) {
+			s.append(q);
+		}
+
+		return s.toString();
 	}
 }

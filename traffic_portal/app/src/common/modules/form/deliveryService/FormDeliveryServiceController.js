@@ -260,6 +260,21 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         }
     };
 
+    $scope.addQueryParam = function() {
+        $scope.deliveryService.consistentHashQueryParams.push('');
+    };
+
+    $scope.removeQueryParam = function(index) {
+        if ($scope.deliveryService.consistentHashQueryParams.length > 1) {
+            $scope.deliveryService.consistentHashQueryParams.splice(index, 1);
+        } else {
+            // if only one query param is left, don't remove the item from the array. instead, just blank it out
+            // so the dynamic form widget will still be visible. empty strings get stripped out on save anyhow.
+            $scope.deliveryService.consistentHashQueryParams[index] = '';
+        }
+        $scope.deliveryServiceForm.$pristine = false; // this enables the 'update' button in the ds form
+    };
+
     $scope.viewTargets = function() {
         $location.path($location.path() + '/targets');
     };
@@ -310,6 +325,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         getCDNs();
         getProfiles();
         getTenants();
+        if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
+            // add an empty one so the dynamic form widget is visible. empty strings get stripped out on save anyhow.
+            $scope.deliveryService.consistentHashQueryParams = [ '' ];
+        }
     };
     init();
 

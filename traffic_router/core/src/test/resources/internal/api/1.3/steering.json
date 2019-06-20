@@ -45,6 +45,32 @@
       "clientSteering": true
     },
     {
+      "deliveryService": "client-steering-diversity-test",
+      "targets": [
+        {
+          "deliveryService": "csd-target-1",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "csd-target-2",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "csd-target-3",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "csd-target-4",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "csd-target-5",
+          "weight": "5000"
+        }
+      ],
+      "clientSteering": true
+    },
+    {
       "deliveryService": "client-steering-test-2",
       "targets": [
         {

@@ -15,6 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
@@ -32,6 +33,35 @@ public class DeliveryServiceTest {
         final JsonNode jsonConfiguration = mapper.readTree(jsonStr);
         DeliveryService deliveryService = new DeliveryService("a-delivery-service", jsonConfiguration);
         assertThat(deliveryService.getRequestHeaders().size(), equalTo(0));
+    }
+
+    @Test
+    public void itHandlesLackOfConsistentHashQueryParamsInJSON() throws Exception {
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false}");
+        DeliveryService d = new DeliveryService("test", json);
+        assert d.getConsistentHashQueryParams() != null;
+        assert d.getConsistentHashQueryParams().size() == 0;
+    }
+
+    @Test
+    public void itHandlesDuplicatesInConsistentHashQueryParams() throws Exception {
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\", \"test\"]}");
+        DeliveryService d = new DeliveryService("test", json);
+        assert d.getConsistentHashQueryParams() != null;
+        assert d.getConsistentHashQueryParams().size() == 2;
+        assert d.getConsistentHashQueryParams().contains("test");
+        assert d.getConsistentHashQueryParams().contains("quest");
+    }
+
+    @Test
+    public void itExtractsQueryParams() throws Exception {
+        final JsonNode json = (new ObjectMapper()).readTree("{\"routingName\":\"edge\",\"coverageZoneOnly\":false,\"consistentHashQueryParams\":[\"test\", \"quest\"]}");
+        final HTTPRequest r = new HTTPRequest();
+		r.setPath("/path1234/some_stream_name1234/some_other_info.m3u8");
+        r.setQueryString("test=value&foo=fizz&quest=oth%20ervalue&bar=buzz");
+        assert (new DeliveryService("test", json)).extractSignificantQueryParams(r).equals("quest=oth ervaluetest=value");
     }
 
     @Test

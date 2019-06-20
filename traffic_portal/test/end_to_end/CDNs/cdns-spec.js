@@ -21,15 +21,16 @@ var pd = require('./pageData.js');
 var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal CDNs Test Suite', function() {
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var myNewCDN = 'pTestCDN';
-	var myDomainName = 'ptest.com';
-	var mydnssec = 'true';
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const myNewCDN = 'cdn-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789');
+	const myDomainName = myNewCDN + '.com';
+	const mydnssec = 'true';
 
 	it('should go to the CDNs page', function() {
 		console.log("Go to the CDNs page");
-		browser.get(browser.baseUrl + "/#!/cdns");
+		browser.setLocation("cdns");
+		browser.getCurrentUrl().then(x => console.log(x));
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 
@@ -63,17 +64,11 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		}).get(0).click();
 		browser.sleep(1000);
 		pageData.domainName.clear();
-		pageData.domainName.sendKeys('ptestUpdated.com');
+		pageData.domainName.sendKeys(myDomainName + 'updated.com');
 		pageData.dnssecEnabled.click();
 		pageData.dnssecEnabled.sendKeys('false');
 		pageData.updateButton.click();
-		expect(pageData.domainName.getText() === 'ptestUpdated.com');
+		expect(pageData.domainName.getText() === myDomainName + 'updated.com');
 	});
 
-	it('should delete the new CDN', function() {
-		console.log("Deleting " + myNewCDN);
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(myNewCDN);
-		pageData.deletePermanentlyButton.click();
-	});
 });

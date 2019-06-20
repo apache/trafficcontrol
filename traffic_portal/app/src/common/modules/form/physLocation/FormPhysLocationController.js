@@ -29,8 +29,8 @@ var FormPhysLocationController = function(physLocation, $scope, $location, formU
     $scope.physLocation = physLocation;
 
     $scope.props = [
-        { name: 'name', type: 'text', required: true, maxLength: 45 },
-        { name: 'shortName', type: 'text', required: true, maxLength: 12 },
+        { name: 'name', type: 'text', required: true, maxLength: 100 },
+        { name: 'shortName', type: 'text', required: true, maxLength: 100 },
         { name: 'address', type: 'text', required: true, maxLength: 128 },
         { name: 'city', type: 'text', required: true, maxLength: 128 },
         { name: 'state', type: 'text', required: true, maxLength: 2 },
