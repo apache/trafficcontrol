@@ -58,8 +58,12 @@ var TableTypesController = function(types, $scope, $state, dateUtils, locationUt
                     realtime: false
                 },
                 "initComplete": function(settings, json) {
-                    // need to create the show/hide column checkboxes and bind to the current visibility
-                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_typesTable_/')).columns;
+                    try {
+                        // need to create the show/hide column checkboxes and bind to the current visibility
+                        $scope.columns = JSON.parse(localStorage.getItem('DataTables_typesTable_/')).columns;
+                    } catch (e) {
+                        console.error("Failure to retrieve required column info from localStorage (key=DataTables_typesTable_/):", e);
+                    }
                 }
             });
     });
