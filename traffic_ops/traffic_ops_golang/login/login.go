@@ -20,6 +20,7 @@ package login
  */
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -121,16 +122,33 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}{}
 
 		form := auth.PasswordForm{}
-		tokenForm := struct {
-			Token string `json:"t"`
+		parameters := struct {
+			AuthCodeTokenUrl string `json:"authCodeTokenUrl"`
 		}{}
 
-		if err := json.NewDecoder(r.Body).Decode(&tokenForm); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&parameters); err != nil {
 			handleErrs(http.StatusBadRequest, err)
 			return
 		}
 
-		encodedToken := tokenForm.Token
+		req, err := http.NewRequest("POST", parameters.AuthCodeTokenUrl, nil)
+		if err != nil {
+			log.Errorf("obtaining token using code from oauth provider\n", err.Error())
+			return
+		}
+
+		client := http.Client{}
+		response, err := client.Do(req)
+		if err != nil {
+			log.Errorf("getting an http client\n", err.Error())
+			return
+		}
+		defer response.Body.Close()
+
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(response.Body)
+
+		encodedToken := buf.String()
 
 		if encodedToken == "" {
 			log.Errorf("Token not found in request but is required")
