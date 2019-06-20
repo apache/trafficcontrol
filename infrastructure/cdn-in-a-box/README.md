@@ -166,9 +166,9 @@ To expose the ports of each service on the host, add the `docker-compose.expose-
 
 If you scroll back through the output ( or use `docker-compose logs trafficops-perl | grep "User defined signal 2"` ) and see a line that says something like `/run.sh: line 79: 118 User defined signal 2 $TO_DIR/local/bin/hypnotoad script/cdn` then you've hit a mysterious known error. We don't know what this is or why it happens, but your best bet is to send up a quick prayer and restart the stack.
 
-### Traffic Monitor is stuck waiting for a valid CRConfig 
+### Traffic Monitor is stuck waiting for a valid Snapshot
 
-Often times you must snap the CDN in order for a valid CRConfig to be generated. This can be done by logging into the Traffic Portal and clicking the camera icon, then clicking the perform snapshot button.
+Often times you must take a CDN [Snapshot](https://traffic-control-cdn.readthedocs.io/en/latest/glossary.html#term-snapshot) in order for a valid Snapshot to be generated. This can be done through [Traffic Portal's "CDNs" view](https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_portal/usingtrafficportal.html#cdns), clicking on the "CDN-in-a-Box" CDN, then pressing the camera button, and finally the "Perform Snapshot" button.
 
 ### I'm seeing a failure to open a socket and/or set a socket option
 
