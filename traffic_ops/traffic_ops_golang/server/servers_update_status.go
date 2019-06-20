@@ -49,7 +49,7 @@ func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]t
 	baseSelectStatement :=
 		`WITH parentservers AS (SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending FROM server ps
          LEFT JOIN status AS pstatus ON pstatus.id = ps.status
-         WHERE pstatus.name != 'OFFLINE' ),
+         WHERE (pstatus.name = '` + string(tc.CacheStatusOnline) + `' OR pstatus.name = '` + string(tc.CacheStatusReported) + `') ),
          use_reval_pending AS (SELECT value::boolean FROM parameter WHERE name = 'use_reval_pending' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY)
          SELECT s.id, s.host_name, type.name AS type, (s.reval_pending::boolean) as server_reval_pending, use_reval_pending.value, s.upd_pending, status.name AS status, COALESCE(bool_or(ps.upd_pending), FALSE) AS parent_upd_pending, COALESCE(bool_or(ps.reval_pending), FALSE) AS parent_reval_pending FROM use_reval_pending, server s
          LEFT JOIN status ON s.status = status.id
