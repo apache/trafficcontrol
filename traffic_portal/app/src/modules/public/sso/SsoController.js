@@ -20,10 +20,18 @@
 var SsoController = function($scope, $state, $interval, $location, authService, propertiesModel) {
 
 	var init = function () {
-        const tokenParameter = propertiesModel.properties.oAuth.oAuthTokenQueryParam !== '' ? propertiesModel.properties.oAuth.oAuthTokenQueryParam : 'access_token';
-		const token = $location.search()[tokenParameter];
+        const authCodeTokenUrl = propertiesModel.properties.oAuth.oAuthCodeTokenUrl;
+        const clientId = propertiesModel.properties.oAuth.clientId;
+        const clientSecret = propertiesModel.properties.oAuth.clientSecret;
+        var code = '';
+        if ($location.hash()) {
+            code = $location.hash().replace('code=', '');
+        } else {
+            code = $location.search()['code'];
+        }
 
-        authService.oauthLogin(token);
+        const fullAuthCodeTokenUrl = authCodeTokenUrl + '?client_id=' + clientId + '&client_secret=' + clientSecret + '&code=' + code;
+        authService.oauthLogin(fullAuthCodeTokenUrl);
 	};
 	init();
 

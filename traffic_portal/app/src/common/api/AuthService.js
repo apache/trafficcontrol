@@ -51,8 +51,8 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
         );
     };
 
-    this.oauthLogin = function(token) {
-        return $http.post(ENV.api['root'] + 'user/login/oauth', { t: token})
+    this.oauthLogin = function(authCodeTokenUrl) {
+        return $http.post(ENV.api['root'] + 'user/login/oauth', { authCodeTokenUrl: authCodeTokenUrl })
             .then(
                 function(result) {
                     $rootScope.$broadcast('authService::login');

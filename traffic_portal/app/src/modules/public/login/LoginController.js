@@ -61,7 +61,7 @@ var LoginController = function($scope, $log, $uibModal, $location, authService, 
         var continueURL = new URL(propertiesModel.properties.oAuth.oAuthUrl);
         continueURL.searchParams.append(redirectUriParamKey, redirectUriParam);
         continueURL.searchParams.append('client_id', propertiesModel.properties.oAuth.clientId);
-        continueURL.searchParams.append('response_type', 'token');
+        continueURL.searchParams.append('response_type', 'code');
 
         window.location.href = continueURL.href;
     };
