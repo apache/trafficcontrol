@@ -50,7 +50,7 @@ public abstract class AbstractServiceUpdater {
 	private long pollingInterval;
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
-	private TrafficRouterManager trafficRouterManager;
+	protected TrafficRouterManager trafficRouterManager;
 	protected Path databasesDirectory;
 	private String eTag = null;
 

@@ -72,7 +72,7 @@ public class ConfigHandler {
 
 	private static long lastSnapshotTimestamp = 0;
 	private static Object configSync = new Object();
-	private static String deliveryServicesKey = "deliveryServices";
+	public static String deliveryServicesKey = "deliveryServices";
 
 	private TrafficRouterManager trafficRouterManager;
 	private GeolocationDatabaseUpdater geolocationDatabaseUpdater;
@@ -233,7 +233,6 @@ public class ConfigHandler {
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.get("requestHeaders")));
 				trafficRouterManager.getTrafficRouter().configurationChanged();
 
-				letsEncryptDnsChallengeWatcher.setTrafficRouter(trafficRouterManager.getTrafficRouter());
 
 				/*
 				 * NetworkNode uses lazy loading to associate CacheLocations with NetworkNodes at request time in TrafficRouter.

@@ -92,11 +92,11 @@
     <bean id="letsEncryptDnsChallengeWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher">
         <property name="executorService" ref="ScheduledExecutorService" />
         <property name="databasesDirectory" ref="databasesDir" />
-        <property name="databaseName" value="$[cache.steering.database:steering.json]" />
+        <property name="databaseName" value="$[cache.letsencrypt.database:letsencrypt.json]" />
         <property name="trafficOpsUtils" ref="trafficOpsUtils" />
         <property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="pollingInterval" value="60000" />
-
+        <property name="configHandler" ref="ConfigHandler" />
 	</bean>
 
 	<bean id="certificatesQueue" class="java.util.concurrent.ArrayBlockingQueue" >

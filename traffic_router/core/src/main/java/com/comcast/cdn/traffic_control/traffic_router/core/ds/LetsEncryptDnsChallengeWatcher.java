@@ -15,26 +15,33 @@ package com.comcast.cdn.traffic_control.traffic_router.core.ds;
  * limitations under the License.
  */
 
-import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
+import com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.AbstractResourceWatcher;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.log4j.Logger;
-import org.xbill.DNS.*;
 
-import java.time.Duration;
+import java.io.*;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 
 public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
     private static final Logger LOGGER = Logger.getLogger(LetsEncryptDnsChallengeWatcher.class);
-    public static final String DEFAULT_LE_DNS_CHALLENGE_URL = "http://${toHostname}/api/1.4/letsencrypt/dnsrecords/";
-    private static final long TTL = Duration.ofMinutes(15).getSeconds();
-    private TrafficRouter trafficRouter;
+    public static final String DEFAULT_LE_DNS_CHALLENGE_URL = "https://${toHostname}/api/1.4/letsencrypt/dnsrecords/";
+    private static final String configFile = "/opt/traffic_router/db/cr-config.json";
 
-    public void setTrafficRouter(final TrafficRouter trafficRouter) {
-        this.trafficRouter = trafficRouter;
+    private ConfigHandler configHandler;
+
+    public void setConfigHandler(final ConfigHandler configHandler) {
+        this.configHandler = configHandler;
     }
 
     public LetsEncryptDnsChallengeWatcher() {
@@ -48,21 +55,56 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
             final HashMap<String, List<LetsEncryptDnsChallenge>> dataMap = mapper.readValue(data, new TypeReference<HashMap<String, List<LetsEncryptDnsChallenge>>>() { });
             final List<LetsEncryptDnsChallenge> challengeList = dataMap.get("response");
 
+            JsonNode mostRecentConfig = mapper.readTree(readConfigFile());
+            final ObjectNode deliveryServicesNode = (ObjectNode) JsonUtils.getJsonNode(mostRecentConfig, ConfigHandler.deliveryServicesKey);
+
+
             challengeList.forEach(challenge -> {
                 final StringBuilder sb = new StringBuilder();
                 sb.append(challenge.getFqdn());
                 if (!challenge.getFqdn().endsWith(".")) {
                      sb.append('.');
                 }
-                final String fqdn = sb.toString();
-                try {
-                    final Name zoneName = new Name(fqdn);
-                    final Record r = new TXTRecord(zoneName, DClass.IN, TTL, challenge.getRecord());
-                    trafficRouter.getZoneManager().getZone(zoneName).addRecord(r);
-                } catch (TextParseException e) {
-                    LOGGER.warn("Failed to parse zone from fqdn: " + fqdn);
-                }
+                final String challengeDomain = sb.toString();
+                final String fqdn = challengeDomain.substring(0, challengeDomain.length() - 1).replace("_acme-challenge.", "");
+
+                    final String dsLabel = fqdn.split("\\.")[0];
+                    final ObjectNode deliveryServiceConfig = (ObjectNode) deliveryServicesNode.get(dsLabel);
+
+                    ArrayNode staticDnsEntriesNode;
+
+                    if (deliveryServiceConfig.findValue("staticDnsEntries") != null) {
+                         staticDnsEntriesNode = (ArrayNode) deliveryServiceConfig.findValue("staticDnsEntries");
+                    } else {
+                        staticDnsEntriesNode = mapper.createArrayNode();
+                    }
+
+                    final ObjectNode newChildNode = mapper.createObjectNode();
+                    newChildNode.put("type", "TXT");
+                    newChildNode.put("name", "_acme-challenge");
+                    newChildNode.put("value", challenge.getRecord());
+                    newChildNode.put("ttl", 10);
+
+                    staticDnsEntriesNode.add(newChildNode);
+
+                    deliveryServiceConfig.set("staticDnsEntries", staticDnsEntriesNode);
+                    deliveryServicesNode.set(dsLabel, deliveryServiceConfig);
+
             });
+
+            final ObjectNode statsNode = (ObjectNode) mostRecentConfig.get("stats");
+            statsNode.put("date", Instant.now().toEpochMilli() / 1000L);
+
+//                    final ObjectNode fullConfig = mapper.createObjectNode();
+            final ObjectNode fullConfig = (ObjectNode) mostRecentConfig;
+            fullConfig.set(ConfigHandler.deliveryServicesKey, deliveryServicesNode);
+            fullConfig.set("stats", statsNode);
+
+            try {
+                configHandler.processConfig(fullConfig.toString());
+            } catch (JsonParseException | JsonUtilsException jsonError) {
+                LOGGER.error("error processing config: " + jsonError.getMessage());
+            }
 
             return true;
         } catch (Exception e) {
@@ -88,5 +130,23 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
     @Override
     public String getWatcherConfigPrefix() {
         return "dnschallengemapping";
+    }
+
+    @SuppressWarnings("PMD.AppendCharacterWithChar")
+    private String readConfigFile() {
+        try {
+            final InputStream is = new FileInputStream(configFile);
+            final BufferedReader buf = new BufferedReader(new InputStreamReader(is));
+            String line = buf.readLine();
+            final StringBuilder sb = new StringBuilder();
+            while (line != null) {
+                sb.append(line).append("\n");
+                line = buf.readLine();
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            LOGGER.error("Could not read cr-config file.");
+            return null;
+        }
     }
 }

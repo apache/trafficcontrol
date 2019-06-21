@@ -36,6 +36,7 @@ import (
 	"github.com/go-acme/lego/lego"
 	"github.com/go-acme/lego/registration"
 	"net/http"
+	"time"
 )
 
 type MyUser struct {
@@ -64,6 +65,10 @@ func NewDNSProviderTrafficRouter(r *http.Request) (*DNSProviderTrafficRouter, er
 	return &DNSProviderTrafficRouter{r: r}, nil
 }
 
+func (d *DNSProviderTrafficRouter) Timeout() (timeout, interval time.Duration) {
+	return time.Minute * 10, time.Second * 30
+}
+
 func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error {
 	inf, userErr, sysErr, _ := api.NewInfo(d.r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -74,7 +79,9 @@ func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error 
 
 	fqdn, value := dns01.GetRecord(domain, keyAuth)
 
-	if response, err := inf.Tx.Tx.Exec(`INSERT INTO dnschallenges (fqdn, record) VALUES ($1, $2)`, fqdn, value); err != nil {
+	q := `INSERT INTO dnschallenges (fqdn, record) VALUES ($1, $2)`
+	response, err := inf.Tx.Tx.Exec(q, fqdn, value)
+	if err != nil {
 		log.Errorf("Inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
 		return errors.New("Inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
 	} else {
@@ -93,6 +100,27 @@ func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error 
 }
 
 func (d *DNSProviderTrafficRouter) CleanUp(domain, token, keyAuth string) error {
+	//fqdn, value := dns01.GetRecord(domain, keyAuth)
+	//
+	//defer d.tx.Commit()
+	//
+	//q := `DELETE FROM dnschallenges WHERE fqdn = $1`
+	//response, err := d.tx.Exec(q, fqdn)
+	//if err != nil {
+	//	log.Errorf("Deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+	//	return errors.New("Deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+	//} else {
+	//	rows, err := response.RowsAffected()
+	//	if err != nil {
+	//		log.Errorf("Determining rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+	//		return errors.New("Determining rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+	//	}
+	//	if rows == 0 {
+	//		log.Errorf("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+	//		return errors.New("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+	//	}
+	//}
+	//
 	return nil
 }
 
@@ -168,26 +196,27 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	// private key, and a certificate URL. SAVE THESE TO DISK.
 	fmt.Printf("%#v\n", certificates)
 
+	//x509cert, err := x509.ParseCertificate(certificates.Certificate)
+	//expiration := x509cert.NotBefore
+	//log.Errorf("MATT JACKSON - expiration = %s", expiration)
+	log.Errorf("MATT JACKSON - cert = %s", certificates.Certificate)
+	log.Errorf("MATT JACKSON - privatekey = %s", certificates.PrivateKey)
+	log.Errorf("MATT JACKSON - csr = %s", certificates.CSR)
+
 	// Save certs into Riak
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
 		CDN:             *req.CDN,
 		DeliveryService: *req.DeliveryService,
-		BusinessUnit:    *req.BusinessUnit,
-		City:            *req.City,
-		Organization:    *req.Organization,
 		Hostname:        *req.HostName,
-		Country:         *req.Country,
-		State:           *req.State,
-		Key:             *req.Key,
 		Version:         *req.Version,
 	}
-	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(certificates.Certificate), Key: string(certificates.PrivateKey), CSR: string(certificates.CSR)}
+
+	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(certificates.Certificate)), Key: string(EncodePEMToLegacyPerlRiakFormat(certificates.PrivateKey)), CSR: string(certificates.CSR)}
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
 		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("putting riak keys: "+err.Error()), nil)
 		return
 	}
-
 	api.WriteResp(w, r, "Successfully created ssl keys for "+deliveryService)
 
 }
