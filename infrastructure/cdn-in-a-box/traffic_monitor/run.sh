@@ -104,7 +104,7 @@ export TO_PASSWORD=$TO_ADMIN_PASSWORD
 touch /opt/traffic_monitor/var/log/traffic_monitor.log
 
 # Do not start until there a valid Snapshot has been taken
-until [ $(to-get "/api/1.4/cdns/$CDN_NAME/snapshot" 2>/dev/null | jq -c -e '.config|length') -gt 0 ] ; do
+until [ $(to-get "/api/1.4/cdns/$CDN_NAME/snapshot" 2>/dev/null | jq -c -e '.response.config|length') -gt 0 ] ; do
 	echo "Waiting on valid Snapshot...";
   	sleep 3;
 done
