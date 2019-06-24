@@ -266,14 +266,14 @@ A table of all servers (of all kinds) across all :term:`Delivery Services` and C
 
 :UPD:    'true' when updates to the server's configuration are pending, 'false' otherwise
 :Host:   The hostname of the server
-:Domain: The server's domain. (The :abbr:`FQDN (Fully Qualified Domain Name)` of the server is given by 'Host.Domain')
+:Domain: The server's domain. (The :abbr:`FQDN (Fully Qualified Domain Name)` of the server is given by :file:`{Host}.{Domain}`)
 :IP:     The server's IPv4 address
 :IPv6:   The server's IPv6 address
-:Status: The server's status
+:Status: The server's :term:`Status`
 
 	.. seealso:: :ref:`health-proto`
 
-:Type:        	The type of server e.g. EDGE for an Edge-tier :term:`cache server`
+:Type:        	The :term:`Type` of server e.g. EDGE for an :term:`Edge-tier cache server`
 :Profile:     	The name of the server's :term:`Profile`
 :CDN:         	The name of the CDN to which this server is assigned (if any)
 :Cache Group: 	The name of the :term:`Cache Group` to which this server belongs
