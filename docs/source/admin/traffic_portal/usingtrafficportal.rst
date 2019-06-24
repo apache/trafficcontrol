@@ -38,33 +38,31 @@ Current Connections
 	The current number of connections to all of your CDNs.
 
 Healthy Caches
-	Displays the number of healthy caches across all CDNs. Click the link to view the healthy caches on the cache stats page.
+	Displays the number of healthy :term:`cache servers` across all CDNs. Click the link to view the healthy caches on the cache stats page.
 
 Unhealthy Caches
-	Displays the number of unhealthy caches across all CDNs. Click the link to view the unhealthy caches on the cache stats page.
+	Displays the number of unhealthy :term:`cache servers` across all CDNs. Click the link to view the unhealthy caches on the cache stats page.
 
 Online Caches
-	Displays the number of :term:`cache server` s with ONLINE status. Traffic Monitor will not monitor the state of ONLINE servers [1]_.
+	Displays the number of :term:`cache servers` with ONLINE :term:`Status`. Traffic Monitor will not monitor the state of ONLINE servers.
 
 Reported Caches
-	Displays the number of :term:`cache server` s with REPORTED status [1]_.
+	Displays the number of :term:`cache servers` with REPORTED :term:`Status`.
 
 Offline Caches
-	Displays the number of :term:`cache server` s with OFFLINE status [1]_.
+	Displays the number of :term:`cache servers` with OFFLINE :term:`Status`.
 
 Admin Down Caches
-	Displays the number of caches with ADMIN_DOWN status [1]_.
+	Displays the number of caches with ADMIN_DOWN :term:`Status`.
 
-Each component of this view is updated on the intervals defined in the :file:`traffic_portal_properties.json` configuration file.
-
-.. [1] For more information, see :ref:`health-proto`.
+Each component of this view is updated on the intervals defined in the :atc-file:`traffic_portal/app/src/traffic_portal_properties.json` configuration file.
 
 CDNs
 ====
 A table of CDNs with the following columns:
 
 :Name:           The name of the CDN
-:Domain:         The CDN's Top-Level Domain (TLD)
+:Domain:         The CDN's :abbr:`TLD (Top-Level Domain)`
 :DNSSEC Enabled: 'true' if :ref:`tr-dnssec` is enabled on this CDN, 'false' otherwise.
 
 CDN management includes the ability to (where applicable):
@@ -73,17 +71,16 @@ CDN management includes the ability to (where applicable):
 - update an existing CDN
 - delete an existing CDN
 - queue/clear updates on all servers in a CDN
-- diff CDN snapshots
-- create a CDN snapshot
+- compare and take CDN :term:`Snapshots`
 - manage a CDN's DNSSEC keys
-- manage a CDN's federations
-- view :term:`Delivery Service`\ s of a CDN
-- view CDN profiles
+- manage a CDN's :term:`Federations`
+- view :term:`Delivery Services` of a CDN
+- view CDN :term:`Profiles`
 - view servers within a CDN
 
 Monitor
 =======
-The :guilabel:`Monitor` section of Traffic Portal is used to display statistics regarding the various :term:`cache server` s within all CDNs visible to the user. It retrieves this information through the Traffic Ops API from Traffic Monitor instances.
+The :guilabel:`Monitor` section of Traffic Portal is used to display statistics regarding the various :term:`cache servers` within all CDNs visible to the user. It retrieves this information through the :ref:`to-api` from Traffic Monitor instances.
 
 .. figure:: ./images/tp_menu_monitor.png
 	:align: center
@@ -94,41 +91,43 @@ The :guilabel:`Monitor` section of Traffic Portal is used to display statistics 
 
 Cache Checks
 ------------
-A real-time view into the status of each cache. The :menuselection:`Monitor --> Cache Checks` page is intended to give an overview of the caches managed by Traffic Control as well as their status.
+A real-time view into the status of each :term:`cache server`. The :menuselection:`Monitor --> Cache Checks` page is intended to give an overview of the caches managed by Traffic Control as well as their status.
 
-:Hostname: Cache host name
-:Profile:  The name of the profile applied to the cache
-:Status:   The status of the cache (one of: ONLINE, REPORTED, ADMIN_DOWN, OFFLINE)
+.. warning:: Several of these columns may be empty by default - particularly in the :ref:`ciab` environment - and require :ref:`Traffic Ops Extensions <admin-to-ext-script>` to be installed/enabled/configured in order to work.
+
+:Hostname: The (short) hostname of the :term:`cache server`
+:Profile:  The name of the :term:`Profile` used by the :term:`cache server`
+:Status:   The :term:`Status` of the :term:`cache server`
 
 	.. seealso:: :ref:`health-proto`
 
-:UPD:      Configuration updates pending for an Edge-tier or Mid-tier :term:`cache server`
-:RVL:      Content invalidation requests are pending for this server and/or its parent(s)
-:ILO:      Ping the iLO interface for Edge-tier or Mid-tier :term:`cache server` s
-:10G:      Ping the IPv4 address of the Edge-tier or Mid-tier :term:`cache server` s
-:FQDN:     DNS check that matches what the DNS servers responds with compared to what Traffic Ops has
-:DSCP:     Checks the :abbr:`DSCP (Differentiated Services Code Point)` value of packets from the Edge-tier :term:`cache server` to the Traffic Ops server
-:10G6:     Ping the IPv6 address of the Edge-tier or Mid-tier :term:`cache server` s
-:MTU:      Ping the Edge-tier or Mid-tier using the configured :abbr:`MTU (Maximum Transmission Unit)` from Traffic Ops
-:RTR:      Content Router checks. Checks the health of the Traffic Router servers. Also checks the health of the :term:`cache server` s using the Traffic Routers
-:CHR:      Cache Hit Ratio percent
-:CDU:      Total Cache Disk Usage percent
-:ORT:      Operational Readiness Test - uses the :term:`ORT` script on the Edge-tier and Mid-tier :term:`cache server` s to determine if the configuration in Traffic Ops matches the configuration on the Edge-tier or Mid-tier. The user as whom this script runs must have an SSH key on the Edge-tier servers.
+:UPD:  Displays whether or not this :term:`cache server` has configuration updates pending
+:RVL:  Displays whether or not this :term:`cache server` (or one or more of its :term:`parents`) has content invalidation requests pending
+:ILO:  Indicates the status of an :abbr:`iLO (Integrated Lights-Out)` interface for this :term:`cache server`
+:10G:  Indicates whether or not the IPv4 address of this :term:`cache server` is reachable via ICMP "pings"
+:FQDN: DNS check that matches what the DNS servers respond with compared to what Traffic Ops has configured
+:DSCP: Checks the :abbr:`DSCP (Differentiated Services Code Point)` value of packets received from this :term:`cache server`
+:10G6: Indicates whether or not the IPv6 address of this :term:`cache server` is reachable via ICMP "pings"
+:MTU:  Checks the :abbr:`MTU (Maximum Transmission Unit)` by sending ICMP "pings" from the Traffic Ops server
+:RTR:  Checks the reachability of the :term:`cache server` from the CDN's configured Traffic Routers
+:CHR:  Cache-Hit Ratio (percent)
+:CDU:  Total Cache-Disk Usage (percent)
+:ORT:  Uses the :term:`ORT` script on the :term:`cache server` to determine if the configuration in Traffic Ops matches the configuration on :term:`cache server` itself. The user as whom this script runs must have an SSH key on each server.
 
 
 Cache Stats
 -----------
 A table showing the results of the periodic :ref:`to-check-ext` that are run. These can be grouped by :term:`Cache Group` and/or :term:`Profile`.
 
-:Profile:     Name of the :term:`Profile` applied to the Edge-tier or Mid-tier :term:`cache server`
+:Profile:     Name of the :term:`Profile` applied to the Edge-tier or Mid-tier :term:`cache server`, or the special name "ALL" indicating that this row is a group of all :term:`cache servers` within a single :term:`Cache Group`
 :Host:        'ALL' for entries grouped by :term:`Cache Group`, or the hostname of a particular :term:`cache server`
-:Cache Group: Name of the :term:`Cache Group` to which this server belongs, or the name of the :term:`Cache Group` that is grouped for entries grouped by :term:`Cache Group`
+:Cache Group: Name of the :term:`Cache Group` to which this server belongs, or the name of the :term:`Cache Group` that is grouped for entries grouped by :term:`Cache Group`, or the special name "ALL" indicating that this row is an aggregate across all :term:`Cache Groups`
 :Healthy:     True/False as determined by Traffic Monitor
 
 	.. seealso:: :ref:`health-proto`
 
 :Status:      Status of the :term:`cache server` or :term:`Cache Group`
-:Connections: Number of connections to this :term:`cache server` or :term:`Cache Group`
+:Connections: Number of currently open connections to this :term:`cache server` or :term:`Cache Group`
 :MbpsOut:     Data flow rate outward from the CDN (toward client) in Megabits per second
 
 .. _tp-services:

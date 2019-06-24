@@ -60,7 +60,7 @@ influxPassword
 pollingInterval
 	The interval at which Traffic Monitor is polled and stats are stored in InfluxDB
 statusToMon
-	The status of Traffic Monitor to poll (poll ONLINE or OFFLINE traffic monitors)
+	The status of Traffic Monitor to poll (poll ONLINE or OFFLINE Traffic Monitors)
 seelogConfig
 	The absolute path of the seelog configuration file
 dailySummaryPollingInterval
@@ -68,9 +68,9 @@ dailySummaryPollingInterval
 cacheRetentionPolicy
 	The default retention policy for cache stats
 dsRetentionPolicy
-	The default retention policy for :term:`Delivery Service`\ stats
+	The default retention policy for :term:`Delivery Service` statistics
 dailySummaryRetentionPolicy
-	The retention policy to be used for the daily stats
+	The retention policy to be used for the daily statistics
 influxUrls
 	An array of InfluxDB hosts for Traffic Stats to write stats to.
 
@@ -86,7 +86,7 @@ To easily create databases, retention policies, and continuous queries, run :pro
 
 Configuring Grafana
 -------------------
-In Traffic Portal the :menuselection:`Other --> Grafana` menu item can be configured to display Grafana graphs using InfluxDB data. In order for this to work correctly, you will need two things:
+In Traffic Portal the :menuselection:`Other --> Grafana` menu item can be configured to display Grafana graphs using InfluxDB data (when not configured, this menu item will not appear). In order for this to work correctly, you will need two things:
 
 #. A :term:`Parameter` with the graph URL (more information below)
 #. The graphs created in Grafana. See below for how to create some simple graphs in Grafana. These instructions assume that InfluxDB has been configured and that data has been written to it. If this is not true, you will not see any graphs.
@@ -112,41 +112,52 @@ To create a graph in Grafana, you can follow these basic steps:
 
 In order for Traffic Portal users to see Grafana graphs, Grafana will need to allow anonymous access. Information on how to configure anonymous access can be found on the configuration page of the `Grafana Website  <http://docs.grafana.org/installation/configuration/#authanonymous>`_.
 
-Traffic Portal uses custom dashboards to display information about individual :term:`Delivery Service`\ s or :term:`Cache Group`\ s. In order for the custom graphs to display correctly, the `traffic_ops_*.js <https://github.com/apache/trafficcontrol/blob/master/traffic_stats/grafana/>`_ files need to be in the ``/usr/share/grafana/public/dashboards/`` directory on the Grafana server. If your Grafana server is the same as your Traffic Stats server the RPM install process will take care of putting the files in place. If your Grafana server is different from your Traffic Stats server, you will need to manually copy the files to the correct directory.
+Traffic Portal uses custom dashboards to display information about individual :term:`Delivery Services` or :term:`Cache Groups`. In order for the custom graphs to display correctly, the Javascript files in :atc-file:`traffic_stats/grafana/`  need to be in the :file:`/usr/share/grafana/public/dashboards/` directory on the Grafana server. If your Grafana server is the same as your Traffic Stats server the RPM install process will take care of putting the files in place. If your Grafana server is different from your Traffic Stats server, you will need to manually copy the files to the correct directory.
 
-More information on custom scripted graphs can be found in the `scripted dashboards <http://docs.grafana.org/reference/scripting/>`_ section of the Grafana documentation.
+.. seealso:: More information on custom scripted graphs can be found in the `scripted dashboards <http://docs.grafana.org/reference/scripting/>`_ section of the Grafana documentation.
 
 Configuring Traffic Portal for Traffic Stats
 --------------------------------------------
 - The InfluxDB servers need to be added to Traffic Portal with profile = InfluxDB. Make sure to use port 8086 in the configuration.
 - The traffic stats server should be added to Traffic Ops with profile = Traffic Stats.
-- :term:`Parameter`\ s for which stats will be collected are added with the release, but any changes can be made via parameters that are assigned to the Traffic Stats profile.
+- :term:`Parameters` for which stats will be collected are added with the release, but any changes can be made via parameters that are assigned to the Traffic Stats profile.
 
 Configuring Traffic Portal to use Grafana Dashboards
 ----------------------------------------------------
-To configure Traffic Portal to use Grafana Dashboards, you need to enter the following :term:`Parameter`\ s and assign them to the GLOBAL profile. This assumes you followed the above instructions to install and configure InfluxDB and Grafana. You will need to place 'cdn-stats','deliveryservice-stats', and 'daily-summary' with the name of your dashboards.
+To configure Traffic Portal to use Grafana Dashboards, you need to enter the following :term:`Parameters` and assign them to the special GLOBAL :term:`Profile`. This assumes you followed instructions in the Installation_, `Configuring Traffic Stats`_, `Configuring InfluxDB`_, and `Configuring Grafana`_ sections.
 
 .. table:: Traffic Stats Parameters
 
-	+---------------------------+----------------------------------------------------------------------------------------------------+
-	|       parameter name      |                                        parameter value                                             |
-	+===========================+====================================================================================================+
-	| all_graph_url             | ``https://<grafanaHost>/dashboard/db/deliveryservice-stats``                                       |
-	+---------------------------+----------------------------------------------------------------------------------------------------+
-	| cachegroup_graph_url      | ``https://<grafanaHost>/dashboard/script/traffic_ops_cachegroup.js?which=``                        |
-	+---------------------------+----------------------------------------------------------------------------------------------------+
-	| deliveryservice_graph_url | ``https://<grafanaHost>/dashboard/script/traffic_ops_deliveryservice.js?which=``                   |
-	+---------------------------+----------------------------------------------------------------------------------------------------+
-	| server_graph_url          | ``https://<grafanaHost>/dashboard/script/traffic_ops_server.js?which=``                            |
-	+---------------------------+----------------------------------------------------------------------------------------------------+
-	| visual_status_panel_1     | ``https://<grafanaHost>/dashboard-solo/db/cdn-stats?panelId=2&fullscreen&from=now-24h&to=now-60s`` |
-	+---------------------------+----------------------------------------------------------------------------------------------------+
-	| visual_status_panel_2     | ``https://<grafanaHost>/dashboard-solo/db/cdn-stats?panelId=1&fullscreen&from=now-24h&to=now-60s`` |
-	+---------------------------+----------------------------------------------------------------------------------------------------+
-	| daily_bw_url              | ``https://<grafanaHost>/dashboard-solo/db/daily-summary?panelId=1&fullscreen&from=now-3y&to=now``  |
-	+---------------------------+----------------------------------------------------------------------------------------------------+
-	| daily_served_url          | ``https://<grafanaHost>/dashboard-solo/db/daily-summary?panelId=2&fullscreen&from=now-3y&to=now``  |
-	+---------------------------+----------------------------------------------------------------------------------------------------+
+	+---------------------------+--------------------------------------------------------------------------------------------------------------------+
+	|       parameter name      |                                        parameter value                                                             |
+	+===========================+====================================================================================================================+
+	| all_graph_url             | :file:`https://{grafanaHost}/dashboard/db/{deliveryservice-stats-dashboard}`                                       |
+	+---------------------------+--------------------------------------------------------------------------------------------------------------------+
+	| cachegroup_graph_url      | :file:`https://{grafanaHost}/dashboard/script/traffic_ops_cachegroup.js?which=`                                    |
+	+---------------------------+--------------------------------------------------------------------------------------------------------------------+
+	| deliveryservice_graph_url | :file:`https://{grafanaHost}/dashboard/script/traffic_ops_deliveryservice.js?which=`                               |
+	+---------------------------+--------------------------------------------------------------------------------------------------------------------+
+	| server_graph_url          | :file:`https://{grafanaHost}/dashboard/script/traffic_ops_server.js?which=`                                        |
+	+---------------------------+--------------------------------------------------------------------------------------------------------------------+
+	| visual_status_panel_1     | :file:`https://{grafanaHost}/dashboard-solo/db/{cdn-stats-dashboard}?panelId=2&fullscreen&from=now-24h&to=now-60s` |
+	+---------------------------+--------------------------------------------------------------------------------------------------------------------+
+	| visual_status_panel_2     | :file:`https://{grafanaHost}/dashboard-solo/db/{cdn-stats-dashboard}?panelId=1&fullscreen&from=now-24h&to=now-60s` |
+	+---------------------------+--------------------------------------------------------------------------------------------------------------------+
+	| daily_bw_url              | :file:`https://{grafanaHost}/dashboard-solo/db/{daily-summary-dashboard}?panelId=1&fullscreen&from=now-3y&to=now`  |
+	+---------------------------+--------------------------------------------------------------------------------------------------------------------+
+	| daily_served_url          | :file:`https://{grafanaHost}/dashboard-solo/db/{daily-summary-dashboard}?panelId=2&fullscreen&from=now-3y&to=now`  |
+	+---------------------------+--------------------------------------------------------------------------------------------------------------------+
+
+where
+
+grafanaHost
+	is the :abbr:`FQDN (Fully Qualified Domain Name)` of the Grafana server (again, usually the same as the Traffic Stats server),
+cdn-stats-dashboard
+	is the name of the Dashboard providing CDN-level statistics,
+deliveryservice-stats-dashboard
+	is the name of the Dashboard providing :term:`Delivery Service`-level statistics, and
+daily-summary-dashboard
+	is the name of the Dashboard providing a daily summary of general statistics that would be of interest to administrators using Traffic Portal
 
 InfluxDB Tools
 ==============
