@@ -243,7 +243,7 @@ For the JSON formatter component:
 
 For the DataTables component:
 @traffic_portal/app/src/assets/css/jquery.dataTables.min_1.10.9.css
-@traffic_portal/app/src/assets/js/jquery.dataTables.1.10.19_patched.js
+@traffic_portal/app/src/assets/js/jquery.dataTables.1.10.19.js
 @traffic_portal/app/src/assets/images/sort_*
 ./licenses/MIT-datatables
 
