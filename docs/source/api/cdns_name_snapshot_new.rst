@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves the *pending* snapshot for a CDN, which represents the current *configuration* of the CDN, **not** the current *operating state* of the CDN. The contents of this snapshot are currently used by Traffic Monitor and Traffic Router.
+Retrieves the *pending* :term:`Snapshot` for a CDN, which represents the current *configuration* of the CDN, **not** the current *operating state* of the CDN. The contents of this :term:`Snapshot` are currently used by Traffic Monitor and Traffic Router.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+------------------------------------------------------------+
-	| Name | Description                                                |
-	+======+============================================================+
-	| name | The name of the CDN for which a snapshot shall be returned |
-	+------+------------------------------------------------------------+
+	+------+--------------------------------------------------------------------+
+	| Name | Description                                                        |
+	+======+====================================================================+
+	| name | The name of the CDN for which a :term:`Snapshot` shall be returned |
+	+------+--------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -315,7 +315,7 @@ Response Structure
 	:CDN_name: The name of this CDN
 	:date:     The UNIX epoch timestamp date in the Traffic Ops server's own timezone
 	:tm_host:  The FQDN of the Traffic Ops server
-	:tm_path:  A path relative to the root of the Traffic Ops server where a request may be replaced to have this snapshot overwritten by the current *configured state* of the CDN
+	:tm_path:  A path relative to the root of the Traffic Ops server where a request may be replaced to have this :term:`Snapshot` overwritten by the current *configured state* of the CDN
 
 		.. deprecated:: 1.1
 			This field is still present for legacy compatibility reasons, but its contents should be ignored. Instead, make a ``PUT`` request to :ref:`to-api-snapshot-name`.

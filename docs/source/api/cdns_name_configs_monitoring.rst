@@ -57,7 +57,7 @@ Response Structure
 	:health.polling.interval:     An interval in milliseconds on which to poll for health statistics
 	:health.threadPool:           The number of threads to be used for health polling
 	:health.timepad:              A 'padding time' to add to requests to spread them out for Traffic Control systems that use a large number of Traffic Monitors
-	:tm.crConfig.polling.url:     The URL from which a CRConfig can be obtained
+	:tm.crConfig.polling.url:     The URL from which a :term:`Snapshot` can be obtained
 	:tm.dataServer.polling.url:   The URL from which a list of data servers can be obtained
 	:tm.healthParams.polling.url: The URL from which a list of health-polling parameters can be obtained
 	:tm.polling.interval:         The interval at which to poll for configuration updates

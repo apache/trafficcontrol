@@ -26,7 +26,7 @@ Delivery Services are modeled several times over, in the Traffic Ops database, i
 
 Active
 ------
-Whether or not this Delivery Service is active on the CDN and can be served. When a Delivery Service is not "active", Traffic Router will not be made aware of its existence - i.e. it will not appear in CDN :term:`Snapshot`\ s. Setting a Delivery Service to be "active" (or "inactive") will require that a new :term:`Snapshot` be taken.
+Whether or not this Delivery Service is active on the CDN and can be served. When a Delivery Service is not "active", Traffic Router will not be made aware of its existence - i.e. it will not appear in CDN :term:`Snapshots`. Setting a Delivery Service to be "active" (or "inactive") will require that a new :term:`Snapshot` be taken.
 
 Anonymous Blocking
 ------------------

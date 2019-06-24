@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Queue or dequeue updates for all servers assigned to a specific CDN.
+:term:`Queue` or "dequeue" updates for all servers assigned to a specific CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -55,7 +55,7 @@ Request Structure
 Response Structure
 ------------------
 :action: The action processed, either ``"queue"`` or ``"dequeue"``
-:cdnId:  The integral, unique identifier for the CDN on which updates were (de)queued
+:cdnId:  The integral, unique identifier for the CDN on which :term:`Queue Updates` was performed or cleared
 
 .. code-block:: http
 	:caption: Response Example

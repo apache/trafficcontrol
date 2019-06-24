@@ -57,6 +57,8 @@ Admin Down Caches
 
 Each component of this view is updated on the intervals defined in the :atc-file:`traffic_portal/app/src/traffic_portal_properties.json` configuration file.
 
+.. _tp-cdns:
+
 CDNs
 ====
 A table of CDNs with the following columns:
@@ -70,8 +72,9 @@ CDN management includes the ability to (where applicable):
 - create a new CDN
 - update an existing CDN
 - delete an existing CDN
-- queue/clear updates on all servers in a CDN
-- compare and take CDN :term:`Snapshots`
+- :term:`Queue Updates` on all servers in a CDN, or clear such updates
+- Compare CDN :term:`Snapshots`
+- create a CDN :term:`Snapshot`
 - manage a CDN's DNSSEC keys
 - manage a CDN's :term:`Federations`
 - view :term:`Delivery Services` of a CDN
@@ -287,7 +290,7 @@ Server management includes the ability to (where applicable):
 - create a new server
 - update an existing server
 - delete an existing server
-- queue/clear updates on a server
+- :term:`Queue Updates` on a server, or clear such updates
 - update server status
 - view server :term:`Delivery Services`
 - view server configuration files
@@ -415,7 +418,7 @@ Topology
 
 Cache Groups
 ------------
-This page is a table of :term:`Cache Group`\ s, each entry of which has the following fields:
+This page is a table of :term:`Cache Groups`, each entry of which has the following fields:
 
 :Name:       The full name of this :term:`Cache Group`
 :Short Name: A shorter, more human-friendly name for this :term:`Cache Group`
@@ -428,12 +431,12 @@ This page is a table of :term:`Cache Group`\ s, each entry of which has the foll
 - create a new :term:`Cache Group`
 - update an existing :term:`Cache Group`
 - delete an existing :term:`Cache Group`
-- queue/clear updates for all servers in a :term:`Cache Group`
+- :term:`Queue Updates` for all servers in a :term:`Cache Group`, or clear such updates
 - view :term:`Cache Group` :abbr:`ASN (Autonomous System Number)`\ s
 
 	.. seealso:: `The Wikipedia page on Autonomous System Numbers <https://en.wikipedia.org/wiki/Autonomous_System_Number>`_
 
-- view and assign :term:`Cache Group` :term:`Parameter`\ s
+- view and assign :term:`Cache Group` :term:`Parameters`
 - view :term:`Cache Group` servers
 
 Coordinates
@@ -550,11 +553,23 @@ DHCP
 	If this is 'no' the IP settings of the system must be specified, and the following extra fields will appear:
 
 		IP Address
-			The resultant system's IPv4 Address
+			The resultant system's IPv4 address
+		IPv6 Address
+			The resultant system's IPv6 address
 		Network Subnet
 			The system's network subnet mask
 		Network Gateway
-			The system's network gateway's IPv4 Address
+			The system's network gateway's IPv4 address
+		IPv6 Gateway
+			The system's network gateway's IPv6 address
+		Management IP Address
+			An optional IP address (IPv4 or IPv6) of a "management" server for the resultant system (e.g. for :abbr:`ILO (Integrated Lights-Out)`)
+		Management IP Netmask
+			The subnet mask (IPv4 or IPv6) used by a "management" server for the resultant system (e.g. for :abbr:`ILO (Integrated Lights-Out)`) - only needed if the Management IP Address is provided
+		Management IP Gateway
+			The IP address (IPv4 or IPv6) of the network gateway used by a "management" server for the resultant system (e.g. for :abbr:`ILO (Integrated Lights-Out)`) - only needed if the Management IP Address is provided
+		Management Interface
+			The network interface used by a "management" server for the resultant system (e.g. for :abbr:`ILO (Integrated Lights-Out)`) - only needed if the Management IP Address is provided. Must not be the same as "Interface Name".
 
 Network MTU
 	The system's network's :abbr:`MTU (Maximum Transmission Unit)`. Despite being a text field, this can only be 1500 or 9000 - it should almost always be 1500
@@ -564,7 +579,7 @@ Network MTU
 Disk for OS Install
 	The disk on which to install the base system. A reasonable default is ``sda`` (the ``/dev/`` prefix is not necessary)
 Root Password
-	The password to be used for the root user. Input is MD5 hashed before being written to disk
+	The password to be used for the root user. Input is hashed using MD5 before being written to disk
 Confirm Root Password
 	Repeat the 'Root Password' to be sure it's right
 Interface Name
@@ -574,6 +589,8 @@ Interface Name
 
 Stream ISO
 	If this is 'yes', then the download will start immediately as the ISO is written directly to the socket connection to Traffic Ops. If this is 'no', then the download will begin only *after* the ISO has finished being generated. For almost all use cases, this should be 'yes'.
+
+.. impl-detail:: Traffic Ops uses Red Hat's `Kickstart <https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/installation_guide/chap-kickstart-installations>` to create these ISOs, so many configuration options not available here can be tweaked in the :ref:`Kickstart configuration file <Creating-CentOS-Kickstart>`.
 
 User Admin
 ==========

@@ -64,19 +64,19 @@ Configure Regional Geo-blocking (RGB)
 		The interval on which Traffic Router polls the :abbr:`RGB (Regional Geographic-based Blocking)` configuration file.
 
 	.. figure:: regionalgeo/01.png
-		:scale: 100%
+		:width: 40%
 		:align: center
 
-#. Enable RGB for a :term:`Delivery Service`
+#. Enable :abbr:`RGB (Regional Geographic-based Blocking)` for a :term:`Delivery Service` using the :ref:`Delivery Services view in Traffic Portal <tp-services-delivery-service>` (don't forget to save changes!)
 
 	.. figure:: regionalgeo/02.png
-		:scale: 100%
+		:width: 40%
 		:align: center
 
-#. Go to :menuselection:`Tools --> Snapshot CRConfig`, perform :guilabel:`Diff CRConfig` and click :guilabel:`Write CRConfig`.
+#. Go to :ref:`the Traffic Portal CDNs view <tp-cdns>`, click on :guilabel:`Diff CDN Config Snapshot`, and click :guilabel:`Perform Snapshot`.
 
 	.. figure:: regionalgeo/03.png
-		:scale: 70%
+		:width: 40%
 		:align: center
 
 Traffic Router Access Log

@@ -23,7 +23,7 @@
 
 ``PUT``
 =======
-Performs a CDN snapshot. Effectively, this propagates the new *configuration* of the CDN to its *operating state*, which replaces the output of the :ref:`to-api-cdns-name-snapshot` endpoint with the output of the :ref:`to-api-cdns-name-snapshot-new` endpoint.
+Performs a CDN :term:`Snapshot`. Effectively, this propagates the new *configuration* of the CDN to its *operating state*, which replaces the output of the :ref:`to-api-cdns-name-snapshot` endpoint with the output of the :ref:`to-api-cdns-name-snapshot-new` endpoint.
 
 .. Note:: Snapshotting the CDN also deletes all HTTPS certificates for every :term:`Delivery Service` which has been deleted since the last CDN :term:`Snapshot`.
 
@@ -35,11 +35,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+--------------------------------------------------------------------------------+
-	| Name | Description                                                                    |
-	+======+================================================================================+
-	|  ID  | The integral, unique identifier of the CDN for which a snapshot shall be taken |
-	+------+--------------------------------------------------------------------------------+
+	+------+----------------------------------------------------------------------------------------+
+	| Name | Description                                                                            |
+	+======+========================================================================================+
+	|  ID  | The integral, unique identifier of the CDN for which a :term:`Snapshot` shall be taken |
+	+------+----------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
