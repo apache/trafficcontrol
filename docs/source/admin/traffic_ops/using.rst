@@ -38,32 +38,6 @@ The Traffic Ops Menu
 
 The following tabs are available in the menu at the top of the Traffic Ops user interface.
 
-.. index::
-	Health Tab
-
-Health
-------
-Information on the health of the system. Hover over this tab to get to the following options:
-
-+---------------+------------------------------------------------------------------------------------------------------------------------------------+
-|     Option    |                                                            Description                                                             |
-+===============+====================================================================================================================================+
-| Table View    | A real time view into the main performance indicators of the CDNs managed by Traffic Control.                                      |
-|               | This view is sourced directly by the Traffic Monitor data and is updated every 10 seconds.                                         |
-|               | This is the default screen of Traffic Ops.                                                                                         |
-|               | See :ref:`health-table` for details.                                                                                               |
-+---------------+------------------------------------------------------------------------------------------------------------------------------------+
-| Graph View    | A real graphical time view into the main performance indicators of the CDNs managed by Traffic Control.                            |
-|               | This view is sourced by the Traffic Monitor data and is updated every 10 seconds.                                                  |
-|               | On loading, this screen will show a history of 24 hours of data from Traffic Stats                                                 |
-|               | See :ref:`health-graph` for details.                                                                                               |
-+---------------+------------------------------------------------------------------------------------------------------------------------------------+
-| Server Checks | A table showing the results of the periodic check extension scripts that are run. See :ref:`server-checks`                         |
-+---------------+------------------------------------------------------------------------------------------------------------------------------------+
-| Daily Summary | A graph displaying the daily peaks of bandwidth, overall bytes served per day, and overall bytes served since initial installation |
-|               | per CDN.                                                                                                                           |
-+---------------+------------------------------------------------------------------------------------------------------------------------------------+
-
 Servers
 -------
 The main Servers table. This is where you Create/Read/Update/Delete servers of all types.  Click the main tab to get to the main table, and hover over to get these sub options:
@@ -166,78 +140,6 @@ Help for Traffic Ops and Traffic Control. Hover over this tab to get the followi
 +---------------+---------------------------------------------------------------------+
 | Logout        | Logout from Traffic Ops                                             |
 +---------------+---------------------------------------------------------------------+
-
-
-.. index::
-	Edge Health
-	Health
-
-Health
-======
-
-.. _health-table:
-
-The Health Table
-----------------
-The Health table is the default landing screen for Traffic Ops, it displays the status of the EDGE caches in a table form directly from Traffic Monitor (bypassing Traffic Stats), sorted by Mbps Out. The columns in this table are:
-
-
-:Profile:          the Profile of this server or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
-:Edge Cache Group: the edge :term:`Cache Group` short name or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
-:Host Name:        the host name of the server or ALL, meaning this row shows data for multiple servers, and the row shows the sum of all values.
-:Healthy:          indicates if this cache is healthy according to the Health Protocol. A row with ALL in any of the columns will always show a |checkmark|, this column is valid only for individual EDGE caches.
-:Admin:            shows the administrative status of the server.
-:Connections:      the number of connections this cache (or group of caches) has open (``ats.proxy.process.http.current_client_connections`` from ATS).
-:Mbps Out:         the bandwidth being served out if this cache (or group of caches)
-
-Since the top line has ALL, ALL, ALL, it shows the total connections and bandwidth for all caches managed by this instance of Traffic Ops.
-
-.. _health-graph:
-
-Graph View
-----------
-The Graph View shows a live view of the last 24 hours of bits per seconds served and open connections at the edge in a graph. This data is sourced from Traffic Stats. If there are 2 CDNs configured, this view will show the statistis for both, and the graphs are stacked. On the left-hand side, the totals and immediate values as well as the percentage of total possible capacity are displayed. This view is update every 10 seconds.
-
-
-.. _server-checks:
-
-Server Checks
--------------
-The server checks page is intended to give an overview of the Servers managed by Traffic Control as well as their status. This data comes from `Traffic Ops extensions <traffic_ops_extensions.html>`_.
-
-+------+-----------------------------------------------------------------------+
-| Name |                 Description                                           |
-+======+=======================================================================+
-| ILO  | Ping the iLO interface for EDGE or MID servers                        |
-+------+-----------------------------------------------------------------------+
-| 10G  | Ping the IPv4 address of the EDGE or MID servers                      |
-+------+-----------------------------------------------------------------------+
-| 10G6 | Ping the IPv6 address of the EDGE or MID servers                      |
-+------+-----------------------------------------------------------------------+
-| MTU  | Ping the EDGE or MID using the configured MTU from Traffic Ops        |
-+------+-----------------------------------------------------------------------+
-| FQDN | DNS check that matches what the DNS servers responds with compared to |
-|      | what Traffic Ops has.                                                 |
-+------+-----------------------------------------------------------------------+
-| DSCP | Checks the DSCP value of packets from the edge server to the Traffic  |
-|      | Ops server.                                                           |
-+------+-----------------------------------------------------------------------+
-| RTR  | Content Router checks. Checks the health of the Content Routers.      |
-|      | Checks the health of the caches using the Content Routers.            |
-+------+-----------------------------------------------------------------------+
-| CHR  | Cache Hit Ratio in percent.                                           |
-+------+-----------------------------------------------------------------------+
-| CDU  | Total Cache Disk Usage in percent.                                    |
-+------+-----------------------------------------------------------------------+
-| ORT  | Operational Readiness Test. Uses the ORT script on the edge and mid   |
-|      | servers to determine if the configuration in Traffic Ops matches the  |
-|      | configuration on the edge or mid. The user that this script runs as   |
-|      | must have an ssh key on the edge servers.                             |
-+------+-----------------------------------------------------------------------+
-
-Daily Summary
--------------
-Displays daily max gbps and bytes served for all CDNs.  In order for the graphs to appear, the 'daily_bw_url' and 'daily_served_url' parameters need to be be created, assigned to the global profile, and have a value of a grafana graph.  For more information on configuring grafana, see the `Traffic Stats <../traffic_stats.html>`_  section.
 
 .. _server:
 
