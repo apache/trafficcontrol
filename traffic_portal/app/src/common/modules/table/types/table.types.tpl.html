@@ -31,11 +31,11 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <menuitem ng-repeat="c in columns">
+                    <li role="menuitem" ng-repeat="c in columns">
                         <div class="checkbox">
                             <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
                         </div>
-                    </menuitem>
+                    </li>
                 </menu>
             </div>
         </div>
