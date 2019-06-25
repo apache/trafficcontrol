@@ -31,7 +31,7 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-repeat="c in columns">
+                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
                         <div class="checkbox">
                             <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
                         </div>
@@ -48,16 +48,16 @@ under the License.
                 <tr class="headings">
                     <th>Name</th>
                     <th>Description</th>
-                    <th>Last Updated</th>
                     <th>Use In Table</th>
+                    <th>Last Updated</th>
                 </tr>
             </thead>
             <tbody>
                 <tr ng-click="editType(t.id)" ng-repeat="t in ::types">
                     <td name="name" data-search="^{{::t.name}}$">{{::t.name}}</td>
                     <td name="description" data-search="^{{::t.description}}$">{{::t.description}}</td>
-                    <td name="lastUpdated" data-search="^{{::getRelativeTime(t.lastUpdated)}}$" data-order="{{::t.lastUpdated}}">{{::getRelativeTime(t.lastUpdated)}}</td>
                     <td name="useInTable" data-search="^{{::t.useInTable}}$">{{::t.useInTable}}</td>
+                    <td name="lastUpdated" data-search="^{{::getRelativeTime(t.lastUpdated)}}$" data-order="{{::t.lastUpdated}}">{{::getRelativeTime(t.lastUpdated)}}</td>
                 </tr>
             </tbody>
         </table>

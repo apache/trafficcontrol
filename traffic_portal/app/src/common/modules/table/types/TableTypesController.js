@@ -51,8 +51,8 @@ var TableTypesController = function(types, $scope, $state, dateUtils, locationUt
                 "columns": [
                     { "name": "name", "visible": true, "searchable": true },
                     { "name": "description", "visible": true, "searchable": true },
-                    { "name": "lastUpdated", "visible": false, "searchable": false },
-                    { "name": "useInTable", "visible": true, "searchable": true }
+                    { "name": "useInTable", "visible": true, "searchable": true },
+                    { "name": "lastUpdated", "visible": false, "searchable": false }
                 ],
                 "colReorder": {
                     realtime: false
