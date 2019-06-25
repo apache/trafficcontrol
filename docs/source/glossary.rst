@@ -44,7 +44,7 @@ Glossary
 
 		..  Note:: Often the Edge-tier to Mid-tier relationship is based on network distance, and does not necessarily match the geographic distance.
 
-		.. seealso:: A :dfn:`Cache Group` serves a particular part of the network as defined in the coverage zone file. See :ref:`asn-czf` for details.
+		.. seealso:: A :dfn:`Cache Group` serves a particular part of the network as defined in the :term:`Coverage Zone File` (or :term:`Deep Coverage Zone File`, when applicable).
 
 		Consider the example CDN in :numref:`fig-cg_hierarchy`. Here some country/province/region has been divided into quarters: Northeast, Southeast, Northwest, and Southwest. The arrows in the diagram indicate the flow of requests. If a client in the Northwest, for example, were to make a request to the :term:`Delivery Service`, it would first be directed to some :term:`cache server` in the "Northwest" Edge-tier :dfn:`Cache Group`. Should the requested content not be in cache, the Edge-tier server will select a parent from the "West" :dfn:`Cache Group` and pass the request up, caching the result for future use. All Mid-tier :dfn:`Cache Groups` (usually) answer to a single :term:`origin` that provides canonical content. If requested content is not in the Mid-tier cache, then the request will be passed up to the :term:`origin` and the result cached.
 
@@ -64,9 +64,45 @@ Glossary
 	Coverage Zone Map
 		The :abbr:`CZM (Coverage Zone Map)` or :abbr:`CZF (Coverage Zone File)` is a file that maps network prefixes to :term:`Cache Groups`. Traffic Router uses the :abbr:`CZM (Coverage Zone Map)` to determine what :term:`Cache Group` is closest to the client. If the client IP address is not in this :abbr:`CZM (Coverage Zone Map)`, it falls back to geographic mapping, using a `MaxMind GeoIP2 database <https://www.maxmind.com/en/geoip2-databases>`_ to find the client's location, and the geographic coordinates from Traffic Ops for the :term:`Cache Group`. Traffic Router is inserted into the HTTP retrieval process by making it the authoritative DNS server for the domain of the CDN :term:`Delivery Service`. In the example of the :term:`reverse proxy`, the client was given the ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` URL. In a Traffic Control CDN, URLs start with a routing name, which is configurable per-:term:`Delivery Service`, e.g. ``http://foo.mydeliveryservice.cdn.com/fun/example.html`` with the chosen routing name ``foo``.
 
+		.. code-block:: json
+			:caption: Example Coverage Zone File
+
+			{ "coverageZones": {
+				"cache-group-01": {
+					"network6": [
+						"1234:5678::/64",
+						"1234:5679::/64"
+					],
+					"network": [
+						"192.168.8.0/24",
+						"192.168.9.0/24"
+					]
+				}
+			}}
+
+
 	Deep Coverage Zone File
 	Deep Coverage Zone Map
 		The :abbr:`DCZF (Deep Coverage Zone File)` or :abbr:`DCZM (Deep Coverage Zone Map)` maps network prefixes to "locations" - almost like the :term:`Coverage Zone File`. Location names must be unique, and within the file are simply used to group :term:`Edge-tier cache servers`. When a mapping is performed by Traffic Router, it will only look in the :abbr:`DCZF (Deep Coverage Zone File)` if the :term:`Delivery Service` to which a client is being directed makes use of :ref:`ds-deep-caching`. If the client's IP address cannot be matched by entries in this file, Traffic Router will first fall back to the regular :term:`Coverage Zone File`. Then, failing that, it will perform geographic mapping using a database provided by the :term:`Delivery Service`'s :ref:`ds-geo-provider`.
+
+		.. code-block:: json
+			:caption: Example Deep Coverage Zone File
+
+			{ "coverageZones": {
+				"cache-group-01": {
+					"network6": [
+						"1234:5678::/64",
+						"1234:5679::/64"
+					],
+					"network": [
+						"192.168.8.0/24",
+						"192.168.9.0/24"
+					],
+					"caches": [
+						"edge"
+					]
+				}
+			}}
 
 	Delivery Service
 	Delivery Services
@@ -85,7 +121,7 @@ Glossary
 
 	Division
 	Divisions
-		A group of :term:`Region`\ s.
+		A group of :term:`Regions`.
 
 	Edge
 	Edge-tier
