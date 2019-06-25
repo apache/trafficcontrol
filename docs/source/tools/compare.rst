@@ -82,7 +82,7 @@ traffic_ops/testing/compare/compare.go
 	Print version information and exit
 
 .. versionchanged:: 3.0.0
-	Removed the ``-s`` command line switch to compare CDN :term:`Snapshot`\ s - this is now the responsibility of the :program:`genConfigRoutes.py` script.
+	Removed the ``-s`` command line switch to compare CDN :term:`Snapshots` - this is now the responsibility of the :program:`genConfigRoutes.py` script.
 
 .. program:: genConfigRoutes.py
 

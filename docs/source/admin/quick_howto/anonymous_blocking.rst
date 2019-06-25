@@ -50,29 +50,29 @@ Configure Anonymous Blocking
 		An optional element. It includes a list of :abbr:`CIDR (Classless Inter-Domain Routing)` blocks indicating the IPv4 and IPv6 subnets that are allowed by the rule. If this list exists and the value is not ``null``, client IPs will be matched against the :abbr:`CIDR (Classless Inter-Domain Routing)` list, and if there is any match, the request will be allowed. If there is no match in the white list, further anonymous blocking logic will continue.
 
 
-#. Add the following three Anonymous Blocking parameters in Traffic Portal into CRConfig.json:
+#. Add the following three Anonymous Blocking parameters in Traffic Portal with the "CRConfig.json" "Config File", and ensure they are assigned to all of the Traffic Routers that should perform Anonymous Blocking:
 
 	``anonymousip.policy.configuration``
-		The HTTP URL of the Anonymous Blocking configuration file. Traffic Router will fetch the file from this URL.
+		The URL of the Anonymous Blocking configuration file. Traffic Router will fetch the file from this URL.
 	``anonymousip.polling.url``
-		The HTTP URL of the Anonymous IP Database. Traffic Router will fetch the file from this URL.
+		The URL of the Anonymous IP Database. Traffic Router will fetch the file from this URL.
 	``anonymousip.polling.interval``
 		The interval that Traffic Router polls the Anonymous Blocking configuration file and Anonymous IP Database.
 
 	.. figure:: anonymous_blocking/01.png
-		:scale: 100%
+		:width: 40%
 		:align: center
 
-#. Enable Anonmyous Blocking for a :term:`Delivery Service`
+#. Enable Anonmyous Blocking for a :term:`Delivery Service` using the :ref:`Delivery Services view in Traffic Portal <tp-services-delivery-service>` (don't forget to save changes!)
 
 	.. figure:: anonymous_blocking/02.png
-		:scale: 100%
+		:width: 40%
 		:align: center
 
-#. Go to :menuselection:`Tools --> Snapshot CRConfig`, perform :guilabel:`Diff CRConfig` and click :guilabel:`Write CRConfig`.
+#. Go to :ref:`the Traffic Portal CDNs view <tp-cdns>`, click on :guilabel:`Diff CDN Config Snapshot`, and click :guilabel:`Perform Snapshot`.
 
-	.. figure:: regionalgeo/03.png
-		:scale: 70%
+	.. figure:: anonymous_blocking/03.png
+		:width: 40%
 		:align: center
 
 

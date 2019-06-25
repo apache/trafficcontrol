@@ -322,14 +322,27 @@ Glossary
 			.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``ELASTICSEARCH``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
 		ATS_PROFILE
-			A Profile that can be used with either an Edge-tier or Mid-tier :term:`cache server`\ ` (but not both, in general).
+			A Profile that can be used with either an Edge-tier or Mid-tier :term:`cache server` (but not both, in general).
 
 			.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``EDGE`` or ``MID``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
 
-		.. tip:: A :dfn:`Profile` of the wrong type assigned to a Traffic Control component *will* (in general) cause it to function incorrectly, regardless of the :term:`Parameter`\ s assigned to it.
+		.. tip:: A :dfn:`Profile` of the wrong type assigned to a Traffic Control component *will* (in general) cause it to function incorrectly, regardless of the :term:`Parameters` assigned to it.
 
 		.. danger:: Nearly all of these :dfn:`Profile` types have strict naming requirements, and it may be noted that some of said requirements are prefixes ending with ``_``, while others are either not prefixes or do not end with ``_``. This is exactly true; some requirements **need** that ``_`` and some may or may not have it. It is our suggestion, therefore, that for the time being all prefixes use the ``_`` notation to separate words, so as to avoid causing headaches remembering when that matters and when it does not.
+
+	Queue
+	Queue Updates
+	Queue Server Updates
+		:dfn:`Queuing Updates` is an action that signals to various ATC components - most notably :term:`cache servers` - that any configuration changes that are pending are to be applied now. Specifically, Traffic Monitor and Traffic Router are updated through a CDN :term:`Snapshot`, and *not* :dfn:`Queued Updates`. In particular, :term:`ORT` will notice that the server on which it's running has new configuration, and will request the new configuration from Traffic Ops.
+
+		Updates may be queued on a server-by-server basis (in Traffic Portal's :ref:`tp-configure-servers` view), a Cache Group-wide basis (in Traffic Portal's :ref:`tp-configure-cache-groups` view), or on a CDN-wide basis (in Traffic Portal's :ref:`tp-cdns` view). Usually using the CDN-wide version is easiest, and unless there are special circumstances, and/or the user really knows what he or she is doing, it is recommended that the full CDN-wide :dfn:`Queue Updates` be used.
+
+		This is similar to taking a CDN :term:`Snapshot`, but this configuration change affects only servers, and not routing.
+
+		That seems like a vague difference because it is - in general the rule to follow is that changes to :term:`Profiles` and :term:`Parameters` requires only updates be queued, changes to the assignments of :term:`cache servers` to :term:`Delivery Services` requires both a :term:`Snapshot` *and* a :dfn:`Queue Updates`, and changes to only a :term:`Delivery Service` itself (usually) entails a :term:`Snapshot` only. These aren't exhaustive rules, and a grasp of what changes require which action(s) will take time to form. In general, when doing both :dfn:`Queuing Updates` as well as taking a CDN :term:`Snapshot`, it is advisable to first :dfn:`Queue Updates` and *then* take the :term:`Snapshot`, as otherwise Traffic Router may route clients to :term:`Edge-tier cache servers` that are not equipped to service their request(s). However, when modifying the assignment(s) of :term:`cache servers` to one or more :term:`Delivery Services`, a :term:`Snapshot` ought to be taken before updates are queued.
+
+		.. warning:: Updates to :term:`Parameters` with certain "configFile" values may require running :term:`ORT` in a different mode, occasionally manually. Though the server may appear to no longer have pending updates in these cases, until this manual intervention is performed the configuration *will* **not** *be correct*.
 
 	Region
 	Regions

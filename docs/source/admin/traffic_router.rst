@@ -81,8 +81,6 @@ Installing Traffic Router
 
 #. Perform a CDN :term:`Snapshot`.
 
-	.. SeeAlso:: :ref:`snapshot-crconfig`
-
 	.. Note:: Once the :term:`Snapshot` is taken, live traffic will be sent to the new Traffic Routers provided that their status has been set to ``ONLINE``.
 
 #. Ensure that the parent domain (e.g.: ``cdn.local``) for the CDN's top level domain (e.g.: ``ciab.cdn.local``) contains a delegation (Name Server records) for the new Traffic Router, and that the value specified matches the :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Router.
@@ -95,7 +93,7 @@ Configuring Traffic Router
 .. versionchanged:: 3.0
 	Traffic Router 3.0 has been converted to a formal Tomcat instance, meaning that is now installed separately from the Tomcat servlet engine. The Traffic Router installation package contains all of the Traffic Router-specific software, configuration and startup scripts including some additional configuration files needed for Tomcat. These new configuration files can all be found in the :file:`/opt/traffic_router/conf` directory and generally serve to override Tomcat's default settings.
 
-For the most part, the configuration files and :term:`Parameter`\ s used by Traffic Router are used to bring it online and start communicating with various Traffic Control components. Once Traffic Router is successfully communicating with Traffic Control, configuration should mostly be performed in Traffic Portal, and will be distributed throughout Traffic Control via CDN :term:`Snapshot` process. See :ref:`snapshot-crconfig` for more information. Please see the :term:`Parameter` documentation for Traffic Router in the Using Traffic Ops guide documented under :ref:`ccr-profile` for :term:`Parameter`\ s that influence the behavior of Traffic Router via the :term:`Snapshot`.
+For the most part, the configuration files and :term:`Parameters` used by Traffic Router are used to bring it online and start communicating with various Traffic Control components. Once Traffic Router is successfully communicating with Traffic Control, configuration should mostly be performed in Traffic Portal, and will be distributed throughout Traffic Control via CDN :term:`Snapshot` process. Please see the :term:`Parameter` documentation for Traffic Router in the Using Traffic Ops guide documented under :ref:`ccr-profile` for :term:`Parameters` that influence the behavior of Traffic Router via the :term:`Snapshot`.
 
 .. _tr-config-files:
 .. table:: Traffic Router Parameters
@@ -352,7 +350,7 @@ DS_BYPASS
 DS_CLIENT_GEO_UNSUPPORTED
 	Traffic Router did not find a resource supported by coverage zone data and was unable to determine the geographic location of the requesting client
 DS_CZ_BACKUP_CG
-	Traffic Router found a backup cache via fall-back (CRconfig's ``edgeLocation``)  or via coordinates (:abbr:`CZF (Coverage Zone File)`) configuration
+	Traffic Router found a backup cache via fall-back (through the ``edgeLocation`` field of a :term:`Snapshot`)  or via coordinates (:term:`Coverage Zone File`) configuration
 DS_CZ_ONLY
 	The selected :term:`Delivery Service` only supports resource lookup based on coverage zone data
 DS_NO_BYPASS

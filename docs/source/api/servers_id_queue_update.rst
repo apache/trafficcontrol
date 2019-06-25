@@ -18,12 +18,11 @@
 *******************************
 ``servers/{{ID}}/queue_update``
 *******************************
-.. deprecated:: 1.1
-	Use the ``PUT`` method of the :ref:`to-api-servers-id` endpoint instead.
+.. caution:: In the vast majority of cases, it is advisable that the ``PUT`` method of the :ref:`to-api-servers-id` endpoint be used instead.
 
 ``POST``
 ========
-Queue or dequeue updates for a specific server.
+:term:`Queue` or dequeue updates for a specific server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -42,7 +41,7 @@ Request Structure
 :action: A string describing what action to take regarding server updates; one of:
 
 	queue
-		Enqueue updates for the server, propagating configuration changes to the actual server
+		:term:`Queue Updates` for the server, propagating configuration changes to the actual server
 	dequeue
 		Cancels any pending updates on the server
 
@@ -66,7 +65,7 @@ Response Structure
 :action: The action processed, one of:
 
 	queue
-		Enqueued updates for the server, propagating configuration changes to the actual server
+		:term:`Queue Updates` was performed on the server, propagating configuration changes to the actual server
 	dequeue
 		Canceled any pending updates on the server
 
