@@ -124,6 +124,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		form := auth.PasswordForm{}
 		parameters := struct {
 			AuthCodeTokenUrl string `json:"authCodeTokenUrl"`
+			Code             string `json:"code"`
 		}{}
 
 		if err := json.NewDecoder(r.Body).Decode(&parameters); err != nil {
@@ -131,7 +132,11 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		req, err := http.NewRequest("POST", parameters.AuthCodeTokenUrl, nil)
+		data := url.Values{}
+		data.Add("code", parameters.Code)
+
+		req, err := http.NewRequest("POST", parameters.AuthCodeTokenUrl, bytes.NewBufferString(data.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		if err != nil {
 			log.Errorf("obtaining token using code from oauth provider\n", err.Error())
 			return
