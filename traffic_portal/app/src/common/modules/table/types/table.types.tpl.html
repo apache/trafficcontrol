@@ -54,10 +54,10 @@ under the License.
             </thead>
             <tbody>
                 <tr ng-click="editType(t.id)" ng-repeat="t in ::types">
-                    <td name="name" data-search="^{{::t.name}}$">{{::t.name}}</td>
-                    <td name="description" data-search="^{{::t.description}}$">{{::t.description}}</td>
-                    <td name="useInTable" data-search="^{{::t.useInTable}}$">{{::t.useInTable}}</td>
-                    <td name="lastUpdated" data-search="^{{::getRelativeTime(t.lastUpdated)}}$" data-order="{{::t.lastUpdated}}">{{::getRelativeTime(t.lastUpdated)}}</td>
+                    <td data-search="^{{::t.name}}$">{{::t.name}}</td>
+                    <td data-search="^{{::t.description}}$">{{::t.description}}</td>
+                    <td data-search="^{{::t.useInTable}}$">{{::t.useInTable}}</td>
+                    <td data-search="^{{::getRelativeTime(t.lastUpdated)}}$" data-order="{{::t.lastUpdated}}">{{::getRelativeTime(t.lastUpdated)}}</td>
                 </tr>
             </tbody>
         </table>
