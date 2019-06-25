@@ -30,8 +30,8 @@ var SsoController = function($scope, $state, $interval, $location, authService, 
             code = $location.search()['code'];
         }
 
-        const fullAuthCodeTokenUrl = authCodeTokenUrl + '?client_id=' + clientId + '&client_secret=' + clientSecret + '&code=' + code;
-        authService.oauthLogin(fullAuthCodeTokenUrl);
+        const fullAuthCodeTokenUrl = authCodeTokenUrl + '?client_id=' + clientId + '&client_secret=' + clientSecret;
+        authService.oauthLogin(fullAuthCodeTokenUrl, code);
 	};
 	init();
 
