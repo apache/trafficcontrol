@@ -2945,7 +2945,7 @@ sub adv_processing_udev {
 				}
 				( my @df_lines ) = split( /\n/, `/bin/df` );
 				foreach my $l (@df_lines) {
-					if ( $l =~ m/$dev_path/ ) {
+					if ( $l =~ m/$dev_path\d/ ) {
 						( $log_level >> $FATAL ) && print "FATAL Device /dev/$dev has an active partition and a file system!!\n";
 					}
 				}
