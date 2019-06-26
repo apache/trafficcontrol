@@ -22,6 +22,7 @@ package cdn
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -37,7 +38,8 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cdnName := tc.CDNName(inf.Params["name"])
-	if ok, err := cdnExists(inf.Tx.Tx, cdnName); err != nil {
+	ok, cdnID, err := cdnExists(inf.Tx.Tx, cdnName)
+	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
 		return
 	} else if !ok {
@@ -56,6 +58,7 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "cdn was deleted.")
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CDN: %v, ID: %v, ACTION: Deleted CDN", cdnName, cdnID), inf.User, inf.Tx.Tx)
 }
 
 func deleteCDNByName(tx *sql.Tx, name tc.CDNName) error {
@@ -65,15 +68,15 @@ func deleteCDNByName(tx *sql.Tx, name tc.CDNName) error {
 	return nil
 }
 
-func cdnExists(tx *sql.Tx, name tc.CDNName) (bool, error) {
+func cdnExists(tx *sql.Tx, name tc.CDNName) (bool, int, error) {
 	id := 0
 	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {
-			return false, nil
+			return false, id, nil
 		}
-		return false, errors.New("querying cdn existence: " + err.Error())
+		return false, id, errors.New("querying cdn existence: " + err.Error())
 	}
-	return true, nil
+	return true, id, nil
 }
 
 func cdnUnused(tx *sql.Tx, name tc.CDNName) (bool, error) {
