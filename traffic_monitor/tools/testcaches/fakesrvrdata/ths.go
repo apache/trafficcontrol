@@ -21,17 +21,42 @@ package fakesrvrdata
 
 import (
 	"sync"
+	"unsafe"
 )
+
+type MinMaxUint64 struct {
+	Min uint64
+	Max uint64
+}
 
 // Ths provides threadsafe access to a ThsT pointer. Note the object itself is not safe for multiple access, and must not be mutated, either by the original owner after calling Set, or by future users who call Get. If you need to mutate, perform a deep copy.
 type Ths struct {
 	v *ThsT
 	m *sync.RWMutex
+	// IncrementChan may be used to set the increments for a particular remap.
+	// Note this is not synchronized with GetIncrementChan, so multiple writers calling GetIncrementChan and IncrmeentChan to get and set will race, unless they are externally synchronized.
+	IncrementChan chan IncrementChanT
+	// GetIncrementsChan may be used to get the current increments for all remaps.
+	// The returned map must not be modified.
+	// Note this is not synchronized with GetIncrementChan, so multiple writers calling GetIncrementChan and IncrmeentChan to get and set will race, unless they are externally synchronized.
+	GetIncrementsChan chan map[string]BytesPerSec
+
+	// DelayMS is the minimum and maximum delay to serve requests, in milliseconds.
+	// Atomic - MUST be accessed with sync/atomic.LoadUintptr and sync/atomic.StoreUintptr.
+	DelayMS *unsafe.Pointer
 }
 
 func NewThs() Ths {
 	v := ThsT(nil)
-	return Ths{m: &sync.RWMutex{}, v: &v}
+	delayMSPtr := &MinMaxUint64{}
+	delayMSUnsafePtr := unsafe.Pointer(delayMSPtr)
+	return Ths{
+		m:                 &sync.RWMutex{},
+		v:                 &v,
+		IncrementChan:     make(chan IncrementChanT, 10), // arbitrarily allow 10 writes before blocking. TODO document? config?
+		GetIncrementsChan: make(chan map[string]BytesPerSec),
+		DelayMS:           &delayMSUnsafePtr,
+	}
 }
 
 func (t Ths) Set(v ThsT) {

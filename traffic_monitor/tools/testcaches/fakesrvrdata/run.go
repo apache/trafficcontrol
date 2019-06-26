@@ -72,44 +72,82 @@ func Run(s FakeServerData, remapIncrements map[string]BytesPerSec) (Ths, error) 
 	}
 	ths := NewThs()
 	ths.Set(&s)
+
 	go run(ths, remapIncrements)
 	return ths, nil
+}
+
+type IncrementChanT struct {
+	RemapName   string
+	BytesPerSec BytesPerSec
 }
 
 // run starts a goroutine incrementing the FakeServerData's values according to the remapIncrements. Never returns.
 func run(srvrThs Ths, remapIncrements map[string]BytesPerSec) {
 	tickSecs := uint64(1) // adjustable for performance (i.e. a higher number is less CPU work)
+
+	ticker := time.NewTicker(time.Second * time.Duration(tickSecs))
+
 	for {
-		time.Sleep(time.Second * time.Duration(tickSecs))
-		srvr := srvrThs.Get()
-		newRemaps := copyRemaps(srvr.ATS.Remaps)
-		for remap, increments := range remapIncrements {
-			srvrRemap := newRemaps[remap]
-			if increments.Min.InBytes != increments.Min.InBytes {
-				i := uint64(rand.Int63n(int64((increments.Max.InBytes-increments.Min.InBytes)*tickSecs))) + (increments.Min.InBytes * tickSecs)
-				srvrRemap.InBytes += i
-				srvr.System.ProcNetDev.RcvBytes += i
+		select {
+		case srvrThs.GetIncrementsChan <- remapIncrements:
+		case newIncrement := <-srvrThs.IncrementChan:
+			remapIncrements[newIncrement.RemapName] = newIncrement.BytesPerSec
+		case <-ticker.C:
+			srvr := srvrThs.Get()
+			newRemaps := copyRemaps(srvr.ATS.Remaps)
+			for remap, increments := range remapIncrements {
+				srvrRemap := newRemaps[remap]
+
+				addInBytes := increments.Min.InBytes * tickSecs
+				if increments.Min.InBytes != increments.Max.InBytes {
+					addInBytes += uint64(rand.Int63n(int64((increments.Max.InBytes - increments.Min.InBytes) * tickSecs)))
+				}
+				srvrRemap.InBytes += addInBytes
+				srvr.System.ProcNetDev.RcvBytes += addInBytes
+
+				addOutBytes := increments.Min.OutBytes * tickSecs
+				if increments.Min.OutBytes != increments.Max.OutBytes {
+					addOutBytes += uint64(rand.Int63n(int64((increments.Max.OutBytes - increments.Min.OutBytes) * tickSecs)))
+				}
+				srvrRemap.OutBytes += addOutBytes
+				srvr.System.ProcNetDev.SndBytes += addOutBytes
+
+				srvrRemap.Status2xx += increments.Min.Status2xx * tickSecs
+				if increments.Min.Status2xx != increments.Max.Status2xx {
+					srvrRemap.Status2xx += uint64(rand.Int63n(int64((increments.Max.Status2xx - increments.Min.Status2xx) * tickSecs)))
+				}
+
+				srvrRemap.Status3xx += increments.Min.Status3xx * tickSecs
+				if increments.Min.Status3xx != increments.Max.Status3xx {
+					srvrRemap.Status3xx += uint64(rand.Int63n(int64((increments.Max.Status3xx - increments.Min.Status3xx) * tickSecs)))
+				}
+
+				srvrRemap.Status4xx += increments.Min.Status4xx * tickSecs
+				if increments.Min.Status4xx != increments.Max.Status4xx {
+					srvrRemap.Status4xx += uint64(rand.Int63n(int64((increments.Max.Status4xx - increments.Min.Status4xx) * tickSecs)))
+				}
+
+				srvrRemap.Status5xx += increments.Min.Status5xx * tickSecs
+				if increments.Min.Status5xx != increments.Max.Status5xx {
+					srvrRemap.Status5xx += uint64(rand.Int63n(int64((increments.Max.Status5xx - increments.Min.Status5xx) * tickSecs)))
+				}
+
+				newRemaps[remap] = srvrRemap
 			}
-			if increments.Min.OutBytes != increments.Max.OutBytes {
-				i := uint64(rand.Int63n(int64((increments.Max.OutBytes-increments.Min.OutBytes)*tickSecs))) + (increments.Min.OutBytes * tickSecs)
-				srvrRemap.OutBytes += i
-				srvr.System.ProcNetDev.SndBytes += i
-			}
-			if increments.Min.Status2xx != increments.Max.Status2xx {
-				srvrRemap.Status2xx += uint64(rand.Int63n(int64((increments.Max.Status2xx-increments.Min.Status2xx)*tickSecs))) + (increments.Min.Status2xx * tickSecs)
-			}
-			if increments.Min.Status3xx != increments.Max.Status3xx {
-				srvrRemap.Status3xx += uint64(rand.Int63n(int64((increments.Max.Status3xx-increments.Min.Status3xx)*tickSecs))) + (increments.Min.Status3xx * tickSecs)
-			}
-			if increments.Min.Status4xx != increments.Max.Status4xx {
-				srvrRemap.Status4xx += uint64(rand.Int63n(int64((increments.Max.Status4xx-increments.Min.Status4xx)*tickSecs))) + (increments.Min.Status4xx * tickSecs)
-			}
-			if increments.Min.Status5xx != increments.Max.Status5xx {
-				srvrRemap.Status5xx += uint64(rand.Int63n(int64((increments.Max.Status5xx-increments.Min.Status5xx)*tickSecs))) + (increments.Min.Status5xx * tickSecs)
-			}
-			newRemaps[remap] = srvrRemap
+			srvr.ATS.Remaps = newRemaps
+			srvrThs.Set(srvr)
 		}
-		srvr.ATS.Remaps = newRemaps
-		srvrThs.Set(srvr)
+	}
+}
+
+// tryReceiveIncrement asynchronously tries to recieve from incrementChan if it has a value.
+// Returns the value if it was read, or returns false if no value was waiting.
+func tryReceiveIncrement(incrementChan <-chan IncrementChanT) (IncrementChanT, bool) {
+	select {
+	case inc := <-incrementChan:
+		return inc, true
+	default:
+		return IncrementChanT{}, false
 	}
 }
