@@ -57,8 +57,8 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
         return deferred.promise;
     };
 
-    this.oauthLogin = function(authCodeTokenUrl, code) {
-        return httpService.post(ENV.api['root'] + 'user/login/oauth', { authCodeTokenUrl: authCodeTokenUrl, code: code})
+    this.oauthLogin = function(authCodeTokenUrl, code, clientId, clientSecret) {
+        return httpService.post(ENV.api['root'] + 'user/login/oauth', { authCodeTokenUrl: authCodeTokenUrl, code: code, clientId: clientId, clientSecret: clientSecret})
             .then(
                 function(result) {
                     $rootScope.$broadcast('authService::login');

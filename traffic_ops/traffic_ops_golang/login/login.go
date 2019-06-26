@@ -125,6 +125,8 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		parameters := struct {
 			AuthCodeTokenUrl string `json:"authCodeTokenUrl"`
 			Code             string `json:"code"`
+			ClientId         string `json:"clientId"`
+			ClientSecret     string `json:"clientSecret"`
 		}{}
 
 		if err := json.NewDecoder(r.Body).Decode(&parameters); err != nil {
@@ -134,6 +136,8 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		data := url.Values{}
 		data.Add("code", parameters.Code)
+		data.Add("client_id", parameters.ClientId)
+		data.Add("client_secret", parameters.ClientSecret)
 
 		req, err := http.NewRequest("POST", parameters.AuthCodeTokenUrl, bytes.NewBufferString(data.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
