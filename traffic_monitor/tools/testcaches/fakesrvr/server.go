@@ -22,8 +22,11 @@ package fakesrvr
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/fakesrvrdata"
@@ -40,6 +43,20 @@ func reqIsApplicationSystem(r *http.Request) bool {
 func astatsHandler(fakeSrvrDataThs fakesrvrdata.Ths) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		srvr := (*fakesrvrdata.FakeServerData)(fakeSrvrDataThs.Get())
+
+		delayMSPtr := (*fakesrvrdata.MinMaxUint64)(atomic.LoadPointer(fakeSrvrDataThs.DelayMS))
+		minDelayMS := delayMSPtr.Min
+		maxDelayMS := delayMSPtr.Max
+
+		if maxDelayMS != 0 {
+			delayMS := minDelayMS
+			if minDelayMS != maxDelayMS {
+				delayMS += uint64(rand.Int63n(int64((maxDelayMS - minDelayMS))))
+			}
+			delay := time.Duration(delayMS) * time.Millisecond
+			time.Sleep(delay)
+		}
+
 		// TODO cast to System, if query string `application=system`
 		b := []byte{}
 		err := error(nil)
@@ -56,9 +73,27 @@ func astatsHandler(fakeSrvrDataThs fakesrvrdata.Ths) http.HandlerFunc {
 	}
 }
 
+func cmdHandler(fakeSrvrDataThs fakesrvrdata.Ths) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		path = strings.ToLower(path)
+		path = strings.TrimLeft(path, "/cmd")
+		for cmd, cmdF := range cmds {
+			if strings.HasPrefix(path, cmd) {
+				cmdF(w, r, fakeSrvrDataThs)
+				return
+			}
+		}
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("command '" + path + "' not found\n"))
+	}
+}
+
 func Serve(port int, fakeSrvrData fakesrvrdata.Ths) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/_astats", astatsHandler(fakeSrvrData))
+	mux.HandleFunc("/cmd", cmdHandler(fakeSrvrData))
+	mux.HandleFunc("/cmd/", cmdHandler(fakeSrvrData))
 	server := &http.Server{
 		Addr:           ":" + strconv.Itoa(port),
 		Handler:        mux,
