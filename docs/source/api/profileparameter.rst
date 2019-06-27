@@ -18,12 +18,11 @@
 ********************
 ``profileparameter``
 ********************
-.. deprecated:: 1.1
-	Use :ref:`to-api-profileparameters` instead.
+.. seealso:: :ref:`to-api-profileparameters`.
 
 ``POST``
 ========
-Create one or more profile/parameter assignments.
+Create one or more :term:`Profile`/:term:`Parameter` assignments.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,9 +30,9 @@ Create one or more profile/parameter assignments.
 
 Request Structure
 -----------------
-:paramIds:  An array of integral, unique identifiers for parameters which shall be assigned to the profile identified by ``profileId``
-:profileId: The integral, unique identifier of a profile to which parameters will be assigned
-:replace:   An optional boolean (default: false) which, if ``true``, will cause any conflicting profile/parameter assignments to be overridden.
+:profileId: The :ref:`profile-id` of the :term:`Profile` to which the :term:`Parameters` identified within the ``parameterIds`` array will be assigned
+:paramIds:  An array of :term:`Parameter` :ref:`IDs <parameter-id>` which shall be assigned to the :term:`Profile` identified by ``profileId``
+:replace:   An optional boolean (default: false) which, if ``true``, will cause any conflicting :term:`Profile`/:term:`Parameter` assignments to be overridden.
 
 .. code-block:: http
 	:caption: Request Example
@@ -53,9 +52,9 @@ Request Structure
 
 Response Structure
 ------------------
-:paramIds:  An array of integral, unique identifiers for parameters which have been assigned to the profile identified by ``profileId``
-:profileId: The integral, unique identifier of a profile to which parameters have been assigned
-:replace:   An optional boolean (default: false) which, if ``true``, caused any conflicting profile/parameter assignments to be overridden.
+:profileId: The :ref:`profile-id` of the :term:`Profile` to which the :term:`Parameters` identified within the ``parameterIds`` array are assigned
+:paramIds:  An array of :term:`Parameter` :ref:`IDs <parameter-id>` which have been assigned to the :term:`Profile` identified by ``profileId``
+:replace:   An optional boolean (default: false) which, if ``true``, indicates that any conflicting :term:`Profile`/:term:`Parameter` assignments have been overridden.
 
 .. code-block:: http
 	:caption: Response Example

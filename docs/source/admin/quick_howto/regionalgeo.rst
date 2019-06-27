@@ -56,7 +56,7 @@ Configure Regional Geo-blocking (RGB)
 		An optional element that is an array of :abbr:`CIDR (Classless Inter-Domain Routing)` blocks indicating the IPv4 subnets that are allowed by the rule. If this list exists and the value is not empty, client IP will be matched against the :abbr:`CIDR (Classless Inter-Domain Routing)` list, bypassing the value of ``geoLocation``. If there is no match in the white list, Traffic Router defers to the value of ``geoLocation`` to determine if content ought to be blocked.
 
 
-#. Add :abbr:`RGB (Regional Geographic-based Blocking)` parameters in Traffic Portal to the :term:`Delivery Service`'s Traffic Router(s)'s profile(s). The ``configFile`` field should be set to ``CRConfig.json``, and the following two parameter name/values need to be specified:
+#. Add :abbr:`RGB (Regional Geographic-based Blocking)` :term:`Parameters` in Traffic Portal to the :term:`Delivery Service`'s Traffic Router(s)'s :term:`Profile`\ (s). The :ref:`parameter-config-file` value should be set to ``CRConfig.json``, and the following two :term:`Parameter` :ref:`parameter-name`/:ref:`parameter-value` pairs need to be specified:
 
 	``regional_geoblocking.polling.url``
 		The URL of the RGB configuration file. Traffic Router will fetch the file from this URL using an HTTP ``GET`` request.

@@ -18,7 +18,7 @@
 ******************
 Traffic Router API
 ******************
-By default, Traffic Router serves its API via HTTP (not HTTPS) on port 3333. This can be configured in :file:`/opt/traffic_router/conf/server.xml` or by setting a :term:`Parameter` named ``api.port`` with ``configFile`` ``server.xml`` on the Traffic Router's :term:`Profile`.
+By default, Traffic Router serves its API via HTTP (not HTTPS) on port 3333. This can be configured in :file:`/opt/traffic_router/conf/server.xml` or by setting a :term:`Parameter` with the :ref:`parameter-name` "api.port", and the :ref:`parameter-config-file` "server.xml" on the Traffic Router's :term:`Profile`.
 
 Traffic Router API endpoints only respond to ``GET`` requests.
 

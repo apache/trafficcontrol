@@ -18,7 +18,7 @@
 **************
 ``osversions``
 **************
-.. seealso:: :ref:`generate-iso`
+.. seealso:: :ref:`tp-tools-generate-iso`
 
 ``GET``
 =======
@@ -34,7 +34,7 @@ No parameters available.
 
 Response Structure
 ------------------
-This endpoint has no constant keys in its ``response``. Instead, each key in the ``response`` object is the name of an OS, and the value is a string that names the directory where the ISO source can be found. These directories sit under `/var/www/files/` on the Traffic Ops host machine by default, or at the location defined by the ``kickstart.files.location`` parameter, if it is defined.
+This endpoint has no constant keys in its ``response``. Instead, each key in the ``response`` object is the name of an OS, and the value is a string that names the directory where the ISO source can be found. These directories sit under `/var/www/files/` on the Traffic Ops host machine by default, or at the location defined by the ``kickstart.files.location`` :term:`Parameter` of the Traffic Ops server's :term:`Profile`, if it is defined.
 
 .. code-block:: http
 	:caption: Response Example

@@ -118,9 +118,9 @@ Traffic Portal uses custom dashboards to display information about individual :t
 
 Configuring Traffic Portal for Traffic Stats
 --------------------------------------------
-- The InfluxDB servers need to be added to Traffic Portal with profile = InfluxDB. Make sure to use port 8086 in the configuration.
-- The traffic stats server should be added to Traffic Ops with profile = Traffic Stats.
-- :term:`Parameters` for which stats will be collected are added with the release, but any changes can be made via parameters that are assigned to the Traffic Stats profile.
+- The InfluxDB servers need to be added to Traffic Portal with a :term:`Profile` that has the :ref:`profile-type` InfluxDB. Make sure to use port 8086 in the configuration.
+- The traffic stats server should be added to Traffic Ops with a :term:`Profile` that has the :ref:`profile-type` TRAFFIC_STATS.
+- :term:`Parameters` for which stats will be collected are added with the release, but any changes can be made via :term:`Parameters` that are assigned to the Traffic Stats :term:`Profile`.
 
 Configuring Traffic Portal to use Grafana Dashboards
 ----------------------------------------------------

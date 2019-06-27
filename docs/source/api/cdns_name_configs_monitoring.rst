@@ -69,10 +69,10 @@ Response Structure
 	:totalTpsThreshold:  A threshold amount of transactions per second that this :term:`Delivery Service` is configured to handle
 	:xmlId:              An integral, unique identifier for this Deliver Service (named "xmlId" for legacy reasons)
 
-:profiles: An array of the profiles in use by the :term:`cache server` s and :term:`Delivery Service`\ s belonging to this CDN
+:profiles: An array of the :term:`Profiles` in use by the :term:`cache servers` and :term:`Delivery Services` belonging to this CDN
 
-	:name:       The profile's name
-	:parameters: An array of the parameters in this profile that relate to monitoring configuration. This can be ``null`` if the servers using this profile cannot be monitored (e.g. Traffic Routers)
+	:name:       The :term:`Profile`'s :ref:`profile-name`
+	:parameters: An array of the :term:`Parameters` in this :term:`Profile` that relate to monitoring configuration. This can be ``null`` if the servers using this :term:`Profile` cannot be monitored (e.g. Traffic Routers)
 
 		:health.connection.timeout:                 A timeout value, in milliseconds, to wait before giving up on a health check request
 		:health.polling.url:                        A URL to request for polling health. Substitutions can be made in a shell-like syntax using the properties of an object from the ``"trafficServers"`` array
@@ -81,7 +81,7 @@ Response Structure
 		:health.threshold.queryTime:                The highest allowed length of time for completing health queries (after connection has been established) in milliseconds
 		:history.count:                             The number of past events to store; once this number is reached, the oldest event will be forgotten before a new one can be added
 
-	:type: The type of the profile
+	:type: The :ref:`profile-type` of the :term:`Profile`
 
 :trafficMonitors: An array of objects representing each Traffic Monitor that monitors this CDN (this is used by Traffic Monitor's "peer polling" function)
 
@@ -90,10 +90,10 @@ Response Structure
 	:ip6:      The IPv6 address of this Traffic Monitor - when applicable
 	:ip:       The IP address of this Traffic Monitor
 	:port:     The port on which this Traffic Monitor listens for incoming connections
-	:profile:  The name of the profile assigned to this Traffic Monitor
+	:profile:  The :ref:`profile-name` of the :term:`Profile` assigned to this Traffic Monitor
 	:status:   The status of the server running this Traffic Monitor instance
 
-:trafficServers: An array of objects that represent the caches being monitored within this CDN
+:trafficServers: An array of objects that represent the :term:`cache servers` being monitored within this CDN
 
 	:cacheGroup:    The Cache Group to which this cache belongs
 	:fqdn:          A Fully Qualified Domain Name (FQDN) that resolves to the :term:`cache server`'s IP (or IPv6) address
@@ -103,7 +103,7 @@ Response Structure
 	:ip6:           The cache's IPv6 address - when applicable
 	:ip:            The cache's IP address
 	:port:          The port on which the cache listens for incoming connections
-	:profile:       The name of the profile assigned to this cache
+	:profile:       The :ref:`profile-name` of the :term:`Profile` assigned to this :term:`cache server`
 	:status:        The status of the Cache
 	:type:          The type of the cache - should be either ``EDGE`` or ``MID``
 
