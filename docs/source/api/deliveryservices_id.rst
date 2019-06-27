@@ -34,21 +34,28 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| Name        | Required | Description                                                                                                                                |
-	+=============+==========+============================================================================================================================================+
-	| cdn         | no       | Show only the :term:`Delivery Services` belonging to the CDN identified by this integral, unique identifier                                |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| logsEnabled | no       | If true, return only :term:`Delivery Services` with logging enabled, otherwise return only :term:`Delivery Services` with logging disabled |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| profile     | no       | Return only :term:`Delivery Services` using the :term:`Profile` with this :ref:`profile-id`                                                |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| tenant      | no       | Show only the :term:`Delivery Services` belonging to the tenant identified by this integral, unique identifier                             |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| type        | no       | Return only :term:`Delivery Services` of the :ref:`Delivery Service Type <ds-types>` identified by this integral, unique identifier        |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-
-.. tip:: Since this method of this endpoint by definition should only ever return one :term:`Delivery Service`, using these query parameters is typically useless. Unless for some reason the only desired information is the value of one of these specific fields.
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                                                                    |
+	+=============+==========+================================================================================================================================================+
+	| cdn         | no       | Show only the :term:`Delivery Service`\ s belonging to the CDN identified by this integral, unique identifier                                  |
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	| logsEnabled | no       | If true, return only :term:`Delivery Service`\ s with logging enabled, otherwise return only :term:`Delivery Service`\ s with logging disabled |
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	| profile     | no       | Return only :term:`Delivery Service`\ s using the profile identified by this integral, unique identifier                                       |
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	| tenant      | no       | Show only the :term:`Delivery Service`\ s belonging to the tenant identified by this integral, unique identifier                               |
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	| type        | no       | Return only :term:`Delivery Service`\ s of the :term:`Delivery Service` type identified by this integral, unique identifier                    |
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                                  |
+	|             |          | array                                                                                                                                          |
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder   | no       | Changes the order of sorting. Either ascending (default) or descending ("desc")                                                                |
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	| limit       | no       | Choose the number of results to return                                                                                                         |
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	| offset      | no       | The number of results to skip before beginning to return results                                                                               |
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. table:: Request Path Parameters
 

@@ -41,6 +41,15 @@ Request Structure
 	+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 	| targetID | The integral, unique identifier of a :term:`Delivery Service` which is a target of the :term:`Delivery Service` identified by ``ID`` |
 	+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby  | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array                  |
+	+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrde | Changes the order of sorting. Either ascending (default) or descending ("desc")                                                      |
+	| r        |                                                                                                                                      |
+	+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| limit    | Choose the number of results to return                                                                                               |
+	+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| offset   | The number of results to skip before beginning to return results                                                                     |
+	+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

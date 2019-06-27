@@ -31,15 +31,25 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------------+----------+--------------------------------------------------------------+
-	|    Name     | Required | Description                                                  |
-	+=============+==========+==============================================================+
-	| description |    no    | Return only statuses with this *exact* description           |
-	+-------------+----------+--------------------------------------------------------------+
-	|     id      |    no    | Return only the status with this integral, unique identifier |
-	+-------------+----------+--------------------------------------------------------------+
-	|    name     |    no    | Return only statuses with this name                          |
-	+-------------+----------+--------------------------------------------------------------+
+	+-------------+----------+------------------------------------------------------------------+
+	| Name        | Required | Description                                                      |
+	+=============+==========+==================================================================+
+	| description | no       | Return only statuses with this *exact* description               |
+	+-------------+----------+------------------------------------------------------------------+
+	| id          | no       | Return only the status with this integral, unique identifier     |
+	+-------------+----------+------------------------------------------------------------------+
+	| name        | no       | Return only statuses with this name                              |
+	+-------------+----------+------------------------------------------------------------------+
+	| orderby     | no       | Choose the ordering of the results - must be the name of one     |
+	|             |          | of the fields of the objects in the ``response`` array           |
+	+-------------+----------+------------------------------------------------------------------+
+	| sortOrder   | no       | Changes the order of sorting. Either ascending (default) or      |
+	|             |          | descending ("desc")                                              |
+	+-------------+----------+------------------------------------------------------------------+
+	| limit       | no       | Choose the number of results to return                           |
+	+-------------+----------+------------------------------------------------------------------+
+	| offset      | no       | The number of results to skip before beginning to return results |
+	+-------------+----------+------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
