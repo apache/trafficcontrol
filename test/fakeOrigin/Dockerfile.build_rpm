@@ -31,8 +31,7 @@ RUN apt-get update &&           \
     apt-get autoclean -y &&     \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /go/src/github.com/apache/trafficcontrol
-COPY . .
+COPY . /go/src/github.com/apache/trafficcontrol
 WORKDIR /go/src/github.com/apache/trafficcontrol/test/fakeOrigin
 
 VOLUME ["/go/src/github.com/apache/trafficcontrol/test/fakeOrigin/dist"]

@@ -26,13 +26,11 @@ RUN apt-get update && \
     apt-get autoclean -y && \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /go/src/github.com/apache/trafficcontrol
-COPY . .
+COPY . /go/src/github.com/apache/trafficcontrol
 WORKDIR /go/src/github.com/apache/trafficcontrol/test/fakeOrigin
 
 RUN go get -d -v ./... && \
     go install -v ./...
-RUN go build
 
 RUN groupadd -g 999 fakeOrigin && \
     useradd -r -u 999 -g fakeOrigin fakeOrigin
