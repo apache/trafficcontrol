@@ -1,0 +1,48 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# This is a very simple Dockerfile.
+# All it does is install and start the Traffic Monitor, given a Traffic Ops to point it to.
+# It doesn't do any of the complex things the Dockerfiles in infrastructure/docker or infrastructure/cdn-in-a-box do, like inserting itself into Traffic Ops.
+# It is designed for a very simple use case, where the complex orchestration of other Traffic Control components is done elsewhere (or manually).
+
+# Example Build and Run:
+# docker build --build-arg RPM=traffic_monitor.rpm --tag traffic_monitor:latest .
+#
+# docker run --detach --name tm --hostname tm --net=tmi --env TO_URI=http://to.invalid:3000 --env TO_USER=user --env TO_PASS=pass traffic_monitor:latest
+
+FROM centos/systemd
+MAINTAINER dev@trafficcontrol.apache.org
+
+# ARG RPM=traffic_monitor.rpm
+# ADD $RPM /
+
+RUN yum install -y initscripts
+RUN yum install -y epel-release
+RUN yum install -y golang
+# RUN yum install -y /$(basename $RPM)
+# RUN rm /$(basename $RPM)
+
+COPY traffic_monitor_integration_test /
+
+# TODO build go test here, instead of requiring it manually be built beforehand
+#      See /infrastructure/cdn-in-a-box/traffic_ops_integration_test/Dockerfile
+
+RUN curl -L jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 > /usr/sbin/jq && chmod +x /usr/sbin/jq
+
+COPY Dockerfile_run.sh /
+ENTRYPOINT /Dockerfile_run.sh

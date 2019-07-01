@@ -67,7 +67,9 @@ func astatsHandler(fakeSrvrDataThs fakesrvrdata.Ths) http.HandlerFunc {
 			b, err = json.MarshalIndent(&srvr, "", "  ") // TODO debug, change to Marshal
 		}
 		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(`{"error": "marshalling: ` + err.Error() + `"}`)) // TODO escape error for JSON
+			return
 		}
 		w.Write(b)
 	}
