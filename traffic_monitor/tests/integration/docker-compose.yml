@@ -1,0 +1,102 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# To run the integration test:
+# 1. build Traffic Monitor and then copy the RPM to this directory as traffic_monitor.rpm.
+# 2. build traffic_monitor/tools/testcaches and place the binary in this directory.
+# 3. build traffic_monitor/tools/testto and place the binary in this directory.
+# 4. Run this compose
+#
+# Commands are, from the root trafficcontrol directory:
+# ./pkg -v traffic_monitor_build
+# cp ./dist/traffic_monitor*.rpm ./traffic_monitor/
+# (cd ./traffic_monitor/tools/testto && go build)
+# (cd ./traffic_monitor/tools/testcaches && go build)
+# cd ./traffic_monitor
+# docker-compose up
+#
+# To run the integration tests, your current working directory must be trafficcontrol/traffic_monitor.
+# This is because Docker doesn't allow accessing files outside the current "context," and the integration tests need
+#
+#      docker-compose up -d
+#
+
+---
+version: '2.1'
+
+services:
+  testto:
+    build:
+      context: ./tools/testto
+      dockerfile: ./Dockerfile
+    domainname: traffic-monitor-integration.test
+    env_file:
+      - variables.env
+    hostname: testto
+    image: testto
+    volumes:
+      - shared:/shared
+
+  testcaches:
+    build:
+      context: ./tools/testcaches
+      dockerfile: ./Dockerfile
+    domainname: traffic-monitor-integration.test
+    env_file:
+      - variables.env
+    hostname: testcaches
+    image: testcaches
+    volumes:
+      - shared:/shared
+
+  trafficmonitor:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        RPM: ./traffic_monitor.rpm
+    depends_on:
+      - testto
+    domainname: traffic-monitor-integration.test
+    env_file:
+      - variables.env
+    hostname: trafficmonitor
+    image: trafficmonitor
+    ports:
+      - "80:80"
+    volumes:
+      - shared:/shared
+
+  tmintegrationtest:
+    build:
+      context: ./tests/integration
+      dockerfile: ./Dockerfile
+    depends_on:
+      - testto
+      - testcaches
+      - trafficmonitor
+    domainname: traffic-monitor-integration.test
+    env_file:
+      - variables.env
+    hostname: tmintegrationtest
+    image: tmintegrationtest
+    volumes:
+      - shared:/shared
+
+volumes:
+  shared:
+    external: false
