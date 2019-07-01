@@ -30,7 +30,6 @@ import org.apache.tomcat.util.net.SocketWrapperBase;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class RouterNioEndpoint extends NioEndpoint {
 	private static final Logger LOGGER = Logger.getLogger(RouterNioEndpoint.class);
@@ -48,7 +47,6 @@ public class RouterNioEndpoint extends NioEndpoint {
 			sslHostConfigs.clear();
 			final KeyManager keyManager = new KeyManager();
 			final CertificateRegistry certificateRegistry = keyManager.getCertificateRegistry();
-			certificateRegistry.loadDefaultCert();
 			replaceSSLHosts(certificateRegistry.getHandshakeData());
 
 			//Now let initialiseSsl do it's thing.

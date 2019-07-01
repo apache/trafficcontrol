@@ -60,7 +60,6 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 			status := tc.CRConfigRouterStatus(*s.ServerStatus)
 			routers[host] = tc.CRConfigRouter{
 				APIPort:       s.APIPort,
-				SecureAPIPort: s.SecureAPIPort,
 				FQDN:          s.Fqdn,
 				HTTPSPort:     s.HttpsPort,
 				IP:            s.Ip,
@@ -68,6 +67,7 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 				Location:      s.LocationId,
 				Port:          s.Port,
 				Profile:       s.Profile,
+				SecureAPIPort: s.SecureAPIPort,
 				ServerStatus:  &status,
 			}
 		case *s.ServerType == tc.MonitorTypeName:

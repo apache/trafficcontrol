@@ -27,25 +27,17 @@ if [ -f /opt/traffic_router/conf/*.crt ]; then
 	done
 fi
 
-if [ ! -f /opt/traffic_router/conf/keyStore.jks ]; then
-    $keytool -genkeypair -v \
-    -alias _default_ \
-    -dname "CN=$(hostname), OU=CDN, O=somecompany, L=Denver, ST=Colorado, C=US" \
-    -keystore $(pwd)/keyStore.jks \
-    -storepass changeit \
-    -keyalg RSA \
-    -ext KeyUsage="digitalSignature,keyEncipherment,keyCertSign" \
-    -ext BasicConstraints:"critical=ca:true" \
-    -storetype JKS
 
-    $keytool -exportcert -v \
-    -alias _default_ \
-    -file $(hostname).crt \
-    -keypass changeit \
-    -storepass changeit \
-    -keystore $(pwd)/keyStore.jks \
-    -rfc
-fi
+echo -e "
+cd /opt/traffic_router/conf
+
+keytool=\$(dirname \$(readlink -f \$(which java)))/keytool
+
+if [ ! -f /opt/traffic_router/conf/keyStore.jks ]; then \n
+    \$keytool -genkeypair -v -alias \$(hostname) -dname \"CN=\$(hostname), OU=APIDefault, O=Apache Traffic Control, L=Denver, ST=Colorado, C=US\" -keystore \$(pwd)/keyStore.jks -storepass changeit -keyalg RSA -ext KeyUsage=\"digitalSignature,keyEncipherment,keyCertSign\" -ext BasicConstraints:\"critical=ca:true\" -storetype JKS
+    \$keytool -exportcert -v -alias \$(hostname) -file \$(hostname).crt -keypass changeit -storepass changeit -keystore \$(pwd)/keyStore.jks -rfc
+fi" >> generatingCerts.sh
+chmod 755 generatingCerts.sh
 
 echo "Traffic Router installed successfully."
 

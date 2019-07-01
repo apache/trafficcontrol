@@ -68,7 +68,6 @@ type CRConfigRouterStatus string
 
 type CRConfigRouter struct {
 	APIPort       *string               `json:"api.port,omitempty"`
-	SecureAPIPort *string               `json:"secure.api.port,omitempty"`
 	FQDN          *string               `json:"fqdn,omitempty"`
 	HTTPSPort     *int                  `json:"httpsPort"`
 	HashCount     *int                  `json:"hashCount,omitempty"`
@@ -77,6 +76,7 @@ type CRConfigRouter struct {
 	Location      *string               `json:"location,omitempty"`
 	Port          *int                  `json:"port,omitempty"`
 	Profile       *string               `json:"profile,omitempty"`
+	SecureAPIPort *string               `json:"secure.api.port,omitempty"`
 	ServerStatus  *CRConfigRouterStatus `json:"status,omitempty"`
 }
 

@@ -26,6 +26,12 @@ import sun.security.x509.CertificateExtensions;
 import sun.security.x509.ExtendedKeyUsageExtension;
 import sun.security.x509.KeyUsageExtension;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.io.*;
 import java.security.*;
@@ -49,11 +55,16 @@ public class CertificateRegistry {
 	volatile private Map<String, HandshakeData>	handshakeDataMap = new HashMap<>();
 	private RouterNioEndpoint sslEndpoint = null;
 	final private Map<String, CertificateData> previousData = new HashMap<>();
-    public static final String DEFAULT_ALIAS = "_default_";
+    public String defaultAlias;
 
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
 	private CertificateRegistry() {
+    	try {
+			defaultAlias = InetAddress.getLocalHost().getHostName();
+		} catch (Exception e) {
+    		log.error("Error getting hostname");
+		}
 	}
 
 	public static CertificateRegistry getInstance() {
@@ -107,51 +118,45 @@ public class CertificateRegistry {
 	    return handshakeDataMap;
     }
 
-    private void addToHandshakeData(final String key, final HandshakeData handshakeData) {
-        handshakeDataMap.putIfAbsent(key, handshakeData);
-    }
-
 	public void setEndPoint(final RouterNioEndpoint routerNioEndpoint) {
 		sslEndpoint = routerNioEndpoint;
 	}
 
-    public void loadDefaultCert() throws RuntimeException {
-        try {
-            final Map<String, String> httpsProperties = (new HttpsProperties()).getHttpsPropertiesMap();
+    private HandshakeData createApiDefaultSsl() {
+		try {
+			final Map<String, String> httpsProperties = (new HttpsProperties()).getHttpsPropertiesMap();
 
-            if (getHandshakeData(DEFAULT_ALIAS) == null) {
-                final KeyStore ks = KeyStore.getInstance("JKS");
-                final String selfSignedKeystoreFile = httpsProperties.get("https.certificate.location");
-                if (new File(selfSignedKeystoreFile).exists()) {
-                    final String password = httpsProperties.get("https.password");
-                    final InputStream readStream = new FileInputStream(selfSignedKeystoreFile);
-                    ks.load(readStream, password.toCharArray());
-                    readStream.close();
-                    final Certificate[] certs = ks.getCertificateChain(DEFAULT_ALIAS);
-                    final List<X509Certificate> x509certs = new ArrayList<>();
+			final KeyStore ks = KeyStore.getInstance("JKS");
+			final String selfSignedKeystoreFile = httpsProperties.get("https.certificate.location");
+			if (new File(selfSignedKeystoreFile).exists()) {
+				final String password = httpsProperties.get("https.password");
+				final InputStream readStream = new FileInputStream(selfSignedKeystoreFile);
+				ks.load(readStream, password.toCharArray());
+				readStream.close();
+				final Certificate[] certs = ks.getCertificateChain(defaultAlias);
+				final List<X509Certificate> x509certs = new ArrayList<>();
 
-                    for (final Certificate cert : certs) {
-                        final CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                        final ByteArrayInputStream bais = new ByteArrayInputStream(cert.getEncoded());
-                        final X509Certificate x509cert = (X509Certificate) cf.generateCertificate(bais);
-                        x509certs.add(x509cert);
-                    }
+				for (final Certificate cert : certs) {
+					final CertificateFactory cf = CertificateFactory.getInstance("X.509");
+					final ByteArrayInputStream bais = new ByteArrayInputStream(cert.getEncoded());
+					final X509Certificate x509cert = (X509Certificate) cf.generateCertificate(bais);
+					x509certs.add(x509cert);
+				}
 
-                    X509Certificate[] x509CertsArray = new X509Certificate[x509certs.size()];
-                    x509CertsArray = x509certs.toArray(x509CertsArray);
+				X509Certificate[] x509CertsArray = new X509Certificate[x509certs.size()];
+				x509CertsArray = x509certs.toArray(x509CertsArray);
 
-                    final HandshakeData handshakeData = new HandshakeData("localhost", DEFAULT_ALIAS,
-                            x509CertsArray, (PrivateKey) ks.getKey(DEFAULT_ALIAS, password.toCharArray()));
+				final HandshakeData handshakeData = new HandshakeData(defaultAlias, defaultAlias,
+						x509CertsArray, (PrivateKey) ks.getKey(defaultAlias, password.toCharArray()));
 
-                    addToHandshakeData(DEFAULT_ALIAS, handshakeData);
-                }
-            }
-        } catch (Exception e) {
-            log.error("Failed to load default certificate. Received " + e.getClass() + " with message: " + e.getMessage());
-        }
-        // else nothing to do
-
-    }
+				return handshakeData;
+			}
+		} catch (Exception e) {
+			log.error("Failed to load default certificate. Received " + e.getClass() + " with message: " + e.getMessage());
+			return null;
+		}
+		return null;
+	}
 
     @SuppressWarnings("PMD.AccessorClassGeneration")
     private static class CertificateRegistryHolder {
@@ -223,6 +228,18 @@ public class CertificateRegistry {
 			master.put(handshakeDataMap.get(DEFAULT_ALIAS).getHostname(), handshakeDataMap.get(DEFAULT_ALIAS));
 		}
 
+
+		if (!master.containsKey(defaultAlias)) {
+		    if (handshakeDataMap.containsKey(defaultAlias)) {
+		        master.put(defaultAlias, handshakeDataMap.get(defaultAlias));
+            } else {
+		    	final HandshakeData apiDefault = createApiDefaultSsl();
+		    	if (apiDefault == null) {
+		    		log.error("Failed to initialize the API Default certificate.");
+				}
+				master.put(apiDefault.getHostname(), apiDefault);
+			}
+        }
 		handshakeDataMap = master;
 
 		if (sslEndpoint != null) {

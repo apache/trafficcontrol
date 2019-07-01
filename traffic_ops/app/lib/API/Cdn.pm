@@ -763,7 +763,7 @@ sub gen_traffic_router_config {
 			$traffic_router->{'ip6'}      = $row->ip6_address;
 			$traffic_router->{'profile'}  = $row->profile->name;
 			if ( defined($secure_api_port) && defined( $secure_api_port->value ) ) {
-			    $traffic_router->{'secureApiPort'}  = int($secure_api_port->value);
+				$traffic_router->{'secureApiPort'}  = int($secure_api_port->value);
 			}
 
 			push( @{ $data_obj->{'trafficRouters'} }, $traffic_router );

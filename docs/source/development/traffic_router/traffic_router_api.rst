@@ -24,8 +24,8 @@ The API can be configured via HTTPS on port 3443 in :file:`/opt/traffic_router/c
 To override the self signed certificates with new ones from a certificate authority, update the properties for the Keystore location and password at :file:`/opt/traffic_router/conf/https.properties`.
 
 
-The API can be configured via HTTPS on port 3443 in :file:`/opt/traffic_router/conf/server.xml` or by setting a :term:`Parameter` named ``secure.api.port`` with ``configFile`` ``server.xml`` on the Traffic Router's :term:`Profile`.  The post install script will generate self signed certificates at ``/opt/traffic_router/conf/``, create a new Java Keystore named :file:`/opt/traffic_router/conf/keyStore.jks`, and add the new certificate to the Keystore.  The password for the Java Keystore and the Keystore location are stored in :file:`/opt/traffic_router/conf/https.properties`.
-To override the self signed certificates with new ones from a certificate authority, update the properties for the Keystore location and password at :file:`/opt/traffic_router/conf/https.properties`.
+The API can be configured via HTTPS on port 3443 in :file:`/opt/traffic_router/conf/server.xml` or by setting a :term:`Parameter` named ``secure.api.port`` with ``configFile`` ``server.xml`` on the Traffic Router's :term:`Profile`.  When ``systemctl start traffic_router`` is run, it will generate self signed certificates at ``/opt/traffic_router/conf/``, create a new Java Keystore named :file:`/opt/traffic_router/conf/keyStore.jks`, and add the new certificate to the Keystore.  The password for the Java Keystore and the Keystore location are stored in :file:`/opt/traffic_router/conf/https.properties`.
+To override the self signed certificates with new ones from a certificate authority, either replace the Java Keystore in the default location or update the properties for the new Keystore location and password at :file:`/opt/traffic_router/conf/https.properties` and then restart the Traffic Router using ``systemctl``.
 
 
 Traffic Router API endpoints only respond to ``GET`` requests.
