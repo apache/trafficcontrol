@@ -27,6 +27,7 @@ BuildRoot: %{buildroot}
 License: Apache License, Version 2.0
 URL: https://github.com/apache/trafficcontrol
 Vendor:	Apache Software Foundation
+Requires: initscripts
 
 %description
 A fake HTTP CDN Origin for testing
