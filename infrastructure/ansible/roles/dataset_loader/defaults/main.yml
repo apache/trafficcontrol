@@ -2028,13 +2028,13 @@ dl_ds_default_profile_cdntemplates:
         value: STRING traffic.out
       - name: CONFIG proxy.config.output.logfile.rolling_enabled
         configFile: records.config
-        value: INT 0
+        value: INT 2
       - name: CONFIG proxy.config.output.logfile.rolling_interval_sec
         configFile: records.config
         value: INT 3600
       - name: CONFIG proxy.config.output.logfile.rolling_size_mb
         configFile: records.config
-        value: INT 100
+        value: INT 1024
       - name: CONFIG proxy.config.process_manager.mgmt_port
         configFile: records.config
         value: INT 8084
@@ -3396,13 +3396,13 @@ dl_ds_default_profile_cdntemplates:
         value: STRING traffic.out
       - name: CONFIG proxy.config.output.logfile.rolling_enabled
         configFile: records.config
-        value: INT 0
+        value: INT 2
       - name: CONFIG proxy.config.output.logfile.rolling_interval_sec
         configFile: records.config
         value: INT 3600
       - name: CONFIG proxy.config.output.logfile.rolling_size_mb
         configFile: records.config
-        value: INT 100
+        value: INT 1024
       - name: CONFIG proxy.config.process_manager.mgmt_port
         configFile: records.config
         value: INT 8084
