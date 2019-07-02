@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -48,6 +49,8 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting parameter profile: "+err.Error()))
 		return
 	}
+	paramName, _, _ := dbhelpers.GetParamNameFromID(int(*paramProfile.ParamID), inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("PARAM: %v, ID: %v, ACTION: Assigned %v profiles to parameter", paramName, *paramProfile.ParamID, len(*paramProfile.ProfileIDs)), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d profiles were assigned to the %d parameter", len(*paramProfile.ProfileIDs), *paramProfile.ParamID), paramProfile)
 }
 

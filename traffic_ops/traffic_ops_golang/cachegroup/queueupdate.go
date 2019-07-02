@@ -23,8 +23,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -88,7 +90,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		CDN:            *reqObj.CDN,
 		CacheGroupID:   cgID,
 	})
-	api.CreateChangeLogRawTx(api.ApiChange, "Server updates "+reqObj.Action+"d for "+string(cgName), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CacheGroup: %v, ID: %v, ACTION: %vd CacheGroup server updates", cgName, cgID, strings.Title(reqObj.Action)), inf.User, inf.Tx.Tx)
 }
 
 type QueueUpdatesResp struct {

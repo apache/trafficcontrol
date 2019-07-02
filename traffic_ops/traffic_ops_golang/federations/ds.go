@@ -22,6 +22,7 @@ package federations
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -40,6 +41,10 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	fedID := inf.IntParams["id"]
+	fedName, err := getFedNameByID(fedID, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting federation cname from ID '"+string(fedID)+"': "+err.Error()))
+	}
 
 	post := tc.FederationDSPost{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &post); err != nil {
@@ -67,8 +72,16 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("FEDERATION: %v, ID: %v, ACTION: Assign DSes to federation", fedName, fedID), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, strconv.Itoa(len(post.DSIDs))+" delivery service(s) were assigned to the federation "+strconv.Itoa(fedID), post)
+}
+
+func getFedNameByID(id int, tx *sql.Tx) (string, error) {
+	name := ""
+	if err := tx.QueryRow(`select cname from federation where id = $1`, id).Scan(&name); err != nil {
+		return "", errors.New("Error querying federation cname: " + err.Error())
+	}
+	return name, nil
 }
 
 func deleteDSFeds(tx *sql.Tx, fedID int) error {

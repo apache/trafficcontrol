@@ -85,6 +85,14 @@ func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int64, dsIDs []int64) (tc
 		}
 	}
 
+	cgName, ok, err := getCGNameFromID(tx, cgID)
+	if err != nil {
+		return tc.CacheGroupPostDSResp{}, nil, errors.New("getting cachegroup name from ID '" + string(cgID) + "': " + err.Error()), http.StatusInternalServerError
+	}
+	if !ok {
+		return tc.CacheGroupPostDSResp{}, errors.New("cachegroup " + string(cgID) + " does not exist"), nil, http.StatusBadRequest
+	}
+
 	if err := verifyDSesCDN(tx, dsIDs, cdnName); err != nil {
 		return tc.CacheGroupPostDSResp{}, nil, errors.New("verifying delivery service CDNs match cachegroup server CDNs: " + err.Error()), http.StatusInternalServerError
 	}
@@ -99,7 +107,7 @@ func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int64, dsIDs []int64) (tc
 	if err := updateParams(tx, dsIDs); err != nil {
 		return tc.CacheGroupPostDSResp{}, nil, errors.New("updating delivery service parameters: " + err.Error()), http.StatusInternalServerError
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("assign servers in cache group %v to deliveryservices %v", cgID, dsIDs), user, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CACHEGROUP: %v, ID: %v, ACTION: Assign DSes to CacheGroup servers", cgName, cgID), user, tx)
 	return tc.CacheGroupPostDSResp{ID: util.JSONIntStr(cgID), ServerNames: cgServers, DeliveryServices: dsIDs}, nil, nil, http.StatusOK
 }
 
