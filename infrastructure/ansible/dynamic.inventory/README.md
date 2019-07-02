@@ -24,21 +24,21 @@ This python script uses the Traffic Ops Python Native Client to expose much of t
 You will need to ensure the Traffic Ops Python Native Client is available to the python env shared by Ansible.
 
 Due to limitations in the way parameters are passed in Ansible Dynamic Inventory scripts, the following environment variables must be defined:
-```bash
-export TO_USERNAME=<my.to.username>
+```bash session
+export TO_USER=<my.to.username>
 export TO_PASSWORD=<my.to.password>
 export TO_URL=to.kabletown.invalid
 ```
 Failure to set login credentials will result in a valid, but empty response.
 
 If you find yourself debugging this or are curious what's available, the following commands are handy:
-```bash
+```bash session
 ansible-inventory -i infrastructure/ansible/dynamic.inventory/TO.py --graph --vars > ansible.inventory.txt
-python infrastructure/ansible/dynamic.inventory/TO.py --list -to <to.username> <to.password> -url to.kabletown.invalid
+python infrastructure/ansible/dynamic.inventory/TO.py --list --username "<my.to.username>" --username "<my.to.password>" --url "to.kabletown.invalid" --verify_cert true
 ```
 
 ## Example Usage
 Use ansible ad-hoc to test connectivity to all offline edge caches belonging to the Kabletown2.0 CDN and having "den" in the fqdn somewhere, but not with "aurora" in their fqdn.
-```bash
+```bash session
 ansible -i infrastructure/ansible/dynamic.inventory/TO.py 'server_status|OFFLINE:&server_type|EDGE:&server_cdnName|Kabletown2.0:&*den*:!*aurora*' -m ping
 ```
