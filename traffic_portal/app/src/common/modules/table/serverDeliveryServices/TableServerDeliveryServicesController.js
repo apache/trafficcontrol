@@ -31,6 +31,32 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 			);
 	};
 
+	var confirmRemoveDS = function(ds, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
+
+		var params = {
+			title: 'Remove Delivery Service from Server?',
+			message: 'Are you sure you want to remove ' + ds.xmlId + ' from this server?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			removeDeliveryService(ds.id);
+		}, function () {
+			// do nothing
+		});
+	};
+
 	$scope.server = server;
 
 	// adds some items to the base delivery services context menu
@@ -41,7 +67,7 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 				return true;
 			},
 			click: function ($itemScope) {
-				$scope.confirmRemoveDS($itemScope.ds);
+				confirmRemoveDS($itemScope.ds);
 			}
 		}
 	);
@@ -109,39 +135,10 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 		});
 	};
 
-	$scope.confirmRemoveDS = function(ds, $event) {
-		if ($event) {
-			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		}
-
-		var params = {
-			title: 'Remove Delivery Service from Server?',
-			message: 'Are you sure you want to remove ' + ds.xmlId + ' from this server?'
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
-			}
-		});
-		modalInstance.result.then(function() {
-			removeDeliveryService(ds.id);
-		}, function () {
-			// do nothing
-		});
-	};
-
 	angular.element(document).ready(function () {
 		$('#serverDeliveryServicesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
-			],
 			"aaSorting": []
 		});
 	});
