@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -61,6 +62,11 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
+	serverName, err := getServerNameByID(server, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
+		return
+	}
 
 	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
 	if err != nil {
@@ -68,12 +74,16 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := api.CreateChangeLogRawErr(api.ApiChange, "Assigned "+strconv.Itoa(len(assignedDSes))+" delivery services to server id: "+strconv.Itoa(server) , inf.User, inf.Tx.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error writing to change log: " + err.Error()))
-		return
-	}
-
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("SERVER: %v, ID: %v, ACTION: Assigned %v DSes to server", serverName, server, len(assignedDSes)), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
+}
+
+func getServerNameByID(id int, tx *sql.Tx) (string, error) {
+	name := ""
+	if err := tx.QueryRow(`select host_name from server where id = $1`, id).Scan(&name); err != nil {
+		return "", errors.New("Error querying server name: " + err.Error())
+	}
+	return name, nil
 }
 
 func assignDeliveryServicesToServer(server int, dses []int, replace bool, tx *sql.Tx) ([]int, error) {
