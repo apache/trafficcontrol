@@ -58,12 +58,12 @@ start() {
         OPEN_FILE_LIMIT=65536
         ulimit -n $OPEN_FILE_LIMIT
         if [ $? -ne 0 ]; then
-            echo -n "Failed to set open file limit to $OPEN_FILE_LIMIT"
+            echo "Failed to set open file limit to $OPEN_FILE_LIMIT"
             exit 1
         fi
 
         # Start daemons.
-        echo -n $"Starting $name: "
+        echo -n "Starting $name: "
         daemon nohup $prog $options < /dev/null > /var/log/${name}/${name}.log 2>&1 &
         RETVAL=$?
         echo
@@ -72,7 +72,7 @@ start() {
 }
 
 stop() {
-        echo -n $"Shutting down $name: "
+        echo -n "Shutting down $name: "
         killproc $prog
         RETVAL=$?
         echo
@@ -81,11 +81,11 @@ stop() {
 }
 
 reload() {
-        echo -n $"Reloading $name: "
+        echo -n "Reloading $name: "
         if [ -n "`pidofproc $prog`" ]; then
                 killproc $prog -HUP
         else
-                failure $"Reloading $name"
+                failure "Reloading $name"
         fi
         RETVAL=$?
         echo
@@ -116,6 +116,6 @@ case "$1" in
         reload
         ;;
   *)
-        echo $"Usage: $0 {start|stop|status|restart|try-restart|reload|force-reload}"
+        echo "Usage: $0 {start|stop|status|restart|try-restart|reload|force-reload}"
         exit 2
 esac
