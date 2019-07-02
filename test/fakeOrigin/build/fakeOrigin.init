@@ -89,6 +89,7 @@ reload() {
         fi
         RETVAL=$?
         echo
+        return $RETVAL
 }
 
 case "$1" in
