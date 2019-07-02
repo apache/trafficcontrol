@@ -78,7 +78,7 @@ The transcoder phase will be skipped for static and dir `type` as well as other 
 ## Manual Command Tokens
 You cannot use unescaped spaces in commands.  Each segment of the command is a separate entry in the array.
 
-Since fakeOrigin still needs to know about where certain things are for things, such as the metadata generation, file organization, and the live manifest interceptor, a set of tokens are defined for use in a manual command.  These are mostly taken from the endpoint properties themselves.
+Since fakeOrigin still needs to know about where certain things are, such as the metadata generation, file organization, and the live manifest interceptor, a set of tokens are defined for use in a manual command.  These are mostly taken from the endpoint properties themselves.
 ```
 %DISKID% :          Identifier for use in file paths, defaults to same as ID
 %ENDPOINTTYPE% :    Endpoint Type [live, vod, event, static, dir]
