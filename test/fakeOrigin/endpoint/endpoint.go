@@ -126,10 +126,14 @@ func WriteConfig(cfg Config, path string) error {
 }
 
 // ProcessConfig processes the config loaded from disk, or generated the first time. This must be called before the config can be used to transcode or serve.
-func ProcessConfig(out Config) Config {
+func ProcessConfig(out Config) (Config, error) {
 	for i := range out.Endpoints {
+		var err error
 		// Resolve relative paths to absolute paths
-		out.Endpoints[i].Source, _ = filepath.Abs(out.Endpoints[i].Source)
+		out.Endpoints[i].Source, err = filepath.Abs(out.Endpoints[i].Source)
+		if err != nil {
+			return Config{}, errors.New("resolving relative path: " + err.Error())
+		}
 		out.Endpoints[i].OutputDirectory, _ = filepath.Abs(out.Endpoints[i].OutputDirectory)
 
 		if out.Endpoints[i].OutputDirectory == "" {
@@ -139,7 +143,7 @@ func ProcessConfig(out Config) Config {
 			out.Endpoints[i].DiskID = out.Endpoints[i].ID
 		}
 	}
-	return out
+	return out, nil
 }
 
 // LoadAndGenerateDefaultConfig loads the config from a given json file and puts a default value in place if you havn't stored anything
@@ -177,7 +181,10 @@ func LoadAndGenerateDefaultConfig(path string) (Config, error) {
 			return out, errors.New("Paths of ABR Layer manifests must not be set via configuration")
 		}
 	}
-	out = ProcessConfig(out)
+	out, err = ProcessConfig(out)
+	if err = WriteConfig(out, path); err != nil {
+		return out, errors.New("processing config file: " + err.Error())
+	}
 	return out, nil
 }
 
