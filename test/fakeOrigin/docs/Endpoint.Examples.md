@@ -209,7 +209,7 @@ This shows how to serve single files with fakeOrigin.  Also, `id` must still be 
 This shows how to serve all files in a given directory recursively.  Also, `id` must still be unique even if they are different source files.  This type serves each file it finds at startup as a static file.
 
 ## Player Troubleshooting
-If you're running into issues with a javascript based test player, there is a good chance you may need to get add some default CORS headers to your endpoint config.
+If you're running into issues with a Javascript-based test player, there is a good chance you may need to get add some default CORS headers to your endpoint config.
 ```json
 "default_headers": {
   "Access-Control-Allow-Headers": [
