@@ -65,13 +65,9 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdnID, ok, err := getCDNIDFromName(string(cdnName), inf.Tx.Tx)
+	cdnID, ok, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ID from name '"+string(cdnName)+"': "+err.Error()))
-		return
-	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn "+string(cdnName)+" does not exist"), nil)
 		return
 	}
 
@@ -112,18 +108,7 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CDN: %v, ID: %v, ACTION: Generated KSK DNSSEC keys", cdnName, cdnID), inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, "generated ksk dnssec keys for "+string(cdnName))
-}
-
-func getCDNIDFromName(name string, tx *sql.Tx) (string, bool, error) {
-	id := 0
-	if err := tx.QueryRow(`select id from cdn where name = $1`, name).Scan(&id); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("Error querying CDN id: " + err.Error())
-	}
-	return name, true, nil
+	api.WriteResp(w, r, "Successfully generated ksk dnssec keys for "+string(cdnName))
 }
 
 // getKSKParams returns the CDN's profile's tld.ttls.DNSKEY and DNSKEY.effective.multiplier parameters. If either parameter doesn't exist, nil is returned.

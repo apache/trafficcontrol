@@ -49,7 +49,12 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting parameter profile: "+err.Error()))
 		return
 	}
-	paramName, _, _ := dbhelpers.GetParamNameFromID(int(*paramProfile.ParamID), inf.Tx.Tx)
+	paramName, ok, err := dbhelpers.GetParamNameFromID(inf.Tx.Tx, *paramProfile.ParamID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting parameter name from id: "+err.Error()))
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("parameter not found"))
+	}
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("PARAM: %v, ID: %v, ACTION: Assigned %v profiles to parameter", paramName, *paramProfile.ParamID, len(*paramProfile.ProfileIDs)), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d profiles were assigned to the %d parameter", len(*paramProfile.ProfileIDs), *paramProfile.ParamID), paramProfile)
 }

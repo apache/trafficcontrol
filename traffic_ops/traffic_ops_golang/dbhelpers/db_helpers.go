@@ -159,6 +159,17 @@ func GetPrivLevelFromRoleID(tx *sql.Tx, id int) (int, bool, error) {
 	return privLevel, true, nil
 }
 
+func GetCGNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying cachegroup ID: " + err.Error())
+	}
+	return tc.CacheGroupName(name), true, nil
+}
+
 // GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
 func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	name := tc.DeliveryServiceName("")
@@ -180,8 +191,20 @@ func GetDSIDFromName(tx *sql.Tx, xml_id string) (int, error) {
 	return id, nil
 }
 
+// GetFedNameFromID returns the federations name and whether or not one with the given ID exists, or an error
+func GetFedNameByID(tx *sql.Tx, id int) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`select cname from federation where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("Error querying federation cname: " + err.Error())
+	}
+	return name, true, nil
+}
+
 // GetParamNameFromID returns the parameter's name, whether a parameter with ID exists, or any error.
-func GetParamNameFromID(id int, tx *sql.Tx) (string, bool, error) {
+func GetParamNameFromID(tx *sql.Tx, id int64) (string, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name from parameter where id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
@@ -193,7 +216,7 @@ func GetParamNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 }
 
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
-func GetProfileNameFromID(id int, tx *sql.Tx) (string, bool, error) {
+func GetProfileNameFromID(tx *sql.Tx, id int64) (string, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name from profile where id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
@@ -229,12 +252,15 @@ func CDNExists(cdnName string, tx *sql.Tx) (bool, error) {
 }
 
 // GetCDNIDFromName returns the CDN's ID if a CDN with the given name exists
-func GetCDNIDFromName(tx *sql.Tx, name string) (int, error) {
+func GetCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
 	id := 0
 	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
-		return id, errors.New("querying CDN ID: " + err.Error())
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, errors.New("querying CDN ID: " + err.Error())
 	}
-	return id, nil
+	return id, true, nil
 }
 
 func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {

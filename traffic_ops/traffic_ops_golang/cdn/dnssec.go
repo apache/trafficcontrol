@@ -58,13 +58,9 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	cdnName := *req.Key
 
-	cdnID, ok, err := getCDNIDFromName(cdnName, inf.Tx.Tx)
+	cdnID, _, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdnName))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ID from name '"+cdnName+"': "+err.Error()))
-		return
-	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn "+cdnName+" does not exist"), nil)
 		return
 	}
 
@@ -314,7 +310,7 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := inf.Params["name"]
-	cdnID, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, key)
+	cdnID, _, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(key))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id: "+err.Error()))
 		return

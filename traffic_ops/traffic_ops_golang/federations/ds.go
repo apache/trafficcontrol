@@ -28,6 +28,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -41,9 +42,11 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	fedID := inf.IntParams["id"]
-	fedName, err := getFedNameByID(fedID, inf.Tx.Tx)
+	fedName, ok, err := dbhelpers.GetFedNameByID(inf.Tx.Tx, fedID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting federation cname from ID '"+string(fedID)+"': "+err.Error()))
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("federation not found: "+err.Error()), nil)
 	}
 
 	post := tc.FederationDSPost{}
@@ -74,14 +77,6 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("FEDERATION: %v, ID: %v, ACTION: Assign DSes to federation", fedName, fedID), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, strconv.Itoa(len(post.DSIDs))+" delivery service(s) were assigned to the federation "+strconv.Itoa(fedID), post)
-}
-
-func getFedNameByID(id int, tx *sql.Tx) (string, error) {
-	name := ""
-	if err := tx.QueryRow(`select cname from federation where id = $1`, id).Scan(&name); err != nil {
-		return "", errors.New("Error querying federation cname: " + err.Error())
-	}
-	return name, nil
 }
 
 func deleteDSFeds(tx *sql.Tx, fedID int) error {

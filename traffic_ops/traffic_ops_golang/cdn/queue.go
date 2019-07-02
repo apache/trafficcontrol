@@ -27,6 +27,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 type QueueReq struct {
@@ -59,7 +60,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdnName, ok, err := getCDNNameFromID(inf.IntParams["id"], inf.Tx.Tx)
+	cdnName, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(inf.IntParams["id"]))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn name from ID '"+inf.Params["id"]+"': "+err.Error()))
 		return
@@ -68,7 +69,6 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn "+inf.Params["id"]+" does not exist"), nil)
 		return
 	}
-
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CDN: %v, ID: %v, ACTION: Queue CDN updates", cdnName, inf.IntParams["id"]), inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, QueueResp{Action: reqObj.Action, CDNID: int64(inf.IntParams["id"])})
 }
@@ -78,15 +78,4 @@ func queueUpdates(tx *sql.Tx, cdnID int64, queue bool) error {
 		return errors.New("querying queue updates: " + err.Error())
 	}
 	return nil
-}
-
-func getCDNNameFromID(id int, tx *sql.Tx) (string, bool, error) {
-	name := ""
-	if err := tx.QueryRow(`select name from cdn where id = $1`, id).Scan(&name); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("Error querying CDN name: " + err.Error())
-	}
-	return name, true, nil
 }

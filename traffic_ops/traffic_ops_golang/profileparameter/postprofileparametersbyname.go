@@ -27,7 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	dbhelp "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -45,7 +45,7 @@ func PostProfileParamsByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	profileName := inf.Params["name"]
-	profileID, profileExists, err := dbhelp.GetProfileIDFromName(profileName, inf.Tx.Tx)
+	profileID, profileExists, err := dbhelpers.GetProfileIDFromName(profileName, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting profile '"+profileName+"' ID: "+err.Error()))
 		return
@@ -59,6 +59,7 @@ func PostProfileParamsByName(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting profile parameters by name: "+err.Error()))
 		return
 	}
+	resp := tc.ProfileParameterPostResp{Parameters: insertedObjs, ProfileName: profileName, ProfileID: profileID}
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("PROFILE: %v, ID: %v, ACTION: Assigned parameters to profile", profileName, profileID), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Assign parameters successfully to profile "+profileName, resp)
 }

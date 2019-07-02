@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 func DeleteName(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +39,7 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cdnName := tc.CDNName(inf.Params["name"])
-	ok, cdnID, err := cdnExists(inf.Tx.Tx, cdnName)
+	cdnID, ok, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
 		return
@@ -66,17 +67,6 @@ func deleteCDNByName(tx *sql.Tx, name tc.CDNName) error {
 		return errors.New("deleting cdns: " + err.Error())
 	}
 	return nil
-}
-
-func cdnExists(tx *sql.Tx, name tc.CDNName) (bool, int, error) {
-	id := 0
-	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
-		if err == sql.ErrNoRows {
-			return false, id, nil
-		}
-		return false, id, errors.New("querying cdn existence: " + err.Error())
-	}
-	return true, id, nil
 }
 
 func cdnUnused(tx *sql.Tx, name tc.CDNName) (bool, error) {
