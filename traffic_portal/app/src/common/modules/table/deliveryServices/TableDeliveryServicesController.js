@@ -25,6 +25,8 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
 
     var dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
+    var showCustomCharts = propertiesModel.properties.deliveryServices.charts.customLink.show;
+
     var createDeliveryService = function(typeName) {
         var path = '/delivery-services/new?type=' + typeName;
         locationUtils.navigateToPath(path);
@@ -192,10 +194,6 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
 
     $scope.deliveryServices = deliveryServices;
 
-    $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
-
-    $scope.openCharts = deliveryServiceUtils.openCharts;
-
     $scope.getRelativeTime = dateUtils.getRelativeTime;
 
     $scope.navigateToPath = locationUtils.navigateToPath;
@@ -235,8 +233,22 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         null, // Divider
         {
             text: 'View Charts',
+            displayed: function () {
+                // only show if custom ds charts link is NOT configured
+                return !showCustomCharts;
+            },
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/charts?type=' + $itemScope.ds.type);
+            }
+        },
+        {
+            text: 'View Charts',
+            displayed: function () {
+                // only show if custom ds charts link IS configured
+                return showCustomCharts;
+            },
+            click: function ($itemScope, event) {
+                deliveryServiceUtils.openCharts($itemScope.ds, event);
             }
         },
         null, // Divider
@@ -382,11 +394,8 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
 
     angular.element(document).ready(function () {
         $('#deliveryServicesTable').dataTable({
-            "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+            "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
             "iDisplayLength": 25,
-            "columnDefs": [
-                { 'orderable': false, 'targets': 12 }
-            ],
             "aaSorting": []
         });
     });

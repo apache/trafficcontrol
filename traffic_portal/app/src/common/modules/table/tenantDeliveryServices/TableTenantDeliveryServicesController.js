@@ -26,11 +26,8 @@ var TableTenantDeliveryServicesController = function(tenant, deliveryServices, $
 
 	angular.element(document).ready(function () {
 		$('#tenantDSsTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
-			],
 			"aaSorting": []
 		});
 	});

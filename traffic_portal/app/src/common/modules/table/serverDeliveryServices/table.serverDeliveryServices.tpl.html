@@ -56,7 +56,6 @@ under the License.
                 <th>Signing Algorithm</th>
                 <th>Qstring Handling</th>
                 <th>Last Updated</th>
-                <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -73,10 +72,6 @@ under the License.
                 <td data-search="^{{::ds.signingAlgorithm}}$">{{::ds.signingAlgorithm}}</td>
                 <td data-search="^{{::qstring(ds)}}$">{{::qstring(ds)}}</td>
                 <td data-search="^{{::getRelativeTime(ds.lastUpdated)}}$" data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
-                <td style="text-align: right;">
-                    <a class="link action-link" title="Unlink Delivery Service from Server" ng-click="confirmRemoveDS(ds, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
-                    <span ng-if="showChartsButton"><a class="link action-link" title="View Charts" ng-click="openCharts(ds, $event)"><i class="fa fa-sm fa-bar-chart"></i></a></span>
-                </td>
             </tr>
             </tbody>
         </table>

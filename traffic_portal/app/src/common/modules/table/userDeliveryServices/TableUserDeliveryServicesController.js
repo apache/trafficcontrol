@@ -26,7 +26,7 @@ var TableUserDeliveryServicesController = function (user, deliveryServices, $con
 
 	angular.element(document).ready(function () {
 		$('#userDeliveryServicesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"aaSorting": []
 		});

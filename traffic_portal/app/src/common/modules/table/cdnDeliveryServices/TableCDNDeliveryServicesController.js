@@ -26,11 +26,8 @@ var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $contro
 
 	angular.element(document).ready(function () {
 		$('#cdnDeliveryServicesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
-			],
 			"aaSorting": []
 		});
 	});
