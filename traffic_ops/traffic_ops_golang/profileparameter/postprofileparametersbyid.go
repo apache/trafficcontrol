@@ -26,7 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	dbhelp "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 func PostProfileParamsByID(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +44,7 @@ func PostProfileParamsByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	profileID := inf.IntParams["id"]
-	profileName, profileExists, err := dbhelp.GetProfileNameFromID(profileID, inf.Tx.Tx)
+	profileName, profileExists, err := dbhelpers.GetProfileNameFromID(inf.Tx.Tx, int64(profileID))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting profile ID %d: "+err.Error(), profileID))
 		return
