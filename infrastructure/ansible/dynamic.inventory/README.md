@@ -21,7 +21,7 @@
 This python script uses the Traffic Ops Python Native Client to expose much of the TO dataset as an ansible inventory on demand as Ansible patterns.
 
 ## Requirements
-You will need to ensure the Traffic Ops Python Native Client is available to the python env shared by Ansible.
+You will need to ensure the Traffic Ops Python Native Client is available to the python env shared by Ansible (https://github.com/apache/trafficcontrol/tree/master/traffic_control/clients/python).
 
 Due to limitations in the way parameters are passed in Ansible Dynamic Inventory scripts, the following environment variables must be defined:
 ```bash session
