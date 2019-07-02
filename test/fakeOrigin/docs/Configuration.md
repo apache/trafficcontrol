@@ -96,7 +96,7 @@ When using HLS with adaptive bitrate layers, the master manifest generator withi
 Setting `default_headers` in the config file makes sense for cases like video players who can't supply custom HTTP headers.  However for testing specific use cases, you can also supply custom headers as a client to override what gets returned in the fakeOrigin response.  If you give a header with the Prefix `fakeOrigin-`, that prefix will be stripped and the rest of the client header string will be returned.
 
 Example (Normal):
-```curl
+```bash session
 curl -vs4 -o /dev/null http://localhost:8080/SampleVideo/kelloggs.mp4
 *   Trying 127.0.0.1...
 * TCP_NODELAY set
@@ -116,7 +116,7 @@ curl -vs4 -o /dev/null http://localhost:8080/SampleVideo/kelloggs.mp4
 <
 ```
 Example (With Client Header Override):
-```curl
+```bash session
 curl -vs4 -o /dev/null http://localhost:8080/SampleVideo/kelloggs.mp4 -H 'fakeOrigin-A-Custom_header: foo' -H 'fakeOrigin-Another-Custom-Header: "baz"'
 *   Trying 127.0.0.1...
 * TCP_NODELAY set
