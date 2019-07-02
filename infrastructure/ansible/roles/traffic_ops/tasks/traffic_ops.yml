@@ -15,7 +15,7 @@
 - name: Install Postgres client tools
   yum:
     name:
-      - postgresql96
+      - "{{ postgresql_client_pkg_name }}"
     state: present
     lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"

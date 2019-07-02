@@ -15,6 +15,10 @@
 install_traffic_opsdb: false
 initialize_traffic_opsdb: false
 
+postgresql_server_pkg_name: "{% if postgresql_version is defined and postgresql_version != omit %}{{ 'postgresql96-server-'+postgresql_version }}{% else %}postgresql96-server{% endif %}"
+postgresql_client_pkg_name: "{% if postgresql_version is defined and postgresql_version != omit %}{{ 'postgresql96-'+postgresql_version }}{% else %}postgresql96{% endif %}"
+postgresql_devel_pkg_name: "{% if postgresql_version is defined and postgresql_version != omit %}{{ 'postgresql96-devel-'+postgresql_version }}{% else %}postgresql96-devel{% endif %}"
+
 # Local OS User to use for Postgres Processes
 postgresql_user: postgres
 postgresql_group: postgres

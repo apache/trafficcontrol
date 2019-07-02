@@ -20,9 +20,9 @@
 - name: Install Postgres
   yum:
     name:
-      - postgresql96-server
-      - postgresql96
-      - postgresql96-devel
+      - "{{ postgresql_server_pkg_name }}"
+      - "{{ postgresql_client_pkg_name }}"
+      - "{{ postgresql_devel_pkg_name }}"
       - gcc
       - python-devel
     state: present
