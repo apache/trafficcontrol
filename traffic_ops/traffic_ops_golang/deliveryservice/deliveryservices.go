@@ -1411,7 +1411,7 @@ func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullable) (*int, error) {
 		existingID, _, err := getDSTenantIDByID(tx, *ds.ID) // ignore exists return - if the DS is new, we only need to check the user input tenant
 		return existingID, err
 	}
-	existingID, _, err := getDSTenantIDByName(tx, *ds.XMLID) // ignore exists return - if the DS is new, we only need to check the user input tenant
+	existingID, _, err := getDSTenantIDByName(tx, tc.DeliveryServiceName(*ds.XMLID)) // ignore exists return - if the DS is new, we only need to check the user input tenant
 	return existingID, err
 }
 
@@ -1459,32 +1459,8 @@ func getDSTenantIDByID(tx *sql.Tx, id int) (*int, bool, error) {
 	return tenantID, true, nil
 }
 
-// GetDSTenantIDByIDTx returns the tenant ID, whether the delivery service exists, and any error.
-func GetDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
-	tenantID := (*int)(nil)
-	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, id).Scan(&tenantID); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, false, nil
-		}
-		return nil, false, fmt.Errorf("querying tenant ID for delivery service ID '%v': %v", id, err)
-	}
-	return tenantID, true, nil
-}
-
 // getDSTenantIDByName returns the tenant ID, whether the delivery service exists, and any error.
-func getDSTenantIDByName(tx *sql.Tx, name string) (*int, bool, error) {
-	tenantID := (*int)(nil)
-	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where xml_id = $1`, name).Scan(&tenantID); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, false, nil
-		}
-		return nil, false, fmt.Errorf("querying tenant ID for delivery service name '%v': %v", name, err)
-	}
-	return tenantID, true, nil
-}
-
-// GetDSTenantIDByNameTx returns the tenant ID, whether the delivery service exists, and any error.
-func GetDSTenantIDByNameTx(tx *sql.Tx, ds tc.DeliveryServiceName) (*int, bool, error) {
+func getDSTenantIDByName(tx *sql.Tx, ds tc.DeliveryServiceName) (*int, bool, error) {
 	tenantID := (*int)(nil)
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where xml_id = $1`, ds).Scan(&tenantID); err != nil {
 		if err == sql.ErrNoRows {

@@ -387,7 +387,7 @@ type Version struct {
 	Minor uint64
 }
 
-// getRequestedAPIVersion returns a pointer to the requested API Version from the request if it exists, otherwise nil
+// getRequestedAPIVersion returns a pointer to the requested API Version from the request if it exists or returns nil otherwise.
 func getRequestedAPIVersion(path string) *Version {
 	pathParts := strings.Split(path, "/")
 	if len(pathParts) < 2 {
@@ -410,6 +410,9 @@ func getRequestedAPIVersion(path string) *Version {
 		return nil
 	}
 	minorVersion, err := strconv.ParseUint(versionParts[1], 10, 64)
+	if err != nil {
+		return nil
+	}
 	return &Version{Major: majorVersion, Minor: minorVersion}
 }
 
