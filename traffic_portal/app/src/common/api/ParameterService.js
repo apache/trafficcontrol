@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ParameterService = function(Restangular, $http, $q, locationUtils, messageModel, ENV) {
+var ParameterService = function(Restangular, $http, $q, messageModel, ENV) {
 
     this.getParameters = function(queryParams) {
         return Restangular.all('parameters').getList(queryParams);
@@ -30,9 +30,9 @@ var ParameterService = function(Restangular, $http, $q, locationUtils, messageMo
     this.createParameter = function(parameter) {
         return Restangular.service('parameters').post(parameter)
             .then(
-            function() {
+            function(response) {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter created' } ], true);
-                locationUtils.navigateToPath('/parameters');
+                return response;
             },
             function(fault) {
                 messageModel.setMessages(fault.data.alerts, false);
@@ -84,5 +84,5 @@ var ParameterService = function(Restangular, $http, $q, locationUtils, messageMo
 
 };
 
-ParameterService.$inject = ['Restangular', '$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
+ParameterService.$inject = ['Restangular', '$http', '$q', 'messageModel', 'ENV'];
 module.exports = ParameterService;

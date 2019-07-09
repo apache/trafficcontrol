@@ -100,50 +100,7 @@ var TableParameterProfilesController = function(parameter, profiles, $controller
 	};
 
 	$scope.selectProfiles = function() {
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/table/parameterProfiles/table.paramProfilesUnassigned.tpl.html',
-			controller: 'TableParamProfilesUnassignedController',
-			size: 'lg',
-			resolve: {
-				parameter: function() {
-					return parameter;
-				},
-				allProfiles: function(profileService) {
-					return profileService.getProfiles({ orderby: 'name' });
-				},
-				assignedProfiles: function() {
-					return profiles;
-				}
-			}
-		});
-		modalInstance.result.then(function(selectedProfileIds) {
-			var params = {
-				title: 'Assign profiles to ' + parameter.name,
-				message: 'Are you sure you want to modify the profiles assigned to ' + parameter.name + '?'
-			};
-			var modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-				controller: 'DialogConfirmController',
-				size: 'md',
-				resolve: {
-					params: function () {
-						return params;
-					}
-				}
-			});
-			modalInstance.result.then(function() {
-				profileParameterService.linkParamProfiles(parameter.id, selectedProfileIds)
-					.then(
-						function() {
-							$scope.refresh(); // refresh the parameter profiles table
-						}
-					);
-			}, function () {
-				// do nothing
-			});
-		}, function () {
-			// do nothing
-		});
+		profileParameterService.selectProfiles(parameter, profiles)
 	};
 
 	angular.element(document).ready(function () {

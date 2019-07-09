@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ProfileParameterService = function(Restangular, httpService, messageModel, ENV) {
+var ProfileParameterService = function(Restangular, httpService, messageModel, ENV, $uibModal) {
 
 	this.unlinkProfileParameter = function(profileId, paramId) {
 		return httpService.delete(ENV.api['root'] + 'profileparameters/' + profileId + '/' + paramId)
@@ -43,19 +43,59 @@ var ProfileParameterService = function(Restangular, httpService, messageModel, E
 			);
 	};
 
-	this.linkParamProfiles = function(paramId, profiles) {
+	var linkParamProfilesHelper = function(paramId, profiles) { 
 		return Restangular.service('parameterprofile').post({ paramId: paramId, profileIds: profiles, replace: true })
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Profiles linked to parameter' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+	.then(
+		function() {
+			messageModel.setMessages([ { level: 'success', text: 'Profiles linked to parameter' } ], false);
+		},
+		function(fault) {
+			messageModel.setMessages(fault.data.alerts, false);
+		}
+	);
+	}
+
+	this.linkParamProfiles = function(paramId, profiles) {
+		return linkParamProfilesHelper(paramId, profiles);
 	};
+
+	this.selectProfiles = function(parameter, profiles) {
+		return $uibModal.open({
+		templateUrl: 'common/modules/table/parameterProfiles/table.paramProfilesUnassigned.tpl.html',
+		controller: 'TableParamProfilesUnassignedController',
+		size: 'lg',
+		resolve: {
+			parameter: function() {
+				return parameter;
+			},
+			allProfiles: function(profileService) {
+				return profileService.getProfiles({ orderby: 'name' });
+			},
+			assignedProfiles: function(profileService) {
+				return profiles || profileService.getParameterProfiles(parameter.id); // there's an uncaught error that doesn't affect functionality if the parameter creation fails
+			}
+		}
+		}).result.then(function(selectedProfileIds) {
+		var params = {
+			title: 'Assign profiles to ' + parameter.name,
+			message: 'Are you sure you want to modify the profiles assigned to ' + parameter.name + '?'
+		};
+		return $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		}).result.then(function() {
+			linkParamProfilesHelper(parameter.id, selectedProfileIds); // not ideal, but it's what works for now
+		});
+	});
+};
 
 };
 
-ProfileParameterService.$inject = ['Restangular', 'httpService', 'messageModel', 'ENV'];
+ProfileParameterService.$inject = ['Restangular', 'httpService', 'messageModel', 'ENV', '$uibModal'];
 module.exports = ProfileParameterService;
