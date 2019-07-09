@@ -101,7 +101,6 @@ Most structs do not have versioning. If you are adding a field to a struct with 
 
 1. In `lib/go-tc`, rename the old struct to be the previous minor version.
     - For example, if you are adding a field to Delivery Service and existing minor version is 1.4 (so your new minor version is 1.5), in `lib/go-tc/deliveryservices.go` rename `type DeliveryServiceNullable struct` to `type DeliveryServiceNullableV14 struct`.
-  - Also rename any `Sanitize` and `Validate` functions to the old object.
 
 2. In `lib/go-tc`, create a new struct with an unversioned name, and anonymously embed the previous struct (that you just renamed), along with your new field.
     - For example:
@@ -112,57 +111,83 @@ type DeliveryServiceNullable struct {
 }
 ```
 
-3. Create a `Sanitize` function on the new struct, e.g. `func (ds *DeliveryServiceNullable) Sanitize()`, which sets your new field to a default value, if it is null.
-    - It must always be possible to create objects with previous API versions. Therefore, this step is not optional.
-    - The new `Sanitize` function must call the previous version's `Sanitize` as well, in order to sanitize all previous versions. E.g.
+3. In `lib/go-tc`, change the struct's type alias to the new minor version.
+    - For example:
 ```go
-  func (ds *DeliveryServiceNullable) Sanitize() {
-	ds.DeliveryServiceNullableV14.Sanitize()
+type DeliveryServiceNullableV15 DeliveryServiceNullable
 ```
 
-4. Create a `Validate` function, which immediately calls the `Sanitize` function, as well as doing any other validation on your new field.
-    - `Validate` is used to `Sanitize` by the API frameworks. If a `Validate` function doesn't exist, your new field won't be checked and made valid, and may result in nil panics. Therefore, this step is not optional.
+4. Update the `Sanitize` function on the unversioned struct, e.g. `func (ds *DeliveryServiceNullable) Sanitize()`, which sets your new field to a default value, if it is null.
+```go
+  func (ds *DeliveryServiceNullable) Sanitize() {
+    if ds.MyNewField == nil { ... }
+```
+
+5. Update the `Validate` function on the unversioned struct to add validation for your new field.
     - For example, if your new field is a port, `Validate` should verify it is between 0 and 65535.
     - Almost all fields can be invalid! Don't skip this step. Proper validation is essential to Traffic Control functioning properly and rejecting invalid input.
 
-    For example:
+6. Add new versioned Create and Update handlers for the new version in e.g. `deliveryservice/deliveryservices.go`. The added Create and Update handlers will decode requests into the latest version of the struct and should pass it to an underlying versioned `create` or `update` function:
 
+  For example:
 ```go
-func (ds *DeliveryServiceNullableV14) Validate(tx *sql.Tx) error {
-	ds.Sanitize()
-```
+func CreateV15(w http.ResponseWriter, r *http.Request) {
+  ...
+	ds := tc.DeliveryServiceNullableV15{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
 
+	res, status, userErr, sysErr := createV15(w, r, inf, ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV15{*res})
+}
 
-5. Create a func to convert the previous version to the new latest struct. For example, `func NewDeliveryServiceNullableFromV14(ds DeliveryServiceNullableV14) DeliveryServiceNullable`. This function will typically do nothing more than create the latest object with the older version, and sanitize new fields. E.g.
-```go
-func NewDeliveryServiceNullableFromV14(ds DeliveryServiceNullableV14) DeliveryServiceNullable {
-	newDS := DeliveryServiceNullable{DeliveryServiceNullableV14: ds}
-	newDS.Sanitize()
-	return newDS
+func createV15(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS tc.DeliveryServiceNullableV15) *tc.DeliveryServiceNullableV15 {
+  ...
 }
 ```
 
-6. In `traffic_ops/traffic_ops_golang`, copy the existing previous version file, e.g. `cp traffic_ops/traffic_ops_golang/deliveryservice/deliveryservicesv1{3,4}.go`.
-    - If the object has no previous version, see `deliveryservice` for an example. The "CRUDer" version file should contain only boilerplate, no logic, and no reference to other versions except the latest. Hence, it should be possible to copy and rename, with no logic changes. The logic and latest version should all be in the main file, e.g. `deliveryservice/deliveryservices.go`.
+NOTE: the underlying `create` and `update` functions are chained together so that requests for previous minor versions are upgraded into requests of the next latest version until they are finally handled at the latest minor version.
 
-7. In the new version file, rename all instances of the previous version to the new version, e.g. `sed -i 's/v13/v14/' deliveryservicesv14.go`.
+Example call chains:
+```
+  CreateV12 -> createV12 -> createV13 -> createV14 -> createV15
+  CreateV13         ->      createV13 -> createV14 -> createV15
+  CreateV14                ->            createV14 -> createV15
+  CreateV15                      ->                   createV15
+  ```
 
-8. Add the logic for your new field to the latest version file, e.g. `deliveryservice/deliveryservices.go`.
+In this example you would rename the existing `createV14` function to `createV15` and update its signature to accept and return a V15 struct. Then you would create a new `createV14` function, in which you would simply create a V15 struct, insert the V14 struct into it, and pass it to the `createV15` function. By doing that, the V14 request would essentially be upgraded into a V15 request for the underlying `createV15` handler to use.
 
-9. Add your new version to `traffic_ops/traffic_ops_golang/routing/routes.go`, and add the versioned object to the previous route.
+For an `updateV14` function, you would follow the same pattern as the create function, but you also have to take into account any existing 1.5 fields that may already exist in the resource. So, you have to read existing 1.5 fields from the DB into your V15 struct before passing it to `updateV15`. That is how an "update" request can be upgraded from a 1.4 request to a 1.5 request.
+
+7. Modify the `createV15` and `updateV15` functions (and associated INSERT and UPDATE SQL queries) to create and update the new field in e.g. `deliveryservice/deliveryservices.go`.
+
+8. Modify the `Read` function (and associated SELECT SQL query) to read structs of the new version. For example in `deliveryservice/deliveryservices.go`, you would update the `switch` statement so that `version.Minor >= 5` returns structs of `DeliveryServiceNullable` (the latest version of the struct), and `version.Minor >= 4` returns structs of the embedded `DeliveryServiceNullableV14`. The SELECT SQL query should always be updated to read all of the latest fields, and the `Read` handler should always return the proper versioned struct for the requested API version.
+
+NOTE: the `Delete` handler should not need any modification when adding a new minor version of an API endpoint.
+
+9. Add the routes for your new `CreateV15` and `UpdateV15` handlers to `traffic_ops/traffic_ops_golang/routing/routes.go`.
     - The new latest route must go above the previous version. If the new version is below the old, the new version will never be routed to!
 
     For example, Change:
 ```go
-{1.4, http.MethodGet, `deliveryservices/{id}/?(\.json)?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV14, auth.PrivLevelOperations, Authenticated, nil},
 ```
 
   To:
 
 ```go
-{1.5, http.MethodGet, `deliveryservices/{id}/?(\.json)?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil},
-{1.4, http.MethodGet, `deliveryservices/{id}/?(\.json)?$`, api.ReadHandler(&deliveryservice.TODeliveryServiceV14{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.5, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV15, auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV14, auth.PrivLevelOperations, Authenticated, nil},
 ```
+
+NOTE: the `Read` and `Delete` handlers should always point to the lowest minor version since they are meant to handle requests of any minor version, so the routes for these handlers should not change when adding a new minor version.
 
 ## Converting Routes to Traffic Ops Golang
 
