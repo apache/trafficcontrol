@@ -20,9 +20,12 @@ package deliveryservice
  */
 
 import (
+	"context"
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -35,6 +38,7 @@ import (
 	"github.com/go-acme/lego/challenge/dns01"
 	"github.com/go-acme/lego/lego"
 	"github.com/go-acme/lego/registration"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"time"
 )
@@ -58,11 +62,11 @@ func (u *MyUser) GetPrivateKey() crypto.PrivateKey {
 }
 
 type DNSProviderTrafficRouter struct {
-	r *http.Request
+	db *sqlx.DB
 }
 
-func NewDNSProviderTrafficRouter(r *http.Request) (*DNSProviderTrafficRouter, error) {
-	return &DNSProviderTrafficRouter{r: r}, nil
+func NewDNSProviderTrafficRouter() (*DNSProviderTrafficRouter, error) {
+	return &DNSProviderTrafficRouter{}, nil
 }
 
 func (d *DNSProviderTrafficRouter) Timeout() (timeout, interval time.Duration) {
@@ -70,17 +74,12 @@ func (d *DNSProviderTrafficRouter) Timeout() (timeout, interval time.Duration) {
 }
 
 func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error {
-	inf, userErr, sysErr, _ := api.NewInfo(d.r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		log.Errorf("Getting api info. UserErr = " + userErr.Error() + " and SysErr = " + sysErr.Error())
-		return errors.New("Getting api info. UserErr = " + userErr.Error() + " and SysErr = " + sysErr.Error())
-	}
-	defer inf.Close()
-
+	tx, err := d.db.Begin()
 	fqdn, value := dns01.GetRecord(domain, keyAuth)
 
 	q := `INSERT INTO dnschallenges (fqdn, record) VALUES ($1, $2)`
-	response, err := inf.Tx.Tx.Exec(q, fqdn, value)
+	response, err := tx.Exec(q, fqdn, value)
+	tx.Commit()
 	if err != nil {
 		log.Errorf("Inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
 		return errors.New("Inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
@@ -100,27 +99,27 @@ func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error 
 }
 
 func (d *DNSProviderTrafficRouter) CleanUp(domain, token, keyAuth string) error {
-	//fqdn, value := dns01.GetRecord(domain, keyAuth)
-	//
-	//defer d.tx.Commit()
-	//
-	//q := `DELETE FROM dnschallenges WHERE fqdn = $1`
-	//response, err := d.tx.Exec(q, fqdn)
-	//if err != nil {
-	//	log.Errorf("Deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
-	//	return errors.New("Deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
-	//} else {
-	//	rows, err := response.RowsAffected()
-	//	if err != nil {
-	//		log.Errorf("Determining rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
-	//		return errors.New("Determining rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
-	//	}
-	//	if rows == 0 {
-	//		log.Errorf("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
-	//		return errors.New("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
-	//	}
-	//}
-	//
+	fqdn, value := dns01.GetRecord(domain, keyAuth)
+	tx, err := d.db.Begin()
+
+	q := `DELETE FROM dnschallenges WHERE fqdn = $1 and record = $2`
+	response, err := tx.Exec(q, fqdn, value)
+	tx.Commit()
+	if err != nil {
+		log.Errorf("Deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+		return errors.New("Deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+	} else {
+		rows, err := response.RowsAffected()
+		if err != nil {
+			log.Errorf("Determining rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+			return errors.New("Determining rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+		}
+		if rows == 0 {
+			log.Errorf("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+			return errors.New("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+		}
+	}
+
 	return nil
 }
 
@@ -132,10 +131,14 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	ctx, _ := context.WithTimeout(r.Context(), time.Minute*10)
+	db, err := api.GetDB(ctx)
+	tx, err := db.BeginTxx(ctx, nil)
+
 	req := tc.DeliveryServiceLetsEncryptSSLKeysReq{}
-	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
+	if err := api.Parse(r.Body, nil, &req); err != nil {
 		log.Errorf("Error parsing request: %s", err.Error())
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
+		api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
 		return
 	}
 
@@ -145,7 +148,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		log.Errorf("Error generating private key: %s", err.Error())
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
 		return
 	}
 
@@ -160,23 +163,24 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	client, err := lego.NewClient(config)
 	if err != nil {
 		log.Errorf("Error creating lets encrypt client: %s", err.Error())
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
 		return
 	}
 
 	client.Challenge.Remove(challenge.HTTP01)
 	client.Challenge.Remove(challenge.TLSALPN01)
-	trafficRouterDns, err := NewDNSProviderTrafficRouter(r)
+	trafficRouterDns, err := NewDNSProviderTrafficRouter()
+	trafficRouterDns.db = db
 	if err != nil {
 		log.Errorf("Error creating Traffic Router DNS provider: %s", err.Error())
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
 	}
 	client.Challenge.SetDNS01Provider(trafficRouterDns)
 
 	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
 	if err != nil {
 		log.Errorf("Error registering lets encrypt client: %s", err.Error())
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
 		return
 	}
 	myUser.Registration = reg
@@ -188,20 +192,27 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	certificates, err := client.Certificate.Obtain(request)
 	if err != nil {
 		log.Errorf("Error obtaining lets encrypt certificate: %s", err.Error())
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
 		return
 	}
 
-	// Each certificate comes back with the cert bytes, the bytes of the client's
-	// private key, and a certificate URL. SAVE THESE TO DISK.
 	fmt.Printf("%#v\n", certificates)
 
-	//x509cert, err := x509.ParseCertificate(certificates.Certificate)
-	//expiration := x509cert.NotBefore
-	//log.Errorf("MATT JACKSON - expiration = %s", expiration)
-	log.Errorf("MATT JACKSON - cert = %s", certificates.Certificate)
-	log.Errorf("MATT JACKSON - privatekey = %s", certificates.PrivateKey)
-	log.Errorf("MATT JACKSON - csr = %s", certificates.CSR)
+	block, _ := pem.Decode([]byte(certificates.Certificate))
+	if block == nil {
+		log.Errorf("Error parsing cert - %s", err.Error())
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
+		return
+	}
+	x509cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		log.Errorf("Error parsing cert to get expiry - %s", err.Error())
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
+		return
+	}
+
+	expiration := x509cert.NotAfter
+	log.Errorf("MATT JACKSON - expiration = %s", expiration)
 
 	// Save certs into Riak
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
@@ -211,8 +222,8 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		Version:         *req.Version,
 	}
 
-	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(certificates.Certificate)), Key: string(EncodePEMToLegacyPerlRiakFormat(certificates.PrivateKey)), CSR: string(certificates.CSR)}
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
+	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(certificates.Certificate)), Key: string(EncodePEMToLegacyPerlRiakFormat(certificates.PrivateKey)), CSR: "Not Applicable"}
+	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
 		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("putting riak keys: "+err.Error()), nil)
 		return
@@ -270,7 +281,7 @@ func RenewLetsEncryptCert(w http.ResponseWriter, r *http.Request) {
 
 	client.Challenge.Remove(challenge.HTTP01)
 	client.Challenge.Remove(challenge.TLSALPN01)
-	trafficRouterDns, err := NewDNSProviderTrafficRouter(r)
+	trafficRouterDns, err := NewDNSProviderTrafficRouter()
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
 	}

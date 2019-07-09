@@ -55,7 +55,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
             final HashMap<String, List<LetsEncryptDnsChallenge>> dataMap = mapper.readValue(data, new TypeReference<HashMap<String, List<LetsEncryptDnsChallenge>>>() { });
             final List<LetsEncryptDnsChallenge> challengeList = dataMap.get("response");
 
-            JsonNode mostRecentConfig = mapper.readTree(readConfigFile());
+            final JsonNode mostRecentConfig = mapper.readTree(readConfigFile());
             final ObjectNode deliveryServicesNode = (ObjectNode) JsonUtils.getJsonNode(mostRecentConfig, ConfigHandler.deliveryServicesKey);
 
 
@@ -63,21 +63,29 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
                 final StringBuilder sb = new StringBuilder();
                 sb.append(challenge.getFqdn());
                 if (!challenge.getFqdn().endsWith(".")) {
-                     sb.append('.');
+                    sb.append('.');
                 }
                 final String challengeDomain = sb.toString();
                 final String fqdn = challengeDomain.substring(0, challengeDomain.length() - 1).replace("_acme-challenge.", "");
 
-                    final String dsLabel = fqdn.split("\\.")[0];
-                    final ObjectNode deliveryServiceConfig = (ObjectNode) deliveryServicesNode.get(dsLabel);
+                final String dsLabel = fqdn.split("\\.")[0];
+                final ObjectNode deliveryServiceConfig = (ObjectNode) deliveryServicesNode.get(dsLabel);
 
-                    ArrayNode staticDnsEntriesNode;
+                ArrayNode staticDnsEntriesNode;
 
-                    if (deliveryServiceConfig.findValue("staticDnsEntries") != null) {
-                         staticDnsEntriesNode = (ArrayNode) deliveryServiceConfig.findValue("staticDnsEntries");
-                    } else {
-                        staticDnsEntriesNode = mapper.createArrayNode();
+                if (deliveryServiceConfig.findValue("staticDnsEntries") != null) {
+                    staticDnsEntriesNode = (ArrayNode) deliveryServiceConfig.findValue("staticDnsEntries");
+                } else {
+                    staticDnsEntriesNode = mapper.createArrayNode();
+                }
+
+                if (challenge.getRecord().isEmpty()) {
+                    for (int i = 0; i < staticDnsEntriesNode.size(); i++) {
+                        if (staticDnsEntriesNode.get(i).get("name").equals("_acme-challenge")) {
+                            staticDnsEntriesNode.remove(i);
+                        }
                     }
+                } else {
 
                     final ObjectNode newChildNode = mapper.createObjectNode();
                     newChildNode.put("type", "TXT");
@@ -86,16 +94,16 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
                     newChildNode.put("ttl", 10);
 
                     staticDnsEntriesNode.add(newChildNode);
+                }
 
-                    deliveryServiceConfig.set("staticDnsEntries", staticDnsEntriesNode);
-                    deliveryServicesNode.set(dsLabel, deliveryServiceConfig);
+                deliveryServiceConfig.set("staticDnsEntries", staticDnsEntriesNode);
+                deliveryServicesNode.set(dsLabel, deliveryServiceConfig);
 
             });
 
             final ObjectNode statsNode = (ObjectNode) mostRecentConfig.get("stats");
             statsNode.put("date", Instant.now().toEpochMilli() / 1000L);
 
-//                    final ObjectNode fullConfig = mapper.createObjectNode();
             final ObjectNode fullConfig = (ObjectNode) mostRecentConfig;
             fullConfig.set(ConfigHandler.deliveryServicesKey, deliveryServicesNode);
             fullConfig.set("stats", statsNode);
