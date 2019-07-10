@@ -142,22 +142,28 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		req, err := http.NewRequest("POST", parameters.AuthCodeTokenUrl, bytes.NewBufferString(data.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		if err != nil {
-			log.Errorf("obtaining token using code from oauth provider\n", err.Error())
+			log.Errorf("obtaining token using code from oauth provider\n%s", err.Error())
 			return
 		}
 
 		client := http.Client{}
 		response, err := client.Do(req)
 		if err != nil {
-			log.Errorf("getting an http client\n", err.Error())
+			log.Errorf("getting an http client\n%s", err.Error())
 			return
 		}
 		defer response.Body.Close()
 
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(response.Body)
+		encodedToken := ""
 
-		encodedToken := buf.String()
+		var result map[string]string
+		if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
+			encodedToken = buf.String()
+		} else {
+			encodedToken = result["access_token"]
+		}
 
 		if encodedToken == "" {
 			log.Errorf("Token not found in request but is required")
