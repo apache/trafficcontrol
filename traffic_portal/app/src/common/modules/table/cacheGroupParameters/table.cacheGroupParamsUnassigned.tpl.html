@@ -34,8 +34,8 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="p in ::unassignedParams">
-            <td><input type="checkbox" ng-click="updateParams($event, p.id)"></td>
+        <tr ng-repeat="p in ::unassignedParams" ng-click="updateParams($event, p.id)"">
+            <td><input type="checkbox" ng-click="$event.preventDefault()"></td>
             <td data-search="^{{::p.name}}$">{{::p.name}}</td>
             <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
             <td data-search="^{{::p.value}}$">{{::p.value}}</td>
