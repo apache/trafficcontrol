@@ -321,10 +321,15 @@ func GetPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions, riakPort *uint)
 		newcluster, err := GetRiakCluster(newservers, authOptions)
 		if err == nil {
 			if err := newcluster.Start(); err == nil {
-				log.Infoln("New cluster started")
+				log.Infof("New riak cluster started: %p\n", newcluster)
 
 				if sharedCluster != nil {
-					runtime.SetFinalizer(sharedCluster, sharedCluster.Stop())
+					runtime.SetFinalizer(sharedCluster, func(c *riak.Cluster) {
+						log.Infof("running finalizer for riak sharedcluster (%p)\n", c)
+						if err := c.Stop(); err != nil {
+							log.Errorf("in finalizer for riak sharedcluster (%p): stopping cluster: %s\n", c, err.Error())
+						}
+					})
 				}
 
 				sharedCluster = newcluster
