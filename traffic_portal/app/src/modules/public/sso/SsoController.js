@@ -23,7 +23,8 @@ var SsoController = function($scope, $state, $interval, $location, authService, 
         const authCodeTokenUrl = propertiesModel.properties.oAuth.oAuthCodeTokenUrl;
         const clientId = propertiesModel.properties.oAuth.clientId;
         const clientSecret = propertiesModel.properties.oAuth.clientSecret;
-        const redirectUri = location.href;
+        const redirectUri = localStorage.getItem('redirectUri');
+        localStorage.clear();
         var code = '';
         if ($location.hash()) {
             code = $location.hash().replace('code=', '');
