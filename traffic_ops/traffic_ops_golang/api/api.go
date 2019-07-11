@@ -41,6 +41,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
+	influx "github.com/influxdata/influxdb1-client/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -49,6 +50,17 @@ const DBContextKey = "db"
 const ConfigContextKey = "context"
 const ReqIDContextKey = "reqid"
 const APIRespWrittenKey = "respwritten"
+
+const influxServersQuery = `
+SELECT (host_name||'.'||domain_name) as fqdn,
+       tcp_port,
+       https_port
+FROM server
+WHERE type in ( SELECT id
+                FROM type
+                WHERE name='INFLUXDB'
+              )
+`
 
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
@@ -404,6 +416,54 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 		return http.StatusInternalServerError, nil, fmt.Errorf("Failed to send email: %v", err)
 	}
 	return http.StatusOK, nil, nil
+}
+
+// Constructs and returns an InfluxDB HTTP client, if enabled and when possible.
+// The error this returns should not be exposed to the user; it's for logging purposes only.
+//
+// If Influx connections are not enabled, this will return `nil` - but also no error. It is expected
+// that the caller will handle this situation appropriately.
+func (inf *APIInfo) CreateInfluxClient() (c *influx.Client, e error) {
+	if !inf.Config.InfluxEnabled {
+		return
+	}
+
+	var fqdn string
+	var TCPPort uint
+	var HTTPSPort uint
+
+	row := inf.Tx.Tx.QueryRow(influxServersQuery)
+	if e = row.Scan(&fqdn, &TCPPort, &HTTPSPort); e != nil {
+		return
+	}
+
+	host := "http%s://%s"
+	if (inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure) {
+		host = fmt.Sprintf(host, "s", fqdn)
+	} else {
+		host = fmt.Sprintf(host, "", fqdn)
+	}
+
+	if HTTPSPort > 0 {
+		if HTTPSPort != 443 {
+			host = fmt.Sprintf("%s:%d", host, HTTPSPort)
+		}
+	} else if TCPPort > 0 && TCPPort != 443 {
+		host = fmt.Sprintf("%s:%d", host, TCPPort)
+	}
+
+	config := influx.HTTPConfig {
+		Addr: host,
+		Username: inf.Config.ConfigInflux.User,
+		Password: inf.Config.ConfigInflux.Password,
+		UserAgent: fmt.Sprintf("TrafficOps/%s (Go)", inf.Config.Version),
+		Timeout: time.Duration(float64(inf.Config.ReadTimeout) / 2.1) * time.Second,
+	}
+
+	var client influx.Client
+	client, e = influx.NewHTTPClient(config)
+	c = &client
+	return
 }
 
 // APIInfoImpl implements APIInfo via the APIInfoer interface
