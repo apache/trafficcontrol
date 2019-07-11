@@ -23,13 +23,14 @@ var SsoController = function($scope, $state, $interval, $location, authService, 
         const authCodeTokenUrl = propertiesModel.properties.oAuth.oAuthCodeTokenUrl;
         const clientId = propertiesModel.properties.oAuth.clientId;
         const clientSecret = propertiesModel.properties.oAuth.clientSecret;
+        const redirectUri = location.href;
         var code = '';
         if ($location.hash()) {
             code = $location.hash().replace('code=', '');
         } else {
             code = $location.search()['code'];
         }
-        authService.oauthLogin(authCodeTokenUrl, code, clientId, clientSecret);
+        authService.oauthLogin(authCodeTokenUrl, code, clientId, clientSecret, redirectUri);
 	};
 	init();
 
