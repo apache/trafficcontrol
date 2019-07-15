@@ -24,6 +24,8 @@ An opt-in configuration for SSO using OAuth is supported and can be configured t
 
 .. Note:: OAuth providers sometimes do not return the public key set URL but instead require a locally stored key. This functionality is not currently supported and will require further development.
 
+.. Note:: The ``POST`` from the API to the OAuth provider to exchange the code for a token expects the response to have the token in JSON format with `access_token` as the desired field (and can include other fields).  It also supports a response with just the token itself as the body.  Further development work will need to be done to allow other resposne forms or other response fields.
+
 To configure OAuth login:
 
 - Set up authentication with a third party OAuth provider.
@@ -71,7 +73,7 @@ To configure OAuth login:
 		+--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
 		| Name                     | Type               | Description                                                                                                     |
 		+==========================+====================+=================================================================================================================+
-		| whitelisted_oauth_urls   | Array of strings   | List of whitelisted URLs for the Json public key set returned by OAuth provider.  Can contain ``*`` wildcards.  |
+		| whitelisted_oauth_urls   | Array of strings   | List of whitelisted URLs for the JSON public key set returned by OAuth provider.  Can contain ``*`` wildcards.  |
 		+--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
 
 
