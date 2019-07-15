@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -90,7 +89,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		CDN:            *reqObj.CDN,
 		CacheGroupID:   cgID,
 	})
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CACHEGROUP: %v, ID: %v, ACTION: %vd CacheGroup server updates", cgName, cgID, strings.Title(reqObj.Action)), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+string(cgID)+", ACTION: "+strings.Title(reqObj.Action)+"d CacheGroup server updates", inf.User, inf.Tx.Tx)
 }
 
 type QueueUpdatesResp struct {
