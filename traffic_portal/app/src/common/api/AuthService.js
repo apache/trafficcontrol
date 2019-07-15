@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var AuthService = function($rootScope, $http, $state, $location, userModel, messageModel, ENV) {
+var AuthService = function($rootScope, $http, $state, $location, userModel, messageModel, ENV, locationUtils) {
 
     this.login = function(username, password) {
         userModel.resetUser();
@@ -63,6 +63,10 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
                     } else {
                         $location.url('/');
                     }
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
+                    locationUtils.navigateToPath('/');
                 }
             );
     };
@@ -88,5 +92,5 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
 
 };
 
-AuthService.$inject = ['$rootScope', '$http', '$state', '$location', 'userModel', 'messageModel', 'ENV'];
+AuthService.$inject = ['$rootScope', '$http', '$state', '$location', 'userModel', 'messageModel', 'ENV', 'locationUtils'];
 module.exports = AuthService;
