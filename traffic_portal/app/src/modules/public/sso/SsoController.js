@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var SsoController = function($scope, $state, $interval, $location, authService, propertiesModel) {
+var SsoController = function($scope, $location, authService, propertiesModel) {
 
 	var init = function () {
         const authCodeTokenUrl = propertiesModel.properties.oAuth.oAuthCodeTokenUrl;
@@ -37,5 +37,5 @@ var SsoController = function($scope, $state, $interval, $location, authService, 
 
 };
 
-SsoController.$inject = ['$scope', '$state', '$interval', '$location', 'authService', 'propertiesModel'];
+SsoController.$inject = ['$scope', '$location', 'authService', 'propertiesModel'];
 module.exports = SsoController;
