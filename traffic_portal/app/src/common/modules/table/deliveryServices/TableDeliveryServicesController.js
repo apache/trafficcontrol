@@ -19,9 +19,17 @@
 
 var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, $scope, $state, $location, $uibModal, $window, deliveryServiceService, deliveryServiceRequestService, dateUtils, deliveryServiceUtils, locationUtils, messageModel, propertiesModel, userModel) {
 
+    let deliveryServicesTable;
+
     var protocols = deliveryServiceUtils.protocols;
 
     var qstrings = deliveryServiceUtils.qstrings;
+
+    var geoProviders = deliveryServiceUtils.geoProviders;
+
+    var geoLimits = deliveryServiceUtils.geoLimits;
+
+    var rrhs = deliveryServiceUtils.rrhs;
 
     var dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
@@ -204,6 +212,63 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
     $scope.PENDING = 3;
     $scope.COMPLETE = 4;
 
+    $scope.columns = [
+        { "name": "Active", "visible": true, "searchable": true },
+        { "name": "Anonymous Blocking", "visible": false, "searchable": false },
+        { "name": "CDN", "visible": true, "searchable": true },
+        { "name": "Check Path", "visible": false, "searchable": false },
+        { "name": "Consistent Hash Query Params", "visible": false, "searchable": false },
+        { "name": "Consistent Hash Regex", "visible": false, "searchable": false },
+        { "name": "Deep Caching Type", "visible": false, "searchable": false },
+        { "name": "Display Name", "visible": false, "searchable": false },
+        { "name": "DNS Bypass CNAME", "visible": false, "searchable": false },
+        { "name": "DNS Bypass IP", "visible": false, "searchable": false },
+        { "name": "DNS Bypass IPv6", "visible": false, "searchable": false },
+        { "name": "DNS Bypass TTL", "visible": false, "searchable": false },
+        { "name": "DNS TTL", "visible": false, "searchable": false },
+        { "name": "DSCP", "visible": true, "searchable": true },
+        { "name": "Edge Header Rewrite Rules", "visible": false, "searchable": false },
+        { "name": "FQ Pacing Rate", "visible": false, "searchable": false },
+        { "name": "Geo Limit", "visible": false, "searchable": false },
+        { "name": "Geo Limit Countries", "visible": false, "searchable": false },
+        { "name": "Geo Limit Redirect URL", "visible": false, "searchable": false },
+        { "name": "Geolocation Provider", "visible": false, "searchable": false },
+        { "name": "Geo Miss Latitude", "visible": false, "searchable": false },
+        { "name": "Geo Miss Longitude", "visible": false, "searchable": false },
+        { "name": "Global Max Mbps", "visible": false, "searchable": false },
+        { "name": "Global Max TPS", "visible": false, "searchable": false },
+        { "name": "HTTP Bypass FQDN", "visible": false, "searchable": false },
+        { "name": "ID", "visible": false, "searchable": false },
+        { "name": "Info URL", "visible": false, "searchable": false },
+        { "name": "Initial Dispersion", "visible": false, "searchable": false },
+        { "name": "IPv6 Routing", "visible": true, "searchable": true },
+        { "name": "Last Updated", "visible": false, "searchable": false },
+        { "name": "Long Desc 1", "visible": false, "searchable": false },
+        { "name": "Long Desc 2", "visible": false, "searchable": false },
+        { "name": "Long Desc 3", "visible": false, "searchable": false },
+        { "name": "Max DNS Answers", "visible": false, "searchable": false },
+        { "name": "Max Origin Connections", "visible": false, "searchable": false },
+        { "name": "Mid Header Rewrite Rules", "visible": false, "searchable": false },
+        { "name": "Multi-Site Origin", "visible": false, "searchable": false },
+        { "name": "Origin Shield", "visible": false, "searchable": false },
+        { "name": "Origin FQDN", "visible": true, "searchable": true },
+        { "name": "Profile", "visible": false, "searchable": false },
+        { "name": "Protocol", "visible": true, "searchable": true },
+        { "name": "Qstring Handling", "visible": true, "searchable": true },
+        { "name": "Range Request Handling", "visible": false, "searchable": false },
+        { "name": "Regex Remap Expression", "visible": false, "searchable": false },
+        { "name": "Regional Geoblocking", "visible": false, "searchable": false },
+        { "name": "Raw Remap Text", "visible": false, "searchable": false },
+        { "name": "Routing Name", "visible": false, "searchable": false },
+        { "name": "Signed", "visible": false, "searchable": false },
+        { "name": "Signing Algorithm", "visible": true, "searchable": true },
+        { "name": "Tenant", "visible": true, "searchable": true },
+        { "name": "TR Request Headers", "visible": false, "searchable": false },
+        { "name": "TR Response Headers", "visible": false, "searchable": false },
+        { "name": "Type", "visible": true, "searchable": true },
+        { "name": "XML ID (Key)", "visible": true, "searchable": true }
+    ];
+
     $scope.contextMenuItems = [
         {
             text: 'Open in New Tab',
@@ -334,6 +399,18 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         return qstrings[ds.qstringIgnore];
     };
 
+    $scope.geoProvider = function(ds) {
+        return geoProviders[ds.geoProvider];
+    };
+
+    $scope.geoLimit = function(ds) {
+        return geoLimits[ds.geoLimit];
+    };
+
+    $scope.rrh = function(ds) {
+        return rrhs[ds.rangeRequestHandling];
+    };
+
     $scope.selectDSType = function() {
         var params = {
             title: 'Create Delivery Service',
@@ -392,11 +469,29 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         });
     };
 
+    $scope.toggleVisibility = function(colName) {
+        const col = deliveryServicesTable.column(colName + ':name');
+        col.visible(!col.visible());
+        deliveryServicesTable.rows().invalidate().draw();
+    };
+
     angular.element(document).ready(function () {
-        $('#deliveryServicesTable').dataTable({
+        deliveryServicesTable = $('#deliveryServicesTable').DataTable({
             "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
             "iDisplayLength": 25,
-            "aaSorting": []
+            "aaSorting": [],
+            "columns": $scope.columns,
+            "colReorder": {
+                realtime: false
+            },
+            "initComplete": function(settings, json) {
+                try {
+                    // need to create the show/hide column checkboxes and bind to the current visibility
+                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_deliveryServicesTable_/')).columns;
+                } catch (e) {
+                    console.error("Failure to retrieve required column info from localStorage (key=DataTables_deliveryServicesTable_/):", e);
+                }
+            }
         });
     });
 

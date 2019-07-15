@@ -22,6 +22,8 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 	// extends the TableDeliveryServicesController to inherit common methods
 	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
 
+	let serverDeliveryServicesTable;
+
 	var removeDeliveryService = function(dsId) {
 		deliveryServiceService.deleteDeliveryServiceServer(dsId, $scope.server.id)
 			.then(
@@ -135,11 +137,29 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 		});
 	};
 
+	$scope.toggleVisibility = function(colName) {
+		const col = serverDeliveryServicesTable.column(colName + ':name');
+		col.visible(!col.visible());
+		serverDeliveryServicesTable.rows().invalidate().draw();
+	};
+
 	angular.element(document).ready(function () {
-		$('#serverDeliveryServicesTable').dataTable({
+		serverDeliveryServicesTable = $('#serverDeliveryServicesTable').DataTable({
 			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"colReorder": {
+				realtime: false
+			},
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_serverDeliveryServicesTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_serverDeliveryServicesTable_/):", e);
+				}
+			}
 		});
 	});
 
