@@ -22,7 +22,6 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -176,7 +175,7 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CDN: %v, ID: %v, ACTION: Snapshot of CRConfig and Monitor", cdn, inf.IntParams["id"]), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdn+", ID: "+string(inf.IntParams["id"])+", ACTION: Snapshot of CRConfig and Monitor", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "SUCCESS")
 }
 

@@ -22,7 +22,6 @@ package cdn
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -54,12 +53,12 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Failed to delete cdn name = "+string(cdnName)+" has delivery services or servers"), nil)
 		return
 	}
-	if err := deleteCDNByName(inf.Tx.Tx, tc.CDNName(cdnName)); err != nil {
+	if err := deleteCDNByName(inf.Tx.Tx, cdnName); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN: "+err.Error()))
 		return
 	}
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "cdn was deleted.")
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CDN: %v, ID: %v, ACTION: Deleted CDN", cdnName, cdnID), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+string(cdnID)+", ACTION: Deleted CDN", inf.User, inf.Tx.Tx)
 }
 
 func deleteCDNByName(tx *sql.Tx, name tc.CDNName) error {

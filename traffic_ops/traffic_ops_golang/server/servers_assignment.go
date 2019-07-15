@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -77,7 +76,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("SERVER: %v, ID: %v, ACTION: Assigned %v DSes to server", serverName, server, len(assignedDSes)), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverName+", ID: "+string(server)+", ACTION: Assigned "+string(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
 }
 
