@@ -261,6 +261,9 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if !authenticated {
 			w.WriteHeader(http.StatusUnauthorized)
 		}
+		if !userAllowed {
+			w.WriteHeader(http.StatusForbidden)
+		}
 		fmt.Fprintf(w, "%s", respBts)
 
 	}
