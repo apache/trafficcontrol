@@ -22,6 +22,21 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, origin: origin, type: type, types: types, $scope: $scope }));
 
+	var confirmNoOutstandingRequests = function(deliveryService) {
+		deliveryServiceRequestService.getDeliveryServiceRequests()
+		.then(
+			function(dsRequests) {
+				// search all requests for those that are not completed and share the same deliveryservice id
+				angular.forEach(dsRequests, function(value) {
+					if (value.status != 'complete' && value.deliveryService.id == deliveryService.id) {
+						return false;
+					}
+				});
+				return true;
+			}
+		);
+	};
+
 	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
 			title: "Delivery Service Delete Request",
@@ -61,7 +76,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 
 			// if the user chooses to complete/fulfill the delete request immediately, the ds will be deleted and behind the
 			// scenes a delivery service request will be created and marked as complete
-			if (options.status.id == $scope.COMPLETE) {
+			if (options.status.id == $scope.COMPLETE && confirmNoOutstandingRequests(deliveryService)) {
 				// first delete the ds
 				deliveryServiceService.deleteDeliveryService(deliveryService)
 					.then(
@@ -200,7 +215,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 				};
 				// if the user chooses to complete/fulfill the update request immediately, the ds will be updated and behind the
 				// scenes a delivery service request will be created and marked as complete
-				if (options.status.id == $scope.COMPLETE) {
+				if (options.status.id == $scope.COMPLETE && confirmNoOutstandingRequests(deliveryService)) {
 					deliveryServiceService.updateDeliveryService(deliveryService).
 						then(
 							function() {
