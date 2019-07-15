@@ -1,23 +1,18 @@
-==========================================
-TITLE <!-- a concise title for the new feature this blueprint will describe -->
-==========================================
+# TITLE <!-- a concise title for the new feature this blueprint will describe -->
 
-Problem Description
-===================
+## Problem Description
 <!--
 *What* is being asked for?
 *Why* is this necessary?
 *How* will this be used?
 -->
 
-Proposed Change
-===============
+## Proposed Change
 <!--
 *How* will this be implemented (at a high level)?
 -->
 
-Traffic Portal Impact
----------------------
+### Traffic Portal Impact
 <!--
 *How* will this impact Traffic Portal?
 What new UI changes will be required?
@@ -26,14 +21,12 @@ Will a new field be added to an existing form?
 How will the user interact with the new UI changes?
 -->
 
-Traffic Ops Impact
-------------------
+### Traffic Ops Impact
 <!--
 *How* will this impact Traffic Ops (at a high level)?
 -->
 
-REST API Impact
-~~~~~~~~~~~~~~~
+#### REST API Impact
 <!--
 *How* will this impact the Traffic Ops REST API?
 
@@ -45,24 +38,21 @@ What are the defaults for optional fields?
 What are the validation constraints?
 -->
 
-Client Impact
-~~~~~~~~~~~~~
+#### Client Impact
 <!--
 *How* will this impact Traffic Ops REST API clients (Go, Python, Java)?
 
 If new endpoints are required, will corresponding client methods be added?
 -->
 
-Data Model Impact
-~~~~~~~~~~~~~~~~~
+#### Data Model Impact
 <!--
 *How* will this impact the Traffic Ops data model?
 
 What changes to the lib/go-tc structs will be required?
 -->
 
-Database Impact
-~~~~~~~~~~~~~~~
+#### Database Impact
 <!--
 *How* will this impact the database schema?
 
@@ -72,22 +62,19 @@ What are the column data types and modifiers?
 What are the FK references and constraints?
 -->
 
-ORT Impact
-----------
+### ORT Impact
 <!--
 *How* will this impact ORT?
 -->
 
-Traffic Monitor Impact
-----------------------
+### Traffic Monitor Impact
 <!--
 *How* will this impact Traffic Monitor?
 
 Will new profile parameters be required?
 -->
 
-Traffic Router Impact
----------------------
+### Traffic Router Impact
 <!--
 *How* will this impact Traffic Router?
 
@@ -98,14 +85,12 @@ Will Traffic Router remain backwards-compatible with old CRConfigs?
 Will old Traffic Routers remain forwards-compatible with new CRConfigs?
 -->
 
-Traffic Stats Impact
---------------------
+### Traffic Stats Impact
 <!--
 *How* will this impact Traffic Stats?
 -->
 
-Traffic Vault Impact
---------------------
+### Traffic Vault Impact
 <!--
 *How* will this impact Traffic Vault?
 
@@ -113,8 +98,7 @@ Will there be any new data stored in or removed from Riak?
 Will there be any changes to the Riak requests and responses?
 -->
 
-Documentation Impact
---------------------
+### Documentation Impact
 <!--
 *How* will this impact the documentation?
 
@@ -122,8 +106,7 @@ What new documentation will be required?
 What existing documentation will need to be updated?
 -->
 
-Testing Impact
---------------
+### Testing Impact
 <!--
 *How* will this impact testing?
 
@@ -133,8 +116,7 @@ Can this be tested within the existing test frameworks?
 How should the existing frameworks be enhanced in order to test this properly?
 -->
 
-Performance Impact
-------------------
+### Performance Impact
 <!--
 *How* will this impact performance?
 
@@ -143,8 +125,7 @@ Is there anything particularly CPU, network, or storage-intensive to be aware of
 What are the known bottlenecks to be aware of that may need to be addressed?
 -->
 
-Security Impact
----------------
+### Security Impact
 <!--
 *How* will this impact overall security?
 
@@ -160,8 +141,7 @@ Will these changes require handling of any secrets?
 Will new SQL queries properly use parameter binding?
 -->
 
-Upgrade Impact
---------------
+### Upgrade Impact
 <!--
 *How* will this impact the upgrade of an existing system?
 
@@ -173,8 +153,7 @@ Are there any special steps to be followed during the upgrade?
 Are there any special steps to be followed after the upgrade is complete?
 -->
 
-Operations Impact
------------------
+### Operations Impact
 <!--
 *How* will this impact overall operation of the system?
 
@@ -185,8 +164,7 @@ Do the changes have known limitations or risks that operators should be made awa
 Will the changes introduce new steps to be followed for existing operations?
 -->
 
-Developer Impact
-----------------
+### Developer Impact
 <!--
 *How* will this impact other developers?
 
@@ -196,16 +174,14 @@ What do other developers need to know about these changes?
 Are the changes straightforward, or will new developer instructions be necessary?
 -->
 
-Alternatives
-============
+## Alternatives
 <!--
 What are some of the alternative solutions for this problem?
 What are the pros and cons of each approach?
 What design trade-offs were made and why?
 -->
 
-Dependencies
-============
+## Dependencies
 <!--
 Are there any significant new dependencies that will be required?
 How were the dependencies assessed and chosen?
@@ -213,8 +189,7 @@ How will the new dependencies be managed?
 Are the dependencies required at build-time, run-time, or both?
 -->
 
-References
-==========
+## References
 <!--
 Include any references to external links here.
 -->
