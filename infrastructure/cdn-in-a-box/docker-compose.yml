@@ -78,10 +78,10 @@ services:
   # in place until all API endpoints have been rewritten in Go
   trafficops-perl:
     build:
-      context: .
-      dockerfile: traffic_ops/Dockerfile
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile
       args:
-        TRAFFIC_OPS_RPM: traffic_ops/traffic_ops.rpm
+        TRAFFIC_OPS_RPM: infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
     depends_on:
       - db
       - enroller
