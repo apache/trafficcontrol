@@ -105,6 +105,8 @@ traffic_portal/app/src/assets/js/chartjs/angular-chart\..*, BSD
 traffic_portal/app/src/assets/css/jsonformatter\..*, Apache
 traffic_portal/app/src/assets/js/jsonformatter\..*, Apache
 traffic_portal/app/src/assets/js/fast-json-patch\..*, MIT
+traffic_ops/traffic_ops_golang/vendor/github\.com/dgrijalva/.*, MIT
+traffic_ops/traffic_ops_golang/vendor/github\.com/lestrrat-go/.*, MIT
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.

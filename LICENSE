@@ -427,3 +427,11 @@ The modern-go/concurrent component is used under the Apache 2.0 license:
 The modern-go/reflect2 component is used under the Apache 2.0 license:
 @vendor/github.com/modern-go/reflect2/*
 ./vendor/github.com/modern-go/reflect2/LICENSE
+
+For the lestrrat-go/jwx component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/LICENSE
+
+For the dgrijalva/jwt-go component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/LICENSE
