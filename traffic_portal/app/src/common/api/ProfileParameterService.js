@@ -17,46 +17,45 @@
  * under the License.
  */
 
-var ProfileParameterService = function(Restangular, httpService, messageModel, ENV, $uibModal) {
+var ProfileParameterService = function($http, messageModel, ENV, $uibModal) {
 
 	this.unlinkProfileParameter = function(profileId, paramId) {
-		return httpService.delete(ENV.api['root'] + 'profileparameters/' + profileId + '/' + paramId)
-			.then(
-				function() {
+		return $http.delete(ENV.api['root'] + 'profileparameters/' + profileId + '/' + paramId).then(
+				function(result) {
 					messageModel.setMessages([ { level: 'success', text: 'Profile and parameter were unlinked.' } ], false);
+					return result;
 				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, true);
+				function(err) {
+					messageModel.setMessages(err.data.alerts, true);
+					throw err;
 				}
 			);
 	};
 
 	this.linkProfileParameters = function(profileId, params) {
-		return Restangular.service('profileparameter').post({ profileId: profileId, paramIds: params, replace: true })
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Parameters linked to profile' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.post(ENV.api['root'] + 'profileparameter', { profileId: profileId, paramIds: params, replace: true }).then(
+			function(result) {
+				messageModel.setMessages([ { level: 'success', text: 'Parameters linked to profile' } ], false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
-	var linkParamProfilesHelper = function(paramId, profiles) { 
-		return Restangular.service('parameterprofile').post({ paramId: paramId, profileIds: profiles, replace: true })
-	.then(
-		function() {
-			messageModel.setMessages([ { level: 'success', text: 'Profiles linked to parameter' } ], false);
-		},
-		function(fault) {
-			messageModel.setMessages(fault.data.alerts, false);
-		}
-	);
-	}
-
 	this.linkParamProfiles = function(paramId, profiles) {
-		return linkParamProfilesHelper(paramId, profiles);
+		return $http.post(ENV.api['root'] + 'parameterprofile', { paramId: paramId, profileIds: profiles, replace: true }).then(
+			function(result) {
+				messageModel.setMessages([ { level: 'success', text: 'Profiles linked to parameter' } ], false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 	this.selectProfiles = function(parameter, profiles) {
@@ -97,5 +96,5 @@ var ProfileParameterService = function(Restangular, httpService, messageModel, E
 
 };
 
-ProfileParameterService.$inject = ['Restangular', 'httpService', 'messageModel', 'ENV', '$uibModal'];
+ProfileParameterService.$inject = ['$http', 'messageModel', 'ENV', '$uibModal'];
 module.exports = ProfileParameterService;
