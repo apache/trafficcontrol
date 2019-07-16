@@ -38,7 +38,7 @@ Request Structure
 	:csr: The csr file for the :term:`Delivery Service` identified by ``key``
 	:key: The private key for the :term:`Delivery Service` identified by ``key``
 
-:key:     The 'xml_id' of the :term:`Delivery Service` to which these keys will be assigned
+:key:     The :ref:`ds-xmlid` of the :term:`Delivery Service` to which these keys will be assigned
 :version: An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
 
 .. code-block:: http

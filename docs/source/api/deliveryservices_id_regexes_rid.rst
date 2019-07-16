@@ -24,7 +24,7 @@
 Retrieves a specific routing regular expression for a specific :term:`Delivery Service`.
 
 :Auth. Required: Yes
-:Roles Required: None\ [1]_
+:Roles Required: None\ [#tenancy]_
 :Response Type:  Array
 
 Request Structure
@@ -81,15 +81,13 @@ Response Structure
 		}
 	]}
 
-.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to see.
-
 
 ``PUT``
 =======
 Updates a routing regular expression.
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [2]_
+:Roles Required: "admin" or "operations"\ [#tenancy]_
 :Response Type:  Object
 
 Request Structure
@@ -166,14 +164,13 @@ Response Structure
 	}}
 
 
-.. [2] If tenancy is used, then users (regardless of role) will only be able to edit the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to edit. Assuming tenancy is satisfied, a routing regular expression can only be edited by a user with the "admin" or "operations" role.
 
 ``DELETE``
 ==========
 Deletes a routing regular expression.
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [3]_
+:Roles Required: "admin" or "operations"\ [#tenancy]_
 :Response Type:  ``undefined``
 
 Request Structure
@@ -221,4 +218,4 @@ Response Structure
 		}
 	]}
 
-.. [3] If tenancy is used, then users (regardless of role) will only be able to delete the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to delete. Assuming tenancy is satisfied, a routing regular expression can only be deleted by a user with the "admin" or "operations" role.
+.. [#tenancy] Users will only be able to view, delete and update regular expressions for the :term:`Delivery Services` their :term:`Tenant` is allowed to see.
