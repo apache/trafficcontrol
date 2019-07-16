@@ -425,13 +425,13 @@ var trafficPortal = angular.module('trafficPortal', [
 
             RestangularProvider.setBaseUrl(ENV.api['root']);
 
-            RestangularProvider.setResponseInterceptor(function(data, operation) {
+            RestangularProvider.setResponseInterceptor(function(data, operation, what) {
 
-                if (angular.isDefined(data.response)) {
-                    if (operation != 'getList' && angular.isArray(data.response) && data.response.length == 1) {
-                        return data.response[0];
+                if (angular.isDefined(data.response)) { // todo: this should not be needed. need better solution.
+                    if (operation == 'getList') {
+                        return data.response;
                     }
-                    return data.response;
+                    return data.response[0];
                 } else {
                     return data;
                 }
