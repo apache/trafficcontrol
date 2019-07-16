@@ -99,7 +99,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "backend_max_connections": {
             "mojolicious": 4
         },
-        "whitelisted_oauth_urls": ["*.xfinity.tv"]
+        "whitelisted_oauth_urls": []
     },
     "cors" : {
         "access_control_allow_origin" : "*"
