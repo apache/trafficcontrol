@@ -25,7 +25,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 	const commonFunctions = new cfunc();
 	const myNewCDN = 'cdn-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789');
 	const myDomainName = myNewCDN + '.com';
-	const mydnssec = 'true';
+	const mydnssec = false;
 
 	it('should go to the CDNs page', function() {
 		console.log("Go to the CDNs page");
@@ -44,7 +44,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		pageData.dnssecEnabled.click();
-		pageData.dnssecEnabled.sendKeys(mydnssec);
+		pageData.dnssecEnabled.sendKeys(mydnssec.toString());
 		pageData.name.sendKeys(myNewCDN);
 		pageData.domainName.sendKeys(myDomainName);
 		expect(pageData.createButton.isEnabled()).toBe(true);
@@ -53,7 +53,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 	});
 
 	it('should verify the new CDN and then update CDN', function() {
-		console.log("verifying the new CDN and then updating CDN");
+		console.log("Verifying the new CDN and then updating CDN");
 		browser.sleep(250);
 		pageData.searchFilter.sendKeys(myNewCDN);
 		browser.sleep(250);
@@ -66,9 +66,23 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		pageData.domainName.clear();
 		pageData.domainName.sendKeys(myDomainName + 'updated.com');
 		pageData.dnssecEnabled.click();
-		pageData.dnssecEnabled.sendKeys('false');
+		pageData.dnssecEnabled.sendKeys((!mydnssec).toString());
 		pageData.updateButton.click();
 		expect(pageData.domainName.getText() === myDomainName + 'updated.com');
+	});
+
+	it('should generate DNSSEC keys', function() {
+		console.log("Generating DNSSEC keys for the new CDN and then verifying them");
+		pageData.moreButton.click();
+		pageData.manageDnssecKeysButton.click();
+		browser.sleep(250);
+		expect(pageData.expirationDate.getText() === '');
+		pageData.generateDnssecKeysButton.click();
+		pageData.regenerateButton.click();
+		expect(pageData.confirmButton.isEnabled()).toBe(false);
+		pageData.confirmInput.sendKeys(myNewCDN);
+		expect(pageData.confirmButton.isEnabled()).toBe(true);
+		pageData.confirmButton.click();
 	});
 
 });
