@@ -235,7 +235,6 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 		if err != nil {
 			log.Errorf("checking local user: %s\n", err.Error())
-			return
 		}
 
 		if userAllowed && authenticated {
