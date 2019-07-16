@@ -36,13 +36,11 @@ var TableCacheGroupParamsUnassignedController = function(cg, parameters, $scope,
 	};
 
 	$scope.updateParams = function($event, paramId) {
-		var checkbox = $event.currentTarget.firstElementChild.firstElementChild; // finds the input element from the table row which was clicked
-		if (!checkbox.checked) {
+		var checkbox = $event.target;
+		if (checkbox.checked) {
 			addParam(paramId);
-			checkbox.checked = true;
 		} else {
 			removeParam(paramId);
-			checkbox.checked = false;
 		}
 	};
 
