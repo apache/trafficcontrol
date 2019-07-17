@@ -44,6 +44,10 @@ var TableCacheGroupParamsUnassignedController = function(cg, parameters, $scope,
 		}
 	};
 
+	$scope.handleRowClick = function($index) {
+		$('#checkbox-' + $index).trigger('click');
+	};
+
 	$scope.submit = function() {
 		$uibModalInstance.close(selectedParams);
 	};
