@@ -45,7 +45,7 @@ var ParameterService = function($http, locationUtils, messageModel, ENV) {
         return $http.post(ENV.api['root'] + 'parameters', parameter).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter created' } ], true);
-                locationUtils.navigateToPath('/parameters');
+                locationUtils.navigateToPath('/parameters/' + result.data.response.id + '/profiles');
                 return result;
             },
             function(err) {
