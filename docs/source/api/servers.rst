@@ -42,7 +42,7 @@ Request Structure
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	|     id     | no       | Return only the server with this integral, unique identifier                                                      |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|  profileId | no       | Return only those servers that are using the profile identified by this integral, unique identifier               |
+	|  profileId | no       | Return only those servers that are using the :term:`Profile` that has this :ref:`profile-id`                      |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	|   status   | no       | Return only those servers with this status - see :ref:`health-proto`                                              |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
@@ -92,9 +92,9 @@ Response Structure
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 :physLocation:   The name of the physical location where the server resides
 :physLocationId: An integral, unique identifier for the physical location where the server resides
-:profile:        The name of the profile this server uses
-:profileDesc:    A description of the profile this server uses
-:profileId:      An integral, unique identifier for the profile used by this server
+:profile:        The :ref:`profile-name` of the :term:`Profile` used by this server
+:profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
+:profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :rack:           A string indicating "server rack" location
 :routerHostName: The human-readable name of the router responsible for reaching this server
@@ -216,7 +216,7 @@ Request Structure
 :mgmtIpGateway:  An optional IPv4 address of a gateway used by some network interface on the server used for 'management'
 :mgmtIpNetmask:  An optional IPv4 subnet mask used by some network interface on the server used for 'management'
 :physLocationId: An integral, unique identifier for the physical location where the server resides
-:profileId:      An integral, unique identifier for the profile used by this server
+:profileId:      The :ref:`profile-id` the :term:`Profile` that shall be used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :rack:           An optional string indicating "server rack" location
 :routerHostName: An optional string containing the human-readable name of the router responsible for reaching this server
@@ -311,9 +311,9 @@ Response Structure
 :offlineReason:  A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 :physLocation:   The name of the physical location where the server resides
 :physLocationId: An integral, unique identifier for the physical location where the server resides
-:profile:        The name of the profile this server uses
-:profileDesc:    A description of the profile this server uses
-:profileId:      An integral, unique identifier for the profile used by this server
+:profile:        The :ref:`profile-name` of the :term:`Profile` used by this server
+:profileDesc:    A :ref:`profile-description` of the :term:`Profile` used by this server
+:profileId:      The :ref:`profile-id` the :term:`Profile` used by this server
 :revalPending:   A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
 :rack:           A string indicating "server rack" location
 :routerHostName: The human-readable name of the router responsible for reaching this server

@@ -115,7 +115,7 @@ Response Structure
 	:ip6:       This Traffic Router's IPv6 address
 	:location:  The name of the Cache Group to which this Traffic Router belongs
 	:port:      The port number on which this Traffic Router listens for incoming HTTP requests
-	:profile:   The name of the profile used by this Traffic Router
+	:profile:   The :ref:`profile-name` of the :term:`Profile` used by this Traffic Router
 	:status:    The health status of this Traffic Router
 
 		.. seealso:: :ref:`health-proto`
@@ -136,7 +136,7 @@ Response Structure
 	:ip:              The server's IPv4 address
 	:locationId:      This field is exactly the same as ``cacheGroup`` and only exists for legacy compatibility reasons
 	:port:            The port on which this :term:`cache server` listens for incoming HTTP requests
-	:profile:         The name of the profile used by the :term:`cache server`
+	:profile:         The :ref:`profile-name` of the :term:`Profile` used by the :term:`cache server`
 	:routingDisabled: An integer representing the boolean concept of whether or not Traffic Routers should route client traffic this :term:`cache server`; one of:
 
 		0
@@ -301,9 +301,9 @@ Response Structure
 	:httpsPort: The port number on which this Traffic Monitor listens for incoming HTTPS requests
 	:ip6:       This Traffic Monitor's IPv6 address
 	:ip:        This Traffic Monitor's IPv4 address
-	:location:  The name of the Cache Group to which this Traffic Monitor belongs
+	:location:  The name of the :term:`Cache Group` to which this Traffic Monitor belongs
 	:port:      The port number on which this Traffic Monitor listens for incoming HTTP requests
-	:profile:   The name of the profile used by this Traffic Monitor
+	:profile:   The :ref:`profile-name` of the :term:`Profile` used by this Traffic Monitor
 
 		.. note:: For legacy reasons, this must always start with "RASCAL-".
 

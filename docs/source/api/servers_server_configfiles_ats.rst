@@ -45,8 +45,8 @@ Response Structure
 
 	:cdnId:         The integral, unique, identifier of the CDN to which ``server`` is assigned
 	:cdnName:       The name of the CDN to which ``server`` is assigned
-	:profileId:     The integral, unique, identifier of the profile used by ``server``
-	:profileName:   The name of the profile used by ``server``
+	:profileName:   The :ref:`profile-name` of the :term:`Profile` used by this server
+	:profileId:     The :ref:`profile-id` the :term:`Profile` used by this server
 	:serverId:      An integral, unique, identifier for ``server``
 	:serverIpv4:    IPv4 address of the server
 	:serverTcpPort: The port number on which ``server`` listens for incoming TCP connections
@@ -63,7 +63,7 @@ Response Structure
 		"cdns"
 			The file is used by all caches in the CDN
 		"profiles"
-			The file is used by all servers with the same profile
+			The file is used by all servers with the same :term:`Profile`
 		"servers"
 			The most specific grouping of servers which use this file is simply a collection of distinct servers
 

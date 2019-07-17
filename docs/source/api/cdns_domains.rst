@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Gets a list of domains and their related Traffic Router profiles for all CDNs.
+Gets a list of domains and their related Traffic Router :term:`Profiles` for all CDNs.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -33,11 +33,11 @@ No parameters available.
 
 Response Structure
 ------------------
-:domainName:         The top-level domain (TLD) assigned to this CDN
-:parameterId:        The integral, unique identifier for the parameter that sets this TLD on the Traffic Router
+:domainName:         The :abbr:`TLD (Top-Level Domain)` assigned to this CDN
+:parameterId:        The :ref:`parameter-id` for the :term:`Parameter` that sets this :abbr:`TLD (Top-Level Domain)` on the Traffic Router
 :profileDescription: A short, human-readable description of the Traffic Router's profile
-:profileId:          The integral, unique identifier for the profile assigned to the Traffic Router responsible for serving ``domainName``
-:profileName:        The name of the profile assigned to the Traffic Router responsible for serving ``domainName``
+:profileId:          The :ref:`profile-id` of the :term:`Profile` assigned to the Traffic Router responsible for serving ``domainName``
+:profileName:        The :ref:`profile-name` of the :term:`Profile` assigned to the Traffic Router responsible for serving ``domainName``
 
 .. code-block:: json
 	:caption: Response Example

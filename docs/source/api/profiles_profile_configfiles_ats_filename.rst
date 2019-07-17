@@ -33,13 +33,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+-------------------+--------------------------------------------------------------+
-	| Parameter | Type              | Description                                                  |
-	+===========+===================+==============================================================+
-	| profile   | string or integer | Either the name or integral, unique, identifier of a profile |
-	+-----------+-------------------+--------------------------------------------------------------+
-	| filename  | string            | The name of a configuration file used by ``profile``         |
-	+-----------+-------------------+--------------------------------------------------------------+
+	+-----------+-------------------+--------------------------------------------------------------------------+
+	| Parameter | Type              | Description                                                              |
+	+===========+===================+==========================================================================+
+	| profile   | string or integer | Either the :ref:`profile-name` or :ref:`profile-id` of a :term:`Profile` |
+	+-----------+-------------------+--------------------------------------------------------------------------+
+	| filename  | string            | The name of a configuration file used by ``profile``                     |
+	+-----------+-------------------+--------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -52,7 +52,7 @@ Request Structure
 
 Response Structure
 ------------------
-.. note:: If the file identified by ``filename`` doesn't exist at the profile, a JSON response will be returned and the ``alerts`` array will contain a ``"level": "error"`` node which suggests other scopes to check for the configuration file.
+.. note:: If the file identified by ``filename`` doesn't exist at the :term:`Profile`, a JSON response will be returned and the ``alerts`` array will contain a ``"level": "error"`` node which suggests other scopes to check for the configuration file.
 
 .. code-block:: http
 	:caption: Response Example

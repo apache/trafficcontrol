@@ -21,7 +21,7 @@
 
 ``DELETE``
 ==========
-Deletes a profile/parameter association.
+Deletes a :term:`Profile`/:term:`Parameter` association.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-------------+----------------------------------------------------------------------------------------------------------------------+
-	|    Name     | Description                                                                                                          |
-	+=============+======================================================================================================================+
-	|  profileID  | The integral, unique identifier of the profile from which a parameter shall be removed                               |
-	+-------------+----------------------------------------------------------------------------------------------------------------------+
-	| parameterID | The integral, unique identifier of the parameter which shall be removed from the profile identified by ``profileID`` |
-	+-------------+----------------------------------------------------------------------------------------------------------------------+
+	+-------------+------------------------------------------------------------------------------------------------------------------------------+
+	|    Name     | Description                                                                                                                  |
+	+=============+==============================================================================================================================+
+	|  profileID  | The :ref:`profile-id` of the :term:`Profile` from which a :term:`Parameter` shall be removed                                 |
+	+-------------+------------------------------------------------------------------------------------------------------------------------------+
+	| parameterID | The :ref:`parameter-id` of the :term:`Parameter` which shall be removed from the :term:`Profile` identified by ``profileID`` |
+	+-------------+------------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

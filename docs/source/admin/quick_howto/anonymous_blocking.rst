@@ -50,7 +50,7 @@ Configure Anonymous Blocking
 		An optional element. It includes a list of :abbr:`CIDR (Classless Inter-Domain Routing)` blocks indicating the IPv4 and IPv6 subnets that are allowed by the rule. If this list exists and the value is not ``null``, client IPs will be matched against the :abbr:`CIDR (Classless Inter-Domain Routing)` list, and if there is any match, the request will be allowed. If there is no match in the white list, further anonymous blocking logic will continue.
 
 
-#. Add the following three Anonymous Blocking parameters in Traffic Portal with the "CRConfig.json" "Config File", and ensure they are assigned to all of the Traffic Routers that should perform Anonymous Blocking:
+#. Add the following three Anonymous Blocking :ref:`Parameters` in Traffic Portal with the "CRConfig.json" :ref:`parameter-config-file`, and ensure they are assigned to all of the Traffic Routers that should perform Anonymous Blocking:
 
 	``anonymousip.policy.configuration``
 		The URL of the Anonymous Blocking configuration file. Traffic Router will fetch the file from this URL.

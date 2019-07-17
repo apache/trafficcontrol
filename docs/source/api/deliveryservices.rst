@@ -31,21 +31,21 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| Name        | Required | Description                                                                                                                         |
-	+=============+==========+=====================================================================================================================================+
-	| cdn         | no       | Show only the :term:`Delivery Services` belonging to the :ref:`ds-cdn` identified by this integral, unique identifier               |
-	+-------------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| id          | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                    |
-	+-------------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| logsEnabled | no       | Show only the :term:`Delivery Services` that have :ref:`ds-logs-enabled` set or not based on this boolean                           |
-	+-------------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| profile     | no       | Return only :term:`Delivery Services` using the :term:`Profile` identified by this integral, unique identifier                      |
-	+-------------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| tenant      | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier              |
-	+-------------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| type        | no       | Return only :term:`Delivery Services` of the :ref:`Delivery Service Type <ds-types>` identified by this integral, unique identifier |
-	+-------------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                                                                |
+	+=============+==========+============================================================================================================================================+
+	| cdn         | no       | Show only the :term:`Delivery Services` belonging to the :ref:`ds-cdn` identified by this integral, unique identifier                      |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| id          | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                           |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| logsEnabled | no       | Show only the :term:`Delivery Services` that have :ref:`ds-logs-enabled` set or not based on this boolean                                  |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| profile     | no       | Return only :term:`Delivery Services` using the :term:`Profile` that has this :ref:`profile-id`                                            |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| tenant      | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier                     |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| type        | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier       |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -117,9 +117,9 @@ Response Structure
 :multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
 :orgServerFqdn:        The :ref:`ds-origin-url`
 :originShield:         A :ref:`ds-origin-shield` string
-:profileDescription:   The description of the :term:`Delivery Service`'s :ref:`ds-profile`, if any
-:profileId:            The integral, unique identifier for :ref:`ds-profile` with which this :term:`Delivery Service` is associated, if any
-:profileName:          The name of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated, if any
+:profileDescription:   The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileId:            The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileName:          The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
 :protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
 :qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
 :rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
@@ -273,7 +273,7 @@ Request Structure
 
 	.. versionadded:: 1.4
 
-:deepCachingType:     The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
+:deepCachingType: The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
 
 	.. versionadded:: 1.3
 
@@ -288,27 +288,20 @@ Request Structure
 
 	.. versionadded:: 1.3
 
-:geoLimit:            An integer that defines the :ref:`ds-geo-limit`
-:geoLimitCountries:   A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
-:geoLimitRedirectUrl: A :ref:`ds-geo-limit-redirect-url`\ [#geolimit]_
-:geoProvider:         The :ref:`ds-geo-provider`
-:globalMaxMbps:       The :ref:`ds-global-max-mbps`
-:globalMaxTps:        The :ref:`ds-global-max-tps`
-:httpBypassFqdn:      A :ref:`ds-http-bypass-fqdn`
-:infoUrl:             An :ref:`ds-info-url`
-:initialDispersion:  The :ref:`ds-initial-dispersion`
-:ipv6RoutingEnabled: A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
-:lastUpdated:        The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
-:logsEnabled:        A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
-:longDesc:           The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:          The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:          The :ref:`ds-longdesc3` of this :term:`Delivery Service`
-:matchList:          The :term:`Delivery Service`'s :ref:`ds-matchlist`
-
-	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
-	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
-	:type:      The type of match performed using ``pattern``.
-
+:geoLimit:             An integer that defines the :ref:`ds-geo-limit`
+:geoLimitCountries:    A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
+:geoLimitRedirectUrl:  A :ref:`ds-geo-limit-redirect-url`\ [#geolimit]_
+:geoProvider:          The :ref:`ds-geo-provider`
+:globalMaxMbps:        The :ref:`ds-global-max-mbps`
+:globalMaxTps:         The :ref:`ds-global-max-tps`
+:httpBypassFqdn:       A :ref:`ds-http-bypass-fqdn`
+:infoUrl:              An :ref:`ds-info-url`
+:initialDispersion:    The :ref:`ds-initial-dispersion`
+:ipv6RoutingEnabled:   A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:logsEnabled:          A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
+:longDesc:             The :ref:`ds-longdesc` of this :term:`Delivery Service`
+:longDesc1:            An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
+:longDesc2:            An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
 :maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
 :maxOriginConnections: The :ref:`ds-max-origin-connections`
 
@@ -320,7 +313,7 @@ Request Structure
 :multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
 :orgServerFqdn:        The :ref:`ds-origin-url`
 :originShield:         A :ref:`ds-origin-shield` string
-:profileId:            The integral, unique identifier for :ref:`ds-profile` with which this :term:`Delivery Service` is associated, if any
+:profileId:            An optional :ref:`profile-id` of a :ref:`ds-profile` with which this :term:`Delivery Service` shall be associated
 :protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
 :qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
 :rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
@@ -437,14 +430,14 @@ Response Structure
 :httpBypassFqdn:      A :ref:`ds-http-bypass-fqdn`
 :id:                  An integral, unique identifier for this :term:`Delivery Service`
 :infoUrl:             An :ref:`ds-info-url`
-:initialDispersion:  The :ref:`ds-initial-dispersion`
-:ipv6RoutingEnabled: A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
-:lastUpdated:        The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
-:logsEnabled:        A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
-:longDesc:           The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:          The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:          The :ref:`ds-longdesc3` of this :term:`Delivery Service`
-:matchList:          The :term:`Delivery Service`'s :ref:`ds-matchlist`
+:initialDispersion:   The :ref:`ds-initial-dispersion`
+:ipv6RoutingEnabled:  A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastUpdated:         The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
+:logsEnabled:         A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
+:longDesc:            The :ref:`ds-longdesc` of this :term:`Delivery Service`
+:longDesc1:           The :ref:`ds-longdesc2` of this :term:`Delivery Service`
+:longDesc2:           The :ref:`ds-longdesc3` of this :term:`Delivery Service`
+:matchList:           The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
 	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
 	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
@@ -461,9 +454,9 @@ Response Structure
 :multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
 :orgServerFqdn:        The :ref:`ds-origin-url`
 :originShield:         A :ref:`ds-origin-shield` string
-:profileDescription:   The description of the :term:`Delivery Service`'s :ref:`ds-profile`, if any
-:profileId:            The integral, unique identifier for :ref:`ds-profile` with which this :term:`Delivery Service` is associated, if any
-:profileName:          The name of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated, if any
+:profileDescription:   The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileId:            The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileName:          The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
 :protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
 :qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
 :rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`

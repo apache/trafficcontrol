@@ -18,12 +18,11 @@
 ********************************************
 ``cachegroups/{{id}}/unassigned_parameters``
 ********************************************
-Gets all the parameters NOT associated with a specific :term:`Cache Group`
-
-.. seealso:: :ref:`param-prof`
 
 ``GET``
 =======
+Gets all the :term:`Parameters` *not* associated with a specific :term:`Cache Group`
+
 :Auth. Required: Yes
 :Roles Required: None
 :Response Type:  Array
@@ -32,21 +31,21 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------------------+----------+------------------------+
-	|       Name       | Required | Description            |
-	+==================+==========+========================+
-	| ``id``           | yes      | :term:`Cache Group` ID |
-	+------------------+----------+------------------------+
+	+------------------+----------+---------------------------------------------------------+
+	|       Name       | Required | Description                                             |
+	+==================+==========+=========================================================+
+	| ``id``           | yes      | An integral, unique identifier of a :term:`Cache Group` |
+	+------------------+----------+---------------------------------------------------------+
 
 
 Response Structure
 ------------------
-:configFile:  Configuration file associated with the parameter
-:id:          A numeric, unique identifier for this parameter
-:lastUpdated: The Time / Date this entry was last updated
-:name:        Name of the parameter
-:secure:      Is the parameter value only visible to admin users
-:value:       Value of the parameter
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:id:          The :term:`Parameter`'s :ref:`parameter-id`
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: json
 	:caption: Response Example

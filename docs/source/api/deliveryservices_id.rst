@@ -41,7 +41,7 @@ Request Structure
 	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
 	| logsEnabled | no       | If true, return only :term:`Delivery Services` with logging enabled, otherwise return only :term:`Delivery Services` with logging disabled |
 	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	| profile     | no       | Return only :term:`Delivery Services` using the profile identified by this integral, unique identifier                                     |
+	| profile     | no       | Return only :term:`Delivery Services` using the :term:`Profile` with this :ref:`profile-id`                                                |
 	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
 	| tenant      | no       | Show only the :term:`Delivery Services` belonging to the tenant identified by this integral, unique identifier                             |
 	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
@@ -105,14 +105,14 @@ Response Structure
 :httpBypassFqdn:      A :ref:`ds-http-bypass-fqdn`
 :id:                  An integral, unique identifier for this :term:`Delivery Service`
 :infoUrl:             An :ref:`ds-info-url`
-:initialDispersion:  The :ref:`ds-initial-dispersion`
-:ipv6RoutingEnabled: A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
-:lastUpdated:        The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
-:logsEnabled:        A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
-:longDesc:           The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:          The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:          The :ref:`ds-longdesc3` of this :term:`Delivery Service`
-:matchList:          The :term:`Delivery Service`'s :ref:`ds-matchlist`
+:initialDispersion:   The :ref:`ds-initial-dispersion`
+:ipv6RoutingEnabled:  A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastUpdated:         The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
+:logsEnabled:         A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
+:longDesc:            The :ref:`ds-longdesc` of this :term:`Delivery Service`
+:longDesc1:           The :ref:`ds-longdesc2` of this :term:`Delivery Service`
+:longDesc2:           The :ref:`ds-longdesc3` of this :term:`Delivery Service`
+:matchList:           The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
 	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
 	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
@@ -129,9 +129,9 @@ Response Structure
 :multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
 :orgServerFqdn:        The :ref:`ds-origin-url`
 :originShield:         A :ref:`ds-origin-shield` string
-:profileDescription:   The description of the :term:`Delivery Service`'s :ref:`ds-profile`, if any
-:profileId:            The integral, unique identifier for :ref:`ds-profile` with which this :term:`Delivery Service` is associated, if any
-:profileName:          The name of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated, if any
+:profileDescription:   The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileId:            The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileName:          The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
 :protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
 :qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
 :rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
@@ -308,19 +308,12 @@ Request Structure
 :globalMaxTps:        The :ref:`ds-global-max-tps`
 :httpBypassFqdn:      A :ref:`ds-http-bypass-fqdn`
 :infoUrl:             An :ref:`ds-info-url`
-:initialDispersion:  The :ref:`ds-initial-dispersion`
-:ipv6RoutingEnabled: A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
-:lastUpdated:        The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
-:logsEnabled:        A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
-:longDesc:           The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:          The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:          The :ref:`ds-longdesc3` of this :term:`Delivery Service`
-:matchList:          The :term:`Delivery Service`'s :ref:`ds-matchlist`
-
-	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
-	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
-	:type:      The type of match performed using ``pattern``.
-
+:initialDispersion:   The :ref:`ds-initial-dispersion`
+:ipv6RoutingEnabled:  A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:logsEnabled:         A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
+:longDesc:            The :ref:`ds-longdesc` of this :term:`Delivery Service`
+:longDesc1:           An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
+:longDesc2:           An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
 :maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
 :maxOriginConnections: The :ref:`ds-max-origin-connections`
 
@@ -332,13 +325,14 @@ Request Structure
 :multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
 :orgServerFqdn:        The :ref:`ds-origin-url`
 :originShield:         A :ref:`ds-origin-shield` string
-:profileId:            The integral, unique identifier for :ref:`ds-profile` with which this :term:`Delivery Service` is associated, if any
+:profileId:            An optional :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` will be associated
 :protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
 :qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
 :rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
 :regexRemap:           A :ref:`ds-regex-remap`
 :regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:            :ref:`ds-raw-remap`
+:routingName:          The :ref:`ds-routing-name` of this :term:`Delivery Service`
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 
@@ -357,7 +351,6 @@ Request Structure
 
 	.. versionadded:: 1.3
 
-:type:   The :ref:`ds-types` of this :term:`Delivery Service`
 :typeId: The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
 :xmlId:  This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
@@ -437,11 +430,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+---------------------------------------------------------------------------------+
-	| Name | Description                                                                     |
-	+======+=================================================================================+
-	| ID   | The integral, unique identifier of the :term:`Delivery Service` to be retrieved |
-	+------+---------------------------------------------------------------------------------+
+	+------+-------------------------------------------------------------------------------+
+	| Name | Description                                                                   |
+	+======+===============================================================================+
+	| ID   | The integral, unique identifier of the :term:`Delivery Service` to be deleted |
+	+------+-------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

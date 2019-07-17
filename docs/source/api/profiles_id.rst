@@ -32,11 +32,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+----------------------------------------------------------------+
-	| Parameter |                           Description                          |
-	+===========+================================================================+
-	|    id     | The integral, unique identifier of the profile to be retrieved |
-	+-----------+----------------------------------------------------------------+
+	+-----------+--------------------------------------------------------------+
+	| Parameter | Description                                                  |
+	+===========+==============================================================+
+	|    id     | The :ref:`profile-id` of the :term:`Profile` to be retrieved |
+	+-----------+--------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -49,24 +49,24 @@ Request Structure
 
 Response Structure
 ------------------
-:cdn:         The integral, unique identifier of the CDN to which this profile belongs
-:cdnName:     The CDN name
-:description: A description of the profile
-:id:          The integral, unique identifier of this profile
-:lastUpdated: The date and time at which this profile was last updated
-:name:        The name of the profile
-:params:      An array of parameters in use by this profile
+:cdn:         The integral, unique identifier of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:cdnName:     The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:description: The :term:`Profile`'s :ref:`profile-description`
+:id:          The :term:`Profile`'s :ref:`profile-id`
+:lastUpdated: The date and time at which this :term:`Profile` was last updated, in an ISO-like format
+:name:        The :term:`Profile`'s :ref:`profile-name`
+:params:      An array of :term:`Parameters` in use by this :term:`Profile`
 
-	:configFile:  The *base* filename to which this parameter belongs
-	:id:          An integral, unique identifier for this parameter
-	:lastUpdated: The date and time at which this parameter was last modified in ISO format
-	:name:        The parameter name
-	:profiles:    An array of profile names that use this parameter
-	:secure:      When ``true``, the parameter value is visible only to "admin"-role users
-	:value:       The parameter value - if ``secure`` is true and the user does not have the "admin" role this will be obfuscated (at the time of this writing the obfuscation value is defined to be ``"********"``) but **not** missing
+	:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+	:id:          The :term:`Parameter`'s :ref:`parameter-id`
+	:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+	:name:        :ref:`parameter-name` of the :term:`Parameter`
+	:profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
+	:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+	:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
-:routingDisabled: A boolean which, if ``true`` will disable Traffic Router's routing to servers using this profile
-:type:            The name of the 'type' of the profile
+:routingDisabled: The :term:`Profile`'s :ref:`profile-routing-disabled` setting
+:type:            The :term:`Profile`'s :ref:`profile-type`
 
 .. code-block:: http
 	:caption: Response Example
@@ -119,7 +119,7 @@ Response Structure
 
 ``PUT``
 =======
-Replaces the specified profile with the one in the response payload
+Replaces the specified :term:`Profile` with the one in the request payload
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -129,20 +129,19 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+---------------------------------------------------------------+
-	| Name | Description                                                   |
-	+======+===============================================================+
-	|  ID  | The integral, unique identifier of the profile being modified |
-	+------+---------------------------------------------------------------+
+	+------+-------------------------------------------------------------+
+	| Name | Description                                                 |
+	+======+=============================================================+
+	|  ID  | The :ref:`profile-id` of the :term:`Profile` being modified |
+	+------+-------------------------------------------------------------+
 
-:name:            New of the name profile
-:description:     A new description of the new profile
-:cdn:             The integral, unique identifier of the CDN to which the profile shall be assigned
-:type:            The type of the profile
+:cdn:             The integral, unique identifier of the :ref:`profile-cdn` to which this :term:`Profile` will belong
+:description:     The :term:`Profile`'s new :ref:`profile-description`
+:name:            The :term:`Profile`'s new :ref:`profile-name`
+:routingDisabled: The :term:`Profile`'s new :ref:`profile-routing-disabled` setting
+:type:            The :term:`Profile`'s new :ref:`profile-type`
 
 	.. warning:: Changing this will likely break something, be **VERY** careful when modifying this value
-
-:routingDisabled: A boolean which, if ``true``, will prevent the Traffic Router from directing traffic to any servers assigned this profile
 
 .. code-block:: http
 	:caption: Request Example
@@ -165,14 +164,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cdn:             The integral, unique identifier of the CDN to which this profile belongs
-:cdnName:         The CDN name
-:description:     A description of the profile
-:id:              The integral, unique identifier of this profile
-:lastUpdated:     The date and time at which this profile was last updated
-:name:            The name of the profile
-:routingDisabled: A boolean which, if ``true`` will disable Traffic Router's routing to servers using this profile
-:type:            The name of the 'type' of the profile
+:cdn:             The integral, unique identifier of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:cdnName:         The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:description:     The :term:`Profile`'s :ref:`profile-description`
+:id:              The :term:`Profile`'s :ref:`profile-id`
+:lastUpdated:     The date and time at which this :term:`Profile` was last updated, in an ISO-like format
+:name:            The :term:`Profile`'s :ref:`profile-name`
+:routingDisabled: The :term:`Profile`'s :ref:`profile-routing-disabled` setting
+:type:            The :term:`Profile`'s :ref:`profile-type`
 
 .. code-block:: http
 	:caption: Response Example
@@ -209,7 +208,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Allows user to delete a profile.
+Allows user to delete a :term:`Profile`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -219,11 +218,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+--------------------------------------------------------------+
-	| Name | Description                                                  |
-	+======+==============================================================+
-	|  ID  | The integral, unique identifier of the profile being deleted |
-	+------+--------------------------------------------------------------+
+	+------+------------------------------------------------------------+
+	| Name | Description                                                |
+	+======+============================================================+
+	|  ID  | The :ref:`profile-id` of the :term:`Profile` being deleted |
+	+------+------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

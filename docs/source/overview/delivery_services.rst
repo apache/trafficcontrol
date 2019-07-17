@@ -518,7 +518,7 @@ An experimental feature that allows administrators to list additional forward pr
 
 Profile
 -------
-Either the name of a :term:`Profile` used by this Delivery Service, or an integral, unique identifier for said :term:`Profile`.
+Either the :ref:`profile-name` of a :term:`Profile` used by this Delivery Service, or the :ref:`profile-id` of said :term:`Profile`.
 
 .. table:: Aliases
 

@@ -58,15 +58,15 @@ The following steps will take you through the procedure of setting up an :abbr:`
 		- This :abbr:`OSBU (Origin Server Base URL)` must be valid - :abbr:`ATS (Apache Traffic Server)` will perform a DNS lookup on this :abbr:`FQDN (Fully Qualified Domain Name)` even if IPs, not DNS, are used in the :file:`parent.config`.
 		- The :abbr:`OSBU (Origin Server Base URL)` entered as the "Origin Server Base URL" will be sent to the origins as a host header. All origins must be configured to respond to this host.
 
-#. Create a delivery service profile. This must be done to set the :abbr:`MSO (Multi-Site Origin)` algorithm. Also, as of :abbr:`ATS (Apache Traffic Server)` 6.x, multi-site options must be set as parameters within the :file:`parent.config`. Header rewrite parameters will be ignored. See `ATS parent.config <https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/files/parent.config.en.html>`_ for more details. These parameters are now handled by the creation of a :term:`Delivery Service` profile.
+#. Create a delivery service profile. This must be done to set the :abbr:`MSO (Multi-Site Origin)` algorithm. Also, as of :abbr:`ATS (Apache Traffic Server)` 6.x, multi-site options must be set as parameters within the :file:`parent.config`. Header rewrite parameters will be ignored. See `ATS parent.config <https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/files/parent.config.en.html>`_ for more details. These :term:`Parameters` are now handled by the creation of a :term:`Delivery Service` :term:`Profile`.
 
-	a) Create a profile of the type ``DS_PROFILE`` for the :term:`Delivery Service` in question.
+	a) Create a :term:`Profile` of the :ref:`profile-type` ``DS_PROFILE`` for the :term:`Delivery Service` in question.
 
 		.. figure:: multi_site/ds_profile.png
 			:scale: 50%
 			:align: center
 
-	#) Click :guilabel:`Show profile parameters` to bring up the parameters screen for the profile. Create parameters for the following:
+	#) Click :guilabel:`Show profile parameters` to bring up the :term:`Parameters` screen for the :term:`Profile`. Create the following :term:`Parameters`:
 
 		+----------------------------------------+------------------+--------------------------+-------------------------+
 		| Parameter Name                         | Config File Name | Value                    | ATS parent.config value |
@@ -97,6 +97,6 @@ The following steps will take you through the procedure of setting up an :abbr:`
 
 	#) In the :term:`Delivery Service` page, select the newly created ``DS_PROFILE`` and save the :term:`Delivery Service`.
 
-#. Turn on parent_proxy_routing in the MID profile.
+#. Turn on parent_proxy_routing in the MID :term:`Profile`.
 
 .. Note:: Support for multisite configurations with single-layer CDNs is now available. If a :term:`Cache Group`\ s defined parents are either blank or of the type ``ORG_LOC``, that :term:`cache server`'s ``parent.config`` will be generated as a top layer cache, even if it is an edge. In the past, ``parent.config`` generation was strictly determined by cache type. The new method examines the parent :term:`Cache Group` definitions and generates the :file:`parent.config` accordingly.

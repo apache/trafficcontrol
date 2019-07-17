@@ -25,7 +25,7 @@
 
 ``GET``
 =======
-Extract identifying information about all cachegroups with a specific parameter
+Extract identifying information about all :term:`Cache Groups` with a specific :term:`Parameter`
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -43,10 +43,10 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroups: An array of all Cache Groups with an associated parameter identifiable by the ``parameter_id`` request path parameter
+:cachegroups: An array of all :term:`Cache Groups` with an associated :term:`Parameter` identifiable by the ``parameter_id`` request path parameter
 
-	:id:   The numeric ID of the Cache Group
-	:name: The human-readable name of the Cache Group
+	:id:   The integral, unique identifier of the :term:`Cache Group`
+	:name: The human-readable name of the :term:`Cache Group`
 
 .. code-block:: json
 	:caption: Response Example

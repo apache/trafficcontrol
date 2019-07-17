@@ -99,7 +99,7 @@ A real-time view into the status of each :term:`cache server`. The :menuselectio
 .. warning:: Several of these columns may be empty by default - particularly in the :ref:`ciab` environment - and require :ref:`Traffic Ops Extensions <admin-to-ext-script>` to be installed/enabled/configured in order to work.
 
 :Hostname: The (short) hostname of the :term:`cache server`
-:Profile:  The name of the :term:`Profile` used by the :term:`cache server`
+:Profile:  The :ref:`profile-name` of the :term:`Profile` used by the :term:`cache server`
 :Status:   The :term:`Status` of the :term:`cache server`
 
 	.. seealso:: :ref:`health-proto`
@@ -122,7 +122,7 @@ Cache Stats
 -----------
 A table showing the results of the periodic :ref:`to-check-ext` that are run. These can be grouped by :term:`Cache Group` and/or :term:`Profile`.
 
-:Profile:     Name of the :term:`Profile` applied to the Edge-tier or Mid-tier :term:`cache server`, or the special name "ALL" indicating that this row is a group of all :term:`cache servers` within a single :term:`Cache Group`
+:Profile:     :ref:`profile-name` of the :term:`Profile` applied to the Edge-tier or Mid-tier :term:`cache server`, or the special name "ALL" indicating that this row is a group of all :term:`cache servers` within a single :term:`Cache Group`
 :Host:        'ALL' for entries grouped by :term:`Cache Group`, or the hostname of a particular :term:`cache server`
 :Cache Group: Name of the :term:`Cache Group` to which this server belongs, or the name of the :term:`Cache Group` that is grouped for entries grouped by :term:`Cache Group`, or the special name "ALL" indicating that this row is an aggregate across all :term:`Cache Groups`
 :Healthy:     True/False as determined by Traffic Monitor
@@ -277,7 +277,7 @@ A table of all servers (of all kinds) across all :term:`Delivery Services` and C
 	.. seealso:: :ref:`health-proto`
 
 :Type:        	The :term:`Type` of server e.g. EDGE for an :term:`Edge-tier cache server`
-:Profile:     	The name of the server's :term:`Profile`
+:Profile:     	The :ref:`profile-name` of the server's :term:`Profile`
 :CDN:         	The name of the CDN to which this server is assigned (if any)
 :Cache Group: 	The name of the :term:`Cache Group` to which this server belongs
 :Phys Location:	The name of the :term:`Physical Location` to which this server belongs
@@ -321,7 +321,7 @@ A table of all :term:`origins`. These are automatically created for the :term:`o
 
 :Coordinate: The name of the geographic coordinate pair that defines the physical location of this :term:`origin server`. :term:`Origins` created for :term:`Delivery Services` automatically will **not** have associated Coordinates. This can be rectified on the details pages for said :term:`origins`
 :Cachegroup: The name of the :term:`Cache Group` to which this :term:`origin` belongs, if any.
-:Profile:    The name of a :term:`Profile` used by this :term:`origin`.
+:Profile:    The :ref:`profile-name` of a :term:`Profile` used by this :term:`origin`.
 
 :term:`Origin` management includes the ability to (where applicable):
 
@@ -329,17 +329,17 @@ A table of all :term:`origins`. These are automatically created for the :term:`o
 - update an existing :term:`origin`
 - delete an existing :term:`origin`
 
-.. _tp-profiles-page:
+.. _tp-configure-profiles:
 
 Profiles
 --------
-A table of all :term:`Profile`\ s. From here you can see :term:`Parameter`\ s, servers and :term:`Delivery Service`\ s assigned to each :term:`Profile`. Each entry in the table has these fields:
+A table of all :term:`Profiles`. From here you can see :term:`Parameters`, servers and :term:`Delivery Services` assigned to each :term:`Profile`. Each entry in the table has these fields:
 
-:Name:             The name of the :term:`Profile`
-:Type:             The type of this :term:`Profile`, which indicates the kinds of objects to which the :term:`Profile` may be assigned
-:Routing Disabled: For :term:`Profile`\ s applied to :term:`cache server` s (Edge-tier or Mid-tier) this indicates that Traffic Router will refuse to provide routes to these machines
-:Description:      A user-defined description of the :term:`Profile`, typically indicating its purpose
-:CDN:              The CDN to which this :term:`Profile` is restricted. To use the same :term:`Profile` across multiple CDNs, clone the :term:`Profile` and change the clone's CDN field.
+:Name:             The :ref:`profile-name` of the :term:`Profile`
+:Type:             The :ref:`profile-type` of this :term:`Profile`, which indicates the kinds of objects to which the :term:`Profile` may be assigned
+:Routing Disabled: The :ref:`profile-routing-disabled` setting of this :term:`Profile`
+:Description:      This :term:`Profile`'s :ref:`profile-description`
+:CDN:              The :ref:`profile-cdn` to which this :term:`Profile` is restricted. To use the same :term:`Profile` across multiple CDNs, clone the :term:`Profile` and change the clone's :ref:`profile-cdn` field.
 
 :term:`Profile` management includes the ability to (where applicable):
 
@@ -348,29 +348,29 @@ A table of all :term:`Profile`\ s. From here you can see :term:`Parameter`\ s, s
 - delete an existing :term:`Profile`
 - clone a :term:`Profile`
 - export a :term:`Profile`
-- view :term:`Profile` :term:`Parameter`\ s
-- view :term:`Profile` :term:`Delivery Service`\ s
+- view :term:`Profile` :term:`Parameters`
+- view :term:`Profile` :term:`Delivery Services`
 - view :term:`Profile` servers
 
-.. seealso:: :ref:`working-with-profiles`
+.. _tp-configure-parameters:
 
 Parameters
 ----------
-This page displays a table of :term:`Parameter`\ s from all :term:`Profile`\ s with the following columns:
+This page displays a table of :term:`Parameters` from all :term:`Profiles` with the following columns:
 
-:Name:        The name of the :term:`Parameter`
-:Config File: The configuration file where this :term:`Parameter` is stored, possibly the special value ``location``, indicating that this :term:`Parameter` actually names the location of a configuration file rather than its contents, or ``package`` to indicate that this :term:`Parameter` specifies a package to be installed rather than anything to do with configuration files
-:Value:       The value of the :term:`Parameter`. The meaning of this depends on the value of 'Config File'
-:Secure:      When this is 'true', a user requesting to see this :term:`Parameter` will see the value ``********`` instead of its actual value if the user's permission role isn't 'admin'
-:Profiles:    The number of :term:`Profile`\ s currently using this :term:`Parameter`
+:Name:        The :ref:`parameter-name` of the :term:`Parameter`
+:Config File: The :ref:`parameter-config-file` to which the :term:`Parameter` belongs.
+:Value:       The :ref:`parameter-value` of the :term:`Parameter`.
+:Secure:      Whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:Profiles:    The number of :term:`Profiles` currently using this :term:`Parameter`
 
 :term:`Parameter` management includes the ability to (where applicable):
 
 - create a new :term:`Parameter`
 - update an existing :term:`Parameter`
 - delete an existing :term:`Parameter`
-- view :term:`Parameter` :term:`Profile`\ s
-- manage assignments of a :term:`Parameter` to one or more :term:`Profile`\ s and/or :term:`Delivery Service`\ s
+- view :term:`Parameter` :term:`Profiles`
+- manage assignments of a :term:`Parameter` to one or more :term:`Profiles` and/or :term:`Delivery Services`
 
 .. _tp-configure-types:
 
@@ -536,6 +536,8 @@ Here, specific assets can be invalidated in all caches of a :term:`Delivery Serv
 Invalidate content includes the ability to (where applicable):
 
 - create a new invalidate content job
+
+.. _tp-tools-generate-iso:
 
 Generate ISO
 ------------

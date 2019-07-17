@@ -135,9 +135,9 @@ Response Structure
 :multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
 :orgServerFqdn:        The :ref:`ds-origin-url`
 :originShield:         A :ref:`ds-origin-shield` string
-:profileDescription:   The description of the :term:`Delivery Service`'s :ref:`ds-profile`, if any
-:profileId:            The integral, unique identifier for :ref:`ds-profile` with which this :term:`Delivery Service` is associated, if any
-:profileName:          The name of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated, if any
+:profileDescription:   The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileId:            The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileName:          The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
 :protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
 :qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
 :rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`

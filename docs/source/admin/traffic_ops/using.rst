@@ -13,12 +13,6 @@
 .. limitations under the License.
 ..
 
-.. |graph| image:: images/graph.png
-.. |info| image:: images/info.png
-.. |checkmark| image:: images/good.png
-.. |X| image:: images/bad.png
-.. |clock| image:: images/clock-black.png
-
 .. _to-using:
 
 *******************
@@ -37,28 +31,6 @@ The Traffic Ops Menu
 	The Traffic Ops Landing Page
 
 The following tabs are available in the menu at the top of the Traffic Ops user interface.
-
-Parameters
-----------
-Parameters and Profiles can be edited here. Hover over the tab to get the following options:
-
-+-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|        Option               |                                                                             Description                                                                                             |
-+=============================+=====================================================================================================================================================================================+
-| Global Profile              | The table of global parameters. See :ref:`param-prof`. This is where you Create/Read/Update/Delete parameters in the Global profile                                                 |
-+-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| All :term:`Cache Group`\ s  | The table of all parameters *that are assigned to a cachegroup* - this may be slow to pull up, as there can be thousands of parameters.                                             |
-+-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| All Profiles                | The table of all parameters *that are assigned to a profile* - this may be slow to pull up, as there can be thousands of parameters.                                                |
-+-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Select Profile              | Select the parameter list by profile first, then get a table of just the parameters for that profile.                                                                               |
-+-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Export Profile              | Profiles can be exported from one Traffic Ops instance to another using 'Select Profile' and under the "Profile Details" dialog for the desired profile                             |
-+-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Import Profile              | Profiles can be imported from one Traffic Ops instance to another using the button "Import Profile" after using the "Export Profile" feature                                        |
-+-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Orphaned Parameters         | A table of parameters that are not associated to any profile of :term:`Cache Group`. These parameters either should be deleted or associated with a profile of :term:`Cache Group`. |
-+-----------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. index::
 	Change Log
@@ -81,118 +53,6 @@ Help for Traffic Ops and Traffic Control. Hover over this tab to get the followi
 +---------------+---------------------------------------------------------------------+
 | Logout        | Logout from Traffic Ops                                             |
 +---------------+---------------------------------------------------------------------+
-
-
-.. _working-with-profiles:
-
-Parameters and Profiles
-=======================
-Parameters are shared between profiles if the set of ``{ name, config_file, value }`` is the same. To change a value in one profile but not in others, the parameter has to be removed from the profile you want to change it in, and a new parameter entry has to be created (**Add Parameter** button at the bottom of the Parameters view), and assigned to that profile. It is easy to create new profiles from the **Misc > Profiles** view - just use the **Add/Copy Profile** button at the bottom of the profile view to copy an existing profile to a new one. Profiles can be exported from one system and imported to another using the profile view as well. It makes no sense for a parameter to not be assigned to a single profile - in that case it really has no function. To find parameters like that use the **Parameters > Orphaned Parameters** view. It is easy to create orphaned parameters by removing all profiles, or not assigning a profile directly after creating the parameter.
-
-.. seealso:: :ref:`param-prof` in the *Configuring Traffic Ops* section.
-
-.. _ccr-profile:
-
-Traffic Router Profile
-----------------------
-
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-|                   Name                  |      Config_file       |                                                                  Description                                                                     |
-+=========================================+========================+==================================================================================================================================================+
-| location                                | dns.zone               | Location to store the DNS zone files in the local file system of Traffic Router.                                                                 |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| location                                | http-log4j.properties  | Location to find the log4j.properties file for Traffic Router.                                                                                   |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| location                                | dns-log4j.properties   | Location to find the dns-log4j.properties file for Traffic Router.                                                                               |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| location                                | geolocation.properties | Location to find the log4j.properties file for Traffic Router.                                                                                   |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| CDN_name                                | rascal-config.txt      | The human readable name of the CDN for this profile.                                                                                             |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| CoverageZoneJsonURL                     | CRConfig.xml           | The location (URL) to retrieve the coverage zone map file in JSON format from.                                                                   |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| ecsEnable                               | CRConfig.json          | Boolean value to enable or disable ENDS0 client subnet extensions.                                                                               |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| geolocation.polling.url                 | CRConfig.json          | The location (URL) to retrieve the geo database file from.                                                                                       |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| geolocation.polling.interval            | CRConfig.json          | How often to refresh the coverage geo location database  in ms                                                                                   |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| coveragezone.polling.interval           | CRConfig.json          | How often to refresh the coverage zone map in ms                                                                                                 |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| coveragezone.polling.url                | CRConfig.json          | The location (URL) to retrieve the coverage zone map file in JSON format from.                                                                   |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| deepcoveragezone.polling.interval       | CRConfig.json          | How often to refresh the deep coverage zone map in ms                                                                                            |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| deepcoveragezone.polling.url            | CRConfig.json          | The location (URL) to retrieve the deep coverage zone map file in JSON format from.                                                              |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| client.steering.forced.diversity        | CRConfig.json          | Enable the Client Steering Forced Diversity feature (value = "true") to diversify CLIENT_STEERING results by including more unique edge caches   |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.soa.expire                          | CRConfig.json          | The value for the expire field the Traffic Router DNS Server will respond with on Start of Authority (SOA) records.                              |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.soa.minimum                         | CRConfig.json          | The value for the minimum field the Traffic Router DNS Server will respond with on SOA records.                                                  |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.soa.admin                           | CRConfig.json          | The DNS Start of Authority admin.  Should be a valid support email address for support if DNS is not working correctly.                          |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.soa.retry                           | CRConfig.json          | The value for the retry field the Traffic Router DNS Server will respond with on SOA records.                                                    |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.soa.refresh                         | CRConfig.json          | The TTL the Traffic Router DNS Server will respond with on A records.                                                                            |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.ttls.NS                             | CRConfig.json          | The TTL the Traffic Router DNS Server will respond with on NS records.                                                                           |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.ttls.SOA                            | CRConfig.json          | The TTL the Traffic Router DNS Server will respond with on SOA records.                                                                          |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.ttls.AAAA                           | CRConfig.json          | The Time To Live (TTL) the Traffic Router DNS Server will respond with on AAAA records.                                                          |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.ttls.A                              | CRConfig.json          | The TTL the Traffic Router DNS Server will respond with on A records.                                                                            |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.ttls.DNSKEY                         | CRConfig.json          | The TTL the Traffic Router DNS Server will respond with on DNSKEY records.                                                                       |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| tld.ttls.DS                             | CRConfig.json          | The TTL the Traffic Router DNS Server will respond with on DS records.                                                                           |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| api.port                                | server.xml             | The TCP port Traffic Router listens on for API (REST) access.                                                                                    |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| api.cache-control.max-age               | CRConfig.json          | The value of the ``Cache-Control: max-age=`` header in the API responses of Traffic Router.                                                      |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| api.auth.url                            | CRConfig.json          | The API authentication URL (https://${tmHostname}/api/1.1/user/login); ${tmHostname} is a search and replace token used by Traffic Router to     |
-|                                         |                        | construct the correct URL)                                                                                                                       |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| consistent.dns.routing                  | CRConfig.json          | Control whether DNS :term:`Delivery Service`\ s use consistent hashing on the edge FQDN to select caches for answers. May improve performance if |
-|                                         |                        | set to true; defaults to false                                                                                                                   |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| dnssec.enabled                          | CRConfig.json          | Whether DNSSEC is enabled; this parameter is updated via the DNSSEC administration user interface.                                               |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| dnssec.allow.expired.keys               | CRConfig.json          | Allow Traffic Router to use expired DNSSEC keys to sign zones; default is true. This helps prevent DNSSEC related outages due to failed Traffic  |
-|                                         |                        | Control components or connectivity issues.                                                                                                       |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| dynamic.cache.primer.enabled            | CRConfig.json          | Allow Traffic Router to attempt to prime the dynamic zone cache; defaults to true                                                                |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| dynamic.cache.primer.limit              | CRConfig.json          | Limit the number of permutations to prime when dynamic zone cache priming is enabled; defaults to 500                                            |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| keystore.maintenance.interval           | CRConfig.json          | The interval in seconds which Traffic Router will check the keystore API for new DNSSEC keys                                                     |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| keystore.api.url                        | CRConfig.json          | The keystore API URL (https://${tmHostname}/api/1.1/cdns/name/${cdnName}/dnsseckeys.json; ${tmHostname} and ${cdnName} are search and replace    |
-|                                         |                        | tokens used by Traffic Router to construct the correct URL)                                                                                      |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| keystore.fetch.timeout                  | CRConfig.json          | The timeout in milliseconds for requests to the keystore API                                                                                     |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| keystore.fetch.retries                  | CRConfig.json          | The number of times Traffic Router will attempt to load keys before giving up; defaults to 5                                                     |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| keystore.fetch.wait                     | CRConfig.json          | The number of milliseconds Traffic Router will wait before a retry                                                                               |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| signaturemanager.expiration.multiplier  | CRConfig.json          | Multiplier used in conjunction with a zone's maximum TTL to calculate DNSSEC signature durations; defaults to 5                                  |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| zonemanager.threadpool.scale            | CRConfig.json          | Multiplier used to determine the number of cores to use for zone signing operations; defaults to 0.75                                            |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| zonemanager.cache.maintenance.interval  | CRConfig.json          | The interval in seconds which Traffic Router will check for zones that need to be resigned or if dynamic zones need to be expired from cache     |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| zonemanager.dynamic.response.expiration | CRConfig.json          | A string (e.g.: 300s) that defines how long a dynamic zone                                                                                       |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNSKEY.generation.multiplier            | CRConfig.json          | Used to deteremine when new keys need to be regenerated. Keys are regenerated if expiration is less than the generation multiplier * the TTL. If |
-|                                         |                        | the parameter does not exist, the default is 10.                                                                                                 |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNSKEY.effective.multiplier             | CRConfig.json          | Used when creating an effective date for a new key set.  New keys are generated with an effective date of old key expiration - (effective        |
-|                                         |                        | multiplier * TTL).  Default is 2.                                                                                                                |
-+-----------------------------------------+------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. index::
 	Invalidate Content
@@ -234,7 +94,7 @@ The Manage DNSSEC Keys screen also allows a user to perform the following action
 
 Activate/Deactivate DNSSEC for a CDN
 ------------------------------------
-Fairly straight forward, this button set the **dnssec.enabled** param to either **true** or **false** on the Traffic Router profile for the CDN.  The Activate/Deactivate option is only available if DNSSEC keys exist for CDN.  In order to active DNSSEC for a CDN a user must first generate keys and then click the **Active DNSSEC** button.
+Fairly straight forward, this button set the :term:`Parameter` with the :ref:`parameter-name` "dnssec.enabled" to have a :ref:`parameter-value` of either "true" or "false" on the Traffic Router :term:`Profile` for the CDN.  The Activate/Deactivate option is only available if DNSSEC keys exist for CDN.  In order to active DNSSEC for a CDN a user must first generate keys and then click the :guilabel:`Active DNSSEC` button.
 
 Generate Keys
 -------------

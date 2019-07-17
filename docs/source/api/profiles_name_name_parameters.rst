@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves all parameters associated with a given profile
+Retrieves all :term:`Parameters` associated with a given :term:`Profile`
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------+
-	| Name | Description                                                 |
-	+======+=============================================================+
-	| name | The name of the profile for which parameters will be listed |
-	+------+-------------------------------------------------------------+
+	+------+--------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                |
+	+======+============================================================================================+
+	| name | The :ref:`profile-name` of the :term:`Profile` for which :term:`Parameters` will be listed |
+	+------+--------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -48,15 +48,16 @@ Request Structure
 
 Response Structure
 ------------------
-:configFile:  The *base* filename to which this parameter belongs
-:id:          An integral, unique identifier for this parameter
-:lastUpdated: The date and time at which this parameter was last modified in ISO format
-:name:        The parameter name
-:profiles:    An array of profile names that use this parameter
-:secure:      When ``true``, the parameter value is visible only to "admin"-role users
-:value:       The parameter value - if ``secure`` is true and the user does not have the "admin" role this will be obfuscated (at the time of this writing the obfuscation value is defined to be ``"********"``) but **not** missing
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:id:          The :term:`Parameter`'s :ref:`parameter-id`
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
+:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
-**Response Example** ::
+.. code-block:: http
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
@@ -107,7 +108,7 @@ Response Structure
 
 ``POST``
 ========
-Associate parameters to a profile. If the parameter does not exist, create it and associate to the profile. If the parameter already exists, associate it to the profile. If the parameter is already associated with the profile, keep the association.
+Associates :term:`Parameters` to a :term:`Profile`. If the :term:`Parameter` does not exist, creates it and associates it to the :term:`Profile`. If the :term:`Parameter` already exists, associates it to the :term:`Profile`. If the :term:`Parameter` is already associated with the :term:`Profile`, keep the association.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -117,11 +118,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+--------------------------------------------------------------+
-	| Name | Description                                                  |
-	+======+==============================================================+
-	| name | The name of the profile to which parameters will be assigned |
-	+------+--------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                 |
+	+======+=============================================================================================+
+	| name | The :ref:`profile-name` of the :term:`Profile` to which :term:`Parameters` will be assigned |
+	+------+---------------------------------------------------------------------------------------------+
 
 This endpoint accepts two formats for the request payload:
 
@@ -134,10 +135,10 @@ Parameter Array Format
 
 Single Parameter Format
 """""""""""""""""""""""
-:configFile: The *base* filename of the configuration file to which this parameter shall belong e.g. "foo" not "/path/to/foo"
-:name:       Parameter name
-:secure:     An integer which, when any number other than ``0``, will prohibit users who do not have the "admin" role from viewing the parameter's ``value`` (at the time of this writing the obfuscation value is defined to be ``"********"``)
-:value:      Parameter value
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: http
 	:caption: Request Example - Single Parameter Format
@@ -159,10 +160,10 @@ Single Parameter Format
 
 Parameter Array Format
 """"""""""""""""""""""
-:configFile: The *base* filename of the configuration file to which this parameter shall belong e.g. "foo" not "/path/to/foo"
-:name:       Parameter name
-:secure:     An integer which, when any number other than ``0``, will prohibit users who do not have the "admin" role from viewing the parameter's ``value`` (at the time of this writing the obfuscation value is defined to be ``"********"``)
-:value:      Parameter value
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: http
 	:caption: Request Example - Parameter Array Format
@@ -190,15 +191,15 @@ Parameter Array Format
 
 Response Structure
 ------------------
-:parameters: An array of objects representing the parameters which have been assigned
+:parameters: An array of objects representing the :term:`Parameters` which have been assigned
 
-	:configFile: The *base* filename of the configuration file to which this parameter shall belong e.g. "foo" not "/path/to/foo"
-	:name:       Parameter name
-	:secure:     An integer which, when any number other than ``0``, will prohibit users who do not have the "admin" role from viewing the parameter's ``value`` (at the time of this writing the obfuscation value is defined to be ``"********"``)
-	:value:      Parameter value
+	:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+	:name:        :ref:`parameter-name` of the :term:`Parameter`
+	:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+	:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
-:profileId:   The integral, unique identifier for the profile to which the parameter(s) have been assigned
-:profileName: Name of the profile to which the parameter(s) have been assigned
+:profileId:   The :ref:`profile-id` of the :term:`Profile` to which the :term:`Parameter`\ (s) have been assigned
+:profileName: :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter`\ (s) have been assigned
 
 .. code-block:: http
 	:caption: Response Example

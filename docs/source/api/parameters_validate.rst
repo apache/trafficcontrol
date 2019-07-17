@@ -19,11 +19,11 @@
 ``parameters/validate``
 ***********************
 .. deprecated:: 1.1
-	To check for the existence of a parameter with specific name, value etc., use the query parameters of the :ref:`to-api-parameters` endpoint instead.
+	To check for the existence of a :term:`Parameter` with a specific :ref:`parameter-name`, :ref:`parameter-value` etc., use the query parameters of the :ref:`to-api-parameters` endpoint instead.
 
 ``POST``
 ========
-Returns a successful response and message if a parameter matching the one in the payload exists, and an error response and message if no such parameter is found.
+Returns a successful response and message if a :term:`Parameter` matching the one in the payload exists, and an error response and message if no such :term:`Parameter` is found.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -31,10 +31,10 @@ Returns a successful response and message if a parameter matching the one in the
 
 Request Structure
 -----------------
-:name:       Parameter name
-:configFile: The *base* filename of the configuration file to which this parameter belongs e.g. "foo" not "/path/to/foo"
-:secure:     When ``true``, the parameter value is visible only to "admin"-role users
-:value:       The parameter value - if ``secure`` is true and the user does not have the "admin" role this will be obfuscated (at the time of this writing the obfuscation value is defined to be ``"********"``) but **not** missing
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: http
 	:caption: Request Example
@@ -56,13 +56,11 @@ Request Structure
 
 Response Structure
 ------------------
-:configFile:  The *base* filename to which this parameter belongs
-:id:          An integral, unique identifier for this parameter
-:lastUpdated: The date and time at which this parameter was last modified in ISO format
-:name:        The parameter name
-:profiles:    An array of profile names that use this parameter
-:secure:      When ``true``, the parameter value is visible only to "admin"-role users
-:value:       The parameter value - if ``secure`` is true and the user does not have the "admin" role this will be obfuscated (at the time of this writing the obfuscation value is defined to be ``"********"``) but **not** missing
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:id:          The :term:`Parameter`'s :ref:`parameter-id`
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: http
 	:caption: Response Example - Parameter Found
@@ -119,4 +117,4 @@ Response Structure
 		}
 	]}
 
-.. note:: This endpoint returns a client-side error response when the parameter was not found - as such any API tools that wish to use this endpoint should be aware that a client-side error response code may not actually mean that an error occurred. However, neither can it be said that a ``400`` response code means that the parameter wasn't found; that response code is also returned in the event of _true_ client-side errors e.g. a malformed JSON payload in the request.
+.. note:: This endpoint returns a client-side error response when the parameter was not found - as such any API tools that wish to use this endpoint should be aware that a client-side error response code may not actually mean that an error occurred. However, neither can it be said that a ``400`` response code means that the :term:`Parameter` wasn't found; that response code is also returned in the event of _true_ client-side errors e.g. a malformed JSON payload in the request.
