@@ -35,7 +35,7 @@ under the License.
         </thead>
         <tbody>
         <tr ng-repeat="p in ::unassignedParams" ng-click="angular.element('#checkbox-' + $index).triggerHandler('click')">
-            <td><input id="checkbox-{{$index}}" type="checkbox" ng-click="updateParams($event, p.id); $event.stopPropagation()"></td>
+            <td><input id="checkbox-{{$index}}" ng-class="::{'active': p.selected}" type="checkbox" ng-click="updateParams($event, p.id); $event.stopPropagation()"></td>
             <td data-search="^{{::p.name}}$">{{::p.name}}</td>
             <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
             <td data-search="^{{::p.value}}$">{{::p.value}}</td>
