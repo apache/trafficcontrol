@@ -26,6 +26,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 	const myNewCDN = 'cdn-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789');
 	const myDomainName = myNewCDN + '.com';
 	const mydnssec = false;
+	const myKskDays = commonFunctions.random(365);
 
 	it('should go to the CDNs page', function() {
 		console.log("Go to the CDNs page");
@@ -68,21 +69,53 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		pageData.dnssecEnabled.click();
 		pageData.dnssecEnabled.sendKeys((!mydnssec).toString());
 		pageData.updateButton.click();
-		expect(pageData.domainName.getText() === myDomainName + 'updated.com');
+		expect(pageData.domainName.getAttribute('value')).toEqual(myDomainName + 'updated.com');
 	});
 
 	it('should generate DNSSEC keys', function() {
-		console.log("Generating DNSSEC keys for the new CDN and then verifying them");
+		console.log("Generating DNSSEC keys for the new CDN and and verifying their expiration date");
 		pageData.moreButton.click();
 		pageData.manageDnssecKeysButton.click();
-		browser.sleep(250);
-		expect(pageData.expirationDate.getText() === '');
+		expect(pageData.expirationDate.getAttribute('value')).toEqual('');
 		pageData.generateDnssecKeysButton.click();
 		pageData.regenerateButton.click();
 		expect(pageData.confirmButton.isEnabled()).toBe(false);
 		pageData.confirmInput.sendKeys(myNewCDN);
 		expect(pageData.confirmButton.isEnabled()).toBe(true);
 		pageData.confirmButton.click();
+		const expirationDate = pageData.expirationDate.getAttribute('value').then((expir) => {return Date.parse(expir + ' UTC');});
+		const calculatedExpirationDate = Date.now() + 365*24*60*60*1000;
+		expect(expirationDate).toBeCloseTo(calculatedExpirationDate, -4);
+	});
+
+	it('should regenerate DNSSEC keys', function() {
+		console.log("Renerating DNSSEC keys and verifying their expiration date");
+		pageData.regenerateDnssecKeysButton.click();
+		pageData.kskExpirationDays.clear();
+		pageData.kskExpirationDays.sendKeys(myKskDays.toString());
+		pageData.regenerateButton.click();
+		expect(pageData.confirmButton.isEnabled()).toBe(false);
+		pageData.confirmInput.sendKeys(myNewCDN);
+		expect(pageData.confirmButton.isEnabled()).toBe(true);
+		pageData.confirmButton.click();
+		const expirationDate = pageData.expirationDate.getAttribute('value').then((expir) => {return Date.parse(expir + ' UTC');});
+		const calculatedExpirationDate = Date.now() + myKskDays*24*60*60*1000;
+		expect(expirationDate).toBeCloseTo(calculatedExpirationDate, -4);
+	});
+
+	it('should regenerate KSK keys', function() {
+		console.log("Regenerating KSK keys and verifying their expiration");
+		pageData.regenerateKskButton.click();
+		pageData.kskExpirationDays.clear();
+		pageData.kskExpirationDays.sendKeys(myKskDays.toString());
+		pageData.generateButton.click();
+		expect(pageData.confirmButton.isEnabled()).toBe(false);
+		pageData.confirmInput.sendKeys(myNewCDN);
+		expect(pageData.confirmButton.isEnabled()).toBe(true);
+		pageData.confirmButton.click();
+		const expirationDate = pageData.expirationDate.getAttribute('value').then((expir) => {return Date.parse(expir + ' UTC');});
+		const calculatedExpirationDate = Date.now() + myKskDays*24*60*60*1000;
+		expect(expirationDate).toBeCloseTo(calculatedExpirationDate, -4);
 	});
 
 });

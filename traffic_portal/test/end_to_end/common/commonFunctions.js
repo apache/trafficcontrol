@@ -39,4 +39,9 @@ module.exports = function() {
 			}
 		).join("");
 	}
+
+	this.random = (max) => {
+		return Math.round(Math.random() * max);   
+	}
+
 };
