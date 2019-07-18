@@ -17,27 +17,41 @@
  * under the License.
  */
 
-var ApplicationService = function($rootScope, $anchorScroll, $http) {
+var ApplicationService = function($rootScope, $anchorScroll, $http, messageModel, propertiesModel) {
 
-    this.startup = function() {
-        // anything you need to do at startup
+    let storageAvailable = function(type) {
+        try {
+            let storage = window[type],
+                x = '__storage_test__';
+
+            storage.setItem(x, x);
+            storage.removeItem(x);
+            return true;
+        }
+        catch(e) {
+            return e;
+        }
     };
 
-    $rootScope.$on("$viewContentLoaded", function() {
-        $anchorScroll(); // scrolls window to top
-    });
-
-    var init = function() {
+    let init = function() {
         $http.defaults.withCredentials = true;
 
         // jquery DataTables default overrides
         $.extend(true, $.fn.dataTable.defaults, {
             "stateSave": true
         });
+
+        if (!storageAvailable('localStorage')) {
+            messageModel.setMessages([ { level: 'warning', text: 'A browser that supports local storage is required to use ' + propertiesModel.properties.name } ], false);
+        }
     };
     init();
 
+    $rootScope.$on("$viewContentLoaded", function() {
+        $anchorScroll(); // scrolls window to top
+    });
+
 };
 
-ApplicationService.$inject = ['$rootScope', '$anchorScroll', '$http'];
+ApplicationService.$inject = ['$rootScope', '$anchorScroll', '$http', 'messageModel', 'propertiesModel'];
 module.exports = ApplicationService;

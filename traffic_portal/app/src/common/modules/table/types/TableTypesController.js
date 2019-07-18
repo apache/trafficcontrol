@@ -17,9 +17,13 @@
  * under the License.
  */
 
-var TableTypesController = function(types, $scope, $state, locationUtils) {
+var TableTypesController = function(types, $scope, $state, dateUtils, locationUtils) {
+
+    let table;
 
     $scope.types = types;
+
+    $scope.getRelativeTime = dateUtils.getRelativeTime;
 
     $scope.editType = function(id) {
         locationUtils.navigateToPath('/types/' + id);
@@ -33,15 +37,38 @@ var TableTypesController = function(types, $scope, $state, locationUtils) {
         $state.reload(); // reloads all the resolves for the view
     };
 
+    $scope.toggleVisibility = function(colName) {
+        const col = table.column(colName + ':name');
+        col.visible(!col.visible());
+        table.rows().invalidate().draw();
+    };
+
     angular.element(document).ready(function () {
-        $('#typesTable').dataTable({
-            "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": 25,
-            "aaSorting": []
-        });
+        table = $('#typesTable').DataTable({
+                "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+                "iDisplayLength": 25,
+                "aaSorting": [],
+                "columns": [
+                    { "name": "name", "visible": true, "searchable": true },
+                    { "name": "description", "visible": true, "searchable": true },
+                    { "name": "useInTable", "visible": true, "searchable": true },
+                    { "name": "lastUpdated", "visible": false, "searchable": false }
+                ],
+                "colReorder": {
+                    realtime: false
+                },
+                "initComplete": function(settings, json) {
+                    try {
+                        // need to create the show/hide column checkboxes and bind to the current visibility
+                        $scope.columns = JSON.parse(localStorage.getItem('DataTables_typesTable_/')).columns;
+                    } catch (e) {
+                        console.error("Failure to retrieve required column info from localStorage (key=DataTables_typesTable_/):", e);
+                    }
+                }
+            });
     });
 
 };
 
-TableTypesController.$inject = ['types', '$scope', '$state', 'locationUtils'];
+TableTypesController.$inject = ['types', '$scope', '$state', 'dateUtils', 'locationUtils'];
 module.exports = TableTypesController;
