@@ -22,21 +22,6 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, origin: origin, type: type, types: types, $scope: $scope }));
 
-	var confirmNoOutstandingRequests = function(deliveryService) {
-		deliveryServiceRequestService.getDeliveryServiceRequests()
-		.then(
-			function(dsRequests) {
-				// search all requests for those that are not completed and share the same deliveryservice id
-				angular.forEach(dsRequests, function(value) {
-					if (value.status != 'complete' && value.deliveryService.id == deliveryService.id) {
-						return false;
-					}
-				});
-				return true;
-			}
-		);
-	};
-
 	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
 			title: "Delivery Service Delete Request",
@@ -76,44 +61,40 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 
 			// if the user chooses to complete/fulfill the delete request immediately, the ds will be deleted and behind the
 			// scenes a delivery service request will be created and marked as complete
-			if (options.status.id == $scope.COMPLETE && confirmNoOutstandingRequests(deliveryService)) {
-				// first delete the ds
-				deliveryServiceService.deleteDeliveryService(deliveryService)
-					.then(
-						function() {
-							// then create the ds request
-							deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
-								then(
-									function(response) {
-										var comment = {
-											deliveryServiceRequestId: response.id,
-											value: options.comment
-										};
-										// then create the ds request comment
-										deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
-											then(
-												function() {
-													var promises = [];
-													// assign the ds request
-													promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
-													// set the status to 'complete'
-													promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
-													// and finally navigate to the /delivery-services page
-													messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted' } ], true);
-													locationUtils.navigateToPath('/delivery-services');
-												}
-											);
-									}
-								);
-						},
-						function(fault) {
-							$anchorScroll(); // scrolls window to top
-							messageModel.setMessages(fault.data.alerts, false);
-						}
-					);
-
-
-
+			if (options.status.id === $scope.COMPLETE) {
+				// first create the ds request
+				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest)
+					.then(function(response) {
+						var comment = {
+							deliveryServiceRequestId: response.id,
+							value: options.comment
+						};
+						// then create the ds request comment
+						deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
+							then(
+								function() {
+									var promises = [];
+									// assign the ds request
+									promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
+									// set the status to 'complete'
+									promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
+									// and finally navigate to the /delivery-services page
+									messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted' } ], true);
+									locationUtils.navigateToPath('/delivery-services');
+								}
+							// then, if all that works, delete the ds	
+							).then(
+								function() {
+									deliveryServiceService.deleteDeliveryService(deliveryService);
+								}
+							);
+					}
+					// handle any failures just once
+					).catch(function(fault) {
+						$anchorScroll(); // scrolls window to top
+						messageModel.setMessages(fault.data.alerts, false);
+					}
+				);
 			} else {
 				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
 					then(
@@ -138,7 +119,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 	};
 
 	var createDeliveryServiceUpdateRequest = function(dsRequest, dsRequestComment, autoFulfilled) {
-		deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
+		return deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
 			then(
 				function(response) {
 					var comment = {
@@ -215,19 +196,17 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 				};
 				// if the user chooses to complete/fulfill the update request immediately, the ds will be updated and behind the
 				// scenes a delivery service request will be created and marked as complete
-				if (options.status.id == $scope.COMPLETE && confirmNoOutstandingRequests(deliveryService)) {
-					deliveryServiceService.updateDeliveryService(deliveryService).
-						then(
-							function() {
-								$state.reload(); // reloads all the resolves for the view
-								messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
-								createDeliveryServiceUpdateRequest(dsRequest, options.comment, true);
-							},
-							function(fault) {
-								$anchorScroll(); // scrolls window to top
-								messageModel.setMessages(fault.data.alerts, false);
-							}
-						);
+				if (options.status.id == $scope.COMPLETE) {
+					createDeliveryServiceUpdateRequest(dsRequest, options.comment, true).then(
+						function() {
+							deliveryServiceService.updateDeliveryService(deliveryService);
+						}).then(function() {
+							$state.reload(); // reloads all the resolves for the view
+							messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
+						}).catch(function(fault) {
+							$anchorScroll(); // scrolls window to top
+							messageModel.setMessages(fault.data.alerts, false);
+					});
 				} else {
 					createDeliveryServiceUpdateRequest(dsRequest, options.comment, false);
 				}
