@@ -99,6 +99,16 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
+	it('should toggle the visibility of the first table column ', function() {
+		browser.driver.findElement(by.id('toggleColumns')).click();
+		let first = element.all(by.css('input[type=checkbox]')).first();
+		expect(first.isSelected()).toBe(true);
+		first.click();
+		expect(first.isSelected()).toBe(false);
+		let tableColumns = element.all(by.css('#deliveryServicesTable tr:first-child td'));
+		expect(tableColumns.count()).toBe(10);
+	});
+
 	it('should update the ANY_MAP delivery service', function() {
 		console.log('Updating the ANY_MAP delivery service for ' + mockVals.anyMapXmlId);
 		pageData.searchFilter.clear().then(function() {
