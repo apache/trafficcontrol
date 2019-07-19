@@ -10,17 +10,16 @@ guidelines at https://www.apache.org/security/ regarding vulnerability disclosur
 [Traffic Control slack channels](https://traffic-control-cdn.slack.com) or [Traffic Control mailing lists](http://trafficcontrol.apache.org/mailing_lists/).
 - Before submitting, please **SEARCH GITHUB** for a similar issue or PR. -->
 
-**I'm submitting a ...**
-<!-- (check one with "x") -->
+## I'm submitting a ...
+<!-- (check all that apply with "[x]") -->
 <!--- security vulnerability (STOP!! - see above)-->
 - [ ] bug report
-- [ ] regression from TC 3.x
 - [ ] new feature / enhancement request
-- [ ] improvement (functionality exists but it could be improved in some way)
+- [ ] improvement request (usability, performance, tech debt, etc.)
 - [ ] other <!--(Please do not submit support requests here - see above)-->
 
-**The following Traffic Control components are affected by this issue ...**
-<!-- (check one with "x") -->
+## Traffic Control components affected ...
+<!-- (check all that apply with "[x]") -->
 - [ ] CDN in a Box
 - [ ] Documentation
 - [ ] Grove
@@ -34,19 +33,19 @@ guidelines at https://www.apache.org/security/ regarding vulnerability disclosur
 - [ ] Traffic Vault
 - [ ] unknown
 
-**Current behavior:**
+## Current behavior:
 <!-- Describe how the bug manifests / how the current features are insufficient. -->
 
-**Expected / new behavior:**
+## Expected / new behavior:
 <!-- Describe what the behavior would be without the bug / how the feature would improve Traffic Control -->
 
-**Minimal reproduction of the problem with instructions:**
+## Minimal reproduction of the problem with instructions:
 <!--
 If the current behavior is a bug or you can illustrate your feature request better with an example,
-please provide the *STEPS TO REPRODUCE*.
+please provide the *STEPS TO REPRODUCE* and include the applicable TC version.
 -->
 
-**Anything else:**
+## Anything else:
 <!-- e.g. stacktraces, related issues, suggestions how to fix -->
 
 <!--
