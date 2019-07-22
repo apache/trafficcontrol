@@ -59,8 +59,8 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 				deliveryService: deliveryService
 			};
 
-			// if the user chooses to complete/fulfill the delete request immediately, the ds will be deleted and behind the
-			// scenes a delivery service request will be created and marked as complete
+			// if the user chooses to complete/fulfill the delete request immediately, a delivery service request will be made and marked as complete, 
+			// then if that is successful, the DS will be deleted
 			if (options.status.id === $scope.COMPLETE) {
 				// first create the ds request
 				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest)
@@ -194,8 +194,8 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 					status: status,
 					deliveryService: deliveryService
 				};
-				// if the user chooses to complete/fulfill the update request immediately, the ds will be updated and behind the
-				// scenes a delivery service request will be created and marked as complete
+				// if the user chooses to complete/fulfill the update request immediately, a delivery service request will be made and marked as complete, 
+				// then if that is successful, the DS will be updated
 				if (options.status.id == $scope.COMPLETE) {
 					createDeliveryServiceUpdateRequest(dsRequest, options.comment, true).then(
 						function() {
