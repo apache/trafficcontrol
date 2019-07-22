@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves the *pending* snapshot for a CDN, which represents the current *configuration* of the CDN, **not** the current *operating state* of the CDN. The contents of this snapshot are currently used by Traffic Monitor and Traffic Router.
+Retrieves the *pending* :term:`Snapshot` for a CDN, which represents the current *configuration* of the CDN, **not** the current *operating state* of the CDN. The contents of this :term:`Snapshot` are currently used by Traffic Monitor and Traffic Router.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+------------------------------------------------------------+
-	| Name | Description                                                |
-	+======+============================================================+
-	| name | The name of the CDN for which a snapshot shall be returned |
-	+------+------------------------------------------------------------+
+	+------+--------------------------------------------------------------------+
+	| Name | Description                                                        |
+	+======+====================================================================+
+	| name | The name of the CDN for which a :term:`Snapshot` shall be returned |
+	+------+--------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -112,17 +112,17 @@ Response Structure
 	:httpsPort: The port number on which this Traffic Router listens for incoming HTTPS requests
 	:ip:        This Traffic Router's IPv4 address
 	:ip6:       This Traffic Router's IPv6 address
-	:location:  The name of the Cache Group to which this Traffic Router belongs
+	:location:  The name of the :term:`Cache Group` to which this Traffic Router belongs
 	:port:      The port number on which this Traffic Router listens for incoming HTTP requests
-	:profile:   The name of the profile used by this Traffic Router
+	:profile:   The :ref:`profile-name` of the :term:`Profile` used by this Traffic Router
 	:status:    The health status of this Traffic Router
 
 		.. seealso:: :ref:`health-proto`
 
-:contentServers: An object containing keys which are the (short) hostnames of the Edge-Tier :term:`cache server` s in the CDN; the values corresponding to those keys are routing information for said servers
+:contentServers: An object containing keys which are the (short) hostnames of the :term:`Edge-Tier cache servers` in the CDN; the values corresponding to those keys are routing information for said servers
 
-	:cacheGroup:       The name of the Cache Group to which the server belongs
-	:deliveryServices: An object containing keys which are the names of :term:`Delivery Service`\ s to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of FQDNs that resolve to this :term:`cache server`
+	:cacheGroup:       The name of the :term:`Cache Group` to which the server belongs
+	:deliveryServices: An object containing keys which are the names of :term:`Delivery Services` to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of FQDNs that resolve to this :term:`cache server`
 
 		.. note:: Only Edge-tier :term:`cache server` s can be assigned to a Delivery SErvice, and therefore this field will only be present when ``type`` is ``"EDGE"``.
 
@@ -135,7 +135,7 @@ Response Structure
 	:ip:              The server's IPv4 address
 	:locationId:      This field is exactly the same as ``cacheGroup`` and only exists for legacy compatibility reasons
 	:port:            The port on which this :term:`cache server` listens for incoming HTTP requests
-	:profile:         The name of the profile used by the :term:`cache server`
+	:profile:         The :ref:`profile-name` of the :term:`Profile` used by the :term:`cache server`
 	:routingDisabled: An integer representing the boolean concept of whether or not Traffic Routers should route client traffic this :term:`cache server`; one of:
 
 		0
@@ -300,13 +300,10 @@ Response Structure
 	:httpsPort: The port number on which this Traffic Monitor listens for incoming HTTPS requests
 	:ip6:       This Traffic Monitor's IPv6 address
 	:ip:        This Traffic Monitor's IPv4 address
-	:location:  The name of the Cache Group to which this Traffic Monitor belongs
+	:location:  The name of the :term:`Cache Group` to which this Traffic Monitor belongs
 	:port:      The port number on which this Traffic Monitor listens for incoming HTTP requests
-	:profile:   The name of the profile used by this Traffic Monitor
-
-		.. note:: For legacy reasons, this must always start with "RASCAL-".
-
-	:status: The health status of this Traffic Monitor
+	:profile:   The :ref:`profile-name` of the :term:`Profile` used by this Traffic Monitor
+	:status:    The health status of this Traffic Monitor
 
 		.. seealso:: :ref:`health-proto`
 
@@ -315,7 +312,7 @@ Response Structure
 	:CDN_name: The name of this CDN
 	:date:     The UNIX epoch timestamp date in the Traffic Ops server's own timezone
 	:tm_host:  The FQDN of the Traffic Ops server
-	:tm_path:  A path relative to the root of the Traffic Ops server where a request may be replaced to have this snapshot overwritten by the current *configured state* of the CDN
+	:tm_path:  A path relative to the root of the Traffic Ops server where a request may be replaced to have this :term:`Snapshot` overwritten by the current *configured state* of the CDN
 
 		.. deprecated:: 1.1
 			This field is still present for legacy compatibility reasons, but its contents should be ignored. Instead, make a ``PUT`` request to :ref:`to-api-snapshot-name`.

@@ -18,9 +18,7 @@
 *********************************
 ``cachegroups/{{ID}}/parameters``
 *********************************
-Gets all the parameters associated with a :term:`Cache Group`
-
-.. seealso:: :ref:`param-prof`
+Gets all the :term:`Parameters` associated with a :term:`Cache Group`
 
 ``GET``
 =======
@@ -41,12 +39,12 @@ Request Structure
 
 Response Structure
 ------------------
-:configFile:  Configuration file associated with the parameter
-:id:          A numeric, unique identifier for this parameter
-:lastUpdated: The date and time at which this parameter was last updated, in an ISO-like format
-:name:        Name of the parameter
-:secure:      If ``true``, the parameter value is only visible to "admin"-role users
-:value:       Value of the parameter
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:id:          The :term:`Parameter`'s :ref:`parameter-id`
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:secure:      A boolean value describing whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: http
 	:caption: Response Example

@@ -25,7 +25,7 @@
 
 ``GET``
 =======
-Gets a list of :term:`Cache Group`\ s which are available to have a specific parameter assigned to them
+Gets a list of :term:`Cache Groups` which are available to have a specific :term:`Parameter` assigned to them
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -38,7 +38,7 @@ Request Structure
 	+------------------+----------+--------------------------------------------------------------+
 	|       Name       | Required | Description                                                  |
 	+==================+==========+==============================================================+
-	| ``parameter ID`` | yes      | The integral, unique identifier of the parameter of interest |
+	| ``parameter ID`` | yes      | The :ref:`parameter-id` of the :term:`Parameter` of interest |
 	+------------------+----------+--------------------------------------------------------------+
 
 Response Structure

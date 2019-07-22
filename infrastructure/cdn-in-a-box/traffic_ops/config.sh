@@ -90,11 +90,11 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "read_header_timeout" : 60,
         "write_timeout" : 60,
         "idle_timeout" : 60,
-        "log_location_error": "stdout",
-        "log_location_warning": "stdout",
-        "log_location_info": "stdout",
-        "log_location_debug": "stdout",
-        "log_location_event": "stdout",
+        "log_location_error": "$TO_LOG_ERROR",
+        "log_location_warning": "$TO_LOG_WARNING",
+        "log_location_info": "$TO_LOG_INFO",
+        "log_location_debug": "$TO_LOG_DEBUG",
+        "log_location_event": "$TO_LOG_EVENT",
         "max_db_connections": 20,
         "backend_max_connections": {
             "mojolicious": 4

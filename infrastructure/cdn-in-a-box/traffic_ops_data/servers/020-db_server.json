@@ -3,7 +3,6 @@
   "domainName": "infra.ciab.test",
   "cachegroup": "CDN_in_a_Box_Edge",
   "interfaceName": "eth0",
-  "ipNetmask": "255.255.255.0",
   "interfaceMtu": 1500,
   "type": "TRAFFIC_OPS_DB",
   "physLocation": "Apachecon North America 2018",

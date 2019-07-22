@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Retrieves all profiles assigned to the parameter.
+Retrieves all :term:`Profiles` assigned to a specific :term:`Parameter`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -33,11 +33,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+--------------------------------------------------------------------------------------------+
-	| Name |                    Description                                                             |
-	+======+============================================================================================+
-	|  ID  | An integral, unique identifier that specifies for which parameter shall profiles be listed |
-	+------+--------------------------------------------------------------------------------------------+
+	+------+---------------------------------------------------------------------------------------------+
+	| Name |                    Description                                                              |
+	+======+=============================================================================================+
+	|  ID  | The :ref:`parameter-id` of the :term:`Parameter` for which :term:`Profiles` shall be listed |
+	+------+---------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Structure
@@ -50,18 +50,12 @@ Request Structure
 
 Response Structure
 ------------------
-:description:     A description of profile
-:id:              An integral, unique identifier for this profile
-:lastUpdated:     The date and time at which this profile was last updated
-:name:            Profile name
-:routingDisabled: An integer that defines whether or not Traffic Routers will route to servers using these profiles - can only be one of:
-
-	0
-		Traffic Routers will route traffic to these servers normally
-	1
-		Traffic Routers will ignore these servers, and not route traffic to them
-
-:type: The profile's type
+:description:     The :term:`Profile`'s :ref:`profile-description`
+:id:              The :term:`Profile`'s :ref:`profile-id`
+:lastUpdated:     The date and time at which this :term:`Profile` was last updated, in an ISO-like format
+:name:            The :term:`Profile`'s :ref:`profile-name`
+:routingDisabled: The :term:`Profile`'s :ref:`profile-routing-disabled` setting
+:type:            The :term:`Profile`'s :ref:`profile-type`
 
 .. code-block:: http
 	:caption: Response Example

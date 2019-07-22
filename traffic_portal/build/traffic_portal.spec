@@ -61,7 +61,7 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 
 	# creates dynamic json file needed at runtime for traffic portal to display release info
 	VERSION=%{version}-%{build_number}
-	BUILD_DATE=$(date +'%Y-%m-%d %H:%M:%S')
+	BUILD_DATE=$(date +'%Y-%m-%d %H:%M')
 	VERSION="\"Version\":\"$VERSION\""
 	BUILD_DATE="\"Build Date\":\"$BUILD_DATE\""
 	JSON_VERSION="{\n$VERSION,\n$BUILD_DATE\n}"

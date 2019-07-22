@@ -19,31 +19,18 @@
 ``deliveryservices/{{xml_id}}/urisignkeys``
 *******************************************
 
-DELETE
+``DELETE``
+==========
+Deletes URISigning objects for a :term:`Delivery Service`.
 
-	Deletes URISigning objects for a delivery service.
+:Auth. Required: Yes
+:Roles Required: admin\ [#tenancy]_
+:Response Type:  ``undefined``
 
-	Authentication Required: Yes
+Request Structure
+-----------------
 
-	Role(s) Required: admin
-
-	**Request Route Parameters**
-
-	+-----------+----------+----------------------------------------+
-	|    Name   | Required |              Description               |
-	+===========+==========+========================================+
-	| xml_id    | yes      | xml_id of the desired delivery service |
-	+-----------+----------+----------------------------------------+
-
-**GET deliveryservices/:xml_id/urisignkeys**
-
-	Retrieves one or more URISigning objects for a delivery service.
-
-	Authentication Required: Yes
-
-	Role(s) Required: admin
-
-	**Request Route Parameters**
+.. table:: Request Path Parameters
 
 	+-----------+----------+----------------------------------------+
 	|    Name   | Required |              Description               |
@@ -51,58 +38,72 @@ DELETE
 	| xml_id    | yes      | xml_id of the desired delivery service |
 	+-----------+----------+----------------------------------------+
 
-	**Response Properties**
+Response Structure
+------------------
+TBD
 
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	|    Parameter        |  Type  |                                                               Description                                                               |
-	+=====================+========+=========================================================================================================================================+
-	| ``Issuer``          | string | a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example        |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``renewal_kid``     | string | a string naming the jwt key used for renewals.                                                                                          |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, :rfc:`7518`       |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in :rfc:`7516`                  |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in :rfc:`7516`                               |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see :rfc:`7516`                     |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+``GET``
+=======
+Retrieves one or more URISigning objects for a delivery service.
 
-	**Response Example** ::
+:Auth. Required: Yes
+:Roles Required: admin\ [#tenancy]_
+:Response Type:  ``undefined``
 
-		{
-			"Kabletown URI Authority": {
-				"renewal_kid": "Second Key",
-				"keys": [
-					{
-						"alg": "HS256",
-						"kid": "First Key",
-						"kty": "oct",
-						"k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
-					},
-					{
-						"alg": "HS256",
-						"kid": "Second Key",
-						"kty": "oct",
-						"k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
-					}
-				]
+Request Structure
+-----------------
+.. table:: Request Route Parameters
+
+	+-----------+----------+----------------------------------------+
+	|    Name   | Required |              Description               |
+	+===========+==========+========================================+
+	| xml_id    | yes      | xml_id of the desired delivery service |
+	+-----------+----------+----------------------------------------+
+
+Response Structure
+------------------
+
+:Issuer:      a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example
+:renewal_kid: a string naming the jwt key used for renewals
+:keys:        json array of jwt symmetric keys
+:alg:         this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, :rfc:`7518`
+:kid:         this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in :rfc:`7516`
+:kty:         this parameter repeats for each jwt key in the array and specifies the key type as defined in :rfc:`7516`
+:k:           this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see :rfc:`7516`
+
+.. code-block:: json
+	:caption: Response Example
+
+	{ "Kabletown URI Authority": {
+		"renewal_kid": "Second Key",
+		"keys": [
+			{
+				"alg": "HS256",
+				"kid": "First Key",
+				"kty": "oct",
+				"k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+			},
+			{
+				"alg": "HS256",
+				"kid": "Second Key",
+				"kty": "oct",
+				"k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
 			}
-		}
+		]
+	}}
 
 
-**POST deliveryservices/:xml_id/urisignkeys**
+``POST``
+========
+Assigns URISigning objects to a delivery service.
 
-	Assigns URISigning objects to a delivery service.
+:Auth. Required: Yes
+:Roles Required: admin\ [#tenancy]_
+:Response Type:  ``undefined``
 
-	Authentication Required: Yes
-
-	Role(s) Required: admin
-
-	**Request Route Parameters**
+Request Structure
+-----------------
+.. table:: Request Path Parameters
 
 	+-----------+----------+----------------------------------------+
 	|    Name   | Required |              Description               |
@@ -110,57 +111,48 @@ DELETE
 	|   xml_id  | yes      | xml_id of the desired delivery service |
 	+-----------+----------+----------------------------------------+
 
-	**Request Properties**
+Request Structure
+-----------------
+:Issuer:      a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example
+:renewal_kid: a string naming the jwt key used for renewals
+:keys:        json array of jwt symmetric keys
+:alg:         this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, :rfc:`7518`
+:kid:         this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in :rfc:`7516`
+:kty:         this parameter repeats for each jwt key in the array and specifies the key type as defined in :rfc:`7516`
+:k:           this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see :rfc:`7516`
 
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	|    Parameter        |  Type  |                                                               Description                                                               |
-	+=====================+========+=========================================================================================================================================+
-	| ``Issuer``          | string | a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example        |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``renewal_kid``     | string | a string naming the jwt key used for renewals.                                                                                          |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, :rfc:`7518`       |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in :rfc:`7516`                  |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in :rfc:`7516`                               |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see :rfc:`7516`                     |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+.. code-block:: json
+	:caption: Request Example
 
-	**Request Example** ::
-
-		{
-			"Kabletown URI Authority": {
-				"renewal_kid": "Second Key",
-				"keys": [
-					{
-						"alg": "HS256",
-						"kid": "First Key",
-						"kty": "oct",
-						"k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
-					},
-					{
-						"alg": "HS256",
-						"kid": "Second Key",
-						"kty": "oct",
-						"k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
-					}
-				]
+	{ "Kabletown URI Authority": {
+		"renewal_kid": "Second Key",
+		"keys": [
+			{
+				"alg": "HS256",
+				"kid": "First Key",
+				"kty": "oct",
+				"k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+			},
+			{
+				"alg": "HS256",
+				"kid": "Second Key",
+				"kty": "oct",
+				"k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
 			}
-		}
+		]
+	}}
 
-**PUT deliveryservices/:xml_id/urisignkeys**
+``PUT``
+=======
+updates URISigning objects on a delivery service.
 
-	updates URISigning objects on a delivery service.
+:Auth. Required: Yes
+:Roles Required: admin\ [#tenancy]_
+:Response Type:  ``undefined``
 
-	Authentication Required: Yes
-
-	Role(s) Required: admin
-
-	**Request Route Parameters**
+Request Structure
+-----------------
+.. table:: Request Path Parameters
 
 	+-----------+----------+----------------------------------------+
 	|    Name   | Required |              Description               |
@@ -168,46 +160,35 @@ DELETE
 	|  xml_id   | yes      | xml_id of the desired delivery service |
 	+-----------+----------+----------------------------------------+
 
-	**Request Properties**
+Request Structure
+-----------------
+:Issuer:      a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example
+:renewal_kid: a string naming the jwt key used for renewals
+:keys:        json array of jwt symmetric keys
+:alg:         this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, :rfc:`7518`
+:kid:         this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in :rfc:`7516`
+:kty:         this parameter repeats for each jwt key in the array and specifies the key type as defined in :rfc:`7516`
+:k:           this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see :rfc:`7516`
 
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	|    Parameter        |  Type  |                                                               Description                                                               |
-	+=====================+========+=========================================================================================================================================+
-	| ``Issuer``          | string | a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example        |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``renewal_kid``     | string | a string naming the jwt key used for renewals.                                                                                          |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, :rfc:`7518`       |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in :rfc:`7516`                  |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in :rfc:`7516`                               |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see :rfc:`7516`                     |
-	+---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+.. code-block:: json
+	:caption: Request Example
 
-	**Request Example** ::
-
-		{
-			"Kabletown URI Authority": {
-				"renewal_kid": "Second Key",
-				"keys": [
-					{
-						"alg": "HS256",
-						"kid": "First Key",
-						"kty": "oct",
-						"k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
-					},
-					{
-						"alg": "HS256",
-						"kid": "Second Key",
-						"kty": "oct",
-						"k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
-					}
-				]
+	{ "Kabletown URI Authority": {
+		"renewal_kid": "Second Key",
+		"keys": [
+			{
+				"alg": "HS256",
+				"kid": "First Key",
+				"kty": "oct",
+				"k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+			},
+			{
+				"alg": "HS256",
+				"kid": "Second Key",
+				"kty": "oct",
+				"k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
 			}
-		}
+		]
+	}}
 
-|
+.. [#tenancy] URI Signing Keys can only be created, viewed, deleted, or modified on :term:`Delivery Services` that either match the requesting user's :term:`Tenant` or are descendants thereof.

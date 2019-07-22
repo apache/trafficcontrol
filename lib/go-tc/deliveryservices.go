@@ -13,7 +13,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 /*
@@ -43,6 +43,11 @@ type DeliveryServicesResponse struct {
 	Response []DeliveryService `json:"response"`
 }
 
+// DeliveryServicesNullableResponse ...
+type DeliveryServicesNullableResponse struct {
+	Response []DeliveryServiceNullable `json:"response"`
+}
+
 // CreateDeliveryServiceResponse ...
 type CreateDeliveryServiceResponse struct {
 	Response []DeliveryService      `json:"response"`
@@ -61,6 +66,12 @@ type UpdateDeliveryServiceResponse struct {
 	Alerts   []DeliveryServiceAlert `json:"alerts"`
 }
 
+// UpdateDeliveryServiceNullableResponse ...
+type UpdateDeliveryServiceNullableResponse struct {
+	Response []DeliveryServiceNullable `json:"response"`
+	Alerts   []DeliveryServiceAlert    `json:"alerts"`
+}
+
 // DeliveryServiceResponse ...
 type DeliveryServiceResponse struct {
 	Response DeliveryService        `json:"response"`
@@ -75,6 +86,7 @@ type DeleteDeliveryServiceResponse struct {
 type DeliveryService struct {
 	DeliveryServiceV13
 	MaxOriginConnections      int      `json:"maxOriginConnections" db:"max_origin_connections"`
+	ConsistentHashRegex       string   `json:"consistentHashRegex"`
 	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
 }
 
@@ -83,7 +95,7 @@ type DeliveryServiceV13 struct {
 	DeepCachingType   DeepCachingType `json:"deepCachingType"`
 	FQPacingRate      int             `json:"fqPacingRate,omitempty"`
 	SigningAlgorithm  string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	Tenant            string          `json:"tenant,omitempty"`
+	Tenant            string          `json:"tenant"`
 	TRRequestHeaders  string          `json:"trRequestHeaders,omitempty"`
 	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
 }
@@ -108,7 +120,6 @@ type DeliveryServiceV11 struct {
 	EdgeHeaderRewrite        string                 `json:"edgeHeaderRewrite"`
 	ExampleURLs              []string               `json:"exampleURLs"`
 	GeoLimit                 int                    `json:"geoLimit"`
-	FQPacingRate             int                    `json:"fqPacingRate"`
 	GeoProvider              int                    `json:"geoProvider"`
 	GlobalMaxMBPS            int                    `json:"globalMaxMbps"`
 	GlobalMaxTPS             int                    `json:"globalMaxTps"`
@@ -143,9 +154,11 @@ type DeliveryServiceV11 struct {
 	TypeID                   int                    `json:"typeId"`
 	Type                     DSType                 `json:"type"`
 	TRResponseHeaders        string                 `json:"trResponseHeaders"`
-	TenantID                 int                    `json:"tenantId,omitempty"`
+	TenantID                 int                    `json:"tenantId"`
 	XMLID                    string                 `json:"xmlId"`
 }
+
+type DeliveryServiceNullableV14 DeliveryServiceNullable // this type alias should always alias the latest minor version of the deliveryservices endpoints
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV13
@@ -157,7 +170,7 @@ type DeliveryServiceNullable struct {
 type DeliveryServiceNullableV13 struct {
 	DeliveryServiceNullableV12
 	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
-	FQPacingRate      *int             `json:"fqPacingRate"`
+	FQPacingRate      *int             `json:"fqPacingRate" db:"fq_pacing_rate"`
 	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
 	Tenant            *string          `json:"tenant"`
 	TRResponseHeaders *string          `json:"trResponseHeaders"`
@@ -187,7 +200,6 @@ type DeliveryServiceNullableV11 struct {
 	DNSBypassTTL             *int                    `json:"dnsBypassTtl" db:"dns_bypass_ttl"`
 	DSCP                     *int                    `json:"dscp" db:"dscp"`
 	EdgeHeaderRewrite        *string                 `json:"edgeHeaderRewrite" db:"edge_header_rewrite"`
-	FQPacingRate             *int                    `json:"fqPacingRate" db:"fq_pacing_rate"`
 	GeoLimit                 *int                    `json:"geoLimit" db:"geo_limit"`
 	GeoLimitCountries        *string                 `json:"geoLimitCountries" db:"geo_limit_countries"`
 	GeoLimitRedirectURL      *string                 `json:"geoLimitRedirectURL" db:"geolimit_redirect_url"`
@@ -231,42 +243,6 @@ type DeliveryServiceNullableV11 struct {
 	ExampleURLs              []string                `json:"exampleURLs"`
 }
 
-// NewDeliveryServiceNullableFromV12 creates a new V13 DS from a V12 DS, filling new fields with appropriate defaults.
-func NewDeliveryServiceNullableFromV12(ds DeliveryServiceNullableV12) DeliveryServiceNullable {
-	newDSv13 := DeliveryServiceNullableV13{DeliveryServiceNullableV12: ds}
-	newDS := DeliveryServiceNullable{DeliveryServiceNullableV13: newDSv13}
-	newDS.Sanitize()
-	return newDS
-}
-
-// NewDeliveryServiceNullableFromV13 creates a new V14 DS from a V13 DS, filling new fields with appropriate defaults.
-func NewDeliveryServiceNullableFromV13(ds DeliveryServiceNullableV13) DeliveryServiceNullable {
-	newDS := DeliveryServiceNullable{DeliveryServiceNullableV13: ds}
-	newDS.Sanitize()
-	return newDS
-}
-
-func (ds *DeliveryServiceNullableV12) Sanitize() {
-	if ds.GeoLimitCountries != nil {
-		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
-	}
-	if ds.ProfileID != nil && *ds.ProfileID == -1 {
-		ds.ProfileID = nil
-	}
-	if ds.EdgeHeaderRewrite != nil && strings.TrimSpace(*ds.EdgeHeaderRewrite) == "" {
-		ds.EdgeHeaderRewrite = nil
-	}
-	if ds.MidHeaderRewrite != nil && strings.TrimSpace(*ds.MidHeaderRewrite) == "" {
-		ds.MidHeaderRewrite = nil
-	}
-	if ds.RoutingName == nil || *ds.RoutingName == "" {
-		ds.RoutingName = util.StrPtr(DefaultRoutingName)
-	}
-	if ds.AnonymousBlockingEnabled == nil {
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	}
-}
-
 func requiredIfMatchesTypeName(patterns []string, typeName string) func(interface{}) error {
 	return func(value interface{}) error {
 		switch v := value.(type) {
@@ -302,7 +278,72 @@ func requiredIfMatchesTypeName(patterns []string, typeName string) func(interfac
 	}
 }
 
-func (ds *DeliveryServiceNullableV12) validateTypeFields(tx *sql.Tx) error {
+func validateOrgServerFQDN(orgServerFQDN string) bool {
+	_, fqdn, port, err := ParseOrgServerFQDN(orgServerFQDN)
+	if err != nil || !govalidator.IsHost(*fqdn) || (port != nil && !govalidator.IsPort(*port)) {
+		return false
+	}
+	return true
+}
+
+func ParseOrgServerFQDN(orgServerFQDN string) (*string, *string, *string, error) {
+	originRegex := regexp.MustCompile(`^(https?)://([^:]+)(:(\d+))?$`)
+	matches := originRegex.FindStringSubmatch(orgServerFQDN)
+	if len(matches) == 0 {
+		return nil, nil, nil, fmt.Errorf("unable to parse invalid orgServerFqdn: '%s'", orgServerFQDN)
+	}
+
+	protocol := strings.ToLower(matches[1])
+	FQDN := matches[2]
+
+	if len(protocol) == 0 || len(FQDN) == 0 {
+		return nil, nil, nil, fmt.Errorf("empty Origin protocol or FQDN parsed from '%s'", orgServerFQDN)
+	}
+
+	var port *string
+	if len(matches[4]) != 0 {
+		port = &matches[4]
+	}
+	return &protocol, &FQDN, port, nil
+}
+
+func (ds *DeliveryServiceNullable) Sanitize() {
+	if ds.GeoLimitCountries != nil {
+		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
+	}
+	if ds.ProfileID != nil && *ds.ProfileID == -1 {
+		ds.ProfileID = nil
+	}
+	if ds.EdgeHeaderRewrite != nil && strings.TrimSpace(*ds.EdgeHeaderRewrite) == "" {
+		ds.EdgeHeaderRewrite = nil
+	}
+	if ds.MidHeaderRewrite != nil && strings.TrimSpace(*ds.MidHeaderRewrite) == "" {
+		ds.MidHeaderRewrite = nil
+	}
+	if ds.RoutingName == nil || *ds.RoutingName == "" {
+		ds.RoutingName = util.StrPtr(DefaultRoutingName)
+	}
+	if ds.AnonymousBlockingEnabled == nil {
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	}
+	signedAlgorithm := SigningAlgorithmURLSig
+	if ds.Signed && (ds.SigningAlgorithm == nil || *ds.SigningAlgorithm == "") {
+		ds.SigningAlgorithm = &signedAlgorithm
+	}
+	if !ds.Signed && ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == signedAlgorithm {
+		ds.Signed = true
+	}
+	if ds.MaxOriginConnections == nil || *ds.MaxOriginConnections < 0 {
+		ds.MaxOriginConnections = util.IntPtr(0)
+	}
+	if ds.DeepCachingType == nil {
+		s := DeepCachingType("")
+		ds.DeepCachingType = &s
+	}
+	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
+}
+
+func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
 	// Validate the TypeName related fields below
 	err := error(nil)
 	DNSRegexType := "^DNS.*$"
@@ -317,6 +358,14 @@ func (ds *DeliveryServiceNullableV12) validateTypeFields(tx *sql.Tx) error {
 	}
 
 	errs := validation.Errors{
+		"consistentHashQueryParams": validation.Validate(ds,
+			validation.By(func(dsi interface{}) error {
+				ds := dsi.(*DeliveryServiceNullable)
+				if len(ds.ConsistentHashQueryParams) == 0 || DSType(typeName).IsHTTP() {
+					return nil
+				}
+				return fmt.Errorf("consistentHashQueryParams not allowed for '%s' deliveryservice type", typeName)
+			})),
 		"initialDispersion": validation.Validate(ds.InitialDispersion,
 			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName)),
 			validation.By(tovalidate.IsGreaterThanZero)),
@@ -349,43 +398,17 @@ func (ds *DeliveryServiceNullableV12) validateTypeFields(tx *sql.Tx) error {
 	return nil
 }
 
-func validateOrgServerFQDN(orgServerFQDN string) bool {
-	_, fqdn, port, err := ParseOrgServerFQDN(orgServerFQDN)
-	if err != nil || !govalidator.IsHost(*fqdn) || (port != nil && !govalidator.IsPort(*port)) {
-		return false
-	}
-	return true
-}
-
-func ParseOrgServerFQDN(orgServerFQDN string) (*string, *string, *string, error) {
-	originRegex := regexp.MustCompile(`^(https?)://([^:]+)(:(\d+))?$`)
-	matches := originRegex.FindStringSubmatch(orgServerFQDN)
-	if len(matches) == 0 {
-		return nil, nil, nil, fmt.Errorf("unable to parse invalid orgServerFqdn: '%s'", orgServerFQDN)
-	}
-
-	protocol := strings.ToLower(matches[1])
-	FQDN := matches[2]
-
-	if len(protocol) == 0 || len(FQDN) == 0 {
-		return nil, nil, nil, fmt.Errorf("empty Origin protocol or FQDN parsed from '%s'", orgServerFQDN)
-	}
-
-	var port *string
-	if len(matches[4]) != 0 {
-		port = &matches[4]
-	}
-	return &protocol, &FQDN, port, nil
-}
-
-func (ds *DeliveryServiceNullableV12) Validate(tx *sql.Tx) error {
+func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 	ds.Sanitize()
+	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
+		"must be one of 'NEVER' or 'ALWAYS'")
 	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
 	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
-	errs := validation.Errors{
+	errs := tovalidate.ToErrors(validation.Errors{
 		"active":              validation.Validate(ds.Active, validation.NotNil),
 		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
+		"deepCachingType":     validation.Validate(ds.DeepCachingType, neverOrAlways),
 		"displayName":         validation.Validate(ds.DisplayName, validation.Required, validation.Length(1, 48)),
 		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Min(0)),
 		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
@@ -395,79 +418,14 @@ func (ds *DeliveryServiceNullableV12) Validate(tx *sql.Tx) error {
 		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
 		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
 		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
-	}
-	toErrs := tovalidate.ToErrors(errs)
-	if err := ds.validateTypeFields(tx); err != nil {
-		toErrs = append(toErrs, errors.New("type fields: "+err.Error()))
-	}
-	if len(toErrs) > 0 {
-		return util.JoinErrs(toErrs)
-	}
-	return nil
-}
-
-func (ds *DeliveryServiceNullable) Sanitize() {
-	ds.DeliveryServiceNullableV12.Sanitize()
-	signedAlgorithm := SigningAlgorithmURLSig
-	if ds.Signed && (ds.SigningAlgorithm == nil || *ds.SigningAlgorithm == "") {
-		ds.SigningAlgorithm = &signedAlgorithm
-	}
-	if !ds.Signed && ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == signedAlgorithm {
-		ds.Signed = true
-	}
-	if ds.MaxOriginConnections == nil || *ds.MaxOriginConnections < 0 {
-		ds.MaxOriginConnections = util.IntPtr(0)
-	}
-	if ds.DeepCachingType == nil {
-		s := DeepCachingType("")
-		ds.DeepCachingType = &s
-	}
-	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
-}
-
-func (ds *DeliveryServiceNullable) validateTypeFields(tx *sql.Tx) error {
-	// Validate the TypeName related fields below
-	err := error(nil)
-
-	typeName, err := ValidateTypeID(tx, ds.TypeID, "deliveryservice")
-	if err != nil {
-		return err
-	}
-
-	errs := validation.Errors{
-		"consistentHashQueryParams": validation.Validate(ds,
-			validation.By(func(dsi interface{}) error {
-				ds := dsi.(*DeliveryServiceNullable)
-				if len(ds.ConsistentHashQueryParams) == 0 || DSType(typeName).IsHTTP() {
-					return nil
-				}
-				return fmt.Errorf("consistentHashQueryParams not allowed for '%s' deliveryservice type", typeName)
-			})),
-	}
-	toErrs := tovalidate.ToErrors(errs)
-	if len(toErrs) > 0 {
-		return errors.New(util.JoinErrsStr(toErrs))
-	}
-	return nil
-}
-
-func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
-	ds.Sanitize()
-	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
-		"must be one of 'NEVER' or 'ALWAYS'")
-	errs := tovalidate.ToErrors(validation.Errors{
-		"deepCachingType": validation.Validate(ds.DeepCachingType, neverOrAlways),
 	})
-	if v12Err := ds.DeliveryServiceNullableV12.Validate(tx); v12Err != nil {
-		errs = append(errs, v12Err)
-	}
 	if err := ds.validateTypeFields(tx); err != nil {
 		errs = append(errs, errors.New("type fields: "+err.Error()))
 	}
 	if len(errs) == 0 {
 		return nil
 	}
-	return util.JoinErrs(errs) // don't add context, so versions chain well
+	return util.JoinErrs(errs)
 }
 
 // Value implements the driver.Valuer interface

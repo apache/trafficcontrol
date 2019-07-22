@@ -23,7 +23,7 @@
 
 ``POST``
 ========
-Create one or more parameter/profile assignments.
+Create one or more :term:`Parameter`/:term:`Profile` assignments.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,9 +31,9 @@ Create one or more parameter/profile assignments.
 
 Request Structure
 -----------------
-:paramId:    The integral, unique identifier for the parameter to be assigned to the profiles identified within the ``profileIds`` array
-:profileIds: An array of integral, unique identifiers for profiles to which the parameter identified by ``paramId`` shall be assigned
-:replace:    An optional boolean (default: false) which, if ``true``, will cause any conflicting profile/parameter assignments to be overridden.
+:paramId:    The :ref:`parameter-id` of the :term:`Parameter` to be assigned to the :term:`Profiles` identified within the ``profileIds`` array
+:profileIds: An array of :term:`Profile` :ref:`IDs <profile-id>` to which the :term:`Parameter` identified by ``paramId`` shall be assigned
+:replace:    An optional boolean (default: false) which, if ``true``, will cause any conflicting :term:`Profile`/:term:`Parameter` assignments to be overridden.
 
 .. code-block:: http
 	:caption: Request Example
@@ -53,9 +53,9 @@ Request Structure
 
 Response Structure
 ------------------
-:paramId:    The integral, unique identifier for the parameter which has been assigned to the profiles identified within the ``profileIds`` array
-:profileIds: An array of integral, unique identifiers for profiles to which the parameter identified by ``paramId`` has been assigned
-:replace:    An optional boolean (default: false) which, if ``true``, caused any conflicting profile/parameter assignments to be overridden.
+:paramId:    The :ref:`parameter-id` of the :term:`Parameter` which has been assigned to the :term:`Profiles` identified within the ``profileIds`` array
+:profileIds: An array of :term:`Profile` :ref:`IDs <profile-id>` to which the :term:`Parameter` identified by ``paramId`` has been assigned
+:replace:    An optional boolean (default: false) which, if ``true``, caused any conflicting :term:`Profile`/:term:`Parameter` assignments to be overridden.
 
 .. code-block:: http
 	:caption: Response Example

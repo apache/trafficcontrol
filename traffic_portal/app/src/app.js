@@ -457,7 +457,6 @@ var trafficPortal = angular.module('trafficPortal', [
 
         .run(function($log, applicationService) {
             $log.debug("Application run...");
-            applicationService.startup();
         })
     ;
 

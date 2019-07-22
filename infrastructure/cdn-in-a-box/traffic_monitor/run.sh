@@ -101,15 +101,12 @@ export TO_PASSWORD="$TM_PASSWORD"
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
-touch /opt/traffic_monitor/var/log/traffic_monitor.log
-
-# Do not start until there is a valid CRConfig available
-until [ $(to-get "/CRConfig-Snapshots/$CDN_NAME/CRConfig.json" 2>/dev/null | jq -c -e '.config|length') -gt 0 ] ; do
-	echo "Waiting on valid CRConfig..."; 
-  	sleep 3; 
+# Do not start until there a valid Snapshot has been taken
+until [ $(to-get "/api/1.4/cdns/$CDN_NAME/snapshot" 2>/dev/null | jq -c -e '.response.config|length') -gt 0 ] ; do
+	echo "Waiting on valid Snapshot...";
+  	sleep 3;
 done
 
+envsubst < /opt/traffic_monitor/conf/traffic_monitor.cfg.template > /opt/traffic_monitor/conf/traffic_monitor.cfg
 cd /opt/traffic_monitor
-/opt/traffic_monitor/bin/traffic_monitor -opsCfg /opt/traffic_monitor/conf/traffic_ops.cfg -config /opt/traffic_monitor/conf/traffic_monitor.cfg &
-disown
-exec tail -f /opt/traffic_monitor/var/log/traffic_monitor.log
+/opt/traffic_monitor/bin/traffic_monitor -opsCfg /opt/traffic_monitor/conf/traffic_ops.cfg -config /opt/traffic_monitor/conf/traffic_monitor.cfg

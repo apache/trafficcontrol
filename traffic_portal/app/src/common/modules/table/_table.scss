@@ -15,6 +15,12 @@
 
 */
 
+.x_content {
+    table {
+        width: 100% !important;
+    }
+}
+
 .update-column {
   text-align: center;
   .fa-flag {
@@ -84,5 +90,8 @@ td span {
     &:hover {
         background-color: #F1FAF8;
     }
+}
+.column-settings {
+    padding: 10px 20px;
 }
 

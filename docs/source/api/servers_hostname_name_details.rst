@@ -67,8 +67,8 @@ Response Structure
 :ipNetmask:        The IPv4 subnet mask used by ``interfaceName``
 :offlineReason:    A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
 :physLocation:     The name of the physical location where the server resides
-:profile:          The name of the profile this server uses
-:profileDesc:      A description of the profile this server uses
+:profile:          The :ref:`profile-name` of the :term:`Profile` used by this server
+:profileDesc:      A :ref:`profile-description` of the :term:`Profile` used by this server
 :rack:             A string indicating "server rack" location
 :routerHostName:   The human-readable name of the router responsible for reaching this server
 :routerPortName:   The human-readable name of the port used by the router responsible for reaching this server

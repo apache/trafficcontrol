@@ -35,11 +35,11 @@ Request Structure
 
 	.. note:: In most cases, this must be the same as the :term:`Delivery Service` URL'
 
-:key:          The 'xml_id' of the :term:`Delivery Service` for which keys will be generated
+:key:          The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated
 :organization: An optional field which, if present, will represent the organization for which the SSL certificate was generated
 :state:        An optional field which, if present, will represent the resident state or province of the generated SSL certificate
 :businessUnit: An optional field which, if present, will represent the business unit for which the SSL certificate was generated
-:version:  version of the keys being generated
+:version:      version of the keys being generated
 
 .. code-block:: http
 	:caption: Request Example

@@ -201,9 +201,9 @@ The enroller runs within CDN in a Box using :option:`--dir` which provides the a
 
 Auto Snapshot/Queue-Updates
 ---------------------------
-An automatic snapshot of the current Traffic Ops CDN configuration/toplogy will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled.  To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [8]_.  The snapshot and queue-updates actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled.  The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (snapshot and queue-updates) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [9]_.
+An automatic :term:`Snapshot` of the current Traffic Ops CDN configuration/topology will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled. To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [8]_. The :term:`Snapshot` and :term:`Queue Updates` actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled. The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (:term:`Snapshot` and :term:`Queue Updates`) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [9]_.
 
-.. [8] Automatic Snapshot/Queue-Updates is enabled by default in :file:`infrastructure/cdn-in-a-box/variables.env`.
+.. [8] Automatic :term:`Snapshot`/:term:`Queue Updates` is enabled by default in `variables.env`_.
 .. [9] Server poll interval and delay action wait are defaulted to a value of 2 seconds.
 
 Mock Origin Service

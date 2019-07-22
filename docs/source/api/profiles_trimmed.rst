@@ -31,7 +31,7 @@ No parameters available
 
 Response Structure
 ------------------
-:name: The name of the profile
+:name: The :ref:`profile-name` of the :term:`Profile`
 
 .. code-block:: http
  	:caption: Response Example
