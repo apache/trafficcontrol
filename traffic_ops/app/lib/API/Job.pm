@@ -154,6 +154,10 @@ sub get_current_user_jobs {
 sub create_current_user_job {
 	my $self = shift;
 
+	if (!&is_portal($self)) {
+		return $self->forbidden();
+	}
+
 	my $ds_id      = $self->req->json->{dsId};
 	my $regex      = $self->req->json->{regex};
 	my $ttl        = $self->req->json->{ttl};
@@ -181,7 +185,7 @@ sub create_current_user_job {
 			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 		}
 	} else {
-		if ( !&is_oper($self) && !$self->is_delivery_service_assigned($ds_id) ) {
+		if ( !&is_portal($self) && !$self->is_delivery_service_assigned($ds_id) ) {
 			return $self->forbidden();
 		}
 	}
