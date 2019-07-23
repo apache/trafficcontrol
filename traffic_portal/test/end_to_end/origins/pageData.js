@@ -17,35 +17,17 @@
  * under the License.
  */
 
-exports.config = {
-	framework: 'jasmine',
-	seleniumAddress: 'http://localhost:4444/wd/hub',
-	baseUrl: 'https://localhost:4443',
-	getPageTimeout: 30000,
-
-	capabilities: {
-		'browserName': 'chrome'
-	},
-	params: {
-		adminUser: 'admin',
-		adminPassword: 'twelve'
-	},
-	jasmineNodeOpts: {defaultTimeoutInterval: 600000},
-
-	suites: {
-		loginTests: 'login/login-spec.js',
-		allTests: [
-			'login/login-spec.js',
-			'CDNs/cdns-spec.js',
-			'cacheGroups/cache-groups-spec.js',
-			'profiles/profiles-spec.js',
-			'divisions/divisions-spec.js',
-			'regions/regions-spec.js',
-			'physLocations/phys-locations-spec.js',
-			'DeliveryServices/delivery-services-spec.js',
-			'Servers/servers-spec.js',
-			'users/users-spec.js',
-			'origins/origins-spec.js'
-		]
-	}
+module.exports = function () {
+    this.createOriginButton = element(by.css('button[title="Create Origin"]'));
+    this.name = element(by.name("name"));
+    this.tenant = element(by.name("tenantId"));
+    this.fqdn = element(by.name("fqdn"));
+    this.protocol = element(by.name("protocol"));
+    this.ds = element(by.name('deliveryServiceId'));
+    this.createButton = element(by.buttonText('Create'));
+    this.searchFilter=element(by.id('originsTable_filter')).element(by.css('label')).element(by.css('input'));
+    this.updateButton = element(by.buttonText('Update'));
+    this.deleteButton = element(by.buttonText('Delete'));
+    this.confirmWithNameInput = element(by.name('confirmWithNameInput'));
+    this.deletePermanentlyButton = element(by.buttonText('Delete Permanently'));
 };
