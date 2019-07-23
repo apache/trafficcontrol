@@ -41,6 +41,7 @@ j[mM]enu(?:\.jquery)?\.(?:css|js)(?: MIT. Properly documented in LICENSE ){0}
 downloadjs\-min.*\.js(?:             MIT. Properly documented in LICENSE ){0}
 jquery\-ui\..*(?:                    MIT. Properly documented in LICENSE ){0}
 jquery\.dataTables\..*(?:            MIT. Properly documented in LICENSE ){0}
+colReorder\.dataTables\..*(?:        MIT. Properly documented in LICENSE ){0}
 .*underscore.*(?:                    MIT. Properly documented in LICENSE ){0}
 .*moment.*(?:                        MIT. Properly documented in LICENSE ){0}
 .*jsdiff.*(?:                        BSD 3-clause. Properly documented in LICENSE ){0}

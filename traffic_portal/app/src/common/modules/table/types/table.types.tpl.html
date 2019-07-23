@@ -25,6 +25,19 @@ under the License.
         <div class="pull-right">
             <button class="btn btn-primary" title="Create Type" ng-click="createType()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-columns"></i>&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
+                        <div class="checkbox">
+                            <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
+                        </div>
+                    </li>
+                </menu>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -34,18 +47,19 @@ under the License.
             <thead>
                 <tr class="headings">
                     <th>Name</th>
-                    <th>Use In Table</th>
                     <th>Description</th>
+                    <th>Use In Table</th>
+                    <th>Last Updated</th>
                 </tr>
             </thead>
             <tbody>
                 <tr ng-click="editType(t.id)" ng-repeat="t in ::types">
                     <td data-search="^{{::t.name}}$">{{::t.name}}</td>
-                    <td data-search="^{{::t.useInTable}}$">{{::t.useInTable}}</td>
                     <td data-search="^{{::t.description}}$">{{::t.description}}</td>
+                    <td data-search="^{{::t.useInTable}}$">{{::t.useInTable}}</td>
+                    <td data-search="^{{::getRelativeTime(t.lastUpdated)}}$" data-order="{{::t.lastUpdated}}">{{::getRelativeTime(t.lastUpdated)}}</td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
-
