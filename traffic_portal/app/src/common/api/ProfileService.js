@@ -45,7 +45,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
         return $http.post(ENV.api['root'] + 'profiles', profile).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Profile created' } ], true);
-                locationUtils.navigateToPath('/profiles');
+                locationUtils.navigateToPath('/profiles/' + result.data.response.id + '/parameters');
                 return result;
             },
             function(err) {

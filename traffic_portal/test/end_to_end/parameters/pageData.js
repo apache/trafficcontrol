@@ -18,16 +18,15 @@
  */
 
 module.exports = function(){
-	this.createProfileButton=element(by.name('createProfileButton'));
+    this.createParameterButton=element(by.css('[title="Create Parameter"]'));
 	this.name=element(by.name('name'));
-	this.cdn=element(by.name('cdn'));
-	this.type=element(by.name('type'));
-	this.routingDisabled=element(by.name('routingDisabled'));
-	this.description=element(by.id('description'));
+	this.configFile=element(by.name('configFile'));
+	this.secure=element(by.name('secure'));
+	this.value=element(by.name('value'));
 	this.createButton=element(by.buttonText('Create'));
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
-	this.searchFilter=element(by.id('profilesTable_filter')).element(by.css('label')).element(by.css('input'));
+	this.searchFilter=element(by.id('parametersTable_filter')).element(by.css('label')).element(by.css('input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
 };
