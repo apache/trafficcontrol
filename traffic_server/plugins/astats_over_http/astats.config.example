@@ -10,3 +10,10 @@ allow_ip6=::1/64
 # hexidecimal int (without 0x), each bit (1 through 7) representing a record type to return.  0x100 is for the built in system stats.  
 # This can be overriden from the url, e.g.: http://localhost/_astats?record.types=100
 record_types=144
+
+# wrap_counters
+# wrap_counters when set to true, will keep the signed int64_t values within the range of INT64_MAX so that they remain positive
+# and do not wrap to become negative in value.  Instead when they exceed INT64_MAX, they will start at 0 and begin counting
+# from there.  This affects the TS_RECORDDATATYPE_COUNTER and TS_RECORDDATATYPE_COUNTER
+# By default, wrap_counters is 'false'
+wrap_counters = true

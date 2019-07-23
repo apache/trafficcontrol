@@ -89,6 +89,7 @@ int configReloads = 0;
 time_t lastReloadRequest = 0;
 time_t lastReload = 0;
 time_t astatsLoad = 0;
+static bool wrap_counters = false;
 
 #define PLUGIN_TAG              "astats_over_http"
 #define DEFAULT_CONFIG_NAME     "astats.config"
@@ -225,6 +226,17 @@ stats_process_read(TSCont contp, TSEvent event, stats_state *my_state) {
 			APPEND(b); \
 } while(0)
 
+// This wraps uint64_t values to the int64_t range to avoid negative integers when wrap occurs.
+static uint64_t
+wrap_unsigned_counter(uint64_t value)
+{
+	if (wrap_counters) {
+		return (value > INT64_MAX) ? value % INT64_MAX : value;
+	} else {
+		return value;
+	}
+}
+
 static void
 json_out_stat(TSRecordType rec_type, void *edata, int registered, const char *name, TSRecordDataType data_type, TSRecordData *datum) {
 	stats_state *my_state = edata;
@@ -245,9 +257,9 @@ json_out_stat(TSRecordType rec_type, void *edata, int registered, const char *na
 
 	switch(data_type) {
 	case TS_RECORDDATATYPE_COUNTER:
-		APPEND_STAT(name, "%" PRIu64, datum->rec_counter); break;
+		APPEND_STAT(name, "%" PRIu64, wrap_unsigned_counter(datum->rec_counter)); break;
 	case TS_RECORDDATATYPE_INT:
-		APPEND_STAT(name, "%" PRIu64, datum->rec_int); break;
+		APPEND_STAT(name, "%" PRIu64, wrap_unsigned_counter(datum->rec_int)); break;
 	case TS_RECORDDATATYPE_FLOAT:
 		APPEND_STAT(name, "%f", datum->rec_float); break;
 	case TS_RECORDDATATYPE_STRING:
@@ -697,6 +709,11 @@ static config_t* new_config(TSFile fh) {
 		} else if((p = strstr(buffer, "allow_ip6="))) {
 			p+=strlen("allow_ip6=");
 			parseIps6(config, p);
+		} else if((p = strstr(buffer, "wrap_counters="))) {
+			p+=strlen("wrap_counters=");
+			if(strcmp(p, "true") == 0) {
+				wrap_counters = true;
+			}
 		}
 	}
 	if(!config->ipCount) {
