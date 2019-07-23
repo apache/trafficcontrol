@@ -35,7 +35,7 @@ func stripAllWhitespace(s string) string {
 }
 
 func TestBuildQuery(t *testing.T) {
-	v := map[string]string{"param1": "queryParamv1", "param2": "queryParamv2"}
+	v := map[string]string{"param1": "queryParamv1", "param2": "queryParamv2", "limit": "20", "offset": "10"}
 
 	selectStmt := `SELECT
 	t.col1,
@@ -51,6 +51,11 @@ FROM table t
 	where, orderBy, pagination, queryValues, _ := BuildWhereAndOrderByAndPagination(v, queryParamsToSQLCols)
 	query := selectStmt + where + orderBy + pagination
 	actualQuery := stripAllWhitespace(query)
+
+	expectedPagination := "\nLIMIT " + v["limit"] + "\nOFFSET " + v["offset"]
+	if pagination != expectedPagination {
+		t.Errorf("expected: %s for pagination, actual: %s", expectedPagination, pagination)
+	}
 
 	if queryValues == nil {
 		t.Errorf("expected: nil error, actual: %v", queryValues)

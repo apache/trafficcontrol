@@ -71,7 +71,7 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 		log.Debugln("limit: ", limit)
 		paginationClause += " " + limit
 		if offset, exists := parameters["offset"]; exists {
-			paginationClause += " " + BaseOffset + " " + offset
+			paginationClause += BaseOffset + " " + offset
 		}
 	}
 
