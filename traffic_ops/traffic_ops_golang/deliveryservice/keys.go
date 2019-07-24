@@ -106,7 +106,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.WriteRespAlert(w, r, tc.WarnLevel, "WARNING: SSL keys were successfully added for '"+*req.DeliveryService+"', but the input certificate may be invalid (certificate verification produced a different chain)")
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %s, ACTION: Add SSL keys", +*req.DeliveryService, **req.Key), user, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %s, ACTION: Add SSL keys", +*req.DeliveryService, **req.Key), inf.User, tx)
 	api.WriteResp(w, r, "Successfully added ssl keys for "+*req.DeliveryService)
 }
 
