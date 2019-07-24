@@ -29,9 +29,11 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -99,7 +101,30 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		Key:             *req.Key,
 		Version:         *req.Version,
 		Certificate:     *req.Certificate,
+		AuthType:        *req.AuthType,
 	}
+
+	expiration := *new(time.Time)
+	for _, pemCert := range strings.SplitAfter(certChain, PemCertEndMarker) {
+		if pemCert == "" {
+			continue
+		}
+
+		pBlock, _ := pem.Decode([]byte(pemCert))
+		x509cert, err := x509.ParseCertificate(pBlock.Bytes)
+
+		if err != nil {
+			log.Errorf("Could not parse expiration. %s", err.Error())
+		}
+		if expiration.IsZero() || x509cert.NotAfter.Before(expiration) {
+			expiration = x509cert.NotAfter
+		}
+	}
+
+	if !expiration.IsZero() {
+		dsSSLKeys.Expiration = expiration
+	}
+
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting SSL keys in Riak for delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return

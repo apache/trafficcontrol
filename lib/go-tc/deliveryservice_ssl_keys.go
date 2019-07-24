@@ -30,6 +30,11 @@ const DNSSECZSKType = "zsk"
 const DNSSECKeyStatusNew = "new"
 const DNSSECKeyStatusExpired = "expired"
 const DNSSECStatusExisting = "existing"
+const (
+	SelfSignedCertAuthType           = "Self Signed"
+	CertificateAuthorityCertAuthType = "Certificate Authority"
+	LetsEncryptAuthType              = "Lets Encrypt"
+)
 
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
@@ -38,6 +43,7 @@ type DeliveryServiceSSLKeysResponse struct {
 
 // DeliveryServiceSSLKeys ...
 type DeliveryServiceSSLKeys struct {
+	AuthType        string                            `json:"authType,omitempty"`
 	CDN             string                            `json:"cdn,omitempty"`
 	DeliveryService string                            `json:"deliveryservice,omitempty"`
 	BusinessUnit    string                            `json:"businessUnit,omitempty"`
@@ -49,9 +55,11 @@ type DeliveryServiceSSLKeys struct {
 	Key             string                            `json:"key"`
 	Version         util.JSONIntStr                   `json:"version"`
 	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
+	Expiration      time.Time                         `json:"expiration,omitempty"`
 }
 
 type DeliveryServiceSSLKeysReq struct {
+	AuthType        *string `json:authType,omitempty`
 	CDN             *string `json:"cdn,omitempty"`
 	DeliveryService *string `json:"deliveryservice,omitempty"`
 	BusinessUnit    *string `json:"businessUnit,omitempty"`

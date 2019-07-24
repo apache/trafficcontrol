@@ -20,6 +20,7 @@ package deliveryservice
  */
 
 import (
+	"bytes"
 	"context"
 	"crypto"
 	"crypto/rand"
@@ -153,7 +154,8 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	myUser := MyUser{
-		key: privateKey,
+		key:   privateKey,
+		Email: inf.Config.ConfigLetsEncrypt.Email,
 	}
 
 	config := lego.NewConfig(&myUser)
@@ -200,8 +202,8 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	block, _ := pem.Decode([]byte(certificates.Certificate))
 	if block == nil {
-		log.Errorf("Error parsing cert - %s", err.Error())
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
+		log.Errorf("Error parsing cert")
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, errors.New("parsing cert"), nil)
 		return
 	}
 	x509cert, err := x509.ParseCertificate(block.Bytes)
@@ -212,107 +214,39 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	expiration := x509cert.NotAfter
-	log.Errorf("MATT JACKSON - expiration = %s", expiration)
 
 	// Save certs into Riak
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
+		AuthType:        tc.LetsEncryptAuthType,
 		CDN:             *req.CDN,
 		DeliveryService: *req.DeliveryService,
 		Hostname:        *req.HostName,
 		Version:         *req.Version,
+		Expiration:      expiration,
 	}
 
-	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(certificates.Certificate)), Key: string(EncodePEMToLegacyPerlRiakFormat(certificates.PrivateKey)), CSR: "Not Applicable"}
+	crtBuf := bytes.Buffer{}
+	if err := pem.Encode(&crtBuf, &pem.Block{Type: "CERTIFICATE", Bytes: certificates.Certificate}); err != nil {
+		log.Errorf("pem-encoding certificate: " + err.Error())
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, errors.New("pem-encoding certificate: "+err.Error()), nil)
+		return
+	}
+	crtPem := crtBuf.Bytes()
+
+	keyBuf := bytes.Buffer{}
+	if err := pem.Encode(&keyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: certificates.PrivateKey}); err != nil {
+		log.Errorf("pem-encoding key: " + err.Error())
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, errors.New("pem-encoding key: "+err.Error()), nil)
+		return
+	}
+	keyPem := keyBuf.Bytes()
+
+	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(crtPem)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: "Not Applicable"}
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
 		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("putting riak keys: "+err.Error()), nil)
 		return
 	}
 	api.WriteResp(w, r, "Successfully created ssl keys for "+deliveryService)
-
-}
-
-func RenewLetsEncryptCert(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	req := tc.DeliveryServiceLetsEncryptSSLKeysReq{}
-	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
-		return
-	}
-	deliveryService := *req.DeliveryService
-
-	version := inf.Params["version"]
-	xmlID := inf.Params["xmlId"]
-	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
-		return
-	}
-	if !ok {
-		api.WriteRespAlertObj(w, r, tc.InfoLevel, "no object found for the specified key", struct{}{}) // empty response object because Perl
-		return
-	}
-
-	oldCert := certificate.Resource{
-		PrivateKey:  []byte(keyObj.Certificate.Key),
-		Certificate: []byte(keyObj.Certificate.Crt),
-		CSR:         []byte(keyObj.Certificate.CSR),
-	}
-
-	myUser := MyUser{
-		key: keyObj.Key,
-	}
-
-	config := lego.NewConfig(&myUser)
-	config.CADirURL = lego.LEDirectoryStaging // TODO take this out after testing
-	config.Certificate.KeyType = certcrypto.RSA2048
-
-	client, err := lego.NewClient(config)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
-		return
-	}
-
-	client.Challenge.Remove(challenge.HTTP01)
-	client.Challenge.Remove(challenge.TLSALPN01)
-	trafficRouterDns, err := NewDNSProviderTrafficRouter()
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
-	}
-	client.Challenge.SetDNS01Provider(trafficRouterDns)
-
-	renewedCert, err := client.Certificate.Renew(oldCert, true, false)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("renewing certificate: "+err.Error()), nil)
-		return
-	}
-
-	// Save certs into Riak
-	dsSSLKeys := tc.DeliveryServiceSSLKeys{
-		CDN:             *req.CDN,
-		DeliveryService: *req.DeliveryService,
-		BusinessUnit:    *req.BusinessUnit,
-		City:            *req.City,
-		Organization:    *req.Organization,
-		Hostname:        *req.HostName,
-		Country:         *req.Country,
-		State:           *req.State,
-		Key:             *req.Key,
-		Version:         *req.Version,
-	}
-
-	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(renewedCert.Certificate), Key: string(renewedCert.PrivateKey), CSR: string(renewedCert.CSR)}
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("putting riak keys: "+err.Error()), nil)
-		return
-	}
-
-	api.WriteResp(w, r, "Successfully renewed ssl keys for "+deliveryService)
 
 }

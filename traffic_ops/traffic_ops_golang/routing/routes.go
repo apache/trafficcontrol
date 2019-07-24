@@ -980,7 +980,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Delivery service LetsEncrypt
 		{api.Version{1, 4}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?(\.json)?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelReadOnly, Authenticated, nil, 753439052, noPerlBypass},
-		{api.Version{1, 4}, http.MethodPost, `deliveryservices/sslkeys/renew/letsencrypt/?(\.json)?$`, deliveryservice.RenewLetsEncryptCert, auth.PrivLevelReadOnly, Authenticated, nil, 753439053, noPerlBypass},
 		{api.Version{1, 4}, http.MethodGet, `letsencrypt/dnsrecord/?(\.json)?$`, deliveryservice.GetDnsChallengeRecord, auth.PrivLevelReadOnly, Authenticated, nil, 753439054, noPerlBypass},
 		{api.Version{1, 4}, http.MethodGet, `letsencrypt/dnsrecords/?(\.json)?$`, deliveryservice.GetAllDnsChallengeRecords, auth.PrivLevelReadOnly, Authenticated, nil, 753439055, noPerlBypass},
 
