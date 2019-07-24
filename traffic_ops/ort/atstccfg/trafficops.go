@@ -35,11 +35,11 @@ import (
 	"strconv"
 	"time"
 
-	"golang.org/x/net/publicsuffix"
-
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 // GetClient returns a TO Client, using a cached cookie if it exists, or logging in otherwise

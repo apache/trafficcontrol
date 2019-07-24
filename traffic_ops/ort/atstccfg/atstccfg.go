@@ -25,6 +25,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
@@ -48,6 +49,11 @@ type TCCfg struct {
 	Cfg
 	TOClient **toclient.Session
 }
+
+// TODO make the below configurable?
+const TOInsecure = false
+const TOTimeout = time.Second * 10
+const CacheFileMaxAge = time.Minute
 
 func main() {
 	cfg, err := GetCfg()
