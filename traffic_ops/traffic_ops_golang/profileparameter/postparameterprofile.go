@@ -27,7 +27,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -49,7 +48,7 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting parameter profile: "+err.Error()))
 		return
 	}
-	paramName, ok, err := dbhelpers.GetParamNameFromID(inf.Tx.Tx, *paramProfile.ParamID)
+	paramName, ok, err := getParamNameFromID(inf.Tx.Tx, *paramProfile.ParamID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting parameter name from id: "+err.Error()))
 	} else if !ok {
@@ -57,6 +56,18 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "PARAM: "+paramName+", ID: "+string(*paramProfile.ParamID)+", ACTION: Assigned "+string(len(*paramProfile.ProfileIDs))+" profiles to parameter", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d profiles were assigned to the %d parameter", len(*paramProfile.ProfileIDs), *paramProfile.ParamID), paramProfile)
+}
+
+// getParamNameFromID returns the parameter's name, whether a parameter with ID exists, or any error.
+func getParamNameFromID(id int, tx *sql.Tx) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name from parameter where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying param name from id: " + err.Error())
+	}
+	return name, true, nil
 }
 
 func insertParameterProfile(post tc.PostParamProfile, tx *sql.Tx) error {

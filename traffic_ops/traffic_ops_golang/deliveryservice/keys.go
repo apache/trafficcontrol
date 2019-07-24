@@ -35,7 +35,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
@@ -240,7 +239,7 @@ func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	xmlID := inf.Params["xmlid"]
-	dsID, err := dbhelpers.GetDSIDFromName(inf.Tx.Tx, xmlID)
+	dsID, err := getDSIDFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID from name "+err.Error()))
 	}
@@ -274,6 +273,15 @@ func getCDNIDByDomainname(domainName string, tx *sql.Tx) (int64, bool, error) {
 		return 0, false, err
 	}
 	return cdnID, true, nil
+}
+
+// getDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
+func getDSIDFromName(tx *sql.Tx, xml_id string) (int, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xml_id).Scan(&id); err != nil {
+		return id, fmt.Errorf("querying ID for delivery service ID '%v': %v", xml_id, err)
+	}
+	return id, nil
 }
 
 // returns a delivery service xmlId for a cdn by host regex.

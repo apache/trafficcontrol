@@ -228,39 +228,6 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	return name, true, nil
 }
 
-// GetDSIDFromName returns the DS's ID if a DS with the given XMLID exists
-func GetDSIDFromName(tx *sql.Tx, xml_id string) (int, error) {
-	id := 0
-	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xml_id).Scan(&id); err != nil {
-		return id, fmt.Errorf("querying ID for delivery service ID '%v': %v", xml_id, err)
-	}
-	return id, nil
-}
-
-// GetFedNameFromID returns the federations name and whether or not one with the given ID exists, or an error
-func GetFedNameByID(tx *sql.Tx, id int) (string, bool, error) {
-	name := ""
-	if err := tx.QueryRow(`select cname from federation where id = $1`, id).Scan(&name); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("Error querying federation cname: " + err.Error())
-	}
-	return name, true, nil
-}
-
-// GetParamNameFromID returns the parameter's name, whether a parameter with ID exists, or any error.
-func GetParamNameFromID(tx *sql.Tx, id int64) (string, bool, error) {
-	name := ""
-	if err := tx.QueryRow(`SELECT name from parameter where id = $1`, id).Scan(&name); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("querying param name from id: " + err.Error())
-	}
-	return name, true, nil
-}
-
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
 func GetProfileNameFromID(tx *sql.Tx, id int64) (string, bool, error) {
 	name := ""
@@ -295,18 +262,6 @@ func CDNExists(cdnName string, tx *sql.Tx) (bool, error) {
 		return false, errors.New("Error querying CDN name: " + err.Error())
 	}
 	return true, nil
-}
-
-// GetCDNIDFromName returns the CDN's ID if a CDN with the given name exists
-func GetCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
-	id := 0
-	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
-		if err == sql.ErrNoRows {
-			return id, false, nil
-		}
-		return id, false, errors.New("querying CDN ID: " + err.Error())
-	}
-	return id, true, nil
 }
 
 func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
