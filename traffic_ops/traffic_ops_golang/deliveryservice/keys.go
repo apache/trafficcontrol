@@ -248,7 +248,7 @@ func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %s, ACTION: Add SSL keys", xmlID, xmlID), user, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %s, ACTION: Delete SSL keys", getDSNameFromID(inf.tx.tx, xmlID), xmlID), user, tx)
 	api.WriteResp(w, r, "Successfully deleted ssl keys for "+xmlID)
 }
 

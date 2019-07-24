@@ -1447,6 +1447,14 @@ func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceNullable) (bool,
 	return true, nil
 }
 
+func getDSIDFromName(tx *sql.Tx, xmlID string) (int, error) {
+	var id int
+	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xmlID).Scan(&id); err != nil {
+		return id, fmt.Errorf("querying ID for delivery service ID '%v': %v", xmlID, err)
+	}
+	return id, nil
+}
+
 // getDSTenantIDByID returns the tenant ID, whether the delivery service exists, and any error.
 func getDSTenantIDByID(tx *sql.Tx, id int) (*int, bool, error) {
 	tenantID := (*int)(nil)

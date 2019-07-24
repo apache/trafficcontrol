@@ -240,7 +240,7 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+": "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %s, ACTION: Generate URL keys", ds, ds), user, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %s, ACTION: Generate URL keys", ds, getDSIDFromName(inf.tx.tx, ds)), user, tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully generated and stored keys")
 }
 
