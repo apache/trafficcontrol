@@ -29,12 +29,13 @@ describe('Traffic Portal Origins Test Suite', function() {
     }
 
     it('should create a new origin', async () => {
+        console.log('Creating new origin');
         browser.setLocation('origins');
         await pageData.createOriginButton.click();
         await pageData.name.sendKeys(myNewOrigin.name);
         commonFunctions.selectDropdownbyNum(pageData.tenant, 1);
         await pageData.fqdn.sendKeys(myNewOrigin.fdqn);
-        commonFunctions.selectDropdownbyNum(pageData.protocol, 2);
+        commonFunctions.selectDropdownbyNum(pageData.protocol, 1);
         commonFunctions.selectDropdownbyNum(pageData.ds, 1);
         await pageData.createButton.click();
         expect(element(by.css('.alert-success')).isPresent()).toBe(true);
@@ -42,6 +43,7 @@ describe('Traffic Portal Origins Test Suite', function() {
     });
 
     it('should update an existing origin', async () => {
+        console.log('Updating existing origin');
         browser.setLocation('origins');
         await pageData.searchFilter.clear().sendKeys(myNewOrigin.name);
         await element.all(by.repeater('o in ::origins')).get(0).click();
@@ -52,6 +54,7 @@ describe('Traffic Portal Origins Test Suite', function() {
     });
 
     it('should delete an existing origin', async () => {
+        console.log('Deleting an existing origin');
         browser.setLocation('origins');
         await pageData.searchFilter.clear().sendKeys(myNewOrigin.name);
         await element.all(by.repeater('o in ::origins')).get(0).click();

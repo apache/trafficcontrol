@@ -35,22 +35,25 @@ describe('Traffic Portal Users Test Suite', () => {
     const myOtherNewUser = newUser();
 
     it('should register a new user', async () => {
+        console.log('Registering new user')
         await browser.setLocation('users');
         await pageData.registerUserButton.click();
         await pageData.email.sendKeys(myNewUser.email);
-        commonFunctions.selectDropdownbyNum(pageData.role, 3);
+        commonFunctions.selectDropdownbyNum(pageData.role, 1); // note: this creates a new user with admin permissions
         commonFunctions.selectDropdownbyNum(pageData.tenant, 1);
         await pageData.sendRegistration.click();
-        //expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/users");
+        // this statement is commented out because I kept getting an internal  
+        // expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/users");
     });
 
     it('should create a new user', async () => {
+        console.log('Creating new user');
         browser.setLocation('users');
         await pageData.createUserButton.click();
         await pageData.fullName.sendKeys(myOtherNewUser.name);
         await pageData.username.sendKeys(myOtherNewUser.username);
         await pageData.email.sendKeys(myOtherNewUser.email);
-        commonFunctions.selectDropdownbyNum(pageData.role, 3);
+        commonFunctions.selectDropdownbyNum(pageData.role, 1); // note: this creates a new user with admin permissions
         commonFunctions.selectDropdownbyNum(pageData.tenant, 1);
         await pageData.password.sendKeys(myOtherNewUser.password);
         await pageData.confirmPassword.sendKeys(myOtherNewUser.password);
@@ -60,6 +63,7 @@ describe('Traffic Portal Users Test Suite', () => {
     });
 
     it('should update the username of an existing user', async () => {
+        console.log('Updating the username of existing user');
         browser.setLocation('users');
         await pageData.searchFilter.clear().sendKeys(myNewUser.email);
         await element.all(by.repeater('u in ::users')).get(0).click();
