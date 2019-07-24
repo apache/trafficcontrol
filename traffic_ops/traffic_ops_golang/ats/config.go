@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
@@ -38,13 +38,19 @@ const CacheUrlPrefix = "cacheurl_"
 
 const RemapFile = "remap.config"
 
-const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
-
 func GetConfigFile(prefix string, xmlId string) string {
 	return prefix + xmlId + configSuffix
 }
 
 func GetNameVersionString(tx *sql.Tx) (string, error) {
+	toolName, url, err := GetToolNameAndURL(tx)
+	if err != nil {
+		return "", errors.New("getting toolname and url parameters: " + err.Error())
+	}
+	return atscfg.GetNameVersionStringFromToolNameAndURL(toolName, url), nil
+}
+
+func GetToolNameAndURL(tx *sql.Tx) (string, string, error) {
 	qry := `
 SELECT
   p.name,
@@ -56,16 +62,17 @@ WHERE
 `
 	rows, err := tx.Query(qry)
 	if err != nil {
-		return "", errors.New("querying: " + err.Error())
+		return "", "", errors.New("querying: " + err.Error())
 	}
 	defer rows.Close()
+
 	toolName := ""
 	url := ""
 	for rows.Next() {
 		name := ""
 		val := ""
 		if err := rows.Scan(&name, &val); err != nil {
-			return "", errors.New("scanning: " + err.Error())
+			return "", "", errors.New("scanning: " + err.Error())
 		}
 		if name == "tm.toolname" {
 			toolName = val
@@ -73,7 +80,7 @@ WHERE
 			url = val
 		}
 	}
-	return toolName + " (" + url + ")", nil
+	return toolName, url, nil
 }
 
 // getCDNNameFromNameOrID returns the CDN name from a parameter which may be the name or ID.
@@ -127,5 +134,5 @@ func headerComment(tx *sql.Tx, name string) (string, error) {
 	if err != nil {
 		return "", errors.New("getting name version string: " + err.Error())
 	}
-	return "# DO NOT EDIT - Generated for " + name + " by " + nameVersionStr + " on " + time.Now().Format(HeaderCommentDateFormat) + "\n", nil
+	return atscfg.HeaderCommentWithTOVersionStr(name, nameVersionStr), nil
 }
