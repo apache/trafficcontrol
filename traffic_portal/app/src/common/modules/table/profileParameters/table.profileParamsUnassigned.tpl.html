@@ -34,8 +34,8 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr id="{{::p.id}}" class="param-row" ng-repeat="p in ::selectedParams">
-            <td><input type="checkbox" ng-checked="p.selected" ng-model="p.selected" ng-change="onChange()"></td>
+        <tr id="{{::p.id}}" class="param-row" ng-class="::{'active': p.selected}" ng-repeat="p in ::selectedParams" ng-click="p.selected = !p.selected; onChange()">
+            <td><input type="checkbox" ng-model="p.selected"></td>
             <td data-search="^{{::p.name}}$">{{::p.name}}</td>
             <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
             <td data-search="^{{::p.value}}$">{{::p.value}}</td>

@@ -34,8 +34,8 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr id="{{ds.id}}" class="ds-row" ng-repeat="ds in ::deliveryServices">
-            <td><input type="checkbox" ng-checked="ds.selected" ng-model="ds.selected" ng-change="onChange()"></td>
+        <tr id="{{ds.id}}" class="ds-row" ng-class="::{'active': ds.selected}" ng-repeat="ds in ::deliveryServices" ng-click="ds.selected = !ds.selected; onChange()">
+            <td><input type="checkbox" ng-model="ds.selected"></td>
             <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
             <td data-search="^{{::ds.displayName}}$">{{::ds.displayName}}</td>
             <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
