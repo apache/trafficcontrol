@@ -47,7 +47,9 @@ import (
 type TODeliveryServiceServer struct {
 	api.APIInfoImpl `json:"-"`
 	tc.DeliveryServiceServer
-	TenantIDs pq.Int64Array `json:"-" db:"accessibleTenants"`
+	TenantIDs          pq.Int64Array `json:"-" db:"accessibleTenants"`
+	DeliveryServiceIDs pq.Int64Array `json:"-" db:"dsids"`
+	ServerIDs          pq.Int64Array `json:"-" db:"serverids"`
 }
 
 func (dss TODeliveryServiceServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -112,7 +114,7 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 
 	dss := TODeliveryServiceServer{}
 	dss.SetInfo(inf)
-	results, err := dss.readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams)
+	results, err := dss.readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams, nil, nil)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -120,7 +122,56 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespRaw(w, r, results)
 }
 
-func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int) (*tc.DeliveryServiceServerResponse, error) {
+// ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$
+func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	dsIDs := []int64{}
+	dsIDStrs := strings.Split(inf.Params["deliveryserviceids"], ",")
+	for _, dsIDStr := range dsIDStrs {
+		dsIDStr = strings.TrimSpace(dsIDStr)
+		if dsIDStr == "" {
+			continue
+		}
+		dsID, err := strconv.Atoi(dsIDStr)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, 400, errors.New("deliveryserviceids query parameter must be a comma-delimited list of integers, got '"+inf.Params["deliveryserviceids"]+"'"), nil)
+			return
+		}
+		dsIDs = append(dsIDs, int64(dsID))
+	}
+
+	serverIDs := []int64{}
+	serverIDStrs := strings.Split(inf.Params["serverids"], ",")
+	for _, serverIDStr := range serverIDStrs {
+		serverIDStr = strings.TrimSpace(serverIDStr)
+		if serverIDStr == "" {
+			continue
+		}
+		serverID, err := strconv.Atoi(serverIDStr)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, 400, errors.New("serverids query parameter must be a comma-delimited list of integers, got '"+inf.Params["serverids"]+"'"), nil)
+			return
+		}
+		serverIDs = append(serverIDs, int64(serverID))
+	}
+
+	dss := TODeliveryServiceServer{}
+	dss.SetInfo(inf)
+	results, err := dss.readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams, dsIDs, serverIDs)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	api.WriteRespRaw(w, r, results)
+}
+
+func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int, dsIDs []int64, serverIDs []int64) (*tc.DeliveryServiceServerResponse, error) {
 	orderby := params["orderby"]
 	limit := 20
 	offset := 0
@@ -148,8 +199,10 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 	for _, id := range tenantIDs {
 		dss.TenantIDs = append(dss.TenantIDs, int64(id))
 	}
+	dss.ServerIDs = serverIDs
+	dss.DeliveryServiceIDs = dsIDs
 
-	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset))
+	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs)
 	if err != nil {
 		return nil, errors.New("creating query for DeliveryserviceServers: " + err.Error())
 	}
@@ -171,7 +224,7 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 	return &tc.DeliveryServiceServerResponse{orderby, servers, page, limit}, nil
 }
 
-func selectQuery(orderBy string, limit string, offset string) (string, error) {
+func selectQuery(orderBy string, limit string, offset string, dsIDs []int64, serverIDs []int64) (string, error) {
 	selectStmt := `SELECT
 	s.deliveryService,
 	s.server,
@@ -197,6 +250,16 @@ func selectQuery(orderBy string, limit string, offset string) (string, error) {
 JOIN deliveryservice d on s.deliveryservice = d.id
 WHERE d.tenant_id = ANY(CAST(:accessibleTenants AS bigint[]))
 `
+	if len(dsIDs) > 0 {
+		selectStmt += `
+AND s.deliveryservice = ANY(:dsids)
+`
+	}
+	if len(serverIDs) > 0 {
+		selectStmt += `
+AND s.server = ANY(:serverids)
+`
+	}
 
 	if orderBy != "" {
 		selectStmt += ` ORDER BY ` + orderBy

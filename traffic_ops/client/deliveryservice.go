@@ -98,6 +98,17 @@ func (to *Session) GetDeliveryServicesNullable() ([]tc.DeliveryServiceNullable, 
 	return data.Response, reqInf, nil
 }
 
+func (to *Session) GetDeliveryServicesByCDNID(cdnID int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	data := struct {
+		Response []tc.DeliveryServiceNullable `json:"response"`
+	}{}
+	reqInf, err := get(to, apiBase+dsPath+"?cdn="+strconv.Itoa(cdnID), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	return data.Response, reqInf, nil
+}
+
 func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNullable, ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
