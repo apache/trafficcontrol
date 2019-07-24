@@ -45,17 +45,12 @@ What are the validation constraints?
 If new endpoints are required, will corresponding client methods be added?
 -->
 
-#### Data Model Impact
+#### Data Model / Database Impact
 <!--
 *How* will this impact the Traffic Ops data model?
+*How* will this impact the Traffic Ops database schema?
 
 What changes to the lib/go-tc structs will be required?
--->
-
-#### Database Impact
-<!--
-*How* will this impact the database schema?
-
 What new tables and columns will be required?
 How will existing tables and columns be changed?
 What are the column data types and modifiers?

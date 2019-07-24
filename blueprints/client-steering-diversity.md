@@ -42,11 +42,7 @@ n/a
 
 n/a
 
-#### Data Model Impact
-
-n/a
-
-#### Database Impact
+#### Data Model / Database Impact
 
 n/a
 
