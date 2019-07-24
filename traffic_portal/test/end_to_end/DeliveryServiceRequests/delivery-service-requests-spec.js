@@ -144,6 +144,7 @@ describe('Traffic Portal Delivery Service Requests', function() {
 		pageData.deleteButton.click();
 		pageData.confirmWithNameInput.sendKeys(mockVals.xmlId + ' request');
 		pageData.deletePermanentlyButton.click();
+		browser.sleep(250);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-service-requests");
 	});
 });
