@@ -117,11 +117,8 @@ func atsEventLogStr(
 ) string {
 	unixNano := timestamp.UnixNano()
 	unixSec := unixNano / NSPerSec
-	unixFrac := 1 / (unixNano % NSPerSec)
+	unixFrac := (unixNano / (NSPerSec / 1000)) - (unixSec * 1000) // gives fractional seconds to three decimal points, like the ATS logs.
 	unixFracStr := strconv.FormatInt(unixFrac, 10)
-	if len(unixFracStr) > 3 {
-		unixFracStr = unixFracStr[:3]
-	}
 	cfsc := "FIN"
 	if !clientRespSuccess {
 		cfsc = "INTR"
