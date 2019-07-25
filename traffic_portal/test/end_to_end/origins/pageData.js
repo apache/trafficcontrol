@@ -26,9 +26,12 @@ module.exports = function () {
     this.ds = element(by.name('deliveryServiceId'));
     this.createButton = element(by.buttonText('Create'));
     this.successMsg = element(by.css('.alert-success'));
-    this.searchFilter=element(by.id('originsTable_filter')).element(by.css('label')).element(by.css('input'));
+    this.originCreatedText = element(by.cssContainingText('div', 'origin was created.'));
+    this.searchFilter = element(by.id('originsTable_filter')).element(by.css('label')).element(by.css('input'));
     this.updateButton = element(by.buttonText('Update'));
+    this.originUpdatedText = element(by.cssContainingText('div', 'origin was updated.'));
     this.deleteButton = element(by.buttonText('Delete'));
     this.confirmWithNameInput = element(by.name('confirmWithNameInput'));
     this.deletePermanentlyButton = element(by.buttonText('Delete Permanently'));
+    this.originDeletedText = element(by.cssContainingText('div', 'origin was deleted.'));
 };

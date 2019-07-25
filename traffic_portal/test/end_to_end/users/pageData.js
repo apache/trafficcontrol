@@ -24,13 +24,15 @@ module.exports = function () {
     this.tenant = element(by.name("tenantId"));
     this.sendRegistration = element(by.buttonText('Send Registration'));
     this.successMsg = element(by.css('.alert-success'));
+    this.userRegisteredText = element(by.cssContainingText('div', 'User was registered.')); // not actually sure if that's right, because I can't get a successful user registration to happen
     this.createUserButton = element(by.css('button[title="Create New User"]'));
     this.fullName = element(by.name("fullName"));
     this.username = element(by.name("uName"));
     this.password = element(by.name("uPass"));
     this.confirmPassword = element(by.name("confirmPassword"));
     this.createButton = element(by.buttonText('Create'));
+    this.userCreatedText = element(by.cssContainingText('div', 'User created'));
     this.searchFilter=element(by.id('usersTable_filter')).element(by.css('label')).element(by.css('input'));
     this.updateButton = element(by.buttonText('Update'));
-    this.deleteButton = element(by.buttonText('Delete'));
+    this.userUpdatedText = element(by.cssContainingText('div', 'user was updated.'));
 };

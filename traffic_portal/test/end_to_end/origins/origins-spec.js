@@ -36,12 +36,13 @@ describe('Traffic Portal Origins Test Suite', function() {
         await browser.setLocation('origins');
         await pageData.createOriginButton.click();
         await pageData.name.sendKeys(myNewOrigin.name);
-        await commonFunctions.selectDropdownByLabel(pageData.tenant, myNewOrigin.tenant); // <-- needs to switch to using label
+        await commonFunctions.selectDropdownByLabel(pageData.tenant, myNewOrigin.tenant);
         await pageData.fqdn.sendKeys(myNewOrigin.fdqn);
         await commonFunctions.selectDropdownByLabel(pageData.protocol, myNewOrigin.protocol);
         await commonFunctions.selectDropdownByNum(pageData.ds, 1);
         await pageData.createButton.click();
-        expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.successMsg.isPresent()).toBe(true, 'Success alert message should exist');
+        expect(pageData.originCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
         expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/origins");
     });
 
@@ -51,8 +52,8 @@ describe('Traffic Portal Origins Test Suite', function() {
         await commonFunctions.clickTableEntry(pageData.searchFilter, myNewOrigin.name, tableRepeater);
         await pageData.fqdn.clear().sendKeys('updated.' + myNewOrigin.fdqn);
         await pageData.updateButton.click();
-        expect(pageData.successMsg.isPresent()).toBe(true); // <-- give this a custom error message
-        // also test for the specific text of the message in addition to if it's a success color
+        expect(pageData.successMsg.isPresent()).toBe(true, 'Success alert message should exist');
+        expect(pageData.originUpdatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
         expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl) + "#!/origins/[0-9]+$");
     });
 
@@ -63,8 +64,9 @@ describe('Traffic Portal Origins Test Suite', function() {
         await pageData.deleteButton.click();
         await pageData.confirmWithNameInput.sendKeys(myNewOrigin.name);
         await pageData.deletePermanentlyButton.click();
-        expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.successMsg.isPresent()).toBe(true, 'Success alert message should exist');
+        expect(pageData.originDeletedText.isPresent()).toBe(true, 'Actual message does not match expected message');
         expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/origins");
-    })
+    });
 
 });

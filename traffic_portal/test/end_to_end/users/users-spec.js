@@ -47,6 +47,7 @@ describe('Traffic Portal Users Test Suite', () => {
         await pageData.sendRegistration.click();
         // these statements are commented out because I kept getting an internal server error when running this test locally
         // expect(pageData.successMsg.isPresent()).toBe(true);
+        // expect(pageData.userRegisteredText.isPresent()).toBe(true, 'Actual message does not match expected message');
         // expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/users");
     });
 
@@ -63,6 +64,7 @@ describe('Traffic Portal Users Test Suite', () => {
         await pageData.confirmPassword.sendKeys(myOtherNewUser.password);
         await pageData.createButton.click();
         expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.userCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
         expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/users");
     });
 
@@ -74,6 +76,7 @@ describe('Traffic Portal Users Test Suite', () => {
         await pageData.username.clear().sendKeys(myNewUser.username);
         await pageData.updateButton.click();
         expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.userUpdatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
         expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl) + "#!/users/[0-9]+$");
     });
 
