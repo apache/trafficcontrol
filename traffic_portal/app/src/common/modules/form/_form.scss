@@ -196,3 +196,21 @@ aside.current-value {
 	}
 }
 
+#deliveryServiceForm, #deliveryServiceURLs {
+	fieldset {
+		margin: 0 0 20px 0;
+		legend {
+			font-size: 18px;
+			font-weight: bold;
+			.fa {
+				float: right;
+				margin-right: 10px;
+			}
+		}
+		legend.fieldset-error {
+			color: #a94442;
+		}
+	}
+}
+
+

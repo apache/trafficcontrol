@@ -48,6 +48,12 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
     $scope.deliveryService = deliveryService;
 
+    $scope.showGeneralConfig = true;
+
+    $scope.showCacheConfig = true;
+
+    $scope.showRoutingConfig = true;
+
     $scope.dsCurrent = dsCurrent; // this ds is used primarily for showing the diff between a ds request and the current DS
 
     $scope.origin = origin[0];
@@ -59,13 +65,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
     $scope.edgeFQDNs = function(ds) {
-        var urlString = '';
-        if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
-            for (var i = 0; i < ds.exampleURLs.length; i++) {
-                urlString += ds.exampleURLs[i] + '\n';
-            }
-        }
-        return urlString;
+        return ds.exampleURLs.join('<br/>');
     };
 
     $scope.DRAFT = 0;
@@ -203,10 +203,6 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         { value: 3, label: "3 - IP-based Round Robin" },
         { value: 4, label: "4 - Latch on Failover" }
     ];
-
-    $scope.label = function(field, attribute) {
-        return propertiesModel.properties.deliveryServices.defaults.descriptions[field][attribute];
-    };
 
     $scope.tenantLabel = function(tenant) {
         return '-'.repeat(tenant.level) + ' ' + tenant.name;
