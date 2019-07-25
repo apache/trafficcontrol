@@ -45,7 +45,8 @@ exports.config = {
 			'DeliveryServices/delivery-services-spec.js',
 			'Servers/servers-spec.js',
 			'users/users-spec.js',
-			'origins/origins-spec.js'
+			'origins/origins-spec.js',
+			'tenants/tenants-spec.js'
 		]
 	}
 };

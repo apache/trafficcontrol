@@ -28,7 +28,7 @@ describe('Traffic Portal Origins Test Suite', function() {
         fdqn: "fake.origin.example.com",
         tenant: "- root",
         protocol: "http"
-    }
+    };
     const tableRepeater = "o in ::origins";
 
     it('should create a new origin', async () => {
