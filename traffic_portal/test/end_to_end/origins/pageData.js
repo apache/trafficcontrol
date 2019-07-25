@@ -25,6 +25,7 @@ module.exports = function () {
     this.protocol = element(by.name("protocol"));
     this.ds = element(by.name('deliveryServiceId'));
     this.createButton = element(by.buttonText('Create'));
+    this.successMsg = element(by.css('.alert-success'));
     this.searchFilter=element(by.id('originsTable_filter')).element(by.css('label')).element(by.css('input'));
     this.updateButton = element(by.buttonText('Update'));
     this.deleteButton = element(by.buttonText('Delete'));

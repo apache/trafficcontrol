@@ -23,6 +23,7 @@ module.exports = function () {
     this.role = element(by.name("role"));
     this.tenant = element(by.name("tenantId"));
     this.sendRegistration = element(by.buttonText('Send Registration'));
+    this.successMsg = element(by.css('.alert-success'));
     this.createUserButton = element(by.css('button[title="Create New User"]'));
     this.fullName = element(by.name("fullName"));
     this.username = element(by.name("uName"));

@@ -25,43 +25,45 @@ describe('Traffic Portal Origins Test Suite', function() {
     const commonFunctions = new cfunc();
     const myNewOrigin = {
         name: "origin-" + commonFunctions.shuffle('abcdefghijklmnopqrstuvwxyz0123456789'),
-        fdqn: "fake.origin.example.com"
+        fdqn: "fake.origin.example.com",
+        tenant: "- root",
+        protocol: "http"
     }
+    const tableRepeater = "o in ::origins";
 
     it('should create a new origin', async () => {
         console.log('Creating new origin');
-        browser.setLocation('origins');
+        await browser.setLocation('origins');
         await pageData.createOriginButton.click();
         await pageData.name.sendKeys(myNewOrigin.name);
-        commonFunctions.selectDropdownbyNum(pageData.tenant, 1);
+        await commonFunctions.selectDropdownByLabel(pageData.tenant, myNewOrigin.tenant); // <-- needs to switch to using label
         await pageData.fqdn.sendKeys(myNewOrigin.fdqn);
-        commonFunctions.selectDropdownbyNum(pageData.protocol, 1);
-        commonFunctions.selectDropdownbyNum(pageData.ds, 1);
+        await commonFunctions.selectDropdownByLabel(pageData.protocol, myNewOrigin.protocol);
+        await commonFunctions.selectDropdownByNum(pageData.ds, 1);
         await pageData.createButton.click();
-        expect(element(by.css('.alert-success')).isPresent()).toBe(true);
+        expect(pageData.successMsg.isPresent()).toBe(true);
         expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/origins");
     });
 
     it('should update an existing origin', async () => {
         console.log('Updating existing origin');
-        browser.setLocation('origins');
-        await pageData.searchFilter.clear().sendKeys(myNewOrigin.name);
-        await element.all(by.repeater('o in ::origins')).get(0).click();
+        await browser.setLocation('origins');
+        await commonFunctions.clickTableEntry(pageData.searchFilter, myNewOrigin.name, tableRepeater);
         await pageData.fqdn.clear().sendKeys('updated.' + myNewOrigin.fdqn);
         await pageData.updateButton.click();
-        expect(element(by.css('.alert-success')).isPresent()).toBe(true);
+        expect(pageData.successMsg.isPresent()).toBe(true); // <-- give this a custom error message
+        // also test for the specific text of the message in addition to if it's a success color
         expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl) + "#!/origins/[0-9]+$");
     });
 
     it('should delete an existing origin', async () => {
         console.log('Deleting an existing origin');
-        browser.setLocation('origins');
-        await pageData.searchFilter.clear().sendKeys(myNewOrigin.name);
-        await element.all(by.repeater('o in ::origins')).get(0).click();
+        await browser.setLocation('origins');
+        await commonFunctions.clickTableEntry(pageData.searchFilter, myNewOrigin.name, tableRepeater);
         await pageData.deleteButton.click();
         await pageData.confirmWithNameInput.sendKeys(myNewOrigin.name);
         await pageData.deletePermanentlyButton.click();
-        expect(element(by.css('.alert-success')).isPresent()).toBe(true);
+        expect(pageData.successMsg.isPresent()).toBe(true);
         expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/origins");
     })
 
