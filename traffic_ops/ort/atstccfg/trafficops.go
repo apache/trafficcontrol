@@ -1,10 +1,30 @@
 package main
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import (
 	"bytes"
+	"crypto/sha512"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -12,11 +32,12 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptrace"
 	"net/url"
-	"os"
 	"strconv"
+	"time"
 
 	"golang.org/x/net/publicsuffix"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
@@ -25,7 +46,7 @@ import (
 func GetClient(toURL string, toUser string, toPass string, tempDir string) (*toclient.Session, error) {
 	cookies, err := GetCookiesFromFile(tempDir)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "DEBUG failed to get cookies from cache file (trying real TO): "+err.Error()+"\n")
+		log.Infoln("failed to get cookies from cache file (trying real TO): " + err.Error())
 		cookies = ""
 	}
 
@@ -35,9 +56,9 @@ func GetClient(toURL string, toUser string, toPass string, tempDir string) (*toc
 		if err != nil {
 			return nil, errors.New("getting cookies from Traffic Ops: " + err.Error())
 		}
-		fmt.Fprintf(os.Stderr, "DEBUG using cookies from TO\n")
+		log.Infoln("using cookies from TO")
 	} else {
-		fmt.Fprintf(os.Stderr, "DEBUG using cookies from cache file\n")
+		log.Infoln("using cookies from cache file")
 	}
 
 	useCache := false
@@ -86,21 +107,53 @@ func GetCookiesFromTO(toURL string, toUser string, toPass string, tempDir string
 
 // TrafficOpsRequest makes a request to Traffic Ops for the given method, url, and body.
 // If it gets an Unauthorized or Forbidden, it tries to log in again and makes the request again.
-func TrafficOpsRequest(toClient **toclient.Session, cfg Cfg, method string, url string, body []byte) (string, error) {
+func TrafficOpsRequest(toClient **toclient.Session, cfg Cfg, method string, url string, body []byte) (string, int, error) {
+	return trafficOpsRequestWithRetry(toClient, cfg, method, url, body, cfg.NumRetries)
+}
+
+func trafficOpsRequestWithRetry(
+	toClient **toclient.Session,
+	cfg Cfg,
+	method string,
+	url string,
+	body []byte,
+	retryNum int,
+) (string, int, error) {
+	currentRetry := 0
+	for {
+		body, code, err := trafficOpsRequestWithLogin(toClient, cfg, method, url, body)
+		if err == nil || currentRetry == retryNum {
+			return body, code, err
+		}
+
+		sleepSeconds := RetryBackoffSeconds(currentRetry)
+		log.Errorf("getting '%v' '%v', sleeping for %v seconds: %v\n", method, url, sleepSeconds, err)
+		currentRetry++
+		time.Sleep(time.Second * time.Duration(sleepSeconds))
+	}
+}
+
+func trafficOpsRequestWithLogin(
+	toClient **toclient.Session,
+	cfg Cfg,
+	method string,
+	url string,
+	body []byte,
+) (string, int, error) {
 	resp, toIP, err := rawTrafficOpsRequest(*toClient, method, url, body)
 	if err != nil {
 		toIPStr := ""
 		if toIP != nil {
 			toIPStr = toIP.String()
 		}
-		return "", errors.New("requesting from Traffic Ops '" + toIPStr + "': " + err.Error())
+		return "", 1, errors.New("requesting from Traffic Ops '" + toIPStr + "': " + err.Error())
 	}
 
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		resp.Body.Close()
 
-		fmt.Fprintf(os.Stderr, "DEBUG TrafficOpsRequest got unauthorized/forbidden, logging in again\n")
-		fmt.Fprintf(os.Stderr, "DEBUG TrafficOpsRequest url '%v' user '%v' pass '%v'\n", (*toClient).URL, (*toClient).UserName, (*toClient).Password)
+		log.Infoln("TrafficOpsRequest got unauthorized/forbidden, logging in again")
+		log.Infof("TrafficOpsRequest url '%v' user '%v' pass '%v'\n", (*toClient).URL, (*toClient).UserName, (*toClient).Password)
 
 		useCache := false
 		newTOClient, toIP, err := toclient.LoginWithAgent((*toClient).URL, (*toClient).UserName, (*toClient).Password, TOInsecure, UserAgent, useCache, TOTimeout)
@@ -109,7 +162,7 @@ func TrafficOpsRequest(toClient **toclient.Session, cfg Cfg, method string, url 
 			if toIP != nil {
 				toIPStr = toIP.String()
 			}
-			return "", errors.New("logging in to Traffic Ops IP '" + toIPStr + "': " + err.Error())
+			return "", 1, errors.New("logging in to Traffic Ops IP '" + toIPStr + "': " + err.Error())
 		}
 		*toClient = newTOClient
 
@@ -119,7 +172,7 @@ func TrafficOpsRequest(toClient **toclient.Session, cfg Cfg, method string, url 
 			if toIP != nil {
 				toIPStr = toIP.String()
 			}
-			return "", errors.New("requesting from Traffic Ops '" + toIPStr + "': " + err.Error())
+			return "", 1, errors.New("requesting from Traffic Ops '" + toIPStr + "': " + err.Error())
 		}
 	}
 	defer resp.Body.Close()
@@ -129,7 +182,7 @@ func TrafficOpsRequest(toClient **toclient.Session, cfg Cfg, method string, url 
 		if err != nil {
 			bts = []byte("(read failure)") // if it's a non-200 and the body read fails, don't error, just note the read fail in the error
 		}
-		return "", errors.New("Traffic Ops returned non-200 code '" + strconv.Itoa(resp.StatusCode) + "' body '" + string(bts) + "'")
+		return "", resp.StatusCode, errors.New("Traffic Ops returned non-200 code '" + strconv.Itoa(resp.StatusCode) + "' body '" + string(bts) + "'")
 	}
 
 	bts, err := ioutil.ReadAll(resp.Body)
@@ -138,10 +191,38 @@ func TrafficOpsRequest(toClient **toclient.Session, cfg Cfg, method string, url 
 		if toIP != nil {
 			toIPStr = toIP.String()
 		}
-		return "", errors.New("reading body from Traffic Ops '" + toIPStr + "': " + err.Error())
+		return "", resp.StatusCode, errors.New("reading body from Traffic Ops '" + toIPStr + "': " + err.Error())
 	}
 
-	return string(bts), nil
+	if err := IntegrityCheck(resp.Header, bts, url); err != nil {
+		return "", resp.StatusCode, errors.New("integrity check failed for url '" + url + "': " + err.Error())
+	}
+
+	return string(bts), http.StatusOK, nil
+}
+
+func IntegrityCheck(hdr http.Header, body []byte, url string) error {
+	if hdrSHA := hdr.Get("Whole-Content-SHA512"); hdrSHA != "" {
+		realSHA := sha512.Sum512(body)
+		realSHAStr := base64.StdEncoding.EncodeToString(realSHA[:])
+		if realSHAStr != hdrSHA {
+			return errors.New("Body does not match header Whole-Content-SHA512")
+		}
+		log.Infoln("Integrity check for url '" + url + "' passed (sha match)")
+		return nil
+	}
+	if hdrLenStr := hdr.Get("Content-Length"); hdrLenStr != "" {
+		hdrLen, err := strconv.Atoi(hdrLenStr)
+		if err != nil {
+			return errors.New("No Whole-Content-SHA512, and Content-Length '" + hdrLenStr + "' is not an integer")
+		}
+		if hdrLen != len(body) {
+			return errors.New("No Whole-Content-SHA512, and Content-Length '" + hdrLenStr + "' does not match body length")
+		}
+		log.Infoln("Integrity check for url '" + url + "' passed (length match)\n")
+		return nil
+	}
+	return errors.New("No Whole-Content-SHA512, and no Content-Length, cannot verify content")
 }
 
 // rawTrafficOpsRequest makes a request to Traffic Ops for the given method, url, and body.

@@ -175,6 +175,8 @@ if ($override_domainname ne '') {
 	$domainname = $override_domainname;
 }
 
+my $atstccfg_cmd = '/opt/ort/atstccfg';
+
 $lwp_conn->agent("$hostname_short-$unixtime");
 
 my $TMP_BASE  = "/tmp/ort";
@@ -1462,8 +1464,8 @@ sub lwp_get {
 	my $response;
 	my $response_content;
 
-	while( $retry_counter > 0 ) {
-
+	# TODO add retry_counter arg to atstccfg
+	while(1) { # no retry counter, atstccfg handles retries
 		( $log_level >> $INFO ) && print "INFO Traffic Ops host: " . $traffic_ops_host . "\n";
 		( $log_level >> $DEBUG ) && print "DEBUG lwp_get called with $uri\n";
 		my $request = $traffic_ops_host . $uri;
@@ -1476,53 +1478,56 @@ sub lwp_get {
 			( $log_level >> $INFO ) && print "INFO Secure data request - bypassing reverse proxy and using $to_url.\n";
 		}
 
-		$response = $lwp_conn->get($request, %headers);
-		$response_content = $response->content;
+	my $atstccfg_log_path = "$TMP_BASE/atstccfg.log";
 
-		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_message_integrity($response, $ERROR) ) {
-			( $log_level >> $ERROR ) && print "ERROR result for $request is: ..." . $response->content . "...\n";
-			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
-					return $response->code;
-			}
-			if ($uri =~ m/update_status/ &&  $response->code == 404) {
-				return $response->code;
-			}
-			if ( $rev_proxy_in_use == 1 ) {
-				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Reverse Proxy.  Reverting to primary Traffic Ops host.\n";
-				$traffic_ops_host = $to_url;
-				$rev_proxy_in_use = 0;
-			}
-			sleep 2**( $retries - $retry_counter );
-			$retry_counter--;
+	my ( $TO_USER, $TO_PASS ) = split( /:/, $TM_LOGIN );
+
+	$response_content = `$atstccfg_cmd --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
+
+	my $atstccfg_exit_code = $?;
+
+	if ($atstccfg_exit_code != 0) {
+		if ( $uri =~ m/configfiles\/ats/ && $atstccfg_exit_code == 404) {
+			return $atstccfg_exit_code;
 		}
-		# https://github.com/Comcast/traffic_control/issues/1168
-		elsif ( ( $uri =~ m/url\_sig\_(.*)\.config$/ || $uri =~ m/uri\_signing\_(.*)\.config$/ ) && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
-			( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response->content . "...\n";
-			exit 1;
+		if ($uri =~ m/update_status/ && $atstccfg_exit_code == 404) {
+			return $$atstccfg_exit_code;
 		}
-		else {
-			( $log_level >> $DEBUG ) && print "DEBUG result for $uri is: ..." . $response->content . "...\n";
-			last;
+		if ( $atstccfg_exit_code != 0 && $rev_proxy_in_use == 1 ) {
+			( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Reverse Proxy.  Reverting to primary Traffic Ops host.\n";
+			$traffic_ops_host = $to_url;
+			$rev_proxy_in_use = 0;
+			next;
 		}
 
+		( $log_level >> $FATAL ) && print "FATAL atstccfg returned $atstccfg_exit_code - see $atstccfg_log_path\n";
+		exit 1;
 	}
 
-	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_message_integrity($response, $FATAL) ) if ( $retry_counter == 0 );
+	# https://github.com/Comcast/traffic_control/issues/1168
+	if ( ( $uri =~ m/url\_sig\_(.*)\.config$/ || $uri =~ m/uri\_signing\_(.*)\.config$/ ) && $response_content =~ m/No RIAK servers are set to ONLINE/ ) {
+		( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response_content . "...\n";
+		exit 1;
+	}
 
-	&eval_json($response) if ( $uri =~ m/\.json$/ );
+	( $log_level >> $DEBUG ) && print "DEBUG result for $uri is: ..." . $response_content . "...\n";
+
+		&eval_json($request, $response_content) if ( $uri =~ m/\.json$/ );
+		last;
+	}
 
 	return $response_content;
-
 }
 
 sub eval_json {
-	my $lwp_response = shift;
+	my $uri = shift;
+	my $lwp_response_content = shift;
 	eval {
-		decode_json($lwp_response->content());
+		decode_json($lwp_response_content);
 		1;
 	} or do {
 		my $error = $@;
-		( $log_level >> $FATAL ) && print "FATAL " . $lwp_response->request->uri . " did not return valid JSON: " . $lwp_response->content() . " | Error: $error\n";
+		( $log_level >> $FATAL ) && print "FATAL " . $uri . " did not return valid JSON: " . $lwp_response_content . " | Error: $error\n";
 		exit 1;
 	}
 
