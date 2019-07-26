@@ -1,5 +1,24 @@
 package main
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import (
 	"errors"
 	"fmt"
@@ -10,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
@@ -21,7 +41,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 
 	// TODO TOAPI add /servers?cdn=1 query param
 	servers := []tc.Server{}
-	err := GetCachedJSON(cfg.TempDir, "servers.json", &servers, func(obj interface{}) error {
+	err := GetCachedJSON(cfg.TempDir, "servers.json", cfg.NumRetries, &servers, func(obj interface{}) error {
 		toServers, reqInf, err := toClient.GetServers()
 		if err != nil {
 			return errors.New("getting servers from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -56,7 +76,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 	}
 
 	cacheGroups := []tc.CacheGroupNullable{}
-	err = GetCachedJSON(cfg.TempDir, "cachegroups"+".json", &cacheGroups, func(obj interface{}) error {
+	err = GetCachedJSON(cfg.TempDir, "cachegroups.json", cfg.NumRetries, &cacheGroups, func(obj interface{}) error {
 		toCacheGroups, reqInf, err := toClient.GetCacheGroupsNullable()
 		if err != nil {
 			return errors.New("getting cachegroups from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -139,7 +159,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 
 	parentCacheGroups := map[string]struct{}{}
 	if serverInfo.IsTopLevelCache() {
-		fmt.Fprintf(os.Stderr, "DEBUG istoplevel!\n")
+		log.Infoln("This cache Is Top Level!")
 		for _, cg := range cacheGroups {
 			if cg.Type == nil {
 				return "", errors.New("cachegroup type is nil!")
@@ -210,7 +230,8 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 	cgServerIDsStr := strings.Join(cgServerIDStrs, "-")
 
 	cgDSServers := []tc.DeliveryServiceServer{}
-	err = GetCachedJSON(cfg.TempDir, "deliveryservice_servers_"+cgServerIDsStr+".json", &cgDSServers, func(obj interface{}) error {
+	// TODO make this filename shorter (but still unique) somehow. The filename is almost always too long.
+	err = GetCachedJSON(cfg.TempDir, "deliveryservice_servers_"+cgServerIDsStr+".json", cfg.NumRetries, &cgDSServers, func(obj interface{}) error {
 		toDSS, reqInf, err := toClient.GetDeliveryServiceServersWithLimits(999999, nil, cgServerIDs)
 		if err != nil {
 			return errors.New("getting cachegroup parent server delivery service servers from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -235,7 +256,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 	}
 
 	serverProfileParameters := []tc.Parameter{}
-	err = GetCachedJSON(cfg.TempDir, "profile_"+server.Profile+"_parameters.json", &serverProfileParameters, func(obj interface{}) error {
+	err = GetCachedJSON(cfg.TempDir, "profile_"+server.Profile+"_parameters.json", cfg.NumRetries, &serverProfileParameters, func(obj interface{}) error {
 		toParams, reqInf, err := toClient.GetParametersByProfileName(server.Profile)
 		if err != nil {
 			return errors.New("getting server profile '" + server.Profile + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -266,7 +287,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 	}
 
 	globalParams := []tc.Parameter{}
-	err = GetCachedJSON(cfg.TempDir, "profile_global_parameters"+".json", &globalParams, func(obj interface{}) error {
+	err = GetCachedJSON(cfg.TempDir, "profile_global_parameters"+".json", cfg.NumRetries, &globalParams, func(obj interface{}) error {
 		toParams, reqInf, err := toClient.GetParametersByProfileName(GlobalProfileName)
 		if err != nil {
 			return errors.New("getting global profile '" + GlobalProfileName + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -293,7 +314,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 	}
 
 	deliveryServices := []tc.DeliveryServiceNullable{}
-	err = GetCachedJSON(cfg.TempDir, "cdn_"+strconv.Itoa(server.CDNID)+"_deliveryservices"+".json", &deliveryServices, func(obj interface{}) error {
+	err = GetCachedJSON(cfg.TempDir, "cdn_"+strconv.Itoa(server.CDNID)+"_deliveryservices"+".json", cfg.NumRetries, &deliveryServices, func(obj interface{}) error {
 		toDSes, reqInf, err := toClient.GetDeliveryServicesByCDNID(server.CDNID)
 		if err != nil {
 			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -307,7 +328,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 	}
 
 	parentConfigParams := []tc.Parameter{}
-	err = GetCachedJSON(cfg.TempDir, "config_file_parent_config_parameters"+".json", &parentConfigParams, func(obj interface{}) error {
+	err = GetCachedJSON(cfg.TempDir, "config_file_parent_config_parameters"+".json", cfg.NumRetries, &parentConfigParams, func(obj interface{}) error {
 		toParams, reqInf, err := toClient.GetParameterByConfigFile("parent.config")
 		if err != nil {
 			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -352,11 +373,11 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 			continue // skip ANY_MAP, STEERING, etc
 		}
 		if tcDS.XMLID == nil || *tcDS.XMLID == "" {
-			fmt.Fprintf(os.Stderr, "ERROR got delivery service with no XMLID! Skipping!\n")
+			log.Errorln("got delivery service with no XMLID! Skipping!")
 			continue
 		}
 		if tcDS.OrgServerFQDN == nil || *tcDS.OrgServerFQDN == "" {
-			fmt.Fprintf(os.Stderr, "ERROR ds  '"+*tcDS.XMLID+"' has no origin server! Skipping!\n")
+			log.Errorln("ds  '" + *tcDS.XMLID + "' has no origin server! Skipping!")
 			continue
 		}
 
@@ -431,7 +452,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 	}
 
 	cdn := tc.CDN{}
-	err = GetCachedJSON(cfg.TempDir, "cdn_"+string(serverInfo.CDN)+".json", &cdn, func(obj interface{}) error {
+	err = GetCachedJSON(cfg.TempDir, "cdn_"+string(serverInfo.CDN)+".json", cfg.NumRetries, &cdn, func(obj interface{}) error {
 		toCDNs, reqInf, err := toClient.GetCDNByName(string(serverInfo.CDN))
 		if err != nil {
 			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
@@ -474,7 +495,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 			case atscfg.ParentConfigCacheParamPort:
 				i, err := strconv.ParseInt(val, 10, 64)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "parent.config generation: port param is not an integer, skipping! : "+err.Error())
+					log.Errorln("parent.config generation: port param is not an integer, skipping! : " + err.Error())
 				} else {
 					profileCache.Port = int(i)
 				}
@@ -483,7 +504,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 			case atscfg.ParentConfigCacheParamRank:
 				i, err := strconv.ParseInt(val, 10, 64)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "parent.config generation: rank param is not an integer, skipping! : "+err.Error())
+					log.Errorln("parent.config generation: rank param is not an integer, skipping! : " + err.Error())
 				} else {
 					profileCache.Rank = int(i)
 				}
@@ -497,7 +518,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 	dsIDMap := map[int]tc.DeliveryServiceNullable{}
 	for _, ds := range deliveryServices {
 		if ds.ID == nil {
-			fmt.Fprintf(os.Stderr, "ERROR delivery services got nil ID\n")
+			log.Errorln("delivery services got nil ID!")
 			os.Exit(1)
 		}
 
@@ -515,7 +536,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 				// this is normal if the TO was too old to understand our /deliveryserviceserver?servers= query param
 				// In which case, the DSS will include DSes from other CDNs, which aren't in the dsIDMap
 				// If the server was new enough to respect the params, this should never happen.
-				// fmt.Fprintf(os.Stderr, "WARNING getting delivery services: parent server DS %v not in dsIDMap\n", dsID)
+				// log.Warnln("getting delivery services: parent server DS %v not in dsIDMap\n", dsID)
 				continue
 			}
 			if _, ok := allDSMap[dsID]; !ok {
@@ -524,18 +545,17 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "DEBUG len(parentServerDSes) %v!\n", len(parentServerDSes))
-	fmt.Fprintf(os.Stderr, "DEBUG len(dsIDMap) %v!\n", len(dsIDMap))
-
-	fmt.Fprintf(os.Stderr, "DEBUG len(allDSMap) %v!\n", len(allDSMap))
+	log.Infof("len(parentServerDSes) %v!\n", len(parentServerDSes))
+	log.Infof("len(dsIDMap) %v!\n", len(dsIDMap))
+	log.Infof("len(allDSMap) %v!\n", len(allDSMap))
 
 	dsOrigins, err := GetDSOrigins(allDSMap)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR getting delivery service origins: "+err.Error()+"\n")
+		log.Errorln("getting delivery service origins: " + err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Fprintf(os.Stderr, "DEBUG len(dsOrigins) %v!\n", len(dsOrigins))
+	log.Infof("len(dsOrigins) %v!\n", len(dsOrigins))
 
 	profileParams := parentConfigServerCacheProfileParams
 
@@ -561,7 +581,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 			for dsID, _ := range parentServerDSes[cgServer.ID] { // map[serverID][]dsID
 				orgURI := dsOrigins[dsID]
 				if orgURI == nil {
-					// fmt.Fprintf(os.Stderr, "WARNING ds %v has no origins! Skipping!\n", dsID) // TODO determine if this is normal
+					// log.Warnln("ds %v has no origins! Skipping!\n", dsID) // TODO determine if this is normal
 					continue
 				}
 				originServers[orgURI.Host] = append(originServers[orgURI.Host], realCGServer)
@@ -572,7 +592,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 
 		if _, profileCachesHasProfile := profileCaches[realCGServer.ProfileID]; !profileCachesHasProfile {
 			if profileCache, profileParamsHasProfile := profileParams[cgServer.Profile]; !profileParamsHasProfile {
-				fmt.Fprintf(os.Stderr, "WARNING cachegroup has server with profile %+v but that profile has no parameters", cgServer.ProfileID)
+				log.Warnf("cachegroup has server with profile %+v but that profile has no parameters\n", cgServer.ProfileID)
 				profileCaches[realCGServer.ProfileID] = atscfg.DefaultProfileCache()
 			} else {
 				profileCaches[realCGServer.ProfileID] = profileCache
@@ -597,7 +617,7 @@ func GetDSOrigins(dses map[int]tc.DeliveryServiceNullable) (map[int]*atscfg.Orig
 			return nil, fmt.Errorf("ds id %v has nil XMLID", *ds.ID)
 		}
 		if ds.OrgServerFQDN == nil {
-			fmt.Fprintf(os.Stderr, "WARNING GetDSOrigins ds %v got nil OrgServerFQDN, skipping!\n", *ds.XMLID)
+			log.Warnf("GetDSOrigins ds %v got nil OrgServerFQDN, skipping!\n", *ds.XMLID)
 			continue
 		}
 		orgURL, err := url.Parse(*ds.OrgServerFQDN)
@@ -620,7 +640,7 @@ func GetDSOrigins(dses map[int]tc.DeliveryServiceNullable) (map[int]*atscfg.Orig
 			} else if scheme == "https" {
 				port = "443"
 			} else {
-				fmt.Fprintf(os.Stderr, "WARNING parsing ds '"+*ds.XMLID+"' OrgServerFQDN '"+*ds.OrgServerFQDN+"': "+"unknown scheme '"+scheme+"' and no port, leaving port empty!")
+				log.Warnln("parsing ds '" + *ds.XMLID + "' OrgServerFQDN '" + *ds.OrgServerFQDN + "': " + "unknown scheme '" + scheme + "' and no port, leaving port empty!")
 			}
 		}
 		dsOrigins[*ds.ID] = &atscfg.OriginURI{Scheme: scheme, Host: host, Port: port}
