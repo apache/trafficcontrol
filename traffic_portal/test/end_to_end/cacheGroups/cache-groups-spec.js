@@ -29,28 +29,28 @@ describe('Traffic Portal Cache Groups Test Suite', function() {
 		longitude: 45
 	};
 
-	it('should go to the cache groups page', function() {
+	it('should go to the cache groups page', async () => {
 		console.log("Go to the cache groups page");
-		browser.setLocation("cache-groups");
+		await browser.setLocation("cache-groups");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cache-groups");
 	});
 
-	it('should open new cache group form page', function() {
+	it('should open new cache group form page', async () => {
 		console.log("Open new cache groups form page");
-		browser.driver.findElement(by.name('createCacheGroupButton')).click();
+		await browser.driver.findElement(by.name('createCacheGroupButton')).click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cache-groups/new");
 	});
 
-	it('should fill out form, create button is enabled and submit', function () {
+	it('should fill out form, create button is enabled and submit', async () => {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.name.sendKeys(myNewCG.name);
-		pageData.shortName.sendKeys(myNewCG.name);
+		await pageData.name.sendKeys(myNewCG.name);
+		await pageData.shortName.sendKeys(myNewCG.name);
 		commonFunctions.selectDropdownbyNum(pageData.type, 1);
-		pageData.latitude.sendKeys(myNewCG.latitude);
-		pageData.longitude.sendKeys(myNewCG.longitude);
+		await pageData.latitude.sendKeys(myNewCG.latitude);
+		await pageData.longitude.sendKeys(myNewCG.longitude);
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cache-groups");
 	});
 

@@ -35,37 +35,37 @@ describe('Traffic Portal Servers Test Suite', function() {
 		interfaceMtu: "9000",
 	};
 
-	it('should go to the Servers page', function() {
+	it('should go to the Servers page', async () => {
 		console.log('Looading Configure/Servers');
-		browser.setLocation("servers");
+		await browser.setLocation("servers");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
-	it('should open new Servers form page', function() {
+	it('should open new Servers form page', async () => {
 		console.log('Clicking on Create new server ' + mockVals.hostName);
-		browser.driver.findElement(by.name('createServersButton')).click();
+		await browser.driver.findElement(by.name('createServersButton')).click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/new");
 	});
 
-	it('should fill out form, create button is enabled and submit', function () {
+	it('should fill out form, create button is enabled and submit', async () => {
 		console.log('Filling out Server form');
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.status.click();
-		pageData.status.sendKeys(mockVals.status);
-		pageData.hostName.sendKeys(mockVals.hostName);
-		pageData.domainName.sendKeys(mockVals.domainName);
+		await pageData.status.click();
+		await pageData.status.sendKeys(mockVals.status);
+		await pageData.hostName.sendKeys(mockVals.hostName);
+		await pageData.domainName.sendKeys(mockVals.domainName);
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
 		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
 		commonFunctions.selectDropdownbyNum(pageData.type, 1);
 		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
-		pageData.interfaceName.sendKeys(mockVals.interfaceName);
-		pageData.ipAddress.sendKeys(mockVals.ipAddress);
-		pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
-		pageData.ipGateway.sendKeys(mockVals.ipGateway);
-		pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
+		await pageData.interfaceName.sendKeys(mockVals.interfaceName);
+		await pageData.ipAddress.sendKeys(mockVals.ipAddress);
+		await pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
+		await pageData.ipGateway.sendKeys(mockVals.ipGateway);
+		await pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
 		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
@@ -79,30 +79,28 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(tableColumns.count()).toBe(11);
 	});
 
-	it('should verify the new Server and then update Server', function() {
+	it('should verify the new Server and then update Server', async () => {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
-		browser.sleep(1000);
-		pageData.searchFilter.sendKeys(mockVals.hostName);
-		browser.sleep(250);
-		element.all(by.repeater('s in ::servers')).filter(function(row){
+		await pageData.searchFilter.sendKeys(mockVals.hostName);
+		await element.all(by.repeater('s in ::servers')).filter(function(row){
 			return row.element(by.name('hostName')).getText().then(function(val){
 				return val === mockVals.hostName;
 			});
 		}).get(0).click();
-		browser.sleep(1000);
-		pageData.domainName.clear();
-		pageData.domainName.sendKeys('testupdated.com');
-		pageData.type.click();
-		pageData.type.sendKeys('MID');
-		pageData.updateButton.click();
+		await pageData.domainName.clear();
+		await pageData.domainName.sendKeys('testupdated.com');
+		await pageData.type.click();
+		await pageData.type.sendKeys('MID');
+		await pageData.updateButton.click();
 		expect(pageData.domainName.getText() === 'testupdated.com');
 		expect(pageData.type.getText() === 'MID');
 	});
 
-	it('should delete the new Server', function() {
+	it('should delete the new Server', async () => {
 		console.log('Deleting the server ' + mockVals.hostName);
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.hostName);
-		pageData.deletePermanentlyButton.click();
+		await pageData.deleteButton.click();
+		await pageData.confirmWithNameInput.sendKeys(mockVals.hostName);
+		await pageData.deletePermanentlyButton.click();
+		// feel like we should have some kind of expectation here...
 	});
 });

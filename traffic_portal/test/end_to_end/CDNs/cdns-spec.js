@@ -28,51 +28,48 @@ describe('Traffic Portal CDNs Test Suite', function() {
 	const mydnssec = false;
 	const myKskDays = commonFunctions.random(365);
 
-	it('should go to the CDNs page', function() {
+	it('should go to the CDNs page', async () => {
 		console.log("Go to the CDNs page");
-		browser.setLocation("cdns");
-		browser.getCurrentUrl().then(x => console.log(x));
+		await browser.setLocation("cdns");
+		await browser.getCurrentUrl().then(x => console.log(x));
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 
-	it('should open new CDN form page', function() {
+	it('should open new CDN form page', async () => {
 		console.log("Open new CDN form page");
-		browser.driver.findElement(by.name('createCdnButton')).click();
+		await browser.driver.findElement(by.name('createCdnButton')).click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns/new");
 	});
 
-	it('should fill out form, create button is enabled and submit', function () {
+	it('should fill out form, create button is enabled and submit', async () => {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.dnssecEnabled.click();
-		pageData.dnssecEnabled.sendKeys(mydnssec.toString());
-		pageData.name.sendKeys(myNewCDN);
-		pageData.domainName.sendKeys(myDomainName);
+		await pageData.dnssecEnabled.click();
+		await pageData.dnssecEnabled.sendKeys(mydnssec.toString());
+		await pageData.name.sendKeys(myNewCDN);
+		await pageData.domainName.sendKeys(myDomainName);
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 
-	it('should verify the new CDN and then update CDN', function() {
+	it('should verify the new CDN and then update CDN', async () => {
 		console.log("Verifying the new CDN and then updating CDN");
-		browser.sleep(250);
-		pageData.searchFilter.sendKeys(myNewCDN);
-		browser.sleep(250);
-		element.all(by.repeater('cdn in ::cdns')).filter(function(row){
+		await pageData.searchFilter.sendKeys(myNewCDN);
+		await element.all(by.repeater('cdn in ::cdns')).filter(function(row){
 			return row.element(by.name('name')).getText().then(function(val){
 				return val === myNewCDN;
 			});
 		}).get(0).click();
-		browser.sleep(1000);
-		pageData.domainName.clear();
-		pageData.domainName.sendKeys(myDomainName + 'updated.com');
-		pageData.dnssecEnabled.click();
-		pageData.dnssecEnabled.sendKeys((!mydnssec).toString());
-		pageData.updateButton.click();
+		await pageData.domainName.clear();
+		await pageData.domainName.sendKeys(myDomainName + 'updated.com');
+		await pageData.dnssecEnabled.click();
+		await pageData.dnssecEnabled.sendKeys((!mydnssec).toString());
+		await pageData.updateButton.click();
 		expect(pageData.domainName.getAttribute('value')).toEqual(myDomainName + 'updated.com');
 	});
 
-	it('should generate DNSSEC keys', async function() {
+	it('should generate DNSSEC keys', async () => {
 		console.log("Generating DNSSEC keys for the new CDN and and verifying their expiration date");
 		await pageData.moreButton.click();
 		await pageData.manageDnssecKeysButton.click();
@@ -88,7 +85,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		expect(expirationDate).toBeCloseTo(calculatedExpirationDate, -4);
 	});
 
-	it('should regenerate DNSSEC keys', async function() {
+	it('should regenerate DNSSEC keys', async () => {
 		console.log("Renerating DNSSEC keys and verifying their expiration date");
 		await pageData.regenerateDnssecKeysButton.click();
 		await pageData.kskExpirationDays.clear().sendKeys(myKskDays.toString());
@@ -102,7 +99,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		expect(expirationDate).toBeCloseTo(calculatedExpirationDate, -4);
 	});
 
-	it('should regenerate KSK keys', async function() {
+	it('should regenerate KSK keys', async () => {
 		console.log("Regenerating KSK keys and verifying their expiration");
 		await pageData.regenerateKskButton.click();
 		await pageData.kskExpirationDays.clear().sendKeys(myKskDays.toString());

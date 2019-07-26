@@ -52,50 +52,50 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		longDesc: "This is only a test delivery service that should be disposed of by Automated UI Testing."
 	};
 
-	it('should open delivery services page', function() {
+	it('should open delivery services page', async () => {
 		console.log('Opening delivery services page');
-		browser.setLocation("delivery-services");
+		await browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
 	// ANY_MAP delivery service
 
-	it('should click new delivery service and select ANY_MAP category from the dropdown', function() {
+	it('should click new delivery service and select ANY_MAP category from the dropdown', async () => {
 		console.log('Clicked Create New and selecting ANY_MAP');
-		browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
+		await browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
-		browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('ANY_MAP');
+		await browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('ANY_MAP');
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(true);
-		pageData.selectFormSubmitButton.click();
+		await pageData.selectFormSubmitButton.click();
 	});
 
-	it('should populate and submit the delivery service form', function() {
+	it('should populate and submit the delivery service form', async () => {
 		console.log('Creating a DS for ' + mockVals.anyMapXmlId);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/new?type=ANY_MAP");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		// set required fields
 		// set xml id
-		pageData.xmlId.sendKeys(mockVals.anyMapXmlId);
+		await pageData.xmlId.sendKeys(mockVals.anyMapXmlId);
 		// set display name
-		pageData.displayName.sendKeys(mockVals.anyMapXmlId);
+		await pageData.displayName.sendKeys(mockVals.anyMapXmlId);
 		// set active status
-		pageData.active.click();
-		pageData.active.sendKeys('Active');
+		await pageData.active.click();
+		await pageData.active.sendKeys('Active');
 		// set content routing type
-		pageData.type.click();
-		pageData.type.sendKeys(mockVals.dsTypes.anyMap[0]);
+		await pageData.type.click();
+		await pageData.type.sendKeys(mockVals.dsTypes.anyMap[0]);
 		// set tenant
 		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
 		// set cdn
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
 		// all required fields have been set, create button should be enabled
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
 	});
 
-	it('should back out to delivery services page and verify the new ANY_MAP delivery service and update it', function() {
+	it('should back out to delivery services page and verify the new ANY_MAP delivery service and update it', async () => {
 		console.log('Verifying that ' + mockVals.anyMapXmlId + ' exists');
-		browser.setLocation("delivery-services");
+		await browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
@@ -109,206 +109,199 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(tableColumns.count()).toBe(10);
 	});
 
-	it('should update the ANY_MAP delivery service', function() {
+	it('should update the ANY_MAP delivery service', async () => {
 		console.log('Updating the ANY_MAP delivery service for ' + mockVals.anyMapXmlId);
-		pageData.searchFilter.clear().then(function() {
-			pageData.searchFilter.sendKeys(mockVals.anyMapXmlId);
-		});
-		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
+		await pageData.searchFilter.clear().sendKeys(mockVals.anyMapXmlId);
+		await element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
 			return row.element(by.name('xmlId')).getText().then(function(val){
 				return val.toString() === mockVals.anyMapXmlId.toString();
 			});
 		}).get(0).click();
 		expect(pageData.updateButton.isEnabled()).toBe(false);
 		expect(pageData.xmlId.getAttribute('readonly')).toBe('true');
-		pageData.displayName.clear().then(function() {
-			pageData.displayName.sendKeys("Updated display name");
-		});
+		await pageData.displayName.clear().sendKeys("Updated display name");
 		expect(pageData.updateButton.isEnabled()).toBe(true);
-		pageData.updateButton.click();
+		await pageData.updateButton.click();
 		expect(pageData.displayName.getText() === "Updated display name");
 	});
 
-	it('should delete the ANY_MAP delivery service', function() {
+	it('should delete the ANY_MAP delivery service', async () => {
 		console.log('Deleting ' + mockVals.anyMapXmlId);
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.anyMapXmlId);
-		pageData.deletePermanentlyButton.click();
+		await pageData.deleteButton.click();
+		await pageData.confirmWithNameInput.sendKeys(mockVals.anyMapXmlId);
+		await pageData.deletePermanentlyButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
 	// DNS delivery service
 
-	it('should click new delivery service and select DNS category from the dropdown', function() {
+	it('should click new delivery service and select DNS category from the dropdown', async () => {
 		console.log('Clicked Create New and selecting DNS');
-		browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
+		await browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
-		browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('DNS');
+		await browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('DNS');
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(true);
-		pageData.selectFormSubmitButton.click();
+		await pageData.selectFormSubmitButton.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/new?type=" + mockVals.dsTypes.dns[0]);
 	});
 
-	it('should populate and submit the ds form', function() {
+	it('should populate and submit the ds form', async () => {
 		console.log('Creating a DS for ' + mockVals.dnsXmlId);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/new?type=DNS");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		// set required fields
 		// set xml id
-		pageData.xmlId.sendKeys(mockVals.dnsXmlId);
+		await pageData.xmlId.sendKeys(mockVals.dnsXmlId);
 		// set display name
-		pageData.displayName.sendKeys(mockVals.dnsXmlId);
+		await pageData.displayName.sendKeys(mockVals.dnsXmlId);
 		// set active status
-		pageData.active.click();
-		pageData.active.sendKeys('Active');
+		await pageData.active.click();
+		await pageData.active.sendKeys('Active');
 		// set content routing type
-		pageData.type.click();
-		pageData.type.sendKeys(mockVals.dsTypes.dns[0]);
+		await pageData.type.click();
+		await pageData.type.sendKeys(mockVals.dsTypes.dns[0]);
 		// set tenant
 		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
 		// set cdn
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
 		// set origin server
-		pageData.orgServerFqdn.sendKeys('http://' + mockVals.dnsXmlId + '.com');
+		await pageData.orgServerFqdn.sendKeys('http://' + mockVals.dnsXmlId + '.com');
 		// set protocol
 		commonFunctions.selectDropdownbyNum(pageData.protocol, 1);
 		// all required fields have been set, create button should be enabled
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
 	});
 
-	it('should back out to delivery services page and verify the new DNS delivery service and update it', function() {
+	it('should back out to delivery services page and verify the new DNS delivery service and update it', async () => {
 		console.log('Verifying that ' + mockVals.dnsXmlId + ' exists');
-		browser.setLocation("delivery-services");
+		await browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
-	it('should update the DNS delivery service', function() {
+	it('should update the DNS delivery service', async () => {
 		console.log('Updating the DNS delivery service for ' + mockVals.dnsXmlId);
-		pageData.searchFilter.clear().then(function() {
-			pageData.searchFilter.sendKeys(mockVals.dnsXmlId);
-		});
-		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
+		await pageData.searchFilter.clear().sendKeys(mockVals.dnsXmlId);
+		await element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
 			return row.element(by.name('xmlId')).getText().then(function(val){
 				return val.toString() === mockVals.dnsXmlId.toString();
 			});
 		}).get(0).click();
 		expect(pageData.updateButton.isEnabled()).toBe(false);
 		expect(pageData.xmlId.getAttribute('readonly')).toBe('true');
-		pageData.displayName.clear().then(function() {
-			pageData.displayName.sendKeys("Updated display name");
-		});
+		await pageData.displayName.clear().sendKeys("Updated display name");
 		expect(pageData.updateButton.isEnabled()).toBe(true);
-		pageData.updateButton.click();
+		await pageData.updateButton.click();
 		expect(pageData.displayName.getText() === "Updated display name");
 	});
 
-	it('should delete the DNS delivery service', function() {
+	it('should delete the DNS delivery service', async () => {
 		console.log('Deleting ' + mockVals.dnsXmlId);
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.dnsXmlId);
-		pageData.deletePermanentlyButton.click();
+		await pageData.deleteButton.click();
+		await pageData.confirmWithNameInput.sendKeys(mockVals.dnsXmlId);
+		await pageData.deletePermanentlyButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
 	// HTTP delivery service
 
-	it('should click new delivery service and select HTTP category from the dropdown', function() {
+	it('should click new delivery service and select HTTP category from the dropdown', async () => {
 		console.log('Clicked Create New and selecting HTTP');
-		browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
+		await browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
-		browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('HTTP');
+		await browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('HTTP');
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(true);
-		pageData.selectFormSubmitButton.click();
+		await pageData.selectFormSubmitButton.click();
 	});
 
-	it('should populate and submit the delivery service form', function() {
+	it('should populate and submit the delivery service form', async () => {
 		console.log('Creating a HTTP DS for ' + mockVals.dnsXmlId);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/new?type=HTTP");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		// set required fields
 		// set xml id
-		pageData.xmlId.sendKeys(mockVals.httpXmlId);
+		await pageData.xmlId.sendKeys(mockVals.httpXmlId);
 		// set display name
-		pageData.displayName.sendKeys(mockVals.httpXmlId);
+		await pageData.displayName.sendKeys(mockVals.httpXmlId);
 		// set active status
-		pageData.active.click();
-		pageData.active.sendKeys('Active');
+		await pageData.active.click();
+		await pageData.active.sendKeys('Active');
 		// set content routing type
-		pageData.type.click();
-		pageData.type.sendKeys(mockVals.dsTypes.http[0]);
+		await pageData.type.click();
+		await pageData.type.sendKeys(mockVals.dsTypes.http[0]);
 		// set tenant
 		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
 		// set cdn
 		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
 		// set origin server
-		pageData.orgServerFqdn.sendKeys('http://' + mockVals.httpXmlId + '.com');
+		await pageData.orgServerFqdn.sendKeys('http://' + mockVals.httpXmlId + '.com');
 		// set protocol
 		commonFunctions.selectDropdownbyNum(pageData.protocol, 1);
 		// all required fields have been set, create button should be enabled
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
 	});
 
-	it('should back out to delivery services page and verify the new HTTP delivery service and update it', function() {
+	it('should back out to delivery services page and verify the new HTTP delivery service and update it', async () => {
 		console.log('Verifying that ' + mockVals.httpXmlId + ' exists');
-		browser.setLocation("delivery-services");
+		await browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
-	it('should update the HTTP delivery service', function() {
+	it('should update the HTTP delivery service', async () => {
 		console.log('Updating the HTTP delivery service for ' + mockVals.httpXmlId);
-		pageData.searchFilter.clear().then(function() {
+		await pageData.searchFilter.clear().then(function() {
 			pageData.searchFilter.sendKeys(mockVals.httpXmlId);
 		});
-		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
+		await element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
 			return row.element(by.name('xmlId')).getText().then(function(val){
 				return val.toString() === mockVals.httpXmlId.toString();
 			});
 		}).get(0).click();
 		expect(pageData.updateButton.isEnabled()).toBe(false);
 		expect(pageData.xmlId.getAttribute('readonly')).toBe('true');
-		pageData.displayName.clear().then(function() {
+		await pageData.displayName.clear().then(function() {
 			pageData.displayName.sendKeys("Updated display name");
 		});
 		expect(pageData.updateButton.isEnabled()).toBe(true);
-		pageData.updateButton.click();
+		await pageData.updateButton.click();
 		expect(pageData.displayName.getText() === "Updated display name");
 	});
 
-	it('should delete the HTTP delivery service', function() {
+	it('should delete the HTTP delivery service', async () => {
 		console.log('Deleting ' + mockVals.httpXmlId);
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.httpXmlId);
-		pageData.deletePermanentlyButton.click();
+		await pageData.deleteButton.click();
+		await pageData.confirmWithNameInput.sendKeys(mockVals.httpXmlId);
+		await pageData.deletePermanentlyButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
 	// Steering delivery service
 
-	it('should click new delivery service and select Steering category from the dropdown', function() {
+	it('should click new delivery service and select Steering category from the dropdown', async () => {
 		console.log('Clicked Create New and selecting Steering');
-		browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
+		await browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
-		browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('STEERING');
+		await browser.driver.findElement(by.name('selectFormDropdown')).sendKeys('STEERING');
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(true);
-		pageData.selectFormSubmitButton.click();
+		await pageData.selectFormSubmitButton.click();
 	});
 
-	it('should populate and submit the delivery service form', function() {
+	it('should populate and submit the delivery service form', async () => {
 		console.log('Creating a Steering DS for ' + mockVals.dnsXmlId);
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/new?type=STEERING");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		// set required fields
 		// set xml id
-		pageData.xmlId.sendKeys(mockVals.steeringXmlId);
+		await pageData.xmlId.sendKeys(mockVals.steeringXmlId);
 		// set display name
-		pageData.displayName.sendKeys(mockVals.steeringXmlId);
+		await pageData.displayName.sendKeys(mockVals.steeringXmlId);
 		// set active status
-		pageData.active.click();
-		pageData.active.sendKeys('Active');
+		await pageData.active.click();
+		await pageData.active.sendKeys('Active');
 		// set content routing type
-		pageData.type.click();
-		pageData.type.sendKeys(mockVals.dsTypes.steering[0]);
+		await pageData.type.click();
+		await pageData.type.sendKeys(mockVals.dsTypes.steering[0]);
 		// set tenant
 		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
 		// set cdn
@@ -317,40 +310,36 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		commonFunctions.selectDropdownbyNum(pageData.protocol, 1);
 		// all required fields have been set, create button should be enabled
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
 	});
 
-	it('should back out to delivery services page and verify the new Steering delivery service and update it', function() {
+	it('should back out to delivery services page and verify the new Steering delivery service and update it', async () => {
 		console.log('Verifying that ' + mockVals.steeringXmlId + ' exists');
-		browser.setLocation("delivery-services");
+		await browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
-	it('should update the Steering delivery service', function() {
+	it('should update the Steering delivery service', async () => {
 		console.log('Updating the Steering delivery service for ' + mockVals.steeringXmlId);
-		pageData.searchFilter.clear().then(function() {
-			pageData.searchFilter.sendKeys(mockVals.steeringXmlId);
-		});
-		element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
+		await pageData.searchFilter.clear().sendKeys(mockVals.steeringXmlId);
+		await element.all(by.repeater('ds in ::deliveryServices')).filter(function(row){
 			return row.element(by.name('xmlId')).getText().then(function(val){
 				return val.toString() === mockVals.steeringXmlId.toString();
 			});
 		}).get(0).click();
 		expect(pageData.updateButton.isEnabled()).toBe(false);
 		expect(pageData.xmlId.getAttribute('readonly')).toBe('true');
-		pageData.displayName.clear().then(function() {
-			pageData.displayName.sendKeys("Updated display name");
-		});
+		await pageData.displayName.clear().sendKeys("Updated display name");
 		expect(pageData.updateButton.isEnabled()).toBe(true);
-		pageData.updateButton.click();
+		await pageData.updateButton.click();
 		expect(pageData.displayName.getText() === "Updated display name");
 	});
 
-	it('should delete the HTTP delivery service', function() {
+	it('should delete the HTTP delivery service', async () => {
 		console.log('Deleting ' + mockVals.steeringXmlId);
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.steeringXmlId);
-		pageData.deletePermanentlyButton.click();
+		await pageData.deleteButton.click();
+		await pageData.confirmWithNameInput.sendKeys(mockVals.steeringXmlId);
+		await pageData.deletePermanentlyButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 

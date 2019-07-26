@@ -27,25 +27,25 @@ describe('Traffic Portal Regions Test Suite', function() {
 		name: 'region-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 	};
 
-	it('should go to the regions page', function() {
+	it('should go to the regions page', async () => {
 		console.log("Go to the regions page");
-		browser.setLocation("regions");
+		await browser.setLocation("regions");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/regions");
 	});
 
-	it('should open new region form page', function() {
+	it('should open new region form page', async () => {
 		console.log("Open new region form page");
-		browser.driver.findElement(by.name('createRegionButton')).click();
+		await browser.driver.findElement(by.name('createRegionButton')).click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/regions/new");
 	});
 
-	it('should fill out form, create button is enabled and submit', function () {
+	it('should fill out form, create button is enabled and submit', async () => {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.name.sendKeys(myNewRegion.name);
+		await pageData.name.sendKeys(myNewRegion.name);
 		commonFunctions.selectDropdownbyNum(pageData.division, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/regions");
 	});
 
