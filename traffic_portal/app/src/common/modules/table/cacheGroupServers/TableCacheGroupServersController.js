@@ -22,6 +22,8 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 	// extends the TableServersController to inherit common methods
 	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
 
+	let cacheGroupServersTable;
+
 	$scope.cacheGroup = cacheGroup;
 
 	var queueCacheGroupServerUpdates = function(cacheGroup, cdnId) {
@@ -92,11 +94,29 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $controlle
 		});
 	};
 
+	$scope.toggleVisibility = function(colName) {
+		const col = cacheGroupServersTable.column(colName + ':name');
+		col.visible(!col.visible());
+		cacheGroupServersTable.rows().invalidate().draw();
+	};
+
 	angular.element(document).ready(function () {
-		$('#cacheGroupServersTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+		cacheGroupServersTable = $('#cacheGroupServersTable').DataTable({
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"colReorder": {
+				realtime: false
+			},
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_cacheGroupServersTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_cacheGroupServersTable_/):", e);
+				}
+			}
 		});
 	});
 
