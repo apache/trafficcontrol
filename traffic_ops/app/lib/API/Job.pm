@@ -185,7 +185,7 @@ sub create_current_user_job {
 			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 		}
 	} else {
-		if ( !$self->is_delivery_service_assigned($ds_id) ) {
+		if ( !&is_oper($self) && !$self->is_delivery_service_assigned($ds_id) ) {
 			return $self->forbidden();
 		}
 	}
