@@ -124,7 +124,7 @@ Creates a new content revalidation job.
 :Auth. Required: Yes
 :Roles Required: "portal"
 
-	.. versionchanged:: ATCv3.0.2
+	.. versionchanged:: ATCv3.1.0
 		For security reasons, the endpoint was reworked so that regardless of tenancy, the "portal" :term:`Role` or higher is required.
 
 :Response Type:  ``undefined``
