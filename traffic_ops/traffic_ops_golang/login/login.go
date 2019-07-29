@@ -142,17 +142,19 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		data.Add("grant_type", "authorization_code") // Required by RFC6749 section 4.1.3
 		data.Add("redirect_uri", parameters.RedirectUri)
 
-		req, err := http.NewRequest("POST", parameters.AuthCodeTokenUrl, bytes.NewBufferString(data.Encode()))
+		req, err := http.NewRequest(http.MethodPost, parameters.AuthCodeTokenUrl, bytes.NewBufferString(data.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		if err != nil {
-			log.Errorf("obtaining token using code from oauth provider\n%s", err.Error())
+			log.Errorf("obtaining token using code from oauth provider: %s", err.Error())
 			return
 		}
 
-		client := http.Client{}
+		client := http.Client{
+			Timeout: 30 * time.Second,
+		}
 		response, err := client.Do(req)
 		if err != nil {
-			log.Errorf("getting an http client\n%s", err.Error())
+			log.Errorf("getting an http client: %s", err.Error())
 			return
 		}
 		defer response.Body.Close()
@@ -166,7 +168,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			log.Warnf("Error parsing JSON response from oAuth: %s", err.Error())
 			encodedToken = buf.String()
 		} else if _, ok := result["access_token"]; !ok {
-			sysErr := fmt.Errorf("Missing access token in response:\n%s\n", buf.String())
+			sysErr := fmt.Errorf("Missing access token in response: %s\n", buf.String())
 			usrErr := errors.New("Bad response from OAuth2.0 provider")
 			api.HandleErr(w, r, nil, http.StatusBadGateway, usrErr, sysErr)
 			return

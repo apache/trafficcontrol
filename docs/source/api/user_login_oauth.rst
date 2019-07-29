@@ -31,7 +31,11 @@ Authentication of a user by exchanging a code for an encrypted JSON Web Token fr
 
 Request Structure
 -----------------
-:t: Token
+:authCodeTokenUrl: URL for code-to-token conversion
+:code: Code
+:clientId: Client Id
+:clientSecret: Client Secret
+:redirectUri: Redirect URI
 
 .. code-block:: http
 	:caption: Request Example
