@@ -270,7 +270,16 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 
 	client, err := inf.CreateInfluxClient()
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		if err == sql.ErrNoRows {
+			errCode = http.StatusServiceUnavailable
+			userErr = errors.New("No InfluxDB servers available!")
+			sysErr = userErr
+		} else {
+			errCode = http.StatusInternalServerError
+			userErr = nil
+			sysErr = err
+		}
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	} else if client == nil {
 		userErr = errors.New("Traffic Stats is not configured!")

@@ -60,6 +60,7 @@ WHERE type in ( SELECT id
                 FROM type
                 WHERE name='INFLUXDB'
               )
+AND status=(SELECT id FROM status WHERE name='ONLINE')
 `
 
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
