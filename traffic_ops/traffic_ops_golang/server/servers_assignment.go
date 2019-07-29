@@ -34,8 +34,15 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/lib/pq"
 )
+
+type needsCheck struct {
+	CDN uint
+	ID uint
+	Tenant int
+}
 
 func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
@@ -64,10 +71,10 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
+
 	serverInfo, ok, err := dbhelpers.GetServerInfo(server, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
-		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
 		return
@@ -81,10 +88,82 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	var serverCDN uint
+	row := inf.Tx.Tx.QueryRow(`SELECT cdn_id FROM server WHERE id=$1`)
+	if err := row.Scan(&serverCDN); err != nil {
+		if err == sql.ErrNoRows {
+			userErr = errors.New("No such server!")
+			errCode = http.StatusNotFound
+		} else {
+			sysErr = fmt.Errorf("Getting CDN ID for server (%d): %v", server, err)
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	rows, err := inf.Tx.Tx.Query(`SELECT id, cdn_id, tenant_id FROM deliveryservice WHERE id = ANY($1)`, pq.Array(dsList))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			userErr = errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!")
+			errCode = http.StatusBadRequest
+		} else {
+			sysErr = err
+			errCode = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer rows.Close()
+
+	tenantsToCheck := make([]needsCheck, 0, len(dsList))
+	for rows.Next() {
+		var n needsCheck
+		if err = rows.Scan(&n.ID, &n.CDN, &n.Tenant); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Scanning cdn_id for ds: %v", err))
+			return
+		}
+
+		tenantsToCheck = append(tenantsToCheck, n)
+	}
+
+	if len(tenantsToCheck) != len(dsList) {
+		errCode = http.StatusNotFound
+		userErr = errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!")
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	for _,t := range tenantsToCheck {
+		if ok, err := tenant.IsResourceAuthorizedToUserTx(t.Tenant, inf.User, inf.Tx.Tx); err != nil {
+			sysErr = fmt.Errorf("Checking availability of ds %d (tenant_id: %d) to tenant_id %d: %v", t.ID, t.Tenant, err, inf.User.TenantID, err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+			return
+		} else if !ok {
+			sysErr = fmt.Errorf("User %s denied access to inaccessible DS %d (owned by tenant_id %d)", inf.User.UserName, t.ID, t.Tenant)
+
+			// In keeping with the behavior of /deliveryservices, we don't disclose the existences
+			// of Delivery Services to which the user is forbidden access
+			errCode = http.StatusNotFound
+			userErr = errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!")
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+
+		if t.CDN != serverCDN {
+			errCode = http.StatusBadRequest
+			userErr = fmt.Errorf("Delivery Service %d is not in the same CDN as server %d (server is in %d, DS is in %d)!", t.ID, server, serverCDN, t.CDN)
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+			return
+		}
+	}
+
 	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
 		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverInfo.HostName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
