@@ -106,7 +106,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 
 	expiration := *new(time.Time)
 	for _, pemCert := range strings.SplitAfter(certChain, PemCertEndMarker) {
-		if pemCert == "" {
+		if len(strings.TrimSpace(pemCert)) == 0 {
 			continue
 		}
 

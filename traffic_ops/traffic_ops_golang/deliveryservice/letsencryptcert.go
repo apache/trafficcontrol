@@ -133,8 +133,6 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	ctx, _ := context.WithTimeout(r.Context(), time.Minute*10)
-	db, err := api.GetDB(ctx)
-	tx, err := db.BeginTxx(ctx, nil)
 
 	req := tc.DeliveryServiceLetsEncryptSSLKeysReq{}
 	if err := api.Parse(r.Body, nil, &req); err != nil {
@@ -143,14 +141,28 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	error := GetLetsEncryptCertificates(inf, req, ctx)
+
+	if error != nil {
+		api.HandleErr(w, r, nil, http.StatusInternalServerError, error, nil)
+	}
+
+	api.WriteResp(w, r, "Successfully created ssl keys for "+*req.DeliveryService)
+
+}
+
+func GetLetsEncryptCertificates(inf *api.APIInfo, req tc.DeliveryServiceLetsEncryptSSLKeysReq, ctx context.Context) error {
+
+	db, err := api.GetDB(ctx)
+	tx, err := db.BeginTxx(ctx, nil)
+
 	domainName := *req.HostName
 	deliveryService := *req.DeliveryService
 
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		log.Errorf("Error generating private key: %s", err.Error())
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
-		return
+		log.Errorf(deliveryService+": Error generating private key: %s", err.Error())
+		return err
 	}
 
 	myUser := MyUser{
@@ -164,9 +176,8 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	client, err := lego.NewClient(config)
 	if err != nil {
-		log.Errorf("Error creating lets encrypt client: %s", err.Error())
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
-		return
+		log.Errorf(deliveryService+": Error creating lets encrypt client: %s", err.Error())
+		return err
 	}
 
 	client.Challenge.Remove(challenge.HTTP01)
@@ -174,16 +185,15 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	trafficRouterDns, err := NewDNSProviderTrafficRouter()
 	trafficRouterDns.db = db
 	if err != nil {
-		log.Errorf("Error creating Traffic Router DNS provider: %s", err.Error())
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
+		log.Errorf(deliveryService+": Error creating Traffic Router DNS provider: %s", err.Error())
+		return err
 	}
 	client.Challenge.SetDNS01Provider(trafficRouterDns)
 
 	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
 	if err != nil {
-		log.Errorf("Error registering lets encrypt client: %s", err.Error())
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
-		return
+		log.Errorf(deliveryService+": Error registering lets encrypt client: %s", err.Error())
+		return err
 	}
 	myUser.Registration = reg
 
@@ -193,24 +203,21 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 	certificates, err := client.Certificate.Obtain(request)
 	if err != nil {
-		log.Errorf("Error obtaining lets encrypt certificate: %s", err.Error())
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
-		return
+		log.Errorf(deliveryService+": Error obtaining lets encrypt certificate: %s", err.Error())
+		return err
 	}
 
 	fmt.Printf("%#v\n", certificates)
 
 	block, _ := pem.Decode([]byte(certificates.Certificate))
 	if block == nil {
-		log.Errorf("Error parsing cert")
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, errors.New("parsing cert"), nil)
-		return
+		log.Errorf(deliveryService + ": Error parsing cert")
+		return errors.New(deliveryService + ": parsing cert")
 	}
 	x509cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		log.Errorf("Error parsing cert to get expiry - %s", err.Error())
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
-		return
+		log.Errorf(deliveryService+": Error parsing cert to get expiry - %s", err.Error())
+		return err
 	}
 
 	expiration := x509cert.NotAfter
@@ -227,26 +234,23 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	crtBuf := bytes.Buffer{}
 	if err := pem.Encode(&crtBuf, &pem.Block{Type: "CERTIFICATE", Bytes: certificates.Certificate}); err != nil {
-		log.Errorf("pem-encoding certificate: " + err.Error())
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, errors.New("pem-encoding certificate: "+err.Error()), nil)
-		return
+		log.Errorf(deliveryService + ": pem-encoding certificate: " + err.Error())
+		return errors.New(deliveryService + ": pem-encoding certificate: " + err.Error())
 	}
 	crtPem := crtBuf.Bytes()
 
 	keyBuf := bytes.Buffer{}
 	if err := pem.Encode(&keyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: certificates.PrivateKey}); err != nil {
-		log.Errorf("pem-encoding key: " + err.Error())
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, errors.New("pem-encoding key: "+err.Error()), nil)
-		return
+		log.Errorf(deliveryService + ": pem-encoding key: " + err.Error())
+		return errors.New(deliveryService + ": pem-encoding key: " + err.Error())
 	}
 	keyPem := keyBuf.Bytes()
 
 	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(crtPem)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: "Not Applicable"}
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
 		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("putting riak keys: "+err.Error()), nil)
-		return
+		return errors.New(deliveryService + ": putting riak keys: " + err.Error())
 	}
-	api.WriteResp(w, r, "Successfully created ssl keys for "+deliveryService)
 
+	return nil
 }
