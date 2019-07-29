@@ -36,8 +36,8 @@ import (
 // GetCachedJSON attempts to get the given object from tempDir/cacheFileName.
 // If the cache file doesn't exist, is too old, or is malformed, it uses getter to get the object, and stores it in cacheFileName.
 // The object is placed in obj (which must be a pointer to the type of object to decode from JSON), and the error from getter is returned.
-func GetCachedJSON(tempDir string, cacheFileName string, numRetries int, obj interface{}, getter func(obj interface{}) error) error {
-	err := GetJSONObjFromFile(tempDir, cacheFileName, obj)
+func GetCachedJSON(tempDir string, cacheFileName string, cacheFileMaxAge time.Duration, numRetries int, obj interface{}, getter func(obj interface{}) error) error {
+	err := GetJSONObjFromFile(tempDir, cacheFileName, cacheFileMaxAge, obj)
 	if err == nil {
 		return nil
 	}
@@ -91,7 +91,7 @@ func WriteCacheJSON(tempDir string, cacheFileName string, obj interface{}) {
 
 // GetJSONObjFromFile gets obj from tempDir/cacheFileName, if it exists and isn't older than CacheFileMaxAge.
 // Just like with json.Unmarshal, obj must be a non-nil pointer to the object to decode into.
-func GetJSONObjFromFile(tempDir string, cacheFileName string, obj interface{}) error {
+func GetJSONObjFromFile(tempDir string, cacheFileName string, cacheFileMaxAge time.Duration, obj interface{}) error {
 	objPath := filepath.Join(tempDir, cacheFileName)
 
 	objFile, err := os.Open(objPath)
@@ -105,8 +105,8 @@ func GetJSONObjFromFile(tempDir string, cacheFileName string, obj interface{}) e
 		return errors.New("getting object file info '" + objPath + "':" + err.Error())
 	}
 
-	if objFileAge := time.Now().Sub(objFileInfo.ModTime()); objFileAge > CacheFileMaxAge {
-		return fmt.Errorf("object file too old, max age %dms less than file age %dms", int(CacheFileMaxAge/time.Millisecond), int(objFileAge/time.Millisecond))
+	if objFileAge := time.Now().Sub(objFileInfo.ModTime()); objFileAge > cacheFileMaxAge {
+		return fmt.Errorf("object file too old, max age %dms less than file age %dms", int(cacheFileMaxAge/time.Millisecond), int(objFileAge/time.Millisecond))
 	}
 
 	bts, err := ioutil.ReadAll(objFile)
@@ -150,7 +150,7 @@ func WriteCookiesToFile(cookiesStr string, tempDir string) {
 	}
 }
 
-func GetCookiesFromFile(tempDir string) (string, error) {
+func GetCookiesFromFile(tempDir string, cacheFileMaxAge time.Duration) (string, error) {
 	cookiePath := filepath.Join(tempDir, TempCookieFileName)
 
 	cookieFile, err := os.Open(cookiePath)
@@ -165,8 +165,8 @@ func GetCookiesFromFile(tempDir string) (string, error) {
 	}
 
 	cookieFileAge := time.Now().Sub(cookieFileInfo.ModTime())
-	if cookieFileAge > CacheFileMaxAge {
-		return "", fmt.Errorf("cookie file too old, max age %dms less than file age %dms", int(CacheFileMaxAge/time.Millisecond), int(cookieFileAge/time.Millisecond))
+	if cookieFileAge > cacheFileMaxAge {
+		return "", fmt.Errorf("cookie file too old, max age %dms less than file age %dms", int(cacheFileMaxAge/time.Millisecond), int(cookieFileAge/time.Millisecond))
 	}
 
 	bts, err := ioutil.ReadAll(cookieFile)

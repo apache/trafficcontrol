@@ -27,6 +27,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 
@@ -34,15 +35,17 @@ import (
 )
 
 type Cfg struct {
-	TOURL      *url.URL
-	TOUser     string
-	TOPass     string
-	TempDir    string
-	NumRetries int
-
+	CacheFileMaxAge time.Duration
 	LogLocationErr  string
-	LogLocationWarn string
 	LogLocationInfo string
+	LogLocationWarn string
+	NumRetries      int
+	TempDir         string
+	TOInsecure      bool
+	TOPass          string
+	TOTimeout       time.Duration
+	TOURL           *url.URL
+	TOUser          string
 }
 
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
@@ -61,6 +64,9 @@ func GetCfg() (Cfg, error) {
 	logLocationWarnPtr := flag.StringP("log-location-warning", "w", "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null.")
 	logLocationInfoPtr := flag.StringP("log-location-info", "i", "stderr", "Where to log information messages. May be a file path, stdout, stderr, or null.")
 	printGeneratedFilesPtr := flag.BoolP("print-generated-files", "g", false, "Whether to print a list of files which are generated (and not proxied to Traffic Ops).")
+	toInsecurePtr := flag.BoolP("traffic-ops-insecure", "s", false, "Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging.")
+	toTimeoutMSPtr := flag.IntP("traffic-ops-timeout-milliseconds", "t", 10000, "Timeout in seconds for Traffic Ops requests.")
+	cacheFileMaxAgeSecondsPtr := flag.IntP("cache-file-max-age-seconds", "a", 60, "Maximum age to use cached files.")
 	flag.Parse()
 
 	if *printGeneratedFilesPtr {
@@ -83,6 +89,9 @@ func GetCfg() (Cfg, error) {
 	logLocationErr := *logLocationErrPtr
 	logLocationWarn := *logLocationWarnPtr
 	logLocationInfo := *logLocationInfoPtr
+	toInsecure := *toInsecurePtr
+	toTimeout := time.Millisecond * time.Duration(*toTimeoutMSPtr)
+	cacheFileMaxAge := time.Second * time.Duration(*cacheFileMaxAgeSecondsPtr)
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
@@ -117,14 +126,17 @@ func GetCfg() (Cfg, error) {
 	tmpDir = filepath.Join(tmpDir, TempSubdir)
 
 	cfg := Cfg{
-		TOURL:           toURLParsed,
-		TOUser:          toUser,
-		TOPass:          toPass,
-		TempDir:         tmpDir,
-		NumRetries:      numRetries,
+		CacheFileMaxAge: cacheFileMaxAge,
 		LogLocationErr:  logLocationErr,
 		LogLocationWarn: logLocationWarn,
 		LogLocationInfo: logLocationInfo,
+		NumRetries:      numRetries,
+		TempDir:         tmpDir,
+		TOInsecure:      toInsecure,
+		TOPass:          toPass,
+		TOTimeout:       toTimeout,
+		TOURL:           toURLParsed,
+		TOUser:          toUser,
 	}
 
 	if err := log.InitCfg(cfg); err != nil {

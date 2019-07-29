@@ -43,8 +43,8 @@ import (
 )
 
 // GetClient returns a TO Client, using a cached cookie if it exists, or logging in otherwise
-func GetClient(toURL string, toUser string, toPass string, tempDir string) (*toclient.Session, error) {
-	cookies, err := GetCookiesFromFile(tempDir)
+func GetClient(toURL string, toUser string, toPass string, tempDir string, cacheFileMaxAge time.Duration, toTimeout time.Duration, toInsecure bool) (*toclient.Session, error) {
+	cookies, err := GetCookiesFromFile(tempDir, cacheFileMaxAge)
 	if err != nil {
 		log.Infoln("failed to get cookies from cache file (trying real TO): " + err.Error())
 		cookies = ""
@@ -52,7 +52,7 @@ func GetClient(toURL string, toUser string, toPass string, tempDir string) (*toc
 
 	if cookies == "" {
 		err := error(nil)
-		cookies, err = GetCookiesFromTO(toURL, toUser, toPass, tempDir)
+		cookies, err = GetCookiesFromTO(toURL, toUser, toPass, tempDir, toTimeout, toInsecure)
 		if err != nil {
 			return nil, errors.New("getting cookies from Traffic Ops: " + err.Error())
 		}
@@ -62,7 +62,7 @@ func GetClient(toURL string, toUser string, toPass string, tempDir string) (*toc
 	}
 
 	useCache := false
-	toClient := toclient.NewNoAuthSession(toURL, TOInsecure, UserAgent, useCache, TOTimeout)
+	toClient := toclient.NewNoAuthSession(toURL, toInsecure, UserAgent, useCache, toTimeout)
 	toClient.UserName = toUser
 	toClient.Password = toPass
 
@@ -83,14 +83,14 @@ func GetClient(toURL string, toUser string, toPass string, tempDir string) (*toc
 
 // GetCookies gets the cookies from logging in to Traffic Ops.
 // If this succeeds, it also writes the cookies to TempSubdir/TempCookieFileName.
-func GetCookiesFromTO(toURL string, toUser string, toPass string, tempDir string) (string, error) {
+func GetCookiesFromTO(toURL string, toUser string, toPass string, tempDir string, toTimeout time.Duration, toInsecure bool) (string, error) {
 	toURLParsed, err := url.Parse(toURL)
 	if err != nil {
 		return "", errors.New("parsing Traffic Ops URL '" + toURL + "': " + err.Error())
 	}
 
 	toUseCache := false
-	toClient, toIP, err := toclient.LoginWithAgent(toURL, toUser, toPass, TOInsecure, UserAgent, toUseCache, TOTimeout)
+	toClient, toIP, err := toclient.LoginWithAgent(toURL, toUser, toPass, toInsecure, UserAgent, toUseCache, toTimeout)
 	if err != nil {
 		toIPStr := ""
 		if toIP != nil {
@@ -156,7 +156,7 @@ func trafficOpsRequestWithLogin(
 		log.Infof("TrafficOpsRequest url '%v' user '%v' pass '%v'\n", (*toClient).URL, (*toClient).UserName, (*toClient).Password)
 
 		useCache := false
-		newTOClient, toIP, err := toclient.LoginWithAgent((*toClient).URL, (*toClient).UserName, (*toClient).Password, TOInsecure, UserAgent, useCache, TOTimeout)
+		newTOClient, toIP, err := toclient.LoginWithAgent((*toClient).URL, (*toClient).UserName, (*toClient).Password, cfg.TOInsecure, UserAgent, useCache, cfg.TOTimeout)
 		if err != nil {
 			toIPStr := ""
 			if toIP != nil {

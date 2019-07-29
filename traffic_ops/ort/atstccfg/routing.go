@@ -108,7 +108,7 @@ func GetConfigFileFromTrafficOps(toClient **toclient.Session, cfg Cfg) (string, 
 	if cfg.TOURL.RawQuery != "" {
 		path += "?" + cfg.TOURL.RawQuery
 	}
-	log.Infoln("GetConfigFile path '" + path + "'")
+	log.Infoln("GetConfigFile path '" + path + "' not generated locally, requesting from Traffic Ops")
 	log.Infoln("GetConfigFile url '" + cfg.TOURL.String() + "'")
 
 	body, code, err := TrafficOpsRequest(toClient, cfg, http.MethodGet, cfg.TOURL.String(), nil)
