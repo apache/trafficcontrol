@@ -68,8 +68,8 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := api.CreateChangeLogRawErr(api.ApiChange, "Assigned "+strconv.Itoa(len(assignedDSes))+" delivery services to server id: "+strconv.Itoa(server) , inf.User, inf.Tx.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error writing to change log: " + err.Error()))
+	if err := api.CreateChangeLogRawErr(api.ApiChange, "Assigned "+strconv.Itoa(len(assignedDSes))+" delivery services to server id: "+strconv.Itoa(server), inf.User, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error writing to change log: "+err.Error()))
 		return
 	}
 
