@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
@@ -36,11 +35,6 @@ const APIVersion = "1.2"
 const TempSubdir = AppName + "_cache"
 const TempCookieFileName = "cookies"
 const TOCookieName = "mojolicious"
-
-// TODO make the below configurable?
-const TOInsecure = false
-const TOTimeout = time.Second * 10
-const CacheFileMaxAge = time.Minute
 
 func main() {
 	cfg, err := GetCfg()
@@ -56,7 +50,7 @@ func main() {
 	log.Infoln("TO FQDN: '" + toFQDN + "'")
 	log.Infoln("TO URL: '" + cfg.TOURL.String() + "'")
 
-	toClient, err := GetClient(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TempDir)
+	toClient, err := GetClient(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TempDir, cfg.CacheFileMaxAge, cfg.TOTimeout, cfg.TOInsecure)
 	if err != nil {
 		log.Errorln("Logging in to Traffic Ops: " + err.Error())
 		os.Exit(1)
