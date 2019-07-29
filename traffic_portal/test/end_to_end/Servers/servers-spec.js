@@ -33,7 +33,9 @@ describe('Traffic Portal Servers Test Suite', function() {
 		ipNetmask: "255.255.255.252",
 		ipGateway: "10.42.80.117",
 		interfaceMtu: "9000",
+		types: ['EDGE', 'MID']
 	};
+	const repeater = 's in ::servers';
 
 	it('should go to the Servers page', async () => {
 		console.log('Looading Configure/Servers');
@@ -43,29 +45,30 @@ describe('Traffic Portal Servers Test Suite', function() {
 
 	it('should open new Servers form page', async () => {
 		console.log('Clicking on Create new server ' + mockVals.hostName);
-		await browser.driver.findElement(by.name('createServersButton')).click();
+		await pageData.createServerButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/new");
 	});
 
 	it('should fill out form, create button is enabled and submit', async () => {
 		console.log('Filling out Server form');
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		await pageData.status.click();
-		await pageData.status.sendKeys(mockVals.status);
+		await commonFunctions.selectDropdownByLabel(pageData.status, mockVals.status);
 		await pageData.hostName.sendKeys(mockVals.hostName);
 		await pageData.domainName.sendKeys(mockVals.domainName);
-		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
-		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
-		commonFunctions.selectDropdownbyNum(pageData.type, 1);
-		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
+		await commonFunctions.selectDropdownByNum(pageData.cdn, 1);
+		await commonFunctions.selectDropdownByNum(pageData.cachegroup, 1);
+		await commonFunctions.selectDropdownByLabel(pageData.type, mockVals.types[0]);
+		await commonFunctions.selectDropdownByNum(pageData.profile, 1);
 		await pageData.interfaceName.sendKeys(mockVals.interfaceName);
 		await pageData.ipAddress.sendKeys(mockVals.ipAddress);
 		await pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
 		await pageData.ipGateway.sendKeys(mockVals.ipGateway);
 		await pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
-		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
+		await commonFunctions.selectDropdownByNum(pageData.physLocation, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.serverCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
@@ -82,18 +85,14 @@ describe('Traffic Portal Servers Test Suite', function() {
 	it('should verify the new Server and then update Server', async () => {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		await pageData.searchFilter.sendKeys(mockVals.hostName);
-		await element.all(by.repeater('s in ::servers')).filter(function(row){
-			return row.element(by.name('hostName')).getText().then(function(val){
-				return val === mockVals.hostName;
-			});
-		}).get(0).click();
-		await pageData.domainName.clear();
-		await pageData.domainName.sendKeys('testupdated.com');
-		await pageData.type.click();
-		await pageData.type.sendKeys('MID');
+		await commonFunctions.clickTableEntry(pageData.searchFilter, mockVals.hostName, repeater);
+		await pageData.domainName.clear().sendKeys('updated.' + mockVals.domainName);
+		await pageData.type.click().sendKeys(mockVals.types[1]);
 		await pageData.updateButton.click();
-		expect(pageData.domainName.getText() === 'testupdated.com');
-		expect(pageData.type.getText() === 'MID');
+		expect(pageData.domainName.getText() === 'updated.' + mockVals.domainName);
+		expect(pageData.type.getText() === mockVals.types[1]);
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.serverUpdatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 	});
 
 	it('should delete the new Server', async () => {
@@ -101,6 +100,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		await pageData.deleteButton.click();
 		await pageData.confirmWithNameInput.sendKeys(mockVals.hostName);
 		await pageData.deletePermanentlyButton.click();
-		// feel like we should have some kind of expectation here...
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.serverDeletedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 	});
 });

@@ -25,7 +25,8 @@ describe('Traffic Portal Parameters Test Suite', function() {
 	const commonFunctions = new cfunc();
 	const myNewParameter = {
         name: 'parameter-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
-        configFile: 'config-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789')
+		configFile: 'config-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
+		secure: true
 	};
 
 	it('should go to the parameters page', async () => {
@@ -45,10 +46,12 @@ describe('Traffic Portal Parameters Test Suite', function() {
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		await pageData.name.sendKeys(myNewParameter.name);
 		await pageData.configFile.sendKeys(myNewParameter.configFile);
-		commonFunctions.selectDropdownbyNum(pageData.secure, 1);
+		await commonFunctions.selectDropdownByLabel(pageData.secure, myNewParameter.secure.toString());
 		await pageData.value.sendKeys(myNewParameter.name);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.parameterCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/parameters/[0-9]+/profiles");
 	});
 

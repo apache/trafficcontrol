@@ -18,10 +18,14 @@
  */
 
 module.exports = function(){
+	this.createCdnButton=element(by.name('createCdnButton'));
 	this.name=element(by.name('name'));
 	this.domainName=element(by.name('domainName'));
 	this.dnssecEnabled=element(by.name('dnssecEnabled'));
 	this.createButton=element(by.buttonText('Create'));
+	this.successMsg = element(by.css('.alert-success'));
+	this.cdnCreatedText = element(by.cssContainingText('div', 'CDN created'));
+	this.cdnUpdatedText = element(by.cssContainingText('div', 'CDN updated'));
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
 	this.searchFilter=element(by.id('cdnsTable_filter')).element(by.css('label')).element(by.css('input'));

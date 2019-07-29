@@ -58,13 +58,13 @@ describe('Traffic Portal Delivery Service Requests', function() {
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		pageData.active.click();
 		pageData.active.sendKeys(mockVals.active);
-		commonFunctions.selectDropdownbyNum(pageData.type, 1);
+		await commonFunctions.selectDropdownByNum(pageData.type, 1);
 		pageData.xmlId.sendKeys(mockVals.xmlId);
 		pageData.displayName.sendKeys(mockVals.displayName);
-		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
-		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
+		await commonFunctions.selectDropdownByNum(pageData.tenantId, 1);
+		await commonFunctions.selectDropdownByNum(pageData.cdn, 1);
 		pageData.orgServerFqdn.sendKeys(mockVals.orgServerFqdn);
-		commonFunctions.selectDropdownbyNum(pageData.protocol, 1);
+		await commonFunctions.selectDropdownByNum(pageData.protocol, 1);
 		pageData.longDesc.sendKeys(mockVals.longDesc);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
@@ -73,7 +73,7 @@ describe('Traffic Portal Delivery Service Requests', function() {
 
 	it('should select a status from the dropdown and add comment before submitting', function() {
 		browser.sleep(250);
-		commonFunctions.selectDropdownbyNum(pageData.requestStatus, 2);
+		await commonFunctions.selectDropdownByNum(pageData.requestStatus, 2);
 		pageData.dialogComment.sendKeys('This is comment one');
 		browser.sleep(250);
 		expect(pageData.dialogSubmit.isEnabled()).toBe(true);
@@ -106,7 +106,7 @@ describe('Traffic Portal Delivery Service Requests', function() {
 
 	it('should select a status from the dropdown and add comment before submitting', function() {
 		browser.sleep(250);
-		commonFunctions.selectDropdownbyNum(pageData.requestStatus, 2);
+		await commonFunctions.selectDropdownByNum(pageData.requestStatus, 2);
 		pageData.dialogComment.sendKeys('This is comment two');
 		browser.sleep(250);
 		expect(pageData.dialogSubmit.isEnabled()).toBe(true);

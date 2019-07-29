@@ -35,7 +35,7 @@ describe('Traffic Portal Divisions Test Suite', function() {
 
 	it('should open new division form page', async () => {
 		console.log("Open new division form page");
-		await browser.driver.findElement(by.name('createDivisionButton')).click();
+		await pageData.createDivisionButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/divisions/new");
 	});
 
@@ -45,6 +45,8 @@ describe('Traffic Portal Divisions Test Suite', function() {
 		await pageData.name.sendKeys(myNewDiv.name);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.divisionCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/divisions");
 	});
 

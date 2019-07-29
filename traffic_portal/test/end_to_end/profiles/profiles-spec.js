@@ -25,6 +25,8 @@ describe('Traffic Portal Profiles Test Suite', function() {
 	const commonFunctions = new cfunc();
 	const myNewProfile = {
 		name: 'profile-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
+		routingDisabled: false,
+		type: 'ATS_PROFILE'
 	};
 
 	it('should go to the profiles page', async () => {
@@ -43,13 +45,14 @@ describe('Traffic Portal Profiles Test Suite', function() {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		await pageData.name.sendKeys(myNewProfile.name);
-		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
-		commonFunctions.selectDropdownbyNum(pageData.type, 1);
-		await pageData.routingDisabled.click();
-		await pageData.routingDisabled.sendKeys('false');
+		await commonFunctions.selectDropdownByNum(pageData.cdn, 1);
+		await commonFunctions.selectDropdownByLabel(pageData.type, myNewProfile.type);
+		await commonFunctions.selectDropdownByLabel(pageData.routingDisabled, myNewProfile.routingDisabled.toString());
 		await pageData.description.sendKeys(myNewProfile.name);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.profileCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles/[0-9]+/parameters");
 	});
 

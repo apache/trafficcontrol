@@ -35,7 +35,7 @@ describe('Traffic Portal Regions Test Suite', function() {
 
 	it('should open new region form page', async () => {
 		console.log("Open new region form page");
-		await browser.driver.findElement(by.name('createRegionButton')).click();
+		await pageData.createRegionButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/regions/new");
 	});
 
@@ -43,9 +43,11 @@ describe('Traffic Portal Regions Test Suite', function() {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
 		await pageData.name.sendKeys(myNewRegion.name);
-		commonFunctions.selectDropdownbyNum(pageData.division, 1);
+		await commonFunctions.selectDropdownByNum(pageData.division, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.regionCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/regions");
 	});
 

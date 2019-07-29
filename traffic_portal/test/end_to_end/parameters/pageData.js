@@ -29,4 +29,6 @@ module.exports = function(){
 	this.searchFilter=element(by.id('parametersTable_filter')).element(by.css('label')).element(by.css('input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+	this.successMsg = element(by.css('.alert-success'));
+    this.parameterCreatedText = element(by.cssContainingText('div', 'Parameter created'));
 };

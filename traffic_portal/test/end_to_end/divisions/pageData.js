@@ -18,8 +18,11 @@
  */
 
 module.exports = function(){
+	this.createDivisionButton=element(by.name('createDivisionButton'));
 	this.name=element(by.name('name'));
 	this.createButton=element(by.buttonText('Create'));
+	this.successMsg=element(by.css('.alert-success'));
+    this.divisionCreatedText=element(by.cssContainingText('div', 'Division created'));
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
 	this.searchFilter=element(by.id('divisionsTable_filter')).element(by.css('label')).element(by.css('input'));

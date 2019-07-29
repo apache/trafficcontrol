@@ -18,12 +18,15 @@
  */
 
 module.exports = function(){
+	this.createCacheGroupButton=element(by.name('createCacheGroupButton'));
 	this.name=element(by.name('name'));
 	this.shortName=element(by.name('shortName'));
 	this.type=element(by.name('type'));
 	this.latitude=element(by.name('latitude'));
 	this.longitude=element(by.name('longitude'));
 	this.createButton=element(by.buttonText('Create'));
+	this.successMsg=element(by.css('.alert-success'));
+	this.cacheGroupCreatedText = element(by.cssContainingText('div', 'CacheGroup created'));
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
 	this.searchFilter=element(by.id('cacheGroupsTable_filter')).element(by.css('label')).element(by.css('input'));

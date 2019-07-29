@@ -30,4 +30,6 @@ module.exports = function(){
 	this.searchFilter=element(by.id('profilesTable_filter')).element(by.css('label')).element(by.css('input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+	this.successMsg = element(by.css('.alert-success'));
+    this.profileCreatedText = element(by.cssContainingText('div', 'Profile created'));
 };

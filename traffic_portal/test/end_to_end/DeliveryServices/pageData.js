@@ -18,6 +18,8 @@
  */
 
 module.exports = function(){
+	this.createDeliveryServiceButton=element(by.name('createDeliveryServiceButton'));
+	this.selectFormDropdown=element(by.name('selectFormDropdown'));
 	this.selectFormSubmitButton=element(by.buttonText('Submit'));
 	this.active=element(by.name('active'));
 	this.type=element(by.name('type'));
@@ -34,4 +36,5 @@ module.exports = function(){
 	this.searchFilter=element(by.id('deliveryServicesTable_filter')).element(by.css('label')).element(by.css('input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+	this.successMsg = element(by.css('.alert-success'));
 };

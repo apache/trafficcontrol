@@ -39,7 +39,7 @@ describe('Traffic Portal Phys Locations Test Suite', function() {
 
 	it('should open new phys locations form page', async () => {
 		console.log("Open new phys location form page");
-		await browser.driver.findElement(by.name('createPhysLocationButton')).click();
+		await pageData.createPhysLocationButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/phys-locations/new");
 	});
 
@@ -52,9 +52,11 @@ describe('Traffic Portal Phys Locations Test Suite', function() {
 		await pageData.city.sendKeys(myNewPhysLoc.city);
 		await pageData.state.sendKeys(myNewPhysLoc.state);
 		await pageData.zip.sendKeys(myNewPhysLoc.zip);
-		commonFunctions.selectDropdownbyNum(pageData.region, 1);
+		await commonFunctions.selectDropdownByNum(pageData.region, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.physLocationCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/phys-locations");
 	});
 
