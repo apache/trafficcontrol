@@ -430,26 +430,45 @@ func (inf *APIInfo) CreateInfluxClient() (c *influx.Client, e error) {
 
 	var fqdn string
 	var TCPPort uint
-	var HTTPSPort uint
+	var HTTPSPort sql.NullInt64 // this is the only one that's optional
 
 	row := inf.Tx.Tx.QueryRow(influxServersQuery)
 	if e = row.Scan(&fqdn, &TCPPort, &HTTPSPort); e != nil {
 		return
 	}
 
+	useSSL := inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure
 	host := "http%s://%s"
-	if (inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure) {
+	if useSSL {
+		if !HTTPSPort.Valid {
+			log.Warnf("INFLUXDB Server %s has no secure ports, assuming default of 8086!", fqdn)
+			HTTPSPort = sql.NullInt64{8086, true}
+		}
 		host = fmt.Sprintf(host, "s", fqdn)
 	} else {
 		host = fmt.Sprintf(host, "", fqdn)
 	}
 
-	if HTTPSPort > 0 {
-		if HTTPSPort != 443 {
-			host = fmt.Sprintf("%s:%d", host, HTTPSPort)
+	if useSSL {
+		value, err := HTTPSPort.Value()
+		if err != nil {
+			e = err
+			return
 		}
-	} else if TCPPort > 0 && TCPPort != 443 {
+
+		var v int64 = value.(int64)
+
+		if v <= 0 || v > 65535 {
+			log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
+			v = 8086
+		}
+
+		host = fmt.Sprintf("%s:%d", host, v)
+	} else if TCPPort > 0 && TCPPort <= 65535 {
 		host = fmt.Sprintf("%s:%d", host, TCPPort)
+	} else {
+		log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
+		host += ":8086"
 	}
 
 	config := influx.HTTPConfig {
@@ -462,6 +481,9 @@ func (inf *APIInfo) CreateInfluxClient() (c *influx.Client, e error) {
 
 	var client influx.Client
 	client, e = influx.NewHTTPClient(config)
+	if client == nil {
+		return
+	}
 	c = &client
 	return
 }
