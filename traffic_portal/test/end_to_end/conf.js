@@ -34,19 +34,38 @@ exports.config = {
 
 	suites: {
 		loginTests: 'login/login-spec.js',
+		cdnTests: 'CDNs/cdns-spec.js',
+		servicesTests: 'DeliveryServices/delivery-services-spec.js',
+		configureTests: [
+			'Servers/servers-spec.js',
+			'origins/origins-spec.js',
+			'profiles/profiles-spec.js',
+			'parameters/parameters-spec.js'
+		],
+		topologyTests: [
+			'cacheGroups/cache-groups-spec.js',
+			'physLocations/phys-locations-spec.js',
+			'divisions/divisions-spec.js',
+			'regions/regions-spec.js'
+		],
+		userAdminTests: [
+			'users/users-spec.js',
+			'tenants/tenants-spec.js',
+			'roles/roles-spec.js'
+		],
 		allTests: [
 			'login/login-spec.js',
 			'CDNs/cdns-spec.js',
-			'cacheGroups/cache-groups-spec.js',
-			'profiles/profiles-spec.js',
-			'divisions/divisions-spec.js',
-			'regions/regions-spec.js',
-			'physLocations/phys-locations-spec.js',
 			'DeliveryServices/delivery-services-spec.js',
 			'Servers/servers-spec.js',
-			'parameters/parameters-spec.js',
-			'users/users-spec.js',
 			'origins/origins-spec.js',
+			'profiles/profiles-spec.js',
+			'parameters/parameters-spec.js',
+			'cacheGroups/cache-groups-spec.js',
+			'physLocations/phys-locations-spec.js',
+			'divisions/divisions-spec.js',
+			'regions/regions-spec.js',
+			'users/users-spec.js',
 			'tenants/tenants-spec.js',
 			'roles/roles-spec.js'
 		]
