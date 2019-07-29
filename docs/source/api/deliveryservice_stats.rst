@@ -148,8 +148,8 @@ Response Structure
 	:min:                    The minimum value that can be found in the requested data set
 	:ninetyEighthPercentile: Data points with values greater than or equal to this number constitute the "top" 2% of the data set
 	:ninetyFifthPercentile:  Data points with values greater than or equal to this number constitute the "top" 5% of the data set
-	:totalBytes:             A legacy field with no known meaning. Will always be ``null``
-	:totalTransactions:      A legacy field with no known meaning. Will always be ``null``
+	:totalBytes:             When the ``metricType`` requested is ``kbps``, this will contain the total number of bytes transferred by the :term:`Delivery Service` within the requested time window. Note that fractional amounts are possible, as the data transfer rate will almost certainly not be cleanly divided by the requested time range.
+	:totalTransactions:      When the ``metricType`` requested is **not** ``kbps``, this will contain the total number of transactions completed by the :term:`Delivery Service` within the requested time window. Note that fractional amounts are possible, as the transaction rate will almost certainly not be cleanly divided by the requested time range.
 
 :version: A legacy field that seems to have been meant to indicate the API version used. Will always be "1.2"
 
@@ -173,7 +173,7 @@ Response Structure
 		"series": {
 			"columns": [
 				"time",
-				"sum_count"
+				"value"
 			],
 			"count": 2,
 			"name": "tps_total.ds.1min",
@@ -201,7 +201,7 @@ Response Structure
 			"ninetyEighthPercentile": 0,
 			"ninetyFifthPercentile": 0,
 			"totalBytes": null,
-			"totalTransactions": null
+			"totalTransactions": 0
 		},
 		"version": "1.2"
 	}}
