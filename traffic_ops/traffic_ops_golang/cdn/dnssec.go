@@ -57,7 +57,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	cdnName := *req.Key
 
-	cdnID, _, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdnName))
+	cdnID, _, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdnName))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ID from name '"+cdnName+"': "+err.Error()))
 		return
@@ -309,7 +309,7 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := inf.Params["name"]
-	cdnID, _, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(key))
+	cdnID, _, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(key))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id: "+err.Error()))
 		return
@@ -321,4 +321,16 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+string(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "Successfully deleted "+CDNDNSSECKeyType+" for "+key)
+}
+
+// getCDNIDFromName returns the CDN's ID if a CDN with the given name exists
+func getCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, errors.New("querying CDN ID: " + err.Error())
+	}
+	return id, true, nil
 }

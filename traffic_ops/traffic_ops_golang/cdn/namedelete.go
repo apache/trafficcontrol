@@ -26,7 +26,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 func DeleteName(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +37,7 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cdnName := tc.CDNName(inf.Params["name"])
-	cdnID, ok, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, cdnName)
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
 		return

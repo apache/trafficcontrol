@@ -48,7 +48,7 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting parameter profile: "+err.Error()))
 		return
 	}
-	paramName, ok, err := getParamNameFromID(inf.Tx.Tx, *paramProfile.ParamID)
+	paramName, ok, err := getParamNameFromID(*paramProfile.ParamID, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting parameter name from id: "+err.Error()))
 	} else if !ok {
@@ -59,7 +59,7 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 // getParamNameFromID returns the parameter's name, whether a parameter with ID exists, or any error.
-func getParamNameFromID(id int, tx *sql.Tx) (string, bool, error) {
+func getParamNameFromID(id int64, tx *sql.Tx) (string, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name from parameter where id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {

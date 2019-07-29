@@ -64,7 +64,7 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdnID, ok, err := dbhelpers.GetCDNIDFromName(inf.Tx.Tx, cdnName)
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ID from name '"+string(cdnName)+"': "+err.Error()))
 		return

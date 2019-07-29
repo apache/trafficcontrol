@@ -28,7 +28,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -42,7 +41,7 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	fedID := inf.IntParams["id"]
-	fedName, ok, err := dbhelpers.GetFedNameByID(inf.Tx.Tx, fedID)
+	fedName, ok, err := getFedNameByID(inf.Tx.Tx, fedID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting federation cname from ID '"+string(fedID)+"': "+err.Error()))
 	} else if !ok {
@@ -92,4 +91,16 @@ VALUES ($1, unnest($2::integer[]))
 `
 	_, err := tx.Exec(qry, fedID, pq.Array(dsIDs))
 	return err
+}
+
+// getFedNameFromID returns the federations name and whether or not one with the given ID exists, or an error
+func getFedNameByID(tx *sql.Tx, id int) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`select cname from federation where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("Error querying federation cname: " + err.Error())
+	}
+	return name, true, nil
 }
