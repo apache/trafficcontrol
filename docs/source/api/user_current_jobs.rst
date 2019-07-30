@@ -122,7 +122,11 @@ Creates a new content revalidation job.
 .. Note:: This method forces a HTTP *revalidation* of the content, and not a new ``GET`` - the origin needs to support revalidation according to the HTTP/1.1 specification, and send a ``200 OK`` or ``304 Not Modified`` HTTP response as appropriate.
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [1]_
+:Roles Required: "portal"
+
+	.. versionchanged:: ATCv3.1.0
+		For security reasons, the endpoint was reworked so that regardless of tenancy, the "portal" :term:`Role` or higher is required.
+
 :Response Type:  ``undefined``
 
 Request Structure
@@ -186,4 +190,3 @@ Response Structure
 		}
 	]}
 
-.. [1] A role is only required if tenancy is not used; if tenancy is used by Traffic Control, then the user will be able to create the content revalidation job on :term:`Delivery Service`\ s scoped to his or her tenancy regardless of role. This means that **even read-only users can create content invalidation jobs for :term:`Delivery Service`\ s scoped to their tenancy**. This behavior is considered a bug, and it is tracked by `GitHub Issue #3116 <https://github.com/apache/trafficcontrol/issues/3116>`_.
