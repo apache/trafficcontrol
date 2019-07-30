@@ -296,7 +296,7 @@ Interfaces for managing the various components of Traffic Control and how they i
 
 Servers
 -------
-A configurable table of all servers (of all kinds) across all :term:`Delivery Services` and CDNs visible to the user. It has the following columns that can be reordered or displayed/hidden per the user's preference:
+A configurable table of all servers (of all kinds) across all :term:`Delivery Services` and CDNs visible to the user.
 
 .. figure:: ./images/tp_table_server.png
 	:align: center
@@ -304,44 +304,46 @@ A configurable table of all servers (of all kinds) across all :term:`Delivery Se
 
 	Table of Servers
 
-:Cache Group: 		Visible by default. The name of the :term:`Cache Group` to which this server belongs
-:CDN:         		Visible by default. The name of the CDN to which this server is assigned (if any)
-:Domain: 			Visible by default. The server's domain. (The :abbr:`FQDN (Fully Qualified Domain Name)` of the server is given by :file:`{Host}.{Domain}`)
-:Host:   			Visible by default. The hostname of the server
-:HTTPS Port:
-:ID:
-:ILO IP Address:	Visible by default. If not empty, this is the IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` interface
+Use the `Select Columns` menu to select the server columns to view and search. Columns can also be rearranged using drag-and-drop. Available server columns include:
+
+:Cache Group:		[Visible by default] The name of the :term:`Cache Group` to which this server belongs
+:CDN:				[Visible by default] The name of the CDN to which the server belongs
+:Domain:			[Visible by default] The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
+:Host:				[Visible by default] The (short) hostname of the server
+:HTTPS Port:		The port on which the server listens for incoming HTTPS connections/requests
+:ID:				An integral, unique identifier for this server
+:ILO IP Address:	[Visible by default] The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service
 
 	.. seealso:: `Hewlett Packard ILO Wikipedia Page <https://en.wikipedia.org/wiki/HP_Integrated_Lights-Out>`_
 
-:ILO IP Gateway:
-:ILO IP Netmask:
-:ILO Username:
-:Interface Name:
-:IPv6 Address:		Visible by default. The server's IPv6 address
-:IPv6 Gateway:
-:Last Updated:		Date/time when the server object was last updated
-:Mgmt IP Address:
-:Mgmt IP Gateway:
-:Mgmt IP Netmask:
-:Network Gateway:
-:Network IP:		Visible by default. The server's IPv4 address
-:Network MTU:
-:Network Subnet:
-:Offline Reason:	Reason given for changing server status to OFFLINE / ADMIN DOWN and the user responsible for the change
-:Phys Location:		Visible by default.
-:Profile:			Visible by default. The :ref:`profile-name` of the server's :term:`Profile`
-:Rack:
-:Reval Pending:		Is a content invalidation job pending on this server?
-:Router Hostname:
-:Router Port Name:
-:Status:			Visible by default. The server's :term:`Status`
+:ILO IP Gateway:	The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service
+:ILO IP Netmask:	The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service
+:ILO Username:		The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service
+:Interface Name:	The name of the primary network interface used by the server
+:IPv6 Address:		[Visible by default] The IPv6 address and subnet mask of ``interfaceName``
+:IPv6 Gateway:		The IPv6 address of the gateway used by ``interfaceName``
+:Last Updated:		The date and time at which this server description was last modified
+:Mgmt IP Address:	The IPv4 address of some network interface on the server used for 'management'
+:Mgmt IP Gateway:	The IPv4 address of a gateway used by some network interface on the server used for 'management'
+:Mgmt IP Netmask:	The IPv4 subnet mask used by some network interface on the server used for 'management'
+:Network Gateway:	The IPv4 address of the gateway used by ``interfaceName``
+:Network IP:		[Visible by default] The IPv4 address of ``interfaceName``
+:Network MTU:		The Maximum Transmission Unit (MTU) to configured on ``interfaceName``
+:Network Subnet:	The IPv4 subnet mask used by ``interfaceName``
+:Offline Reason:	A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
+:Phys Location:		[Visible by default] The name of the physical location where the server resides
+:Profile:			[Visible by default] The :ref:`profile-name` of the :term:`Profile` used by this server
+:Rack:				A string indicating "server rack" location
+:Reval Pending:		[Visible by default] A boolean value represented as a clock (content invalidation/revalidation is pending) or green check mark (content invalidation/revalidation is not pending)
+:Router Hostname:	The human-readable name of the router responsible for reaching this server
+:Router Port Name:	The human-readable name of the port used by the router responsible for reaching this server
+:Status:			[Visible by default] The :term:`Status` of the server
 
 	.. seealso:: :ref:`health-proto`
 
-:TCP Port:
-:Type:				Visible by default. The :term:`Type` of server e.g. EDGE for an :term:`Edge-tier cache server`
-:Update Pending:	Visible by default. Are server configuration file changes pending?
+:TCP Port:			The port on which this server listens for incoming TCP connections
+:Type:				[Visible by default] The name of the :term:`Type` of this server
+:Update Pending:	[Visible by default] A boolean value represented as a clock (updates are pending) or green check mark (updates are not pending), typically to be acted upon by Traffic Ops ORT
 
 Server management includes the ability to (where applicable):
 
