@@ -150,7 +150,7 @@ Services
 
 Delivery Services
 -----------------
-This page contains a table displaying all :term:`Delivery Service`\ s visible to the user as determined by their :term:`Tenant`.
+This page contains a table displaying all :term:`Delivery Services` visible to the user as determined by their :term:`Tenant`.
 
 .. figure:: images/tp_table_ds.png
 	:align: center

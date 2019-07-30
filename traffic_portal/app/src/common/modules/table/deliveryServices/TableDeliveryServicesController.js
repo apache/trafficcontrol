@@ -312,8 +312,8 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
                 // only show if custom ds charts link IS configured
                 return showCustomCharts;
             },
-            click: function ($itemScope, event) {
-                deliveryServiceUtils.openCharts($itemScope.ds, event);
+            click: function ($itemScope, evt) {
+                deliveryServiceUtils.openCharts($itemScope.ds, evt);
             }
         },
         null, // Divider
