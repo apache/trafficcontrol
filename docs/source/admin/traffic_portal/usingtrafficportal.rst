@@ -296,25 +296,52 @@ Interfaces for managing the various components of Traffic Control and how they i
 
 Servers
 -------
-A table of all servers (of all kinds) across all :term:`Delivery Services` and CDNs visible to the user. It has the following columns:
+A configurable table of all servers (of all kinds) across all :term:`Delivery Services` and CDNs visible to the user. It has the following columns that can be reordered or displayed/hidden per the user's preference:
 
-:UPD:    'true' when updates to the server's configuration are pending, 'false' otherwise
-:Host:   The hostname of the server
-:Domain: The server's domain. (The :abbr:`FQDN (Fully Qualified Domain Name)` of the server is given by :file:`{Host}.{Domain}`)
-:IP:     The server's IPv4 address
-:IPv6:   The server's IPv6 address
-:Status: The server's :term:`Status`
+.. figure:: ./images/tp_table_server.png
+	:align: center
+	:alt: An example table of Servers
+
+	Table of Servers
+
+:Cache Group: 		Visible by default. The name of the :term:`Cache Group` to which this server belongs
+:CDN:         		Visible by default. The name of the CDN to which this server is assigned (if any)
+:Domain: 			Visible by default. The server's domain. (The :abbr:`FQDN (Fully Qualified Domain Name)` of the server is given by :file:`{Host}.{Domain}`)
+:Host:   			Visible by default. The hostname of the server
+:HTTPS Port:
+:ID:
+:ILO IP Address:	Visible by default. If not empty, this is the IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` interface
+
+	.. seealso:: `Hewlett Packard ILO Wikipedia Page <https://en.wikipedia.org/wiki/HP_Integrated_Lights-Out>`_
+
+:ILO IP Gateway:
+:ILO IP Netmask:
+:ILO Username:
+:Interface Name:
+:IPv6 Address:		Visible by default. The server's IPv6 address
+:IPv6 Gateway:
+:Last Updated:		Date/time when the server object was last updated
+:Mgmt IP Address:
+:Mgmt IP Gateway:
+:Mgmt IP Netmask:
+:Network Gateway:
+:Network IP:		Visible by default. The server's IPv4 address
+:Network MTU:
+:Network Subnet:
+:Offline Reason:	Reason given for changing server status to OFFLINE / ADMIN DOWN and the user responsible for the change
+:Phys Location:		Visible by default.
+:Profile:			Visible by default. The :ref:`profile-name` of the server's :term:`Profile`
+:Rack:
+:Reval Pending:		Is a content invalidation job pending on this server?
+:Router Hostname:
+:Router Port Name:
+:Status:			Visible by default. The server's :term:`Status`
 
 	.. seealso:: :ref:`health-proto`
 
-:Type:        	The :term:`Type` of server e.g. EDGE for an :term:`Edge-tier cache server`
-:Profile:     	The :ref:`profile-name` of the server's :term:`Profile`
-:CDN:         	The name of the CDN to which this server is assigned (if any)
-:Cache Group: 	The name of the :term:`Cache Group` to which this server belongs
-:Phys Location:	The name of the :term:`Physical Location` to which this server belongs
-:ILO:         	If not empty, this is the IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` interface
-
-	.. seealso:: `Hewlett Packard ILO Wikipedia Page <https://en.wikipedia.org/wiki/HP_Integrated_Lights-Out>`_
+:TCP Port:
+:Type:				Visible by default. The :term:`Type` of server e.g. EDGE for an :term:`Edge-tier cache server`
+:Update Pending:	Visible by default. Are server configuration file changes pending?
 
 Server management includes the ability to (where applicable):
 
