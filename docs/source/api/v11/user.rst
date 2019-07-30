@@ -1,17 +1,17 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 .. _to-api-v11-users:
 
@@ -279,7 +279,7 @@ Users
     }
 
 |
-  
+
 **POST /api/1.1/user/current/update**
 
   Updates the date for the authenticated user.
@@ -466,7 +466,7 @@ Invalidating content on the CDN is sometimes necessary when the origin was mis-c
 
 Authentication Required: Yes
 
-Role(s) Required: Yes
+Role(s) Required: Portal
 
   **Request Properties**
 
@@ -528,7 +528,7 @@ Role(s) Required: Yes
     {
           "alerts":
                   [
-                      { 
+                      {
                             "level": "success",
                             "text": "Successfully created purge job for: ."
                       }
@@ -764,7 +764,7 @@ Role(s) Required: Yes
 
   **Response Example** ::
 
-    
+
 
     {
      "alerts": [
@@ -775,4 +775,4 @@ Role(s) Required: Yes
      ],
     }
 
-  
+

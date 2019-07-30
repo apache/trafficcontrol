@@ -154,6 +154,10 @@ sub get_current_user_jobs {
 sub create_current_user_job {
 	my $self = shift;
 
+	if (!&is_portal($self)) {
+		return $self->forbidden();
+	}
+
 	my $ds_id      = $self->req->json->{dsId};
 	my $regex      = $self->req->json->{regex};
 	my $ttl        = $self->req->json->{ttl};
