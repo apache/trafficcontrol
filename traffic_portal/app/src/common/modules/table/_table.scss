@@ -19,6 +19,7 @@
     table {
         width: 100% !important;
     }
+    overflow: auto;
 }
 
 .update-column {
@@ -92,6 +93,7 @@ td span {
     }
 }
 .column-settings {
+    max-height: 300px;
     padding: 10px 20px;
+    overflow-y: auto;
 }
-
