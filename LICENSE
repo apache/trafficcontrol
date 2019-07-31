@@ -433,10 +433,10 @@ The modern-go/reflect2 component is used under the Apache 2.0 license:
 @vendor/github.com/modern-go/reflect2/*
 ./vendor/github.com/modern-go/reflect2/LICENSE
 
-For the lestrrat-go/jwx component:
+For the lestrrat-go/jwx (commit e35178a) component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/LICENSE
 
-For the dgrijalva/jwt-go component:
+For the dgrijalva/jwt-go (commit 5e25c22) component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/LICENSE

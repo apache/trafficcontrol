@@ -34,7 +34,6 @@ Request Structure
 :authCodeTokenUrl: URL for code-to-token conversion
 :code: Code
 :clientId: Client Id
-:clientSecret: Client Secret
 :redirectUri: Redirect URI
 
 .. code-block:: http
@@ -49,11 +48,10 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"authCodeTokenUrl": "https://url-to-convert-code-to-token.com",
+		"authCodeTokenUrl": "https://url-to-convert-code-to-token.example.com",
 		"code": "AbCd123",
 		"clientId": "oauthClientId",
-		"clientSecret": "clientSecret",
-		"redirectUri": "https://traffic-portal.com/sso",
+		"redirectUri": "https://traffic-portal.example.com/sso"
 	}
 
 Response Structure

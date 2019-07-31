@@ -99,7 +99,8 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "backend_max_connections": {
             "mojolicious": 4
         },
-        "whitelisted_oauth_urls": []
+        "whitelisted_oauth_urls": [],
+        "oauth_client_secret": ""
     },
     "cors" : {
         "access_control_allow_origin" : "*"

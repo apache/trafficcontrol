@@ -55,7 +55,7 @@ var LoginController = function($scope, $log, $uibModal, $location, authService, 
         const redirectParam = $location.search()['redirect'] !== undefined ? $location.search()['redirect'] : '';
 
         // Builds redirect_uri parameter value to be sent with request to OAuth provider.  This will redirect to the /sso page with any previous redirect information
-        var redirectUriParam = new URL(window.location.href.replace(window.location.hash, '') + 'sso?redirect=' + redirectParam);
+        var redirectUriParam = new URL(window.location.href.replace(window.location.hash, '') + 'sso');
 
         // Builds the URL to redirect to the OAuth provider including the redirect_uri (or override), client_id, and response_type fields
         var continueURL = new URL(propertiesModel.properties.oAuth.oAuthUrl);
@@ -64,6 +64,7 @@ var LoginController = function($scope, $log, $uibModal, $location, authService, 
         continueURL.searchParams.append('response_type', 'code');
 
         localStorage.setItem('redirectUri', redirectUriParam.toString());
+        localStorage.setItem('redirectParam', redirectParam);
 
         window.location.href = continueURL.href;
     };

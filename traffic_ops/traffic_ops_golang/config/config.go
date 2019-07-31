@@ -88,6 +88,7 @@ type ConfigTrafficOpsGolang struct {
 	ProfilingLocation        string                     `json:"profiling_location"`
 	RiakPort                 *uint                      `json:"riak_port"`
 	WhitelistedOAuthUrls     []string                   `json:"whitelisted_oauth_urls"`
+	OAuthClientSecret        string                     `json:"oauth_client_secret"`
 
 	// CRConfigUseRequestHost is whether to use the client request host header in the CRConfig. If false, uses the tm.url parameter.
 	// This defaults to false. Traffic Ops used to always use the host header, setting this true will resume that legacy behavior.

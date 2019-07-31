@@ -126,7 +126,6 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			AuthCodeTokenUrl string `json:"authCodeTokenUrl"`
 			Code             string `json:"code"`
 			ClientId         string `json:"clientId"`
-			ClientSecret     string `json:"clientSecret"`
 			RedirectUri      string `json:"redirectUri"`
 		}{}
 
@@ -138,7 +137,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		data := url.Values{}
 		data.Add("code", parameters.Code)
 		data.Add("client_id", parameters.ClientId)
-		data.Add("client_secret", parameters.ClientSecret)
+		data.Add("client_secret", cfg.ConfigTrafficOpsGolang.OAuthClientSecret)
 		data.Add("grant_type", "authorization_code") // Required by RFC6749 section 4.1.3
 		data.Add("redirect_uri", parameters.RedirectUri)
 

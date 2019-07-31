@@ -51,12 +51,16 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
         );
     };
 
-    this.oauthLogin = function(authCodeTokenUrl, code, clientId, clientSecret, redirectUri) {
-        return $http.post(ENV.api['root'] + 'user/login/oauth', { authCodeTokenUrl: authCodeTokenUrl, code: code, clientId: clientId, clientSecret: clientSecret, redirectUri: redirectUri})
+    this.oauthLogin = function(authCodeTokenUrl, code, clientId, redirectUri) {
+        return $http.post(ENV.api['root'] + 'user/login/oauth', { authCodeTokenUrl: authCodeTokenUrl, code: code, clientId: clientId, redirectUri: redirectUri})
             .then(
                 function(result) {
                     $rootScope.$broadcast('authService::login');
-                    const redirect = decodeURIComponent($location.search().redirect);
+                    var redirect = localStorage.getItem('redirectParam');
+                    localStorage.clear();
+                    if (redirect === undefined || redirect === '') {
+                        redirect = decodeURIComponent($location.search().redirect);
+                    }
                     if (redirect !== undefined) {
                         $location.search('redirect', null); // remove the redirect query param
                         $location.url(redirect);

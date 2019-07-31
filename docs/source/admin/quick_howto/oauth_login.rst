@@ -26,6 +26,8 @@ An opt-in configuration for SSO using OAuth is supported and can be configured t
 
 .. Note:: The ``POST`` from the API to the OAuth provider to exchange the code for a token expects the response to have the token in JSON format with `access_token` as the desired field (and can include other fields).  It also supports a response with just the token itself as the body.  Further development work will need to be done to allow other resposne forms or other response fields.
 
+.. Note:: Users must exist in both Traffic Ops as well as in the OAuth provider's system.  The user's rights are defined by the :term:`role` assigned to the user.
+
 To configure OAuth login:
 
 - Set up authentication with a third party OAuth provider.
@@ -47,8 +49,6 @@ To configure OAuth login:
 		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
 		| oAuthCodeTokenUrl            | string     | URL to your OAuth provider's endpoint for exchanging the code (from oAuthUrl) for a token                                                 |
 		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
-		| clientSecret                 | string     | Client secret registered with OAuth provider to verify client, passed in with `client_secret` parameter                                   |
-		+------------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------+
 
 
 	.. code-block:: json
@@ -61,8 +61,7 @@ To configure OAuth login:
 				"oAuthUrl": "example.oauth.com",
 				"redirectUriParameterOverride": "",
 				"clientId": "",
-				"oAuthCodeTokenUrl": "example.oauth.com/oauth/token",
-				"clientSecret": ""
+				"oAuthCodeTokenUrl": "example.oauth.com/oauth/token"
 			}
 		}
 
@@ -75,6 +74,8 @@ To configure OAuth login:
 		+==========================+====================+=================================================================================================================+
 		| whitelisted_oauth_urls   | Array of strings   | List of whitelisted URLs for the JSON public key set returned by OAuth provider.  Can contain ``*`` wildcards.  |
 		+--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
+		| oauth_client_secret      | string             | Client secret registered with OAuth provider to verify client, passed in with `client_secret` parameter         |
+		+--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
 
 
 	.. code-block:: json
@@ -83,8 +84,9 @@ To configure OAuth login:
 		{
 			"traffic_ops_golang": {
 				"whitelisted_oauth_urls": [
-					"example.oauth.com",
-					"*.oauth.com"
-				]
+					"oauth.example.com",
+					"*.example.com"
+				],
+				"oauth_client_secret": "secret"
 			}
 		}
