@@ -55,6 +55,11 @@ nav#expanded > ul {
 	& > li {
 		display: inline;
 		margin: auto 0.5em;
+
+		& svg {
+			width: 1.1em;
+			fill: white;
+		}
 	}
 }
 
