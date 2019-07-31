@@ -33,8 +33,6 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.security.KeyStore;
 import java.security.PrivateKey;
-import java.io.*;
-import java.security.*;
 import java.security.cert.CertificateFactory;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -45,7 +43,6 @@ import java.util.Map;
 import java.util.Vector;
 
 import sun.security.x509.X500Name;
-import java.security.cert.X509Certificate;
 import java.util.Date;
 
 public class CertificateRegistry {
@@ -224,10 +221,6 @@ public class CertificateRegistry {
 				master.put(DEFAULT_SSL_KEY, defaultHd);
 			}
 		}
-		if (handshakeDataMap.get(DEFAULT_ALIAS) != null) {
-			master.put(handshakeDataMap.get(DEFAULT_ALIAS).getHostname(), handshakeDataMap.get(DEFAULT_ALIAS));
-		}
-
 
 		if (!master.containsKey(defaultAlias)) {
 			if (handshakeDataMap.containsKey(defaultAlias)) {

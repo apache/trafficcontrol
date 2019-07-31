@@ -27,13 +27,11 @@ import org.apache.tomcat.util.net.SSLHostConfigCertificate;
 import org.apache.tomcat.util.net.SocketEvent;
 import org.apache.tomcat.util.net.SocketProcessorBase;
 import org.apache.tomcat.util.net.SocketWrapperBase;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class RouterNioEndpoint extends NioEndpoint {
 	private static final Logger LOGGER = Logger.getLogger(RouterNioEndpoint.class);
-	private static final String DEFAULT_ALIAS = CertificateRegistry.DEFAULT_ALIAS;
 
 	// Grabs the aliases from our custom certificate registry, creates a sslHostConfig for them
 	// and adds the newly created config to the list of sslHostConfigs.  We also remove the default config
@@ -60,18 +58,10 @@ public class RouterNioEndpoint extends NioEndpoint {
 		final Set<String> aliases = sslHostsData.keySet();
 		String lastHostName = "";
 
-		final List<String> defaultAliasList = aliases.stream().filter(alias -> alias.equalsIgnoreCase(DEFAULT_ALIAS)).collect(Collectors.toList());
-		boolean hasDefault = !defaultAliasList.isEmpty();
-		LOGGER.info( (hasDefault && defaultAliasList.size() == 1) ? "Found default alias." : "No default alias, using first from list. List length is " + aliases.size());
-		if (hasDefault && sslHostsData.get(defaultAliasList.get(0)) != null) {
-			setDefaultSSLHostConfigName(sslHostsData.get(defaultAliasList.get(0)).getHostname());
-		}
-
-		for (String alias : aliases) {
+		for (final String alias : aliases) {
 			final SSLHostConfig sslHostConfig = new SSLHostConfig();
 			final SSLHostConfigCertificate cert = new SSLHostConfigCertificate(sslHostConfig, SSLHostConfigCertificate.Type.RSA);
 			sslHostConfig.setHostName(sslHostsData.get(alias).getHostname());
-			alias = alias.equalsIgnoreCase(DEFAULT_ALIAS) ? sslHostsData.get(alias).getHostname() : alias;
 			cert.setCertificateKeyAlias(alias);
 			sslHostConfig.addCertificate(cert);
 			sslHostConfig.setCertificateKeyAlias(alias);
@@ -85,10 +75,9 @@ public class RouterNioEndpoint extends NioEndpoint {
 				lastHostName = sslHostConfig.getHostName();
 			}
 
-			if (!hasDefault && ! "".equals(alias)) {
+			if (CertificateRegistry.DEFAULT_SSL_KEY.equals(alias)){
 				// One of the configs must be set as the default
 				setDefaultSSLHostConfigName(sslHostConfig.getHostName());
-				hasDefault = true;
 			}
 		}
 	}
