@@ -55,15 +55,15 @@ public class CertificateRegistry {
 	volatile private Map<String, HandshakeData>	handshakeDataMap = new HashMap<>();
 	private RouterNioEndpoint sslEndpoint = null;
 	final private Map<String, CertificateData> previousData = new HashMap<>();
-    public String defaultAlias;
+	public String defaultAlias;
 
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
 	private CertificateRegistry() {
-    	try {
+		try {
 			defaultAlias = InetAddress.getLocalHost().getHostName();
 		} catch (Exception e) {
-    		log.error("Error getting hostname");
+			log.error("Error getting hostname");
 		}
 	}
 
@@ -115,14 +115,14 @@ public class CertificateRegistry {
 	}
 
 	public Map<String, HandshakeData> getHandshakeData() {
-	    return handshakeDataMap;
-    }
+		return handshakeDataMap;
+	}
 
 	public void setEndPoint(final RouterNioEndpoint routerNioEndpoint) {
 		sslEndpoint = routerNioEndpoint;
 	}
 
-    private HandshakeData createApiDefaultSsl() {
+	private HandshakeData createApiDefaultSsl() {
 		try {
 			final Map<String, String> httpsProperties = (new HttpsProperties()).getHttpsPropertiesMap();
 
@@ -158,10 +158,10 @@ public class CertificateRegistry {
 		return null;
 	}
 
-    @SuppressWarnings("PMD.AccessorClassGeneration")
-    private static class CertificateRegistryHolder {
-        private static final CertificateRegistry DELIVERY_SERVICE_CERTIFICATES = new CertificateRegistry();
-    }
+	@SuppressWarnings("PMD.AccessorClassGeneration")
+	private static class CertificateRegistryHolder {
+		private static final CertificateRegistry DELIVERY_SERVICE_CERTIFICATES = new CertificateRegistry();
+	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity"})
 	synchronized public void importCertificateDataList(final List<CertificateData> certificateDataList) {
@@ -195,7 +195,7 @@ public class CertificateRegistry {
 			if (!master.containsKey(alias) && sslEndpoint != null) {
 				final String hostname = previousData.get(alias).getHostname();
 				sslEndpoint.removeSslHostConfig(hostname);
-			    log.warn("Removed handshake data with hostname " + hostname);
+				log.warn("Removed handshake data with hostname " + hostname);
 			}
 		}
 
@@ -218,7 +218,7 @@ public class CertificateRegistry {
 				final HandshakeData defaultHd = createDefaultSsl();
 				if (defaultHd == null){
 					log.error("Failed to initialize the CertificateRegistry because of a problem with the 'default' " +
-							"certificate.  Returning the Certificate Registry without a default.");
+							"certificate. Returning the Certificate Registry without a default.");
 					return;
 				}
 				master.put(DEFAULT_SSL_KEY, defaultHd);
@@ -230,16 +230,16 @@ public class CertificateRegistry {
 
 
 		if (!master.containsKey(defaultAlias)) {
-		    if (handshakeDataMap.containsKey(defaultAlias)) {
-		        master.put(defaultAlias, handshakeDataMap.get(defaultAlias));
-            } else {
-		    	final HandshakeData apiDefault = createApiDefaultSsl();
-		    	if (apiDefault == null) {
-		    		log.error("Failed to initialize the API Default certificate.");
+			if (handshakeDataMap.containsKey(defaultAlias)) {
+				master.put(defaultAlias, handshakeDataMap.get(defaultAlias));
+			} else {
+				final HandshakeData apiDefault = createApiDefaultSsl();
+				if (apiDefault == null) {
+					log.error("Failed to initialize the API Default certificate.");
 				}
 				master.put(apiDefault.getHostname(), apiDefault);
 			}
-        }
+		}
 		handshakeDataMap = master;
 
 		if (sslEndpoint != null) {
