@@ -229,8 +229,9 @@ public class CertificateRegistry {
 				final HandshakeData apiDefault = createApiDefaultSsl();
 				if (apiDefault == null) {
 					log.error("Failed to initialize the API Default certificate.");
+				} else {
+					master.put(apiDefault.getHostname(), apiDefault);
 				}
-				master.put(apiDefault.getHostname(), apiDefault);
 			}
 		}
 		handshakeDataMap = master;
