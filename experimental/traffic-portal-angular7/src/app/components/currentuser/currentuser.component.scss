@@ -11,3 +11,27 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@import '../../../styles.scss';
+
+main {
+	margin: 0 15px;
+}
+
+#edit {
+	background-color: $theme_tertiary;
+	height: 2em;
+	width: 2em;
+	display: block;
+	padding: 1em;
+	right: 5px;
+	text-align: center;
+	vertical-align: center;
+	border-radius: 2em;
+	position: fixed;
+	bottom: 5px;
+	cursor: pointer;
+
+	img {
+		height: 2em;
+	}
+}

@@ -11,8 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
+import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
 
 import { Role, User } from '../../models/user';
@@ -23,29 +24,33 @@ import { APIService, AuthenticationService } from '../../services';
 	templateUrl: './currentuser.component.html',
 	styleUrls: ['./currentuser.component.scss']
 })
-export class CurrentuserComponent implements OnInit {
+export class CurrentuserComponent implements OnInit, OnDestroy {
 
 	currentUser: User;
+	private subscription: Subscription;
 
 	constructor(private readonly auth: AuthenticationService, private readonly api: APIService) {
+		this.currentUser = this.auth.currentUserValue;
 	}
 
 	ngOnInit() {
-		this.currentUser = this.auth.currentUserValue;
 		if (this.currentUser === null) {
-			this.api.getCurrentUser().pipe(first()).subscribe(
-				(u: User) => {
-					this.currentUser = u;
+			this.auth.updateCurrentUser().pipe(first()).subscribe(
+				(r: boolean) => {
+					if (r) {
+						this.currentUser = this.auth.currentUserValue;
+					}
 				}
-			)
+			);
 		}
+		this.subscription = this.auth.currentUser.subscribe(
+			(u: User) => {
+				this.currentUser = u;
+			}
+		);
 	}
 
-	debug(e: Event) {
-		e.preventDefault();
-		console.debug(this);
-		console.debug(e);
-		console.debug(this.auth.currentUserValue);
+	ngOnDestroy() {
+		this.subscription.unsubscribe();
 	}
-
 }

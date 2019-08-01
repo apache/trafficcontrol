@@ -13,12 +13,15 @@ limitations under the License.
 -->
 <tp-header [title]=currentUser.username></tp-header>
 
-<h1><span *ngIf=currentUser.fullName>{{currentUser.fullName}},&nbsp;</span>{{currentUser.roleName}} user</h1>
+<main>
+<h1><span *ngIf=currentUser.fullName>{{currentUser.fullName}}, </span>{{currentUser.roleName}} user</h1>
 <address>
-	<p *ngIf=currentUser.email><a href="mailto:{{currentUser.email}}">{{currentUser.email}}</a></p>
+	<p *ngIf="currentUser.email || currentUser.phoneNumber"><a *ngIf=currentUser.email href="mailto:{{currentUser.email}}">{{currentUser.email}}</a><span *ngIf="currentUser.email && currentUser.phoneNumber">, </span><a *ngIf="currentUser.phoneNumber" href="tel:{{currentUser.phoneNumber}}">{{currentUser.phoneNumber}}</a></p>
 	<p *ngIf=currentUser.addressLine1>{{currentUser.addressLine1}}</p>
 	<p *ngIf=currentUser.addressLine2>{{currentUser.addressLine2}}</p>
 	<p *ngIf=currentUser.company>{{currentUser.company}}</p>
-	<p *ngIf="currentUser.city || currentUser.country || currentUser.stateOrProvince || currentUser.postalCode"><span *ngIf="currentUser.city">{{currentUser.city}}</span><span *ngIf="currentUser.country || currentUser.stateOrProvince || currentUser.postalCode">,</span>&nbsp;</p>
+	<p *ngIf="currentUser.city || currentUser.country || currentUser.stateOrProvince || currentUser.postalCode"><span *ngIf="currentUser.city">{{currentUser.city}}<span *ngIf="currentUser.country || currentUser.stateOrProvince || currentUser.postalCode">&nbsp;</span></span><span *ngIf="currentUser.stateOrProvince">{{currentUser.stateOrProvince}}<span *ngIf="currentUser.country || currentUser.postalCode">, </span></span><span *ngIf="currentUser.country">{{currentUser.country}}<span *ngIf="currentUser.postalCode">, </span></span><span *ngIf=currentUser.postalCode>{{currentUser.postalCode}}</span></p>
 </address>
-<button type="button" (click)="debug($event)">DEBUG</button>
+</main>
+
+<a id="edit" title="Edit Profile"><img src="/assets/edit.svg"/></a>
