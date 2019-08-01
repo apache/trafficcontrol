@@ -23,6 +23,6 @@ WORKDIR /go/src/$DIR/traffic_monitor
 
 RUN bash -c "go get -u github.com/jstemmer/go-junit-report"
 RUN bash -c "go get -v"
-CMD bash -c 'go test -v ./... ../lib/go-tc/... 2>&1 | go-junit-report --package-name=golang.test.tm --set-exit-code > /junit/golang.test.tm.xml && chmod 777 -R /junit && cat /junit/golang.test.tm.xml'
+CMD bash -c 'go test -coverprofile=tmcoverage.out -v ./... ../lib/go-tc/... 2>&1 | go-junit-report --package-name=golang.test.tm --set-exit-code > /junit/golang.test.tm.xml && chmod 777 -R /junit && cat /junit/golang.test.tm.xml'
 #
 # vi:syntax=Dockerfile
