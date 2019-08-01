@@ -19,6 +19,10 @@
 ``cachegroup_fallbacks``
 ************************
 
+.. deprecated:: ATCv4.0
+
+	The :ref:`to-api-cachegroups` endpoint now contains a list of "fallbacks" in the output, and supports it in input, and so this endpoint is redundant.
+
 ``GET``
 =======
 Retrieve fallback-related configurations for a :term:`Cache Group`.
