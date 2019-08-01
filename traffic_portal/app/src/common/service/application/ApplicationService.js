@@ -38,7 +38,8 @@ var ApplicationService = function($rootScope, $anchorScroll, $http, messageModel
 
         // jquery DataTables default overrides
         $.extend(true, $.fn.dataTable.defaults, {
-            "stateSave": true
+            "stateSave": true,
+            "scrollX": true
         });
 
         if (!storageAvailable('localStorage')) {
