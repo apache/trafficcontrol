@@ -825,9 +825,9 @@ func IsUserAuthorizedToModifyDSID(inf *api.APIInfo, ds uint) (error, error, int)
 	}
 
 	if !ok {
-		return errors.New("Your tenant does not have permissions to create, delete, or modify content invalidation jobs for this Delivery Service!"),
-			nil,
-			http.StatusForbidden
+		return errors.New("No such Delivery Service!"),
+			fmt.Errorf("User %s attempted to modify DS %d, which is outside of its tenancy (have: %d, want: %d)", inf.User.UserName, ds, inf.User.TenantId, t),
+			http.StatusNotFound
 	}
 	return nil, nil, 0
 }
@@ -855,9 +855,9 @@ func IsUserAuthorizedToModifyDSXMLID(inf *api.APIInfo, ds string) (error, error,
 	}
 
 	if !ok {
-		return errors.New("Your tenant does not have permissions to create, delete, or modify content invalidation jobs for this Delivery Service!"),
-			nil,
-			http.StatusForbidden
+		return errors.New("No such Delivery Service!"),
+			fmt.Errorf("User %s attempted to modify DS %s, which is outside of its tenancy (have: %d, want: %d)", inf.User.UserName, ds, inf.User.TenantId, t),
+			http.StatusNotFound
 	}
 	return nil, nil, 0
 }
