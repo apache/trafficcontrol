@@ -72,9 +72,9 @@ func CreateTestInvalidationJobs(t *testing.T) {
 	}
 
 	for _, job := range testData.InvalidationJobs {
-		id, ok := dsNameIDs[job.DeliveryService.(string)]
+		_, ok := dsNameIDs[(*job.DeliveryService).(string)]
 		if !ok {
-			t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DSName)
+			t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DeliveryService)
 		}
 		if _, _, err := TOSession.CreateInvalidationJob(job); err != nil {
 			t.Errorf("could not CREATE job: %v\n", err)
