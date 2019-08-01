@@ -474,6 +474,14 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if job.StartTime.Before(time.Now()) {
+		userErr = errors.New("Cannot modify a job that has already started!")
+		errCode = http.StatusMethodNotAllowed
+		w.Header().Set(http.CanonicalHeaderKey("allow"), "GET,HEAD,DELETE")
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
 	if *job.DeliveryService != *input.DeliveryService {
 		userErr = errors.New("Cannot change 'deliveryService' of existing invalidation job!")
 		errCode = http.StatusConflict
@@ -494,6 +502,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 		return
 	}
+
 
 	row = inf.Tx.Tx.QueryRow(updateQuery,
 		input.AssetURL,
@@ -826,7 +835,7 @@ func IsUserAuthorizedToModifyDSID(inf *api.APIInfo, ds uint) (error, error, int)
 
 	if !ok {
 		return errors.New("No such Delivery Service!"),
-			fmt.Errorf("User %s attempted to modify DS %d, which is outside of its tenancy (have: %d, want: %d)", inf.User.UserName, ds, inf.User.TenantId, t),
+			fmt.Errorf("User %s attempted to modify DS %d, which is outside of its tenancy (have: %d, want: %d)", inf.User.UserName, ds, inf.User.TenantID, t),
 			http.StatusNotFound
 	}
 	return nil, nil, 0
@@ -856,7 +865,7 @@ func IsUserAuthorizedToModifyDSXMLID(inf *api.APIInfo, ds string) (error, error,
 
 	if !ok {
 		return errors.New("No such Delivery Service!"),
-			fmt.Errorf("User %s attempted to modify DS %s, which is outside of its tenancy (have: %d, want: %d)", inf.User.UserName, ds, inf.User.TenantId, t),
+			fmt.Errorf("User %s attempted to modify DS %s, which is outside of its tenancy (have: %d, want: %d)", inf.User.UserName, ds, inf.User.TenantID, t),
 			http.StatusNotFound
 	}
 	return nil, nil, 0
