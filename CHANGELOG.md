@@ -87,6 +87,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed Traffic Ops Golang POST servers/id/deliveryservice continuing erroneously after a database error.
 - Fixed Traffic Ops Golang POST servers/id/deliveryservice double-logging errors.
 
+### Deprecated/Removed
+- The TO API `cachegroup_fallbacks` endpoint is now deprecated
+
 ## [3.0.0] - 2018-10-30
 ### Added
 - Removed MySQL-to-Postgres migration tools.  This tool is supported for 1.x to 2.x upgrades only and should not be used with 3.x.
