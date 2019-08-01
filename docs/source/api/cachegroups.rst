@@ -79,8 +79,8 @@ Response Structure
 :secondaryParentCachegroupId:   ID of this :term:`Cache Group`'s secondary parent :term:`Cache Group` (if any)
 :secondaryParentCachegroupName: Name of this :term:`Cache Group`'s secondary parent :term:`Cache Group` (if any)
 :shortName:                     Abbreviation of the :term:`Cache Group` name
-:typeId:                        Unique identifier for the 'Type' of :term:`Cache Group` entry
-:typeName:                      The name of the type of :term:`Cache Group` entry
+:typeId:                        Unique identifier for the ':term:`Type`' of :term:`Cache Group` entry
+:typeName:                      The name of the :term:`type` of :term:`Cache Group` entry
 
 .. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
@@ -148,7 +148,7 @@ Request Structure
 :parentCachegroupId:          An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`'s primary parent
 :secondaryParentCachegroupId: An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`'s secondary parent
 :shortName:                   An abbreviation of the ``name``
-:typeId:                      An integral, unique identifier for the type of :term:`Cache Group`; one of:
+:typeId:                      An integral, unique identifier for the :term:`type` of :term:`Cache Group`; one of:
 
 	EDGE_LOC
 		Indicates a group of Edge-tier caches
@@ -198,13 +198,13 @@ Response Structure
 :localizationMethods:           Array of enabled localization methods (as strings)
 :fallbacks:                     Array of fallback server hostnames
 :name:                          The name of the :term:`Cache Group` entry
-:parentCachegroupId:            ID of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
-:parentCachegroupName:          Name of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
-:secondaryParentCachegroupId:   ID of this :term:`Cache Group`\ 's secondary parent :term:`Cache Group` (if any)
-:secondaryParentCachegroupName: Name of this :term:`Cache Group`\ 's secondary parent :term:`Cache Group` (if any)
+:parentCachegroupId:            ID of this :term:`Cache Group`'s parent :term:`Cache Group` (if any)
+:parentCachegroupName:          Name of this :term:`Cache Group`'s parent :term:`Cache Group` (if any)
+:secondaryParentCachegroupId:   ID of this :term:`Cache Group`'s secondary parent :term:`Cache Group` (if any)
+:secondaryParentCachegroupName: Name of this :term:`Cache Group`'s secondary parent :term:`Cache Group` (if any)
 :shortName:                     Abbreviation of the :term:`Cache Group` name
-:typeId:                        Unique identifier for the 'Type' of :term:`Cache Group` entry
-:typeName:                      The name of the type of :term:`Cache Group` entry
+:typeId:                        Unique identifier for the ':term:`Type`' of :term:`Cache Group` entry
+:typeName:                      The name of the :term:`type` of :term:`Cache Group` entry
 
 
 .. code-block:: http
@@ -246,7 +246,7 @@ Response Structure
 		"lastUpdated": "2018-11-07 22:11:50+00"
 	}}
 
-.. [#fallbacks] A ``fallbackToClosest`` setting of ``true`` is mutually exclusive with a non-empty ``fallbacks`` array.
+.. [#fallbacks] Traffic Router will first check for a ``fallbacks`` array and, when that is empty/unset/all the :term:`Cache Groups` in it are also unavailable, will subsequently check for ``fallbackToClosest``. If that is ``true``, then it falls back to the geographically closest :term:`Cache Group` capable of serving the same content or, when it is ``false``/no such :term:`Cache Group` exists/said :term:`Cache Group` is also unavailable, will respond to clients with a failure response indicating the problem.
 .. [#optional] While these fields are technically optional, note that if they are not specified many things may break. For this reason, Traffic Portal requires them when creating or editing :term:`Cache Groups`.
 
 .. This doesn't appear to exist anymore - can't reproduce in CIAB nor production
