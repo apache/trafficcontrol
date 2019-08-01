@@ -21,5 +21,7 @@ ADD lib /go/src/$DIR/lib
 WORKDIR /go/src/$DIR/traffic_ops/traffic_ops_golang
 
 CMD bash -c 'go get -v && go test -coverprofile=tocoverage.out  -v ./... ../../lib/go-tc/...'
+CMD bash -c 'go tool cover -func=tocoverage.out'
+
 #
 # vi:syntax=Dockerfile
