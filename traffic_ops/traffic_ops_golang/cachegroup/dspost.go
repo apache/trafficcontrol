@@ -107,7 +107,7 @@ func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int64, dsIDs []int64) (tc
 	if err := updateParams(tx, dsIDs); err != nil {
 		return tc.CacheGroupPostDSResp{}, nil, errors.New("updating delivery service parameters: " + err.Error()), http.StatusInternalServerError
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+string(cgID)+", ACTION: Assign DSes to CacheGroup servers", user, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.FormatInt(cgID, 10)+", ACTION: Assign DSes to CacheGroup servers", user, tx)
 	return tc.CacheGroupPostDSResp{ID: util.JSONIntStr(cgID), ServerNames: cgServers, DeliveryServices: dsIDs}, nil, nil, http.StatusOK
 }
 

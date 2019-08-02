@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -57,7 +58,7 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "cdn was deleted.")
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+string(cdnID)+", ACTION: Deleted CDN", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted CDN", inf.User, inf.Tx.Tx)
 }
 
 func deleteCDNByName(tx *sql.Tx, name tc.CDNName) error {

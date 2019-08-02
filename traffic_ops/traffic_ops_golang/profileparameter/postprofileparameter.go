@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -56,7 +57,7 @@ func PostProfileParam(w http.ResponseWriter, r *http.Request) {
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("profile not found"))
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "PROFILE: "+profileName+", ID: "+string(*profileParam.ProfileID)+", ACTION: Assigned "+string(len(*profileParam.ParamIDs))+" parameters to profile", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "PROFILE: "+profileName+", ID: "+strconv.FormatInt(*profileParam.ProfileID, 10)+", ACTION: Assigned "+string(len(*profileParam.ParamIDs))+" parameters to profile", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d parameters were assigned to the %d profile", len(*profileParam.ParamIDs), *profileParam.ProfileID), profileParam)
 }
 

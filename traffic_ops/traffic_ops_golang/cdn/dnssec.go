@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -76,7 +77,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+string(cdnID)+", ACTION: Generated DNSSEC keys", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(cdnID)+", ACTION: Generated DNSSEC keys", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "Successfully created dnssec keys for "+cdnName)
 }
 
@@ -319,7 +320,7 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+string(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "Successfully deleted "+CDNDNSSECKeyType+" for "+key)
 }
 

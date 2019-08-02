@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -60,6 +61,6 @@ func PostProfileParamsByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := tc.ProfileParameterPostResp{Parameters: insertedObjs, ProfileName: profileName, ProfileID: profileID}
-	api.CreateChangeLogRawTx(api.ApiChange, "PROFILE: "+profileName+", ID: "+string(profileID)+", ACTION: Assigned parameters to profile", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "PROFILE: "+profileName+", ID: "+strconv.Itoa(profileID)+", ACTION: Assigned parameters to profile", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Assign parameters successfully to profile "+profileName, resp)
 }
