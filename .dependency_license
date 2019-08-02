@@ -19,7 +19,6 @@ CHANGELOG$, Docs
 \.classpath$, Apache
 \.pmd$, Apache
 \.project$, Apache
-^\.rat-excludes$, Apache
 RobotoSlab-Bold\.ttf$, Apache
 RobotoSlab-Regular\.ttf$, Apache
 \.cfg$, Apache
@@ -110,7 +109,6 @@ traffic_portal/app/src/assets/js/colReorder.dataTables\..*, MIT
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.
-^\.rat-excludes$, Ignore # False positives for basically everything.
 \.dependency_license$, Ignore # False positives in this file.
 
 # This file is created dynamically by the testing script itself, it is
