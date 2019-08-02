@@ -4,5 +4,5 @@ workflow "Daily Tests" {
 }
 
 action "Go Test" {
-  uses = "./traffic_ops/app/bin/tests/Dockerfile-golangtest"
+  uses = "./tests/traffic_ops/golang"
 }
