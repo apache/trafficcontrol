@@ -19,6 +19,10 @@ package tc
  * under the License.
  */
 
+type LogsResponse struct {
+	Response []Log `json:"response"`
+}
+
 type Log struct {
 	ID           *int       `json:"id"`
 	LastUpdated  *Time      `json:"lastUpdated"`
