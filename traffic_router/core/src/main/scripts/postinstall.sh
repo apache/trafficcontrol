@@ -34,7 +34,7 @@ cd /opt/traffic_router/conf
 keytool=\$(dirname \$(readlink -f \$(which java)))/keytool
 
 if [ ! -f /opt/traffic_router/conf/keyStore.jks ]; then \n
-    \$keytool -genkeypair -v -alias \$(hostname -f) -dname \"CN=\$(hostname -f), OU=APIDefault, O=Apache Traffic Control, L=Denver, ST=Colorado, C=US\" -keystore \$(pwd)/keyStore.jks -storepass changeit -keyalg RSA -ext KeyUsage=\"digitalSignature,keyEncipherment,keyCertSign\" -ext BasicConstraints:\"critical=ca:true\" -storetype JKS
+    \$keytool -genkeypair -v -alias \$(hostname -f) -dname \"CN=\$(hostname -f), OU=APIDefault, O=Apache Traffic Control, L=Denver, ST=Colorado, C=US\" -keystore \$(pwd)/keyStore.jks -storepass changeit -keyalg RSA -ext KeyUsage=\"digitalSignature,keyEncipherment,keyCertSign\" -ext BasicConstraints:\"critical=ca:true\" -storetype JKS -validity 3650
     \$keytool -exportcert -v -alias \$(hostname -f) -file \$(hostname -f).crt -keypass changeit -storepass changeit -keystore \$(pwd)/keyStore.jks -rfc
 fi" >> generatingCerts.sh
 chmod 755 generatingCerts.sh
