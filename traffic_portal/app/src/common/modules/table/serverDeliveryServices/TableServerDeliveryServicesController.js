@@ -22,6 +22,8 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 	// extends the TableDeliveryServicesController to inherit common methods
 	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
 
+	let serverDeliveryServicesTable;
+
 	var removeDeliveryService = function(dsId) {
 		deliveryServiceService.deleteDeliveryServiceServer(dsId, $scope.server.id)
 			.then(
@@ -29,6 +31,32 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 					$scope.refresh();
 				}
 			);
+	};
+
+	var confirmRemoveDS = function(ds, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
+
+		var params = {
+			title: 'Remove Delivery Service from Server?',
+			message: 'Are you sure you want to remove ' + ds.xmlId + ' from this server?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			removeDeliveryService(ds.id);
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.server = server;
@@ -41,7 +69,7 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 				return true;
 			},
 			click: function ($itemScope) {
-				$scope.confirmRemoveDS($itemScope.ds);
+				confirmRemoveDS($itemScope.ds);
 			}
 		}
 	);
@@ -109,40 +137,29 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 		});
 	};
 
-	$scope.confirmRemoveDS = function(ds, $event) {
-		if ($event) {
-			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		}
-
-		var params = {
-			title: 'Remove Delivery Service from Server?',
-			message: 'Are you sure you want to remove ' + ds.xmlId + ' from this server?'
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
-			}
-		});
-		modalInstance.result.then(function() {
-			removeDeliveryService(ds.id);
-		}, function () {
-			// do nothing
-		});
+	$scope.toggleVisibility = function(colName) {
+		const col = serverDeliveryServicesTable.column(colName + ':name');
+		col.visible(!col.visible());
+		serverDeliveryServicesTable.rows().invalidate().draw();
 	};
 
 	angular.element(document).ready(function () {
-		$('#serverDeliveryServicesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+		serverDeliveryServicesTable = $('#serverDeliveryServicesTable').DataTable({
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
-			],
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"colReorder": {
+				realtime: false
+			},
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_serverDeliveryServicesTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_serverDeliveryServicesTable_/):", e);
+				}
+			}
 		});
 	});
 

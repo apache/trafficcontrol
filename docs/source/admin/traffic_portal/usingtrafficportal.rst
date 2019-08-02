@@ -137,55 +137,80 @@ A table showing the results of the periodic :ref:`to-check-ext` that are run. Th
 
 Services
 ========
-:guilabel:`Services` groups the functionality to modify :term:`Delivery Service`\ s - for those users with the necessary permissions - or make Requests for such changes - for uses without necessary permissions.
+:guilabel:`Services` groups the functionality to modify :term:`Delivery Service`\ s - for those users with the necessary permissions - or make Delivery Service Requests for such changes - for users without necessary permissions.
 
-.. figure:: images/tp_table_ds_requests.png
+
+.. figure:: ./images/tp_menu_services.png
 	:align: center
-	:alt: An example table of Delivery Service Requests
+	:alt: The Traffic Portal 'Services' Menu
 
-	Table of Delivery Service Requests
+	The 'Services' Menu
 
 .. _tp-services-delivery-service:
 
-Delivery Service
+Delivery Services
 -----------------
-This page contains a table displaying all :term:`Delivery Service`\ s visible to the user. Each entry in this table has the following fields:
+This page contains a table displaying all :term:`Delivery Services` visible to the user as determined by their :term:`Tenant`.
 
-:Key (XML ID): A unique string that identifies this :term:`Delivery Service`
-:Tenant:       The tenant to which the :term:`Delivery Service` is assigned
-:Origin:       The Origin Server's base URL. This includes the protocol (HTTP or HTTPS). Example: ``http://movies.origin.com``
-:Active:       When this is set to 'false', Traffic Router will not serve DNS or HTTP responses for this :term:`Delivery Service`
-:Type:         The type of content routing this :term:`Delivery Service` will use
+.. figure:: images/tp_table_ds.png
+	:align: center
+	:alt: An example table of Delivery Services
 
-	.. seealso:: :ref:`ds-types`
+	Table of Delivery Services
 
-:Protocol: The protocol which which this :term:`Delivery Service` serves clients. Its value is one of:
+Use the `Select Columns` menu to select the delivery service columns to view and search. Columns can also be rearranged using drag-and-drop. Available delivery service columns include:
 
-	HTTP
-		Only insecure requests will be serviced
-	HTTPS
-		Only secure requests will be serviced
-	HTTP and HTTPS
-		Both secure and insecure requests will be serviced
-	HTTP to HTTPS
-		Insecure requests will be redirected to secure locations and secure requests are serviced normally
-
-:CDN:                   The CDN to which the :term:`Delivery Service` belongs
-:IPv6 Enabled:          When set to 'true', the Traffic Router will respond to AAAA DNS requests for the routed name of this :term:`Delivery Service`, Otherwise, only A records will be served
-:DSCP:                  The :abbr:`DSCP (Differentiated Services Code Point)` value with which to mark IP packets sent to the client
-:Signing Algorithm:     The algorithm used to sign URLs used by the Delivery Service
-:Query String Handling: Describes how the :term:`Delivery Service` treats query strings. It has one of the following possible values:
-
-	USE
-		The query string will be used in the :abbr:`ATS (Apache Traffic Server)` `'cache key' <https://docs.trafficserver.apache.org/en/7.1.x/appendices/glossary.en.html#term-cache-key>`_ and is passed in requests to the origin (each unique query string is treated as a unique URL)
-	IGNORE
-		The query string will *not* be used in the :abbr:`ATS (Apache Traffic Server)` `'cache key' <https://docs.trafficserver.apache.org/en/7.1.x/appendices/glossary.en.html#term-cache-key>`_, but *will* be passed in requests to the origin
-	DROP
-		The query string is stripped from the request URL at the Edge-tier cache, and so is not used in the :abbr:`ATS (Apache Traffic Server)` `'cache key' <https://docs.trafficserver.apache.org/en/7.1.x/appendices/glossary.en.html#term-cache-key>`_, and is not passed in requests to the origin
-
-	.. seealso:: :ref:`ds-qstring-handling`
-
-:Last Updated: The time at which the :term:`Delivery Service` was last updated
+- :ref:`ds-active` (visible by default)
+- :ref:`ds-anonymous-blocking`
+- :ref:`ds-cdn` (visible by default)
+- :ref:`ds-check-path`
+- :ref:`ds-consistent-hashing-qparams`
+- :ref:`ds-consistent-hashing-regex`
+- :ref:`ds-deep-caching`
+- :ref:`ds-display-name`
+- :ref:`ds-dns-bypass-cname`
+- :ref:`ds-dns-bypass-ip`
+- :ref:`ds-dns-bypass-ipv6`
+- :ref:`ds-dns-bypass-ttl`
+- :ref:`ds-dns-ttl`
+- :ref:`ds-dscp` (visible by default)
+- :ref:`ds-edge-header-rw-rules`
+- :ref:`ds-fqpr`
+- :ref:`ds-geo-limit`
+- :ref:`ds-geo-limit-countries`
+- :ref:`ds-geo-limit-redirect-url`
+- :ref:`ds-geo-provider`
+- :ref:`ds-geo-miss-default-latitude`
+- :ref:`ds-geo-miss-default-longitude`
+- :ref:`ds-global-max-mbps`
+- :ref:`ds-global-max-tps`
+- :ref:`ds-http-bypass-fqdn`
+- :ref:`ds-info-url`
+- :ref:`ds-initial-dispersion`
+- :ref:`ds-ipv6-routing` (visible by default)
+- :ref:`ds-longdesc`
+- :ref:`ds-longdesc2`
+- :ref:`ds-longdesc3`
+- :ref:`ds-max-dns-answers`
+- :ref:`ds-max-origin-connections`
+- :ref:`ds-mid-header-rw-rules`
+- :ref:`ds-origin-shield`
+- :ref:`ds-origin-url` (visible by default)
+- :ref:`ds-profile`
+- :ref:`ds-protocol` (visible by default)
+- :ref:`ds-qstring-handling` (visible by default)
+- :ref:`ds-range-request-handling`
+- :ref:`ds-raw-remap`
+- :ref:`ds-regex-remap`
+- :ref:`ds-regionalgeo`
+- :ref:`ds-routing-name`
+- :ref:`ds-signing-algorithm` (visible by default)
+- :ref:`ds-tenant` (visible by default)
+- :ref:`ds-tr-resp-headers`
+- :ref:`ds-tr-req-headers`
+- :ref:`ds-types` (visible by default)
+- :ref:`ds-multi-site-origin`
+- :ref:`ds-xmlid` (visible by default)
 
 :term:`Delivery Service` management includes the ability to (where applicable):
 
@@ -209,6 +234,12 @@ This page contains a table displaying all :term:`Delivery Service`\ s visible to
 Delivery Service Requests
 -------------------------
 If enabled in the :file:`traffic_portal_properties.json` configuration file, all :term:`Delivery Service` changes (create, update and delete) are captured as a Delivery Service Request and must be reviewed before fulfillment/deployment.
+
+.. figure:: images/tp_table_ds_requests.png
+	:align: center
+	:alt: An example table of Delivery Service Requests
+
+	Table of Delivery Service Requests
 
 :term:`Delivery Service`: A unique string that identifies the :term:`Delivery Service` with which the request is associated. This unique string is also known (and ofter referred to within documentation and source code) as a :term:`Delivery Service` key' or 'XML ID'/'xml_id'/'xmlid'
 :Type:             The type of Delivery Service Request: 'create', 'update', or 'delete' according to what was requested

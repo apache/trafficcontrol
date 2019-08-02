@@ -32,6 +32,23 @@ var DeliveryServiceUtils = function($window, propertiesModel) {
 		2: "DROP"
 	};
 
+	this.geoProviders = {
+		0: "MaxMind",
+		1: "Neustar"
+	};
+
+	this.geoLimits = {
+		0: "None",
+		1: "CZF Only",
+		2: "CZF + Country Code(s)",
+	};
+
+	this.rrhs = {
+		0: "no cache",
+		1: "background_fetch",
+		2: "cache_range_requests"
+	};
+
 	this.openCharts = function(ds, $event) {
 		if ($event) {
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
