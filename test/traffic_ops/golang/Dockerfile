@@ -13,13 +13,12 @@
 #
 FROM golang:1.11
 MAINTAINER dev@trafficcontrol.apache.org
-ARG DIR=github.com/apache/trafficcontrol
 
-ADD traffic_ops /go/src/$DIR/traffic_ops
-ADD lib /go/src/$DIR/lib
+# ADD traffic_ops /go/src/github.com/apache/trafficcontrol/traffic_ops
+# ADD lib /go/src/github.com/apache/trafficcontrol/lib
+# WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
 
-WORKDIR /go/src/$DIR/traffic_ops/traffic_ops_golang
+ADD entrypoint.sh /
 
-CMD bash -c 'go get -v && go test -cover -v ./... ../../lib/go-tc/...'
-#
-# vi:syntax=Dockerfile
+# CMD bash -c 'go get -v && go test -cover -v ./... ../../lib/go-tc/...'
+ENTRYPOINT ["/entrypoint.sh"]
