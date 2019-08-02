@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Database migrations have been collapsed. Rollbacks to migrations that previously existed are no longer possible.
 - Issue #3750: Fixed Grove access log fractional seconds.
 - Issue #3646: Fixed Traffic Monitor Thresholds.
+- Modified Traffic Router API to be available via HTTPS.
 
 ## [3.0.0] - 2018-10-30
 ### Added

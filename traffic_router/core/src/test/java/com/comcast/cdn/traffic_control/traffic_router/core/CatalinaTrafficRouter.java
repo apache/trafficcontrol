@@ -22,7 +22,11 @@ import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.core.StandardService;
 import org.apache.catalina.startup.Catalina;
 import org.springframework.util.SocketUtils;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class CatalinaTrafficRouter {
 	Catalina catalina;
@@ -46,6 +50,11 @@ public class CatalinaTrafficRouter {
 		// Override the port and app base property of server.xml
 		StandardService trafficRouterService = (StandardService) catalina.getServer().findService("traffic_router_core");
 
+		List<Connector> secureConnectorList = Arrays.stream(trafficRouterService.findConnectors()).filter(k -> k.getAttribute("portAttribute").equals("SecureApiPort")).collect(Collectors.toList());
+		boolean hasHttpsPort = secureConnectorList.size() > 0;
+		int securePort = hasHttpsPort ? secureConnectorList.get(0).getPort() : 0;
+		int apiPort = Arrays.stream(trafficRouterService.findConnectors()).filter(k -> k.getAttribute("portAttribute").equals("ApiPort")).collect(Collectors.toList()).get(0).getPort();
+
 		Connector[] connectors = trafficRouterService.findConnectors();
 		for (Connector connector : connectors) {
 			if (connector.getPort() == 80) {
@@ -56,6 +65,10 @@ public class CatalinaTrafficRouter {
 
 			if (connector.getPort() == 443) {
 				connector.setPort(Integer.parseInt(System.getProperty("routerSecurePort", "8443")));
+			}
+
+			if (connector.getPort() == 3443) {
+				connector.setPort(Integer.parseInt(System.getProperty("secureApiPort", "3443")));
 			}
 			System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router listening on port " + connector.getPort() + " " + connector.getScheme());
 

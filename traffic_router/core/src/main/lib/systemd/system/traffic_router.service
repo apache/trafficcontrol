@@ -25,6 +25,7 @@ Environment=CATALINA_HOME=/opt/tomcat
 Environment=CATALINA_BASE=/opt/traffic_router
 Environment=CATALINA_OUT=/opt/tomcat/logs/catalina.log
 EnvironmentFile=/opt/traffic_router/conf/startup.properties
+ExecStartPre=/bin/bash /opt/traffic_router/conf/generatingCerts.sh
 ExecStart=/opt/tomcat/bin/startup.sh
 ExecStop=/opt/tomcat/bin/shutdown.sh
 LimitNOFILE=500000

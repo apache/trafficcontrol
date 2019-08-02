@@ -81,6 +81,11 @@
       "value": "3333"
     },
     {
+      "configFile": "server.xml",
+      "name": "secure.api.port",
+      "value": "3443"
+    },
+    {
       "configFile": "CRConfig.json",
       "name": "api.cache-control.max-age",
       "value": "10"

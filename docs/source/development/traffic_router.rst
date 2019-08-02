@@ -115,7 +115,7 @@ To install the Traffic Router Developer environment:
 
 		..  Note:: If an error is displayed in the Console, run ``mvn clean verify`` from the ``traffic_router`` directory
 
-Once running, the :ref:`tr-api` is available at http://localhost:3333, the HTTP routing interface is available on http://localhost:8888 and HTTPS is available on http://localhost:8443. The DNS server and routing interface is available on localhost:53 via TCP and UDP.
+Once running, the :ref:`tr-api` is available over HTTP at http://localhost:3333 and over HTTPS at https://localhost:3443,  the HTTP routing interface is available on http://localhost:8888 and HTTPS is available on http://localhost:8443. The DNS server and routing interface is available on localhost:53 via TCP and UDP.
 
 Manual Testing
 ==============
