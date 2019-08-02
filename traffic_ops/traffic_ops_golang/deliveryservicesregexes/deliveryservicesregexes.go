@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
@@ -227,6 +228,17 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsID := inf.IntParams["dsid"]
+	dsName, empty, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		return
+	}
+	if empty {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+
 	respObj := tc.DeliveryServiceIDRegex{
 		ID:        regexID,
 		Pattern:   dsr.Pattern,
@@ -234,6 +246,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		TypeName:  typeName,
 		SetNumber: dsr.SetNumber,
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+string(dsID)+", ACTION: Created a routing regular expression", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
@@ -247,6 +260,15 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	dsID := inf.IntParams["dsid"]
+	dsName, empty, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		return
+	}
+	if empty {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
 	regexID := inf.IntParams["regexid"]
 	dsTenantID := 0
 	if err := tx.QueryRow(`SELECT tenant_id from deliveryservice where id = $1`, dsID).Scan(&dsTenantID); err != nil {
@@ -291,6 +313,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		TypeName:  typeName,
 		SetNumber: dsr.SetNumber,
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+string(dsID)+", ACTION: Updated routing regular expression "+string(regexID), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 

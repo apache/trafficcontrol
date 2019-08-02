@@ -182,6 +182,11 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	copyDSID, err := getDSIDFromName(inf.Tx.Tx, string(copyDS))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID from name "+err.Error()))
+	}
+
 	keys, ok, err := riaksvc.GetURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort, copyDS)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from riak: "+err.Error()))
@@ -196,6 +201,7 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+" copied from "+string(copyDS)+": "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(copyDS)+", ID: "+string(copyDSID)+", ACTION: Copied URL keys from "+string(ds), inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully copied and stored keys")
 }
 
@@ -231,6 +237,11 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsID, err := getDSIDFromName(inf.Tx.Tx, string(ds))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID from name "+err.Error()))
+	}
+
 	keys, err := GenerateURLSigKeys()
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating URL sig keys: "+err.Error()))
@@ -240,6 +251,7 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+": "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(ds)+", ID: "+string(dsID)+", ACTION: Generated URL keys", inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully generated and stored keys")
 }
 

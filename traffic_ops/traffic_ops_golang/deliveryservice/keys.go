@@ -65,6 +65,11 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsID, err := getDSIDFromName(inf.Tx.Tx, *req.DeliveryService)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.AddSSLKeys: getting DS ID from name "+err.Error()))
+	}
+
 	// ECDSA keys support is only permitted for DNS delivery services
 	// Traffic Router (HTTP* delivery service types) do not support ECDSA keys
 	dsType, dsFound, err := getDSType(inf.Tx.Tx, *req.Key)
@@ -106,6 +111,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.WriteRespAlert(w, r, tc.WarnLevel, "WARNING: SSL keys were successfully added for '"+*req.DeliveryService+"', but the input certificate may be invalid (certificate verification produced a different chain)")
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+string(dsID)+", ACTION: Added SSL keys", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "Successfully added ssl keys for "+*req.DeliveryService)
 }
 
@@ -275,7 +281,7 @@ func getCDNIDByDomainname(domainName string, tx *sql.Tx) (int64, bool, error) {
 	return cdnID, true, nil
 }
 
-// getDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
+// getDSIDFromName loads the DeliveryService's ID from the database, from the xml_id. Returns whether the delivery service was found, and any error.
 func getDSIDFromName(tx *sql.Tx, xml_id string) (int, error) {
 	id := 0
 	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xml_id).Scan(&id); err != nil {

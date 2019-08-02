@@ -48,6 +48,10 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	dsID, err := getDSIDFromName(inf.Tx.Tx, *req.DeliveryService)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID from name "+err.Error()))
+	}
 	if err := generatePutRiakKeys(req, inf.Tx.Tx, inf.Config); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and putting SSL keys: "+err.Error()))
 		return
@@ -56,6 +60,7 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating SSL keys for delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+string(dsID)+", ACTION: Added SSL keys", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "Successfully created ssl keys for "+*req.DeliveryService)
 }
 

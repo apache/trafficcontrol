@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
@@ -46,6 +47,16 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsName, exists, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		return
+	}
+	if !exists {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+
 	ok, err := deleteDSServer(inf.Tx.Tx, dsID, serverID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting delivery service server: "+err.Error()))
@@ -55,6 +66,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+string(dsID)+", ACTION: Remove server "+string(serverID)+" from delivery service", inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Server unlinked from delivery service.")
 }
 
