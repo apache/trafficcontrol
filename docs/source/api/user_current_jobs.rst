@@ -18,10 +18,12 @@
 *********************
 ``user/current/jobs``
 *********************
+.. deprecated:: ATCv4
+
+	Both request methods supported by this endpoint are implemented (better) by :ref:`to-api-jobs`, and in the future that will be the only way to interact with jobs. Developers and administrators are encouraged to switch at their earliest convenience.
 
 ``GET``
 =======
-.. caution:: In the vast majority of cases, it is much better to use the `userId` query parameter of a ``GET`` request to :ref:`to-api-jobs` instead.
 
 Retrieves the user's list of running and pending content invalidation jobs.
 
@@ -110,7 +112,6 @@ Response Structure
 
 ``POST``
 ========
-.. caution:: In many cases, it is better to instead send a ``POST`` request to the :ref:`to-api-jobs` endpoint.
 
 Creates a new content revalidation job.
 

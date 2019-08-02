@@ -52,6 +52,11 @@ FROM job
 WHERE job.job_user=$1
 `
 
+type response struct {
+	Alerts []tc.Alert `json:"alerts"`
+	Response interface{} `json:"response"`
+}
+
 // Creates a new job for the current user (via POST request to `/user/current/jobs`)
 // this uses its own special format encoded in the tc.UserInvalidationJobInput structure
 func CreateUserJob(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +104,17 @@ func CreateUserJob(w http.ResponseWriter, r *http.Request) {
 	if err := setRevalFlags(*job.DSID, inf.Tx.Tx); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval flags: %v", err))
 	} else {
-		resp, err := json.Marshal(apiResponse{[]tc.Alert{{"Invalidation Job creation was successful.", tc.SuccessLevel.String()}}, result})
+		respObj := apiResponse{
+			[]tc.Alert{
+				tc.Alert{
+					Level: tc.SuccessLevel.String(),
+					Text: "Invalidation Job creation was successful.",
+				},
+				api.DeprecationWarning("POST /jobs"),
+			},
+			result,
+		}
+		resp, err := json.Marshal(respObj)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Marshaling JSON: %v", err))
 		} else {
@@ -171,9 +186,12 @@ func GetUserJobs(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resp, err := json.Marshal(struct {
+	type userResponse struct {
+		Alerts []tc.Alert `json:"alerts"`
 		Response []tc.UserInvalidationJob `json:"response"`
-	}{filtered})
+	}
+
+	resp, err := json.Marshal(userResponse{[]tc.Alert{api.DeprecationWarning("GET /jobs?userId=")}, filtered})
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("encoding user jobs response: %v", err))
 	} else {
