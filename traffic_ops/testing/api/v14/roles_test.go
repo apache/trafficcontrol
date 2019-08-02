@@ -34,6 +34,7 @@ func TestRoles(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Roles}, func() {
 		UpdateTestRoles(t)
 		GetTestRoles(t)
+		VerifyGetRolesOrder(t)
 	})
 }
 
@@ -103,6 +104,34 @@ func GetTestRoles(t *testing.T) {
 		t.Errorf("cannot GET Role by role: %v - %v\n", err, resp)
 	}
 
+}
+
+func VerifyGetRolesOrder(t *testing.T) {
+	role := testData.Roles[roleGood]
+	params := map[string]string{
+		"name":      *role.Name,
+		"orderby":   "name",
+		"sortOrder": "desc",
+	}
+	descResp, _, status, err := TOSession.GetRoleByQueryParams(params)
+	log.Debugln("Status Code: ", status)
+	if err != nil {
+		t.Errorf("cannot GET Role by role: %v - %v\n", err, descResp)
+	}
+	params["sortOrder"] = "asc"
+	ascResp, _, status, err := TOSession.GetRoleByQueryParams(params)
+	log.Debugln("Status Code: ", status)
+	if err != nil {
+		t.Errorf("cannot GET Role by role: %v - %v\n", err, ascResp)
+	}
+
+	// reverse the descending-sorted response and compare it to the ascending-sorted one
+	for start, end := 0, len(descResp)-1; start < end; start, end = start+1, end-1 {
+		descResp[start], descResp[end] = descResp[end], descResp[start]
+	}
+	if !reflect.DeepEqual(descResp, ascResp) {
+		t.Errorf("Role responses are not equal after reversal: %v - %v\n", descResp, ascResp)
+	}
 }
 
 func DeleteTestRoles(t *testing.T) {

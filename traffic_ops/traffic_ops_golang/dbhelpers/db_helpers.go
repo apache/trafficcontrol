@@ -70,11 +70,11 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 				if sortOrder == "desc" {
 					orderBy += " DESC"
 				} else if sortOrder != "asc" {
-					log.Debugln("Incorrect name for sortOrder: ", sortOrder)
+					log.Debugln("sortOrder value must be desc or asc. Invalid value provided: ", sortOrder)
 				}
 			}
 		} else {
-			log.Debugln("Incorrect name for orderby: ", orderby)
+			log.Debugln("This column is not configured to support orderby: ", orderby)
 		}
 	}
 

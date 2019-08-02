@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added /#!/sso page to Traffic Portal to catch redirects back from OAuth provider and POST token into the API.
 - In Traffic Portal, server table columns can now be rearranged and their visibility toggled on/off as desired by the user. Hidden table columns are excluded from the table search. These settings are persisted in the browser.
 - Added pagination support to some Traffic Ops endpoints via three new query parameters, limit and offset/page
+- Traffic Ops now supports a query parameter to return API responses in descending order
 
 ### Changed
 - Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops

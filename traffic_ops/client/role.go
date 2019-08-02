@@ -107,8 +107,28 @@ func (to *Session) GetRoleByID(id int) ([]tc.Role, ReqInf, int, error) {
 
 // GET a Role by the Role name
 func (to *Session) GetRoleByName(name string) ([]tc.Role, ReqInf, int, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_ROLES, url.QueryEscape(name))
-	resp, remoteAddr, errClient := to.rawRequest(http.MethodGet, url, nil)
+	route := fmt.Sprintf("%s?name=%s", API_v13_ROLES, url.QueryEscape(name))
+	resp, remoteAddr, errClient := to.rawRequest(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if resp != nil {
+		defer resp.Body.Close()
+
+		var data tc.RolesResponse
+		if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+			return data.Response, reqInf, resp.StatusCode, err
+		}
+		return data.Response, reqInf, resp.StatusCode, errClient
+	}
+	return []tc.Role{}, reqInf, 0, errClient
+}
+
+// GET a Role by the Role name
+func (to *Session) GetRoleByQueryParams(queryParams map[string]string) ([]tc.Role, ReqInf, int, error) {
+	route := fmt.Sprintf("%s?", API_v13_ROLES)
+	for param, val := range queryParams {
+		route += fmt.Sprintf("%s=%s&", url.QueryEscape(param), url.QueryEscape(val))
+	}
+	resp, remoteAddr, errClient := to.rawRequest(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if resp != nil {
 		defer resp.Body.Close()
