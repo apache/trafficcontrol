@@ -70,6 +70,7 @@ elif x509v3_init; then
 		do
 			x509v3_create_cert "$ds" "$ds.$CDN_FQDN"
 		done
+		echo "X509_GENERATION_COMPLETE=\"YES\"" >> "$X509_CA_ENV_FILE"
 		x509v3_dump_env
     # Save newly generated certs for future restarts.
     rsync -av "$X509_CA_DIR/" "$X509_CA_PERSIST_DIR/"

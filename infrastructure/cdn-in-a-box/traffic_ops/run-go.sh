@@ -87,6 +87,12 @@ while true; do
 done
 
 ### Add SSL keys for demo1 delivery service
+until [[ -s "$X509_DEMO1_CERT_FILE" && -s "$X509_DEMO1_REQUEST_FILE" && -s "$X509_DEMO1_KEY_FILE" ]]
+do
+  echo "Waiting on X509_DEMO1 files to exist"
+  sleep 3
+  source "$X509_CA_ENV_FILE"
+done
 to-add-sslkeys $CDN_NAME $ds_name "*.demo1.mycdn.ciab.test" $X509_DEMO1_CERT_FILE $X509_DEMO1_REQUEST_FILE $X509_DEMO1_KEY_FILE
 
 ### Automatic Queue/Snapshot ###

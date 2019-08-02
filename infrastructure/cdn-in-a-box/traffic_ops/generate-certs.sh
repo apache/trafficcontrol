@@ -404,7 +404,6 @@ x509v3_create_cert()
   echo "X509_${env_name}_CERT_FILE=\"$cert_file\"" >> "$X509_CA_ENV_FILE"
   echo "X509_${env_name}_KEY_FILE=\"$key_file\"" >> "$X509_CA_ENV_FILE"
   echo "X509_${env_name}_REQUEST_FILE=\"$request_file\"" >> "$X509_CA_ENV_FILE"
-  echo "X509_GENERATION_COMPLETE=\"YES\"" >> "$X509_CA_ENV_FILE"
 }
 
 
