@@ -209,8 +209,7 @@
       "oAuthTokenQueryParam": "example_token_key",
       "redirectUriParameterOverride": "example_redirect_url_key",
       "clientId": "exampleClient",
-      "oAuthCodeTokenUrl": "https://oauthProvider.example.com/auth/token",
-      "clientSecret": "AbCd123"
+      "oAuthCodeTokenUrl": "https://oauthProvider.example.com/auth/token"
     }
   }
 }
