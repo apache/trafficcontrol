@@ -70,7 +70,7 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, true);
-                    locationUtils.navigateToPath('/');
+                    locationUtils.navigateToPath('/login');
                 }
             );
     };
