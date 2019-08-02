@@ -27,7 +27,7 @@ const (
 	API_v14_Logs = "/api/1.4/logs"
 )
 
-// GetLogsByQueryParams gets a list of logs filtered by query params
+// GetLogsByQueryParams gets a list of logs filtered by query params.
 func (to *Session) GetLogsByQueryParams(queryParams string) ([]tc.Log, ReqInf, error) {
 	URI := API_v14_Logs + queryParams
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
@@ -45,22 +45,17 @@ func (to *Session) GetLogsByQueryParams(queryParams string) ([]tc.Log, ReqInf, e
 	return data.Response, reqInf, nil
 }
 
-// GetLogs gets a list of logs
+// GetLogs gets a list of logs.
 func (to *Session) GetLogs() ([]tc.Log, ReqInf, error) {
 	return to.GetLogsByQueryParams("")
 }
 
-// GetLogsByLimit gets a list of logs limited to a certain number of logs
+// GetLogsByLimit gets a list of logs limited to a certain number of logs.
 func (to *Session) GetLogsByLimit(limit int) ([]tc.Log, ReqInf, error) {
 	return to.GetLogsByQueryParams(fmt.Sprintf("?limit=%d", limit))
 }
 
-// GetLogsByDays gets a list of logs limited to a certain number of days
+// GetLogsByDays gets a list of logs limited to a certain number of days.
 func (to *Session) GetLogsByDays(days int) ([]tc.Log, ReqInf, error) {
 	return to.GetLogsByQueryParams(fmt.Sprintf("?days=%d", days))
 }
-
-
-
-
-
