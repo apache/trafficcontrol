@@ -46,7 +46,7 @@ func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	text, err := headerComment(inf.Tx.Tx, "CDN "+cdnName)
+	text, err := HeaderComment(inf.Tx.Tx, "CDN "+cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_xml-id.config text: "+err.Error()))
 		return
@@ -111,7 +111,7 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	text, err := headerComment(inf.Tx.Tx, "CDN "+cdnName)
+	text, err := HeaderComment(inf.Tx.Tx, "CDN "+cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
 		return

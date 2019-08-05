@@ -122,7 +122,7 @@ func getServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (string, error
 	return serverName, nil, nil, http.StatusOK
 }
 
-func headerComment(tx *sql.Tx, name string) (string, error) {
+func HeaderComment(tx *sql.Tx, name string) (string, error) {
 	nameVersionStr, err := GetNameVersionString(tx)
 	if err != nil {
 		return "", errors.New("getting name version string: " + err.Error())

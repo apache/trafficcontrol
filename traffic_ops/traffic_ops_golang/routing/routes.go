@@ -37,6 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/asn"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats/atsprofile"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachesstats"
@@ -378,6 +379,23 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/regex_revalidate.config/?(\.json)?$`, ats.GetRegexRevalidateDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_mid_{xml-id}.config/?(\.json)?$`, ats.GetMidHeaderRewriteDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_{xml-id}.config/?(\.json)?$`, ats.GetEdgeHeaderRewriteDotConfig, auth.PrivLevelOperations, Authenticated, nil},
+
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/12M_facts/?$`, atsprofile.GetFacts, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/50-ats.rules/?$`, atsprofile.GetATSDotRules, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/astats.config/?$`, atsprofile.GetAstats, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/cache.config/?$`, atsprofile.GetCache, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/drop_qstring.config/?$`, atsprofile.GetDropQString, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/logging.config/?$`, atsprofile.GetLogging, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/logging.yaml/?$`, atsprofile.GetLoggingYAML, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/logs_xml.config/?$`, atsprofile.GetLogsXML, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/plugin.config/?$`, atsprofile.GetPlugin, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/records.config/?$`, atsprofile.GetRecords, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/storage.config/?$`, atsprofile.GetStorage, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/sysctl.conf/?$`, atsprofile.GetSysctl, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/url_sig_{file}.config/?$`, atsprofile.GetURLSig, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/uri_signing_{file}.config/?$`, atsprofile.GetURISigning, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/volume.config/?$`, atsprofile.GetVolume, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/{file}/?$`, atsprofile.GetUnknown, auth.PrivLevelOperations, Authenticated, nil},
 
 		// Cache Configs
 		{1.1, http.MethodGet, `servers/{id-or-host}/configfiles/ats/parent.config/?(\.json)?$`, ats.GetParentDotConfig, auth.PrivLevelOperations, Authenticated, nil},
