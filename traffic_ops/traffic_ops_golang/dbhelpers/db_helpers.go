@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -66,12 +67,32 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 			log.Debugln("Incorrect name for orderby: ", orderby)
 		}
 	}
-	// needs error checking
+
 	if limit, exists := parameters["limit"]; exists {
+		// try to convert to int, if it fails the limit parameter is invalid, so return an error
+		limitInt, err := strconv.Atoi(limit)
+		if err != nil || limitInt < 1 {
+			errs = append(errs, errors.New("limit parameter must be a positive integer"))
+			return "", "", "", queryValues, errs
+		}
 		log.Debugln("limit: ", limit)
 		paginationClause += " " + limit
 		if offset, exists := parameters["offset"]; exists {
+			// check that offset is valid
+			offsetInt, err := strconv.Atoi(offset)
+			if err != nil || offsetInt < 1 {
+				errs = append(errs, errors.New("offset parameter must be a positive integer"))
+				return "", "", "", queryValues, errs
+			}
 			paginationClause += BaseOffset + " " + offset
+		} else if page, exists := parameters["page"]; exists {
+			// check that offset is valid
+			page, err := strconv.Atoi(page)
+			if err != nil || page < 1 {
+				errs = append(errs, errors.New("page parameter must be a positive integer"))
+				return "", "", "", queryValues, errs
+			}
+			paginationClause += BaseOffset + " " + strconv.Itoa((page-1)*limitInt)
 		}
 	}
 
