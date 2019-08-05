@@ -27,6 +27,7 @@ Traffic Control is a complicated system, and documenting it is not trivial. Some
 	ds_requests
 	federations
 	multi_site
+	oauth_login
 	regionalgeo
 	static_dns
 	steering

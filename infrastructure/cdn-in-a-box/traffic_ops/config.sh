@@ -80,7 +80,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "workers" : 12
     },
     "traffic_ops_golang" : {
-	"insecure": true,
+        "insecure": true,
         "port" : "$TO_PORT",
         "proxy_timeout" : 60,
         "proxy_keep_alive" : 60,
@@ -98,7 +98,9 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "max_db_connections": 20,
         "backend_max_connections": {
             "mojolicious": 4
-        }
+        },
+        "whitelisted_oauth_urls": [],
+        "oauth_client_secret": ""
     },
     "cors" : {
         "access_control_allow_origin" : "*"

@@ -652,6 +652,8 @@ User management includes the ability to (where applicable):
 - update an existing user
 - view :term:`Delivery Service`\ s visible to a user
 
+.. Note:: If OAuth is enabled, the username must exist both here as well as with the OAuth provider. A user's rights are defined by the :term:`role` assigned to the user in Traffic Ops. Creating/deleting a user here will update the user's :term:`role` but the user needs to be created/deleted with the OAuth provider as well.
+
 Tenants
 -------
 Each entry in the table of :term:`Tenant`\ s on this page has the following entries:

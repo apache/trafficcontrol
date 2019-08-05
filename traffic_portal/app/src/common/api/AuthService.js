@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var AuthService = function($rootScope, $http, $state, $location, userModel, messageModel, ENV) {
+var AuthService = function($rootScope, $http, $state, $location, userModel, messageModel, ENV, locationUtils) {
 
     this.login = function(username, password) {
         userModel.resetUser();
@@ -51,6 +51,30 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
         );
     };
 
+    this.oauthLogin = function(authCodeTokenUrl, code, clientId, redirectUri) {
+        return $http.post(ENV.api['root'] + 'user/login/oauth', { authCodeTokenUrl: authCodeTokenUrl, code: code, clientId: clientId, redirectUri: redirectUri})
+            .then(
+                function(result) {
+                    $rootScope.$broadcast('authService::login');
+                    var redirect = localStorage.getItem('redirectParam');
+                    localStorage.clear();
+                    if (redirect === undefined || redirect === '') {
+                        redirect = decodeURIComponent($location.search().redirect);
+                    }
+                    if (redirect !== undefined) {
+                        $location.search('redirect', null); // remove the redirect query param
+                        $location.url(redirect);
+                    } else {
+                        $location.url('/');
+                    }
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
+                    locationUtils.navigateToPath('/login');
+                }
+            );
+    };
+
     this.logout = function() {
         userModel.resetUser();
         return $http.post(ENV.api['root'] + 'user/logout').then(
@@ -72,5 +96,5 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
 
 };
 
-AuthService.$inject = ['$rootScope', '$http', '$state', '$location', 'userModel', 'messageModel', 'ENV'];
+AuthService.$inject = ['$rootScope', '$http', '$state', '$location', 'userModel', 'messageModel', 'ENV', 'locationUtils'];
 module.exports = AuthService;

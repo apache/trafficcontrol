@@ -17,7 +17,9 @@
  * under the License.
  */
 
-var LoginController = function($scope, $log, $uibModal, authService, userService) {
+var LoginController = function($scope, $log, $uibModal, $location, authService, userService, propertiesModel) {
+
+    $scope.oAuthEnabled = propertiesModel.properties.oAuth.enabled;
 
     $scope.credentials = {
         username: '',
@@ -48,9 +50,28 @@ var LoginController = function($scope, $log, $uibModal, authService, userService
         });
     };
 
+    $scope.loginOauth = function() {
+        const redirectUriParamKey = propertiesModel.properties.oAuth.redirectUriParameterOverride !== '' ? propertiesModel.properties.oAuth.redirectUriParameterOverride : 'redirect_uri';
+        const redirectParam = $location.search()['redirect'] !== undefined ? $location.search()['redirect'] : '';
+
+        // Builds redirect_uri parameter value to be sent with request to OAuth provider.  This will redirect to the /sso page with any previous redirect information
+        var redirectUriParam = new URL(window.location.href.replace(window.location.hash, '') + 'sso');
+
+        // Builds the URL to redirect to the OAuth provider including the redirect_uri (or override), client_id, and response_type fields
+        var continueURL = new URL(propertiesModel.properties.oAuth.oAuthUrl);
+        continueURL.searchParams.append(redirectUriParamKey, redirectUriParam);
+        continueURL.searchParams.append('client_id', propertiesModel.properties.oAuth.clientId);
+        continueURL.searchParams.append('response_type', 'code');
+
+        localStorage.setItem('redirectUri', redirectUriParam.toString());
+        localStorage.setItem('redirectParam', redirectParam);
+
+        window.location.href = continueURL.href;
+    };
+
     var init = function() {};
     init();
 };
 
-LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService', 'userService'];
+LoginController.$inject = ['$scope', '$log', '$uibModal', '$location', 'authService', 'userService', 'propertiesModel'];
 module.exports = LoginController;
