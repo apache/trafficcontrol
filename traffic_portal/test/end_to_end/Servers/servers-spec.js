@@ -73,9 +73,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 		browser.driver.findElement(by.id('toggleColumns')).click();
 		let first = element.all(by.css('input[type=checkbox]')).first();
 		expect(first.isSelected()).toBe(true);
-		browser.sleep(2000);
 		first.click();
-		browser.sleep(2000);
 		expect(first.isSelected()).toBe(false);
 		let tableColumns = element.all(by.css('#serversTable tr:first-child td'));
 		expect(tableColumns.count()).toBe(11);
