@@ -54,6 +54,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federations"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/login"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/logs"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/origin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/physlocation"
@@ -154,6 +155,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPost, `divisions/?$`, api.CreateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodDelete, `divisions/{id}$`, api.DeleteHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `divisions/name/{name}/?(\.json)?$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil},
+
+		{1.1, http.MethodGet, `logs/?(\.json)?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `logs/{days}/days/?(\.json)?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `logs/newcount/?(\.json)?$`, logs.GetNewCount, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//HWInfo
 		{1.1, http.MethodGet, `hwinfo-wip/?(\.json)?$`, hwinfo.Get, auth.PrivLevelReadOnly, Authenticated, nil},
