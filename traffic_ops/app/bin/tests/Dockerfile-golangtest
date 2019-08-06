@@ -18,9 +18,13 @@ ARG DIR=github.com/apache/trafficcontrol
 ADD traffic_ops /go/src/$DIR/traffic_ops
 ADD lib /go/src/$DIR/lib
 
+COPY traffic_monitor/tests/gocover.bash /go/src/$DIR/traffic_ops/traffic_ops_golang/gocover.bash
+RUN chmod +x /go/src/$DIR/traffic_ops/traffic_ops_golang/gocover.bash
 WORKDIR /go/src/$DIR/traffic_ops/traffic_ops_golang
+RUN bash -c "go get -u github.com/jstemmer/go-junit-report"
+RUN bash -c "go get -v"
 
-CMD bash -c 'go get -v && go test -coverprofile=tocoverage.out  -v ./... ../../lib/go-tc/... && go tool cover -func=tocoverage.out'
+ENTRYPOINT ["./gocover.bash"]
+CMD ["./..." , "../../lib/go-tc/..."]
 
-#
 # vi:syntax=Dockerfile
