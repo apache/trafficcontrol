@@ -781,6 +781,7 @@ WHERE
 	defer rows.Close()
 
 	params := map[string]ConfigProfileParams{}
+
 	for rows.Next() {
 		name := ""
 		file := ""
@@ -798,6 +799,40 @@ WHERE
 			p.URL = val
 			params[file] = p
 		}
+	}
+	return params, nil
+}
+
+type Parameter struct {
+	Name       string
+	ConfigFile string
+	Value      string
+}
+
+func GetParamsByName(tx *sql.Tx, paramName string) ([]Parameter, error) {
+	// TODO implement, determine what fields are necessary
+	qry := `
+SELECT
+  p.value,
+  p.config_file
+FROM
+  parameter p
+WHERE
+  p.name = $1
+`
+	rows, err := tx.Query(qry, paramName)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	params := []Parameter{}
+	for rows.Next() {
+		pa := Parameter{Name: paramName}
+		if err := rows.Scan(&pa.Value, &pa.ConfigFile); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		params = append(params, pa)
 	}
 	return params, nil
 }
