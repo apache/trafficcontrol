@@ -167,7 +167,7 @@ FROM
 // GetATSMajorVersion returns the major version of the given profile's package trafficserver parameter.
 // If no parameter exists, this does not return an error, but rather logs a warning and uses DefaultATSVersion.
 func GetATSMajorVersion(tx *sql.Tx, serverProfileID atscfg.ProfileID) (int, error) {
-	atsVersion, _, err := GetProfileParamValue(tx, serverProfileID, "package", "trafficserver")
+	atsVersion, _, err := ats.GetProfileParamValue(tx, int(serverProfileID), "package", "trafficserver")
 	if err != nil {
 		return 0, errors.New("getting profile param value: " + err.Error())
 	}
@@ -196,30 +196,6 @@ type ParentConfigDSTopLevel struct {
 	MSOUnavailableServerRetryResponses string
 	MSOMaxSimpleRetries                string
 	MSOMaxUnavailableServerRetries     string
-}
-
-// GetProfileParamValue gets the value of a parameter assigned to a profile, by name and config file.
-// Returns the parameter, whether it existed, and any error.
-func GetProfileParamValue(tx *sql.Tx, profileID atscfg.ProfileID, configFile string, name string) (string, bool, error) {
-	qry := `
-SELECT
-  p.value
-FROM
-  parameter p
-  JOIN profile_parameter pp ON p.id = pp.parameter
-WHERE
-  pp.profile = $1
-  AND p.config_file = $2
-  AND p.name = $3
-`
-	val := ""
-	if err := tx.QueryRow(qry, profileID, configFile, name).Scan(&val); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("querying: " + err.Error())
-	}
-	return val, true, nil
 }
 
 func ParentConfigDSQuerySelect() string {
