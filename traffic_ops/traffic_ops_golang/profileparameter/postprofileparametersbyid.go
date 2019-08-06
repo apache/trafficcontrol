@@ -45,13 +45,12 @@ func PostProfileParamsByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	profileID := inf.IntParams["id"]
-	profileName, profileExists, err := dbhelpers.GetProfileNameFromID(inf.Tx.Tx, int64(profileID))
+	profileName, ok, err := dbhelpers.GetProfileNameFromID(profileID, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting profile ID %d: "+err.Error(), profileID))
 		return
-	}
-	if !profileExists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("no profile with ID %d exists", profileID), nil)
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("no profile with ID %d exists", profileID), nil)
 		return
 	}
 
@@ -60,6 +59,7 @@ func PostProfileParamsByID(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting profile parameters by name: "+err.Error()))
 		return
 	}
+
 	resp := tc.ProfileParameterPostResp{Parameters: insertedObjs, ProfileName: profileName, ProfileID: profileID}
 	api.CreateChangeLogRawTx(api.ApiChange, "PROFILE: "+profileName+", ID: "+strconv.Itoa(profileID)+", ACTION: Assigned parameters to profile", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Assign parameters successfully to profile "+profileName, resp)

@@ -66,9 +66,13 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dsID, err := getDSIDFromName(inf.Tx.Tx, *req.DeliveryService)
+	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, *req.DeliveryService)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.AddSSLKeys: getting DS ID from name "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
+		return
 	}
 
 	// ECDSA keys support is only permitted for DNS delivery services
@@ -246,9 +250,13 @@ func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	xmlID := inf.Params["xmlid"]
-	dsID, err := getDSIDFromName(inf.Tx.Tx, xmlID)
+	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID from name "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+xmlID), nil)
+		return
 	}
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -283,12 +291,15 @@ func getCDNIDByDomainname(domainName string, tx *sql.Tx) (int64, bool, error) {
 }
 
 // getDSIDFromName loads the DeliveryService's ID from the database, from the xml_id. Returns whether the delivery service was found, and any error.
-func getDSIDFromName(tx *sql.Tx, xml_id string) (int, error) {
+func getDSIDFromName(tx *sql.Tx, xmlID string) (int, bool, error) {
 	id := 0
-	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xml_id).Scan(&id); err != nil {
-		return id, fmt.Errorf("querying ID for delivery service ID '%v': %v", xml_id, err)
+	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xmlID).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, fmt.Errorf("querying ID for delivery service ID '%v': %v", xmlID, err)
 	}
-	return id, nil
+	return id, true, nil
 }
 
 // returns a delivery service xmlId for a cdn by host regex.

@@ -230,13 +230,9 @@ func Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dsID := inf.IntParams["dsid"]
-	dsName, empty, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	dsName, _, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
-		return
-	}
-	if empty {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
 
@@ -261,12 +257,11 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	dsID := inf.IntParams["dsid"]
-	dsName, empty, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	dsName, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
 		return
-	}
-	if empty {
+	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}

@@ -26,10 +26,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -51,11 +50,11 @@ func PostProfileParam(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting profile parameter: "+err.Error()))
 		return
 	}
-	profileName, ok, err := dbhelpers.GetProfileNameFromID(inf.Tx.Tx, *profileParam.ProfileID)
+	profileName, ok, err := dbhelpers.GetProfileNameFromID(int(*profileParam.ProfileID), inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting profile name from id: "+err.Error()))
 	} else if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("profile not found"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("profile not found"), nil)
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "PROFILE: "+profileName+", ID: "+strconv.FormatInt(*profileParam.ProfileID, 10)+", ACTION: Assigned "+string(len(*profileParam.ParamIDs))+" parameters to profile", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d parameters were assigned to the %d profile", len(*profileParam.ParamIDs), *profileParam.ProfileID), profileParam)

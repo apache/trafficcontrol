@@ -45,13 +45,12 @@ func PostProfileParamsByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	profileName := inf.Params["name"]
-	profileID, profileExists, err := dbhelpers.GetProfileIDFromName(profileName, inf.Tx.Tx)
+	profileID, ok, err := dbhelpers.GetProfileIDFromName(profileName, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting profile '"+profileName+"' ID: "+err.Error()))
 		return
-	}
-	if !profileExists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no profile with that name exists"), nil)
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no profile with that name exists"), nil)
 		return
 	}
 	insertedObjs, err := insertParametersForProfile(profileName, profParams, inf.Tx.Tx)

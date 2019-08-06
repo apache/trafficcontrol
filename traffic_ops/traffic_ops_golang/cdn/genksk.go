@@ -68,6 +68,8 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ID from name '"+string(cdnName)+"': "+err.Error()))
 		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 	}
 
 	ttl, multiplier, err := getKSKParams(inf.Tx.Tx, cdnName)

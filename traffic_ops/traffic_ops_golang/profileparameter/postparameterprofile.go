@@ -53,7 +53,7 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting parameter name from id: "+err.Error()))
 	} else if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("parameter not found"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("parameter not found"), nil)
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "PARAM: "+paramName+", ID: "+strconv.FormatInt(*paramProfile.ParamID, 10)+", ACTION: Assigned "+string(len(*paramProfile.ProfileIDs))+" profiles to parameter", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d profiles were assigned to the %d parameter", len(*paramProfile.ProfileIDs), *paramProfile.ParamID), paramProfile)

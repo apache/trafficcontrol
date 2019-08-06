@@ -48,13 +48,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dsName, exists, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	dsName, _, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
-		return
-	}
-	if !exists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
 

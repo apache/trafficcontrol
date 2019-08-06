@@ -106,9 +106,11 @@ func RemoveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request)
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	dsID, err := getDSIDFromName(inf.Tx.Tx, xmlID)
+	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("error finding delivery service with xmlID: "+xmlID), errors.New("getting DS id from name failed: "+err.Error()))
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 	}
 
 	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
@@ -155,9 +157,11 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	dsID, err := getDSIDFromName(inf.Tx.Tx, xmlID)
+	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("error finding delivery service with xmlID: "+xmlID), errors.New("getting DS id from name failed: "+err.Error()))
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -197,12 +201,16 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func getDSIDFromName(tx *sql.Tx, xml_id string) (int, error) {
+// getDSIDFromName loads the DeliveryService's ID from the database, from the xml_id. Returns whether the delivery service was found, and any error.
+func getDSIDFromName(tx *sql.Tx, xmlID string) (int, bool, error) {
 	id := 0
-	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xml_id).Scan(&id); err != nil {
-		return id, fmt.Errorf("querying ID for delivery service ID '%v': %v", xml_id, err)
+	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xmlID).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, fmt.Errorf("querying ID for delivery service ID '%v': %v", xmlID, err)
 	}
-	return id, nil
+	return id, true, nil
 }
 
 // validateURIKeyset validates URISigingKeyset json.

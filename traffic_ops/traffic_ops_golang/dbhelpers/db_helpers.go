@@ -205,17 +205,6 @@ func GetPrivLevelFromRoleID(tx *sql.Tx, id int) (int, bool, error) {
 	return privLevel, true, nil
 }
 
-func GetCGNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
-	name := ""
-	if err := tx.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("querying cachegroup ID: " + err.Error())
-	}
-	return tc.CacheGroupName(name), true, nil
-}
-
 // GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
 func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	name := tc.DeliveryServiceName("")
@@ -229,7 +218,7 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 }
 
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
-func GetProfileNameFromID(tx *sql.Tx, id int64) (string, bool, error) {
+func GetProfileNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name from profile where id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {

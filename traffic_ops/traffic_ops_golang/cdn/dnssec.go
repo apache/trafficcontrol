@@ -58,10 +58,12 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	cdnName := *req.Key
 
-	cdnID, _, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdnName))
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(cdnName))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ID from name '"+cdnName+"': "+err.Error()))
 		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 	}
 
 	cdnDomain, cdnExists, err := dbhelpers.GetCDNDomainFromName(inf.Tx.Tx, tc.CDNName(cdnName))
