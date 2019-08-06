@@ -67,7 +67,7 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	atsMajorVer, err := ats.GetATSMajorVersion(inf.Tx.Tx, serverInfo.ProfileID)
+	atsMajorVer, err := ats.GetATSMajorVersion(inf.Tx.Tx, atscfg.ProfileID(serverInfo.ProfileID))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ATS major version: "+err.Error()))
 		return
