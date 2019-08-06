@@ -32,54 +32,9 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
-// GenericProfileConfig generates a generic profile config text, from the profile's parameters with the given config file name.
-// This does not include a header comment, because a generic config may not use a number sign as a comment.
-// If you need a header comment, it can be added manually via ats.HeaderComment, or automatically with WithProfileDataHdr.
-func GenericProfileConfig(tx *sql.Tx, profile ats.ProfileData, fileName string, separator string) (string, error) {
-	profileParamData, err := ats.GetProfileParamData(tx, profile.ID, fileName)
-	if err != nil {
-		return "", errors.New("getting profile param data: " + err.Error())
-	}
-	text := ""
-	for name, val := range profileParamData {
-		name = trimParamUnderscoreNumSuffix(name)
-		text += name + separator + val + "\n"
-	}
-	return text, nil
-}
-
-// trimParamUnderscoreNumSuffix removes any trailing "__[0-9]+" and returns the trimmed string.
-func trimParamUnderscoreNumSuffix(paramName string) string {
-	underscorePos := strings.LastIndex(paramName, `__`)
-	if underscorePos == -1 {
-		return paramName
-	}
-	if _, err := strconv.ParseFloat(paramName[underscorePos+2:], 64); err != nil {
-		return paramName
-	}
-	return paramName[:underscorePos]
-}
-
 type MakeCfgFunc func(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string)
 
-// WithProfileData takes a makeCfg function which takes the ProfileData and returns the config text or any error.
-//
-// Most profile config files need the same data and write the same text file, so this can be used to reduce duplicate boilerplate code.
-//
-// This also adds HeaderComment with the profile name to the top of the config text.
-//
-// The route must include an "id" parameter.
-//
-// The route may include a "file" parameter, and if so, it will be passed to makeCfg as fileName. If not, fileName will be the empty string.
-//
-// If makeCfg returns a nil error and the empty string, a 404 Not Found will be returned to the client.
-//
-// If you need to avoid adding the standard header comment, or use a Content-Type other than text/plain, use WithProfileDataHdr.
-//
-func WithProfileData(w http.ResponseWriter, r *http.Request, makeCfg func(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string) (string, error)) {
-	addHdr := true
-	WithProfileDataHdr(w, r, addHdr, tc.ContentTypeTextPlain, makeCfg)
-}
+var ErrBadRequest = errors.New("bad request")
 
 func WithProfileDataHdr(w http.ResponseWriter, r *http.Request, addHdr bool, contentType string, makeCfg func(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string) (string, error)) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"profile-name-or-id"}, nil)

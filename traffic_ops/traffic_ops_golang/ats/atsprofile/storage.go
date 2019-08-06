@@ -23,10 +23,9 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strconv"
-	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
@@ -34,55 +33,19 @@ import (
 const StorageFileName = "storage.config"
 
 func GetStorage(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, makeStorage)
+	addHdr := false
+	contentType := tc.ContentTypeTextPlain
+	WithProfileDataHdr(w, r, addHdr, contentType, makeStorage)
 }
 
 func makeStorage(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {
-	text := ""
-
+	toolName, toURL, err := ats.GetToolNameAndURL(tx)
+	if err != nil {
+		return "", errors.New("getting tool name and URL: " + err.Error())
+	}
 	paramData, err := ats.GetProfileParamData(tx, profile.ID, StorageFileName) // ats.rules is based on the storage.config params
 	if err != nil {
-		return "", errors.New("profile param data: " + err.Error())
+		return "", errors.New("getting profile param data: " + err.Error())
 	}
-
-	nextVolume := 1
-	if drivePrefix := paramData["Drive_Prefix"]; drivePrefix != "" {
-		driveLetters := strings.TrimSpace(paramData["Drive_Letters"])
-		if driveLetters == "" {
-			log.Warnf("Creating storage.config: profile %+v has Drive_Prefix parameter, but no Drive_Letters; creating anyway", profile.Name)
-		}
-		text += makeStorageVolumeText(drivePrefix, driveLetters, nextVolume)
-		nextVolume++
-	}
-
-	if ramDrivePrefix := paramData["RAM_Drive_Prefix"]; ramDrivePrefix != "" {
-		ramDriveLetters := strings.TrimSpace(paramData["RAM_Drive_Letters"])
-		if ramDriveLetters == "" {
-			log.Warnf("Creating storage.config: profile %+v has RAM_Drive_Prefix parameter, but no RAM_Drive_Letters; creating anyway", profile.Name)
-		}
-		text += makeStorageVolumeText(ramDrivePrefix, ramDriveLetters, nextVolume)
-		nextVolume++
-	}
-
-	if ssdDrivePrefix := paramData["SSD_Drive_Prefix"]; ssdDrivePrefix != "" {
-		ssdDriveLetters := strings.TrimSpace(paramData["SSD_Drive_Letters"])
-		if ssdDriveLetters == "" {
-			log.Warnf("Creating storage.config: profile %+v has SSD_Drive_Prefix parameter, but no SSD_Drive_Letters; creating anyway", profile.Name)
-		}
-		text += makeStorageVolumeText(ssdDrivePrefix, ssdDriveLetters, nextVolume)
-		nextVolume++
-	}
-
-	if text == "" {
-		text = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
-	}
-	return text, nil
-}
-
-func makeStorageVolumeText(prefix string, letters string, volume int) string {
-	text := ""
-	for _, letter := range strings.Split(letters, ",") {
-		text += prefix + letter + " volume=" + strconv.Itoa(volume) + "\n"
-	}
-	return text
+	return atscfg.MakeStorageDotConfig(profile.Name, paramData, toolName, toURL), nil
 }

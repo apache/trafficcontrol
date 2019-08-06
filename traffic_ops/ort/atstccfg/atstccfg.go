@@ -21,10 +21,13 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 const AppName = "atstccfg"
@@ -36,11 +39,26 @@ const TempSubdir = AppName + "_cache"
 const TempCookieFileName = "cookies"
 const TOCookieName = "mojolicious"
 
+const ExitCodeSuccess = 0
+const ExitCodeErrGeneric = 1
+const ExitCodeNotFound = 104
+const ExitCodeBadRequest = 100
+
+type TCCfg struct {
+	Cfg
+	TOClient **toclient.Session
+}
+
 func main() {
 	cfg, err := GetCfg()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Getting config: "+err.Error()+"\n")
-		os.Exit(1)
+		os.Exit(ExitCodeErrGeneric)
+	}
+
+	if cfg.PrintGeneratedFiles {
+		fmt.Println(strings.Join(GetGeneratedFilesList(), "\n"))
+		os.Exit(ExitCodeSuccess)
 	}
 
 	log.Infoln("URL: '" + cfg.TOURL.String() + "' User: '" + cfg.TOUser + "' Pass len: '" + strconv.Itoa(len(cfg.TOPass)) + "'")
@@ -53,17 +71,44 @@ func main() {
 	toClient, err := GetClient(toFQDN, cfg.TOUser, cfg.TOPass, cfg.TempDir, cfg.CacheFileMaxAge, cfg.TOTimeout, cfg.TOInsecure)
 	if err != nil {
 		log.Errorln("Logging in to Traffic Ops: " + err.Error())
-		os.Exit(1)
+		os.Exit(ExitCodeErrGeneric)
 	}
 
-	cfgFile, code, err := GetConfigFile(&toClient, cfg)
+	tccfg := TCCfg{Cfg: cfg, TOClient: &toClient}
+
+	cfgFile, code, err := GetConfigFile(tccfg)
+	log.Infof("GetConfigFile returned %v %v\n", code, err)
 	if err != nil {
-		log.Errorln("Getting config file '" + cfg.TOURL.String() + "' from Traffic Ops: " + err.Error())
+		log.Errorln("Getting config file '" + cfg.TOURL.String() + "': " + err.Error())
 		if code == 0 {
-			code = 1
+			code = ExitCodeErrGeneric
 		}
+		log.Infof("GetConfigFile exiting with code %v\n", code)
 		os.Exit(code)
 	}
 	fmt.Println(cfgFile)
-	os.Exit(0)
+	os.Exit(ExitCodeSuccess)
+}
+
+func GetGeneratedFilesList() []string {
+	names := []string{}
+	for scope, fileFuncs := range ConfigFileFuncs() {
+		for cfgFile, _ := range fileFuncs {
+			names = append(names, scope+"/"+cfgFile)
+		}
+	}
+
+	names = append(names, "profiles/url_sig_*.config")     // url_sig configs are generated, but not in the funcs because they're not a literal match
+	names = append(names, "profiles/uri_signing_*.config") // uri_signing configs are generated, but not in the funcs because they're not a literal match
+	names = append(names, "profiles/*")                    // unknown profiles configs are generated, a.k.a. "take-and-bake"
+
+	return names
+}
+
+func HTTPCodeToExitCode(httpCode int) int {
+	switch httpCode {
+	case http.StatusNotFound:
+		return ExitCodeNotFound
+	}
+	return ExitCodeErrGeneric
 }

@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -93,12 +94,7 @@ WHERE
 	return v, true, nil
 }
 
-type ProfileDS struct {
-	Type       tc.DSType
-	OriginFQDN *string
-}
-
-func GetProfileDS(tx *sql.Tx, profileID int) ([]ProfileDS, error) {
+func GetProfileDS(tx *sql.Tx, profileID int) ([]atscfg.ProfileDS, error) {
 	qry := `
 SELECT
   dstype.name AS ds_type,
@@ -114,7 +110,7 @@ WHERE
     SELECT DISTINCT deliveryservice
     FROM deliveryservice_server
     WHERE server IN (SELECT id FROM server WHERE profile = $1)
-  )
+  )p
 `
 	rows, err := tx.Query(qry, profileID)
 	if err != nil {
@@ -122,9 +118,9 @@ WHERE
 	}
 	defer rows.Close()
 
-	dses := []ProfileDS{}
+	dses := []atscfg.ProfileDS{}
 	for rows.Next() {
-		d := ProfileDS{}
+		d := atscfg.ProfileDS{}
 		if err := rows.Scan(&d.Type, &d.OriginFQDN); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
@@ -255,4 +251,38 @@ WHERE
 		return "", false, errors.New("querying: " + err.Error())
 	}
 	return domain, true, nil
+}
+
+type Parameter struct {
+	Name       string
+	ConfigFile string
+	Value      string
+}
+
+func GetParamsByName(tx *sql.Tx, paramName string) ([]Parameter, error) {
+	// TODO implement, determine what fields are necessary
+	qry := `
+SELECT
+  p.value,
+  p.config_file
+FROM
+  parameter p
+WHERE
+  p.name = $1
+`
+	rows, err := tx.Query(qry, paramName)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	params := []Parameter{}
+	for rows.Next() {
+		pa := Parameter{Name: paramName}
+		if err := rows.Scan(&pa.Value, &pa.ConfigFile); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		params = append(params, pa)
+	}
+	return params, nil
 }

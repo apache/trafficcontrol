@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
@@ -44,7 +45,7 @@ func uriSigningDotConfig(tx *sql.Tx, cfg *config.Config, _ ats.ProfileData, file
 		return "", errors.New("getting uri signing keys from Riak: " + err.Error())
 	}
 	if !hasKeys {
-		return "", nil // TODO verify? Perl seems to return without returning its $text
+		keys = []byte{} // TODO verify? Perl seems to return without returning its $text
 	}
-	return string(keys), nil
+	return atscfg.MakeURISigningConfig(keys), nil
 }

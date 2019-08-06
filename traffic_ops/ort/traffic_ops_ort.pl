@@ -1454,6 +1454,23 @@ sub check_this_plugin {
 	}
 }
 
+sub atstccfg_code_to_http_code {
+	# this is necessary, because Linux codes can only be 0-256, so we map e.g. 104 -> 404 to fake the Traffic Ops response code.
+	my $code = shift;
+
+	my $generic_http_err = 500;
+	my %atstccfg_to_http_codes = (
+		0,   200,
+		1,   500,
+		104, 404,
+	);
+	my $http_code = $atstccfg_to_http_codes{$code};
+	if (!defined($http_code)) {
+		$http_code = $generic_http_err;
+	}
+	return $http_code;
+}
+
 sub lwp_get {
 	my $uri           = shift;
 	my $retry_counter = $retries;
@@ -1485,15 +1502,16 @@ sub lwp_get {
 	$response_content = `$atstccfg_cmd --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
 
 	my $atstccfg_exit_code = $?;
+	$atstccfg_exit_code = atstccfg_code_to_http_code($atstccfg_exit_code);
 
-	if ($atstccfg_exit_code != 0) {
+	if ($atstccfg_exit_code != 200) {
 		if ( $uri =~ m/configfiles\/ats/ && $atstccfg_exit_code == 404) {
 			return $atstccfg_exit_code;
 		}
 		if ($uri =~ m/update_status/ && $atstccfg_exit_code == 404) {
 			return $$atstccfg_exit_code;
 		}
-		if ( $atstccfg_exit_code != 0 && $rev_proxy_in_use == 1 ) {
+		if ( $atstccfg_exit_code != 200 && $rev_proxy_in_use == 1 ) {
 			( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Reverse Proxy.  Reverting to primary Traffic Ops host.\n";
 			$traffic_ops_host = $to_url;
 			$rev_proxy_in_use = 0;

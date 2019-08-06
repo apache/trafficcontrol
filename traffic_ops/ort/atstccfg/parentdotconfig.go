@@ -24,34 +24,21 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 const GlobalProfileName = "GLOBAL"
 
-func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg, serverNameOrID string) (string, error) {
-	toClient := *toClientPtr
-
+func GetConfigFileServerParentDotConfig(cfg TCCfg, serverNameOrID string) (string, error) {
 	// TODO TOAPI add /servers?cdn=1 query param
-	servers := []tc.Server{}
-	err := GetCachedJSON(cfg.TempDir, "servers.json", cfg.CacheFileMaxAge, cfg.NumRetries, &servers, func(obj interface{}) error {
-		toServers, reqInf, err := toClient.GetServers()
-		if err != nil {
-			return errors.New("getting servers from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		servers := obj.(*[]tc.Server)
-		*servers = toServers
-		return nil
-	})
+	servers, err := GetServers(cfg)
 	if err != nil {
-		return "", errors.New("getting server: " + err.Error())
+		return "", errors.New("getting servers: " + err.Error())
 	}
 
 	server := tc.Server{ID: atscfg.InvalidID}
@@ -75,16 +62,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 		return "", errors.New("server '" + serverNameOrID + " not found in servers")
 	}
 
-	cacheGroups := []tc.CacheGroupNullable{}
-	err = GetCachedJSON(cfg.TempDir, "cachegroups.json", cfg.CacheFileMaxAge, cfg.NumRetries, &cacheGroups, func(obj interface{}) error {
-		toCacheGroups, reqInf, err := toClient.GetCacheGroupsNullable()
-		if err != nil {
-			return errors.New("getting cachegroups from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		cacheGroups := obj.(*[]tc.CacheGroupNullable)
-		*cacheGroups = toCacheGroups
-		return nil
-	})
+	cacheGroups, err := GetCacheGroups(cfg)
 	if err != nil {
 		return "", errors.New("getting cachegroups: " + err.Error())
 	}
@@ -222,24 +200,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 	}
 	cgServerIDs = append(cgServerIDs, server.ID)
 
-	sort.Ints(cgServerIDs)
-	cgServerIDStrs := []string{}
-	for _, id := range cgServerIDs {
-		cgServerIDStrs = append(cgServerIDStrs, strconv.Itoa(id))
-	}
-	cgServerIDsStr := strings.Join(cgServerIDStrs, "-")
-
-	cgDSServers := []tc.DeliveryServiceServer{}
-	// TODO make this filename shorter (but still unique) somehow. The filename is almost always too long.
-	err = GetCachedJSON(cfg.TempDir, "deliveryservice_servers_"+cgServerIDsStr+".json", cfg.CacheFileMaxAge, cfg.NumRetries, &cgDSServers, func(obj interface{}) error {
-		toDSS, reqInf, err := toClient.GetDeliveryServiceServersWithLimits(999999, nil, cgServerIDs)
-		if err != nil {
-			return errors.New("getting cachegroup parent server delivery service servers from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		dss := obj.(*[]tc.DeliveryServiceServer)
-		*dss = toDSS.Response
-		return nil
-	})
+	cgDSServers, err := GetDeliveryServiceServers(cfg, cgServerIDs)
 	if err != nil {
 		return "", errors.New("getting parent.config cachegroup parent server delivery service servers: " + err.Error())
 	}
@@ -255,16 +216,7 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 		parentServerDSes[*dss.Server][*dss.DeliveryService] = struct{}{}
 	}
 
-	serverProfileParameters := []tc.Parameter{}
-	err = GetCachedJSON(cfg.TempDir, "profile_"+server.Profile+"_parameters.json", cfg.CacheFileMaxAge, cfg.NumRetries, &serverProfileParameters, func(obj interface{}) error {
-		toParams, reqInf, err := toClient.GetParametersByProfileName(server.Profile)
-		if err != nil {
-			return errors.New("getting server profile '" + server.Profile + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		params := obj.(*[]tc.Parameter)
-		*params = toParams
-		return nil
-	})
+	serverProfileParameters, err := GetServerProfileParameters(cfg, server.Profile)
 	if err != nil {
 		return "", errors.New("getting server profile '" + server.Profile + "' parameters: " + err.Error())
 	}
@@ -286,18 +238,9 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 		return "", errors.New("getting ATS major version from version parameter (profile '" + server.Profile + "' configFile 'package' name 'trafficserver'): " + err.Error())
 	}
 
-	globalParams := []tc.Parameter{}
-	err = GetCachedJSON(cfg.TempDir, "profile_global_parameters"+".json", cfg.CacheFileMaxAge, cfg.NumRetries, &globalParams, func(obj interface{}) error {
-		toParams, reqInf, err := toClient.GetParametersByProfileName(GlobalProfileName)
-		if err != nil {
-			return errors.New("getting global profile '" + GlobalProfileName + "' parameters from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		params := obj.(*[]tc.Parameter)
-		*params = toParams
-		return nil
-	})
+	globalParams, err := GetGlobalParameters(cfg)
 	if err != nil {
-		return "", errors.New("getting global profile '" + GlobalProfileName + "' parameters: " + err.Error())
+		return "", errors.New("getting global parameters: " + err.Error())
 	}
 
 	toToolName := ""
@@ -313,30 +256,12 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 		}
 	}
 
-	deliveryServices := []tc.DeliveryServiceNullable{}
-	err = GetCachedJSON(cfg.TempDir, "cdn_"+strconv.Itoa(server.CDNID)+"_deliveryservices"+".json", cfg.CacheFileMaxAge, cfg.NumRetries, &deliveryServices, func(obj interface{}) error {
-		toDSes, reqInf, err := toClient.GetDeliveryServicesByCDNID(server.CDNID)
-		if err != nil {
-			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		dses := obj.(*[]tc.DeliveryServiceNullable)
-		*dses = toDSes
-		return nil
-	})
+	deliveryServices, err := GetCDNDeliveryServices(cfg, server.CDNID)
 	if err != nil {
 		return "", errors.New("getting delivery services: " + err.Error())
 	}
 
-	parentConfigParams := []tc.Parameter{}
-	err = GetCachedJSON(cfg.TempDir, "config_file_parent_config_parameters"+".json", cfg.CacheFileMaxAge, cfg.NumRetries, &parentConfigParams, func(obj interface{}) error {
-		toParams, reqInf, err := toClient.GetParameterByConfigFile("parent.config")
-		if err != nil {
-			return errors.New("getting delivery services from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		params := obj.(*[]tc.Parameter)
-		*params = toParams
-		return nil
-	})
+	parentConfigParams, err := GetConfigFileParameters(cfg, "parent.config")
 	if err != nil {
 		return "", errors.New("getting parent.config parameters: " + err.Error())
 	}
@@ -451,21 +376,9 @@ func GetConfigFileServerParentDotConfig(toClientPtr **toclient.Session, cfg Cfg,
 		}
 	}
 
-	cdn := tc.CDN{}
-	err = GetCachedJSON(cfg.TempDir, "cdn_"+string(serverInfo.CDN)+".json", cfg.CacheFileMaxAge, cfg.NumRetries, &cdn, func(obj interface{}) error {
-		toCDNs, reqInf, err := toClient.GetCDNByName(string(serverInfo.CDN))
-		if err != nil {
-			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
-		}
-		if len(toCDNs) != 1 {
-			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': expected 1 CDN, got " + strconv.Itoa(len(toCDNs)))
-		}
-		cdn := obj.(*tc.CDN)
-		*cdn = toCDNs[0]
-		return nil
-	})
+	cdn, err := GetCDN(cfg, serverInfo.CDN)
 	if err != nil {
-		return "", errors.New("getting cdn: " + err.Error())
+		return "", errors.New("getting cdn '" + string(serverInfo.CDN) + "': " + err.Error())
 	}
 
 	serverCDNDomain := cdn.DomainName

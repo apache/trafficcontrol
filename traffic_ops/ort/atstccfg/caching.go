@@ -36,13 +36,13 @@ import (
 // GetCachedJSON attempts to get the given object from tempDir/cacheFileName.
 // If the cache file doesn't exist, is too old, or is malformed, it uses getter to get the object, and stores it in cacheFileName.
 // The object is placed in obj (which must be a pointer to the type of object to decode from JSON), and the error from getter is returned.
-func GetCachedJSON(tempDir string, cacheFileName string, cacheFileMaxAge time.Duration, numRetries int, obj interface{}, getter func(obj interface{}) error) error {
-	err := GetJSONObjFromFile(tempDir, cacheFileName, cacheFileMaxAge, obj)
+func GetCachedJSON(cfg TCCfg, cacheFileName string, obj interface{}, getter func(obj interface{}) error) error {
+	err := GetJSONObjFromFile(cfg.TempDir, cacheFileName, cfg.CacheFileMaxAge, obj)
 	if err == nil {
 		return nil
 	}
 
-	log.Infoln("GetCachedJSON failed to get object from '" + tempDir + "/" + cacheFileName + "', calling getter: " + err.Error())
+	log.Infoln("GetCachedJSON failed to get object from '" + cfg.TempDir + "/" + cacheFileName + "', calling getter: " + err.Error())
 
 	currentRetry := 0
 	for {
@@ -51,7 +51,7 @@ func GetCachedJSON(tempDir string, cacheFileName string, cacheFileMaxAge time.Du
 			break
 		}
 
-		if currentRetry == numRetries {
+		if currentRetry == cfg.NumRetries {
 			return errors.New("getting uncached: " + err.Error())
 		}
 
@@ -61,7 +61,7 @@ func GetCachedJSON(tempDir string, cacheFileName string, cacheFileMaxAge time.Du
 		time.Sleep(time.Second * time.Duration(sleepSeconds)) // TODO make backoff configurable?
 	}
 
-	WriteCacheJSON(tempDir, cacheFileName, obj)
+	WriteCacheJSON(cfg.TempDir, cacheFileName, obj)
 	return nil
 }
 

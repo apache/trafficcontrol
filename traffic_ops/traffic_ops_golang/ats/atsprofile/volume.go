@@ -23,56 +23,27 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strconv"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
 func GetVolume(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, makeVolume)
+	addHdr := false
+	contentType := tc.ContentTypeTextPlain
+	WithProfileDataHdr(w, r, addHdr, contentType, makeVolume)
 }
 
 func makeVolume(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {
+	toolName, toURL, err := ats.GetToolNameAndURL(tx)
+	if err != nil {
+		return "", errors.New("getting tool name and URL: " + err.Error())
+	}
 	paramData, err := ats.GetProfileParamData(tx, profile.ID, StorageFileName) // volume.config is based on the storage.config params
 	if err != nil {
 		return "", errors.New("getting profile param data: " + err.Error())
 	}
-
-	numVolumes := getNumVolumes(paramData)
-
-	text := "# TRAFFIC OPS NOTE: This is running with forced volumes - the size is irrelevant\n"
-	nextVolume := 1
-	if drivePrefix := paramData["Drive_Prefix"]; drivePrefix != "" {
-		text += volumeText(strconv.Itoa(nextVolume), numVolumes)
-		nextVolume++
-	}
-	if ramDrivePrefix := paramData["RAM_Drive_Prefix"]; ramDrivePrefix != "" {
-		text += volumeText(strconv.Itoa(nextVolume), numVolumes)
-		nextVolume++
-	}
-	if ssdDrivePrefix := paramData["SSD_Drive_Prefix"]; ssdDrivePrefix != "" {
-		text += volumeText(strconv.Itoa(nextVolume), numVolumes)
-		nextVolume++
-	}
-
-	if text == "" {
-		text = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
-	}
-	return text, nil
-}
-
-func volumeText(volume string, numVolumes int) string {
-	return "volume=" + volume + " scheme=http size=" + strconv.Itoa(100/numVolumes) + "%\n"
-}
-
-func getNumVolumes(paramData map[string]string) int {
-	num := 0
-	drivePrefixes := []string{"Drive_Prefix", "SSD_Drive_Prefix", "RAM_Drive_Prefix"}
-	for _, pre := range drivePrefixes {
-		if _, ok := paramData[pre]; ok {
-			num++
-		}
-	}
-	return num
+	return atscfg.MakeVolumeDotConfig(profile.Name, paramData, toolName, toURL), nil
 }
