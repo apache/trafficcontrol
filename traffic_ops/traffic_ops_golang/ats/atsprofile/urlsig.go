@@ -23,41 +23,37 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
 func GetURLSig(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, urlSigDotConfig)
+	addHdr := false
+	contentType := tc.ContentTypeTextPlain
+	WithProfileDataHdr(w, r, addHdr, contentType, urlSigDotConfig)
 }
 
 func urlSigDotConfig(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string) (string, error) {
 	fileName = "url_sig_" + fileName + ".config" // the fileName from the http router is just the DS, missing "url_sig_" and ".config" - add them back now
-
-	sep := " = "
 
 	urlSigKeys, _, err := riaksvc.GetURLSigKeysFromConfigFileKey(tx, cfg.RiakAuthOptions, cfg.RiakPort, fileName)
 	if err != nil {
 		return "", errors.New("getting url sig keys from Riak: " + err.Error())
 	}
 
-	params, err := ats.GetProfileParamData(tx, profile.ID, fileName)
+	paramData, err := ats.GetProfileParamData(tx, profile.ID, fileName)
 	if err != nil {
 		return "", errors.New("getting profile param data: " + err.Error())
 	}
 
-	text := ""
-	for paramName, paramVal := range params {
-		if len(urlSigKeys) == 0 || !strings.HasPrefix(paramName, "key") {
-			text += paramName + sep + paramVal + "\n"
-		}
+	toolName, toURL, err := ats.GetToolNameAndURL(tx)
+	if err != nil {
+		return "", errors.New("getting tool name and URL: " + err.Error())
 	}
 
-	for key, val := range urlSigKeys {
-		text += key + sep + val + "\n"
-	}
-	return text, nil
+	return atscfg.MakeURLSigConfig(profile.Name, urlSigKeys, paramData, toolName, toURL), nil
 }

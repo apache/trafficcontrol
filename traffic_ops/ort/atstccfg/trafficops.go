@@ -107,13 +107,12 @@ func GetCookiesFromTO(toURL string, toUser string, toPass string, tempDir string
 
 // TrafficOpsRequest makes a request to Traffic Ops for the given method, url, and body.
 // If it gets an Unauthorized or Forbidden, it tries to log in again and makes the request again.
-func TrafficOpsRequest(toClient **toclient.Session, cfg Cfg, method string, url string, body []byte) (string, int, error) {
-	return trafficOpsRequestWithRetry(toClient, cfg, method, url, body, cfg.NumRetries)
+func TrafficOpsRequest(cfg TCCfg, method string, url string, body []byte) (string, int, error) {
+	return trafficOpsRequestWithRetry(cfg, method, url, body, cfg.NumRetries)
 }
 
 func trafficOpsRequestWithRetry(
-	toClient **toclient.Session,
-	cfg Cfg,
+	cfg TCCfg,
 	method string,
 	url string,
 	body []byte,
@@ -121,7 +120,7 @@ func trafficOpsRequestWithRetry(
 ) (string, int, error) {
 	currentRetry := 0
 	for {
-		body, code, err := trafficOpsRequestWithLogin(toClient, cfg, method, url, body)
+		body, code, err := trafficOpsRequestWithLogin(cfg, method, url, body)
 		if err == nil || currentRetry == retryNum {
 			return body, code, err
 		}
@@ -134,13 +133,12 @@ func trafficOpsRequestWithRetry(
 }
 
 func trafficOpsRequestWithLogin(
-	toClient **toclient.Session,
-	cfg Cfg,
+	cfg TCCfg,
 	method string,
 	url string,
 	body []byte,
 ) (string, int, error) {
-	resp, toIP, err := rawTrafficOpsRequest(*toClient, method, url, body)
+	resp, toIP, err := rawTrafficOpsRequest(*cfg.TOClient, method, url, body)
 	if err != nil {
 		toIPStr := ""
 		if toIP != nil {
@@ -153,10 +151,10 @@ func trafficOpsRequestWithLogin(
 		resp.Body.Close()
 
 		log.Infoln("TrafficOpsRequest got unauthorized/forbidden, logging in again")
-		log.Infof("TrafficOpsRequest url '%v' user '%v' pass '%v'\n", (*toClient).URL, (*toClient).UserName, (*toClient).Password)
+		log.Infof("TrafficOpsRequest url '%v' user '%v' pass '%v'\n", (*cfg.TOClient).URL, (*cfg.TOClient).UserName, (*cfg.TOClient).Password)
 
 		useCache := false
-		newTOClient, toIP, err := toclient.LoginWithAgent((*toClient).URL, (*toClient).UserName, (*toClient).Password, cfg.TOInsecure, UserAgent, useCache, cfg.TOTimeout)
+		newTOClient, toIP, err := toclient.LoginWithAgent((*cfg.TOClient).URL, (*cfg.TOClient).UserName, (*cfg.TOClient).Password, cfg.TOInsecure, UserAgent, useCache, cfg.TOTimeout)
 		if err != nil {
 			toIPStr := ""
 			if toIP != nil {
@@ -164,9 +162,9 @@ func trafficOpsRequestWithLogin(
 			}
 			return "", 1, errors.New("logging in to Traffic Ops IP '" + toIPStr + "': " + err.Error())
 		}
-		*toClient = newTOClient
+		*cfg.TOClient = newTOClient
 
-		resp, toIP, err = rawTrafficOpsRequest(*toClient, method, url, body)
+		resp, toIP, err = rawTrafficOpsRequest(*cfg.TOClient, method, url, body)
 		if err != nil {
 			toIPStr := ""
 			if toIP != nil {

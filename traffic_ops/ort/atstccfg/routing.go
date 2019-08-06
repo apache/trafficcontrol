@@ -25,24 +25,25 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
-var scopeConfigFileFuncs = map[string]func(toClient **toclient.Session, cfg Cfg, resource string, fileName string) (string, int, error){
+var scopeConfigFileFuncs = map[string]func(cfg TCCfg, resource string, fileName string) (string, int, error){
 	"cdns":     GetConfigFileCDN,
 	"servers":  GetConfigFileServer,
 	"profiles": GetConfigFileProfile,
 }
 
-func GetConfigFile(toClient **toclient.Session, cfg Cfg) (string, int, error) {
+var ErrNotFound = errors.New("not found")
+var ErrBadRequest = errors.New("bad request")
 
+func GetConfigFile(cfg TCCfg) (string, int, error) {
 	pathParts := strings.Split(cfg.TOURL.Path, "/")
 
 	log.Infof("GetConfigFile pathParts %++v\n", pathParts)
 
 	if len(pathParts) < 8 {
 		log.Infoln("GetConfigFile pathParts < 7, calling TO")
-		return GetConfigFileFromTrafficOps(toClient, cfg)
+		return GetConfigFileFromTrafficOps(cfg)
 	}
 	scope := pathParts[3]
 	resource := pathParts[4]
@@ -51,59 +52,95 @@ func GetConfigFile(toClient **toclient.Session, cfg Cfg) (string, int, error) {
 	log.Infoln("GetConfigFile scope '" + scope + "' resource '" + resource + "' fileName '" + fileName + "'")
 
 	if scopeConfigFileFunc, ok := scopeConfigFileFuncs[scope]; ok {
-		return scopeConfigFileFunc(toClient, cfg, resource, fileName)
+		return scopeConfigFileFunc(cfg, resource, fileName)
 	}
 
 	log.Infoln("GetConfigFile unknown scope, calling TO")
-	return GetConfigFileFromTrafficOps(toClient, cfg)
+	return GetConfigFileFromTrafficOps(cfg)
 }
 
-func GetConfigFileCDN(toClient **toclient.Session, cfg Cfg, cdnNameOrID string, fileName string) (string, int, error) {
+func GetConfigFileCDN(cfg TCCfg, cdnNameOrID string, fileName string) (string, int, error) {
 	log.Infoln("GetConfigFileCDN cdn '" + cdnNameOrID + "' fileName '" + fileName + "'")
-	return GetConfigFileFromTrafficOps(toClient, cfg)
+	return GetConfigFileFromTrafficOps(cfg)
 }
 
-func GetConfigFileProfile(toClient **toclient.Session, cfg Cfg, profileNameOrID string, fileName string) (string, int, error) {
+func GetConfigFileProfile(cfg TCCfg, profileNameOrID string, fileName string) (string, int, error) {
 	log.Infoln("GetConfigFileProfile profile '" + profileNameOrID + "' fileName '" + fileName + "'")
-	return GetConfigFileFromTrafficOps(toClient, cfg)
+
+	txt := ""
+	err := error(nil)
+	if getCfgFunc, ok := ProfileConfigFileFuncs()[fileName]; ok {
+		txt, err = getCfgFunc(cfg, profileNameOrID)
+	} else if strings.HasPrefix(fileName, "url_sig_") && strings.HasSuffix(fileName, ".config") && len(fileName) > len("url_sig_")+len(".config") {
+		txt, err = GetConfigFileProfileURLSigConfig(cfg, profileNameOrID, fileName)
+	} else if strings.HasPrefix(fileName, "uri_signing_") && strings.HasSuffix(fileName, ".config") && len(fileName) > len("uri_signing")+len(".config") {
+		txt, err = GetConfigFileProfileURISigningConfig(cfg, profileNameOrID, fileName)
+	} else {
+		txt, err = GetConfigFileProfileUnknownConfig(cfg, profileNameOrID, fileName)
+	}
+
+	if err != nil {
+		code := ExitCodeErrGeneric
+		if err == ErrNotFound {
+			code = ExitCodeNotFound
+		} else if err == ErrBadRequest {
+			code = ExitCodeBadRequest
+		}
+		return "", code, err
+	}
+	return txt, ExitCodeSuccess, nil
 }
 
 // ConfigFileFuncs returns a map[scope][configFile]configFileFunc.
-func ConfigFileFuncs() map[string]map[string]func(toClient **toclient.Session, cfg Cfg, serverNameOrID string) (string, error) {
-	return map[string]map[string]func(toClient **toclient.Session, cfg Cfg, serverNameOrID string) (string, error){
+func ConfigFileFuncs() map[string]map[string]func(cfg TCCfg, serverNameOrID string) (string, error) {
+	return map[string]map[string]func(cfg TCCfg, serverNameOrID string) (string, error){
 		"cdns":     CDNConfigFileFuncs(),
 		"servers":  ServerConfigFileFuncs(),
 		"profiles": ProfileConfigFileFuncs(),
 	}
 }
 
-func CDNConfigFileFuncs() map[string]func(toClient **toclient.Session, cfg Cfg, serverNameOrID string) (string, error) {
-	return map[string]func(toClient **toclient.Session, cfg Cfg, serverNameOrID string) (string, error){}
+func CDNConfigFileFuncs() map[string]func(cfg TCCfg, serverNameOrID string) (string, error) {
+	return map[string]func(cfg TCCfg, serverNameOrID string) (string, error){}
 }
 
-func ProfileConfigFileFuncs() map[string]func(toClient **toclient.Session, cfg Cfg, serverNameOrID string) (string, error) {
-	return map[string]func(toClient **toclient.Session, cfg Cfg, serverNameOrID string) (string, error){}
+func ProfileConfigFileFuncs() map[string]func(cfg TCCfg, serverNameOrID string) (string, error) {
+	return map[string]func(cfg TCCfg, serverNameOrID string) (string, error){
+		"12M_facts":           GetConfigFileProfile12MFacts,
+		"50-ats.rules":        GetConfigFileProfileATSDotRules,
+		"astats.config":       GetConfigFileProfileAstatsDotConfig,
+		"cache.config":        GetConfigFileProfileCacheDotConfig,
+		"drop_qstring.config": GetConfigFileProfileDropQStringDotConfig,
+		"logging.config":      GetConfigFileProfileLoggingDotConfig,
+		"logging.yaml":        GetConfigFileProfileLoggingDotYAML,
+		"logs_xml.config":     GetConfigFileProfileLogsXMLDotConfig,
+		"plugin.config":       GetConfigFileProfilePluginDotConfig,
+		"records.config":      GetConfigFileProfileRecordsDotConfig,
+		"storage.config":      GetConfigFileProfileStorageDotConfig,
+		"sysctl.conf":         GetConfigFileProfileSysCtlDotConf,
+		"volume.config":       GetConfigFileProfileVolumeDotConfig,
+	}
 }
 
-func ServerConfigFileFuncs() map[string]func(toClient **toclient.Session, cfg Cfg, serverNameOrID string) (string, error) {
-	return map[string]func(toClient **toclient.Session, cfg Cfg, serverNameOrID string) (string, error){
+func ServerConfigFileFuncs() map[string]func(cfg TCCfg, serverNameOrID string) (string, error) {
+	return map[string]func(cfg TCCfg, serverNameOrID string) (string, error){
 		"parent.config": GetConfigFileServerParentDotConfig,
 	}
 }
 
-func GetConfigFileServer(toClient **toclient.Session, cfg Cfg, serverNameOrID string, fileName string) (string, int, error) {
+func GetConfigFileServer(cfg TCCfg, serverNameOrID string, fileName string) (string, int, error) {
 	log.Infoln("GetConfigFileServer server '" + serverNameOrID + "' fileName '" + fileName + "'")
 	if getCfgFunc, ok := ServerConfigFileFuncs()[fileName]; ok {
-		txt, err := getCfgFunc(toClient, cfg, serverNameOrID)
+		txt, err := getCfgFunc(cfg, serverNameOrID)
 		if err != nil {
-			return "", 1, err
+			return "", ExitCodeErrGeneric, err
 		}
-		return txt, 0, nil
+		return txt, ExitCodeSuccess, nil
 	}
-	return GetConfigFileFromTrafficOps(toClient, cfg)
+	return GetConfigFileFromTrafficOps(cfg)
 }
 
-func GetConfigFileFromTrafficOps(toClient **toclient.Session, cfg Cfg) (string, int, error) {
+func GetConfigFileFromTrafficOps(cfg TCCfg) (string, int, error) {
 	path := cfg.TOURL.Path
 	if cfg.TOURL.RawQuery != "" {
 		path += "?" + cfg.TOURL.RawQuery
@@ -111,12 +148,12 @@ func GetConfigFileFromTrafficOps(toClient **toclient.Session, cfg Cfg) (string, 
 	log.Infoln("GetConfigFile path '" + path + "' not generated locally, requesting from Traffic Ops")
 	log.Infoln("GetConfigFile url '" + cfg.TOURL.String() + "'")
 
-	body, code, err := TrafficOpsRequest(toClient, cfg, http.MethodGet, cfg.TOURL.String(), nil)
+	body, code, err := TrafficOpsRequest(cfg, http.MethodGet, cfg.TOURL.String(), nil)
 	if err != nil {
 		return "", code, errors.New("Requesting path '" + path + "': " + err.Error())
 	}
 
-	WriteCookiesToFile(CookiesToString((*toClient).Client.Jar.Cookies(cfg.TOURL)), cfg.TempDir)
+	WriteCookiesToFile(CookiesToString((*cfg.TOClient).Client.Jar.Cookies(cfg.TOURL)), cfg.TempDir)
 
-	return string(body), code, nil
+	return string(body), HTTPCodeToExitCode(code), nil
 }

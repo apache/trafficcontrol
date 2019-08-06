@@ -21,41 +21,29 @@ package atsprofile
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
-	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
-const RecordsSeparator = " "
-const RecordsFileName = "records.config"
-
 func GetRecords(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, makeRecords)
+	addHdr := false
+	contentType := tc.ContentTypeTextPlain
+	WithProfileDataHdr(w, r, addHdr, contentType, makeRecords)
 }
 
 func makeRecords(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {
-	txt, err := GenericProfileConfig(tx, profile, RecordsFileName, RecordsSeparator)
+	toolName, toURL, err := ats.GetToolNameAndURL(tx)
 	if err != nil {
-		return "", nil
+		return "", errors.New("getting tool name and URL: " + err.Error())
 	}
-	if txt == "" {
-		txt = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
+	paramData, err := ats.GetProfileParamData(tx, profile.ID, atscfg.RecordsFileName)
+	if err != nil {
+		return "", errors.New("getting profile param data: " + err.Error())
 	}
-	txt = ReplaceLineSuffixes(txt, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
-	return txt, nil
-}
-
-func ReplaceLineSuffixes(txt string, suffix string, newSuffix string) string {
-	lines := strings.Split(txt, "\n")
-	newLines := make([]string, 0, len(lines))
-	for _, line := range lines {
-		if strings.HasSuffix(line, suffix) {
-			line = line[:len(line)-len(suffix)]
-			line += newSuffix
-		}
-		newLines = append(newLines, line)
-	}
-	return strings.Join(newLines, "\n")
+	return atscfg.MakeRecordsDotConfig(profile.Name, paramData, toolName, toURL), nil
 }

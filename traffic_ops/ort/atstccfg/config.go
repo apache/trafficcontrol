@@ -21,7 +21,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"net/url"
 	"os"
@@ -35,17 +34,18 @@ import (
 )
 
 type Cfg struct {
-	CacheFileMaxAge time.Duration
-	LogLocationErr  string
-	LogLocationInfo string
-	LogLocationWarn string
-	NumRetries      int
-	TempDir         string
-	TOInsecure      bool
-	TOPass          string
-	TOTimeout       time.Duration
-	TOURL           *url.URL
-	TOUser          string
+	CacheFileMaxAge     time.Duration
+	LogLocationErr      string
+	LogLocationInfo     string
+	LogLocationWarn     string
+	NumRetries          int
+	TempDir             string
+	TOInsecure          bool
+	TOPass              string
+	TOTimeout           time.Duration
+	TOURL               *url.URL
+	TOUser              string
+	PrintGeneratedFiles bool
 }
 
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
@@ -54,6 +54,8 @@ func (cfg Cfg) InfoLog() log.LogLocation    { return log.LogLocation(cfg.LogLoca
 func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // atstccfg doesn't use the debug logger, use Info instead.
 func (cfg Cfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // atstccfg doesn't use the event logger.
 
+// GetCfg gets the application configuration, from arguments and environment variables.
+// Note if PrintGeneratedFiles is configured, the config will be returned with PrintGeneratedFiles true and all other values set to their defaults. This is because other values may have requirements and return errors, where if PrintGeneratedFiles is set by the user, no other setting should be considered.
 func GetCfg() (Cfg, error) {
 	toURLPtr := flag.StringP("traffic-ops-url", "u", "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL.")
 	toUserPtr := flag.StringP("traffic-ops-user", "U", "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER.")
@@ -70,15 +72,7 @@ func GetCfg() (Cfg, error) {
 	flag.Parse()
 
 	if *printGeneratedFilesPtr {
-		names := []string{}
-		for scope, fileFuncs := range ConfigFileFuncs() {
-			for cfgFile, _ := range fileFuncs {
-				names = append(names, scope+"/"+cfgFile)
-			}
-		}
-		namesStr := strings.Join(names, "\n")
-		fmt.Println(namesStr)
-		os.Exit(0)
+		return Cfg{PrintGeneratedFiles: true}, nil
 	}
 
 	toURL := *toURLPtr

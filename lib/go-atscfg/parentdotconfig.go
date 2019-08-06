@@ -59,6 +59,16 @@ const DeliveryServicesAllParentsKey = "all_parents"
 
 const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer officially supports ATS 5.
 
+type ParentConfigDS struct {
+	Name            tc.DeliveryServiceName
+	QStringIgnore   tc.QStringIgnore
+	OriginFQDN      string
+	MultiSiteOrigin bool
+	OriginShield    string
+	Type            tc.DSType
+	QStringHandling string
+}
+
 type ParentConfigDSTopLevel struct {
 	ParentConfigDS
 	MSOAlgorithm                       string
@@ -88,17 +98,6 @@ func (p ParentInfo) Format() string {
 		host = p.Host + "." + p.Domain
 	}
 	return host + ":" + strconv.Itoa(p.Port) + "|" + p.Weight + ";"
-}
-
-type ParentConfigDS struct {
-	Name            tc.DeliveryServiceName
-	QStringIgnore   tc.QStringIgnore
-	OriginFQDN      string
-	MultiSiteOrigin bool
-	OriginShield    string
-	Type            tc.DSType
-
-	QStringHandling string
 }
 
 type OriginHost string

@@ -22,6 +22,7 @@ package atscfg
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -60,6 +61,10 @@ func GetNameVersionStringFromToolNameAndURL(toolName string, url string) string 
 	return toolName + " (" + url + ")"
 }
 
+func GenericHeaderComment(name string, toolName string, url string) string {
+	return HeaderCommentWithTOVersionStr(name, GetNameVersionStringFromToolNameAndURL(toolName, url))
+}
+
 // GetATSMajorVersionFromATSVersion returns the major version of the given profile's package trafficserver parameter.
 // The atsVersion is typically a Parameter on the Server's Profile, with the configFile "package" name "trafficserver".
 // Returns an error if atsVersion is empty or not a number.
@@ -77,3 +82,30 @@ func GetATSMajorVersionFromATSVersion(atsVersion string) (int, error) {
 type DeliveryServiceID int
 type ProfileID int
 type ServerID int
+
+// GenericProfileConfig generates a generic profile config text, from the profile's parameters with the given config file name.
+// This does not include a header comment, because a generic config may not use a number sign as a comment.
+// If you need a header comment, it can be added manually via ats.HeaderComment, or automatically with WithProfileDataHdr.
+func GenericProfileConfig(
+	paramData map[string]string, // GetProfileParamData(tx, profileID, fileName)
+	separator string,
+) string {
+	text := ""
+	for name, val := range paramData {
+		name = trimParamUnderscoreNumSuffix(name)
+		text += name + separator + val + "\n"
+	}
+	return text
+}
+
+// trimParamUnderscoreNumSuffix removes any trailing "__[0-9]+" and returns the trimmed string.
+func trimParamUnderscoreNumSuffix(paramName string) string {
+	underscorePos := strings.LastIndex(paramName, `__`)
+	if underscorePos == -1 {
+		return paramName
+	}
+	if _, err := strconv.ParseFloat(paramName[underscorePos+2:], 64); err != nil {
+		return paramName
+	}
+	return paramName[:underscorePos]
+}
