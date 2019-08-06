@@ -75,10 +75,10 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
 ADD https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /
 
 WORKDIR /opt/traffic_ops/app
-ADD traffic_ops/app/cpanfile .
+ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
 RUN cpanm -l ./local Carton && \
     POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton  && \
-    rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile
+    rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile && ./install_goose.sh
 
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
 ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
@@ -89,8 +89,7 @@ RUN yum install -y /$(basename $TRAFFIC_OPS_RPM) && \
 
 # Run carton again, in case the cpanfile included in the RPM differs from the one used earlier in the
 # build (should never happen - Perl is supposed to be going away)
-RUN /opt/traffic_ops/install/bin/install_goose.sh && \
-    POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton && \
+RUN POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton && \
     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
 
 ADD infrastructure/cdn-in-a-box/enroller/server_template.json \
