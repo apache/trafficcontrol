@@ -21,7 +21,7 @@ exports.config = {
 	framework: 'jasmine',
 	seleniumAddress: 'http://localhost:4444/wd/hub',
 	specs: ['login/login-spec.js', 'DeliveryServiceRequests/delivery-service-requests-spec.js'],
-	baseUrl: 'https://localhost:4443',
+	baseUrl: 'http://localhost:8100',
 	getPageTimeout: 30000,
 
 	capabilities: {

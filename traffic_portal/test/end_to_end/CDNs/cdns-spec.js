@@ -80,6 +80,7 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		await pageData.confirmInput.sendKeys(myNewCDN.name);
 		expect(pageData.confirmButton.isEnabled()).toBe(true);
 		await pageData.confirmButton.click();
+		// gets the expiration date calculated by Traffic Ops an verifies that it is one year from now, plus or minus a second
 		const expirationDate = pageData.expirationDate.getAttribute('value').then((expir) => {return Date.parse(expir + ' UTC');});
 		const calculatedExpirationDate = Date.now() + 365*24*60*60*1000;
 		expect(expirationDate).toBeCloseTo(calculatedExpirationDate, -4);
