@@ -99,7 +99,7 @@ Response Structure
 :rack:           A string indicating "server rack" location
 :routerHostName: The human-readable name of the router responsible for reaching this server
 :routerPortName: The human-readable name of the port used by the router responsible for reaching this server
-:status:         The status of the server
+:status:         The :term:`Status` of the server
 
 	.. seealso:: :ref:`health-proto`
 
@@ -111,7 +111,7 @@ Response Structure
 
 	.. note:: This is typically thought of as synonymous with "HTTP port", as the port specified by ``httpsPort`` may also be used for incoming TCP connections.
 
-:type:       The name of the 'type' of this server
+:type:       The name of the :term:`Type` of this server
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Ops ORT
 :xmppId:     An identifier to be used in XMPP communications with the server - in nearly all cases this will be the same as ``hostName``
