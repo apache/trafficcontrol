@@ -122,7 +122,7 @@ func (to *Session) GetRoleByName(name string) ([]tc.Role, ReqInf, int, error) {
 	return []tc.Role{}, reqInf, 0, errClient
 }
 
-// GET a Role by the Role query parameters
+// GetRoleByQueryParams gets a Role by the Role query parameters
 func (to *Session) GetRoleByQueryParams(queryParams map[string]string) ([]tc.Role, ReqInf, int, error) {
 	route := fmt.Sprintf("%s?", API_v14_ROLES)
 	for param, val := range queryParams {
