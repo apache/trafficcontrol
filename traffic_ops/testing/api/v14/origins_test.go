@@ -156,7 +156,7 @@ func OriginTenancyTest(t *testing.T) {
 func VerifyPaginationSupport(t *testing.T) {
 	origins, _, err := TOSession.GetOrigins()
 	if err != nil {
-		t.Errorf("cannot GET origins: %v\n", err)
+		t.Fatalf("cannot GET origins: %v\n", err)
 	}
 
 	originsWithLimit, _, err := TOSession.GetOriginsByQueryParams("?limit=1")
