@@ -243,7 +243,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		TypeName:  typeName,
 		SetNumber: dsr.SetNumber,
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Created a routing regular expression", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Created a "+strconv.Itoa(dsr.Type)+" regular expression ("+dsr.Pattern+") in position "+strconv.Itoa(dsr.SetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
@@ -309,7 +309,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		TypeName:  typeName,
 		SetNumber: dsr.SetNumber,
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Updated routing regular expression "+string(regexID), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Updated a "+strconv.Itoa(dsr.Type)+" regular expression ("+dsr.Pattern+") in position "+strconv.Itoa(dsr.SetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 }
 
@@ -327,6 +327,14 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	dsID := inf.IntParams["dsid"]
+	dsName, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
 	regexID := inf.IntParams["regexid"]
 
 	count := 0
@@ -374,7 +382,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("this create affected too many rows: %d", rowsAffected))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf(`deleted deliveryservice_regex {"ds": %d, "regex": %d}`, dsID, regexID), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Deleted regular expression "+strconv.Itoa(regexID), inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "deliveryservice_regex was deleted.")
 }
 

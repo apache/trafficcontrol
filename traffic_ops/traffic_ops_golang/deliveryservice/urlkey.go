@@ -205,7 +205,7 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+" copied from "+string(copyDS)+": "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(ds)+", ID: "+strconv.Itoa(dsID)+", ACTION: Copied URL keys from "+string(copyDS), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(ds)+", ID: "+strconv.Itoa(dsID)+", ACTION: Copied URL sig keys from "+string(copyDS), inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully copied and stored keys")
 }
 
@@ -259,7 +259,7 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+": "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(ds)+", ID: "+strconv.Itoa(dsID)+", ACTION: Generated URL keys", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(ds)+", ID: "+strconv.Itoa(dsID)+", ACTION: Generated URL sig keys", inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully generated and stored keys")
 }
 
