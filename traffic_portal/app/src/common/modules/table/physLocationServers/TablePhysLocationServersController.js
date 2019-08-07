@@ -22,13 +22,33 @@ var TablePhysLocationServersController = function(physLocation, servers, $contro
 	// extends the TableServersController to inherit common methods
 	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
 
+	let physLocServersTable;
+
 	$scope.physLocation = physLocation;
 
+	$scope.toggleVisibility = function(colName) {
+		const col = physLocServersTable.column(colName + ':name');
+		col.visible(!col.visible());
+		physLocServersTable.rows().invalidate().draw();
+	};
+
 	angular.element(document).ready(function () {
-		$('#physLocServersTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+		physLocServersTable = $('#physLocServersTable').DataTable({
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"colReorder": {
+				realtime: false
+			},
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_physLocServersTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_physLocServersTable_/):", e);
+				}
+			}
 		});
 	});
 

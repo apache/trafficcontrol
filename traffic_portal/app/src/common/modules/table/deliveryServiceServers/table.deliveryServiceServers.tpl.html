@@ -27,6 +27,19 @@ under the License.
         <div class="pull-right">
             <button class="btn btn-primary" title="Link Servers to Delivery Service" ng-click="selectServers()"><i class="fa fa-link"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-columns"></i>&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
+                        <div class="checkbox">
+                            <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
+                        </div>
+                    </li>
+                </menu>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -34,46 +47,85 @@ under the License.
         <br>
         <table id="dsServersTable" class="table responsive-utilities jambo_table">
             <thead>
-            <tr class="headings">
-                <th>UPD</th>
-                <th>Host</th>
-                <th>Domain</th>
-                <th>IP</th>
-                <th>IPv6</th>
-                <th>Status</th>
-                <th>Type</th>
-                <th>Profile</th>
-                <th>CDN</th>
-                <th>Cache Group</th>
-                <th>Phys Location</th>
-                <th>ILO</th>
-                <th></th>
-            </tr>
+                <tr class="headings">
+                    <th>Cache Group</th>
+                    <th>CDN</th>
+                    <th>Domain</th>
+                    <th>Host</th>
+                    <th>HTTPS Port</th>
+                    <th>ID</th>
+                    <th>ILO IP Address</th>
+                    <th>ILO IP Gateway</th>
+                    <th>ILO IP Netmask</th>
+                    <th>ILO Username</th>
+                    <th>Interface Name</th>
+                    <th>IPv6 Address</th>
+                    <th>IPv6 Gateway</th>
+                    <th>Last Updated</th>
+                    <th>Mgmt IP Address</th>
+                    <th>Mgmt IP Gateway</th>
+                    <th>Mgmt IP Netmask</th>
+                    <th>Network Gateway</th>
+                    <th>Network IP</th>
+                    <th>Network MTU</th>
+                    <th>Network Subnet</th>
+                    <th>Offline Reason</th>
+                    <th>Phys Location</th>
+                    <th>Profile</th>
+                    <th>Rack</th>
+                    <th>Reval Pending</th>
+                    <th>Router Hostname</th>
+                    <th>Router Port Name</th>
+                    <th>Status</th>
+                    <th>TCP Port</th>
+                    <th>Type</th>
+                    <th>Update Pending</th>
+                </tr>
             </thead>
             <tbody>
-            <tr ng-click="editServer(s.id)" ng-repeat="s in ::servers" ng-class="::{'active': s.updPending}" context-menu="contextMenuItems">
-                <td data-search="{{(s.updPending) ? 'UPD' : ''}}" data-order="{{::s.updPending}}">
-                    <i title="Updates Pending" ng-show="s.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
-                    <i title="Updates Applied" ng-show="!s.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
-                </td>
-                <td data-search="^{{::s.hostName}}$">{{::s.hostName}}</td>
-                <td data-search="^{{::s.domainName}}$">{{::s.domainName}}</td>
-                <td data-search="^{{::s.ipAddress}}$"><a ng-click="ssh(s.ipAddress, $event)">{{::s.ipAddress}}</a></td>
-                <td data-search="^{{::s.ip6Address}}$">{{::s.ip6Address}}</td>
-                <td data-search="^{{::s.status}}$">
-                    <span ng-if="!isOffline(s.status)">{{::s.status}}</span>
-                    <span ng-if="isOffline(s.status)" uib-popover="{{::offlineReason(s)}}" popover-title="Offline Reason" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{::s.status}}</span>
-                </td>
-                <td data-search="^{{::s.type}}$">{{::s.type}}</td>
-                <td data-search="^{{::s.profile}}$">{{::s.profile}}</td>
-                <td data-search="^{{::s.cdnName}}$">{{::s.cdnName}}</td>
-                <td data-search="^{{::s.cachegroup}}$">{{::s.cachegroup}}</td>
-                <td data-search="^{{::s.physLocation}}$">{{::s.physLocation}}</td>
-                <td data-search="^{{::s.iloIpAddress}}$"><a ng-click="ssh(s.iloIpAddress, $event)">{{::s.iloIpAddress}}</a></td>
-                <td style="text-align: right;">
-                    <a class="link action-link" title="Unlink Server from Delivery Service" ng-click="confirmRemoveServer(s, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
-                </td>
-            </tr>
+                <tr ng-click="editServer(s.id)" ng-repeat="s in ::servers" ng-class="::{'active': s.updPending}" context-menu="contextMenuItems">
+                    <td data-search="^{{::s.cachegroup}}$">{{::s.cachegroup}}</td>
+                    <td data-search="^{{::s.cdnName}}$">{{::s.cdnName}}</td>
+                    <td data-search="^{{::s.domainName}}$">{{::s.domainName}}</td>
+                    <td data-search="^{{::s.hostName}}$">{{::s.hostName}}</td>
+                    <td data-search="^{{::s.httpsPort}}$">{{::s.httpsPort}}</td>
+                    <td data-search="^{{::s.id}}$">{{::s.id}}</td>
+                    <td data-search="^{{::s.iloIpAddress}}$"><a ng-click="ssh(s.iloIpAddress, $event)">{{::s.iloIpAddress}}</a></td>
+                    <td data-search="^{{::s.iloIpGateway}}$"><a ng-click="ssh(s.iloIpGateway, $event)">{{::s.iloIpGateway}}</a></td>
+                    <td data-search="^{{::s.iloIpNetmask}}$">{{::s.iloIpNetmask}}</td>
+                    <td data-search="^{{::s.iloUsername}}$">{{::s.iloUsername}}</td>
+                    <td data-search="^{{::s.interfaceName}}$">{{::s.interfaceName}}</td>
+                    <td data-search="^{{::s.ip6Address}}$">{{::s.ip6Address}}</td>
+                    <td data-search="^{{::s.ip6Gateway}}$">{{::s.ip6Gateway}}</td>
+                    <td data-search="^{{::getRelativeTime(s.lastUpdated)}}$" data-order="{{::s.lastUpdated}}">{{::getRelativeTime(s.lastUpdated)}}</td>
+                    <td data-search="^{{::s.mgmtIpAddress}}$"><a ng-click="ssh(s.mgmtIpAddress, $event)">{{::s.mgmtIpAddress}}</a></td>
+                    <td data-search="^{{::s.mgmtIpGateway}}$"><a ng-click="ssh(s.mgmtIpGateway, $event)">{{::s.mgmtIpGateway}}</a></td>
+                    <td data-search="^{{::s.mgmtIpNetmask}}$">{{::s.mgmtIpNetmask}}</td>
+                    <td data-search="^{{::s.ipGateway}}$"><a ng-click="ssh(s.ipGateway, $event)">{{::s.ipGateway}}</a></td>
+                    <td data-search="^{{::s.ipAddress}}$"><a ng-click="ssh(s.ipAddress, $event)">{{::s.ipAddress}}</a></td>
+                    <td data-search="^{{::s.interfaceMtu}}$">{{::s.interfaceMtu}}</td>
+                    <td data-search="^{{::s.ipNetmask}}$">{{::s.ipNetmask}}</td>
+                    <td data-search="^{{::s.offlineReason}}$">{{::s.offlineReason}}</td>
+                    <td data-search="^{{::s.physLocation}}$">{{::s.physLocation}}</td>
+                    <td data-search="^{{::s.profile}}$">{{::s.profile}}</td>
+                    <td data-search="^{{::s.rack}}$">{{::s.rack}}</td>
+                    <td data-search="{{(s.revalPending) ? 'RVL' : ''}}" data-order="{{::s.revalPending}}">
+                        <i title="Reval Pending (RVL)" ng-show="s.revalPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
+                        <i title="Reval Applied" ng-show="!s.revalPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    </td>
+                    <td data-search="^{{::s.routerHostName}}$">{{::s.routerHostName}}</td>
+                    <td data-search="^{{::s.routerPortName}}$">{{::s.routerPortName}}</td>
+                    <td data-search="^{{::s.status}}$">
+                        <span ng-if="!isOffline(s.status)">{{::s.status}}</span>
+                        <span ng-if="isOffline(s.status)" uib-popover="{{::offlineReason(s)}}" popover-title="Offline Reason" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{::s.status}}</span>
+                    </td>
+                    <td data-search="^{{::s.tcpPort}}$">{{::s.tcpPort}}</td>
+                    <td data-search="^{{::s.type}}$">{{::s.type}}</td>
+                    <td data-search="{{(s.updPending) ? 'UPD' : ''}}" data-order="{{::s.updPending}}">
+                        <i title="Updates Pending (UPD)" ng-show="s.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
+                        <i title="Updates Applied" ng-show="!s.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>

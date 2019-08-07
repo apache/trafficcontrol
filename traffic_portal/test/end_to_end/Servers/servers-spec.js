@@ -69,6 +69,16 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
+	it('should toggle the visibility of the first table column ', function() {
+		browser.driver.findElement(by.id('toggleColumns')).click();
+		let first = element.all(by.css('input[type=checkbox]')).first();
+		expect(first.isSelected()).toBe(true);
+		first.click();
+		expect(first.isSelected()).toBe(false);
+		let tableColumns = element.all(by.css('#serversTable tr:first-child td'));
+		expect(tableColumns.count()).toBe(11);
+	});
+
 	it('should verify the new Server and then update Server', function() {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
 		browser.sleep(1000);
