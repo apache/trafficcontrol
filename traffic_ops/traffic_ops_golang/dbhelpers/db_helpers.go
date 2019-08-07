@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -38,10 +39,13 @@ type WhereColumnInfo struct {
 
 const BaseWhere = "\nWHERE"
 const BaseOrderBy = "\nORDER BY"
+const BaseLimit = "\nLIMIT"
+const BaseOffset = "\nOFFSET"
 
-func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, map[string]interface{}, []error) {
+func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
 	orderBy := BaseOrderBy
+	paginationClause := BaseLimit
 	var criteria string
 	var queryValues map[string]interface{}
 	var errs []error
@@ -51,7 +55,7 @@ func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map
 		whereClause += " " + criteria
 	}
 	if len(errs) > 0 {
-		return "", "", queryValues, errs
+		return "", "", "", queryValues, errs
 	}
 
 	if orderby, ok := parameters["orderby"]; ok {
@@ -63,14 +67,46 @@ func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map
 			log.Debugln("Incorrect name for orderby: ", orderby)
 		}
 	}
+
+	if limit, exists := parameters["limit"]; exists {
+		// try to convert to int, if it fails the limit parameter is invalid, so return an error
+		limitInt, err := strconv.Atoi(limit)
+		if err != nil || limitInt < 1 {
+			errs = append(errs, errors.New("limit parameter must be a positive integer"))
+			return "", "", "", queryValues, errs
+		}
+		log.Debugln("limit: ", limit)
+		paginationClause += " " + limit
+		if offset, exists := parameters["offset"]; exists {
+			// check that offset is valid
+			offsetInt, err := strconv.Atoi(offset)
+			if err != nil || offsetInt < 1 {
+				errs = append(errs, errors.New("offset parameter must be a positive integer"))
+				return "", "", "", queryValues, errs
+			}
+			paginationClause += BaseOffset + " " + offset
+		} else if page, exists := parameters["page"]; exists {
+			// check that offset is valid
+			page, err := strconv.Atoi(page)
+			if err != nil || page < 1 {
+				errs = append(errs, errors.New("page parameter must be a positive integer"))
+				return "", "", "", queryValues, errs
+			}
+			paginationClause += BaseOffset + " " + strconv.Itoa((page-1)*limitInt)
+		}
+	}
+
 	if whereClause == BaseWhere {
 		whereClause = ""
 	}
 	if orderBy == BaseOrderBy {
 		orderBy = ""
 	}
-	log.Debugf("\n--\n Where: %s \n Order By: %s", whereClause, orderBy)
-	return whereClause, orderBy, queryValues, errs
+	if paginationClause == BaseLimit {
+		paginationClause = ""
+	}
+	log.Debugf("\n--\n Where: %s \n Order By: %s \n Limit+Offset: %s", whereClause, orderBy, paginationClause)
+	return whereClause, orderBy, paginationClause, queryValues, errs
 }
 
 func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {

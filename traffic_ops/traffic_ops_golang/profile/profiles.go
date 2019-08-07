@@ -109,7 +109,7 @@ func (prof *TOProfile) Read() ([]interface{}, error, error, int) {
 		NameQueryParam: dbhelpers.WhereColumnInfo{"prof.name", nil},
 		IDQueryParam:   dbhelpers.WhereColumnInfo{"prof.id", api.IsInt},
 	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(prof.APIInfo().Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(prof.APIInfo().Params, queryParamsToQueryCols)
 
 	// Narrow down if the query parameter is 'param'
 
@@ -125,7 +125,7 @@ func (prof *TOProfile) Read() ([]interface{}, error, error, int) {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
-	query := selectProfilesQuery() + where + orderBy
+	query := selectProfilesQuery() + where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
 	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)

@@ -98,7 +98,7 @@ func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
 		p["orderby"] = "xmlId"
 	}
 
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(p, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(p, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
@@ -108,7 +108,7 @@ func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
 
-	query := selectDeliveryServiceRequestsQuery() + where + orderBy
+	query := selectDeliveryServiceRequestsQuery() + where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
 	rows, err := req.APIInfo().Tx.NamedQuery(query, queryValues)

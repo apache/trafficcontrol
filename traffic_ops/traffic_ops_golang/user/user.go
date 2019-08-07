@@ -185,7 +185,7 @@ func checkTenancy(tenantID *int, tenantIDs []int) bool {
 func (this *TOUser) Read() ([]interface{}, error, error, int) {
 
 	inf := this.APIInfo()
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(inf.Params, this.ParamColumns())
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, this.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
@@ -196,7 +196,7 @@ func (this *TOUser) Read() ([]interface{}, error, error, int) {
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "u.tenant_id", tenantIDs)
 
-	query := this.SelectQuery() + where + orderBy
+	query := this.SelectQuery() + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, fmt.Errorf("querying users : %v", err), http.StatusInternalServerError

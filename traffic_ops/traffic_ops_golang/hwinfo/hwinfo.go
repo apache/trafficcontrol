@@ -52,11 +52,11 @@ func getHWInfo(tx *sqlx.Tx, params map[string]string) ([]tc.HWInfo, error) {
 		"val":            dbhelpers.WhereColumnInfo{"h.val", nil},
 		"lastUpdated":    dbhelpers.WhereColumnInfo{"h.last_updated", nil}, //TODO: this doesn't appear to work needs debugging
 	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
 		return nil, errors.New("getHWInfo building where clause: " + util.JoinErrsStr(errs))
 	}
-	query := selectHWInfoQuery() + where + orderBy
+	query := selectHWInfoQuery() + where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
 	rows, err := tx.NamedQuery(query, queryValues)
