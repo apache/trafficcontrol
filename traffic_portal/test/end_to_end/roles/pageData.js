@@ -24,7 +24,7 @@ module.exports = function () {
     this.description = element(by.css('textarea[name="description"]'));
     this.createButton = element(by.buttonText('Create'));
     this.successMsg = element(by.css('.alert-success'));
-    this.roleCreatedText = element(by.cssContainingText('div', 'Role created')); // just a guess, keep getting Internal Server Error when running locally
+    this.roleCreatedText = element(by.cssContainingText('div', 'Role created'));
     this.searchFilter=element(by.id('rolesTable_filter')).element(by.css('label')).element(by.css('input'));
     this.updateButton = element(by.buttonText('Update'));
     this.confirmUpdateButton = element(by.buttonText('Yes'));

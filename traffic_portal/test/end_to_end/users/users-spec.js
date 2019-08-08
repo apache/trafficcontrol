@@ -45,10 +45,9 @@ describe('Traffic Portal Users Test Suite', () => {
         await commonFunctions.selectDropdownByLabel(pageData.role, myNewUser.role); // note: this creates a new user with admin permissions
         await commonFunctions.selectDropdownByLabel(pageData.tenant, myNewUser.tenant);
         await pageData.sendRegistration.click();
-        // these statements are commented out because I kept getting an internal server error when running this test locally
-        // expect(pageData.successMsg.isPresent()).toBe(true);
-        // expect(pageData.userRegisteredText.isPresent()).toBe(true, 'Actual message does not match expected message');
-        // expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/users");
+        expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.userRegisteredText.isPresent()).toBe(true, 'Actual message does not match expected message');
+        expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/users");
     });
 
     it('should create a new user', async () => {

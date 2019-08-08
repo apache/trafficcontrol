@@ -38,9 +38,9 @@ describe('Traffic Portal Roles Test Suite', function() {
         await pageData.privLevel.sendKeys(myNewRole.privLevel);
         await pageData.description.click().sendKeys(myNewRole.description);
         await pageData.createButton.click();
-        // expect(pageData.successMsg.isPresent()).toBe(true, 'Success alert message should exist');
-        // expect(pageData.roleCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
-        // expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/roles");
+        expect(pageData.successMsg.isPresent()).toBe(true, 'Success alert message should exist');
+        expect(pageData.roleCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
+        expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl) + "#!/roles");
     });
 
     it('should update an existing role', async () => {

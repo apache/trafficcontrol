@@ -24,7 +24,7 @@ module.exports = function () {
     this.tenant = element(by.name("tenantId"));
     this.sendRegistration = element(by.buttonText('Send Registration'));
     this.successMsg = element(by.css('.alert-success'));
-    this.userRegisteredText = element(by.cssContainingText('div', 'User was registered.')); // not actually sure if that's right, because I can't get a successful user registration to happen
+    this.userRegisteredText = element(by.cssContainingText('div', 'User was registered.'));
     this.createUserButton = element(by.css('button[title="Create New User"]'));
     this.fullName = element(by.name("fullName"));
     this.username = element(by.name("uName"));
