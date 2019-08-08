@@ -72,11 +72,11 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
-	it('should toggle the visibility of the first table column ', function() {
-		browser.driver.findElement(by.id('toggleColumns')).click();
+	it('should toggle the visibility of the first table column ', async () => {
+		await element(by.id('toggleColumns')).click();
 		let first = element.all(by.css('input[type=checkbox]')).first();
 		expect(first.isSelected()).toBe(true);
-		first.click();
+		await first.click();
 		expect(first.isSelected()).toBe(false);
 		let tableColumns = element.all(by.css('#serversTable tr:first-child td'));
 		expect(tableColumns.count()).toBe(11);

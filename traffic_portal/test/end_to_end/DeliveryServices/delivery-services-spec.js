@@ -66,6 +66,16 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
+	it('should toggle the visibility of the first table column ', async () => {
+		await element(by.id('toggleColumns')).click();
+		let first = element.all(by.css('input[type=checkbox]')).first();
+		expect(first.isSelected()).toBe(true);
+		await first.click();
+		expect(first.isSelected()).toBe(false);
+		let tableColumns = element.all(by.css('#deliveryServicesTable tr:first-child td'));
+		expect(tableColumns.count()).toBe(10);
+	});
+
 	for(const [dsTypeKey, dsTypeArray] of Object.entries(mockVals.dsTypes)) {
 		const dsType = dsTypeArray[0];
 		for (const specificDsType of dsTypeArray) {
@@ -104,16 +114,6 @@ describe('Traffic Portal Delivery Services Suite', function() {
 				expect(pageData.successMsg.isPresent()).toBe(true);
         		expect(element(by.cssContainingText('div', 'Delivery Service [ '+mockVals.xmlIds[dsTypeKey]+' ] created')).isPresent()).toBe(true, 'Actual message does not match expected message');
 				expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/[0-9]+.+" + dsType);
-			});
-
-			it('should toggle the visibility of the first table column ', function() {
-				browser.driver.findElement(by.id('toggleColumns')).click();
-				let first = element.all(by.css('input[type=checkbox]')).first();
-				expect(first.isSelected()).toBe(true);
-				first.click();
-				expect(first.isSelected()).toBe(false);
-				let tableColumns = element.all(by.css('#deliveryServicesTable tr:first-child td'));
-				expect(tableColumns.count()).toBe(10);
 			});
 		
 			it('should update the ' + specificDsType + ' delivery service', async () => {
