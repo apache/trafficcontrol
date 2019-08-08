@@ -43,11 +43,11 @@ Request Structure
 	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
 	|           | array                                                                                                         |
 	+-----------+---------------------------------------------------------------------------------------------------------------+
-	| sortOrder | Changes the order of sorting. Either ascending (default) or descending ("desc")                               |
+	| sortOrder | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
 	+-----------+---------------------------------------------------------------------------------------------------------------+
-	| limit     | Choose the number of results to return                                                                        |
+	| limit     | Choose the maximum number of results to return                                                                |
 	+-----------+---------------------------------------------------------------------------------------------------------------+
-	| offset    | The number of results to skip before beginning to return results                                              |
+	| offset    | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
 	+-----------+---------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http

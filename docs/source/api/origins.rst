@@ -55,11 +55,11 @@ Request Structure
 	| orderby         | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                                                       |
 	|                 |          | array                                                                                                                                                               |
 	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| sortOrder       | no       | Changes the order of sorting. Either ascending (default) or descending ("desc")                                                                                     |
+	| sortOrder       | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                                            |
 	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| limit           | no       | Choose the number of results to return                                                                                                                              |
+	| limit           | no       | Choose the maximum number of results to return                                                                                                                      |
 	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| offset          | no       | The number of results to skip before beginning to return results                                                                                                    |
+	| offset          | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                                                |
 	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. note:: Several fields of origin definitions which are filterable by Query Parameters are allowed to be ``null``. ``null`` values in these fields will be filtered *out* appropriately by such Query Parameters, but do note that ``null`` is not a valid value accepted by any of these Query Parameters, and attempting to pass it will result in an error.
