@@ -312,9 +312,12 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := inf.Params["name"]
-	cdnID, _, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(key))
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(key))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
 
