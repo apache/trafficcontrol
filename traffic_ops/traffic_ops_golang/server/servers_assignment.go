@@ -76,7 +76,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+string(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
 }
 

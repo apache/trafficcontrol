@@ -88,7 +88,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		CDN:            *reqObj.CDN,
 		CacheGroupID:   cgID,
 	})
-	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.FormatInt(cgID, 10)+", ACTION: "+strings.Title(reqObj.Action)+"d CacheGroup server updates", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.FormatInt(cgID, 10)+", ACTION: "+strings.Title(reqObj.Action)+"d CacheGroup server updates to the "+string(*reqObj.CDN)+" CDN", inf.User, inf.Tx.Tx)
 }
 
 type QueueUpdatesResp struct {
