@@ -364,6 +364,26 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsrSetNumber := 0
+	if err := inf.Tx.Tx.QueryRow(`SELECT set_number FROM deliveryservice_regex WHERE regex = $1`, regexID).Scan(&dsrSetNumber); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("regex not found for this delivery service"), nil)
+			return
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservicesregexes.Delete finding set number: "+err.Error()))
+		return
+	}
+
+	dsrType, dsrPattern := 0, ""
+	if err := inf.Tx.Tx.QueryRow(`SELECT type, pattern FROM regex WHERE id = $1`, regexID).Scan(&dsrType, &dsrPattern); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("regex not found"), nil)
+			return
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservicesregexes.Delete finding type and pattern: "+err.Error()))
+		return
+	}
+
 	result, err := inf.Tx.Tx.Exec(`DELETE FROM deliveryservice_regex WHERE deliveryservice = $1 and regex = $2`, dsID, regexID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservicesregexes.Delete deleting delivery service regexes: "+err.Error()))
@@ -382,7 +402,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("this create affected too many rows: %d", rowsAffected))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Deleted regular expression "+strconv.Itoa(regexID), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Deleted a "+strconv.Itoa(dsrType)+" regular expression ("+dsrPattern+") in position "+strconv.Itoa(dsrSetNumber), inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "deliveryservice_regex was deleted.")
 }
 
