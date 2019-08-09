@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added pagination support to some Traffic Ops endpoints via three new query parameters, limit and offset/page
 - Traffic Ops now supports a "sortOrder" query parameter on some endpoints to return API responses in descending order
 - Traffic Ops now uses a consistent format for audit logs across all Go endpoints
+- Added cache-side config generator, atstccfg, installed with ORT. Currently includes parent.config and all profile configs, proxies others to Traffic Ops.
 
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)
