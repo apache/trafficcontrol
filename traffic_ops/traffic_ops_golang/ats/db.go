@@ -29,7 +29,6 @@ import (
 )
 
 func GetProfileParamData(tx *sql.Tx, profileID int, configFile string) (map[string]string, error) {
-	// TODO add another func to return a slice, for things that don't need a map, for performance? Does it make a difference?
 	qry := `
 SELECT
   p.name,
@@ -75,7 +74,6 @@ type ProfileData struct {
 
 // GetProfileData returns the necessary info about the profile, whether it exists, and any error.
 func GetProfileData(tx *sql.Tx, id int) (ProfileData, bool, error) {
-	// TODO implement, determine what fields are necessary
 	qry := `
 SELECT
   p.name
@@ -260,7 +258,6 @@ type Parameter struct {
 }
 
 func GetParamsByName(tx *sql.Tx, paramName string) ([]Parameter, error) {
-	// TODO implement, determine what fields are necessary
 	qry := `
 SELECT
   p.value,
