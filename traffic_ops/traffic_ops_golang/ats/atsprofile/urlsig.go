@@ -32,9 +32,7 @@ import (
 )
 
 func GetURLSig(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	contentType := tc.ContentTypeTextPlain
-	WithProfileDataHdr(w, r, addHdr, contentType, urlSigDotConfig)
+	WithProfileData(w, r, tc.ContentTypeTextPlain, urlSigDotConfig)
 }
 
 func urlSigDotConfig(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string) (string, error) {

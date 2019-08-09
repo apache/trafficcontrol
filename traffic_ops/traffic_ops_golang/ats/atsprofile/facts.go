@@ -31,9 +31,7 @@ import (
 )
 
 func GetFacts(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	contentType := tc.ContentTypeTextPlain
-	WithProfileDataHdr(w, r, addHdr, contentType, makeFacts)
+	WithProfileData(w, r, tc.ContentTypeTextPlain, makeFacts)
 }
 
 func makeFacts(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, fileName string) (string, error) {

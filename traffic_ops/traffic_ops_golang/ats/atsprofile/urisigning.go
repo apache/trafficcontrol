@@ -33,9 +33,7 @@ import (
 )
 
 func GetURISigning(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	contentType := tc.ApplicationJson
-	WithProfileDataHdr(w, r, addHdr, contentType, uriSigningDotConfig)
+	WithProfileData(w, r, tc.ApplicationJson, uriSigningDotConfig)
 }
 
 func uriSigningDotConfig(tx *sql.Tx, cfg *config.Config, _ ats.ProfileData, fileName string) (string, error) {

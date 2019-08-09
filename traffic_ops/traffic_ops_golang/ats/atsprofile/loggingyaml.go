@@ -31,9 +31,7 @@ import (
 )
 
 func GetLoggingYAML(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	contentType := tc.ContentTypeTextPlain // TODO change to Content-Type text/yaml? Perl uses text/plain.
-	WithProfileDataHdr(w, r, addHdr, contentType, makeLoggingYAML)
+	WithProfileData(w, r, tc.ContentTypeTextPlain, makeLoggingYAML) // TODO change to Content-Type text/yaml? Perl uses text/plain.
 }
 
 func makeLoggingYAML(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {

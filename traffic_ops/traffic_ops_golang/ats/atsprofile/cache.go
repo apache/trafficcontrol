@@ -31,9 +31,7 @@ import (
 )
 
 func GetCache(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	contentType := tc.ContentTypeTextPlain
-	WithProfileDataHdr(w, r, addHdr, contentType, makeCache)
+	WithProfileData(w, r, tc.ContentTypeTextPlain, makeCache)
 }
 
 func makeCache(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {

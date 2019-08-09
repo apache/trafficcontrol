@@ -31,8 +31,7 @@ import (
 )
 
 func GetLogging(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	WithProfileDataHdr(w, r, addHdr, tc.ContentTypeTextPlain, makeLogging) // TODO change to Content-Type text/x-lua? Perl uses text/plain.
+	WithProfileData(w, r, tc.ContentTypeTextPlain, makeLogging) // TODO change to Content-Type text/x-lua? Perl uses text/plain.
 }
 
 func makeLogging(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {
