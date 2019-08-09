@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Extract information about all :term:`Cache Group`\ s.
+Extract information about all :term:`Cache Groups`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -34,7 +34,7 @@ Request Structure
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 	| Name      | Required | Description                                                                                                   |
 	+===========+==========+===============================================================================================================+
-	| type      | no       | Return only :term:`Cache Group`\ s that are of the type identified by this integral, unique identifier        |
+	| type      | no       | Return only :term:`Cache Groups` that are of the :term:`type` identified by this integral, unique identifier  |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
 	|           |          | array                                                                                                         |
@@ -44,6 +44,10 @@ Request Structure
 	| limit     | no       | Choose the maximum number of results to return                                                                |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|           |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|           |          | defined to make use of ``page``.                                                                              |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http

@@ -37,15 +37,15 @@ Request Structure
 	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
 	| Name        | Required | Description                                                                                                                                    |
 	+=============+==========+================================================================================================================================================+
-	| cdn         | no       | Show only the :term:`Delivery Service`\ s belonging to the CDN identified by this integral, unique identifier                                  |
+	| cdn         | no       | Show only the :term:`Delivery Services` belonging to the CDN identified by this integral, unique identifier                                    |
 	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
-	| logsEnabled | no       | If true, return only :term:`Delivery Service`\ s with logging enabled, otherwise return only :term:`Delivery Service`\ s with logging disabled |
+	| logsEnabled | no       | If true, return only :term:`Delivery Services` with logging enabled, otherwise return only :term:`Delivery Services` with logging disabled     |
 	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
-	| profile     | no       | Return only :term:`Delivery Service`\ s using the profile identified by this integral, unique identifier                                       |
+	| profile     | no       | Return only :term:`Delivery Services` using the :term:`Profile` with this :ref:`profile-id`                                                    |
 	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
-	| tenant      | no       | Show only the :term:`Delivery Service`\ s belonging to the tenant identified by this integral, unique identifier                               |
+	| tenant      | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier                         |
 	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
-	| type        | no       | Return only :term:`Delivery Service`\ s of the :term:`Delivery Service` type identified by this integral, unique identifier                    |
+	| type        | no       | Return only :term:`Delivery Services` of the :ref:`Delivery Service Type <ds-types>` identified by this integral, unique identifier            |
 	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
 	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                                  |
 	|             |          | array                                                                                                                                          |
@@ -55,6 +55,9 @@ Request Structure
 	| limit       | no       | Choose the maximum number of results to return                                                                                                 |
 	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
 	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                           |
+	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. If        |
+	|             |          | ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                                 |
 	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. table:: Request Path Parameters

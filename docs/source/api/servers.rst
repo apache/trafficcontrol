@@ -46,13 +46,17 @@ Request Structure
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| status     | no       | Return only those servers with this status - see :ref:`health-proto`                                              |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	| type       | no       | Return only servers of this 'type'                                                                                |
+	| type       | no       | Return only servers of this :term:`Type`                                                                          |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| sortOrder  | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                          |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| limit      | no       | Choose the maximum number of results to return                                                                    |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 	| offset     | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit              |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| page       | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and   |
+	|            |          | the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to  |
+	|            |          | make use of ``page``.                                                                                             |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http

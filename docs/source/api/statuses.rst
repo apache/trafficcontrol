@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves a list of all server statuses.
+Retrieves a list of all server :term:`Statuses`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -34,11 +34,11 @@ Request Structure
 	+-------------+----------+------------------------------------------------------------------------------------------------------+
 	| Name        | Required | Description                                                                                          |
 	+=============+==========+======================================================================================================+
-	| description | no       | Return only statuses with this *exact* description                                                   |
+	| description | no       | Return only :term:`Statuses` with this *exact* description                                           |
 	+-------------+----------+------------------------------------------------------------------------------------------------------+
-	| id          | no       | Return only the status with this integral, unique identifier                                         |
+	| id          | no       | Return only the :term:`Status` with this integral, unique identifier                                 |
 	+-------------+----------+------------------------------------------------------------------------------------------------------+
-	| name        | no       | Return only statuses with this name                                                                  |
+	| name        | no       | Return only :term:`Statuses` with this name                                                          |
 	+-------------+----------+------------------------------------------------------------------------------------------------------+
 	| orderby     | no       | Choose the ordering of the results - must be the name of one                                         |
 	|             |          | of the fields of the objects in the ``response`` array                                               |
@@ -49,6 +49,10 @@ Request Structure
 	| limit       | no       | Choose the maximum number of results to return                                                       |
 	+-------------+----------+------------------------------------------------------------------------------------------------------+
 	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit |
+	+-------------+----------+------------------------------------------------------------------------------------------------------+
+	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are         |
+	|             |          | ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no       |
+	|             |          | effect. ``limit`` must be defined to make use of ``page``.                                           |
 	+-------------+----------+------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
