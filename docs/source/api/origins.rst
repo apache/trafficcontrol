@@ -45,7 +45,7 @@ Request Structure
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| name            | no       | Return only :term:`origins` by this name                                                                                                                          |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| profileId       | no       | Return only :term:`origin`s which use the :term:`Profile` that has this :ref:`profile-id`                                                                         |
+	| profileId       | no       | Return only :term:`origins` which use the :term:`Profile` that has this :ref:`profile-id`                                                                         |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| primary         | no       | If ``true``, return only :term:`origins` which are the the primary :term:`origin` of the :term:`Delivery Service` to which they belong - if ``false`` return only |
 	|                 |          | :term:`origins` which are *not* the primary :term:`origin` of the :term:`Delivery Service` to which they belong                                                   |
