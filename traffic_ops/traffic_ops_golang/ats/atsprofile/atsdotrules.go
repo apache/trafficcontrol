@@ -31,9 +31,7 @@ import (
 )
 
 func GetATSDotRules(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	contentType := tc.ContentTypeTextPlain
-	WithProfileDataHdr(w, r, addHdr, contentType, makeATSDotRules)
+	WithProfileData(w, r, tc.ContentTypeTextPlain, makeATSDotRules)
 }
 
 func makeATSDotRules(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, fileName string) (string, error) {

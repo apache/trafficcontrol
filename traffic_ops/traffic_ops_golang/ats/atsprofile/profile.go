@@ -32,11 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
-type MakeCfgFunc func(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string)
-
-var ErrBadRequest = errors.New("bad request")
-
-func WithProfileDataHdr(w http.ResponseWriter, r *http.Request, addHdr bool, contentType string, makeCfg func(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string) (string, error)) {
+func WithProfileData(w http.ResponseWriter, r *http.Request, contentType string, makeCfg func(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string) (string, error)) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"profile-name-or-id"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -70,14 +66,6 @@ func WithProfileDataHdr(w http.ResponseWriter, r *http.Request, addHdr bool, con
 		return
 	}
 
-	hdr := ""
-	if addHdr {
-		if hdr, err = ats.HeaderComment(inf.Tx.Tx, profileData.Name); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting file contents: "+err.Error()))
-			return
-		}
-	}
-
 	text, err := makeCfg(inf.Tx.Tx, inf.Config, profileData, fileName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("making config: "+err.Error()))
@@ -93,5 +81,5 @@ func WithProfileDataHdr(w http.ResponseWriter, r *http.Request, addHdr bool, con
 	if contentType != "" {
 		w.Header().Set(tc.ContentType, contentType)
 	}
-	w.Write([]byte(hdr + text))
+	w.Write([]byte(text))
 }

@@ -34,9 +34,7 @@ const SysctlSeparator = " = "
 const SysctlFileName = "sysctl.conf"
 
 func GetSysctl(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	contentType := tc.ContentTypeTextPlain
-	WithProfileDataHdr(w, r, addHdr, contentType, makeSysctl)
+	WithProfileData(w, r, tc.ContentTypeTextPlain, makeSysctl)
 }
 
 func makeSysctl(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {

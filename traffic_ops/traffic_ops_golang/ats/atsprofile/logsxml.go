@@ -31,8 +31,7 @@ import (
 )
 
 func GetLogsXML(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	WithProfileDataHdr(w, r, addHdr, tc.ContentTypeTextPlain, makeLogsXML) // TODO change to Content-Type text/xml? Perl uses text/plain.
+	WithProfileData(w, r, tc.ContentTypeTextPlain, makeLogsXML) // TODO change to Content-Type text/xml? Perl uses text/plain.
 }
 
 func makeLogsXML(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {

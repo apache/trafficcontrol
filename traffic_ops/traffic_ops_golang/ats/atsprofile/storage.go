@@ -33,9 +33,7 @@ import (
 const StorageFileName = "storage.config"
 
 func GetStorage(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	contentType := tc.ContentTypeTextPlain
-	WithProfileDataHdr(w, r, addHdr, contentType, makeStorage)
+	WithProfileData(w, r, tc.ContentTypeTextPlain, makeStorage)
 }
 
 func makeStorage(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {

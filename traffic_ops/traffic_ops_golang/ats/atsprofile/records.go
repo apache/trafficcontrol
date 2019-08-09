@@ -31,9 +31,7 @@ import (
 )
 
 func GetRecords(w http.ResponseWriter, r *http.Request) {
-	addHdr := false
-	contentType := tc.ContentTypeTextPlain
-	WithProfileDataHdr(w, r, addHdr, contentType, makeRecords)
+	WithProfileData(w, r, tc.ContentTypeTextPlain, makeRecords)
 }
 
 func makeRecords(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {
