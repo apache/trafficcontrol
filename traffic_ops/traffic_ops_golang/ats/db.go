@@ -810,7 +810,6 @@ type Parameter struct {
 }
 
 func GetParamsByName(tx *sql.Tx, paramName string) ([]Parameter, error) {
-	// TODO implement, determine what fields are necessary
 	qry := `
 SELECT
   p.value,
