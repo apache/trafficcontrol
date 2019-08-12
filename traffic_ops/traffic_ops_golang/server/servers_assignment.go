@@ -89,12 +89,13 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	var serverCDN uint
-	row := inf.Tx.Tx.QueryRow(`SELECT cdn_id FROM server WHERE id=$1`)
+	row := inf.Tx.Tx.QueryRow(`SELECT cdn_id FROM server WHERE id=$1`, inf.IntParams["id"])
 	if err := row.Scan(&serverCDN); err != nil {
 		if err == sql.ErrNoRows {
 			userErr = errors.New("No such server!")
 			errCode = http.StatusNotFound
 		} else {
+			errCode = http.StatusInternalServerError
 			sysErr = fmt.Errorf("Getting CDN ID for server (%d): %v", server, err)
 		}
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)

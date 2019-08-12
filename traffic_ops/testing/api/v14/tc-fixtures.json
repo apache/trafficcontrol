@@ -1279,7 +1279,7 @@
             "cdnName": "cdn2",
             "description": "edge2 description",
             "lastUpdated": "2018-03-02T17:27:11.818418+00:00",
-            "name": "EDGE2",
+            "name": "EDGEInCDN2",
             "routing_disabled": false,
             "type": "ATS_PROFILE"
         },
@@ -1442,7 +1442,7 @@
             "mgmtIpNetmask": "",
             "offlineReason": null,
             "physLocation": "Denver",
-            "profile": "EDGE2",
+            "profile": "EDGEInCDN2",
             "rack": "",
             "revalPending": false,
             "routerHostName": "",
