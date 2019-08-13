@@ -19,8 +19,20 @@ package tc
  * under the License.
  */
 
+// Capability reflects the ability of a user in ATC to perform some operation.
+//
+// In practice, they are assigned to relevant Traffic Ops API endpoints - to describe the
+// capabilites of said endpoint - and to user permission Roles - to describe the capabilities
+// afforded by said Role. Note that enforcement of Capability-based permisions is not currently
+// implemented.
 type Capability struct {
 	Description string `json:"description"`
 	LastUpdated TimeNoMod `json:"lastUpdated"`
 	Name string `json:"name"`
+}
+
+// CapabilitiesResponse models the structure of a minimal response from the Capabilities API in
+// Traffic Ops.
+type CapabilitiesResponse struct {
+	Response []Capability `json:"response"`
 }
