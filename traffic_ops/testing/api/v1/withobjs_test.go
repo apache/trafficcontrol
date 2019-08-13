@@ -39,6 +39,7 @@ const (
 	CacheGroups TCObj = iota
 	CacheGroupsDeliveryServices
 	CacheGroupParameters
+	Capabilities
 	CDNs
 	CDNFederations
 	Coordinates
@@ -79,6 +80,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	CacheGroups:                          {CreateTestCacheGroups, DeleteTestCacheGroups},
 	CacheGroupsDeliveryServices:          {CreateTestCachegroupsDeliveryServices, DeleteTestCachegroupsDeliveryServices},
 	CacheGroupParameters:                 {CreateTestCacheGroupParameters, DeleteTestCacheGroupParameters},
+	Capabilities:                         {CreateTestCapabilities, DeleteTestCapabilities},
 	CDNs:                                 {CreateTestCDNs, DeleteTestCDNs},
 	CDNFederations:                       {CreateTestCDNFederations, DeleteTestCDNFederations},
 	Coordinates:                          {CreateTestCoordinates, DeleteTestCoordinates},
