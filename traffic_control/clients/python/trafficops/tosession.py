@@ -541,6 +541,55 @@ class TOSession(RestApiSession):
 		"""
 
 	#
+	# Capabilities
+	#
+	@api_request(u'get', u'capabilities', (u'1.1', u'1.2', u'1.3', u'1.4'))
+	def get_capabilities(self, query_params=None):
+		"""
+		Retrieves capabilities
+		:ref:`to-api-capabilities`
+		:param query_params: See API page for more information on accepted parameters
+		:type query_params: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request(u'post', u'capabilities', (u'1.1', u'1.2', u'1.3', u'1.4'))
+	def create_capability(self, data=None):
+		"""
+		Creates a capability
+		:ref:`to-api-capabilities`
+		:param data: See API page for more information on accepted request body data
+		:type data: Any
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request(u'put', u'capabilities', ( u'1.4',))
+	def update_capability(self, query_params=None, data=None):
+		"""
+		Replaces a capability
+		:ref:`to-api-capabilities`
+		:param query_params: See API page for more information on accepted parameters
+		:type query_params: Dict[str, Any]
+		:param data: See API page for more information on accepted request body data
+		:type data: Any
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request(u'delete', u'capabilities', (u'1.4',))
+	def delete_capability(self, query_params=None):
+		"""
+		Deletes a capability
+		:ref:`to-api-capabilities`
+		:param query_params: See API page for more information on accepted parameters
+		:type query_params: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	#
 	# CDN
 	#
 	@api_request(u'get', u'cdns', (u'1.1', u'1.2', u'1.3',))
