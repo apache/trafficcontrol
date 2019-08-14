@@ -91,8 +91,14 @@ func (server *TOServer) GetType() string {
 	return "server"
 }
 
-func (server *TOServer) Validate() error {
+func (server *TOServer) Sanitize() {
+	if server.IP6Address != nil && *server.IP6Address == "" {
+		server.IP6Address = nil
+	}
+}
 
+func (server *TOServer) Validate() error {
+	server.Sanitize()
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
 	validateErrs := validation.Errors{

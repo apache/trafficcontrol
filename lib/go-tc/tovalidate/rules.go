@@ -154,7 +154,7 @@ func IsValidIPv6CIDROrAddress(value interface{}) error {
 				}
 			}
 		}
-		return fmt.Errorf("unable to parse an IPv6 address or CIDR from: %s", v)
+		return fmt.Errorf("unable to parse an IPv6 address or CIDR from: %s", *v)
 	default:
 		return fmt.Errorf("IsValidIPv6CIDROrAddress validation failure: unknown type %T", value)
 	}
