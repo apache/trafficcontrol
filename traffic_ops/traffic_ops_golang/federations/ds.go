@@ -22,6 +22,7 @@ package federations
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -40,6 +41,12 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	fedID := inf.IntParams["id"]
+	fedName, ok, err := getFedNameByID(inf.Tx.Tx, fedID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting federation cname from ID '"+string(fedID)+"': "+err.Error()))
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("federation not found: "+err.Error()), nil)
+	}
 
 	post := tc.FederationDSPost{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &post); err != nil {
@@ -67,7 +74,7 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("FEDERATION: %v, ID: %v, ACTION: Assign DSes to federation", fedName, fedID), inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, strconv.Itoa(len(post.DSIDs))+" delivery service(s) were assigned to the federation "+strconv.Itoa(fedID), post)
 }
 
@@ -84,4 +91,16 @@ VALUES ($1, unnest($2::integer[]))
 `
 	_, err := tx.Exec(qry, fedID, pq.Array(dsIDs))
 	return err
+}
+
+// getFedNameFromID returns the federations name and whether or not one with the given ID exists, or an error
+func getFedNameByID(tx *sql.Tx, id int) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`select cname from federation where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("Error querying federation cname: " + err.Error())
+	}
+	return name, true, nil
 }

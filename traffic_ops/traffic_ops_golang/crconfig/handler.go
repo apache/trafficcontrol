@@ -24,6 +24,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -175,7 +176,7 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig and Monitor performed for "+cdn, inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdn+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: Snapshot of CRConfig and Monitor", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "SUCCESS")
 }
 

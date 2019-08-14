@@ -25,6 +25,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -69,9 +70,8 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cachegroup name from ID '"+inf.Params["id"]+"': "+err.Error()))
 		return
-	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cachegroup "+inf.Params["id"]+" does not exist"), nil)
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
 	queue := reqObj.Action == "queue"
@@ -88,7 +88,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		CDN:            *reqObj.CDN,
 		CacheGroupID:   cgID,
 	})
-	api.CreateChangeLogRawTx(api.ApiChange, "Server updates "+reqObj.Action+"d for "+string(cgName), inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CACHEGROUP: "+string(cgName)+", ID: "+strconv.FormatInt(cgID, 10)+", ACTION: "+strings.Title(reqObj.Action)+"d CacheGroup server updates to the "+string(*reqObj.CDN)+" CDN", inf.User, inf.Tx.Tx)
 }
 
 type QueueUpdatesResp struct {
