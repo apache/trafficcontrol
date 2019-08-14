@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 
 ### Changed
+- Fix TO Servers validation to allow "" ipv6
 
 
 ### Fixed
