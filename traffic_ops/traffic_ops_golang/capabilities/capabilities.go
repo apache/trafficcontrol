@@ -27,7 +27,6 @@ import "net/http"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-// import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 const readQuery = `
 SELECT description,
@@ -102,8 +101,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
-	w.Write([]byte{'\n'})
+	w.Write(append(respBts, '\n'))
 }
 
 func Create(w http.ResponseWriter, r *http.Request) {
@@ -168,9 +166,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CAPABILITY: %s, ACTION: Created", cap.Name), inf.User, tx)
+
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
-	w.Write([]byte{'\n'})
+	w.Write(append(respBts, '\n'))
 }
 
 func Replace(w http.ResponseWriter, r *http.Request) {
@@ -228,9 +227,12 @@ func Replace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	msg := "CAPABILITY: %s, ACTION: Replaced with capability '%s' (%s)'"
+	msg = fmt.Sprintf(msg, inf.Params["name"], cap.Name, cap.Description)
+	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, tx)
+
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
-	w.Write([]byte{'\n'})
+	w.Write(append(respBts, '\n'))
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
@@ -283,6 +285,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
+
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CAPABILITY: %s, ACTION: Deleted", capName), inf.User, tx)
 
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
 	w.Write(append(respBts, '\n'))
