@@ -29,41 +29,51 @@ Get all capabilities.
 
 Request Structure
 -----------------
-No available parameters
+.. table:: Request Query Parameters
+
+	+------+----------+-----------------------------------------------+
+	| Name | Required | Description                                   |
+	+======+==========+===============================================+
+	| name | no       | Return only the capability that has this name |
+	+------+----------+-----------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/capabilities?name=test HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
 :name:        Name of the capability
-:description: Describes the APIs covered by the capability.
-:lastUpdated: Date and time of the last update made to this capability, in ISO format
+:description: Describes the permissions covered by the capability.
+:lastUpdated: Date and time of the last update made to this capability, in an ISO-like format
 
 .. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
-	Date: Wed, 14 Nov 2018 20:26:19 GMT
-	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: zmjsQO3Y4r1/xCFOHB+E+8+bbgDyVcvoR0d4gKqqsWTFaUnxp2flIzuFqWjXf+wb4Bbd1e2Ojse4nQKnyIFKGw==
 	Transfer-Encoding: chunked
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: c18+GtX2ZI8PoCSwuAzBhl+6w3vDpKQTa/cDJC0WHxdpguOL378KBxGWW5PCSyZfJUb7wPyOL5qKMn6NNTufhg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 15 Aug 2019 17:20:20 GMT
+	Content-Length: 161
 
 	{ "response": [
 		{
-			"name": "cdn-read",
-			"description": "View CDN configuration",
-			"lastUpdated": "2017-04-02 08:22:43"
-		},
-		{
-			"name": "cdn-write",
-			"description": "Create, edit or delete CDN configuration",
-			"lastUpdated": "2017-04-02 08:22:43"
+			"description": "This is only a test. If this were a real capability, it might do something",
+			"lastUpdated": "2019-08-15 17:18:03+00",
+			"name": "test"
 		}
 	]}
 
@@ -89,7 +99,7 @@ Request Structure
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
-	Content-Length: 109
+	Content-Length: 108
 	Content-Type: application/json
 
 	{
@@ -99,7 +109,8 @@ Request Structure
 
 Response Structure
 ------------------
-:description: Describes the APIs covered by the capability.
+:description: Describes the permissions covered by the capability.
+:lastUpdated: Date and time of the last update made to this capability, in an ISO-like format
 :name:        Name of the capability
 
 .. code-block:: http
@@ -107,26 +118,152 @@ Response Structure
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
-	Date: Wed, 14 Nov 2018 20:33:00 GMT
-	Server: Mojolicious (Perl)
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Vary: Accept-Encoding
-	Whole-Content-Sha512: HhhQzw3JBLv90lOeeSGj75uknADanz3fUnQt1E266HAKPTFuTjuIJpf8ni9fb9Chv9LN7mt16utcHMbP8MBHZw==
-	Content-Length: 183
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: A1rjpDy+O+oooYeer2j09pCEDpPEFk/nt8/AaJye2sLkfy93MtquCsB/Rlgz7sCYputd/EPOPDyi2WkN8UB1Rw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 15 Aug 2019 17:18:03 GMT
+	Content-Length: 219
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "Capability was created."
+			"text": "Capability created.",
+			"level": "success"
 		}
 	],
 	"response": {
-		"name": "test",
-		"description": "This is only a test. If this were a real capability, it might do something"
+		"description": "This is only a test. If this were a real capability, it might do something",
+		"lastUpdated": "2019-08-15 17:18:03+00",
+		"name": "test"
 	}}
 
+
+``PUT``
+=======
+.. versionadded:: 1.4
+
+Replace a capability with the one provided.
+
+:Auth. Required: Yes
+:Roles Required: "operations" or "admin"
+:Response Type:  Array
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+------+----------+---------------------------------------------------+
+	| Name | Required | Description                                       |
+	+======+==========+===================================================+
+	| name | yes      | The (current) name of the capability to be edited |
+	+------+----------+---------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/1.4/capabilities?name=test HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 109
+	Content-Type: application/json
+
+Response Structure
+------------------
+:description: Describes the permissions covered by the capability.
+:lastUpdated: Date and time of the last update made to this capability, in an ISO-like format
+:name:        Name of the capability
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: eciuE8oKQqBOtMThcQvSrPEIuJ9gUeutB00eW7g4KSscwO/vzplyOg8i/EVgfR9NFhK9VSVvdrKvxHC7HsG2fg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 15 Aug 2019 17:21:50 GMT
+	Content-Length: 224
+
+	{ "alerts": [
+		{
+			"text": "Capability was updated.",
+			"level": "success"
+		}
+	],
+	"response": {
+		"description": "This is only a test. If this were a real capability, it might do something",
+		"lastUpdated": "2019-08-15 17:21:50+00",
+		"name": "quest"
+	}}
+
+``DELETE``
+==========
+.. versionadded:: 1.4
+
+Delete a capability.
+
+:Auth. Required: Yes
+:Roles Required: "operations" or "admin"
+:Response Type:  Array
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+------+----------+------------------------------------------+
+	| Name | Required | Description                              |
+	+======+==========+==========================================+
+	| name | yes      | The name of the capability to be deleted |
+	+------+----------+------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.4/capabilities?name=quest HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
+Response Structure
+------------------
+:description: Describes the permissions that were covered by the capability.
+:lastUpdated: Date and time of the last update made to this capability, in an ISO-like format
+:name:        Name of the capability
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: 7lWTuaI1BUeXrnTG1fbFeKuvVuqojZJjSQV5MOtT0a++VV1PUAXYSIwe2vUOpoM4uwCKpeAc86J75OJGLgLHdg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 15 Aug 2019 17:26:00 GMT
+	Content-Length: 220
+
+	{ "alerts": [
+		{
+			"text": "Capability deleted.",
+			"level": "success"
+		}
+	],
+	"response": {
+		"description": "This is only a test. If this were a real capability, it might do something",
+		"lastUpdated": "2019-08-15 17:21:50+00",
+		"name": "quest"
+	}}

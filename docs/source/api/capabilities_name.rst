@@ -19,6 +19,9 @@
 ``capabilities/{{name}}``
 *************************
 
+.. deprecated:: 1.4
+	All of the functionality provided by this endpoint can be accomplished using :ref:`to-api-capabilities` instead. This endpoint will be removed in a future version of :abbr:`ATC (Apache Traffic Control)`.
+
 ``GET``
 =======
 Get a capability by name.
