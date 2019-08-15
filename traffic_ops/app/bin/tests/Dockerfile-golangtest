@@ -19,10 +19,10 @@ ADD traffic_ops /go/src/$DIR/traffic_ops
 ADD lib /go/src/$DIR/lib
 
 COPY traffic_monitor/tests/gocover.bash /go/src/$DIR/traffic_ops/traffic_ops_golang/gocover.bash
-RUN chmod +x /go/src/$DIR/traffic_ops/traffic_ops_golang/gocover.bash
 WORKDIR /go/src/$DIR/traffic_ops/traffic_ops_golang
-RUN bash -c "go get -u github.com/jstemmer/go-junit-report"
-RUN bash -c "go get -v"
+RUN chmod a+x gocover.bash && \
+    go get -u github.com/jstemmer/go-junit-report && \
+    go get -v
 
 ENTRYPOINT ["./gocover.bash"]
 CMD ["./..." , "../../lib/go-tc/..."]
