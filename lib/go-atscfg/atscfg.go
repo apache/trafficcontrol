@@ -28,6 +28,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const InvalidID = -1
+
 const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
 
 type ServerInfo struct {

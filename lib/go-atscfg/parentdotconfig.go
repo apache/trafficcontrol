@@ -31,8 +31,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-const InvalidID = -1
-
 const ParentConfigParamQStringHandling = "psel.qstring_handling"
 const ParentConfigParamMSOAlgorithm = "mso.algorithm"
 const ParentConfigParamMSOParentRetry = "mso.parent_retry"
