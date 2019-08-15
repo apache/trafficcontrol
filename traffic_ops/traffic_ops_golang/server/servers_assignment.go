@@ -114,7 +114,7 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 
 	//need remap config location
 	var atsConfigLocation string
-	if err := tx.QueryRow("SELECT value FROM parameter WHERE name = 'location' AND config_file = '" + ats.RemapFile + "'").Scan(&atsConfigLocation); err != nil {
+	if err := tx.QueryRow("SELECT value FROM parameter WHERE name = 'location' AND config_file = '" + atscfg.RemapFile + "'").Scan(&atsConfigLocation); err != nil {
 		return nil, errors.New("scanning location parameter: " + err.Error())
 	}
 	if strings.HasSuffix(atsConfigLocation, "/") {
