@@ -68,7 +68,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: Queue CDN updates", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN server updates "+reqObj.Action+"d", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, QueueResp{Action: reqObj.Action, CDNID: int64(inf.IntParams["id"])})
 }
 
