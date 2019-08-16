@@ -32,21 +32,27 @@ Request Structure
 .. table:: Request Query Parameters
 
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|    Name    | Required |                                                Description                                                        |
+	| Name       | Required | Description                                                                                                       |
 	+============+==========+===================================================================================================================+
 	| cachegroup | no       | Return only those servers within the :term:`Cache Group` identified by this integral, unique identifier           |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|    dsId    | no       | Return only those servers assigned to the :term:`Delivery Service` identified by this integral, unique identifier |
+	| dsId       | no       | Return only those servers assigned to the :term:`Delivery Service` identified by this integral, unique identifier |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|  hostName  | no       | Return only those servers that have this (short) hostname                                                         |
+	| hostName   | no       | Return only those servers that have this (short) hostname                                                         |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|     id     | no       | Return only the server with this integral, unique identifier                                                      |
+	| id         | no       | Return only the server with this integral, unique identifier                                                      |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|  profileId | no       | Return only those servers that are using the :term:`Profile` that has this :ref:`profile-id`                      |
+	| profileId  | no       | Return only those servers that are using the :term:`Profile` that has this :ref:`profile-id`                      |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|   status   | no       | Return only those servers with this status - see :ref:`health-proto`                                              |
+	| status     | no       | Return only those servers with this status - see :ref:`health-proto`                                              |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
-	|    type    | no       | Return only servers of this 'type'                                                                                |
+	| type       | no       | Return only servers of this 'type'                                                                                |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| sortOrder  | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                          |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| limit      | no       | Choose the maximum number of results to return                                                                    |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| offset     | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit              |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
