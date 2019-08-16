@@ -9,9 +9,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Fix TO Servers validation to allow "" ipv6
 
-
 ### Fixed
-
+- Fixed a bug where TM crashes when PostgreSQL is unavailable
 
 ## [3.0.1] - 2019-04-09
 ### Added
