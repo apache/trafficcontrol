@@ -435,6 +435,7 @@ func (inf *APIInfo) CreateInfluxClient() (c *influx.Client, e error) {
 
 	row := inf.Tx.Tx.QueryRow(influxServersQuery)
 	if e = row.Scan(&fqdn, &TCPPort, &HTTPSPort); e != nil {
+		e = fmt.Errorf("Failed to create influx client: %v", e)
 		return
 	}
 
@@ -453,7 +454,7 @@ func (inf *APIInfo) CreateInfluxClient() (c *influx.Client, e error) {
 	if useSSL {
 		value, err := HTTPSPort.Value()
 		if err != nil {
-			e = err
+			e = fmt.Errorf("Failed to create influx client: %v", err)
 			return
 		}
 
@@ -483,9 +484,10 @@ func (inf *APIInfo) CreateInfluxClient() (c *influx.Client, e error) {
 	var client influx.Client
 	client, e = influx.NewHTTPClient(config)
 	if client == nil {
-		return
+		e = fmt.Errorf("Failed to create influx client (client was nil): %v", e)
+	} else {
+		c = &client
 	}
-	c = &client
 	return
 }
 
