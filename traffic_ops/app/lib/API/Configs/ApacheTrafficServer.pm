@@ -299,6 +299,7 @@ sub get_profile_config {
 	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "logging.config" ) { $file_contents = $self->logging_dot_config( $profile_obj, $filename ); }
+	elsif ( $filename eq "logging.yaml" ) { $file_contents = $self->logging_dot_yaml( $profile_obj, $filename ); }
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "records.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename ); }
@@ -356,6 +357,7 @@ sub get_scope {
 	elsif ( $fname eq "drop_qstring.config" )                  { $scope = 'profiles' }
 	elsif ( $fname eq "logs_xml.config" )                      { $scope = 'profiles' }
 	elsif ( $fname eq "logging.config" )                       { $scope = 'profiles' }
+	elsif ( $fname eq "logging.yaml" )                         { $scope = 'profiles' }
 	elsif ( $fname eq "plugin.config" )                        { $scope = 'profiles' }
 	elsif ( $fname eq "records.config" )                       { $scope = 'profiles' }
 	elsif ( $fname eq "storage.config" )                       { $scope = 'profiles' }
@@ -1416,6 +1418,94 @@ sub drop_qstring_dot_config {
 	}
 	else {
 		$text .= "/([^?]+) \$s://\$t/\$1\n";
+	}
+
+	return $text;
+}
+
+sub logging_dot_yaml {
+	my $self        = shift;
+	my $profile_obj = shift;
+
+	my $data = $self->profile_param_data( $profile_obj->id, "logging.yaml" );
+
+	# This is an YAML file, the default comment works.
+	my $text = $self->header_comment( $profile_obj->name );
+	$text =~ s/\n//;
+
+	my $max_log_objects = 10;
+
+	# Add formats and filters separately to the top of the file
+	$text .= "\nformats: \n";
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1) {
+		my $log_format_field = "LogFormat";
+		if ( $i > 0 ) {
+			$log_format_field = $log_format_field . "$i";
+		}
+		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
+		if ( length($log_format_name) > 0 ) {
+			my $format = $data->{$log_format_field . ".Format"};
+			$text .= " - name: " . $log_format_name ." \n";
+			$text .= "   format: '" . $format . "'\n"
+		}
+	}
+
+	$text .= "filters:\n";
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1) {
+		my $log_filter_field = "LogFilter";
+		if ( $i > 0 ) {
+			$log_filter_field = $log_filter_field . "$i";
+		}
+		my $log_filter_name = $data->{$log_filter_field . ".Name"} || "";
+		if ( length($log_filter_name) > 0) {
+			my $filter = $data->{$log_filter_field . ".Filter"};
+			my $log_filter_type = $data->{$log_filter_field . ".Type"} || "accept";
+			$text .= "- name: " . $log_filter_name ."\n";
+			$text .= "  action: " . $log_filter_type . "\n";
+			$text .= "  condition: " . $filter ."\n";
+		}
+	}
+
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_object_field = $log_object_field . "$i";
+		}
+
+		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
+		if ( length($log_object_filename) > 0 ) {
+			my $log_object_type                 = $data->{$log_object_field . ".Type"}               || "ascii";
+			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
+			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
+			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
+			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
+			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
+			my $log_object_filters              = $data->{$log_object_field . ".Filters"}            || "";
+
+			$text .= "\nlogs:\n";
+			$text .= "- mode: " . $log_object_type . "\n";
+			$text .= "  filename: " . $log_object_filename ."\n";
+			$text .= "  format: " . $log_object_format . "\n";
+
+			if ( $log_object_type ne "pipe") {
+				if ($log_object_rolling_enabled ne ""){
+					$text .= "  rolling_enabled: ". $log_object_rolling_enabled . "\n";
+				}
+				if ($log_object_rolling_interval_sec ne "") {
+					$text .= "  rolling_interval_sec: ". $log_object_rolling_interval_sec . "\n";
+				}
+				if ($log_object_rolling_offset_hr ne "") {
+					$text .= "  rolling_offset_hr: ". $log_object_rolling_offset_hr . "\n";
+				}
+				if ($log_object_rolling_size_mb ne "") {
+					$text .= "  rolling_size_mb: ". $log_object_rolling_size_mb . "\n";
+				}
+			}
+			if ( length($log_object_filters) > 0 ) {	
+				$log_object_filters =~ s/\v//g;		
+				$text .= "  filters: [" . $log_object_filters . "]";
+			}
+		}
 	}
 
 	return $text;
