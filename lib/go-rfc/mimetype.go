@@ -1,4 +1,4 @@
-package tc
+package rfc
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,10 +18,6 @@ package tc
  * specific language governing permissions and limitations
  * under the License.
  */
-
- // The purpose of this file is for helper objects/functions for dealing with common HTTP objects -
- // it is expected to grow to accomodate things like Content Negotiation, Caching, encoding etc. as
- // the needs arise.
 
 import "mime"
 import "sort"

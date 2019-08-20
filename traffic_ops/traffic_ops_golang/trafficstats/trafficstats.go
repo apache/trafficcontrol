@@ -29,6 +29,7 @@ import "strings"
 import "time"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/lib/go-rfc"
 import "github.com/apache/trafficcontrol/lib/go-log"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -46,12 +47,12 @@ var metricTypes = map[string]interface{}{
 	"tps_5xx":   struct{}{},
 }
 
-var jsonWithRFCTimestamps = tc.MimeType{
+var jsonWithRFCTimestamps = rfc.MimeType{
 	"application/json",
 	map[string]string{"timestamp": "rfc"},
 }
 
-var jsonWithUnixTimestamps = tc.MimeType{
+var jsonWithUnixTimestamps = rfc.MimeType{
 	"application/json",
 	map[string]string{"timestamp": "unix"},
 }
@@ -134,7 +135,7 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (c config, e error, code
 
 	if accept := r.Header.Get("Accept"); accept != "" {
 
-		mimes, err := tc.MimeTypesFromAccept(accept)
+		mimes, err := rfc.MimeTypesFromAccept(accept)
 		if err != nil {
 			log.Warnf("Failed to negotiate content, Accept line '%s', error: %v", accept, err)
 		} else {
