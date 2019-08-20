@@ -139,6 +139,10 @@ Response Structure
 		:value: The value of the requested ``metricType`` at the time given by ``time``. This will always be a floating point number, unless no data is available for the data interval, in which case it will be ``null``
 
 :source:  A legacy field meant only for plugins that override this endpoint to name themselves. Should always be "TrafficStats".
+
+	.. deprecated:: 1.4
+		As this has no known purpose, developers are advised it will be removed in the future.
+
 :summary: An object containing summary statistics describing the data series
 
 	:average:                The arithmetic mean of the data's values
@@ -152,6 +156,9 @@ Response Structure
 	:totalTransactions:      When the ``metricType`` requested is **not** ``kbps``, this will contain the total number of transactions completed by the :term:`Delivery Service` within the requested time window. Note that fractional amounts are possible, as the transaction rate will almost certainly not be cleanly divided by the requested time range.
 
 :version: A legacy field that seems to have been meant to indicate the API version used. Will always be "1.2"
+
+	.. deprecated:: 1.4
+		As this has no known purpose, developers are advised it will be removed in the future.
 
 .. code-block:: http
 	:caption: Response Example
