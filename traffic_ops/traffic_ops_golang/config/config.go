@@ -54,7 +54,7 @@ type Config struct {
 	LDAPConfPath    string `json:"ldap_conf_location"`
 	ConfigInflux    *ConfigInflux
 	InfluxEnabled   bool
-	InfluxDBConfPath string `json:"influxdb_conf_location"`
+	InfluxDBConfPath string
 	Version         string
 }
 
