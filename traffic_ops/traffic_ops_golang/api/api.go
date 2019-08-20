@@ -419,7 +419,7 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 	return http.StatusOK, nil, nil
 }
 
-// Constructs and returns an InfluxDB HTTP client, if enabled and when possible.
+// CreateInfluxClient onstructs and returns an InfluxDB HTTP client, if enabled and when possible.
 // The error this returns should not be exposed to the user; it's for logging purposes only.
 //
 // If Influx connections are not enabled, this will return `nil` - but also no error. It is expected

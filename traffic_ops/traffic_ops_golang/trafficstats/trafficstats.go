@@ -58,7 +58,6 @@ var jsonWithUnixTimestamps = tc.MimeType{
 
 type APIResponse struct {
 	Response tc.TrafficStatsResponse `json:"response"`
-	// Alerts []tc.Alert `json:"alerts,omitempty"`
 }
 
 const dsTenantIDFromXMLIDQuery = `
