@@ -46,7 +46,11 @@ Request Structure
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
-	
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|           |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|           |          | defined to make use of ``page``.                                                                              |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+
 Response Structure
 ------------------
 :lastUpdated: The date and time at which this :term:`Profile`/:term:`Parameter` association was last modified, in an ISO-like format

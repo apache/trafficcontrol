@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Get all requested tenants.
+Get all requested :term:`Tenants`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -34,11 +34,12 @@ Request Structure
 	+-----------+------------------------------------------------------------------------------------+
 	| Name      | Description                                                                        |
 	+===========+====================================================================================+
-	| active    | If ``true``, return only active tenants; if ``false`` return only inactive tenants |
+	| active    | If ``true``, return only active :term:`Tenants`; if ``false`` return only inactive |
+	|           | :term:`Tenants`                                                                    |
 	+-----------+------------------------------------------------------------------------------------+
-	| id        | Return only tenants with this integral, unique identifier                          |
+	| id        | Return only :term:`Tenants` with this integral, unique identifier                  |
 	+-----------+------------------------------------------------------------------------------------+
-	| name      | Return only tenants with this name                                                 |
+	| name      | Return only :term:`Tenants` with this name                                         |
 	+-----------+------------------------------------------------------------------------------------+
 	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the  |
 	|           | objects in the ``response`` array                                                  |
@@ -50,6 +51,10 @@ Request Structure
 	+-----------+------------------------------------------------------------------------------------+
 	| offset    | The number of results to skip before beginning to return results. Must use in      |
 	|           | conjunction with limit                                                             |
+	+-----------+------------------------------------------------------------------------------------+
+	| page      | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, |
+	|           | pages are ``limit`` long and the first page is 1. If ``offset`` was defined, this  |
+	|           | query parameter has no effect. ``limit`` must be defined to make use of ``page``.  |
 	+-----------+------------------------------------------------------------------------------------+
 
 .. code-block:: http

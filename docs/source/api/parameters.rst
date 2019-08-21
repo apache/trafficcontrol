@@ -31,30 +31,28 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| Name        | Required | Description                                                                                                                          |
-	+=============+==========+======================================================================================================================================+
-	| cdn         | no       | Show only the :term:`Delivery Services` belonging to the :ref:`ds-cdn` identified by this integral, unique identifier                |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| id          | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                     |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| logsEnabled | no       | Show only the :term:`Delivery Services` that have :ref:`ds-logs-enabled` set or not based on this boolean                            |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| profile     | no       | Return only :term:`Delivery Services` using the :term:`Profile` that has this :ref:`profile-id`                                      |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| tenant      | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier               |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| type        | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                        |
-	|             |          | array                                                                                                                                |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| sortOrder   | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                             |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| limit       | no       | Choose the maximum number of results to return                                                                                       |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit.                                |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                                   |
+	+=============+==========+===============================================================================================================+
+	| configFile  | no       | Filter :term:`Parameters` by :ref:`parameter-config-file`                                                     |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| id          | no       | Filters :term:`Parameters` by :ref:`parameter-id`                                                             |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| name        | no       | Filter :term:`Parameters` by :ref:`parameter-name`                                                            |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|             |          | array                                                                                                         |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder   | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| limit       | no       | Choose the maximum number of results to return                                                                |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit.         |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|             |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|             |          | defined to make use of ``page``.                                                                              |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

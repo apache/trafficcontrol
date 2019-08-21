@@ -22,7 +22,7 @@
 
 ``GET``
 =======
-Gets all requested :term:`origin`\ s.
+Gets all requested :term:`origins`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -32,35 +32,38 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| Name            | Required | Description                                                                                                                                                         |
-	+=================+==========+=====================================================================================================================================================================+
-	| cachegroup      | no       | Return only :term:`origin`\ s within the :term:`Cache Group` identified by this integral, unique identifier                                                         |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| coordinate      | no       | Return only :term:`origin`\ s located at the geographic coordinates identified by this integral, unique identifier                                                  |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| deliveryservice | no       | Return only :term:`origin`\ s that belong to the :term:`Delivery Service` identified by this integral, unique identifier                                            |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| id              | no       | Return only the :term:`origin` that has this integral, unique identifier                                                                                            |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| name            | no       | Return only :term:`origin`\ s by this name                                                                                                                          |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| profileId       | no       | Return only :term:`origin`\ s which use the :term:`Profile` identified by this integral, unique identifier                                                          |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| primary         | no       | If ``true``, return only :term:`origin`\ s which are the the primary :term:`origin` of the :term:`Delivery Service` to which they belong - if ``false`` return only |
-	|                 |          | :term:`origin`\ s which are *not* the primary :term:`origin` of the :term:`Delivery Service` to which they belong                                                   |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| tenant          | no       | Return only :term:`origin`\ s belonging to the tenant identified by this integral, unique identifier                                                                |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| orderby         | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                                                       |
-	|                 |          | array                                                                                                                                                               |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| sortOrder       | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                                            |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| limit           | no       | Choose the maximum number of results to return                                                                                                                      |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| offset          | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                                                |
-	+-----------------+----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name            | Required | Description                                                                                                                                                       |
+	+=================+==========+===================================================================================================================================================================+
+	| cachegroup      | no       | Return only :term:`origins` within the :term:`Cache Group` identified by this integral, unique identifier                                                         |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| coordinate      | no       | Return only :term:`origins` located at the geographic coordinates identified by this integral, unique identifier                                                  |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| deliveryservice | no       | Return only :term:`origins` that belong to the :term:`Delivery Service` identified by this integral, unique identifier                                            |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| id              | no       | Return only the :term:`origin` that has this integral, unique identifier                                                                                          |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| name            | no       | Return only :term:`origins` by this name                                                                                                                          |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| profileId       | no       | Return only :term:`origins` which use the :term:`Profile` that has this :ref:`profile-id`                                                                         |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| primary         | no       | If ``true``, return only :term:`origins` which are the the primary :term:`origin` of the :term:`Delivery Service` to which they belong - if ``false`` return only |
+	|                 |          | :term:`origins` which are *not* the primary :term:`origin` of the :term:`Delivery Service` to which they belong                                                   |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| tenant          | no       | Return only :term:`origins` belonging to the tenant identified by this integral, unique identifier                                                                |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby         | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                                                     |
+	|                 |          | array                                                                                                                                                             |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder       | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                                          |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| limit           | no       | Choose the maximum number of results to return                                                                                                                    |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| offset          | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                                              |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| page            | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. If ``offset`` was defined,   |
+	|                 |          | this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                                                                            |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. note:: Several fields of origin definitions which are filterable by Query Parameters are allowed to be ``null``. ``null`` values in these fields will be filtered *out* appropriately by such Query Parameters, but do note that ``null`` is not a valid value accepted by any of these Query Parameters, and attempting to pass it will result in an error.
 
