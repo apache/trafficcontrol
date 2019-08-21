@@ -17,55 +17,71 @@
  * under the License.
  */
 
-var PhysLocationService = function(Restangular, locationUtils, messageModel) {
+var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
 
     this.getPhysLocations = function(queryParams) {
-        return Restangular.all('phys_locations').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'phys_locations', {params: queryParams}).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        );
     };
 
     this.getPhysLocation = function(id) {
-        return Restangular.one("phys_locations", id).get();
+        return $http.get(ENV.api['root'] + 'phys_locations', {params: {id: id}}).then(
+            function(result) {
+                return result.data.response[0];
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.createPhysLocation = function(physLocation) {
-        return Restangular.service('phys_locations').post(physLocation)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Physical location created' } ], true);
-                    locationUtils.navigateToPath('/phys-locations');
-
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'phys_locations', physLocation).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Physical location created' } ], true);
+                locationUtils.navigateToPath('/phys-locations');
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.updatePhysLocation = function(physLocation) {
-        return physLocation.put()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Physical location updated' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.put(ENV.api['root'] + 'phys_locations/' + physLocation.id, physLocation).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Physical location updated' } ], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.deletePhysLocation = function(id) {
-        return Restangular.one("phys_locations", id).remove()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Physical location deleted' } ], true);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
-                }
-            );
+        return $http.delete(ENV.api['root'] + 'phys_locations/' + id).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Physical location deleted' } ], true);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, true);
+                throw err;
+            }
+        );
     };
 
 };
 
-PhysLocationService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+PhysLocationService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
 module.exports = PhysLocationService;
