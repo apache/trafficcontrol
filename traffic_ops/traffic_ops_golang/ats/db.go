@@ -170,3 +170,89 @@ func GetProfileIDFromName(tx *sql.Tx, profileName string) (int, bool, error) {
 	}
 	return id, true, nil
 }
+
+// GetServerNameAndTypeFromID returns the server's name, type, whether it exists, and any error.
+func GetServerNameAndTypeFromID(tx *sql.Tx, id int) (tc.CacheName, tc.CacheType, bool, error) {
+	qry := `
+SELECT
+  s.host_name,
+  tp.name
+FROM
+  server s
+  JOIN type tp on s.type = tp.id
+WHERE
+  s.id = $1
+`
+	name := tc.CacheName("")
+	typ := tc.CacheType("")
+	if err := tx.QueryRow(qry, id).Scan(&name, &typ); err != nil {
+		if err == sql.ErrNoRows {
+			return "", tc.CacheType(""), false, nil
+		}
+		return "", tc.CacheType(""), false, errors.New("querying: " + err.Error())
+	}
+	return name, typ, true, nil
+}
+
+// GetServerNameAndTypeFromID returns the server's name, type, whether it exists, and any error.
+func GetServerTypeFromName(tx *sql.Tx, name tc.CacheName) (tc.CacheType, bool, error) {
+	qry := `
+SELECT
+  tp.name
+FROM
+  server s
+  JOIN type tp on s.type = tp.id
+WHERE
+  s.host_name = $1
+`
+	typ := tc.CacheType("")
+	if err := tx.QueryRow(qry, name).Scan(&typ); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying: " + err.Error())
+	}
+	return typ, true, nil
+}
+
+// GetServerNameAndDomainFromID returns the server's name, domain, whether it exists, and any error.
+func GetServerNameAndDomainFromID(tx *sql.Tx, id int) (tc.CacheName, string, bool, error) {
+	qry := `
+SELECT
+  s.host_name,
+  s.domain_name
+FROM
+  server s
+WHERE
+  s.id = $1
+`
+	name := tc.CacheName("")
+	domain := ""
+	if err := tx.QueryRow(qry, id).Scan(&name, &domain); err != nil {
+		if err == sql.ErrNoRows {
+			return "", "", false, nil
+		}
+		return "", "", false, errors.New("querying: " + err.Error())
+	}
+	return name, domain, true, nil
+}
+
+// GetServerNameAndDomainFromID returns the server's name, domain, whether it exists, and any error.
+func GetServerDomainFromName(tx *sql.Tx, name tc.CacheName) (string, bool, error) {
+	qry := `
+SELECT
+  s.domain_name
+FROM
+  server s
+WHERE
+  s.host_name = $1
+`
+	domain := ""
+	if err := tx.QueryRow(qry, name).Scan(&domain); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying: " + err.Error())
+	}
+	return domain, true, nil
+}

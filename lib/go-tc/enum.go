@@ -564,6 +564,9 @@ func (t DSType) UsesMidCache() bool {
 	return true
 }
 
+const DSTypeLiveNationalSuffix = "_LIVE_NATNL"
+const DSTypeLiveSuffix = "_LIVE"
+
 // QStringIgnore is an entry in the delivery_service table qstring_ignore column, and represents how to treat the URL query string for requests to that delivery service.
 // This enum's String function returns the numeric representation, because it is a legacy database value, and the number should be kept for both database and API JSON uses. For the same reason, this enum has no FromString function.
 type QStringIgnore int
