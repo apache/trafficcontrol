@@ -422,6 +422,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/parent.config/?(\.json)?$`, atsserver.GetParentDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/remap.config/?(\.json)?$`, atsserver.GetServerConfigRemap, auth.PrivLevelOperations, Authenticated, nil},
 
+		{1.1, http.MethodGet, `servers/{id-or-host}/configfiles/ats/cache.config/?(\.json)?$`, atsserver.GetCacheDotConfig, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `servers/{id-or-host}/configfiles/ats/ip_allow.config/?(\.json)?$`, atsserver.GetIPAllowDotConfig, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `servers/{id-or-host}/configfiles/ats/hosting.config/?(\.json)?$`, atsserver.GetHostingDotConfig, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `servers/{id-or-host}/configfiles/ats/packages/?(\.json)?$`, atsserver.GetPackages, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `servers/{id-or-host}/configfiles/ats/chkconfig/?(\.json)?$`, atsserver.GetChkconfig, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `servers/{id-or-host}/configfiles/ats/{file}/?(\.json)?$`, atsserver.GetUnknown, auth.PrivLevelOperations, Authenticated, nil},
+
 		// Federations
 		{1.4, http.MethodGet, `federations/all/?(\.json)?$`, federations.GetAll, auth.PrivLevelAdmin, Authenticated, nil},
 		{1.1, http.MethodGet, `federations/?(\.json)?$`, federations.Get, auth.PrivLevelFederation, Authenticated, nil},
