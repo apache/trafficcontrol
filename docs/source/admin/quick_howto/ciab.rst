@@ -42,7 +42,7 @@ These can all be supplied manually via the steps in :ref:`dev-building` (for Tra
 
 Usage
 -----
-In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the containers are exposed locally to the host on specific ports. These are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
+In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the environment are by default not exposed locally to the host. If this is the desired behavior when bringing up CDN in a Box the command ```docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up``` should be run. The ports are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.expose-ports.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
 
 .. _ciab-service-info:
 .. table:: Service Info
