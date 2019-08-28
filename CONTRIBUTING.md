@@ -29,30 +29,41 @@ Things to know before getting started
 #### Code of Conduct
 Please try to keep discussions respectful and follow the [Apache Software Foundation Code of Conduct](https://github.com/apache/trafficcontrol/blob/master/CODE_OF_CONDUCT.md) when interacting with others.
 
-#### Design Decisions
-When we need to make changes to the project, we first discuss it on the [users@trafficcontrol.apache.org](mailto:users@trafficcontrol.apache.org) mailing list. We document our decisions as well as brainstorm project related ideas in the [wiki](https://cwiki.apache.org/confluence/display/TC/Traffic+Control+Home).
-
 How to Contribute
 -------------------------------------
 
-We love pull requests! We simply don't have the time or resources to add every feature and support every platform. If you have improvements (enhancements or bug fixes) for Traffic Control, start by creating an [issue](https://github.com/apache/trafficcontrol/issues) and discussing it with us first on the [users@trafficcontrol.apache.org](mailto:users@trafficcontrol.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
+We love pull requests! We simply don't have the time or resources to add every feature, fix every bug and support every platform. If you have improvements (enhancements or bug fixes) for Traffic Control, start by creating a [Github issue](https://github.com/apache/trafficcontrol/issues) or a [feature blueprint](https://github.com/apache/trafficcontrol/blob/master/blueprints/BLUEPRINT_TEMPLATE.md) and discussing it with us first on the [dev@trafficcontrol.apache.org](mailto:dev@trafficcontrol.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
 
-Once your issue has been approved and you're ready to start slinging code, we have a few [guidelines](https://github.com/apache/trafficcontrol/blob/master/CONTRIBUTING.md#guidelines) to help maintain code quality and ensure the pull request process goes smoothly.
+#### Design Decisions
 
-Remember, your code doesn't have to be perfect. Hack it together and submit a [pull request](https://help.github.com/articles/using-pull-requests/). We'll work with you to make sure it fits properly into the project.
+##### Discussion Email
 
-#### Making a pull request
+When we need to make changes to the project, we first discuss it on the [dev@trafficcontrol.apache.org](mailto:dev@trafficcontrol.apache.org) mailing list. Use your best judgement here. Small changes (i.e. bug fixes or small improvements) may not warrant an email discussion. However, larger changes (i.e. new features or changes to existing functionality) should be discussed on the email list prior to development.
+
+##### Feature Blueprints (optional)
+Some contributors may choose to create a feature blueprint to accompany their email to better articulate an idea and solicit feedback in the form of a PR. The process involves the following:
+
+1. Create a new PR that includes a markdown file that utilizes the [BLUEPRINT_TEMPLATE.md](https://github.com/apache/trafficcontrol/blob/master/blueprints/BLUEPRINT_TEMPLATE.md) template. For example, submit a PR for blueprints/my-feature.md.
+2. Send an email to the [dev@trafficcontrol.apache.org](mailto:dev@trafficcontrol.apache.org) mailing list with a short description of your feature plus a link to the blueprint PR.
+3. Wait for feedback to be applied to your blueprint PR. Because it's a PR, line-specific feedback can be given.
+4. Just like any PR, once all the concerns have been addressed, the blueprint is merged into the blueprints directory (if accepted) or closed (if rejected).
+5. Start work on the feature. Optionally, you can open a draft PR if you want feedback during development.
+6. Submit your PR for review and reference the blueprint in the PR description.
+
+#### Pull Requests
+Once your issue has been approved or your feature blueprint has been merged and you're ready to start slinging code, we have a few [guidelines](https://github.com/apache/trafficcontrol/blob/master/CONTRIBUTING.md#guidelines) to help maintain code quality and ensure the pull request process goes smoothly.
+
 If you've never made a pull request, it's super-easy. Github has a great tutorial [here](https://help.github.com/articles/using-pull-requests/). In a nutshell, you click the _fork_ button to make a fork, clone it and make your change, then click the green _New pull request_ button on your repository's Github page and follow the instructions. That's it! We'll look at it and get back to you.
 
 Guidelines
 ----------
 Following the project conventions will make the pull request process go faster and smoother. If making changes to the Traffic Ops API, please consult the [Traffic Ops API Guidelines](https://cwiki.apache.org/confluence/display/TC/API+Guidelines).
 
-#### Create an issue
+#### Create an issue or feature blueprint
 
-If you want to add a new feature, make a [GitHub issue](https://github.com/apache/trafficcontrol/issues) and discuss it with us first on the [users@trafficcontrol.apache.org](mailto:users@trafficcontrol.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
+If you want to add a new feature, make a [GitHub issue](https://github.com/apache/trafficcontrol/issues) or [feature blueprint](https://github.com/apache/trafficcontrol/blob/master/blueprints/BLUEPRINT_TEMPLATE.md) and discuss it with us first on the [dev@trafficcontrol.apache.org](mailto:dev@trafficcontrol.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
 
-If it's a bug fix, make a [GitHub issue](https://github.com/apache/trafficcontrol/issues) and discuss it with us first on the [users@trafficcontrol.apache.org](mailto:users@trafficcontrol.apache.org) mailing list. We need to know what the problem is and how to reproduce it so please create a [GitHub issue](https://github.com/apache/trafficcontrol/issues) for that as well.
+If it's a bug fix, make a [GitHub issue](https://github.com/apache/trafficcontrol/issues) and optionally discuss it with us first on the [dev@trafficcontrol.apache.org](mailto:dev@trafficcontrol.apache.org) mailing list.
 
 #### Documentation
 
