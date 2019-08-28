@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/go-acme/lego/certcrypto"
 	"github.com/go-acme/lego/certificate"
@@ -48,6 +49,10 @@ type MyUser struct {
 	Email        string
 	Registration *registration.Resource
 	key          crypto.PrivateKey
+}
+
+func GetLetsEncryptTimeout() time.Duration {
+	return time.Minute * 10
 }
 
 func (u *MyUser) GetEmail() string {
@@ -71,7 +76,7 @@ func NewDNSProviderTrafficRouter() (*DNSProviderTrafficRouter, error) {
 }
 
 func (d *DNSProviderTrafficRouter) Timeout() (timeout, interval time.Duration) {
-	return time.Minute * 10, time.Second * 30
+	return GetLetsEncryptTimeout(), time.Second * 30
 }
 
 func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error {
@@ -132,7 +137,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ctx, _ := context.WithTimeout(r.Context(), time.Minute*10)
+	ctx, _ := context.WithTimeout(r.Context(), GetLetsEncryptTimeout())
 
 	req := tc.DeliveryServiceLetsEncryptSSLKeysReq{}
 	if err := api.Parse(r.Body, nil, &req); err != nil {
@@ -141,17 +146,18 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	error := GetLetsEncryptCertificates(inf, req, ctx)
+	error := GetLetsEncryptCertificates(inf.Config, req, ctx)
 
 	if error != nil {
 		api.HandleErr(w, r, nil, http.StatusInternalServerError, error, nil)
+		return
 	}
 
-	api.WriteResp(w, r, "Successfully created ssl keys for "+*req.DeliveryService)
+	api.WriteRespAlert(w, r, tc.WarnLevel, "Successfully created ssl keys for "+*req.DeliveryService)
 
 }
 
-func GetLetsEncryptCertificates(inf *api.APIInfo, req tc.DeliveryServiceLetsEncryptSSLKeysReq, ctx context.Context) error {
+func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSSLKeysReq, ctx context.Context) error {
 
 	db, err := api.GetDB(ctx)
 	tx, err := db.BeginTxx(ctx, nil)
@@ -167,7 +173,7 @@ func GetLetsEncryptCertificates(inf *api.APIInfo, req tc.DeliveryServiceLetsEncr
 
 	myUser := MyUser{
 		key:   privateKey,
-		Email: inf.Config.ConfigLetsEncrypt.Email,
+		Email: cfg.ConfigLetsEncrypt.Email,
 	}
 
 	config := lego.NewConfig(&myUser)
@@ -247,7 +253,7 @@ func GetLetsEncryptCertificates(inf *api.APIInfo, req tc.DeliveryServiceLetsEncr
 	keyPem := keyBuf.Bytes()
 
 	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(crtPem)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: "Not Applicable"}
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
+	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx.Tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
 		return errors.New(deliveryService + ": putting riak keys: " + err.Error())
 	}

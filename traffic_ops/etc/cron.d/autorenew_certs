@@ -1,0 +1,1 @@
+*/5 * * * * root export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib; /opt/traffic_ops/app/bin/checks/ToAutorenewCerts.pl -c '{ "base_url": "https://127.0.0.1" }' -l 1 >> /var/log/traffic_ops/autorenew.log 2>&1

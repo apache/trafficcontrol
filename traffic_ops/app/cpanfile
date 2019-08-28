@@ -212,7 +212,7 @@ requires 'Sub::Install';
 requires 'Sub::Name';
 requires 'Sub::Uplevel';
 requires 'Sys::Syslog';
-requires 'TAP::Formatter::Jenkins';
+requires 'TAP::Formatter::JUnit';
 requires 'Task::Weaken';
 requires 'Term::ReadPassword';
 requires 'Test';

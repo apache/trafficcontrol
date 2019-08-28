@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated Traffic Router to read new EDSN0 client subnet field and route accordingly only for enabled delivery services. When enabled and a subnet is present in the request, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
 - Added an optimistic quorum feature to Traffic Monitor to prevent false negative states from propagating to downstream components in the event of network isolation.
 - Added the ability to fetch users by role
+- Added an API 1.4 endpoint to generate delivery service certificates using Let's Encrypt
+- Added API 1.4 endpoints to GET a single or all records for Let's Encrypt DNS challenge
+- Added an API 1.4 endpoint to renew certificates
 - Traffic Ops Golang Endpoints
   - /api/2.0 for all of the most recent route versions
   - /api/1.1/cachegroupparameters/{{cachegroupID}}/{{parameterID}} `(DELETE)`
@@ -17,6 +20,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.5/stats_summary `(POST)`
   - /api/1.1/cdns/routing
   - /api/1.1/cachegroupparameters/ `(GET, POST)`
+  - /api/1.4/deliveryservices/sslkeys/generate/letsencrypt `POST`
+  - /api/1.4/letsencrypt/autorenew `GET`
+  - /api/1.4/letsencrypt/dnsrecord `GET`
+  - /api/1.4/letsencrypt/dnsrecords `GET`
 
 ### Changed
 - Fix to traffic_ops_ort.pl to strip specific comment lines before checking if a file has changed.  Also promoted a changed file message from DEBUG to ERROR for report mode.

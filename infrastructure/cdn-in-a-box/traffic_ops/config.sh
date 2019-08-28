@@ -130,7 +130,13 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "address" : ""
     },
     "InfluxEnabled": true,
-    "influxdb_conf_path": "/opt/traffic_ops/app/conf/production/influx.conf"
+    "influxdb_conf_path": "/opt/traffic_ops/app/conf/production/influx.conf",
+    "lets_encrypt" : {
+        "user_email" : "",
+        "send_expiration_email": true,
+        "convert_self_signed": true,
+        "renew_days_before_expiration": 500
+    }
 }
 EOF
 

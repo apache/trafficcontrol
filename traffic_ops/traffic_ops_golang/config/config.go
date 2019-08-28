@@ -47,6 +47,7 @@ type Config struct {
 	SMTP                   *ConfigSMTP `json:"smtp"`
 	ConfigPortal           `json:"portal"`
 	ConfigLetsEncrypt      `json:"lets_encrypt"`
+	ConfigSmtp             `json:"smtp"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
@@ -144,7 +145,19 @@ type ConfigSMTP struct {
 }
 
 type ConfigLetsEncrypt struct {
-	Email string `json:"user_email,omitempty"`
+	Email                     string `json:"user_email,omitempty"`
+	SendExpEmail              bool   `json:"send_expiration_email"`
+	ConvertSelfSigned         bool   `json:"convert_self_signed"`
+	RenewDaysBeforeExpiration int    `json:"renew_days_before_expiration"`
+}
+
+type ConfigSmtp struct {
+	Enabled   bool     `json:"enabled"`
+	ToEmail   []string `json:"to_email"`
+	FromEmail string   `json:"from_email"`
+	User      string   `json:"user"`
+	Password  string   `json:"password"`
+	Address   string   `json:"address"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file

@@ -23,13 +23,17 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"net/http"
+	"net/smtp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -43,6 +47,7 @@ type DsExpirationInfo struct {
 	Version    util.JSONIntStr
 	Expiration time.Time
 	AuthType   string
+	Error      error
 }
 
 type ExpirationSummary struct {
@@ -86,27 +91,36 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 
 	keysFound := ExpirationSummary{}
 	for _, ds := range dses {
+		dsExpInfo := DsExpirationInfo{}
 		keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 		if err != nil {
-			log.Errorf("getting ssl keys: " + err.Error())
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
-			return
+			log.Errorf("getting ssl keys for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)) + " :" + err.Error())
+			dsExpInfo.XmlId = ds.XmlId
+			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
+			dsExpInfo.Error = errors.New("getting ssl keys for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)) + " :" + err.Error())
+			continue
 		}
 		if !ok {
-			log.Errorf("no object found for the specified key")
-			api.WriteRespAlertObj(w, r, tc.InfoLevel, "no object found for the specified key", struct{}{}) // empty response object because Perl
-			return
+			log.Errorf("no object found for the specified key with xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)))
+			dsExpInfo.XmlId = ds.XmlId
+			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
+			dsExpInfo.Error = errors.New("no object found for the specified key with xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)))
+			continue
 		}
+
+		// Renew only certificates within configured limit plus 3 days
+		if keyObj.Expiration.After(time.Now().Add(time.Hour * 24 * time.Duration(inf.Config.ConfigLetsEncrypt.RenewDaysBeforeExpiration)).Add(time.Hour * 24 * 3)) {
+			continue
+		}
+
 		newVersion := util.JSONIntStr(keyObj.Version.ToInt64() + 1)
 
-		dsExpInfo := DsExpirationInfo{
-			XmlId:      keyObj.DeliveryService,
-			Version:    newVersion,
-			Expiration: keyObj.Expiration,
-			AuthType:   keyObj.AuthType,
-		}
+		dsExpInfo.XmlId = keyObj.DeliveryService
+		dsExpInfo.Version = keyObj.Version
+		dsExpInfo.Expiration = keyObj.Expiration
+		dsExpInfo.AuthType = keyObj.AuthType
+
 		if keyObj.AuthType == tc.LetsEncryptAuthType {
-			keysFound.LetsEncryptExpirations = append(keysFound.LetsEncryptExpirations, dsExpInfo)
 			req := tc.DeliveryServiceLetsEncryptSSLKeysReq{
 				DeliveryServiceSSLKeysReq: tc.DeliveryServiceSSLKeysReq{
 					HostName:        &keyObj.Hostname,
@@ -115,14 +129,29 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 					Version:         &newVersion,
 				},
 			}
-			ctx, _ := context.WithTimeout(r.Context(), time.Minute*10)
+			ctx, _ := context.WithTimeout(r.Context(), GetLetsEncryptTimeout())
 
-			if error := GetLetsEncryptCertificates(inf, req, ctx); error != nil {
-				api.HandleErr(w, r, nil, http.StatusInternalServerError, error, nil)
-				return
+			if error := GetLetsEncryptCertificates(inf.Config, req, ctx); error != nil {
+				dsExpInfo.Error = error
 			}
+			keysFound.LetsEncryptExpirations = append(keysFound.LetsEncryptExpirations, dsExpInfo)
 
 		} else if keyObj.AuthType == tc.SelfSignedCertAuthType {
+			if inf.Config.ConfigLetsEncrypt.ConvertSelfSigned {
+				req := tc.DeliveryServiceLetsEncryptSSLKeysReq{
+					DeliveryServiceSSLKeysReq: tc.DeliveryServiceSSLKeysReq{
+						HostName:        &keyObj.Hostname,
+						DeliveryService: &keyObj.DeliveryService,
+						CDN:             &keyObj.CDN,
+						Version:         &newVersion,
+					},
+				}
+				ctx, _ := context.WithTimeout(r.Context(), GetLetsEncryptTimeout())
+
+				if error := GetLetsEncryptCertificates(inf.Config, req, ctx); error != nil {
+					dsExpInfo.Error = error
+				}
+			}
 			keysFound.SelfSignedExpirations = append(keysFound.SelfSignedExpirations, dsExpInfo)
 		} else {
 			keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
@@ -130,6 +159,113 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 
 	}
 
+	if inf.Config.ConfigSmtp.Enabled && inf.Config.ConfigLetsEncrypt.SendExpEmail {
+		err = AlertExpiringCerts(keysFound, *inf.Config)
+		if err != nil {
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
+		}
+	}
+
 	api.WriteResp(w, r, keysFound)
 
+}
+
+func AlertExpiringCerts(certsFound ExpirationSummary, config config.Config) error {
+	email := strings.Join(config.ConfigSmtp.ToEmail, ",")
+	if config.ConfigLetsEncrypt.Email != "" {
+		email = config.ConfigLetsEncrypt.Email
+	}
+	msg := "To: " + email + "\r\n" +
+		"Subject: Certificate Expiration Summary\r\n" +
+		"\r\n" +
+		"Summary of automated certificate renewal:\nLet's Encrypt Certificates:\n"
+	for _, leCert := range certsFound.LetsEncryptExpirations {
+		if leCert.Error != nil {
+			msg = msg + "Certificate for " + leCert.XmlId + " Version: " + leCert.Version.String() + " FAILED to renew with error: " + leCert.Error.Error() + "\n"
+		} else {
+			msg = msg + "Certificate for " + leCert.XmlId + " Version: " + leCert.Version.String() + " SUCCESSFULLY renewed" + "\n"
+		}
+	}
+	msg = msg + "\nSelf Signed Certificates:\n"
+	for _, ssCert := range certsFound.SelfSignedExpirations {
+		if config.ConfigLetsEncrypt.ConvertSelfSigned && ssCert.Error != nil {
+			msg = msg + "Certificate for " + ssCert.XmlId + " Version: " + ssCert.Version.String() + " FAILED to renew with error: " + ssCert.Error.Error() + "\n"
+		} else if config.ConfigLetsEncrypt.ConvertSelfSigned && ssCert.Error == nil {
+			msg = msg + "Certificate for " + ssCert.XmlId + " Version: " + ssCert.Version.String() + " SUCCESSFULLY renewed" + "\n"
+		} else {
+			msg = msg + "Certificate for " + ssCert.XmlId + " Version: " + ssCert.Version.String() + " needs to be renewed.  It expires " + ssCert.Expiration.String()
+		}
+	}
+
+	msg = msg + "\nOther Certificates:\n"
+	for _, otherCert := range certsFound.OtherExpirations {
+		msg = msg + "Certificate for " + otherCert.XmlId + " Version: " + otherCert.Version.String() + " needs to be renewed.  It expires " + otherCert.Expiration.String()
+	}
+
+	error := SendEmail(config, msg)
+	if error != nil {
+		return error
+	}
+
+	return nil
+}
+
+func SendEmail(config config.Config, msg string) error {
+	var auth smtp.Auth
+	if config.ConfigSmtp.User != "" {
+		auth = LoginAuth("", config.ConfigSmtp.User, config.ConfigSmtp.Password, strings.Split(config.ConfigSmtp.Address, ":")[0])
+	}
+
+	email := config.ConfigSmtp.ToEmail
+	if config.ConfigLetsEncrypt.Email != "" {
+		email = []string{config.ConfigLetsEncrypt.Email}
+	}
+	error := smtp.SendMail(config.ConfigSmtp.Address, auth, config.ConfigSmtp.FromEmail, email, []byte(msg))
+	if error != nil {
+		return errors.New("Failed to send email: " + error.Error())
+	}
+	return nil
+
+}
+
+type loginAuth struct {
+	identity, username, password string
+	host                         string
+}
+
+func LoginAuth(identity, username, password, host string) smtp.Auth {
+	return &loginAuth{identity, username, password, host}
+}
+
+func isLocalhost(name string) bool {
+	return name == "localhost" || name == "127.0.0.1" || name == "::1"
+}
+
+func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	if !server.TLS && !isLocalhost(server.Name) {
+		return "", nil, errors.New("unencrypted connection")
+	}
+	if server.Name != a.host {
+		return "", nil, errors.New("wrong host name")
+	}
+	resp := []byte(a.identity + "\x00" + a.username + "\x00" + a.password)
+	return "LOGIN", resp, nil
+}
+
+func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	command := string(fromServer)
+	command = strings.TrimSpace(command)
+	command = strings.TrimSuffix(command, ":")
+	command = strings.ToLower(command)
+
+	if more {
+		if command == "username" {
+			return []byte(fmt.Sprintf("%s", a.username)), nil
+		} else if command == "password" {
+			return []byte(fmt.Sprintf("%s", a.password)), nil
+		} else {
+			return nil, fmt.Errorf("unexpected server challenge: %s", command)
+		}
+	}
+	return nil, nil
 }

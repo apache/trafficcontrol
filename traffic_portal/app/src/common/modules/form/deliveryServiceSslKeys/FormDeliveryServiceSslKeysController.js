@@ -35,7 +35,9 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 
 	$scope.deliveryService = deliveryService;
 	$scope.sslKeys = setSSLKeys(sslKeys);
-	$scope.sslKeys.authType = 'Certificate Authority';
+	if ($scope.sslKeys.authType === undefined || $scope.sslKeys.authType === '') {
+        $scope.sslKeys.authType = 'Self Signed';
+    }
 
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;

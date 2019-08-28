@@ -691,8 +691,69 @@ The ordering of certificates within the certificate bundle matters. It must be:
 
 To see the ordering of certificates you may have to manually split up your certificate chain and use :manpage:`openssl(1ssl)` on each individual certificate
 
-Suggested Way of Setting up an HTTPS Delivery Service
------------------------------------------------------
+Let's Encrypt
+-------------
+Let’s Encrypt is a free, automated :abbr:`CA (Certificate Authority)` using :abbr:`ACME (Automated Certificate Management Environment)` protocol. Let's Encrypt performs a domain validation before issuing or renewing a certificate. There are several options for domain validation but for this application the DNS challenge is used in order to receive wildcard certificates. Let's Encrypt sends a token to be used as a TXT record at `_acme-challenge.domain.example.com` and after verifying that the token is accessible there, will return the newly generated and signed certificate and key. The basic workflow implemented is:
+
+#. ``POST`` to Let's Encrypt and receive the DNS challenge token.
+#. Traffic Ops stores the DNS challenge in the Traffic Ops database using the fqdn of the certificate request as the key.
+#. Traffic Router has a watcher set up to watch for changes in the Traffic Ops database table.
+#. When a new record appears, Traffic Router reads it and puts the token from Let's Encrypt as a TXT record at `_acme-challenge.domain.example.com` for the specified :term:`Delivery Service`.
+#. Let's Encrypt verifies that the correct record is accessible to verify ownership of the domain.
+#. Let's Encrypt returns the signed certificate and key to Traffic Ops.
+#. Traffic Ops stores the certificate and key in Riak and removes the DNS challenge record from the Traffic Ops database.
+#. The Traffic Router watcher removes the TXT record when the Traffic Ops database table has the record removed.
+
+Let's Encrypt can be set up through :file:`/opt/traffic_ops/app/conf/cdn.conf` by updating the following fields:
+
+.. table:: Fields to update for Let's Encrypt under `lets_encrypt`
+
+	+------------------------------+---------+----------------------------------------------------------------------------------------------------+
+	| Name                         | Type    | Description                                                                                        |
+	+==============================+=========+====================================================================================================+
+	| user_email                   | string  | Optional. Email to create account with Let's Encrypt or to receive expiration updates              |
+	+------------------------------+---------+----------------------------------------------------------------------------------------------------+
+	| send_expiration_email        | boolean | Toggle for option to send email summarizing certificate expiration status                          |
+	+------------------------------+---------+----------------------------------------------------------------------------------------------------+
+	| convert_self_signed          | boolean | Toggle for option to convert self signed certificates to Let's Encrypt certificates as they expire |
+	+------------------------------+---------+----------------------------------------------------------------------------------------------------+
+	| renew_days_before_expiration | int     | Number of days before expiration date to renew certificates                                        |
+	+------------------------------+---------+----------------------------------------------------------------------------------------------------+
+
+.. table:: Fields to update for sending emails under `smtp`
+
+	+------------+------------------+----------------------------------------------------------------------+
+	| Name       | Type             | Description                                                          |
+	+============+==================+======================================================================+
+	| enabled    | boolean          | Enable sending emails through Simple Mail Transfer Protocol (SMTP)   |
+	+------------+------------------+----------------------------------------------------------------------+
+	| to_email   | Array of strings | List of email addresses to send SMTP emails to                       |
+	+------------+------------------+----------------------------------------------------------------------+
+	| from_email | string           | Email address to send SMTP emails from                               |
+	+------------+------------------+----------------------------------------------------------------------+
+	| user       | string           | User for SMTP server access                                          |
+	+------------+------------------+----------------------------------------------------------------------+
+	| password   | string           | Password for SMTP server access                                      |
+	+------------+------------------+----------------------------------------------------------------------+
+	| address    | string           | SMTP server address including port                                   |
+	+------------+------------------+----------------------------------------------------------------------+
+
+
+Suggested Way of Setting up an HTTPS Delivery Service With Let's Encrypt Automation
+-----------------------------------------------------------------------------------
+Assuming you have already created a :term:`Delivery Service` which you plan to modify to use HTTPS, do the following in Traffic Portal:
+
+#. Select one of '1 - HTTPS', '2 - HTTP AND HTTPS', or '3 - HTTP TO HTTPS' for the protocol field of a :term:`Delivery Service` and click the :guilabel:`Update` button
+#. Go to :menuselection:`More --> Manage SSL Keys`
+#. Click on :menuselection:`More --> Generate SSL Keys`
+#. Click on the :guilabel:`Use Let's Encrypt` slider, click on the green :guilabel:`Generate Keys` button, then confirm that you want to make these changes
+#. Take a new CDN :term:`Snapshot`
+
+Once this is done you should be able to verify that you are being correctly redirected by Traffic Router using e.g. :manpage:`curl(1)` commands to HTTPS destinations on your :term:`Delivery Service`.
+
+
+Suggested Way of Setting up an HTTPS Delivery Service With Certificate Authority
+--------------------------------------------------------------------------------
 Assuming you have already created a :term:`Delivery Service` which you plan to modify to use HTTPS, do the following in Traffic Portal:
 
 #. Select one of '1 - HTTPS', '2 - HTTP AND HTTPS', or '3 - HTTP TO HTTPS' for the protocol field of a :term:`Delivery Service` and click the :guilabel:`Update` button
