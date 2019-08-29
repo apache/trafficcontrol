@@ -73,12 +73,10 @@ func MakeCacheURLDotConfig(
 		return text
 	}
 
-	if len(fileName) < len(`cacheurl_.config`) {
-		return text // TODO warn? Perl doesn't
-	}
-	dsName := fileName[len("cacheurl_") : len(fileName)-len(".config")]
+	// TODO verify prefix and suffix exist, and warn if they don't? Perl doesn't
+	dsName := tc.DeliveryServiceName(strings.TrimSuffix(strings.TrimPrefix(fileName, "cacheurl_"), ".config"))
 
-	ds, ok := dses[tc.DeliveryServiceName(dsName)]
+	ds, ok := dses[dsName]
 	if !ok {
 		return text // TODO warn? Perl doesn't
 	}
