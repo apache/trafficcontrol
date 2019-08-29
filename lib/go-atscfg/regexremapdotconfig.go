@@ -41,13 +41,10 @@ func MakeRegexRemapDotConfig(
 ) string {
 	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
 
-	if len(fileName) < len(`regex_remap_.config`) {
-		return text // TODO warn? Perl doesn't
-	}
+	// TODO verify prefix and suffix exist, and warn if they don't? Perl doesn't
+	dsName := tc.DeliveryServiceName(strings.TrimSuffix(strings.TrimPrefix(fileName, "regex_remap_"), ".config"))
 
-	dsName := fileName[len("regex_remap_") : len(fileName)-len(".config")]
-
-	ds, ok := dses[tc.DeliveryServiceName(dsName)]
+	ds, ok := dses[dsName]
 	if !ok {
 		return text // TODO warn? Perl doesn't
 	}
