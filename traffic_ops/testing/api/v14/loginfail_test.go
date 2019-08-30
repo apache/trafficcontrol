@@ -30,6 +30,7 @@ import (
 func TestLoginFail(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs}, func() {
 		PostTestLoginFail(t)
+		LoginWithEmptyCredentialsTest(t)
 	})
 }
 
@@ -56,6 +57,14 @@ func PostTestLoginFail(t *testing.T) {
 	actualCDN := actualCDNs[0]
 	if expectedCDN.Name != actualCDN.Name {
 		t.Fatalf("cdn.Name expected '%+v' actual '%+v'\n", expectedCDN.Name, actualCDN.Name)
+	}
+}
+
+func LoginWithEmptyCredentialsTest(t *testing.T) {
+	userAgent := "to-api-v14-client-tests-loginfailtest"
+	_, _, err := toclient.LoginWithAgent(Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, "", true, userAgent, false, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
+	if err == nil {
+		t.Fatalf("expected error when logging in with empty credentials, actual nil")
 	}
 }
 

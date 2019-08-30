@@ -19,7 +19,37 @@ package login
  * under the License.
  */
 
-import "testing"
+import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+)
+
+func TestLoginWithEmptyCredentials(t *testing.T) {
+	testInputs := []string{
+		`{"u":"","p":""}`,
+		`{"u":"foo","p":""}`,
+		`{"u":"","p":"foo"}`,
+	}
+
+	for _, testInput := range testInputs {
+		w := httptest.NewRecorder()
+		body := strings.NewReader(testInput)
+		r, err := http.NewRequest(http.MethodPost, "login", body)
+		if err != nil {
+			t.Error("Error creating new request")
+		}
+		LoginHandler(nil, config.Config{})(w, r)
+
+		expected := `{"alerts":[{"text":"username and password are required","level":"error"}]}`
+		if w.Body.String() != expected {
+			t.Error("Expected body", expected, "got", w.Body.String())
+		}
+	}
+}
 
 func TestVerifyUrlOnWhiteList(t *testing.T) {
 	type TestResult struct {
