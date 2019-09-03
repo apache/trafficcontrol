@@ -33,7 +33,7 @@ Request Structure
 	+-------------+----------+---------------------------------------------------+
 	| Name        | Required | Description                                       |
 	+=============+==========+===================================================+
-	| parameterId | no       | Show only the :term:`Paramater` with the given ID |
+	| parameterId | no       | Show only the :term:`Parameter` with the given ID |
 	+-------------+----------+---------------------------------------------------+
 
 .. table:: Request Path Parameters
