@@ -46,6 +46,7 @@ const (
 	Divisions
 	Origins
 	Parameters
+	CacheGroupParameters
 	PhysLocations
 	Profiles
 	ProfileParameters
@@ -80,6 +81,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	PhysLocations:                  {CreateTestPhysLocations, DeleteTestPhysLocations},
 	Profiles:                       {CreateTestProfiles, DeleteTestProfiles},
 	ProfileParameters:              {CreateTestProfileParameters, DeleteTestProfileParameters},
+	CacheGroupParameters:           {CreateTestCacheGroupParameters, DeleteTestCacheGroupParameters},
 	Regions:                        {CreateTestRegions, DeleteTestRegions},
 	Roles:                          {CreateTestRoles, DeleteTestRoles},
 	Servers:                        {CreateTestServers, DeleteTestServers},
@@ -89,5 +91,5 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	Tenants:                        {CreateTestTenants, DeleteTestTenants},
 	Types:                          {CreateTestTypes, DeleteTestTypes},
 	Users:                          {CreateTestUsers, ForceDeleteTestUsers},
-	UsersDeliveryServices: {CreateTestUsersDeliveryServices, DeleteTestUsersDeliveryServices},
+	UsersDeliveryServices:          {CreateTestUsersDeliveryServices, DeleteTestUsersDeliveryServices},
 }

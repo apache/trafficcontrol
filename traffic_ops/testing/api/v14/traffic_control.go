@@ -24,6 +24,7 @@ type TrafficControl struct {
 	ASNs                           []tc.ASN                           `json:"asns"`
 	CDNs                           []tc.CDN                           `json:"cdns"`
 	CacheGroups                    []tc.CacheGroupNullable            `json:"cachegroups"`
+	CacheGroupParameters           []tc.CacheGroupParameter           `json:"cachegroupParameters"`
 	Coordinates                    []tc.Coordinate                    `json:"coordinates"`
 	DeliveryServiceRequests        []tc.DeliveryServiceRequest        `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments []tc.DeliveryServiceRequestComment `json:"deliveryServiceRequestComments"`
