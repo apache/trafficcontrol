@@ -122,9 +122,11 @@ func (role *TORole) Create() (error, error, int) {
 	}
 
 	//after we have role ID we can associate the capabilities:
-	userErr, sysErr, errCode = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if role.Capabilities != nil && *role.Capabilities != nil && len(*role.Capabilities) > 0 {
+		userErr, sysErr, errCode = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
 	}
 	return nil, nil, http.StatusOK
 }
@@ -177,12 +179,16 @@ func (role *TORole) Update() (error, error, int) {
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
+
 	// TODO cascade delete, to automatically do this in SQL?
-	userErr, sysErr, errCode = role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if role.Capabilities != nil && *role.Capabilities != nil {
+		userErr, sysErr, errCode = role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+		return role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
 	}
-	return role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
+	return nil, nil, http.StatusOK
 }
 
 func (role *TORole) Delete() (error, error, int) {
