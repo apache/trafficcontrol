@@ -21,7 +21,7 @@ package tc
 
 // CacheGroupParameter Cache Group Parameter association
 type CacheGroupParameter struct {
-	CacheGroupID int `json:"cachegroupId"`
+	CacheGroupID int `json:"cacheGroupId"`
 	ParameterID  int `json:"parameterId"`
 }
 

@@ -50,7 +50,6 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 
 	cacheGroupID := cacheGroupResp[0].ID
 	parameterID := paramResp[0].ID
-
 	resp, _, err := TOSession.CreateCacheGroupParameter(*cacheGroupID, parameterID)
 	if err != nil {
 		t.Errorf("could not CREATE cache group parameter: %v\n", err)
@@ -84,7 +83,7 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameter) {
 	}
 
 	// Retrieve the Cache Group Parameter to see if it got deleted
-	queryParams := fmt.Sprintf("parameterId=%d", cgp.ParameterID)
+	queryParams := fmt.Sprintf("?parameterId=%d", cgp.ParameterID)
 
 	parameters, _, err := TOSession.GetCacheGroupParametersByQueryParams(cgp.CacheGroupID, queryParams)
 	if err != nil {
