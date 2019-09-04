@@ -21,8 +21,8 @@ package tc
 
 // CacheGroupParameter Cache Group Parameter association
 type CacheGroupParameter struct {
-	ID          int `json:"cachegroupId"`
-	ParameterID int `json:"parameterId"`
+	CacheGroupID int `json:"cachegroupId"`
+	ParameterID  int `json:"parameterId"`
 }
 
 // CacheGroupParameterResponse Response body for associating parameters with cache groups
