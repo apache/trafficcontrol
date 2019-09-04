@@ -69,7 +69,7 @@ func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) 
 
 	_, ok, err := getCGNameFromID(cgparam.ReqInfo.Tx.Tx, int64(cgID))
 	if err != nil {
-		return nil, nil, errors.New("getting cachegroup from id"), http.StatusInternalServerError
+		return nil, nil, err, http.StatusInternalServerError
 	} else if !ok {
 		return nil, errors.New("cachegroup does not exist"), nil, http.StatusNotFound
 	}
