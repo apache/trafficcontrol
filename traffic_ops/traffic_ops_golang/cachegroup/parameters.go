@@ -22,6 +22,7 @@ package cachegroup
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -39,7 +40,7 @@ const (
 //we need a type alias to define functions on
 type TOCacheGroupParameter struct {
 	api.APIInfoImpl `json:"-"`
-	tc.ParameterNullable
+	tc.CacheGroupParameterNullable
 }
 
 func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
@@ -55,9 +56,22 @@ func (cgparam *TOCacheGroupParameter) GetType() string {
 
 func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := cgparam.ParamColumns()
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cgparam.APIInfo().Params, queryParamsToQueryCols)
+	parameters := cgparam.APIInfo().Params
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+
+	cgID, err := strconv.Atoi(parameters[CacheGroupIDQueryParam])
+	if err != nil {
+		return nil, nil, errors.New("cache group id must be an integer"), http.StatusInternalServerError
+	}
+
+	_, ok, err := getCGNameFromID(cgparam.ReqInfo.Tx.Tx, int64(cgID))
+	if err != nil {
+		return nil, nil, errors.New("getting cachegroup from id"), http.StatusInternalServerError
+	} else if !ok {
+		return nil, errors.New("cachegroup does not exist"), nil, http.StatusNotFound
 	}
 
 	query := selectQuery() + where + orderBy + pagination
@@ -69,7 +83,7 @@ func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) 
 
 	params := []interface{}{}
 	for rows.Next() {
-		var p tc.ParameterNullable
+		var p tc.CacheGroupParameterNullable
 		if err = rows.StructScan(&p); err != nil {
 			return nil, nil, errors.New("scanning " + cgparam.GetType() + ": " + err.Error()), http.StatusInternalServerError
 		}

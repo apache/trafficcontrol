@@ -57,11 +57,11 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 	if resp == nil {
 		t.Fatalf("Cache Group Parameter response should not be nil")
 	}
-	testData.CacheGroupParameters = append(testData.CacheGroupParameters, resp.Response...)
+	testData.CacheGroupParameterRequests = append(testData.CacheGroupParameterRequests, resp.Response...)
 }
 
 func GetTestCacheGroupParameters(t *testing.T) {
-	for _, cgp := range testData.CacheGroupParameters {
+	for _, cgp := range testData.CacheGroupParameterRequests {
 		resp, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by cache group: %v - %v\n", err, resp)
@@ -70,12 +70,12 @@ func GetTestCacheGroupParameters(t *testing.T) {
 }
 
 func DeleteTestCacheGroupParameters(t *testing.T) {
-	for _, cgp := range testData.CacheGroupParameters {
+	for _, cgp := range testData.CacheGroupParameterRequests {
 		DeleteTestCacheGroupParameter(t, cgp)
 	}
 }
 
-func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameter) {
+func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterRequest) {
 
 	delResp, _, err := TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, cgp.ParameterID)
 	if err != nil {

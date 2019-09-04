@@ -21,6 +21,7 @@ package cachegroup
 
 import (
 	"errors"
+	"net/http"
 	"testing"
 	"time"
 
@@ -39,16 +40,22 @@ var (
 		"value",
 		"secure",
 	}
+	cgRows = []string{
+		"name",
+	}
 )
 
 func TestReadCacheGroupParameters(t *testing.T) {
 
 	var testCases = []struct {
-		description       string
-		storageError      error
-		expectedUserError bool
-		params            map[string]string
-		cgParams          []tc.ParameterNullable
+		description          string
+		storageError         error
+		expectedUserError    bool
+		params               map[string]string
+		cgParams             []tc.CacheGroupParameterNullable
+		cgExists             bool
+		cgExistsStorageError error
+		expectedReturnCode   int
 	}{
 		{
 			description:       "Success: Read Cache Group Parameters",
@@ -57,10 +64,13 @@ func TestReadCacheGroupParameters(t *testing.T) {
 			params: map[string]string{
 				"id": "1",
 			},
-			cgParams: []tc.ParameterNullable{
+			cgParams: []tc.CacheGroupParameterNullable{
 				generateParameter("global", "param1", "val1", false, 1),
 				generateParameter("global", "param2", "val2", false, 2),
 			},
+			cgExists:             true,
+			cgExistsStorageError: nil,
+			expectedReturnCode:   http.StatusOK,
 		},
 		{
 			description:       "Success: Read Cache Group Parameters with parameter id",
@@ -70,9 +80,12 @@ func TestReadCacheGroupParameters(t *testing.T) {
 				"id":          "1",
 				"parameterId": "1",
 			},
-			cgParams: []tc.ParameterNullable{
+			cgParams: []tc.CacheGroupParameterNullable{
 				generateParameter("global", "param1", "val1", false, 1),
 			},
+			cgExists:             true,
+			cgExistsStorageError: nil,
+			expectedReturnCode:   http.StatusOK,
 		},
 		{
 			description:       "Success: Read Cache Group Parameters no data",
@@ -81,7 +94,10 @@ func TestReadCacheGroupParameters(t *testing.T) {
 			params: map[string]string{
 				"id": "1",
 			},
-			cgParams: []tc.ParameterNullable{},
+			cgParams:             []tc.CacheGroupParameterNullable{},
+			cgExists:             true,
+			cgExistsStorageError: nil,
+			expectedReturnCode:   http.StatusOK,
 		},
 		{
 			description:       "Failure: Storage Error reading Cache Group Parameters",
@@ -90,10 +106,10 @@ func TestReadCacheGroupParameters(t *testing.T) {
 			params: map[string]string{
 				"id": "1",
 			},
-			cgParams: []tc.ParameterNullable{
-				generateParameter("global", "param1", "val1", false, 1),
-				generateParameter("global", "param2", "val2", false, 2),
-			},
+			cgParams:             []tc.CacheGroupParameterNullable{},
+			cgExists:             true,
+			cgExistsStorageError: nil,
+			expectedReturnCode:   http.StatusInternalServerError,
 		},
 		{
 			description:       "Failure: User Error invalid params",
@@ -102,10 +118,34 @@ func TestReadCacheGroupParameters(t *testing.T) {
 			params: map[string]string{
 				"id": "not_an_id",
 			},
-			cgParams: []tc.ParameterNullable{
-				generateParameter("global", "param1", "val1", false, 1),
-				generateParameter("global", "param2", "val2", false, 2),
+			cgParams:             []tc.CacheGroupParameterNullable{},
+			cgExists:             true,
+			cgExistsStorageError: nil,
+			expectedReturnCode:   http.StatusBadRequest,
+		},
+		{
+			description:       "Failure: System Error getting cache group",
+			storageError:      nil,
+			expectedUserError: false,
+			params: map[string]string{
+				"id": "1",
 			},
+			cgParams:             []tc.CacheGroupParameterNullable{},
+			cgExists:             true,
+			cgExistsStorageError: errors.New("error getting cache group"),
+			expectedReturnCode:   http.StatusInternalServerError,
+		},
+		{
+			description:       "Failure: Cache group does not exist",
+			storageError:      nil,
+			expectedUserError: true,
+			params: map[string]string{
+				"id": "1",
+			},
+			cgParams:             []tc.CacheGroupParameterNullable{},
+			cgExists:             false,
+			cgExistsStorageError: nil,
+			expectedReturnCode:   http.StatusNotFound,
 		},
 	}
 	for _, testCase := range testCases {
@@ -130,19 +170,29 @@ func TestReadCacheGroupParameters(t *testing.T) {
 				)
 			}
 			mock.ExpectBegin()
-			if testCase.storageError != nil {
-				mock.ExpectQuery("SELECT").WillReturnError(testCase.storageError)
+			cgr := sqlmock.NewRows(cgRows)
+			if testCase.cgExistsStorageError != nil {
+				mock.ExpectQuery("cachegroup").WillReturnError(testCase.cgExistsStorageError)
 			} else {
-				mock.ExpectQuery("SELECT").WillReturnRows(rows)
+				if testCase.cgExists {
+					cgr = cgr.AddRow("cachegroup_name")
+				}
+				mock.ExpectQuery("cachegroup").WillReturnRows(cgr)
+			}
+
+			if testCase.storageError != nil {
+				mock.ExpectQuery("cachegroup_parameter").WillReturnError(testCase.storageError)
+			} else {
+				mock.ExpectQuery("cachegroup_parameter").WillReturnRows(rows)
 			}
 			mock.ExpectCommit()
 
 			reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: testCase.params}
 			obj := TOCacheGroupParameter{
 				api.APIInfoImpl{&reqInfo},
-				tc.ParameterNullable{},
+				tc.CacheGroupParameterNullable{},
 			}
-			parameters, userErr, sysErr, _ := obj.Read()
+			parameters, userErr, sysErr, returnCode := obj.Read()
 
 			if testCase.storageError != nil {
 				if sysErr == nil {
@@ -152,6 +202,10 @@ func TestReadCacheGroupParameters(t *testing.T) {
 				if userErr == nil {
 					t.Errorf("User error expected: received no userErr")
 				}
+			} else if testCase.cgExistsStorageError != nil {
+				if sysErr == nil {
+					t.Errorf("Read error expected: received no sysErr")
+				}
 			} else {
 				if userErr != nil || sysErr != nil {
 					t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
@@ -160,14 +214,17 @@ func TestReadCacheGroupParameters(t *testing.T) {
 					t.Errorf("cdn.Read expected: len(parameters) == %v, actual: %v", len(testCase.cgParams), len(parameters))
 				}
 			}
+			if testCase.expectedReturnCode != returnCode {
+				t.Errorf("Expected return code: %d, actual %d", testCase.expectedReturnCode, returnCode)
+			}
 		})
 	}
 }
 
-func generateParameter(configFile, param, val string, secureFlag bool, id int) tc.ParameterNullable {
+func generateParameter(configFile, param, val string, secureFlag bool, id int) tc.CacheGroupParameterNullable {
 	lastUpdated := tc.TimeNoMod{}
 	lastUpdated.Scan(time.Now())
-	testParameter := tc.ParameterNullable{
+	testParameter := tc.CacheGroupParameterNullable{
 		ConfigFile:  &configFile,
 		ID:          &id,
 		LastUpdated: &lastUpdated,

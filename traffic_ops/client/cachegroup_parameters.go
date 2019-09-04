@@ -28,7 +28,7 @@ const (
 )
 
 // GetCacheGroupParameters Gets a Cache Group's Parameters
-func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.Parameter, ReqInf, error) {
+func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.CacheGroupParameter, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/parameters", API_v13_CacheGroups, cacheGroupID)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -37,7 +37,7 @@ func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.Parameter, Re
 	}
 	defer resp.Body.Close()
 
-	var data tc.ParametersResponse
+	var data tc.CacheGroupParametersResponse
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -45,7 +45,7 @@ func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.Parameter, Re
 }
 
 // GetCacheGroupParametersByQueryParams Gets a Cache Group's Parameters with query parameters
-func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryParams string) ([]tc.Parameter, ReqInf, error) {
+func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/parameters%s", API_v13_CacheGroups, cacheGroupID, queryParams)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -54,7 +54,7 @@ func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryP
 	}
 	defer resp.Body.Close()
 
-	var data tc.ParametersResponse
+	var data tc.CacheGroupParametersResponse
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -79,8 +79,8 @@ func (to *Session) DeleteCacheGroupParameter(cacheGroupID, parameterID int) (tc.
 }
 
 // CreateCacheGroupParameter Associates a Parameter with a Cache Group
-func (to *Session) CreateCacheGroupParameter(cacheGroupID, parameterID int) (*tc.CacheGroupParameterResponse, ReqInf, error) {
-	cacheGroupParameterReq := tc.CacheGroupParameter{
+func (to *Session) CreateCacheGroupParameter(cacheGroupID, parameterID int) (*tc.CacheGroupParametersPostResponse, ReqInf, error) {
+	cacheGroupParameterReq := tc.CacheGroupParameterRequest{
 		CacheGroupID: cacheGroupID,
 		ParameterID:  parameterID,
 	}
@@ -95,7 +95,7 @@ func (to *Session) CreateCacheGroupParameter(cacheGroupID, parameterID int) (*tc
 	}
 	defer resp.Body.Close()
 
-	var data tc.CacheGroupParameterResponse
+	var data tc.CacheGroupParametersPostResponse
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}

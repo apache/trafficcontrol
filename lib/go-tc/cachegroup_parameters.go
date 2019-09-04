@@ -19,14 +19,40 @@
 
 package tc
 
-// CacheGroupParameter Cache Group Parameter association
-type CacheGroupParameter struct {
+// CacheGroupParameterRequest Cache Group Parameter request body
+type CacheGroupParameterRequest struct {
 	CacheGroupID int `json:"cacheGroupId"`
 	ParameterID  int `json:"parameterId"`
 }
 
-// CacheGroupParameterResponse Response body for associating parameters with cache groups
-type CacheGroupParameterResponse struct {
+// CacheGroupParameterPostResponse Response body when Posting to associate a Parameter with a Cache Group
+type CacheGroupParametersPostResponse struct {
+	Response []CacheGroupParameterRequest `json:"response"`
+	Alerts
+}
+
+// CacheGroupParameterResponse Cache Group Parameter response body
+type CacheGroupParametersResponse struct {
 	Response []CacheGroupParameter `json:"response"`
 	Alerts
+}
+
+// CacheGroupParameter ...
+type CacheGroupParameter struct {
+	ConfigFile  string    `json:"configFile"`
+	ID          int       `json:"id"`
+	LastUpdated TimeNoMod `json:"lastUpdated"`
+	Name        string    `json:"name"`
+	Secure      bool      `json:"secure"`
+	Value       string    `json:"value"`
+}
+
+// CacheGroupParameterNullable ...
+type CacheGroupParameterNullable struct {
+	ConfigFile  *string    `json:"configFile" db:"config_file"`
+	ID          *int       `json:"id" db:"id"`
+	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        *string    `json:"name" db:"name"`
+	Secure      *bool      `json:"secure" db:"secure"`
+	Value       *string    `json:"value" db:"value"`
 }
