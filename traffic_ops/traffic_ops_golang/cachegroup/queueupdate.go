@@ -66,7 +66,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		reqObj.CDN = &cdn
 	}
 	cgID := int64(inf.IntParams["id"])
-	cgName, ok, err := getCGNameFromID(inf.Tx.Tx, cgID)
+	cgName, ok, err := dbhelpers.GetCacheGroupNameFromID(inf.Tx.Tx, cgID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cachegroup name from ID '"+inf.Params["id"]+"': "+err.Error()))
 		return
@@ -97,17 +97,6 @@ type QueueUpdatesResp struct {
 	ServerNames    []tc.CacheName    `json:"serverNames"`
 	CDN            tc.CDNName        `json:"cdn"`
 	CacheGroupID   int64             `json:"cachegroupID"`
-}
-
-func getCGNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
-	name := ""
-	if err := tx.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("querying cachegroup ID: " + err.Error())
-	}
-	return tc.CacheGroupName(name), true, nil
 }
 
 func queueUpdates(tx *sql.Tx, cgID int64, cdn tc.CDNName, queue bool) ([]tc.CacheName, error) {

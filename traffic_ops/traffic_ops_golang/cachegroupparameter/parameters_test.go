@@ -1,4 +1,4 @@
-package cachegroup
+package cachegroupparameter
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,6 +21,7 @@ package cachegroup
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -148,76 +149,81 @@ func TestReadCacheGroupParameters(t *testing.T) {
 			expectedReturnCode:   http.StatusNotFound,
 		},
 	}
+	toParameterReaders := map[string]api.Reader{
+		"Unassigned Parameters": &TOCacheGroupUnassignedParameter{},
+		"Parameters":            &TOCacheGroupParameter{},
+	}
 	for _, testCase := range testCases {
-		t.Run(testCase.description, func(t *testing.T) {
-			t.Log("Starting test scenario: ", testCase.description)
-			mockDB, mock, err := sqlmock.New()
-			if err != nil {
-				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-			}
-			defer mockDB.Close()
-			db := sqlx.NewDb(mockDB, "sqlmock")
-			defer db.Close()
-			rows := sqlmock.NewRows(cgpRows)
-			for _, cgParam := range testCase.cgParams {
-				rows = rows.AddRow(
-					cgParam.ConfigFile,
-					cgParam.ID,
-					cgParam.LastUpdated,
-					cgParam.Name,
-					cgParam.Value,
-					cgParam.Secure,
-				)
-			}
-			mock.ExpectBegin()
-			cgr := sqlmock.NewRows(cgRows)
-			if testCase.cgExistsStorageError != nil {
-				mock.ExpectQuery("cachegroup").WillReturnError(testCase.cgExistsStorageError)
-			} else {
-				if testCase.cgExists {
-					cgr = cgr.AddRow("cachegroup_name")
+		for toParameterKey, toParameterReader := range toParameterReaders {
+			testCaseKey := fmt.Sprintf("%s - %s", testCase.description, toParameterKey)
+			t.Run(testCaseKey, func(t *testing.T) {
+				t.Log("Starting test scenario: ", testCaseKey)
+				mockDB, mock, err := sqlmock.New()
+				if err != nil {
+					t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 				}
-				mock.ExpectQuery("cachegroup").WillReturnRows(cgr)
-			}
+				defer mockDB.Close()
+				db := sqlx.NewDb(mockDB, "sqlmock")
+				defer db.Close()
+				rows := sqlmock.NewRows(cgpRows)
+				for _, cgParam := range testCase.cgParams {
+					rows = rows.AddRow(
+						cgParam.ConfigFile,
+						cgParam.ID,
+						cgParam.LastUpdated,
+						cgParam.Name,
+						cgParam.Value,
+						cgParam.Secure,
+					)
+				}
+				mock.ExpectBegin()
+				cgr := sqlmock.NewRows(cgRows)
+				if testCase.cgExistsStorageError != nil {
+					mock.ExpectQuery("cachegroup").WillReturnError(testCase.cgExistsStorageError)
+				} else {
+					if testCase.cgExists {
+						cgr = cgr.AddRow("cachegroup_name")
+					}
+					mock.ExpectQuery("cachegroup").WillReturnRows(cgr)
+				}
 
-			if testCase.storageError != nil {
-				mock.ExpectQuery("cachegroup_parameter").WillReturnError(testCase.storageError)
-			} else {
-				mock.ExpectQuery("cachegroup_parameter").WillReturnRows(rows)
-			}
-			mock.ExpectCommit()
+				if testCase.storageError != nil {
+					mock.ExpectQuery("cachegroup_parameter").WillReturnError(testCase.storageError)
+				} else {
+					mock.ExpectQuery("cachegroup_parameter").WillReturnRows(rows)
+				}
+				mock.ExpectCommit()
 
-			reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: testCase.params}
-			obj := TOCacheGroupParameter{
-				api.APIInfoImpl{&reqInfo},
-				tc.CacheGroupParameterNullable{},
-			}
-			parameters, userErr, sysErr, returnCode := obj.Read()
+				reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: testCase.params}
+				toParameterReader.SetInfo(&reqInfo)
 
-			if testCase.storageError != nil {
-				if sysErr == nil {
-					t.Errorf("Read error expected: received no sysErr")
+				parameters, userErr, sysErr, returnCode := toParameterReader.Read()
+
+				if testCase.storageError != nil {
+					if sysErr == nil {
+						t.Errorf("Read error expected: received no sysErr")
+					}
+				} else if testCase.expectedUserError {
+					if userErr == nil {
+						t.Errorf("User error expected: received no userErr")
+					}
+				} else if testCase.cgExistsStorageError != nil {
+					if sysErr == nil {
+						t.Errorf("Read error expected: received no sysErr")
+					}
+				} else {
+					if userErr != nil || sysErr != nil {
+						t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
+					}
+					if len(parameters) != len(testCase.cgParams) {
+						t.Errorf("cdn.Read expected: len(parameters) == %v, actual: %v", len(testCase.cgParams), len(parameters))
+					}
 				}
-			} else if testCase.expectedUserError {
-				if userErr == nil {
-					t.Errorf("User error expected: received no userErr")
+				if testCase.expectedReturnCode != returnCode {
+					t.Errorf("Expected return code: %d, actual %d", testCase.expectedReturnCode, returnCode)
 				}
-			} else if testCase.cgExistsStorageError != nil {
-				if sysErr == nil {
-					t.Errorf("Read error expected: received no sysErr")
-				}
-			} else {
-				if userErr != nil || sysErr != nil {
-					t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
-				}
-				if len(parameters) != len(testCase.cgParams) {
-					t.Errorf("cdn.Read expected: len(parameters) == %v, actual: %v", len(testCase.cgParams), len(parameters))
-				}
-			}
-			if testCase.expectedReturnCode != returnCode {
-				t.Errorf("Expected return code: %d, actual %d", testCase.expectedReturnCode, returnCode)
-			}
-		})
+			})
+		}
 	}
 }
 
@@ -233,4 +239,13 @@ func generateParameter(configFile, param, val string, secureFlag bool, id int) t
 		Value:       &val,
 	}
 	return testParameter
+}
+
+func TestInterfaces(t *testing.T) {
+	var i interface{}
+	i = &TOCacheGroupParameter{}
+
+	if _, ok := i.(api.Reader); !ok {
+		t.Errorf("CacheGroupParameter must be Reader")
+	}
 }

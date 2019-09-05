@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 	"github.com/lib/pq"
@@ -84,7 +85,7 @@ func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int64, dsIDs []int64) (tc
 		}
 	}
 
-	cgName, ok, err := getCGNameFromID(tx, cgID)
+	cgName, ok, err := dbhelpers.GetCacheGroupNameFromID(tx, cgID)
 	if err != nil {
 		return tc.CacheGroupPostDSResp{}, nil, errors.New("getting cachegroup name from ID '" + string(cgID) + "': " + err.Error()), http.StatusInternalServerError
 	} else if !ok {

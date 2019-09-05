@@ -1,4 +1,4 @@
-package cachegroup
+package cachegroupparameter
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,6 +21,7 @@ package cachegroup
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -32,31 +33,27 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 )
 
-const (
-	CacheGroupIDQueryParam = "id"
-	ParameterIDQueryParam  = "parameterId"
-)
-
-//we need a type alias to define functions on
-type TOCacheGroupParameter struct {
+// TOCacheGroupUnassignedParameter Unassigned Parameter TO request
+type TOCacheGroupUnassignedParameter struct {
 	api.APIInfoImpl `json:"-"`
 	tc.CacheGroupParameterNullable
 }
 
-func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+// ParamColumns Parameter Where Column definitions
+func (cgunparam *TOCacheGroupUnassignedParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		CacheGroupIDQueryParam: dbhelpers.WhereColumnInfo{"cgp.cachegroup", api.IsInt},
-		ParameterIDQueryParam:  dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
+		ParameterIDQueryParam: dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
 	}
 }
 
-func (cgparam *TOCacheGroupParameter) GetType() string {
-	return "cachegroup_params"
+// GetType Get type string
+func (cgunparam *TOCacheGroupUnassignedParameter) GetType() string {
+	return "cachegroup_unassigned_params"
 }
 
-func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) {
-	queryParamsToQueryCols := cgparam.ParamColumns()
-	parameters := cgparam.APIInfo().Params
+func (cgunparam *TOCacheGroupUnassignedParameter) Read() ([]interface{}, error, error, int) {
+	queryParamsToQueryCols := cgunparam.ParamColumns()
+	parameters := cgunparam.APIInfo().Params
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
@@ -64,20 +61,26 @@ func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) 
 
 	cgID, err := strconv.Atoi(parameters[CacheGroupIDQueryParam])
 	if err != nil {
-		return nil, nil, errors.New("cache group id must be an integer"), http.StatusInternalServerError
+		return nil, errors.New("cache group id must be an integer"), nil, http.StatusBadRequest
 	}
 
-	_, ok, err := getCGNameFromID(cgparam.ReqInfo.Tx.Tx, int64(cgID))
+	_, ok, err := dbhelpers.GetCacheGroupNameFromID(cgunparam.ReqInfo.Tx.Tx, int64(cgID))
 	if err != nil {
 		return nil, nil, err, http.StatusInternalServerError
 	} else if !ok {
 		return nil, errors.New("cachegroup does not exist"), nil, http.StatusNotFound
 	}
 
-	query := selectQuery() + where + orderBy + pagination
-	rows, err := cgparam.ReqInfo.Tx.NamedQuery(query, queryValues)
+	// TODO: enhance build query to handle cols that are not in WHERE as well as appending to existing WHERE
+	queryValues[CacheGroupIDQueryParam] = cgID
+	if len(where) > 0 {
+		where = fmt.Sprintf("\nAND%s", where[len(dbhelpers.BaseWhere):])
+	}
+
+	query := selectUnassignedParametersQuery() + where + orderBy + pagination
+	rows, err := cgunparam.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("querying " + cgparam.GetType() + ": " + err.Error()), http.StatusInternalServerError
+		return nil, nil, errors.New("querying " + cgunparam.GetType() + ": " + err.Error()), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -85,9 +88,9 @@ func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) 
 	for rows.Next() {
 		var p tc.CacheGroupParameterNullable
 		if err = rows.StructScan(&p); err != nil {
-			return nil, nil, errors.New("scanning " + cgparam.GetType() + ": " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New("scanning " + cgunparam.GetType() + ": " + err.Error()), http.StatusInternalServerError
 		}
-		if p.Secure != nil && *p.Secure && cgparam.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
+		if p.Secure != nil && *p.Secure && cgunparam.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
 			p.Value = &parameter.HiddenField
 		}
 		params = append(params, p)
@@ -96,7 +99,7 @@ func (cgparam *TOCacheGroupParameter) Read() ([]interface{}, error, error, int) 
 	return params, nil, nil, http.StatusOK
 }
 
-func selectQuery() string {
+func selectUnassignedParametersQuery() string {
 
 	query := `SELECT
 p.config_file,
@@ -106,6 +109,10 @@ p.name,
 p.value,
 p.secure
 FROM parameter p
-LEFT JOIN cachegroup_parameter cgp ON cgp.parameter = p.id`
+WHERE p.id NOT IN (
+	SELECT parameter
+	FROM cachegroup_parameter as cgp
+	WHERE cgp.cachegroup = :id
+)`
 	return query
 }

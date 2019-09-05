@@ -30,24 +30,30 @@ const (
 // GetCacheGroupParameters Gets a Cache Group's Parameters
 func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.CacheGroupParameter, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/parameters", API_v13_CacheGroups, cacheGroupID)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.CacheGroupParametersResponse
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-	return data.Response, reqInf, nil
+	return to.getCacheGroupParameters(route, "")
 }
 
 // GetCacheGroupParametersByQueryParams Gets a Cache Group's Parameters with query parameters
 func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/parameters%s", API_v13_CacheGroups, cacheGroupID, queryParams)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	route := fmt.Sprintf("%s/%d/parameters", API_v13_CacheGroups, cacheGroupID)
+	return to.getCacheGroupParameters(route, queryParams)
+}
+
+// GetCacheGroupUnassignedParameters Gets a Cache Group's Unassigned Parameters
+func (to *Session) GetCacheGroupUnassignedParameters(cacheGroupID int) ([]tc.CacheGroupParameter, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d/unassigned_parameters", API_v13_CacheGroups, cacheGroupID)
+	return to.getCacheGroupParameters(route, "")
+}
+
+// GetCacheGroupParametersByQueryParams Gets a Cache Group's Unassigned Parameters with query parameters
+func (to *Session) GetCacheGroupUnassignedParametersByQueryParams(cacheGroupID int, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d/unassigned_parameters", API_v13_CacheGroups, cacheGroupID)
+	return to.getCacheGroupParameters(route, queryParams)
+}
+
+func (to *Session) getCacheGroupParameters(route, queryParams string) ([]tc.CacheGroupParameter, ReqInf, error) {
+	r := fmt.Sprintf("%s%s", route, queryParams)
+	resp, remoteAddr, err := to.request(http.MethodGet, r, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
