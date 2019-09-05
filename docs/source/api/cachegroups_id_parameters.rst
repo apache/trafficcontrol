@@ -28,6 +28,14 @@ Gets all the :term:`Parameters` associated with a :term:`Cache Group`
 
 Request Structure
 -----------------
+.. table:: Request Query Parameters
+
+	+-------------+----------+---------------------------------------------------+
+	| Name        | Required | Description                                       |
+	+=============+==========+===================================================+
+	| parameterId | no       | Show only the :term:`Parameter` with the given ID |
+	+-------------+----------+---------------------------------------------------+
+
 .. table:: Request Path Parameters
 
 	+-----------+----------------------------------------------------------+

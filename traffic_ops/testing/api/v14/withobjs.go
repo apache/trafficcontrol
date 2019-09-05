@@ -37,6 +37,7 @@ type TCObj int
 
 const (
 	CacheGroups TCObj = iota
+	CacheGroupParameters
 	CDNs
 	CDNFederations
 	Coordinates
@@ -68,6 +69,7 @@ type TCObjFuncs struct {
 
 var withFuncs = map[TCObj]TCObjFuncs{
 	CacheGroups:                    {CreateTestCacheGroups, DeleteTestCacheGroups},
+	CacheGroupParameters:           {CreateTestCacheGroupParameters, DeleteTestCacheGroupParameters},
 	CDNs:                           {CreateTestCDNs, DeleteTestCDNs},
 	CDNFederations:                 {CreateTestCDNFederations, DeleteTestCDNFederations},
 	Coordinates:                    {CreateTestCoordinates, DeleteTestCoordinates},
@@ -89,5 +91,5 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	Tenants:                        {CreateTestTenants, DeleteTestTenants},
 	Types:                          {CreateTestTypes, DeleteTestTypes},
 	Users:                          {CreateTestUsers, ForceDeleteTestUsers},
-	UsersDeliveryServices: {CreateTestUsersDeliveryServices, DeleteTestUsersDeliveryServices},
+	UsersDeliveryServices:          {CreateTestUsersDeliveryServices, DeleteTestUsersDeliveryServices},
 }
