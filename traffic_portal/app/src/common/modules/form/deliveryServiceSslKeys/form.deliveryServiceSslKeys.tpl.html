@@ -60,12 +60,12 @@ under the License.
 					<input name="version" type="text" class="form-control" ng-model="sslKeys.expiration" readonly>
 				</div>
 			</div>
-			<div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.hostname), 'has-feedback': hasError(dsSslKeyForm.hostname)}">
+			<div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.authType), 'has-feedback': hasError(dsSslKeyForm.authType)}">
 				<label class="control-label col-md-2 col-sm-2 col-xs-12">Certificate Source (Self Signed, CA, etc) *</label>
 				<div class="col-md-10 col-sm-10 col-xs-12">
-					<input name="hostname" type="text" class="form-control" ng-model="sslKeys.authType" required autofocus>
-					<small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.hostname, 'required')">Required</small>
-					<span ng-show="hasError(dsSslKeyForm.hostname)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+					<input name="authType" type="text" class="form-control" ng-model="sslKeys.authType" ng-change="toggleCsrRequirement()" required autofocus>
+					<small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.authType, 'required')">Required</small>
+					<span ng-show="hasError(dsSslKeyForm.authType)" class="form-control-feedback"><i class="fa fa-times"></i></span>
 				</div>
 			</div>
             <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.privateKey), 'has-feedback': hasError(dsSslKeyForm.privateKey)}">
@@ -76,12 +76,12 @@ under the License.
                     <span ng-show="hasError(dsSslKeyForm.privateKey)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.certificateSigningRequest), 'has-feedback': hasError(dsSslKeyForm.certificateSigningRequest)}">
+            <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.certificateSigningRequest) && requiresCrs(), 'has-feedback': hasError(dsSslKeyForm.certificateSigningRequest) && requiresCrs()}" ng-if="requiresCrs()">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Certificate Signing Request *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea name="certificateSigningRequest" type="text" class="form-control" ng-model="sslKeys.certificate.csr" rows="25" required autofocus></textarea>
-                    <small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.certificateSigningRequest, 'required')">Required</small>
-                    <span ng-show="hasError(dsSslKeyForm.certificateSigningRequest)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <textarea id="certificateSigningRequest" name="certificateSigningRequest" type="text" class="form-control" ng-model="sslKeys.certificate.csr" rows="25" autofocus required></textarea>
+                    <small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.certificateSigningRequest, 'required') && requiresCrs()">Required</small>
+                    <span ng-show="hasError(dsSslKeyForm.certificateSigningRequest) && requiresCrs()" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.certificate), 'has-feedback': hasError(dsSslKeyForm.certificate)}">

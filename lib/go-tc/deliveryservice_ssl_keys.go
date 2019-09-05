@@ -132,7 +132,7 @@ func (r *DeliveryServiceAddSSLKeysReq) Validate(tx *sql.Tx) error {
 		if r.Certificate.Crt == "" {
 			errs = append(errs, "certificate.crt required")
 		}
-		if r.Certificate.CSR == "" {
+		if r.Certificate.CSR == "" && *r.AuthType != LetsEncryptAuthType {
 			errs = append(errs, "certificate.csr required")
 		}
 	}

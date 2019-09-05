@@ -39,6 +39,19 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
         $scope.sslKeys.authType = 'Self Signed';
     }
 
+	$scope.requiresCrs = function() {
+	  return $scope.sslKeys.authType !== 'Lets Encrypt';
+    };
+    $scope.toggleCsrRequirement = function() {
+	    if ($scope.requiresCrs() && document.getElementById('certificateSigningRequest') !== null) {
+            document.getElementById('certificateSigningRequest').setAttribute('required', '');
+        } else if (document.getElementById('certificateSigningRequest') !== null) {
+            document.getElementById('certificateSigningRequest').removeAttribute('required');
+        }
+    };
+
+	$scope.toggleCsrRequirement();
+
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 	$scope.navigateToPath = locationUtils.navigateToPath;

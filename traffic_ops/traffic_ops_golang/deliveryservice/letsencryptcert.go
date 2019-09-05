@@ -203,9 +203,15 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 	myUser.Registration = reg
 
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		log.Errorf(deliveryService + ": Error generating private key")
+		return err
+	}
 	request := certificate.ObtainRequest{
-		Domains: []string{domainName},
-		Bundle:  true,
+		Domains:    []string{domainName},
+		Bundle:     true,
+		PrivateKey: priv,
 	}
 	certificates, err := client.Certificate.Obtain(request)
 	if err != nil {
@@ -238,21 +244,17 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 		Expiration:      expiration,
 	}
 
-	crtBuf := bytes.Buffer{}
-	if err := pem.Encode(&crtBuf, &pem.Block{Type: "CERTIFICATE", Bytes: certificates.Certificate}); err != nil {
-		log.Errorf(deliveryService + ": pem-encoding certificate: " + err.Error())
-		return errors.New(deliveryService + ": pem-encoding certificate: " + err.Error())
+	keyDer := x509.MarshalPKCS1PrivateKey(priv)
+	if keyDer == nil {
+		return errors.New("marshalling private key: nil der")
 	}
-	crtPem := crtBuf.Bytes()
-
 	keyBuf := bytes.Buffer{}
-	if err := pem.Encode(&keyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: certificates.PrivateKey}); err != nil {
-		log.Errorf(deliveryService + ": pem-encoding key: " + err.Error())
-		return errors.New(deliveryService + ": pem-encoding key: " + err.Error())
+	if err := pem.Encode(&keyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: keyDer}); err != nil {
+		return errors.New("pem-encoding private key: " + err.Error())
 	}
 	keyPem := keyBuf.Bytes()
 
-	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(crtPem)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: "Not Applicable"}
+	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(certificates.Certificate)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: ""}
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx.Tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
 		return errors.New(deliveryService + ": putting riak keys: " + err.Error())
