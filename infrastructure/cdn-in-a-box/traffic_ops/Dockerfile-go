@@ -22,16 +22,15 @@
 
 
 FROM centos:7
-RUN yum -y install nmap-ncat openssl epel-release
-RUN yum -y install jq && yum clean all
-
-RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production /opt/traffic_ops/app/db
-COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
-COPY --from=trafficops-perl /opt/traffic_ops/app/conf/ /opt/traffic_ops/app/conf
+RUN yum -y install epel-release && \
+	yum -y install jq bind-utils net-tools gettext perl-JSON-PP nmap-ncat openssl && \
+	yum clean all
 
 EXPOSE 443
 WORKDIR /opt/traffic_ops/app
-RUN yum install -y bind-utils net-tools gettext perl-JSON-PP
+
+COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
+COPY --from=trafficops-perl /opt/traffic_ops/app/conf/ /opt/traffic_ops/app/conf/
 
 
 ADD enroller/server_template.json \
