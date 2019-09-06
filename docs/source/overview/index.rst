@@ -22,4 +22,12 @@ Introduces the Traffic Control architecture, components, and their integration.
 	:maxdepth: 2
 	:glob:
 
-	*
+	introduction
+	delivery_services
+	profiles_and_parameters
+	traffic_ops
+	traffic_router
+	traffic_monitor
+	traffic_stats
+	traffic_portal
+	traffic_vault
