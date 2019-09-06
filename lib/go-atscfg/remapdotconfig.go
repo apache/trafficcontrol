@@ -101,18 +101,36 @@ func GetServerConfigRemapDotConfigForMid(
 			continue // skip remap rules from extra HOST_REGEXP entries
 		}
 
+		// multiple uses of cacheurl and cachekey plugins don't work right in ATS, but Perl has always done it.
+		// So for now, keep track of it, so we can log an error when it happens.
+		hasCacheURL := false
+		hasCacheKey := false
+
 		midRemap := ""
 		if ds.MidHeaderRewrite != nil && *ds.MidHeaderRewrite != "" {
 			midRemap += ` @plugin=header_rewrite.so @pparam=` + MidHeaderRewriteConfigFileName(ds.Name)
 		}
 		if ds.QStringIgnore != nil && *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
-			midRemap += GetQStringIgnoreRemap(atsMajorVersion)
+			qstr, addedCacheURL, addedCacheKey := GetQStringIgnoreRemap(atsMajorVersion)
+			if addedCacheURL {
+				hasCacheURL = true
+			}
+			if addedCacheKey {
+				hasCacheKey = true
+			}
+			midRemap += qstr
 		}
 		if ds.CacheURL != nil && *ds.CacheURL != "" {
+			if hasCacheURL {
+				log.Errorln("DeliveryService qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
+			}
 			midRemap += ` @plugin=cacheurl.so @pparam=` + CacheURLConfigFileName(ds.Name)
 		}
 
 		if ds.ProfileID != nil && len(profilesCacheKeyConfigParams[*ds.ProfileID]) > 0 {
+			if hasCacheKey {
+				log.Errorln("DeliveryService qstring_ignore and cachekey params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
+			}
 			midRemap += ` @plugin=cachekey.so`
 			for name, val := range profilesCacheKeyConfigParams[*ds.ProfileID] {
 				midRemap += ` @pparam=--` + name + "=" + val
@@ -216,24 +234,42 @@ func BuildRemapLine(cacheURLConfigParams map[string]string, atsMajorVersion int,
 		}
 	}
 
+	// multiple uses of cacheurl and cachekey plugins don't work right in ATS, but Perl has always done it.
+	// So for now, keep track of it, so we can log an error when it happens.
+	hasCacheURL := false
+	hasCacheKey := false
+
 	if ds.QStringIgnore != nil {
 		if *ds.QStringIgnore == tc.QueryStringIgnoreDropAtEdge {
 			dqsFile := "drop_qstring.config"
 			text += ` @plugin=regex_remap.so @pparam=` + dqsFile
 		} else if *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
 			if _, globalExists := cacheURLConfigParams["location"]; globalExists {
-				log.Debugln("qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter") // TODO warn? Perl was a debug
+				log.Warnln("qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter")
 			} else {
-				text += GetQStringIgnoreRemap(atsMajorVersion)
+				qstr, addedCacheURL, addedCacheKey := GetQStringIgnoreRemap(atsMajorVersion)
+				if addedCacheURL {
+					hasCacheURL = true
+				}
+				if addedCacheKey {
+					hasCacheKey = true
+				}
+				text += qstr
 			}
 		}
 	}
 
 	if ds.CacheURL != nil && *ds.CacheURL != "" {
+		if hasCacheURL {
+			log.Errorln("DeliveryService qstring_ignore and cacheurl both add cacheurl, but ATS cacheurl doesn't work correctly with multiple entries! Adding anyway!")
+		}
 		text += ` @plugin=cacheurl.so @pparam=` + CacheURLConfigFileName(ds.Name)
 	}
 
 	if len(cacheKeyConfigParams) > 0 {
+		if hasCacheKey {
+			log.Errorln("DeliveryService qstring_ignore and params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
+		}
 		text += ` @plugin=cachekey.so`
 
 		keys := []string{}
@@ -360,10 +396,15 @@ func CacheURLConfigFileName(dsName string) string {
 	return "cacheurl_" + dsName + ".config"
 }
 
-func GetQStringIgnoreRemap(atsMajorVersion int) string {
+// GetQStringIgnoreRemap returns the remap, whether cacheurl was added, and whether cachekey was added.
+func GetQStringIgnoreRemap(atsMajorVersion int) (string, bool, bool) {
 	if atsMajorVersion >= 6 {
-		return ` @plugin=cachekey.so @pparam=--separator= @pparam=--remove-all-params=true @pparam=--remove-path=true @pparam=--capture-prefix-uri=/^([^?]*)/$1/`
+		addingCacheURL := false
+		addingCacheKey := true
+		return ` @plugin=cachekey.so @pparam=--separator= @pparam=--remove-all-params=true @pparam=--remove-path=true @pparam=--capture-prefix-uri=/^([^?]*)/$1/`, addingCacheURL, addingCacheKey
 	} else {
-		return ` @plugin=cacheurl.so @pparam=cacheurl_qstring.config`
+		addingCacheURL := true
+		addingCacheKey := false
+		return ` @plugin=cacheurl.so @pparam=cacheurl_qstring.config`, addingCacheURL, addingCacheKey
 	}
 }
