@@ -380,7 +380,7 @@ sub by_parameter_id {
 		}
 	}
 
-	$self->success( { cachegroups => \@data } );
+	$self->success( { cachegroups => \@data }, "API path is deprecated use /cachegroupparameters instead");
 }
 
 sub available_for_parameter {
