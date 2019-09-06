@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [3.1.0] - 2019-08-16
+## [3.1.0] - 2019-09-06
 ### Added
 - Added logging.yaml support
 
@@ -12,6 +12,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fixed a bug where TM crashes when PostgreSQL is unavailable
+
+## [3.0.2] - 2019-09-03
+### Added
+
+### Changed
+
+### Fixed
+- Improved LDAP error handling
 
 ## [3.0.1] - 2019-04-09
 ### Added
@@ -32,7 +40,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fix port handling for traffic ops port checks on ports other than 80.
 - Return a json response with a 200 for a successful snapshot PUT.
 - Correct FQDN case mismatch when generating DNSSEC.
-- Fixed permissions on DELETE /api/$version/deliveryservice_server/{dsid}/{serverid} endpoint
 - Issue 3223 - cannot add steering targets to steering delivery service.
 - Issue 3466 - docs fail to build in python 3.6.
 - Issue #3605: Fixed Traffic Monitor custom ports in health polling URL.
