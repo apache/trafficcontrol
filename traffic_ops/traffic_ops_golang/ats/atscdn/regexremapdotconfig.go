@@ -53,7 +53,7 @@ func GetRegexRemapDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dsName := inf.Params["dsname"] // note this is the regex_remap_{dsname}.config, not the full filename
+	dsName := inf.Params["ds-name"] // note this is the regex_remap_{dsname}.config, not the full filename
 	fullFileName := "regex_remap_" + dsName + ".config"
 
 	dses, err := GetCDNDSes(inf.Tx.Tx, cdnName)

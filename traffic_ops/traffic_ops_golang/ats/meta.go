@@ -38,7 +38,7 @@ func GetConfigMetaData(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	serverName, userErr, sysErr, errCode := getServerNameFromNameOrID(inf.Tx.Tx, inf.Params["server-name-or-id"])
+	serverName, userErr, sysErr, errCode := GetServerNameFromNameOrID(inf.Tx.Tx, inf.Params["server-name-or-id"])
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

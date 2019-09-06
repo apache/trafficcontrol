@@ -59,9 +59,42 @@ func GetConfigFile(cfg TCCfg) (string, int, error) {
 	return GetConfigFileFromTrafficOps(cfg)
 }
 
+type ConfigFilePrefixSuffixFunc struct {
+	Prefix string
+	Suffix string
+	Func   func(cfg TCCfg, resource string, fileName string) (string, error)
+}
+
 func GetConfigFileCDN(cfg TCCfg, cdnNameOrID string, fileName string) (string, int, error) {
 	log.Infoln("GetConfigFileCDN cdn '" + cdnNameOrID + "' fileName '" + fileName + "'")
-	return GetConfigFileFromTrafficOps(cfg)
+
+	txt := ""
+	err := error(nil)
+	if getCfgFunc, ok := CDNConfigFileFuncs()[fileName]; ok {
+		txt, err = getCfgFunc(cfg, cdnNameOrID)
+	} else {
+		for _, prefixSuffixFunc := range ConfigFileCDNPrefixSuffixFuncs {
+			if strings.HasPrefix(fileName, prefixSuffixFunc.Prefix) && strings.HasSuffix(fileName, prefixSuffixFunc.Suffix) && len(fileName) > len(prefixSuffixFunc.Prefix)+len(prefixSuffixFunc.Suffix) {
+				txt, err = prefixSuffixFunc.Func(cfg, cdnNameOrID, fileName)
+				break
+			}
+		}
+	}
+
+	if err == nil && txt == "" {
+		err = ErrNotFound
+	}
+
+	if err != nil {
+		code := ExitCodeErrGeneric
+		if err == ErrNotFound {
+			code = ExitCodeNotFound
+		} else if err == ErrBadRequest {
+			code = ExitCodeBadRequest
+		}
+		return "", code, err
+	}
+	return txt, ExitCodeSuccess, nil
 }
 
 func GetConfigFileProfile(cfg TCCfg, profileNameOrID string, fileName string) (string, int, error) {
@@ -100,8 +133,21 @@ func ConfigFileFuncs() map[string]map[string]func(cfg TCCfg, serverNameOrID stri
 	}
 }
 
-func CDNConfigFileFuncs() map[string]func(cfg TCCfg, serverNameOrID string) (string, error) {
-	return map[string]func(cfg TCCfg, serverNameOrID string) (string, error){}
+func CDNConfigFileFuncs() map[string]func(cfg TCCfg, cdnNameOrID string) (string, error) {
+	return map[string]func(cfg TCCfg, cdnNameOrID string) (string, error){
+		"regex_revalidate.config": GetConfigFileCDNRegexRevalidateDotConfig,
+		"bg_fetch.config":         GetConfigFileCDNBGFetchDotConfig,
+		"ssl_multicert.config":    GetConfigFileCDNSSLMultiCertDotConfig,
+		"cacheurl.config":         GetConfigFileCDNCacheURLPlain,
+	}
+}
+
+var ConfigFileCDNPrefixSuffixFuncs = []ConfigFilePrefixSuffixFunc{
+	{"hdr_rw_mid_", ".config", GetConfigFileCDNHeaderRewriteMid},
+	{"hdr_rw_", ".config", GetConfigFileCDNHeaderRewrite},
+	{"cacheurl", ".config", GetConfigFileCDNCacheURL},
+	{"regex_remap_", ".config", GetConfigFileCDNRegexRemap},
+	{"set_dscp_", ".config", GetConfigFileCDNSetDSCP},
 }
 
 func ProfileConfigFileFuncs() map[string]func(cfg TCCfg, serverNameOrID string) (string, error) {

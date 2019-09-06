@@ -20,13 +20,13 @@ package main
  */
 
 import (
+	"encoding/base64"
 	"errors"
-	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func GetProfile(cfg TCCfg, profileID int) (tc.Profile, error) {
@@ -171,24 +171,21 @@ func GetCacheGroups(cfg TCCfg) ([]tc.CacheGroupNullable, error) {
 	return cacheGroups, nil
 }
 
-func GetDeliveryServiceServers(cfg TCCfg, serverIDs []int) ([]tc.DeliveryServiceServer, error) {
-	serverIDsSorted := make([]int, 0, len(serverIDs))
-	for _, id := range serverIDs {
-		serverIDsSorted = append(serverIDsSorted, id)
+func GetDeliveryServiceServers(cfg TCCfg, dsIDs []int, serverIDs []int) ([]tc.DeliveryServiceServer, error) {
+	sortIDsInHash := true
+	serverIDsStr := ""
+	if len(serverIDs) > 0 {
+		serverIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(serverIDs, sortIDsInHash)))
 	}
-	sort.Ints(serverIDsSorted)
-
-	serverIDStrs := []string{}
-	for _, id := range serverIDs {
-		serverIDStrs = append(serverIDStrs, strconv.Itoa(id))
+	dsIDsStr := ""
+	if len(dsIDs) > 0 {
+		dsIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(dsIDs, sortIDsInHash)))
 	}
-	serverIDsStr := strings.Join(serverIDStrs, "-")
 
 	dsServers := []tc.DeliveryServiceServer{}
-	// TODO make this filename shorter (but still unique) somehow. The filename is almost always too long.
-	err := GetCachedJSON(cfg, "deliveryservice_servers_"+serverIDsStr+".json", &dsServers, func(obj interface{}) error {
+	err := GetCachedJSON(cfg, "deliveryservice_servers_s"+serverIDsStr+"_d_"+dsIDsStr+".json", &dsServers, func(obj interface{}) error {
 		const noLimit = 999999 // TODO add "no limit" param to DSS endpoint
-		toDSS, reqInf, err := (*cfg.TOClient).GetDeliveryServiceServersWithLimits(noLimit, nil, serverIDs)
+		toDSS, reqInf, err := (*cfg.TOClient).GetDeliveryServiceServersWithLimits(noLimit, dsIDs, serverIDs)
 		if err != nil {
 			return errors.New("getting delivery service servers from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
 		}
@@ -198,14 +195,26 @@ func GetDeliveryServiceServers(cfg TCCfg, serverIDs []int) ([]tc.DeliveryService
 			serverIDsMap[id] = struct{}{}
 		}
 
+		dsIDsMap := map[int]struct{}{}
+		for _, id := range dsIDs {
+			dsIDsMap[id] = struct{}{}
+		}
+
 		// Older TO's may ignore the server ID list, so we need to filter them out manually to be sure.
 		filteredDSServers := []tc.DeliveryServiceServer{}
 		for _, dsServer := range toDSS.Response {
 			if dsServer.Server == nil || dsServer.DeliveryService == nil {
 				continue // TODO warn? error?
 			}
-			if _, ok := serverIDsMap[*dsServer.Server]; !ok {
-				continue
+			if len(serverIDsMap) > 0 {
+				if _, ok := serverIDsMap[*dsServer.Server]; !ok {
+					continue
+				}
+			}
+			if len(dsIDsMap) > 0 {
+				if _, ok := dsIDsMap[*dsServer.DeliveryService]; !ok {
+					continue
+				}
 			}
 			filteredDSServers = append(filteredDSServers, dsServer)
 		}
@@ -292,6 +301,26 @@ func GetCDN(cfg TCCfg, cdnName tc.CDNName) (tc.CDN, error) {
 	return cdn, nil
 }
 
+func GetCDNByID(cfg TCCfg, cdnID int) (tc.CDN, error) {
+	cdn := tc.CDN{}
+	err := GetCachedJSON(cfg, "cdn_id_"+strconv.Itoa(cdnID)+".json", &cdn, func(obj interface{}) error {
+		toCDNs, reqInf, err := (*cfg.TOClient).GetCDNByID(cdnID)
+		if err != nil {
+			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+		}
+		if len(toCDNs) != 1 {
+			return errors.New("getting cdn from Traffic Ops '" + MaybeIPStr(reqInf) + "': expected 1 CDN, got " + strconv.Itoa(len(toCDNs)))
+		}
+		cdn := obj.(*tc.CDN)
+		*cdn = toCDNs[0]
+		return nil
+	})
+	if err != nil {
+		return tc.CDN{}, errors.New("getting cdn: " + err.Error())
+	}
+	return cdn, nil
+}
+
 func GetURLSigKeys(cfg TCCfg, dsName string) (tc.URLSigKeys, error) {
 	keys := tc.URLSigKeys{}
 	err := GetCachedJSON(cfg, "urlsigkeys_"+string(dsName)+".json", &keys, func(obj interface{}) error {
@@ -342,4 +371,21 @@ func GetParametersByName(cfg TCCfg, paramName string) ([]tc.Parameter, error) {
 		return nil, errors.New("getting params name '" + paramName + "': " + err.Error())
 	}
 	return params, nil
+}
+
+func GetJobs(cfg TCCfg) ([]tc.Job, error) {
+	jobs := []tc.Job{}
+	err := GetCachedJSON(cfg, "jobs.json", &jobs, func(obj interface{}) error {
+		toJobs, reqInf, err := (*cfg.TOClient).GetJobs(nil, nil)
+		if err != nil {
+			return errors.New("getting jobs from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+		}
+		jobs := obj.(*[]tc.Job)
+		*jobs = toJobs
+		return nil
+	})
+	if err != nil {
+		return nil, errors.New("getting jobs: " + err.Error())
+	}
+	return jobs, nil
 }

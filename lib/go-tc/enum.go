@@ -76,6 +76,8 @@ const OriginTypeName = "ORG"
 
 const CacheGroupOriginTypeName = "ORG_LOC"
 
+const GlobalProfileName = "GLOBAL"
+
 func (c CacheName) String() string {
 	return string(c)
 }
