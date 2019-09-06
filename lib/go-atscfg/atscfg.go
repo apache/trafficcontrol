@@ -115,3 +115,9 @@ func trimParamUnderscoreNumSuffix(paramName string) string {
 	}
 	return paramName[:underscorePos]
 }
+
+const ConfigSuffix = ".config"
+
+func GetConfigFile(prefix string, xmlId string) string {
+	return prefix + xmlId + ConfigSuffix
+}

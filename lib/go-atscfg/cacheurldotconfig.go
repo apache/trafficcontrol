@@ -32,6 +32,25 @@ type CacheURLDS struct {
 	CacheURL      string
 }
 
+func DeliveryServicesToCacheURLDSes(dses []tc.DeliveryServiceNullable) map[tc.DeliveryServiceName]CacheURLDS {
+	sDSes := map[tc.DeliveryServiceName]CacheURLDS{}
+	for _, ds := range dses {
+		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil || ds.Active == nil {
+			log.Errorf("atscfg.DeliveryServicesToCacheURLDSes got DS %+v with nil values! Skipping!", ds)
+			continue
+		}
+		if !*ds.Active {
+			continue
+		}
+		sds := CacheURLDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
+		if ds.CacheURL != nil {
+			sds.CacheURL = *ds.CacheURL
+		}
+		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = sds
+	}
+	return sDSes
+}
+
 func MakeCacheURLDotConfig(
 	cdnName tc.CDNName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
@@ -42,8 +61,8 @@ func MakeCacheURLDotConfig(
 	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
 
 	if fileName == "cacheurl_qstring.config" { // This is the per remap drop qstring w cacheurl use case, the file is the same for all remaps
-		text += `http://([^?]+)(?:\?|\$)  http://\$1` + "\n"
-		text += `https://([^?]+)(?:\?|\$)  https://\$1` + "\n"
+		text += `http://([^?]+)(?:\?|$)  http://$1` + "\n"
+		text += `https://([^?]+)(?:\?|$)  https://$1` + "\n"
 		return text
 	}
 
@@ -57,17 +76,21 @@ func MakeCacheURLDotConfig(
 				continue
 			}
 			org := ds.OrgServerFQDN
+
 			scheme := "https://"
 			if !strings.HasPrefix(org, scheme) {
 				scheme = "http://"
 			}
-			fqdnPath := org
-			if len(scheme) < len(org) {
+
+			if !strings.HasPrefix(org, scheme) {
 				log.Errorln("MakeCacheURLDotConfig got ds '" + string(dsName) + "' origin '" + org + "' with no scheme! cacheurl.config will likely be malformed!")
-			} else {
-				fqdnPath = org[len(scheme):]
 			}
+
+			fqdnPath := strings.TrimPrefix(org, scheme)
+
 			text += scheme + `(` + fqdnPath + `/[^?]+)(?:\?|$)  ` + scheme + `$1` + "\n"
+
+			seenOrigins[ds.OrgServerFQDN] = struct{}{}
 		}
 		text = strings.Replace(text, `__RETURN__`, "\n", -1)
 		return text

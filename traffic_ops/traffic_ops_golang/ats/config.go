@@ -30,57 +30,12 @@ import (
  * under the License.
  */
 
-const configSuffix = ".config"
-
-const HeaderRewritePrefix = "hdr_rw_"
-const RegexRemapPrefix = "regex_remap_"
-const CacheUrlPrefix = "cacheurl_"
-
-const RemapFile = "remap.config"
-
-func GetConfigFile(prefix string, xmlId string) string {
-	return prefix + xmlId + configSuffix
-}
-
 func GetNameVersionString(tx *sql.Tx) (string, error) {
 	toolName, url, err := GetToolNameAndURL(tx)
 	if err != nil {
 		return "", errors.New("getting toolname and url parameters: " + err.Error())
 	}
 	return atscfg.GetNameVersionStringFromToolNameAndURL(toolName, url), nil
-}
-
-func GetToolNameAndURL(tx *sql.Tx) (string, string, error) {
-	qry := `
-SELECT
-  p.name,
-  p.value
-FROM
-  parameter p
-WHERE
-  (p.name = 'tm.toolname' OR p.name = 'tm.url') AND p.config_file = 'global'
-`
-	rows, err := tx.Query(qry)
-	if err != nil {
-		return "", "", errors.New("querying: " + err.Error())
-	}
-	defer rows.Close()
-
-	toolName := ""
-	url := ""
-	for rows.Next() {
-		name := ""
-		val := ""
-		if err := rows.Scan(&name, &val); err != nil {
-			return "", "", errors.New("scanning: " + err.Error())
-		}
-		if name == "tm.toolname" {
-			toolName = val
-		} else if name == "tm.url" {
-			url = val
-		}
-	}
-	return toolName, url, nil
 }
 
 // getCDNNameFromNameOrID returns the CDN name from a parameter which may be the name or ID.

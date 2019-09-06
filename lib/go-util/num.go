@@ -21,9 +21,9 @@ package util
 
 import (
 	"crypto/sha512"
-	"encoding/base64"
 	"encoding/binary"
 	"errors"
+	"sort"
 	"strconv"
 )
 
@@ -110,16 +110,24 @@ func BytesLenSplit(s []byte, n int) [][]byte {
 	return ss
 }
 
-func HashInts(ints []int) string {
-	if len(ints) == 0 {
-		return ""
+// HashInts returns a SHA512 hash of ints.
+// If sortIntsBeforeHashing, the ints are sorted before before hashing. Sorting is done in a copy, the input ints slice is not modified.
+func HashInts(ints []int, sortIntsBeforeHashing bool) []byte {
+	sortedInts := ints
+	if sortIntsBeforeHashing {
+		sortedInts := make([]int, 0, len(ints))
+		for _, in := range ints {
+			sortedInts = append(sortedInts, in)
+		}
+		sort.Ints(sortedInts)
 	}
-	hsh := sha512.New()
-	buf := make([]byte, binary.MaxVarintLen64)
-	for _, i := range ints {
-		wroteLen := binary.PutVarint(buf, int64(i))
-		hsh.Write(buf[:wroteLen])
+
+	buf := make([]byte, binary.MaxVarintLen64*len(sortedInts))
+	currBuf := buf
+	for _, i := range sortedInts {
+		n := binary.PutVarint(currBuf, int64(i))
+		currBuf = currBuf[n:]
 	}
-	bts := hsh.Sum(nil)
-	return base64.RawURLEncoding.EncodeToString(bts)
+	bts := sha512.Sum512(buf)
+	return bts[:]
 }
