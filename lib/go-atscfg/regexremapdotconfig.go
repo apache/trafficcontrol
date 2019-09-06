@@ -22,6 +22,7 @@ package atscfg
 import (
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -30,6 +31,29 @@ type CDNDS struct {
 	QStringIgnore int
 	CacheURL      string
 	RegexRemap    string
+}
+
+func DeliveryServicesToCDNDSes(dses []tc.DeliveryServiceNullable) map[tc.DeliveryServiceName]CDNDS {
+	sDSes := map[tc.DeliveryServiceName]CDNDS{}
+	for _, ds := range dses {
+		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil {
+			if ds.XMLID == nil {
+				log.Errorln("atscfg.DeliveryServicesToCDNDSes got unknown DS with nil values! Skipping!")
+			} else {
+				log.Errorln("atscfg.DeliveryServicesToCDNDSes got DS '" + *ds.XMLID + "' with nil values! Skipping!")
+			}
+			continue
+		}
+		sds := CDNDS{OrgServerFQDN: *ds.OrgServerFQDN, QStringIgnore: *ds.QStringIgnore}
+		if ds.RegexRemap != nil {
+			sds.RegexRemap = *ds.RegexRemap
+		}
+		if ds.CacheURL != nil {
+			sds.CacheURL = *ds.CacheURL
+		}
+		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = sds
+	}
+	return sDSes
 }
 
 func MakeRegexRemapDotConfig(
@@ -46,7 +70,8 @@ func MakeRegexRemapDotConfig(
 
 	ds, ok := dses[dsName]
 	if !ok {
-		return text // TODO warn? Perl doesn't
+		log.Errorln("MakeRegexRemapDotConfig: ds '" + dsName + "' not in dses, skipping!")
+		return text
 	}
 
 	text += ds.RegexRemap + "\n"

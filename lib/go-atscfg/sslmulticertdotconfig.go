@@ -32,6 +32,22 @@ type SSLMultiCertDS struct {
 	ExampleURLs []string
 }
 
+func DeliveryServicesToSSLMultiCertDSes(dses []tc.DeliveryServiceNullable) map[tc.DeliveryServiceName]SSLMultiCertDS {
+	sDSes := map[tc.DeliveryServiceName]SSLMultiCertDS{}
+	for _, ds := range dses {
+		if ds.Type == nil || ds.Protocol == nil || ds.XMLID == nil {
+			if ds.XMLID == nil {
+				log.Errorln("atscfg.DeliveryServicesToSSLMultiCertDSes got unknown DS with nil values! Skipping!")
+			} else {
+				log.Errorln("atscfg.DeliveryServicesToSSLMultiCertDSes got DS '" + *ds.XMLID + "' with nil values! Skipping!")
+			}
+			continue
+		}
+		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = SSLMultiCertDS{Type: *ds.Type, Protocol: *ds.Protocol, ExampleURLs: ds.ExampleURLs}
+	}
+	return sDSes
+}
+
 func MakeSSLMultiCertDotConfig(
 	cdnName tc.CDNName,
 	toToolName string, // tm.toolname global parameter (TODO: cache itself?)

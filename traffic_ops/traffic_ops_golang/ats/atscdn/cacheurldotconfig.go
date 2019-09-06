@@ -82,9 +82,12 @@ SELECT
   COALESCE(ds.cacheurl, '')
 FROM
   deliveryservice ds
+  JOIN deliveryservice_server dss on ds.id = dss.deliveryservice
 WHERE
   ds.cdn_id = (select id from cdn where name = $1)
+  AND ds.active = true
 `
+	// note the dss inner join is intentional, to remove dses with no servers
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, errors.New("querying: " + err.Error())

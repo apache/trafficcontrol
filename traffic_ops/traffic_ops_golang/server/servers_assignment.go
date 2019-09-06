@@ -27,10 +27,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/lib/pq"
 )
@@ -146,19 +146,19 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 		}
 		if xmlID.Valid && len(xmlID.String) > 0 {
 			//param := "hdr_rw_" + xmlID.String + ".config"
-			param := ats.GetConfigFile(ats.HeaderRewritePrefix, xmlID.String)
+			param := atscfg.GetConfigFile(atscfg.HeaderRewritePrefix, xmlID.String)
 			if edgeHeaderRewrite.Valid && len(edgeHeaderRewrite.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = ats.GetConfigFile(ats.RegexRemapPrefix, xmlID.String)
+			param = atscfg.GetConfigFile(atscfg.RegexRemapPrefix, xmlID.String)
 			if regexRemap.Valid && len(regexRemap.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = ats.GetConfigFile(ats.CacheUrlPrefix, xmlID.String)
+			param = atscfg.GetConfigFile(atscfg.CacheUrlPrefix, xmlID.String)
 			if cacheURL.Valid && len(cacheURL.String) > 0 {
 				insert = append(insert, param)
 			} else {
