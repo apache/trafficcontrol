@@ -124,20 +124,28 @@ func ProfileConfigFileFuncs() map[string]func(cfg TCCfg, serverNameOrID string) 
 
 func ServerConfigFileFuncs() map[string]func(cfg TCCfg, serverNameOrID string) (string, error) {
 	return map[string]func(cfg TCCfg, serverNameOrID string) (string, error){
-		"parent.config": GetConfigFileServerParentDotConfig,
+		"parent.config":   GetConfigFileServerParentDotConfig,
+		"cache.config":    GetConfigFileServerCacheDotConfig,
+		"ip_allow.config": GetConfigFileServerIPAllowDotConfig,
+		"hosting.config":  GetConfigFileServerHostingDotConfig,
+		"packages":        GetConfigFileServerPackages,
+		"chkconfig":       GetConfigFileServerChkconfig,
 	}
 }
 
 func GetConfigFileServer(cfg TCCfg, serverNameOrID string, fileName string) (string, int, error) {
 	log.Infoln("GetConfigFileServer server '" + serverNameOrID + "' fileName '" + fileName + "'")
+	txt := ""
+	err := error(nil)
 	if getCfgFunc, ok := ServerConfigFileFuncs()[fileName]; ok {
-		txt, err := getCfgFunc(cfg, serverNameOrID)
-		if err != nil {
-			return "", ExitCodeErrGeneric, err
-		}
-		return txt, ExitCodeSuccess, nil
+		txt, err = getCfgFunc(cfg, serverNameOrID)
+	} else {
+		txt, err = GetConfigFileServerUnknownConfig(cfg, serverNameOrID, fileName)
 	}
-	return GetConfigFileFromTrafficOps(cfg)
+	if err != nil {
+		return "", ExitCodeErrGeneric, err
+	}
+	return txt, ExitCodeSuccess, nil
 }
 
 func GetConfigFileFromTrafficOps(cfg TCCfg) (string, int, error) {

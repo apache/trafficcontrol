@@ -64,7 +64,7 @@ func GetHostingDotConfig(w http.ResponseWriter, r *http.Request) {
 	params := map[string]string{}
 	for name, vals := range multiParams {
 		if len(vals) == 0 {
-			log.Warnln("hosting config got multiple parameters for ")
+			log.Warnln("hosting config got no parameters for '" + name + "'")
 			continue
 		}
 		if len(vals) > 1 {
