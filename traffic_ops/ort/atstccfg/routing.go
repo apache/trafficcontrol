@@ -125,6 +125,7 @@ func ProfileConfigFileFuncs() map[string]func(cfg TCCfg, serverNameOrID string) 
 func ServerConfigFileFuncs() map[string]func(cfg TCCfg, serverNameOrID string) (string, error) {
 	return map[string]func(cfg TCCfg, serverNameOrID string) (string, error){
 		"parent.config":   GetConfigFileServerParentDotConfig,
+		"remap.config":    GetConfigFileServerRemapDotConfig,
 		"cache.config":    GetConfigFileServerCacheDotConfig,
 		"ip_allow.config": GetConfigFileServerIPAllowDotConfig,
 		"hosting.config":  GetConfigFileServerHostingDotConfig,

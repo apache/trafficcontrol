@@ -29,6 +29,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const CacheURLParameterConfigFile = "cacheurl.config"
+const CacheKeyParameterConfigFile = "cachekey.config"
+
 type RemapConfigDSData struct {
 	ID                       int
 	Type                     tc.DSType
