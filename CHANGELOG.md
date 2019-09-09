@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops now uses a consistent format for audit logs across all Go endpoints
 
 ### Changed
+- Traffic Router:  TR will now allow *STEERING target DSs to have RGB enabled. (fixes #3910)
 - Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
   - validates modulus of private and public keys
   - validates current timestamp falls within the certificate date bracket
