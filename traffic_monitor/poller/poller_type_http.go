@@ -107,21 +107,26 @@ func httpPoll(ctxI interface{}, url string, host string, pollID uint64) ([]byte,
 	req.Host = host
 	startReq := time.Now()
 	resp, err := ctx.Client.Do(req)
-	reqEnd := time.Now()
-	reqTime := reqEnd.Sub(startReq) // note this is essentially the roundtrip, not the body transfer time.
 	if err != nil {
+		reqEnd := time.Now()
+		reqTime := reqEnd.Sub(startReq) // note this is the time to transfer the entire body, not just the roundtrip
 		return nil, reqEnd, reqTime, fmt.Errorf("id %v url %v fetch error: %v", ctx.PollerID, url, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, reqEnd, reqTime, fmt.Errorf("id %v url %v fetch error: bad HTTP status: %v", ctx.PollerID, url, resp.StatusCode)
+		reqEnd := time.Now()
+		reqTime := reqEnd.Sub(startReq) // note this is the time to transfer the entire body, not just the roundtrip
+    return nil, reqEnd, reqTime, fmt.Errorf("id %v url %v fetch error: bad HTTP status: %v", ctx.PollerID, url, resp.StatusCode)
 	}
 
 	bts, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		reqEnd := time.Now()
+		reqTime := reqEnd.Sub(startReq) // note this is the time to transfer the entire body, not just the roundtrip
 		return nil, reqEnd, reqTime, fmt.Errorf("id %v url %v fetch error: reading body: %v", ctx.PollerID, url, err)
 	}
-
+	reqEnd := time.Now()
+	reqTime := reqEnd.Sub(startReq) // note this is the time to transfer the entire body, not just the roundtrip
 	return bts, reqEnd, reqTime, nil
 }
