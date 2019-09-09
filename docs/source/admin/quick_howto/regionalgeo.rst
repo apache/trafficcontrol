@@ -58,9 +58,9 @@ Configure Regional Geo-blocking (RGB)
 
 #. Add :abbr:`RGB (Regional Geographic-based Blocking)` :term:`Parameters` in Traffic Portal to the :term:`Delivery Service`'s Traffic Router(s)'s :term:`Profile`\ (s). The :ref:`parameter-config-file` value should be set to ``CRConfig.json``, and the following two :term:`Parameter` :ref:`parameter-name`/:ref:`parameter-value` pairs need to be specified:
 
-	``regional_geoblocking.polling.url``
+	``regional_geoblock.polling.url``
 		The URL of the RGB configuration file. Traffic Router will fetch the file from this URL using an HTTP ``GET`` request.
-	``regional_geoblocking.polling.interval``
+	``regional_geoblock.polling.interval``
 		The interval on which Traffic Router polls the :abbr:`RGB (Regional Geographic-based Blocking)` configuration file.
 
 	.. figure:: regionalgeo/01.png
