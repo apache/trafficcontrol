@@ -27,15 +27,15 @@ https://github.com/apache/trafficcontrol/issues/2391
 *Why* is this necessary?
 *How* will this be used?
 -->
-As an operations user, I need the ability to easily compare parameters across 2 profiles and easily add or remove parameters from each profile. Currently in Traffic Portal, you can compare 2 profiles but it simply involves a comparison of the JSON returned from calls to GET /api/profiles/:profileid_1 and GET /api/profiles/:profileid_2. Any reconciliation of the 2 profiles would involve manually noting the differences and then navigating to either profile and making the necessary changes. This is not the best user experience. It is time-consuming and is prone to error.
+As an operations user, I need the ability to easily compare parameters across 2 profiles and easily add or remove parameters from each profile. Currently in Traffic Portal, you can compare 2 profiles but it simply involves a comparison of the JSON returned from calls to GET /api/profiles/:profileid_1 and GET /api/profiles/{{profileid_2}}. Any reconciliation of the 2 profiles would involve manually noting the differences and then navigating to either profile and making the necessary changes. This is not the best user experience. It is time-consuming and is prone to error.
 
 ## Proposed Change
 <!--
 *How* will this be implemented (at a high level)?
 -->
-The current view in Traffic Portal (https://tp.domain.com/#!/profiles/compare/:profile_id_1/:profile_id_2) can be redesigned to list a superset of all parameters across the 2 profiles and show their profile membership side-by-side. It can also provide the ability to remove or add parameters to each profile easily and allow the user to persist the final state of both profiles (or reset to the original state). As the user makes changes, a visible indicater can be provided (i.e. red checkboxes) to show what has been changed.
+The current view in Traffic Portal (`https://tp.domain.com/#!/profiles/compare/{{profile_id_1}}/{{profile_id_2}}`) can be redesigned to list a superset of all parameters across the 2 profiles and show their profile membership side-by-side. It can also provide the ability to remove or add parameters to each profile easily and allow the user to persist the final state of both profiles (or reset to the original state). As the user makes changes, a visible indicater can be provided (i.e. red checkboxes) to show what has been changed.
 
-![alt text](img/profile-param-compare-manage.png "Mockup of proposed profile comparison view")
+![](img/profile-param-compare-manage.png "Mockup of proposed profile comparison view")
 
 ### Traffic Portal Impact
 <!--
@@ -45,7 +45,7 @@ Will entirely new pages/views be necessary?
 Will a new field be added to an existing form?
 How will the user interact with the new UI changes?
 -->
-Enhancement to https://tp.domain.com/#!/profiles/compare/:profile_id_1/:profile_id_2 as discussed in the "Proposed Change" section. 
+Enhancement to `https://tp.domain.com/#!/profiles/compare/{{profile_id_1}}/{{profile_id_2}}` as discussed in the "Proposed Change" section. 
 
 ### Traffic Ops Impact
 <!--
@@ -64,7 +64,7 @@ What fields are required or optional?
 What are the defaults for optional fields?
 What are the validation constraints?
 -->
-I don't anticipate there being any TO API changes whatsoever. The current GET /api/profiles/:profileid API endpoint should provide the required information for this new view.
+I don't anticipate there being any TO API changes whatsoever. The current GET /api/profiles/{{profileid}} API endpoint should provide the required information for this new view.
 
 
 #### Client Impact
