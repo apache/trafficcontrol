@@ -40,6 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats/atsprofile"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroupparameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachesstats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnfederation"
@@ -119,7 +120,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPost, `cachegroups/{id}/queue_update$`, cachegroup.QueueUpdates, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `cachegroups/{id}/deliveryservices/?$`, cachegroup.DSPostHandler, auth.PrivLevelOperations, Authenticated, nil},
 
-		{1.1, http.MethodGet, `cachegroups/{id}/parameters/?(\.json)?$`, api.ReadHandler(&cachegroup.TOCacheGroupParameter{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		//CacheGroup Parameters: CRUD
+		{1.1, http.MethodGet, `cachegroups/{id}/parameters/?(\.json)?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `cachegroups/{id}/unassigned_parameters/?(\.json)?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupUnassignedParameter{}), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//CDN
 		{1.1, http.MethodGet, `cdns/name/{name}/sslkeys/?(\.json)?$`, cdn.GetSSLKeys, auth.PrivLevelAdmin, Authenticated, nil},

@@ -120,7 +120,6 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 }
 
 func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {
-	m := make(map[string]interface{})
 	var criteria string
 
 	var criteriaArgs []string
@@ -135,7 +134,6 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 			if err != nil {
 				errs = append(errs, errors.New(key+" "+err.Error()))
 			} else {
-				m[key] = urlValue
 				criteria = colInfo.Column + "=:" + key
 				criteriaArgs = append(criteriaArgs, criteria)
 				queryValues[key] = urlValue
@@ -335,4 +333,16 @@ func GetCDNs(tx *sql.Tx) (map[tc.CDNName]struct{}, error) {
 		cdns[cdn] = struct{}{}
 	}
 	return cdns, nil
+}
+
+// GetCacheGroupNameFromID Get Cache Group name from a given ID
+func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying cachegroup ID: " + err.Error())
+	}
+	return tc.CacheGroupName(name), true, nil
 }
