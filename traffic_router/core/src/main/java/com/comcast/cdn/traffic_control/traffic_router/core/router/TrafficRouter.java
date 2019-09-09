@@ -750,10 +750,7 @@ public class TrafficRouter {
 				track.setResultDetails(ResultDetails.DS_TLS_MISMATCH);
 				return null;
 			}
-			if (ds.isRegionalGeoEnabled()) {
-				LOGGER.error("Regional Geo Blocking is not supported with multi-route delivery services.. skipping " + entryDeliveryService.getId() + "/" + ds.getId());
-				toBeRemoved.add(steeringResult);
-			} else if (!ds.isAvailable()) {
+			if (!ds.isAvailable()) {
 				toBeRemoved.add(steeringResult);
 			}
 
