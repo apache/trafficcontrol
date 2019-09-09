@@ -36,7 +36,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apiriak"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/asn"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats/atscdn"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats/atsprofile"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats/atsserver"
@@ -386,7 +385,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// ATS config files
 
-		{1.1, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/?(\.json)?$`, ats.GetConfigMetaData, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/regex_revalidate.config/?(\.json)?$`, atscdn.GetRegexRevalidateDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_mid_{xml-id}.config/?(\.json)?$`, atscdn.GetMidHeaderRewriteDotConfig, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_{xml-id}.config/?(\.json)?$`, atscdn.GetEdgeHeaderRewriteDotConfig, auth.PrivLevelOperations, Authenticated, nil},

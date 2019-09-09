@@ -965,3 +965,15 @@ WHERE
 	}
 	return toolName, url, nil
 }
+
+// GetFirstScopeParameter returns the value of the arbitrarily-first parameter with the name 'scope' and the given config file, whether a parameter was found, and any error.
+func GetFirstScopeParameter(tx *sql.Tx, cfgFile string) (string, bool, error) {
+	v := ""
+	if err := tx.QueryRow(`SELECT p.value FROM parameter p WHERE p.config_file = $1 AND p.name = 'scope'`, cfgFile).Scan(&v); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying first scope parameter: " + err.Error())
+	}
+	return v, true, nil
+}
