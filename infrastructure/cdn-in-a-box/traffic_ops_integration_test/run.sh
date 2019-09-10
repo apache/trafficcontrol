@@ -39,4 +39,10 @@ done
 # if [[ -x ]]; then;./config.sh; done          traffic_ops/run-go.sh
 source config.sh
 
-./traffic_ops_integration_test -test.v -cfg=traffic-ops-test.conf 2>&1 | ./go-junit-report --package-name=golang.test.toapi --set-exit-code > /junit/golang.test.toapi.xml && chmod 777 -R /junit && cat /junit/golang.test.toapi.xml
+PGPASSWORD="$DB_USER_PASS" pg_dump --blobs --no-owner "--host=$DB_SERVER" "--port=$DB_PORT" "--username=$DB_USER" traffic_ops > dbdump.manual
+to-get api/1.4/dbdump > dbdump.api
+
+diff dbdump.api dbdump.manual)
+
+./traffic_ops_integration_test -test.v -cfg=traffic-ops-test.conf 2>&1 | ./go-junit-report --package-name=golang.test.toapi --set-exit-code > /junit/golang.test.toapi.xml && find /junit -type 'f' | xargs chmod 755 && cat /junit/golang.test.toapi.xml
+sleep 8000

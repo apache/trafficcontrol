@@ -36,7 +36,7 @@ RUN go get -u github.com/jstemmer/go-junit-report
 RUN cd /go/src/github.com/jstemmer/go-junit-report && go build
 
 FROM debian:stretch
-RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools vim && apt-get clean
+RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools postgresql-client && apt-get clean
 
 # MANIFEST
 # run.sh                        (wait on TO, then run bin)
