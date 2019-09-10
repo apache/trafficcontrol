@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfileParametersController = function(profile, parameters, $controller, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService) {
+var TableProfileParametersController = function(profile, parameters, $controller, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService, messageModel) {
 
 	// extends the TableParametersController to inherit common methods
 	angular.extend(this, $controller('TableParametersController', { parameters: parameters, $scope: $scope }));
@@ -45,9 +45,10 @@ var TableProfileParametersController = function(profile, parameters, $controller
 	};
 
 	var linkProfileParameters = function(paramIds) {
-		profileParameterService.linkProfileParameters(profile.id, paramIds)
+		profileParameterService.linkProfileParameters(profile, paramIds)
 			.then(
-				function() {
+				function(result) {
+					messageModel.setMessages(result.data.alerts, false);
 					$scope.refresh(); // refresh the profile parameters table
 				}
 			);
@@ -188,5 +189,5 @@ var TableProfileParametersController = function(profile, parameters, $controller
 
 };
 
-TableProfileParametersController.$inject = ['profile', 'parameters', '$controller', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService'];
+TableProfileParametersController.$inject = ['profile', 'parameters', '$controller', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService', 'messageModel'];
 module.exports = TableProfileParametersController;

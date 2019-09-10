@@ -183,6 +183,13 @@ table {
   margin-right: 5px;
 }
 
+input[type="checkbox"].dirty {
+  -moz-box-shadow:    inset 0 0 10px red;
+  -webkit-box-shadow: inset 0 0 10px red;
+  box-shadow:         inset 0 0 10px red;
+}
+
+
 
 
 
