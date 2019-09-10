@@ -107,7 +107,7 @@ func GetConfigFileServerHostingDotConfig(cfg TCCfg, serverNameOrID string) (stri
 		serverIDs = append(serverIDs, sv.ID)
 	}
 
-	dsServers, err := GetDeliveryServiceServers(cfg, serverIDs)
+	dsServers, err := GetDeliveryServiceServers(cfg, nil, serverIDs)
 	if err != nil {
 		return "", errors.New("getting delivery service servers: " + err.Error())
 	}
