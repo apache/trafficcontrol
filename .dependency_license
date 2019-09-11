@@ -35,6 +35,7 @@ RobotoSlab-Regular\.ttf$, Apache
 traffic_monitor_config\.js$, Apache # Actually JSON with a specific format.
 CrStates$, Apache # JSON with a specific format.
 ^docs/.*\.(png|jpe?g|ico|gif)$, Apache
+^blueprints/.*\.(png|jpe?g|ico|gif)$, Apache
 favicon.(ico|png)$, Apache
 ^traffic_ops/experimental/goto/testFiles/, Apache
 cron\.d/[^/]*$, Apache
