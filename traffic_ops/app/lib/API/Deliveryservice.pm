@@ -1131,7 +1131,7 @@ sub get_deliveryservices_by_userId {
 					"geoProvider"          => $row->geo_provider,
 					"globalMaxMbps"        => $row->global_max_mbps,
 					"globalMaxTps"         => $row->global_max_tps,
-					"fqPacingRate"         => $row->fq_pacing_rate,    
+					"fqPacingRate"         => $row->fq_pacing_rate,
 					"httpBypassFqdn"       => $row->http_bypass_fqdn,
 					"id"                   => $row->id,
 					"infoUrl"              => $row->info_url,

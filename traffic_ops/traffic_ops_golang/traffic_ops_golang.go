@@ -75,7 +75,7 @@ func main() {
 
 	cfg, errsToLog, blockStart := config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName, version)
 	for _, err := range errsToLog {
-		log.Errorln(err)
+		fmt.Fprintf(os.Stderr, "Loading Config: %v\n", err)
 	}
 	if blockStart {
 		os.Exit(1)
@@ -86,7 +86,7 @@ func main() {
 		for _, err := range errsToLog {
 			fmt.Println(err)
 		}
-		return
+		os.Exit(1)
 	}
 	for _, err := range errsToLog {
 		log.Warnln(err)
@@ -97,7 +97,7 @@ func main() {
 	err := auth.LoadPasswordBlacklist("app/conf/invalid_passwords.txt")
 	if err != nil {
 		log.Errorf("loading password blacklist: %v\n", err)
-		return
+		os.Exit(1)
 	}
 
 	sslStr := "require"
@@ -108,7 +108,7 @@ func main() {
 	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s&fallback_application_name=trafficops", cfg.DB.User, cfg.DB.Password, cfg.DB.Hostname, cfg.DB.DBName, sslStr))
 	if err != nil {
 		log.Errorf("opening database: %v\n", err)
-		return
+		os.Exit(1)
 	}
 	defer db.Close()
 
@@ -135,7 +135,7 @@ func main() {
 
 	if err := routing.RegisterRoutes(routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins}); err != nil {
 		log.Errorf("registering routes: %v\n", err)
-		return
+		os.Exit(1)
 	}
 
 	plugins.OnStartup(plugin.StartupData{Data: plugin.Data{SharedCfg: cfg.PluginSharedConfig, AppCfg: cfg}})
