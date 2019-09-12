@@ -16,10 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import java.io.File;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -358,7 +355,12 @@ public final class RegionalGeo {
         if (result.getType() == DENIED) {
             routeResult.setResponseCode(result.getHttpResponseCode());
         } else {
-            routeResult.addUrl(new URL(createRedirectURIString(httpRequest, deliveryService, cache, result)));
+                final String redirectURIString = createRedirectURIString(httpRequest, deliveryService, cache, result);
+                if(!"Denied".equals(redirectURIString)){
+                    routeResult.addUrl(new URL(redirectURIString));
+                }else{
+                    LOGGER.warn("RegionalGeo: this needs a better error message, createRedirectURIString returned denied");
+                }
         }
     }
 
@@ -404,7 +406,7 @@ public final class RegionalGeo {
             return regionalGeoResult.getUrl();
         }
 
-        return null; // DENIED
+        return "Denied"; // DENIED
     }
 }
 
