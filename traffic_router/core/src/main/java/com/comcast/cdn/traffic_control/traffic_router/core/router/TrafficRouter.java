@@ -551,7 +551,6 @@ public class TrafficRouter {
 		final String steeringHash = buildPatternBasedHashString(entryDeliveryService.getConsistentHashRegex(), request.getPath());
 		for (final SteeringResult steeringResult : steeringResults) {
 			final DeliveryService ds = steeringResult.getDeliveryService();
-			// Pattern based consistent hashing
 			List<Cache> caches = selectCaches(request, ds, track);
 
 			// child Delivery Services can use their query parameters
@@ -575,7 +574,7 @@ public class TrafficRouter {
 				}
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
 				if (ds.isRegionalGeoEnabled()) {
-					RegionalGeo.enforce(this, request,ds, cache, routeResult, track);
+					RegionalGeo.enforce(this, request, ds, cache, routeResult, track);
 					return routeResult;
 				}
 				steeringResult.setCache(cache);
