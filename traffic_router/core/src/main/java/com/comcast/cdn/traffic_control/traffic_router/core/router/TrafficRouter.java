@@ -551,7 +551,6 @@ public class TrafficRouter {
 		final String steeringHash = buildPatternBasedHashString(entryDeliveryService.getConsistentHashRegex(), request.getPath());
 		for (final SteeringResult steeringResult : steeringResults) {
 			final DeliveryService ds = steeringResult.getDeliveryService();
-
 			List<Cache> caches = selectCaches(request, ds, track);
 
 			// child Delivery Services can use their query parameters
@@ -574,6 +573,10 @@ public class TrafficRouter {
 					}
 				}
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
+				if (ds.isRegionalGeoEnabled()) {
+					RegionalGeo.enforce(this, request, ds, cache, routeResult, track);
+					return routeResult;
+				}
 				steeringResult.setCache(cache);
 				selectedCaches.add(cache);
 			} else {
@@ -750,10 +753,7 @@ public class TrafficRouter {
 				track.setResultDetails(ResultDetails.DS_TLS_MISMATCH);
 				return null;
 			}
-			if (ds.isRegionalGeoEnabled()) {
-				LOGGER.error("Regional Geo Blocking is not supported with multi-route delivery services.. skipping " + entryDeliveryService.getId() + "/" + ds.getId());
-				toBeRemoved.add(steeringResult);
-			} else if (!ds.isAvailable()) {
+			if (!ds.isAvailable()) {
 				toBeRemoved.add(steeringResult);
 			}
 

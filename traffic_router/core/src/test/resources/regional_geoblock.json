@@ -49,6 +49,17 @@
                 "184.66.16.1/22"
             ],
             "urlRegex": ".*live4"
+        },
+        {
+            "redirectUrl": "http://example.com/redirect_https",
+            "deliveryServiceId": "ds-geoblock-redirect-https",
+            "geoLocation": {
+                "excludePostalCode": [
+                    "V5G",
+                    "M7A"
+                ]
+            },
+            "urlRegex": ".*httpsredirect"
         }
     ],
     "customer": "CU",

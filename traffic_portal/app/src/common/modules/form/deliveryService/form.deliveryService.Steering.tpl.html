@@ -442,6 +442,25 @@ under the License.
                             </aside>
                         </div>
                     </div>
+                     <div class="form-group" ng-class="{'has-error': hasError(routingConfig.regionalGeoBlocking), 'has-feedback': hasError(routingConfig.regionalGeoBlocking)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="regionalGeoBlocking">Regional Geoblocking *<div class="helptooltip">
+                            <div class="helptext">
+                                Define regional geo-blocking rules for Delivery Services in a JSON format and set this to 'Enabled' to use "Regional Geoblocking". <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/regionalgeo.html" target="_blank">See Regional Geo-blocking</a>
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="regionalGeoBlocking" name="regionalGeoBlocking" class="form-control" ng-model="deliveryService.regionalGeoBlocking" required>
+                                <option ng-value="true">Enabled</option>
+                                <option ng-value="false" selected>Disabled</option>
+                            </select>
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.regionalGeoBlocking, 'required')">Required</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.regionalGeoBlocking != dsCurrent.regionalGeoBlocking">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.regionalGeoBlocking ? 'Enabled' : 'Disabled'}}</pre>
+                            </aside>
+                        </div>
+                    </div>
                 </ng-form>
             </fieldset>
             <div class="modal-footer">
