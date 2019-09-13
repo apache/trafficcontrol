@@ -355,12 +355,12 @@ public final class RegionalGeo {
         if (result.getType() == DENIED) {
             routeResult.setResponseCode(result.getHttpResponseCode());
         } else {
-                final String redirectURIString = createRedirectURIString(httpRequest, deliveryService, cache, result);
-                if(!"Denied".equals(redirectURIString)){
-                    routeResult.addUrl(new URL(redirectURIString));
-                }else{
-                    LOGGER.warn("RegionalGeo: this needs a better error message, createRedirectURIString returned denied");
-                }
+            final String redirectURIString = createRedirectURIString(httpRequest, deliveryService, cache, result);
+            if(!"Denied".equals(redirectURIString)){
+                routeResult.addUrl(new URL(redirectURIString));
+            }else{
+                LOGGER.warn("RegionalGeo: this needs a better error message, createRedirectURIString returned denied");
+            }
         }
     }
 
