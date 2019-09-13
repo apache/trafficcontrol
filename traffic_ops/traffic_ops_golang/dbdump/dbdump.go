@@ -66,6 +66,7 @@ func DBDump(w http.ResponseWriter, r *http.Request) {
 		Args: []string{
 			"--blobs",
 			"--no-owner",
+			"--format=c",
 			fmt.Sprintf("--host=%s", conf.Hostname),
 			fmt.Sprintf("--port=%s", conf.Port),
 			fmt.Sprintf("--username=%s", conf.User),
@@ -90,7 +91,7 @@ func DBDump(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(tc.ContentType, "application/sql")
+	w.Header().Set(tc.ContentType, "application/octet-stream;type=pg_dump-data")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename()))
 	if out[len(out)-1] != '\n' {
 		out = append(out, '\n')
