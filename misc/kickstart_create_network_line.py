@@ -22,6 +22,8 @@
 import os
 import re
 
+from __future__ import print_function
+
 global TO_LOG
 # This "logs" to stdout which is captured during kickstart
 TO_LOG = True
@@ -54,7 +56,7 @@ cfg_line = re.compile("\s*(?P<key>.*?)=(?P<value>.*)\s*$")
 
 iface_speed = 'auto'
 
-restring="".join([iface_dir, "(?P<iface>.*)/speed"])
+restring = iface_dir + "(?P<iface>.*)/speed"
 iface_search = re.compile(restring)
 
 
@@ -226,10 +228,6 @@ else:
 if "DHCP" not in nc:
     nc['DHCP']='no'
 
-# This should be set to no in the config file, but that could change:
-if "DHCP" not in nc:
-    nc['DHCP']='no'
-
 net_devs = find_usable_net_devs(iface_dir)
 bondable_iface, iface_problems = useable_interfaces(net_devs, nc, iface_speed)
 
@@ -238,13 +236,13 @@ if bondable_iface and len(bondable_iface) > 1:
     dev_list = bondable_iface
     dev_str = dev_list.pop()
     for d in dev_list:
-        dev_str=",".join([dev_str, d])
+        dev_str = dev_str + "," + d
 else:
     dev_str = bondable_iface[0]
 
 
 if ('y' in nc['NETWORKING_IPV6'].lower()) and re.search(":",nc['IPV6ADDR']):
-    IPV6 = "".join(["--ipv6=", nc["IPV6ADDR"]])
+    IPV6 = "--ipv6=" + nc["IPV6ADDR"]
 else:
     if 'y' in nc['NETWORKING_IPV6'].lower():
         if iface_problems is False:
@@ -255,7 +253,7 @@ else:
         if iface_problems is False:
             iface_problems = "IPv6 is disabled, but IPV6ADDR was set to {0}".format(nc['IPV6ADDR'])
         else:
-            iface_problems = " ".join([iface_problems, "and IPv6 is disabled, but IPV6ADDR was set to", nc['IPV6ADDR']])
+            iface_problems = "{0} and IPv6 is disabled, but IPV6ADDR was set to {1}".format(iface_problems, nc['IPV6ADDR'])
     IPV6 = "--noipv6"
 
 if "bond" in nc['BOND_DEVICE'].lower():
