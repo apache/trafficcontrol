@@ -101,6 +101,7 @@ jquery\.tree\.min\.css$, MIT
 jquery\.dataTables\..*\.(css|js)$, MIT
 github\.com/basho/backoff/.*, MIT
 github\.com/dchest/siphash/.*, CC0
+github\.com/pkg/errors\..*, BSD
 traffic_portal/app/src/assets/js/chartjs/angular-chart\..*, BSD
 traffic_portal/app/src/assets/css/jsonformatter\..*, Apache
 traffic_portal/app/src/assets/js/jsonformatter\..*, Apache
