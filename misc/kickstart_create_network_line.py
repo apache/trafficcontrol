@@ -108,7 +108,7 @@ def find_usable_net_devs(location):
         if speed  <= 0:
             add = False
         if TO_LOG:
-            print (add, dev)
+            print(add, dev)
         if add:
             if speed in ifaces:
                 this_speed = ifaces[speed]
@@ -118,9 +118,9 @@ def find_usable_net_devs(location):
                 ifaces[speed]=[dev]
         else:
             bad_ifaces[dev] = speed
-    print ("We find these interfaces have link and might be useful:", ifaces)
+    print("We find these interfaces have link and might be useful:", ifaces)
     if TO_LOG:
-        print ("And these aren't useful:", bad_ifaces)
+        print("And these aren't useful:", bad_ifaces)
     return ifaces
 
 
@@ -129,11 +129,11 @@ def useable_interfaces(net_devs, nc, iface_speed):
     iface_list = False
     notes = False
     if TO_LOG:
-        print ("in usable interfaces")
+        print("in usable interfaces")
 
     if "bond" not in nc['BOND_DEVICE'].lower():
         if TO_LOG:
-            print ("useable interfaces if not", nc['BOND_DEVICE'])
+            print("useable interfaces if not", nc['BOND_DEVICE'])
         #  Not doing a bond, so  we check to make sure the requested device,
         #  nc['BOND_DEVICE'], is in the list of devices with carrier:
         if nc['BOND_DEVICE'] == '""':
@@ -141,20 +141,20 @@ def useable_interfaces(net_devs, nc, iface_speed):
             # network settings.
             # First we check how many net_devs we have:
             if TO_LOG:
-                print ("nc['BOND_DEVICE']=''", len(net_devs), net_devs)
+                print("nc['BOND_DEVICE']=''", len(net_devs), net_devs)
             if len(net_devs) == 1: # This is a dict of speed: devices
                 speeds = net_devs.keys()
                 speeds.sort(reverse=True)
                 speed = speeds[0]
                 possibles = net_devs[speed]
                 if TO_LOG:
-                    print (possibles)
+                    print(possibles)
                 # At this point we have options, but no information, so:
                 notes = "No device in the configuration file and multiple devices found. Picking the first"
                 iface_list = [possibles[0]]
         else:
             if TO_LOG:
-                print ("inner else")
+                print("inner else")
             for speed in net_devs:
                 if nc['BOND_DEVICE'] in net_devs[speed]:
                     iface_list = [nc['BOND_DEVICE']]
@@ -181,21 +181,21 @@ def useable_interfaces(net_devs, nc, iface_speed):
                 iface_list = net_devs[i]
                 break
         if TO_LOG:
-            print ("iface list:", iface_list)
+            print("iface list:", iface_list)
         # if iface_list is still false, and we are requesting a bond, we will
         # want the fastest interface with link:
         if (iface_list == False) and ("bond" in nc['BOND_DEVICE'].lower()):
                 if TO_LOG:
-                    print (len(net_devs), net_devs, i)
+                    print(len(net_devs), net_devs, i)
                 if len(net_devs) == 0:
                     iface_list = net_devs
                     notes = "no devices found for the bond. Will not have network after reboot"
                 else:
                     iface_list = net_devs[fastest] # This is assuming that we'll want to bond the fastest interaface.
                     if TO_LOG:
-                        print ("dev:", net_devs[fastest])
+                        print("dev:", net_devs[fastest])
     if TO_LOG:
-        print (iface_list, notes)
+        print(iface_list, notes)
     return iface_list, notes
 
 
@@ -261,14 +261,14 @@ if "bond" in nc['BOND_DEVICE'].lower():
 elif nc['BOND_DEVICE'] in dev_str:
     bond_stuff = "--device={0}".format(nc["BOND_DEVICE"])
 elif bondable_iface and nc['BOND_DEVICE'] == '""' :
-    print ("**")
+    print("**")
     print("No device (BOND_DEVICE) specified it he config, found", bondable_iface, "with link, using it.")
     print("**")
     bond_stuff = "--device={0}".format(bondable_iface[0])
 else:
-    print ("**")
-    print (nc["BOND_DEVICE"], "not found within $usable_devices, setting anyway, this probably won't work")
-    print ("**")
+    print("**")
+    print(nc["BOND_DEVICE"], "not found within $usable_devices, setting anyway, this probably won't work")
+    print("**")
     bond_stuff = "--device={0}".format(nc["BOND_DEVICE"])
 
 if 'yes' in nc['DHCP'].lower() or not bondable_iface:
