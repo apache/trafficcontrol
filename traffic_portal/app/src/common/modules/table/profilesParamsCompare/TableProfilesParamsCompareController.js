@@ -129,8 +129,8 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 	};
 
 	$scope.selectedParams = profilesParams.map(function(param) {
-		let isAssignedToProfile1 = profile1.params.some(function(pp){return pp.id === param.id}),
-			isAssignedToProfile2 = profile2.params.some(function(pp){return pp.id === param.id});
+		let isAssignedToProfile1 = profile1.params ? profile1.params.some(function(pp){return pp.id === param.id}) : false,
+			isAssignedToProfile2 = profile2.params ? profile2.params.some(function(pp){return pp.id === param.id}) : false;
 
 		if (isAssignedToProfile1) {
 			param['origSelected1'] = true;
