@@ -139,7 +139,7 @@ to_pi_openssl_common_name: "{{ ansible_hostname }}"
 to_pi_openssl_rsa_passphrase:
 
 # --- postinstall profiles.json
-to_pi_cdn_name: MKGA
+to_pi_cdn_name: "{{ hostvars[groups['traffic_router'] | first].cdn | default('mkga') | lower }}"
 to_pi_health_polling_interval: "8000"
 to_pi_dns_subdomain: "{{ to_pi_cdn_name }}.{{ ansible_domain }}"
 to_pi_soa_admin: "traffic_ops"

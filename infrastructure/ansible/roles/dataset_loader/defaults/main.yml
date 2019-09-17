@@ -60,7 +60,7 @@ dl_grove_ram_cache_size_mb: "{{ dl_grove_ram_cache_size_percentage / 100 * ( dl_
 # TO CDN
 dl_ds_merged_cdns: "{{ dl_ds_default_cdns }}"
 dl_ds_default_cdns:
-  MKGA:
+  mkga:
     name: Kabletown2.0
     dnssecEnabled: false
 
