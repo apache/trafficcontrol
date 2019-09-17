@@ -20,6 +20,7 @@ package cachesstats
  */
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -66,7 +67,14 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 		if err != nil {
 			return nil, errors.New("monitor forward proxy '" + monitorForwardProxy + "' in parameter '" + MonitorProxyParameter + "' not a URI: " + err.Error())
 		}
-		client = &http.Client{Timeout: MonitorRequestTimeout, Transport: &http.Transport{Proxy: http.ProxyURL(proxyURI)}}
+		clientTransport := &http.Transport{Proxy: http.ProxyURL(proxyURI)}
+		if proxyURI.Scheme == "https" {
+			// TM does not support HTTP/2 and golang when connecting to https will use HTTP/2 by default causing a conflict
+			// The result will be an unsupported scheme error
+			// Setting TLSNextProto to any empty map will disable using HTTP/2 per https://golang.org/src/net/http/doc.go
+			clientTransport.TLSNextProto = make(map[string]func(authority string, c *tls.Conn) http.RoundTripper)
+		}
+		client = &http.Client{Timeout: MonitorRequestTimeout, Transport: clientTransport}
 	}
 
 	cacheData, err := getCacheData(tx)
