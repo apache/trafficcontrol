@@ -39,7 +39,16 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 		}
 	};
 
-	let confirmUpdateProfiles = function() {
+	$scope.dirty = false;
+
+	$scope.profile1 = profile1;
+	$scope.profile2 = profile2;
+	$scope.profilesParams = profilesParams;
+
+	$scope.selectedProfile1Params = [];
+	$scope.selectedProfile2Params = [];
+
+	$scope.confirmUpdateProfiles = function() {
 		// ok, this method is fun :)
 		let params = {
 			title: 'Modify ' + profile1.name + ' parameters',
@@ -86,22 +95,26 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 								let promises = [];
 
 								if (updateProfile1) {
-									promises.push(profileParameterService.linkProfileParameters(profile1, _.pluck($scope.selectedProfile1Params, 'id')));
+									const selectedProfile1ParamIds = $scope.selectedProfile1Params.map(function(pp){return pp.id;});
+									promises.push(profileParameterService.linkProfileParameters(profile1, selectedProfile1ParamIds));
 								}
 
 								if (updateProfile2) {
-									promises.push(profileParameterService.linkProfileParameters(profile2, _.pluck($scope.selectedProfile2Params, 'id')));
+									const selectedProfile2ParamIds = $scope.selectedProfile2Params.map(function(pp){return pp.id;});
+									promises.push(profileParameterService.linkProfileParameters(profile2, selectedProfile2ParamIds));
 								}
 
 								if (promises.length > 0) {
 									$q.all(promises)
 										.then(
 											function(result) {
-												let messages = [];
+												const messages = new Set();
 												for (let i = 0; i < result.length; i++) {
-													messages = _.union(messages, result[i].data.alerts);
+													for (let j = 0; j < result[i].data.alerts.length; j++) {
+														messages.add(result[i].data.alerts[j]);
+													};
 												};
-												messageModel.setMessages(messages, false);
+												messageModel.setMessages(Array.from(messages), false);
 											})
 										.finally(
 											function() {
@@ -115,18 +128,9 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 			);
 	};
 
-	$scope.dirty = false;
-
-	$scope.profile1 = profile1;
-	$scope.profile2 = profile2;
-	$scope.profilesParams = profilesParams;
-
-	$scope.selectedProfile1Params = [];
-	$scope.selectedProfile2Params = [];
-
-	$scope.selectedParams = _.map(profilesParams, function(param) {
-		let isAssignedToProfile1 = _.find(profile1.params, function(profile1param) { return profile1param.id == param.id }),
-			isAssignedToProfile2 = _.find(profile2.params, function(profile2param) { return profile2param.id == param.id });
+	$scope.selectedParams = profilesParams.map(function(param) {
+		let isAssignedToProfile1 = profile1.params.some(function(pp){return pp.id === param.id}),
+			isAssignedToProfile2 = profile2.params.some(function(pp){return pp.id === param.id});
 
 		if (isAssignedToProfile1) {
 			param['origSelected1'] = true;
@@ -148,7 +152,8 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 	});
 
 	$scope.updateSelectedCount = function(profNum) {
-		$scope['selectedProfile' + profNum + 'Params'] = _.filter($scope.selectedParams, function(param) { return param['selected' + profNum] == true; } );
+		const num = parseInt(profNum, 10);
+		$scope['selectedProfile' + num + 'Params'] = $scope.selectedParams.filter(function(p){return p['selected' + num] == true;});
 	};
 
 	$scope.isCheckboxDirty = function(pp, profNum) {
@@ -182,10 +187,6 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 		modalInstance.result.then(function() {
 			$scope.refresh();
 		});
-	};
-
-	$scope.update = function() {
-		confirmUpdateProfiles();
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
