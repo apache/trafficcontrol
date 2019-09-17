@@ -6,9 +6,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -122,7 +122,13 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     "geniso" : {
         "iso_root_path" : "/opt/traffic_ops/app/public"
     },
-    "inactivity_timeout" : 60
+    "inactivity_timeout" : 60,
+    "SMTP" : {
+        "Enabled" : false,
+        "User" : "",
+        "Password" : "",
+        "Address" : ""
+    }
 }
 EOF
 

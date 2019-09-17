@@ -27,12 +27,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/smtp"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -367,6 +369,33 @@ func (inf *APIInfo) Close() {
 	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
 		log.Errorln("committing transaction: " + err.Error())
 	}
+}
+
+// SendMail is a convenience method used to call SendMail using an APIInfo structure's configuration.
+func (inf *APIInfo) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
+	return SendMail(to, msg, inf.Config)
+}
+
+// SendMail sends an email msg to the address identified by to. The msg parameter should be an
+// RFC822-style email with headers first, a blank line, and then the message body. The lines of msg
+// should be CRLF terminated. The msg headers should usually include fields such as "From", "To",
+// "Subject", and "Cc". Sending "Bcc" messages is accomplished by including an email address in the
+// to parameter but not including it in the msg headers.
+// The cfg parameter is used to set things like the "From" field, as well as for connection
+// and authentication with an external SMTP server.
+// SendMail returns (in order) an HTTP status code, a user-friendly error, and an error fit for
+// logging to system error logs. If either the user or system error is non-nil, the operation failed,
+// and the HTTP status code indicates the type of failure.
+func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, error) {
+	if !cfg.SMTP.Enabled {
+		return http.StatusServiceUnavailable, errors.New("SMTP is not enabled!"), nil
+	}
+	auth := smtp.PlainAuth("", cfg.SMTP.User, cfg.SMTP.Password, strings.Split(cfg.SMTP.Address, ":")[0])
+	err := smtp.SendMail(cfg.SMTP.Address, auth, cfg.ConfigTO.EmailFrom.String(), []string{to.String()}, msg)
+	if err != nil {
+		return http.StatusBadGateway, nil, err
+	}
+	return http.StatusOK, nil, nil
 }
 
 // APIInfoImpl implements APIInfo via the APIInfoer interface
