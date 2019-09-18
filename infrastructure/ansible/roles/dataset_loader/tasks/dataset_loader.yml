@@ -236,116 +236,34 @@
     method: GET
   register: get_all_cachegroups
 
-- name: Associate cachegroups to phys_locations
-  command: "{{ role_path }}/files/selection.set.py {{ item | quote }} {{ dl_ds_merged_divisions | json_query(physlocation_query) | join(',') | quote }}"
-  register: cachegroup_physlocations_out
-  changed_when: false
+# Map of hosts to cachegroups
+- name: Associate origins, caches, and routers to cachegroups
+  set_fact:
+    cachegroups_assignments: "{{ {} |combine(origins) | combine(edges) | combine(mids) | combine(trs) | combine(infra) }}"
+  vars:
+    origins: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'ORG_LOC') | map(attribute='name') | list | associate_round_robin(groups['fakeorigin'] | union(groups['mso_parent_alias'])) | denormalize_association }}"
+    edges: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'EDGE_LOC') | map(attribute='name') | list | associate_round_robin(groups['atsec'] | union(groups['grove'])) | denormalize_association }}"
+    mids: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'MID_LOC') | map(attribute='name') | list | associate_round_robin(groups['atsmid']) | denormalize_association }}"
+    trs: "{{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'TR_LOC') | map(attribute='name') | list | associate_round_robin(groups['traffic_router']) | denormalize_association }}"
+    infra: "{{ ['infrastructure'] | associate_round_robin(groups['all'] | difference(groups['fakeorigin'] + groups['mso_parent_alias'] + groups['atsec'] + groups['grove'] + groups['atsmid'] + groups['traffic_router']) ) | denormalize_association }}"
+
+- name: Build reverse lookup for cachegroups to eligible phys_locations
+  set_fact:
+    cachegroup_lookup: "{{ cachegroup_lookup | default({}) | combine(vals) }}"
   with_items: "{{ dl_ds_merged_divisions | json_query(cachegroup_query) | unique }}"
   vars:
     cachegroup_query: "[*].regions[*].phys_locations[*].cachegroups[][][]"
     physlocation_query: "[*].regions[*].phys_locations[?contains(cachegroups,'{{ item }}')].name[][]"
+    vals: "{{ [item] | associate_round_robin(dl_ds_merged_divisions | json_query(physlocation_query)) }}"
 
-- name: Massage cachegroup to phys_location mappings
+- name: Associate servers to physLocation
   set_fact:
-    physlocation_tmp_str: "{% for i in cachegroup_physlocations_out.results %}{{ i.stdout | from_json | to_json }}{% if not loop.last %}|{% endif %}{%endfor%}"
-
-- name: Build temporary association of cachegroup to region
-  set_fact:
-    phys_location_tmp_dict: "{{ (phys_location_tmp_dict| default({})) | combine(item | from_json) }}"
-  with_items: "{{ physlocation_tmp_str.split('|') }}"
-
-- name: Associate origins to cachegroups
-  command: "{{ role_path }}/files/selection.set.py {{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'ORG_LOC') | map(attribute='name') | join(',') | quote }} {{ groups['fakeorigin'] | union(groups['mso_parent_alias']) | join(',') | quote }}"
-  register: cachegroup_origin_out
-  changed_when: false
-
-- name: Associate edge caches to cachegroups
-  command: "{{ role_path }}/files/selection.set.py {{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'EDGE_LOC') | map(attribute='name') | join(',') | quote }} {{ groups['atsec'] | union(groups['grove']) | join(',') | quote }}"
-  register: cachegroup_edge_out
-  changed_when: false
-
-- name: Associate mid caches to cachegroups
-  command: "{{ role_path }}/files/selection.set.py {{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'MID_LOC') | map(attribute='name') | join(',') | quote }} {{ groups['atsmid'] | join(',') | quote }}"
-  register: cachegroup_mid_out
-  changed_when: false
-
-- name: Associate traffic routers to cachegroups
-  command: "{{ role_path }}/files/selection.set.py {{ dl_ds_merged_cachegroups | selectattr('type', 'equalto', 'TR_LOC') | map(attribute='name') | join(',') | quote }} {{ groups['traffic_router'] | join(',') | quote }}"
-  register: cachegroup_tr_out
-  changed_when: false
-
-# List of Map of Cachegroup to Host List
-- name: Combine cachegroup associations
-  set_fact:
-    cachegroups_merged_tmp: "{{ cachegroups_merged_tmp | default([]) + [ { 'cachegroup': item.key, 'hosts': item.value.split(',') } ] }}"
-  with_dict: "{{ (cachegroup_edge_out.stdout | from_json) | combine(cachegroup_mid_out.stdout | from_json) | combine(cachegroup_tr_out.stdout | from_json) | combine(cachegroup_origin_out.stdout | from_json) }}"
-
-# Map of hosts to cachegroups
-- name: Convert cachegroup associations to a more useful format
-  set_fact:
-    cachegroups_assignments: "{{ cachegroups_assignments | default({}) | combine({ item.1: item.0.cachegroup }) }}"
-  with_subelements:
-    - "{{ cachegroups_merged_tmp }}"
-    - hosts
-
-- name: Hold onto a copy of infrastructure hosts
-  set_fact:
-    infra_hosts: "{{ groups['all'] | difference(cachegroups_assignments.keys()) }}"
-
-- name: Add remaining hosts to the infrastructure cachegroup
-  set_fact:
-    cachegroups_assignments: "{{ cachegroups_assignments | default({}) | combine({ item: 'infrastructure' }) }}"
-  with_items: "{{ infra_hosts }}"
-
-- name: Add remaining hosts to the infrastructure physical locations
-  set_fact:
-    cachegroups_merged_tmp: "{{ cachegroups_merged_tmp | default([]) + [{ 'cachegroup': 'infrastructure', 'hosts': infra_hosts }] }}"
-
-- name: Massage cachegroup associations to a forward lookup dictionary
-  set_fact:
-    cachegroup_lookup: "{{ ( cachegroup_lookup | default({}) ) | combine({ item['cachegroup']: (item['hosts'] | join(',')) }) }}"
-  with_items: "{{ cachegroups_merged_tmp }}"
-
-- name: Associate Physical Locations to Servers
-  command: "{{ role_path }}/files/selection.set.py {{ phys_location_tmp_dict[item.key] | quote }} {{ item.value | quote }}"
-  register: physlocation_caches_out
-  changed_when: false
-  with_dict: "{{ cachegroup_lookup }}"
-
-- name: Massage phys_location to cache mappings
-  set_fact:
-    physlocation_cache_tmp_str: "{% for i in physlocation_caches_out.results %}{{ i.stdout | from_json | to_json }}{% if not loop.last %}|{% endif %}{%endfor%}"
-
-- name: Process location map (phase 1)
-  set_fact:
-    physlocation_cache_tmp_list: "{{ physlocation_cache_tmp_list | default([]) | union( [item  | from_json] ) }}"
-  with_items: "{{ physlocation_cache_tmp_str.split('|') }}"
-
-- name: Process location map (phase 2)
-  set_fact:
-    used_locations: "{{ physlocation_cache_tmp_list | json_query(location_query) | unique }}"
+    physlocation_assignments: "{{ physlocation_assignments | default({}) | combine( eligible_physlocations | associate_round_robin(servers_in_cachegroup) | denormalize_association ) }}"
+  with_items: "{{ cachegroups_assignments.values() | list | unique }}"
   vars:
-    location_query: "[].keys(@)[]"
-
-- name: Process location map (phase 3)
-  set_fact:
-    tmp_location_map: "{{ (tmp_location_map | default({})) | combine({ item: (physlocation_cache_tmp_list | json_query(location_query) | join(','))}) }}"
-  with_items: "{{ used_locations }}"
-  vars:
-    location_query: "[].\"{{ item }}\""
-
-- name: Assemble assignments of cache to location
-  set_fact:
-    physlocation_assignments: "{
-                              {%- for location, host_csv in tmp_location_map.items() -%}
-                              {%- set outer_loop = loop -%}
-                              {%- for i in host_csv.split(',') -%}
-                              '{{ i }}': '{{ location }}'
-                              {%- if not loop.last %},{% endif -%}
-                              {%- endfor %}
-                              {%- if not outer_loop.last %},{% endif -%}
-                              {%- endfor %}
-                              }"
+    eligible_physlocations: "{{ cachegroup_lookup[item] }}"
+    servers_in_cachegroup: "{{ cachegroups_assignments | dict2items | json_query(fqdn_query) }}"
+    fqdn_query: "[?value==`{{ item }}`].key"
 
 - name: Create Division
   uri:
@@ -593,46 +511,10 @@
     hosts: "{{ host_keys_tmp | to_json | from_json | json_query(host_query) }}"
     profile_keys: "{{ ccp_list | to_json | from_json | json_query(key_query) }}"
 
-- name: Associate profiles to hosts
-  command: "{{ role_path }}/files/selection.set.py {{ paired_elegible_keys_hosts[item].profiles | join(',') | quote }} {{ paired_elegible_keys_hosts[item].hosts | join(',') | quote }}"
-  register: profiles_hosts_out
-  changed_when: false
-  with_items: "{{ paired_elegible_keys_hosts.keys() | list}}"
-
-- name: Massage profiles to hosts
+- name: Associate eligible profiles to hosts
   set_fact:
-    profile_host_tmp_str: "{% for i in profiles_hosts_out.results %}{{ i.stdout | from_json | to_json }}{% if not loop.last %}|{% endif %}{%endfor%}"
-
-- name: Process profile map (phase 1)
-  set_fact:
-    profile_host_tmp_list: "{{ profile_host_tmp_list | default([]) | union( [item  | from_json] ) }}"
-  with_items: "{{ profile_host_tmp_str.split('|') }}"
-
-- name: Process profile map (phase 2)
-  set_fact:
-    used_profiles: "{{ profile_host_tmp_list | json_query(profile_query) | unique }}"
-  vars:
-    profile_query: "[].keys(@)[]"
-
-- name: Process profile map (phase 3)
-  set_fact:
-    tmp_profile_map: "{{ (tmp_profile_map | default({})) | combine({ item: (profile_host_tmp_list | json_query(profile_query) | join(','))}) }}"
-  with_items: "{{ used_profiles }}"
-  vars:
-    profile_query: "[].\"{{ item }}\""
-
-- name: Assemble assignments of profiles to hosts
-  set_fact:
-    profile_assignments: "{
-                          {%- for profile, host_csv in tmp_profile_map.items() -%}
-                          {%- set outer_loop = loop -%}
-                          {%- for i in host_csv.split(',') -%}
-                          '{{ i }}': '{{ profile }}'
-                          {%- if not loop.last %},{% endif -%}
-                          {%- endfor %}
-                          {%- if not outer_loop.last %},{% endif -%}
-                          {%- endfor %}
-                          }"
+    profile_assignments: "{{ profile_assignments | default({}) | combine(paired_elegible_keys_hosts[item].profiles | associate_round_robin(paired_elegible_keys_hosts[item].hosts) | denormalize_association) }}"
+  with_items: "{{ paired_elegible_keys_hosts.keys() | list }}"
 
 - name: Get All Server Statuses
   uri:
