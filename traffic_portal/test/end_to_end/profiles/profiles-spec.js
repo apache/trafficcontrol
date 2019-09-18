@@ -33,8 +33,20 @@ describe('Traffic Portal Profiles Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles");
 	});
 
+	it('should compare profiles', function() {
+		pageData.moreBtn.click();
+		pageData.compareProfilesMenuItem.click();
+		expect(pageData.compareSubmit.isEnabled()).toBe(false);
+		commonFunctions.selectDropdownbyNum(pageData.compareDropdown1, 1);
+		commonFunctions.selectDropdownbyNum(pageData.compareDropdown2, 2);
+		expect(pageData.compareSubmit.isEnabled()).toBe(true);
+		pageData.compareSubmit.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!\/profiles\/compare\/\\d+\/\\d+");
+	});
+
 	it('should open new profile form page', function() {
 		console.log("Open new profile form page");
+		browser.setLocation("profiles");
 		pageData.createProfileButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles/new");
 	});
