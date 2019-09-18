@@ -88,7 +88,8 @@ var TableProfileParamsUnassignedController = function(profile, allParams, assign
 			"dom": '<"selected-count">frtip',
 			"columnDefs": [
 				{ 'orderable': false, 'targets': 0 },
-				{ "width": "5%", "targets": 0 }
+				{ "width": "5%", "targets": 0 },
+				{ "width": "50%", "targets": 3 }
 			],
 			"stateSave": false
 		});

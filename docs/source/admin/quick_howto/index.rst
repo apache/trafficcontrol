@@ -31,3 +31,4 @@ Traffic Control is a complicated system, and documenting it is not trivial. Some
 	regionalgeo
 	static_dns
 	steering
+	profile_compare_mgmt
