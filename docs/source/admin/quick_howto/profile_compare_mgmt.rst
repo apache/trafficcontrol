@@ -37,7 +37,7 @@ Once you have selected the :guilabel:`Compare Profiles` menu item, you will be a
 
 	The "Compare Profile Parameters" dialog
 
-A superset of all parameters across the 2 profiles will be displayed with their profile membership displayed side-by-side. This view also provides users with higher level permissions ("operations" or "admin") the ability to easily remove or add parameters for each profile and persist the final state of both profiles (or restore the original state and discard changes). In addition, as the user makes changes, a visual indication is provided as modified checkboxes turn green.
+A superset of all parameters across the 2 profiles will be displayed with their profile membership displayed side-by-side. This view also provides users with higher level permissions ("operations" or "admin") the ability to easily remove or add parameters for each profile and persist the final state of both profiles (or restore the original state and discard changes). In addition, as the user makes changes, a blue shadow is added to all modified checkboxes.
 
 .. figure:: profile_compare_mgmt/compare_profiles_table.png
 	:align: center
