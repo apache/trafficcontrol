@@ -18,6 +18,9 @@
  */
 
 module.exports = function(){
+	this.createDeliveryServiceButton=element(by.name('createDeliveryServiceButton'));
+	this.selectFormDropdown=element(by.name('selectFormDropdown'));
+	this.searchFilter=element(by.id('dsRequestsTable_filter')).element(by.css('label')).element(by.css('input'));
 	this.selectFormSubmitButton=element(by.buttonText('Submit'));
 	this.active=element(by.name('active'));
 	this.type=element(by.name('type'));

@@ -18,14 +18,21 @@
  */
 
 module.exports = function() {
-	// selectDropdownbyNum - pass in the <SELECT> element and a option number, typically 1
-	this.selectDropdownbyNum = function ( element, optionNum ) {
-		if (optionNum){
-			var options = element.all(by.tagName('option'))
-				.then(function(options){
-					options[optionNum].click();
-				});
-		}
+	// selectDropdownByNum - pass in the <SELECT> element and a option number, typically 1
+	this.selectDropdownByNum = async (element, optionNum) => {
+		await element.all(by.tagName('option')).get(optionNum).click();
+	};
+
+	// selectDropdownByLabel - pass in the <SELECT> element and a label for the desired option
+	// use this function only if you know the label you're looking for will ALWAYS be the same
+	// otherwise, use selectDropdownByNum w/ optionNum=1
+	this.selectDropdownByLabel = async (parent, label) => {
+		await parent.element(by.css('option[label="'+label+'"]')).click();
+	};
+
+	this.clickTableEntry = async (searchFilter, query, repeater) => {
+		await searchFilter.clear().sendKeys(query); // searches for the specific item in the table
+        await element.all(by.repeater(repeater)).get(0).click(); // clicks the first result in the table
 	};
 
 	this.urlPath = function ( url ) {

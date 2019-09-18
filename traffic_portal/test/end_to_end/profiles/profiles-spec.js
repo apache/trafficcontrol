@@ -25,31 +25,34 @@ describe('Traffic Portal Profiles Test Suite', function() {
 	const commonFunctions = new cfunc();
 	const myNewProfile = {
 		name: 'profile-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
+		routingDisabled: false,
+		type: 'ATS_PROFILE'
 	};
 
-	it('should go to the profiles page', function() {
+	it('should go to the profiles page', async () => {
 		console.log("Go to the profiles page");
-		browser.setLocation("profiles");
+		await browser.setLocation("profiles");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles");
 	});
 
-	it('should open new profile form page', function() {
+	it('should open new profile form page', async () => {
 		console.log("Open new profile form page");
-		pageData.createProfileButton.click();
+		await pageData.createProfileButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles/new");
 	});
 
-	it('should fill out form, create button is enabled and submit', function () {
+	it('should fill out form, create button is enabled and submit', async () => {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.name.sendKeys(myNewProfile.name);
-		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
-		commonFunctions.selectDropdownbyNum(pageData.type, 1);
-		pageData.routingDisabled.click();
-		pageData.routingDisabled.sendKeys('false');
-		pageData.description.sendKeys(myNewProfile.name);
+		await pageData.name.sendKeys(myNewProfile.name);
+		await commonFunctions.selectDropdownByNum(pageData.cdn, 1);
+		await commonFunctions.selectDropdownByLabel(pageData.type, myNewProfile.type);
+		await commonFunctions.selectDropdownByLabel(pageData.routingDisabled, myNewProfile.routingDisabled.toString());
+		await pageData.description.sendKeys(myNewProfile.name);
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.profileCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles/[0-9]+/parameters");
 	});
 

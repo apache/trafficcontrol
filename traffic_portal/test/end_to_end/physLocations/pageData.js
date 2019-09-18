@@ -18,6 +18,7 @@
  */
 
 module.exports = function(){
+	this.createPhysLocationButton=element(by.name('createPhysLocationButton'));
 	this.name=element(by.name('name'));
 	this.shortName=element(by.name('shortName'));
 	this.address=element(by.name('address'));
@@ -31,4 +32,6 @@ module.exports = function(){
 	this.searchFilter=element(by.id('physLocationsTable_filter')).element(by.css('label')).element(by.css('input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+	this.successMsg = element(by.css('.alert-success'));
+    this.physLocationCreatedText = element(by.cssContainingText('div', 'Physical location created'));
 };

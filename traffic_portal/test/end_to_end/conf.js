@@ -37,13 +37,18 @@ exports.config = {
 		allTests: [
 			'login/login-spec.js',
 			'CDNs/cdns-spec.js',
-			'cacheGroups/cache-groups-spec.js',
+			'DeliveryServices/delivery-services-spec.js',
+			'Servers/servers-spec.js',
+			'origins/origins-spec.js',
 			'profiles/profiles-spec.js',
+			'parameters/parameters-spec.js',
+			'cacheGroups/cache-groups-spec.js',
+			'physLocations/phys-locations-spec.js',
 			'divisions/divisions-spec.js',
 			'regions/regions-spec.js',
-			'physLocations/phys-locations-spec.js',
-			'DeliveryServices/delivery-services-spec.js',
-			'Servers/servers-spec.js'
+			'users/users-spec.js',
+			'tenants/tenants-spec.js',
+			'roles/roles-spec.js'
 		]
 	}
 };

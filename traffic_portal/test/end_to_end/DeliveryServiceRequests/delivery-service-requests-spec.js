@@ -31,120 +31,91 @@ describe('Traffic Portal Delivery Service Requests', function() {
 		displayName: "dsTest",
 		orgServerFqdn: "http://dstest.com",
 		longDesc: "This is only a test that should be disposed of by Automated UI Testing.",
-		commentInput: "This is the second comment"
+		commentInput: "This is the second comment",
+		tenantId: "- root",
+		protocol: "HTTP to HTTPS"
 	};
+	const repeater = 'request in ::dsRequests';
 
-	it('should open ds services page and click button to create a new one', function() {
+	it('should create and select type of ds from the dropdown and confirm', async () => {
 		console.log('Opening delivery service requests page');
-		browser.setLocation("delivery-services");
+		await browser.setLocation("delivery-services");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
-	});
-
-	it('should create and select type of ds from the dropdown and confirm', function() {
 		console.log('Clicked Create New and selecting a type');
-		browser.driver.findElement(by.name('createDeliveryServiceButton')).click();
-		browser.sleep(1000);
+		await pageData.createDeliveryServiceButton.click();
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(false);
-		browser.driver.findElement(by.name('selectFormDropdown')).sendKeys(mockVals.dsType[1]);
-		browser.sleep(250);
+		await pageData.selectFormDropdown.click().sendKeys(mockVals.dsType[1]);
 		expect(pageData.selectFormSubmitButton.isEnabled()).toBe(true);
-		pageData.selectFormSubmitButton.click();
-	});
-
-	it('should populate and submit the ds form', function() {
-		console.log('Filling out form for ' + mockVals.xmlId);
-		browser.sleep(250);
+		await pageData.selectFormSubmitButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services/new?type=" + mockVals.dsType[1]);
+	});
+
+	it('should populate and submit the ds form', async () => {
+		console.log('Filling out form for ' + mockVals.xmlId);
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.active.click();
-		pageData.active.sendKeys(mockVals.active);
-		commonFunctions.selectDropdownbyNum(pageData.type, 1);
-		pageData.xmlId.sendKeys(mockVals.xmlId);
-		pageData.displayName.sendKeys(mockVals.displayName);
-		commonFunctions.selectDropdownbyNum(pageData.tenantId, 1);
-		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
-		pageData.orgServerFqdn.sendKeys(mockVals.orgServerFqdn);
-		commonFunctions.selectDropdownbyNum(pageData.protocol, 1);
-		pageData.longDesc.sendKeys(mockVals.longDesc);
+		await pageData.active.click().sendKeys(mockVals.active);
+		await commonFunctions.selectDropdownByLabel(pageData.type, mockVals.dsType[1]);
+		await pageData.xmlId.sendKeys(mockVals.xmlId);
+		await pageData.displayName.sendKeys(mockVals.displayName);
+		await commonFunctions.selectDropdownByLabel(pageData.tenantId, mockVals.tenantId);
+		await commonFunctions.selectDropdownByNum(pageData.cdn, 1);
+		await pageData.orgServerFqdn.sendKeys(mockVals.orgServerFqdn);
+		await pageData.protocol.click().sendKeys(mockVals.protocol);
+		await pageData.longDesc.sendKeys(mockVals.longDesc);
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
-		browser.sleep(250);
+		await pageData.createButton.click();
 	});
 
-	it('should select a status from the dropdown and add comment before submitting', function() {
-		browser.sleep(250);
-		commonFunctions.selectDropdownbyNum(pageData.requestStatus, 2);
-		pageData.dialogComment.sendKeys('This is comment one');
-		browser.sleep(250);
+	it('should select a status from the dropdown and add comment before submitting', async () => {
+		await commonFunctions.selectDropdownByNum(pageData.requestStatus, 2);
+		await pageData.dialogComment.sendKeys('This is comment one');
 		expect(pageData.dialogSubmit.isEnabled()).toBe(true);
-		pageData.dialogSubmit.click();
-		browser.sleep(250);
-	});
-
-	it('should redirect to delivery-service-requests page', function() {
-		console.log('Backing out and verifying ' + mockVals.xmlId + ' exists');
+		await pageData.dialogSubmit.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-service-requests");
 	});
 
-	it('should open up and update the ds', function() {
+	it('should open up and update the ds', async () => {
 		console.log('Updating the form for ' + mockVals.xmlId);
-		browser.sleep(250);
-		element.all(by.repeater('request in ::dsRequests')).filter(function(row){
-			return row.element(by.name('xmlId')).getText().then(function(val){
-				console.log(val + " this is my val " + mockVals.xmlId);
-				return val.toString() === mockVals.xmlId.toString();
-			});
-		}).get(0).click();
-		browser.sleep(250);
+		await commonFunctions.clickTableEntry(pageData.searchFilter, mockVals.xmlId, repeater);
 		expect(pageData.updateButton.isEnabled()).toBe(false);
-		pageData.displayName.sendKeys(mockVals.displayName + "updated");
+		await pageData.displayName.sendKeys(mockVals.displayName + "updated");
 		expect(pageData.updateButton.isEnabled()).toBe(true);
-		pageData.updateButton.click();
-		browser.sleep(250);
+		await pageData.updateButton.click();
 		expect(pageData.displayName.getText() === mockVals.displayName + "updated");
 	});
 
-	it('should select a status from the dropdown and add comment before submitting', function() {
-		browser.sleep(250);
-		commonFunctions.selectDropdownbyNum(pageData.requestStatus, 2);
-		pageData.dialogComment.sendKeys('This is comment two');
-		browser.sleep(250);
+	it('should select a status from the dropdown and add comment before submitting', async () => {
+		await commonFunctions.selectDropdownByNum(pageData.requestStatus, 2);
+		await pageData.dialogComment.sendKeys('This is comment two');
 		expect(pageData.dialogSubmit.isEnabled()).toBe(true);
-		pageData.dialogSubmit.click();
-		browser.sleep(250);
+		await pageData.dialogSubmit.click();
 	});
 
-	it('should add a comment', function () {
+	it('should add a comment', async () => {
 		console.log('Adding Comment');
-		pageData.newCommentButton.click();
-		browser.sleep(250);
-		pageData.commentInput.sendKeys(mockVals.commentInput);
-		pageData.createCommentButton.click();
+		await pageData.newCommentButton.click();
+		await pageData.commentInput.sendKeys(mockVals.commentInput);
+		await pageData.createCommentButton.click();
 	});
 
-	it('should edit a comment', function () {
+	it('should edit a comment', async () => {
 		console.log('Editing Comment');
-		browser.sleep(250);
-		element.all(by.css('.link.action-link')).first().click();
-		browser.sleep(250);
-		pageData.commentInput.sendKeys(mockVals.commentInput);
-		pageData.updateCommentButton.click();
+		await element.all(by.css('.link.action-link')).first().click();
+		await pageData.commentInput.sendKeys(mockVals.commentInput);
+		await pageData.updateCommentButton.click();
 	});
 
-	it('should delete a comment', function () {
+	it('should delete a comment', async () => {
 		console.log('Deleting Comment');
-		browser.sleep(250);
-		element.all(by.css('.link.action-link')).get(1).click();
-		browser.sleep(250);
-		pageData.yesButton.click();
+		await element.all(by.css('.link.action-link')).get(1).click();
+		await pageData.yesButton.click();
 	});
 
-	it('should delete the ds request', function() {
+	it('should delete the ds request', async () => {
 		console.log('Deleting ' + mockVals.xmlId);
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.xmlId + ' request');
-		pageData.deletePermanentlyButton.click();
-		browser.sleep(250);
+		await pageData.deleteButton.click();
+		await pageData.confirmWithNameInput.sendKeys(mockVals.xmlId + ' request');
+		await pageData.deletePermanentlyButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-service-requests");
 	});
 });

@@ -27,24 +27,26 @@ describe('Traffic Portal Divisions Test Suite', function() {
 		name: 'division-' + Math.random().toString(36).substring(2, 15)
 	};
 
-	it('should go to the divisions page', function() {
+	it('should go to the divisions page', async () => {
 		console.log("Go to the divisions page");
-		browser.setLocation("divisions");
+		await browser.setLocation("divisions");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/divisions");
 	});
 
-	it('should open new division form page', function() {
+	it('should open new division form page', async () => {
 		console.log("Open new division form page");
-		browser.driver.findElement(by.name('createDivisionButton')).click();
+		await pageData.createDivisionButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/divisions/new");
 	});
 
-	it('should fill out form, create button is enabled and submit', function () {
+	it('should fill out form, create button is enabled and submit', async () => {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.name.sendKeys(myNewDiv.name);
+		await pageData.name.sendKeys(myNewDiv.name);
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.divisionCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/divisions");
 	});
 

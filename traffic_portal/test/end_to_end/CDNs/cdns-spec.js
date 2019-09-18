@@ -23,56 +23,53 @@ var cfunc = require('../common/commonFunctions.js');
 describe('Traffic Portal CDNs Test Suite', function() {
 	const pageData = new pd();
 	const commonFunctions = new cfunc();
-	const myNewCDN = 'cdn-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789');
-	const myDomainName = myNewCDN + '.com';
-	const mydnssec = false;
-	const myKskDays = commonFunctions.random(365);
+	const shuffledText = commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789');
+	const myNewCDN = {
+		name : 'cdn-' + shuffledText,
+		domainName : 'cdn-' + shuffledText + '.com',
+		dnssecEnabled: false,
+		numKskDays: commonFunctions.random(365)
+	};
+	const repeater = 'cdn in ::cdns';
 
-	it('should go to the CDNs page', function() {
+	it('should go to the CDNs page', async () => {
 		console.log("Go to the CDNs page");
-		browser.setLocation("cdns");
-		browser.getCurrentUrl().then(x => console.log(x));
+		await browser.setLocation("cdns");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 
-	it('should open new CDN form page', function() {
+	it('should open new CDN form page', async () => {
 		console.log("Open new CDN form page");
-		browser.driver.findElement(by.name('createCdnButton')).click();
+		await pageData.createCdnButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns/new");
 	});
 
-	it('should fill out form, create button is enabled and submit', function () {
+	it('should fill out form, create button is enabled and submit', async () => {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.dnssecEnabled.click();
-		pageData.dnssecEnabled.sendKeys(mydnssec.toString());
-		pageData.name.sendKeys(myNewCDN);
-		pageData.domainName.sendKeys(myDomainName);
+		await pageData.dnssecEnabled.sendKeys(myNewCDN.dnssecEnabled.toString());
+		await pageData.name.sendKeys(myNewCDN.name);
+		await pageData.domainName.sendKeys(myNewCDN.domainName);
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+		expect(pageData.cdnCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 
-	it('should verify the new CDN and then update CDN', function() {
+	it('should verify the new CDN and then update CDN', async () => {
 		console.log("Verifying the new CDN and then updating CDN");
-		browser.sleep(250);
-		pageData.searchFilter.sendKeys(myNewCDN);
-		browser.sleep(250);
-		element.all(by.repeater('cdn in ::cdns')).filter(function(row){
-			return row.element(by.name('name')).getText().then(function(val){
-				return val === myNewCDN;
-			});
-		}).get(0).click();
-		browser.sleep(1000);
-		pageData.domainName.clear();
-		pageData.domainName.sendKeys(myDomainName + 'updated.com');
-		pageData.dnssecEnabled.click();
-		pageData.dnssecEnabled.sendKeys((!mydnssec).toString());
-		pageData.updateButton.click();
-		expect(pageData.domainName.getAttribute('value')).toEqual(myDomainName + 'updated.com');
+		await commonFunctions.clickTableEntry(pageData.searchFilter, myNewCDN.name, repeater);
+		await pageData.domainName.clear();
+		await pageData.domainName.sendKeys(myNewCDN.domainName + 'updated.com');
+		await pageData.dnssecEnabled.sendKeys((!myNewCDN.dnssecEnabled).toString());
+		await pageData.updateButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+		expect(pageData.cdnUpdatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
+		expect(pageData.domainName.getAttribute('value')).toEqual(myNewCDN.domainName + 'updated.com');
 	});
 
-	it('should generate DNSSEC keys', async function() {
+	it('should generate DNSSEC keys', async () => {
 		console.log("Generating DNSSEC keys for the new CDN and and verifying their expiration date");
 		await pageData.moreButton.click();
 		await pageData.manageDnssecKeysButton.click();
@@ -80,39 +77,40 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		await pageData.generateDnssecKeysButton.click();
 		await pageData.regenerateButton.click();
 		expect(pageData.confirmButton.isEnabled()).toBe(false);
-		await pageData.confirmInput.sendKeys(myNewCDN);
+		await pageData.confirmInput.sendKeys(myNewCDN.name);
 		expect(pageData.confirmButton.isEnabled()).toBe(true);
 		await pageData.confirmButton.click();
+		// gets the expiration date calculated by Traffic Ops an verifies that it is one year from now, plus or minus a second
 		const expirationDate = pageData.expirationDate.getAttribute('value').then((expir) => {return Date.parse(expir + ' UTC');});
 		const calculatedExpirationDate = Date.now() + 365*24*60*60*1000;
 		expect(expirationDate).toBeCloseTo(calculatedExpirationDate, -4);
 	});
 
-	it('should regenerate DNSSEC keys', async function() {
+	it('should regenerate DNSSEC keys', async () => {
 		console.log("Renerating DNSSEC keys and verifying their expiration date");
 		await pageData.regenerateDnssecKeysButton.click();
-		await pageData.kskExpirationDays.clear().sendKeys(myKskDays.toString());
+		await pageData.kskExpirationDays.clear().sendKeys(myNewCDN.numKskDays.toString());
 		await pageData.regenerateButton.click();
 		expect(pageData.confirmButton.isEnabled()).toBe(false);
-		await pageData.confirmInput.sendKeys(myNewCDN);
+		await pageData.confirmInput.sendKeys(myNewCDN.name);
 		expect(pageData.confirmButton.isEnabled()).toBe(true);
 		await pageData.confirmButton.click();
 		const expirationDate = pageData.expirationDate.getAttribute('value').then((expir) => {return Date.parse(expir + ' UTC');});
-		const calculatedExpirationDate = Date.now() + myKskDays*24*60*60*1000;
+		const calculatedExpirationDate = Date.now() + myNewCDN.numKskDays*24*60*60*1000;
 		expect(expirationDate).toBeCloseTo(calculatedExpirationDate, -4);
 	});
 
-	it('should regenerate KSK keys', async function() {
+	it('should regenerate KSK keys', async () => {
 		console.log("Regenerating KSK keys and verifying their expiration");
 		await pageData.regenerateKskButton.click();
-		await pageData.kskExpirationDays.clear().sendKeys(myKskDays.toString());
+		await pageData.kskExpirationDays.clear().sendKeys(myNewCDN.numKskDays.toString());
 		await pageData.generateButton.click();
 		expect(pageData.confirmButton.isEnabled()).toBe(false);
-		await pageData.confirmInput.sendKeys(myNewCDN);
+		await pageData.confirmInput.sendKeys(myNewCDN.name);
 		expect(pageData.confirmButton.isEnabled()).toBe(true);
 		await pageData.confirmButton.click();
 		const expirationDate = pageData.expirationDate.getAttribute('value').then((expir) => {return Date.parse(expir + ' UTC');});
-		const calculatedExpirationDate = Date.now() + myKskDays*24*60*60*1000;
+		const calculatedExpirationDate = Date.now() + myNewCDN.numKskDays*24*60*60*1000;
 		expect(expirationDate).toBeCloseTo(calculatedExpirationDate, -4);
 	});
 

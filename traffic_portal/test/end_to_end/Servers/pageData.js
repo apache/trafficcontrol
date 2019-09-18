@@ -18,6 +18,7 @@
  */
 
 module.exports = function(){
+	this.createServerButton=element(by.name('createServersButton'));
 	this.status=element(by.name('status'));
 	this.hostName=element(by.name('hostName'));
 	this.domainName=element(by.name('domainName'));
@@ -37,4 +38,8 @@ module.exports = function(){
 	this.searchFilter=element(by.id('serversTable_filter')).element(by.css('label')).element(by.css('input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+	this.successMsg = element(by.css('.alert-success'));
+	this.serverCreatedText = element(by.cssContainingText('div', 'Server created'));
+	this.serverUpdatedText = element(by.cssContainingText('div', 'Server updated'));
+	this.serverDeletedText = element(by.cssContainingText('div', 'server was deleted.'));
 };

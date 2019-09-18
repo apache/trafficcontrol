@@ -18,6 +18,7 @@
  */
 
 module.exports = function(){
+	this.createRegionButton=element(by.name('createRegionButton'));
 	this.name=element(by.name('name'));
 	this.division=element(by.name('division'));
 	this.createButton=element(by.buttonText('Create'));
@@ -26,4 +27,6 @@ module.exports = function(){
 	this.searchFilter=element(by.id('regionsTable_filter')).element(by.css('label')).element(by.css('input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+	this.successMsg = element(by.css('.alert-success'));
+    this.regionCreatedText = element(by.cssContainingText('div', 'Region created'));
 };

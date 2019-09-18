@@ -33,76 +33,74 @@ describe('Traffic Portal Servers Test Suite', function() {
 		ipNetmask: "255.255.255.252",
 		ipGateway: "10.42.80.117",
 		interfaceMtu: "9000",
+		types: ['EDGE', 'MID']
 	};
+	const repeater = 's in ::servers';
 
-	it('should go to the Servers page', function() {
+	it('should go to the Servers page', async () => {
 		console.log('Looading Configure/Servers');
-		browser.setLocation("servers");
+		await browser.setLocation("servers");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
-	it('should open new Servers form page', function() {
+	it('should open new Servers form page', async () => {
 		console.log('Clicking on Create new server ' + mockVals.hostName);
-		browser.driver.findElement(by.name('createServersButton')).click();
+		await pageData.createServerButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/new");
 	});
 
-	it('should fill out form, create button is enabled and submit', function () {
+	it('should fill out form, create button is enabled and submit', async () => {
 		console.log('Filling out Server form');
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.status.click();
-		pageData.status.sendKeys(mockVals.status);
-		pageData.hostName.sendKeys(mockVals.hostName);
-		pageData.domainName.sendKeys(mockVals.domainName);
-		commonFunctions.selectDropdownbyNum(pageData.cdn, 1);
-		commonFunctions.selectDropdownbyNum(pageData.cachegroup, 1);
-		commonFunctions.selectDropdownbyNum(pageData.type, 1);
-		commonFunctions.selectDropdownbyNum(pageData.profile, 1);
-		pageData.interfaceName.sendKeys(mockVals.interfaceName);
-		pageData.ipAddress.sendKeys(mockVals.ipAddress);
-		pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
-		pageData.ipGateway.sendKeys(mockVals.ipGateway);
-		pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
-		commonFunctions.selectDropdownbyNum(pageData.physLocation, 1);
+		await commonFunctions.selectDropdownByLabel(pageData.status, mockVals.status);
+		await pageData.hostName.sendKeys(mockVals.hostName);
+		await pageData.domainName.sendKeys(mockVals.domainName);
+		await commonFunctions.selectDropdownByNum(pageData.cdn, 1);
+		await commonFunctions.selectDropdownByNum(pageData.cachegroup, 1);
+		await commonFunctions.selectDropdownByLabel(pageData.type, mockVals.types[0]);
+		await commonFunctions.selectDropdownByNum(pageData.profile, 1);
+		await pageData.interfaceName.sendKeys(mockVals.interfaceName);
+		await pageData.ipAddress.sendKeys(mockVals.ipAddress);
+		await pageData.ipNetmask.sendKeys(mockVals.ipNetmask);
+		await pageData.ipGateway.sendKeys(mockVals.ipGateway);
+		await pageData.interfaceMtu.sendKeys(mockVals.interfaceMtu);
+		await commonFunctions.selectDropdownByNum(pageData.physLocation, 1);
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.serverCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
-	it('should toggle the visibility of the first table column ', function() {
-		browser.driver.findElement(by.id('toggleColumns')).click();
+	it('should toggle the visibility of the first table column ', async () => {
+		await element(by.id('toggleColumns')).click();
 		let first = element.all(by.css('input[type=checkbox]')).first();
 		expect(first.isSelected()).toBe(true);
-		first.click();
+		await first.click();
 		expect(first.isSelected()).toBe(false);
 		let tableColumns = element.all(by.css('#serversTable tr:first-child td'));
 		expect(tableColumns.count()).toBe(11);
 	});
 
-	it('should verify the new Server and then update Server', function() {
+	it('should verify the new Server and then update Server', async () => {
 		console.log('Verifying new server added and updating ' + mockVals.hostName);
-		browser.sleep(1000);
-		pageData.searchFilter.sendKeys(mockVals.hostName);
-		browser.sleep(250);
-		element.all(by.repeater('s in ::servers')).filter(function(row){
-			return row.element(by.name('hostName')).getText().then(function(val){
-				return val === mockVals.hostName;
-			});
-		}).get(0).click();
-		browser.sleep(1000);
-		pageData.domainName.clear();
-		pageData.domainName.sendKeys('testupdated.com');
-		pageData.type.click();
-		pageData.type.sendKeys('MID');
-		pageData.updateButton.click();
-		expect(pageData.domainName.getText() === 'testupdated.com');
-		expect(pageData.type.getText() === 'MID');
+		await pageData.searchFilter.sendKeys(mockVals.hostName);
+		await commonFunctions.clickTableEntry(pageData.searchFilter, mockVals.hostName, repeater);
+		await pageData.domainName.clear().sendKeys('updated.' + mockVals.domainName);
+		await pageData.type.click().sendKeys(mockVals.types[1]);
+		await pageData.updateButton.click();
+		expect(pageData.domainName.getText() === 'updated.' + mockVals.domainName);
+		expect(pageData.type.getText() === mockVals.types[1]);
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.serverUpdatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 	});
 
-	it('should delete the new Server', function() {
+	it('should delete the new Server', async () => {
 		console.log('Deleting the server ' + mockVals.hostName);
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(mockVals.hostName);
-		pageData.deletePermanentlyButton.click();
+		await pageData.deleteButton.click();
+		await pageData.confirmWithNameInput.sendKeys(mockVals.hostName);
+		await pageData.deletePermanentlyButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.serverDeletedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 	});
 });

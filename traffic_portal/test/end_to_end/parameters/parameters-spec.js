@@ -25,30 +25,33 @@ describe('Traffic Portal Parameters Test Suite', function() {
 	const commonFunctions = new cfunc();
 	const myNewParameter = {
         name: 'parameter-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
-        configFile: 'config-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789')
+		configFile: 'config-' + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
+		secure: true
 	};
 
-	it('should go to the parameters page', function() {
+	it('should go to the parameters page', async () => {
 		console.log("Go to the parameters page");
-		browser.get(browser.baseUrl + "/#!/parameters");
+		await browser.get(browser.baseUrl + "/#!/parameters");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/parameters");
 	});
 
-	it('should open new parameter form page', function() {
+	it('should open new parameter form page', async () => {
 		console.log("Open new parameter form page");
-		pageData.createParameterButton.click();
+		await pageData.createParameterButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/parameters/new");
 	});
 
-	it('should fill out form, create button is enabled and submit', function () {
+	it('should fill out form, create button is enabled and submit', async () => {
 		console.log("Filling out form, check create button is enabled and submit");
 		expect(pageData.createButton.isEnabled()).toBe(false);
-		pageData.name.sendKeys(myNewParameter.name);
-		pageData.configFile.sendKeys(myNewParameter.configFile);
-		commonFunctions.selectDropdownbyNum(pageData.secure, 1);
-		pageData.value.sendKeys(myNewParameter.name);
+		await pageData.name.sendKeys(myNewParameter.name);
+		await pageData.configFile.sendKeys(myNewParameter.configFile);
+		await commonFunctions.selectDropdownByLabel(pageData.secure, myNewParameter.secure.toString());
+		await pageData.value.sendKeys(myNewParameter.name);
 		expect(pageData.createButton.isEnabled()).toBe(true);
-		pageData.createButton.click();
+		await pageData.createButton.click();
+		expect(pageData.successMsg.isPresent()).toBe(true);
+        expect(pageData.parameterCreatedText.isPresent()).toBe(true, 'Actual message does not match expected message');
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/parameters/[0-9]+/profiles");
 	});
 
