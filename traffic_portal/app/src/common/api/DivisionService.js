@@ -56,7 +56,7 @@ var DivisionService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.updateDivision = function(division) {
-        return $http.put(ENV.api['root'] + 'divisions/' + division.id).then(
+        return $http.put(ENV.api['root'] + 'divisions/' + division.id, division).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;            },
