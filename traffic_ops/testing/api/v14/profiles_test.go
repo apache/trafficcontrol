@@ -136,6 +136,7 @@ func GetTestProfiles(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
 		}
+		profileID := resp[0].ID
 
 		resp, _, err = TOSession.GetProfileByParameter(pr.Parameter)
 		if err != nil {
@@ -145,6 +146,15 @@ func GetTestProfiles(t *testing.T) {
 		resp, _, err = TOSession.GetProfileByCDNID(pr.CDNID)
 		if err != nil {
 			t.Errorf("cannot GET Profile by cdn: %v - %v\n", err, resp)
+		}
+
+		// Export Profile
+		exportResp, _, err := TOSession.ExportProfile(profileID)
+		if err != nil {
+			t.Errorf("error exporting Profile: %v - %v\n", profileID, err)
+		}
+		if exportResp == nil {
+			t.Errorf("error exporting Profile: response nil\n")
 		}
 	}
 }
@@ -216,6 +226,12 @@ func DeleteTestProfiles(t *testing.T) {
 		}
 		if len(prs) > 0 {
 			t.Errorf("expected Profile Name: %s to be deleted\n", pr.Name)
+		}
+
+		// Attempt to export Profile
+		profile, _, err := TOSession.ExportProfile(profileID)
+		if profile != nil {
+			t.Errorf("expected Profile: %s to be nil on export\n", pr.Name)
 		}
 	}
 }
