@@ -172,7 +172,25 @@ func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, timeout time.Duratio
 	return true, nil, nil
 }
 
+// CheckLocalUserToken checks the passed token against the records in the db for a match, up to a
+// maximum duration of timeout.
+func CheckLocalUserToken(token string, db *sqlx.DB, timeout time.Duration) (bool, string, error) {
+	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
+	defer dbClose()
+
+	var username string
+	err := db.GetContext(dbCtx, &username, `SELECT username FROM tm_user WHERE token=$1 AND role!=(SELECT role.id FROM role WHERE role.name=$2)`, token, disallowed)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, "", nil
+		}
+		return false, "", err
+	}
+	return true, username, nil
+}
+
 func sha1Hex(s string) (string, error) {
+	// SHA1 hash
 	hash := sha1.New()
 	if _, err := hash.Write([]byte(s)); err != nil {
 		return "", err

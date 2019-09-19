@@ -115,6 +115,47 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	}
 }
 
+func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		var t tc.UserToken
+		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+			api.HandleErr(w, r, nil, http.StatusBadRequest, fmt.Errorf("Invalid request: %v", err), nil)
+			return
+		}
+
+		tokenMatches, username, err := auth.CheckLocalUserToken(t.Token, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		if err != nil {
+			sysErr := fmt.Errorf("Checking token: %v", err)
+			errCode := http.StatusInternalServerError
+			api.HandleErr(w, r, nil, errCode, nil, sysErr)
+			return
+		} else if !tokenMatches {
+			userErr := errors.New("Invalid token. Please contact your administrator.")
+			errCode := http.StatusUnauthorized
+			api.HandleErr(w, r, nil, errCode, userErr, nil)
+			return
+		}
+
+		expiry := time.Now().Add(time.Hour * 6)
+		cookie := tocookie.New(username, expiry, cfg.Secrets[0])
+		httpCookie := http.Cookie{Name: "mojolicious", Value: cookie, Path: "/", Expires: expiry, HttpOnly: true}
+		http.SetCookie(w, &httpCookie)
+		respBts, err := json.Marshal(tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in."))
+		if err != nil {
+			sysErr := fmt.Errorf("Marshaling response: %v", err)
+			errCode := http.StatusInternalServerError
+			api.HandleErr(w, r, nil, errCode, nil, sysErr)
+			return
+		}
+
+		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Write(append(respBts, '\n'))
+
+		// TODO: afaik, Perl never clears these tokens. They should be reset to NULL on login, I think.
+	}
+}
+
 // OauthLoginHandler accepts a JSON web token previously obtained from an OAuth provider, decodes it, validates it, authorizes the user against the database, and returns the login result as either an error or success message
 func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
