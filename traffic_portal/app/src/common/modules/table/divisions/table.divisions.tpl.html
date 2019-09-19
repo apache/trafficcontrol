@@ -38,7 +38,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editDivision(d.id)" ng-repeat="d in ::divisions">
-                <td data-search="^{{::d.name}}$">{{::d.name}}</td>
+                <td name="name" data-search="^{{::d.name}}$">{{::d.name}}</td>
             </tr>
             </tbody>
         </table>
