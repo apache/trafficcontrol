@@ -110,17 +110,6 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    this.getUnassignedDeliveryServiceServers = function(dsId) {
-        return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/servers/unassigned').then(
-            function (result) {
-                return result.data.response;
-            },
-            function (err) {
-                throw err;
-            }
-        )
-    };
-
     this.getEligibleDeliveryServiceServers = function(dsId) {
         return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/servers/eligible').then(
             function (result) {
