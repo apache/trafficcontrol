@@ -68,6 +68,7 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
+	Content-Disposition: attachment; filename="GLOBAL.json"
 	Content-Type: application/json
 	Set-Cookie: mojolicious=...; Path=/; HttpOnly
 	Whole-Content-Sha512: mzP7DVxFAGhICxqagwDyBDRea7oBZPMAx7NCDeOBVCRqlcCFFe7XL3JP58b80aaVOW/2ZGfg/jpYF70cdDfzQA==

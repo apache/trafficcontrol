@@ -21,6 +21,7 @@ package profile
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -59,7 +60,7 @@ func ExportProfileHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%v.json\"", *exportedProfileResp.Profile.Name))
 	api.WriteRespRaw(w, r, exportedProfileResp)
 }
 
