@@ -64,7 +64,7 @@ func ImportProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	successMsg := fmt.Sprintf("Profile imported [ %v ] imported with %v new and %v existing parameters",
+	successMsg := fmt.Sprintf("Profile imported [ %v ] with %v new and %v existing parameters",
 		*importedProfile.Profile.Name, newParamCnt, existingParamCnt)
 
 	api.CreateChangeLogRawTx(api.ApiChange, successMsg, inf.User, inf.Tx.Tx)
