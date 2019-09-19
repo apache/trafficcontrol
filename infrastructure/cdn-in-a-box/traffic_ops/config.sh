@@ -107,12 +107,12 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     },
     "to" : {
         "base_url" : "https://$TO_FQDN",
-        "email_from" : "no-reply@$DOMAIN",
+        "email_from" : "no-reply@$INFRA_SUBDOMAIN.$TLD_DOMAIN",
         "no_account_found_msg" : "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
     },
     "portal" : {
         "base_url" : "https://$TP_FQDN/!#/",
-        "email_from" : "no-reply@$DOMAIN",
+        "email_from" : "no-reply@$INFRA_SUBDOMAIN.$TLD_DOMAIN",
         "pass_reset_path" : "user",
         "user_register_path" : "user"
     },
