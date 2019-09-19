@@ -1,5 +1,10 @@
 package tc
 
+import (
+	"database/sql"
+	"errors"
+)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -116,4 +121,14 @@ type CDNSSLKeysCertificate struct {
 type CDNConfig struct {
 	Name *string `json:"name"`
 	ID   *int    `json:"id"`
+}
+
+// CDNExistsByName returns whether a cdn with the given name exists, and any error.
+// TODO move to helper package.
+func CDNExistsByName(name string, tx *sql.Tx) (bool, error) {
+	count := 0
+	if err := tx.QueryRow(`SELECT count(*) from cdn where name = $1`, name).Scan(&count); err != nil {
+		return false, errors.New("querying cdn existence from name: " + err.Error())
+	}
+	return count > 0, nil
 }

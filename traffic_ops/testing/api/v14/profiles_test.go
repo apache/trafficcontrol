@@ -29,6 +29,7 @@ func TestProfiles(t *testing.T) {
 		UpdateTestProfiles(t)
 		GetTestProfiles(t)
 		GetTestProfilesWithParameters(t)
+		ImportProfile(t)
 	})
 }
 
@@ -156,6 +157,51 @@ func GetTestProfiles(t *testing.T) {
 		if exportResp == nil {
 			t.Errorf("error exporting Profile: response nil\n")
 		}
+	}
+}
+
+func ImportProfile(t *testing.T) {
+	// Get ID of Profile to export
+	resp, _, err := TOSession.GetProfileByName(testData.Profiles[0].Name)
+	if err != nil {
+		t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
+	}
+	profileID := resp[0].ID
+
+	// Export Profile to import
+	exportResp, _, err := TOSession.ExportProfile(profileID)
+	if err != nil {
+		t.Errorf("error exporting Profile: %v - %v\n", profileID, err)
+	}
+	if exportResp == nil {
+		t.Errorf("error exporting Profile: response nil\n")
+	}
+
+	// Modify Profile and import
+
+	// Add parameter and change name
+	strToPtr := func(s string) *string { return &s }
+	profile := exportResp.Profile
+	profile.Name = strToPtr("TestProfileImport")
+
+	newParam := tc.ProfileExportImportParameterNullable{
+		ConfigFile: strToPtr("config_file_import_test"),
+		Name:       strToPtr("param_import_test"),
+		Value:      strToPtr("import_test"),
+	}
+	parameters := append(exportResp.Parameters, newParam)
+
+	// Import Profile
+	importReq := tc.ProfileImportRequest{
+		Profile:    profile,
+		Parameters: parameters,
+	}
+	importResp, _, err := TOSession.ImportProfile(&importReq)
+	if err != nil {
+		t.Errorf("error importing Profile: %v - %v\n", profileID, err)
+	}
+	if importResp == nil {
+		t.Errorf("error importing Profile: response nil\n")
 	}
 }
 

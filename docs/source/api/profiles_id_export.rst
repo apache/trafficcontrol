@@ -49,14 +49,14 @@ Response Structure
 ------------------
 :profile:     The exported :term:`Profile`
 
-	:cdnName:     The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+	:cdn:     The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
 	:description: The :term:`Profile`'s :ref:`profile-description`
 	:name:        The :term:`Profile`'s :ref:`profile-name`
 	:type:        The :term:`Profile`'s :ref:`profile-type`
 
 :parameters:  An array of :term:`Parameters` in use by this :term:`Profile`
 
-	:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+	:config_file: The :term:`Parameter`'s :ref:`parameter-config-file`
 	:name:        :ref:`parameter-name` of the :term:`Parameter`
 	:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
