@@ -203,6 +203,20 @@ func ImportProfile(t *testing.T) {
 	if importResp == nil {
 		t.Errorf("error importing Profile: response nil\n")
 	}
+
+	// Add newly create profile and parameter to testData so it gets deleted
+	testData.Profiles = append(testData.Profiles, tc.Profile{
+		Name:        *profile.Name,
+		CDNName:     *profile.CDNName,
+		Description: *profile.Description,
+		Type:        *profile.Type,
+	})
+
+	testData.Parameters = append(testData.Parameters, tc.Parameter{
+		ConfigFile: *newParam.ConfigFile,
+		Name:       *newParam.Name,
+		Value:      *newParam.Value,
+	})
 }
 
 func GetTestProfilesWithParameters(t *testing.T) {

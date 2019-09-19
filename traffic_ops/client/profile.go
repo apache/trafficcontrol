@@ -205,10 +205,15 @@ func (to *Session) ExportProfile(id int) (*tc.ProfileExportResponse, ReqInf, err
 }
 
 // ImportProfile imports an exported Profile
-func (to *Session) ImportProfile(*tc.ProfileImportRequest) (*tc.ProfileImportResponse, ReqInf, error) {
+func (to *Session) ImportProfile(importRequest *tc.ProfileImportRequest) (*tc.ProfileImportResponse, ReqInf, error) {
+	var remoteAddr net.Addr
 	route := fmt.Sprintf("%s/import", API_v13_Profiles)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqBody, err := json.Marshal(importRequest)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody)
 	if err != nil {
 		return nil, reqInf, err
 	}
