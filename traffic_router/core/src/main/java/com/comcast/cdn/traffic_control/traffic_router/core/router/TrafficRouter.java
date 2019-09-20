@@ -575,10 +575,6 @@ public class TrafficRouter {
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
 				if (ds.isRegionalGeoEnabled()) {
 					RegionalGeo.enforce(this, request, ds, cache, routeResult, track);
-					//If RGB re-direct is set, we return it
-					if (routeResult.getUrl() != null) {
-						return routeResult;
-					}
 				}
 				steeringResult.setCache(cache);
 				selectedCaches.add(cache);
