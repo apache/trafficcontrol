@@ -101,6 +101,20 @@ func loginCreds(toUser string, toPasswd string) ([]byte, error) {
 	return js, nil
 }
 
+// loginToken gathers token login credentials for Traffic Ops.
+func loginToken(token string) ([]byte, error) {
+	form := tc.UserToken {
+		Token: token,
+	}
+
+	j, e := json.Marshal(form)
+	if e != nil {
+		e := fmt.Errorf("Error creating token login json: %v", e)
+		return nil, e
+	}
+	return j, nil
+}
+
 // Deprecated: Login is deprecated, use LoginWithAgent instead. The `Login` function with its present signature will be removed in the next version and replaced with `Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string)`. The `LoginWithAgent` function will be removed the version after that.
 func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
 	s, _, err := LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client", false, DefaultTimeout)
@@ -140,6 +154,29 @@ func (to *Session) login() (net.Addr, error) {
 	}
 
 	return remoteAddr, nil
+}
+
+func (to *Session) loginWithToken(token []byte) (net.Addr, error) {
+	path := apiBase + "/user/login/token"
+	resp, remoteAddr, err := to.rawRequest(http.MethodPost, path, token)
+	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
+	if err != nil {
+		return remoteAddr, fmt.Errorf("requesting: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var alerts tc.Alerts
+	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return remoteAddr, fmt.Errorf("decoding response JSON: %v", err)
+	}
+
+	for _, alert := range alerts.Alerts {
+		if alert.Level == tc.SuccessLevel.String() && alert.Text == "Successfully logged in." {
+			return remoteAddr, nil
+		}
+	}
+
+	return remoteAddr, fmt.Errorf("Login failed, alerts string: %+v", alerts)
 }
 
 // logout of Traffic Ops
@@ -203,6 +240,36 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 	remoteAddr, err := to.login()
 	if err != nil {
 		return nil, remoteAddr, errors.New("logging in: " + err.Error())
+	}
+	return to, remoteAddr, nil
+}
+
+func LoginWithToken(toURL string, token string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, net.Addr, error) {
+	options := cookiejar.Options {
+		PublicSuffixList: publicsuffix.List,
+	}
+
+	jar, err := cookiejar.New(&options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client := http.Client {
+		Timeout: requestTimeout,
+		Transport: &http.Transport {
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		},
+	}
+
+	to := NewSession("", "", toURL, userAgent, &client, useCache)
+	tBts, err := loginToken(token)
+	if err != nil {
+		return nil, nil, fmt.Errorf("logging in: %v", err)
+	}
+
+	remoteAddr, err := to.loginWithToken(tBts)
+	if err != nil {
+		return nil, remoteAddr, fmt.Errorf("logging in: %v", err)
 	}
 	return to, remoteAddr, nil
 }
