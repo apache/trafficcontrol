@@ -1986,6 +1986,7 @@
             "role": 4,
             "stateOrProvince": "LA",
             "tenant": "root",
+            "token": "test",
             "uid": 0,
             "username": "adminuser"
         },
@@ -2008,6 +2009,7 @@
             "role": 1,
             "stateOrProvince": "",
             "tenant": "tenant1",
+            "token": "quest",
             "uid": 0,
             "username": "disalloweduser"
         },
