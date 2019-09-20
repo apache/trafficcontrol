@@ -58,5 +58,7 @@ Fulfill the Delivery Service Request
 Complete the Delivery Service Request
 	Only after the Delivery Service Request has been fulfilled and the changes have been applied can a Delivery Service Request be marked as 'complete'. Marking a Delivery Service Request as 'complete' is currently a manual step because some changes require :term:`cache server` configuration updates (i.e. :term:`Queue Updates`) and/or a CDN :term:`Snapshot`. Once that is done and the changes have been deployed, the request status should be changed from 'pending' to 'complete'.
 
+	..  Note:: Only the user that fulfilled the delivery service request can mark a delivery service as 'complete'. This prevents other users from interfering in the process and marking delivery services as 'complete' when further action is required for the changes to truly be deployed. However, in traffic_portal_properties.json, users with the 'overrideRole' are given the ability to mark any delivery service requests as 'complete'.
+
 Delete the Delivery Service request
 	Delivery Service Requests with a status of 'draft' or 'submitted' can always be deleted entirely if appropriate.
