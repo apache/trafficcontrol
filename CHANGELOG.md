@@ -80,6 +80,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added fields to traffic_portal_properties.json to configure SSO through OAuth.
 - Added field to cdn.conf to configure whitelisted URLs for Json Key Set URL returned from OAuth provider.
 - Improved [profile comparison view in Traffic Portal](https://github.com/apache/trafficcontrol/blob/master/blueprints/profile-param-compare-manage.md).
+- Issue #3871 - provides users with a specified role the ability to mark any delivery service request as complete.
 - Fixed Traffic Ops Golang POST servers/id/deliveryservice continuing erroneously after a database error.
 - Fixed Traffic Ops Golang POST servers/id/deliveryservice double-logging errors.
 
