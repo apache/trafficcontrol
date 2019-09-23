@@ -437,7 +437,6 @@ func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc { return fun
 		sysErr = fmt.Errorf("Beginning transaction: %v", err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		tx.Rollback()
 		return
 	}
 	defer r.Body.Close()
@@ -447,7 +446,6 @@ func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc { return fun
 		userErr = fmt.Errorf("Malformed request: %v", err)
 		errCode = http.StatusBadRequest
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
-		tx.Rollback()
 		return
 	}
 
@@ -457,7 +455,6 @@ func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc { return fun
 		sysErr = fmt.Errorf("Checking for existence of user with email '%s': %v", req.Email, err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		tx.Rollback()
 		return
 	} else if !userExists {
 		// TODO: consider concealing database state from unauthenticated parties;
@@ -465,7 +462,6 @@ func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc { return fun
 		userErr = fmt.Errorf("No account with the email address '%s' was found!", req.Email)
 		errCode = http.StatusNotFound
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
-		tx.Rollback()
 		return
 	}
 
@@ -474,7 +470,6 @@ func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc { return fun
 		sysErr = fmt.Errorf("Failed to generate and insert UUID: %v", err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		tx.Rollback()
 		return
 	}
 	tx.Commit()
