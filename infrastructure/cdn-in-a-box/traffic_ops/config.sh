@@ -123,7 +123,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "iso_root_path" : "/opt/traffic_ops/app/public"
     },
     "inactivity_timeout" : 60,
-    "SMTP" : {
+    "smtp" : {
         "enabled" : false,
         "user" : "",
         "password" : "",

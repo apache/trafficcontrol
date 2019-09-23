@@ -43,7 +43,7 @@ type Config struct {
 	ConfigHypnotoad        `json:"hypnotoad"`
 	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
 	ConfigTO               `json:"to"`
-	SMTP                   *ConfigSMTP `json:"SMTP"`
+	SMTP                   *ConfigSMTP `json:"smtp"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
