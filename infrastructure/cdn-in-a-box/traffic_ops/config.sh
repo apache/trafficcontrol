@@ -124,10 +124,10 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     },
     "inactivity_timeout" : 60,
     "SMTP" : {
-        "Enabled" : false,
-        "User" : "",
-        "Password" : "",
-        "Address" : ""
+        "enabled" : false,
+        "user" : "",
+        "password" : "",
+        "address" : ""
     }
 }
 EOF
