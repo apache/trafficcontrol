@@ -114,7 +114,7 @@ func getServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (string, error
 	}
 
 	serverName := serverNameOrID
-	if ok, err := dbhelpers.ServerExists(serverName, tx); err != nil {
+	if _, ok, err := dbhelpers.GetServerIDFromName(serverName, tx); err != nil {
 		return "", nil, fmt.Errorf("checking server name '%v' existence: %v", serverName, err), http.StatusInternalServerError
 	} else if !ok {
 		return "", errors.New("server not found"), nil, http.StatusNotFound

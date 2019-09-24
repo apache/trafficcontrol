@@ -2145,5 +2145,39 @@
                 "regex": "/foo"
             }
         }
+    ],
+    "to_extensions": [
+        {
+            "name": "ILO_PING",
+            "version": "1.0.0",
+            "info_url": "-",
+            "script_file": "ToPingCheck.pl",
+            "isactive": true,
+            "description": "",
+            "servercheck_short_name": "ILO",
+            "type": "CHECK_EXTENSION_BOOL"
+        },
+        {
+            "name": "ORT_ERROR_COUNT",
+            "version": "1.0.0",
+            "info_url": "-",
+            "script_file": "ToORTCheck.pl",
+            "isactive": true,
+            "description": "",
+            "servercheck_short_name": "ORT",
+            "type": "CHECK_EXTENSION_NUM"
+        }
+    ],
+    "serverchecks": [
+        {
+            "servercheck_short_name": "ILO",
+            "host_name": "atlanta-edge-01",
+            "value": 1
+        },
+        {
+            "servercheck_short_name": "ORT",
+            "host_name": "atlanta-edge-01",
+            "value": 13
+        }
     ]
 }

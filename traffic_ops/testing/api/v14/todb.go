@@ -91,6 +91,18 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
+	err = SetupTypes(db)
+	if err != nil {
+		fmt.Printf("\nError setting up types %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
+	err = SetupToExtensions(db)
+	if err != nil {
+		fmt.Printf("\nError setting up to_extensions %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
 	return err
 }
 
@@ -155,6 +167,7 @@ INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Confi
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Admin + `','` + encryptedPassword + `', 4, 1);
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Portal + `','` + encryptedPassword + `', 5, 1);
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Federation + `','` + encryptedPassword + `', 6, 1);
+INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Extension + `','` + encryptedPassword + `', 3, 1);
 `
 	err = execSQL(db, sqlStmt, "tm_user")
 	if err != nil {
@@ -227,6 +240,35 @@ INSERT INTO job (id, agent, object_type, object_name, keyword, parameters, asset
 INSERT INTO job (id, agent, object_type, object_name, keyword, parameters, asset_url, asset_type, status, start_time, entered_time, job_user, last_updated, job_deliveryservice) VALUES (300, 1, null, null, 'PURGE', 'TTL:48h', 'http://cdn2.edge/job3/.*', 'file', 1, '2018-01-19 21:14:34.000000', '2018-01-19 21:14:34.000000', (SELECT id FROM tm_user where username = 'admin'), '2018-01-19 21:19:32.460870', 100);
 `
 	err := execSQL(db, sqlStmt, "job")
+	if err != nil {
+		return fmt.Errorf("exec failed %v", err)
+	}
+	return nil
+}
+
+// SetupTypes Set up to_extension types
+func SetupTypes(db *sql.DB) error {
+
+	sqlStmt := `
+INSERT INTO type (id, name, description, use_in_table) VALUES (1, 'CHECK_EXTENSION_BOOL', 'Extension for checkmark in Server Check', 'to_extension');
+INSERT INTO type (id, name, description, use_in_table) VALUES (2, 'CHECK_EXTENSION_NUM', 'Extension for int value in Server Check', 'to_extension');
+INSERT INTO type (id, name, description, use_in_table) VALUES (3, 'CHECK_EXTENSION_OPEN_SLOT', 'Open slot for check in Server Status', 'to_extension');
+`
+	err := execSQL(db, sqlStmt, "type")
+	if err != nil {
+		return fmt.Errorf("exec failed %v", err)
+	}
+	return nil
+}
+
+// SetupToExtensions setup open slot in to_extension table
+func SetupToExtensions(db *sql.DB) error {
+
+	sqlStmt := `
+INSERT INTO to_extension (name, version, info_url, isactive, script_file, servercheck_column_name, type) VALUES ('OPEN', '1.0.0', '-', false, '', 'aa', 3);
+INSERT INTO to_extension (name, version, info_url, isactive, script_file, servercheck_column_name, type) VALUES ('OPEN', '1.0.0', '-', false, '', 'ab', 3);
+	`
+	err := execSQL(db, sqlStmt, "to_extension")
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}

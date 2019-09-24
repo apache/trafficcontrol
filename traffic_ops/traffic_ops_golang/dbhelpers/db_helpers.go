@@ -274,16 +274,16 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 	return domain, true, nil
 }
 
-// ServerExists returns true if the server exists.
-func ServerExists(serverName string, tx *sql.Tx) (bool, error) {
-	id := 0
+// GetServerIDFromName gets server id from a given name
+func GetServerIDFromName(serverName string, tx *sql.Tx) (int64, bool, error) {
+	id := int64(0)
 	if err := tx.QueryRow(`SELECT id FROM server WHERE host_name = $1`, serverName).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {
-			return false, nil
+			return id, false, nil
 		}
-		return false, errors.New("querying server name: " + err.Error())
+		return id, false, errors.New("querying server name: " + err.Error())
 	}
-	return true, nil
+	return id, true, nil
 }
 
 func GetServerNameFromID(tx *sql.Tx, id int64) (string, bool, error) {

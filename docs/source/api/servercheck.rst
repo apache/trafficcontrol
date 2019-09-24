@@ -18,7 +18,8 @@
 ***************
 ``servercheck``
 ***************
-.. caution:: This page is a stub! Much of it may be missing or just downright wrong - it needs a lot of love from people with the domain knowledge required to update it.
+
+Updates the resulting value from running a given check extension on a server.
 
 ``POST``
 ========
@@ -26,12 +27,12 @@ Post a server check result to the "serverchecks" table.
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
-:Response Type:  ``undefined``
+:Response Type: Object
 
 Request Structure
 -----------------
-:host_name:              The hostname of the server to which this "servercheck" refers
-:id:                     An integral, unique identifier for this "servercheck"
+:host_name:              The hostname of the server to which this "servercheck" refers. This is not required if id is defined.
+:id:                     The id of the server to which this "servercheck" refers. This is not required if host_name is defined.
 :servercheck_short_name: The short name for the check for which the "servercheck" has been measured
 :value:                  The value of the "servercheck"
 
@@ -50,7 +51,7 @@ Request Structure
 		"id": 1,
 		"host_name": "edge",
 		"servercheck_short_name": "test",
-		"value": "A test servercheck for API examples"
+		"value": 1
 	}
 
 Response Structure

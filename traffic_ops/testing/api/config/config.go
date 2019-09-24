@@ -72,6 +72,9 @@ type Users struct {
 
 	// FederationUser - The Traffic Ops Federation user
 	Federation string `json:"federation" envconfig:"TO_USER_FEDERATION"`
+
+	// Extension - The Traffic Ops Extension user
+	Extension string `json:"extension" envconfig:"TO_USER_EXTENSION"`
 }
 
 // TrafficOpsDB - config section
