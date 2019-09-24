@@ -252,6 +252,14 @@ For the DataTables ColReorder component:
 @traffic_portal/app/src/assets/js/colReorder.dataTables.min_1.5.1.js
 ./licenses/MIT-ColReorder
 
+For the DataTables Buttons component:
+@traffic_portal/app/src/assets/js/dataTables.buttons.min_1.5.6.js
+./licenses/MIT-datatables-buttons
+
+For the HTML5 Buttons component:
+@traffic_portal/app/src/assets/js/buttons.html5.min_1.5.6.js
+./licenses/MIT-buttons-html5
+
 For the moment.js component:
 @traffic_portal/app/src/assets/js/moment-min_2.22.1.js
 ./licenses/MIT-momentjs
