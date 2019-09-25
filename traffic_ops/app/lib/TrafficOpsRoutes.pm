@@ -851,7 +851,7 @@ sub api_routes {
 	$r->put("/api/$version/user/current")->over( authenticated => 1, not_ldap => 1 )->to( 'User#update_current', namespace => $namespace );
 
 	# alternate current user routes
-	$r->post("/api/$version/user/current/update")->over( authenticated => 1, not_ldap => 1 )->to( 'User#update_current', namespace => $namespace );
+	$r->post("/api/$version/user/current/update")->over( authenticated => 1, not_ldap => 1 )->to( 'User#user_current_update', namespace => $namespace );
 
 	# -- USERS: LOGIN
 	# login w/ username and password
