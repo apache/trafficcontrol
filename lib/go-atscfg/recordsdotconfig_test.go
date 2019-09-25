@@ -52,3 +52,89 @@ func TestMakeRecordsDotConfig(t *testing.T) {
 		t.Errorf("expected config to replace 'STRING __HOSTNAME__' with 'STRING __FULL_HOSTNAME__', actual: '%v'", txt)
 	}
 }
+
+
+func TestReplaceLineSuffixes(t *testing.T) {
+	{
+		input := `
+foo STRING __HOSTNAME__
+bar
+baz
+`
+		expected := `
+foo STRING __FULL_HOSTNAME__
+bar
+baz
+`
+		actual := replaceLineSuffixes(input, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
+		if expected != actual {
+			t.Errorf("Expected '%v' Actual '%v'", expected, actual)
+		}
+	}
+	{
+		input := `STRING __HOSTNAME__`
+		expected := `STRING __FULL_HOSTNAME__`
+		actual := replaceLineSuffixes(input, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
+		if expected != actual {
+			t.Errorf("Expected '%v' Actual '%v'", expected, actual)
+		}
+	}
+	{
+		input := `
+STRING __HOSTNAME__
+`
+		expected := `
+STRING __FULL_HOSTNAME__
+`
+		actual := replaceLineSuffixes(input, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
+		if expected != actual {
+			t.Errorf("Expected '%v' Actual '%v'", expected, actual)
+		}
+	}
+	{
+		input := `
+  
+STRING __HOSTNAME__
+`
+		expected := `
+  
+STRING __FULL_HOSTNAME__
+`
+		actual := replaceLineSuffixes(input, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
+		if expected != actual {
+			t.Errorf("Expected '%v' Actual '%v'", expected, actual)
+		}
+	}
+	{
+		input := `
+STRING __HOSTNAME__
+  STRING __HOSTNAME__
+`
+		expected := `
+STRING __FULL_HOSTNAME__
+  STRING __FULL_HOSTNAME__
+`
+		actual := replaceLineSuffixes(input, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
+		if expected != actual {
+			t.Errorf("Expected '%v' Actual '%v'", expected, actual)
+		}
+	}
+	{
+		input := `
+`
+		expected := `
+`
+		actual := replaceLineSuffixes(input, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
+		if expected != actual {
+			t.Errorf("Expected '%v' Actual '%v'", expected, actual)
+		}
+	}
+	{
+		input := ``
+		expected := ``
+		actual := replaceLineSuffixes(input, "STRING __HOSTNAME__", "STRING __FULL_HOSTNAME__")
+		if expected != actual {
+			t.Errorf("Expected '%v' Actual '%v'", expected, actual)
+		}
+	}
+}
