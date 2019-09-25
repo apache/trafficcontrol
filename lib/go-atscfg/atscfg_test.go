@@ -50,3 +50,33 @@ func testComment(t *testing.T, txt string, objName string, toolName string, toUR
 		t.Errorf("expected profile '" + objName + "' in comment, actual: '" + commentLine + "'")
 	}
 }
+
+func TestTrimParamUnderscoreNumSuffix(t *testing.T) {
+	inputExpected := map[string]string{
+		``:                         ``,
+		`a`:                        `a`,
+		`_`:                        `_`,
+		`foo__`:                    `foo__`,
+		`foo__1`:                   `foo`,
+		`foo__1234567890`:          `foo`,
+		`foo_1234567890`:           `foo_1234567890`,
+		`foo__1234__1234567890`:    `foo__1234`,
+		`foo__1234__1234567890_`:   `foo__1234__1234567890_`,
+		`foo__1234__1234567890a`:   `foo__1234__1234567890a`,
+		`foo__1234__1234567890__`:  `foo__1234__1234567890__`,
+		`foo__1234__1234567890__a`: `foo__1234__1234567890__a`,
+		`__`:                       `__`,
+		`__9`:                      ``,
+		`_9`:                       `_9`,
+		`__35971234789124`:         ``,
+		`a__35971234789124`:        `a`,
+		`1234`:                     `1234`,
+		`foo__asdf_1234`:           `foo__asdf_1234`,
+	}
+
+	for input, expected := range inputExpected {
+		if actual := trimParamUnderscoreNumSuffix(input); expected != actual {
+			t.Errorf("Expected '%v' Actual '%v'", expected, actual)
+		}
+	}
+}
