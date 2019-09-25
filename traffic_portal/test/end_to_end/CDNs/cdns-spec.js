@@ -35,6 +35,11 @@ describe('Traffic Portal CDNs Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cdns");
 	});
 
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
+	});
+
 	it('should open new CDN form page', function() {
 		console.log("Open new CDN form page");
 		browser.driver.findElement(by.name('createCdnButton')).click();

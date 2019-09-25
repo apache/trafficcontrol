@@ -41,6 +41,11 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
 	});
 
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
+	});
+
 	it('should open new Servers form page', function() {
 		console.log('Clicking on Create new server ' + mockVals.hostName);
 		browser.driver.findElement(by.name('createServersButton')).click();

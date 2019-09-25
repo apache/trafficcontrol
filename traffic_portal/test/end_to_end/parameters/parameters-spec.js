@@ -34,6 +34,11 @@ describe('Traffic Portal Parameters Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/parameters");
 	});
 
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
+	});
+
 	it('should open new parameter form page', function() {
 		console.log("Open new parameter form page");
 		pageData.createParameterButton.click();

@@ -35,6 +35,11 @@ describe('Traffic Portal Cache Groups Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/cache-groups");
 	});
 
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
+	});
+
 	it('should open new cache group form page', function() {
 		console.log("Open new cache groups form page");
 		browser.driver.findElement(by.name('createCacheGroupButton')).click();
