@@ -440,3 +440,11 @@ For the lestrrat-go/jwx (commit e35178a) component:
 For the dgrijalva/jwt-go (commit 5e25c22) component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/LICENSE
+
+For the ogier/pflag (commit 45c278a) component:
+@vendor/github.com/ogier/pflag/*
+./licenses/BSD-pflag
+
+For the errors (commit 27936f6) component:
+@vendor/github.com/pkg/errors/*
+./vendor/github.com/pkg/errors/LICENSE

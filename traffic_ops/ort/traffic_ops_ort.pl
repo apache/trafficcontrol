@@ -41,12 +41,21 @@ my $login_dispersion = 0;
 my $reval_wait_time = 60;
 my $reval_in_use = 0;
 my $rev_proxy_disable = 0;
+my $skip_os_check = 0;
+my $override_hostname_short = '';
+my $override_hostname_full = '';
+my $override_domainname = '';
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
             "wait_for_parents=i" => \$wait_for_parents,
             "login_dispersion=i" => \$login_dispersion,
-            "rev_proxy_disable=i" => \$rev_proxy_disable );
+            "rev_proxy_disable=i" => \$rev_proxy_disable,
+            "skip_os_check=i" => \$skip_os_check,
+            "override_hostname_short=s" => \$override_hostname_short,
+            "override_hostname_full=s" => \$override_hostname_full,
+            "override_domainname=s" => \$override_domainname,
+          );
 
 if ( $#ARGV < 1 ) {
 	&usage();
@@ -149,13 +158,25 @@ my $rev_proxy_in_use = 0;
 my $lwp_conn                   = &setup_lwp();
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
+if ($override_hostname_short ne '') {
+	$hostname_short = $override_hostname_short;
+}
 chomp($hostname_short);
 my $hostname_full = `/bin/hostname`;
+if ($override_hostname_full ne '') {
+	$hostname_full = $override_hostname_full;
+}
 chomp($hostname_full);
 my $server_ipv4;
 my $server_tcp_port;
 
 my $domainname = &set_domainname();
+if ($override_domainname ne '') {
+	$domainname = $override_domainname;
+}
+
+my $atstccfg_cmd = '/opt/ort/atstccfg';
+
 $lwp_conn->agent("$hostname_short-$unixtime");
 
 my $TMP_BASE  = "/tmp/ort";
@@ -307,8 +328,10 @@ sub os_version {
 	if (`uname -r` =~ m/.+(el\d)(?:\.\w+)*\.x86_64/)  {
 		$release = uc $1;
 	}
-	exists $supported_el_release{$release} ? return $release
-	    : die("unsupported el_version: $release");
+	if (!exists $supported_el_release{$release} && !$skip_os_check) {
+		die("skip_os_check: $skip_os_check dispersion: $dispersion unsupported el_version: $release");
+	}
+	return $release;
 }
 
 sub usage {
@@ -326,11 +349,15 @@ sub usage {
 	print "\n";
 	print "\t<Traffic_Ops_Login> => Example: 'username:password' \n";
 	print "\n\t[optional flags]:\n";
-	print "\t   dispersion=<time>        => wait a random number between 0 and <time> before starting. Default = 300.\n";
-	print "\t   login_dispersion=<time>  => wait a random number between 0 and <time> before login. Default = 0.\n";
-	print "\t   retries=<number>         => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
-	print "\t   wait_for_parents=<0|1>   => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n";
-	print "\t   rev_proxy_disable=<0|1>  => bypass the reverse proxy even if one has been configured Default = 0.\n";
+	print "\t   dispersion=<time>              => wait a random number between 0 and <time> before starting. Default = 300.\n";
+	print "\t   login_dispersion=<time>        => wait a random number between 0 and <time> before login. Default = 0.\n";
+	print "\t   retries=<number>               => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
+	print "\t   wait_for_parents=<0|1>         => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n";
+	print "\t   rev_proxy_disable=<0|1>        => bypass the reverse proxy even if one has been configured Default = 0.\n";
+	print "\t   skip_os_check=<0|1>            => bypass the check for a supported CentOS version. Default = 0.\n";
+	print "\t   override_hostname_short=<text> => override the short hostname of the OS for config generation. Default = ''.\n";
+	print "\t   override_hostname_full=<text>  => override the full hostname of the OS for config generation. Default = ''.\n";
+	print "\t   override_domainname=<text>     => override the domainname of the OS for config generation. Default = ''.\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -1427,6 +1454,23 @@ sub check_this_plugin {
 	}
 }
 
+sub atstccfg_code_to_http_code {
+	# this is necessary, because Linux codes can only be 0-256, so we map e.g. 104 -> 404 to fake the Traffic Ops response code.
+	my $code = shift;
+
+	my $generic_http_err = 500;
+	my %atstccfg_to_http_codes = (
+		0,   200,
+		1,   500,
+		104, 404,
+	);
+	my $http_code = $atstccfg_to_http_codes{$code};
+	if (!defined($http_code)) {
+		$http_code = $generic_http_err;
+	}
+	return $http_code;
+}
+
 sub lwp_get {
 	my $uri           = shift;
 	my $retry_counter = $retries;
@@ -1437,8 +1481,8 @@ sub lwp_get {
 	my $response;
 	my $response_content;
 
-	while( $retry_counter > 0 ) {
-
+	# TODO add retry_counter arg to atstccfg
+	while(1) { # no retry counter, atstccfg handles retries
 		( $log_level >> $INFO ) && print "INFO Traffic Ops host: " . $traffic_ops_host . "\n";
 		( $log_level >> $DEBUG ) && print "DEBUG lwp_get called with $uri\n";
 		my $request = $traffic_ops_host . $uri;
@@ -1451,53 +1495,57 @@ sub lwp_get {
 			( $log_level >> $INFO ) && print "INFO Secure data request - bypassing reverse proxy and using $to_url.\n";
 		}
 
-		$response = $lwp_conn->get($request, %headers);
-		$response_content = $response->content;
+	my $atstccfg_log_path = "$TMP_BASE/atstccfg.log";
 
-		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_message_integrity($response, $ERROR) ) {
-			( $log_level >> $ERROR ) && print "ERROR result for $request is: ..." . $response->content . "...\n";
-			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
-					return $response->code;
-			}
-			if ($uri =~ m/update_status/ &&  $response->code == 404) {
-				return $response->code;
-			}
-			if ( $rev_proxy_in_use == 1 ) {
-				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Reverse Proxy.  Reverting to primary Traffic Ops host.\n";
-				$traffic_ops_host = $to_url;
-				$rev_proxy_in_use = 0;
-			}
-			sleep 2**( $retries - $retry_counter );
-			$retry_counter--;
+	my ( $TO_USER, $TO_PASS ) = split( /:/, $TM_LOGIN );
+
+	$response_content = `$atstccfg_cmd --traffic-ops-user='$TO_USER' --traffic-ops-password='$TO_PASS' --traffic-ops-url='$request' --log-location-error=stderr --log-location-warning=stderr --log-location-info=null 2>$atstccfg_log_path`;
+
+	my $atstccfg_exit_code = $?;
+	$atstccfg_exit_code = atstccfg_code_to_http_code($atstccfg_exit_code);
+
+	if ($atstccfg_exit_code != 200) {
+		if ( $uri =~ m/configfiles\/ats/ && $atstccfg_exit_code == 404) {
+			return $atstccfg_exit_code;
 		}
-		# https://github.com/Comcast/traffic_control/issues/1168
-		elsif ( ( $uri =~ m/url\_sig\_(.*)\.config$/ || $uri =~ m/uri\_signing\_(.*)\.config$/ ) && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
-			( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response->content . "...\n";
-			exit 1;
+		if ($uri =~ m/update_status/ && $atstccfg_exit_code == 404) {
+			return $$atstccfg_exit_code;
 		}
-		else {
-			( $log_level >> $DEBUG ) && print "DEBUG result for $uri is: ..." . $response->content . "...\n";
-			last;
+		if ( $atstccfg_exit_code != 200 && $rev_proxy_in_use == 1 ) {
+			( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Reverse Proxy.  Reverting to primary Traffic Ops host.\n";
+			$traffic_ops_host = $to_url;
+			$rev_proxy_in_use = 0;
+			next;
 		}
 
+		( $log_level >> $FATAL ) && print "FATAL atstccfg returned $atstccfg_exit_code - see $atstccfg_log_path\n";
+		exit 1;
 	}
 
-	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_message_integrity($response, $FATAL) ) if ( $retry_counter == 0 );
+	# https://github.com/Comcast/traffic_control/issues/1168
+	if ( ( $uri =~ m/url\_sig\_(.*)\.config$/ || $uri =~ m/uri\_signing\_(.*)\.config$/ ) && $response_content =~ m/No RIAK servers are set to ONLINE/ ) {
+		( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response_content . "...\n";
+		exit 1;
+	}
 
-	&eval_json($response) if ( $uri =~ m/\.json$/ );
+	( $log_level >> $DEBUG ) && print "DEBUG result for $uri is: ..." . $response_content . "...\n";
+
+		&eval_json($request, $response_content) if ( $uri =~ m/\.json$/ );
+		last;
+	}
 
 	return $response_content;
-
 }
 
 sub eval_json {
-	my $lwp_response = shift;
+	my $uri = shift;
+	my $lwp_response_content = shift;
 	eval {
-		decode_json($lwp_response->content());
+		decode_json($lwp_response_content);
 		1;
 	} or do {
 		my $error = $@;
-		( $log_level >> $FATAL ) && print "FATAL " . $lwp_response->request->uri . " did not return valid JSON: " . $lwp_response->content() . " | Error: $error\n";
+		( $log_level >> $FATAL ) && print "FATAL " . $uri . " did not return valid JSON: " . $lwp_response_content . " | Error: $error\n";
 		exit 1;
 	}
 
