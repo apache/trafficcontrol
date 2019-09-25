@@ -21,6 +21,7 @@ package login
 
 import (
 	"bytes"
+	"crypto/rand"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -40,7 +41,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat-go/jwx/jwk"
 )
@@ -396,15 +396,18 @@ func VerifyUrlOnWhiteList(urlString string, whiteListedUrls []string) (bool, err
 }
 
 func setToken(addr rfc.EmailAddress, tx *sql.Tx) (string, error) {
-	token, err := uuid.NewRandom()
+	token := make([]byte, 16)
+	_, err := rand.Read(token)
 	if err != nil {
 		return "", err
 	}
-	t := token.String()
-	if _,err = tx.Exec(setTokenQuery, t, addr.Address); err != nil {
+	token[6] = (token[6] & 0x0f) | 0x40
+	token[8] = (token[8] & 0x3f) | 0x80
+
+	if _,err = tx.Exec(setTokenQuery, string(token), addr.Address); err != nil {
 		return "", err
 	}
-	return t, nil
+	return string(token), nil
 }
 
 func createMsg(addr rfc.EmailAddress, t string, db *sqlx.DB, c config.ConfigPortal) ([]byte, error) {
