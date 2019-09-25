@@ -265,3 +265,10 @@ type ProfileParametersNullable struct {
 	Profile     *string    `json:"profile" db:"profile"`
 	Parameter   *int       `json:"parameter" db:"parameter_id"`
 }
+
+// ProfileExportedParameterNullable is an object of the form returned by the Traffic Ops /profile/{id}/export endpoint.
+type ProfileExportedParameterNullable struct {
+	ConfigFile *string `json:"config_file"`
+	Name       *string `json:"name"`
+	Value      *string `json:"value"`
+}

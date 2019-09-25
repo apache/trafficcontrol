@@ -164,7 +164,8 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
     $scope.compareProfiles = function() {
         var params = {
             title: 'Compare Profile Parameters',
-            message: "Please select 2 profiles to compare parameters"
+            message: "Please select 2 profiles to compare",
+            labelFunction: function(item) { return item['name'] + ' (' + item['type'] + ')' }
         };
         var modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/compare/dialog.compare.tpl.html',

@@ -96,3 +96,10 @@ td span {
     padding: 10px 20px;
     overflow-y: auto;
 }
+table.dataTable.params tbody td {
+    word-break: break-word;
+    vertical-align: top;
+}
+th.center, td.center {
+    text-align: center;
+}

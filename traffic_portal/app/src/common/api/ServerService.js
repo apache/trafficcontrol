@@ -17,191 +17,194 @@
  * under the License.
  */
 
-var ServerService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
+var ServerService = function($http, locationUtils, messageModel, ENV) {
 
     this.getServers = function(queryParams) {
-        return Restangular.all('servers').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'servers', {params: queryParams}).then(
+            function (result){
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        )
     };
 
     this.getServer = function(id) {
-        return Restangular.one("servers", id).get();
+        return $http.get(ENV.api['root'] + 'servers', {params: {id: id}}).then(
+            function (result) {
+                return result.data.response[0];
+            },
+            function (err) {
+                throw err;
+            }
+        )
     };
 
     this.createServer = function(server) {
-        return Restangular.service('servers').post(server)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
-                    locationUtils.navigateToPath('/servers');
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'servers', server).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
+                locationUtils.navigateToPath('/servers');
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.updateServer = function(server) {
-        return server.put()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Server updated' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.put(ENV.api['root'] + 'servers/' + server.id, server).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Server updated' } ], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.deleteServer = function(id) {
-        var request = $q.defer();
-
-        $http.delete(ENV.api['root'] + "servers/" + id)
-            .then(
-                function(result) {
-                    request.resolve(result.data);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.delete(ENV.api['root'] + "servers/" + id).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.getServerConfigFiles = function(id) {
-        return Restangular.one("servers", id).customGET('configfiles/ats');
+        return $http.get(ENV.api['root'] + 'servers/' + id + '/configfiles/ats').then(
+            function (result) {
+                return result.data;
+            },
+            function (err) {
+                throw err;
+            }
+        )
     };
 
     this.getServerConfigFile = function(url) {
-        var request = $q.defer();
-
-        $http.get(url)
-            .then(
-                function(result) {
-                    request.resolve(result.data);
-                },
-                function() {
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        return $http.get(url).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.getDeliveryServiceServers = function(dsId) {
-        return Restangular.one('deliveryservices', dsId).getList('servers');
-    };
-
-    this.getUnassignedDeliveryServiceServers = function(dsId) {
-        return Restangular.one('deliveryservices', dsId).getList('servers/unassigned');
+        return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/servers').then(
+            function (result) {
+                return result.data.response;
+            }
+        );
     };
 
     this.getEligibleDeliveryServiceServers = function(dsId) {
-        return Restangular.one('deliveryservices', dsId).getList('servers/eligible');
+        return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/servers/eligible').then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        )
     };
 
     this.assignDeliveryServices = function(server, dsIds, replace, delay) {
-        return Restangular.service('servers/' + server.id + '/deliveryservices?replace=' + replace).post( dsIds )
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: dsIds.length + ' delivery services assigned to ' + server.hostName + '.' + server.domainName } ], delay);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'servers/' + server.id + '/deliveryservices', dsIds, {params: {replace: replace}}).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: dsIds.length + ' delivery services assigned to ' + server.hostName + '.' + server.domainName } ], delay);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.queueServerUpdates = function(id) {
-        return Restangular.one("servers", id).customPOST( { action: "queue"}, "queue_update" )
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Queued server updates' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + "servers/" + id + '/queue_update', { action: "queue"}).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Queued server updates' } ], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.clearServerUpdates = function(id) {
-        return Restangular.one("servers", id).customPOST( { action: "dequeue"}, "queue_update" )
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Cleared server updates' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + "servers/" + id + '/queue_update', { action: "dequeue"}).then(
+            function(result) {
+                messageModel.setMessages([ { level: 'success', text: 'Cleared server updates' } ], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.getEdgeStatusCount = function() {
-        var request = $q.defer();
-
-        $http.get(ENV.api['root'] + "servers/status?type=EDGE")
-            .then(
-                function(result) {
-                    request.resolve(result.data.response);
-                },
-                function() {
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        return $http.get(ENV.api['root'] + "servers/status", {params: {type: "EDGE"}}).then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.getCacheStats = function() {
-        var request = $q.defer();
-
-        $http.get(ENV.api['root'] + "caches/stats")
-            .then(
-                function(result) {
-                    request.resolve(result.data.response);
-                },
-                function() {
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        return $http.get(ENV.api['root'] + "caches/stats").then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.getCacheChecks = function() {
-        var request = $q.defer();
-
-        $http.get(ENV.api['root'] + "servers/checks")
-            .then(
-                function(result) {
-                    request.resolve(result.data.response);
-                },
-                function() {
-                    request.reject();
-                }
-            );
-
-        return request.promise;
+        return $http.get(ENV.api['root'] + "servers/checks").then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.updateStatus = function(id, payload) {
-        var request = $q.defer();
-
-        $http.put(ENV.api['root'] + "servers/" + id + "/status", payload)
-            .then(
-                function(result) {
-                    request.resolve(result);
-                },
-                function(fault) {
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.put(ENV.api['root'] + "servers/" + id + "/status", payload).then(
+            function(result) {
+                return result;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
 };
 
-ServerService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
+ServerService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ServerService;

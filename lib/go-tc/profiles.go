@@ -84,6 +84,35 @@ type ProfileNullable struct {
 	//
 	Parameters []ParameterNullable `json:"params,omitempty"`
 }
+
 type ProfileTrimmed struct {
 	Name string `json:"name"`
+}
+
+type ProfileExportedNullable struct {
+	// The Profile name
+	//
+	Name *string `json:"name"`
+
+	// The Profile Description
+	//
+	Description *string `json:"description"`
+
+	// The CDN name associated with the Profile
+	//
+	CDNName *string `json:"cdn"`
+
+	// The Type name associated with the Profile
+	//
+	Type *string `json:"type"`
+}
+
+type ProfileExportedResponse struct {
+	// Parameters associated to the profile
+	//
+	Profile ProfileExportedNullable `json:"profile"`
+
+	// Parameters associated to the profile
+	//
+	Parameters []ProfileExportedParameterNullable `json:"parameters"`
 }

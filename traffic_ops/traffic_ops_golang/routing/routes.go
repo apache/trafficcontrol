@@ -46,6 +46,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnfederation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/coordinate"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crconfig"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbdump"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/consistenthash"
 	dsrequest "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request"
@@ -156,6 +157,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CDN: Monitoring: Traffic Monitor
 		{1.1, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, crconfig.SnapshotGetMonitoringHandler, auth.PrivLevelReadOnly, Authenticated, nil},
 
+		//Database dumps
+		{1.1, http.MethodGet, `dbdump/?`, dbdump.DBDump, auth.PrivLevelAdmin, Authenticated, nil},
+
 		//Division: CRUD
 		{1.1, http.MethodGet, `divisions/?(\.json)?$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `divisions/{id}$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -214,6 +218,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPost, `profiles/?$`, api.CreateHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodDelete, `profiles/{id}$`, api.DeleteHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil},
 
+		{1.1, http.MethodGet, `profiles/{id}/export/?(\.json)?$`, profile.ExportProfileHandler, auth.PrivLevelReadOnly, Authenticated, nil},
+
 		//Region: CRUDs
 		{1.1, http.MethodGet, `regions/?(\.json)?$`, api.ReadHandler(&region.TORegion{}), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `regions/{id}$`, api.ReadHandler(&region.TORegion{}), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -226,6 +232,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
 
+		{1.4, http.MethodGet, `deliveryserviceserver/?(\.json)?$`, dsserver.ReadDSSHandlerV14, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `deliveryserviceserver/?(\.json)?$`, dsserver.ReadDSSHandler, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil},

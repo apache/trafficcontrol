@@ -64,6 +64,8 @@ const (
 	CacheTypeInvalid = CacheType("")
 )
 
+const AlgorithmConsistentHash = "consistent_hash"
+
 const MonitorTypeName = "RASCAL"
 const MonitorProfilePrefix = "RASCAL"
 const RouterTypeName = "CCR"

@@ -98,6 +98,17 @@ func (to *Session) GetDeliveryServicesNullable() ([]tc.DeliveryServiceNullable, 
 	return data.Response, reqInf, nil
 }
 
+func (to *Session) GetDeliveryServicesByCDNID(cdnID int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	data := struct {
+		Response []tc.DeliveryServiceNullable `json:"response"`
+	}{}
+	reqInf, err := get(to, apiBase+dsPath+"?cdn="+strconv.Itoa(cdnID), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	return data.Response, reqInf, nil
+}
+
 func (to *Session) GetDeliveryServiceNullable(id string) (*tc.DeliveryServiceNullable, ReqInf, error) {
 	data := struct {
 		Response []tc.DeliveryServiceNullable `json:"response"`
@@ -420,4 +431,26 @@ func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServer, ReqInf,
 		return nil, reqInf, err
 	}
 	return resp.Response, reqInf, nil
+}
+
+func (to *Session) GetDeliveryServiceURLSigKeys(dsName string) (tc.URLSigKeys, ReqInf, error) {
+	data := struct {
+		Response tc.URLSigKeys `json:"response"`
+	}{}
+	path := apiBase + `/deliveryservices/xmlId/` + dsName + `/urlkeys.json`
+	reqInf, err := get(to, path, &data)
+	if err != nil {
+		return tc.URLSigKeys{}, reqInf, err
+	}
+	return data.Response, reqInf, nil
+}
+
+func (to *Session) GetDeliveryServiceURISigningKeys(dsName string) ([]byte, ReqInf, error) {
+	path := apiBase + `/deliveryservices/` + dsName + `/urisignkeys`
+	data := json.RawMessage{}
+	reqInf, err := get(to, path, &data)
+	if err != nil {
+		return []byte{}, reqInf, err
+	}
+	return []byte(data), reqInf, nil
 }

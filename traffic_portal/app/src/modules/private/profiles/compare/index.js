@@ -24,8 +24,8 @@ module.exports = angular.module('trafficPortal.private.profiles.compare', [])
 				url: '/compare/{profile1Id}/{profile2Id}',
 				views: {
 					profilesContent: {
-						templateUrl: 'common/modules/compare/compare.tpl.html',
-						controller: 'CompareController',
+						templateUrl: 'common/modules/table/profilesParamsCompare/table.profilesParamsCompare.tpl.html',
+						controller: 'TableProfilesParamsCompareController',
 						resolve: {
 							profile1: function($stateParams, profileService) {
 								return profileService.getProfile($stateParams.profile1Id, { includeParams: true });
@@ -33,17 +33,9 @@ module.exports = angular.module('trafficPortal.private.profiles.compare', [])
 							profile2: function($stateParams, profileService) {
 								return profileService.getProfile($stateParams.profile2Id, { includeParams: true });
 							},
-							item1Name: function(profile1) {
-								return profile1.name;
-							},
-							item2Name: function(profile2) {
-								return profile2.name;
-							},
-							item1: function(profile1) {
-								return profile1.params;
-							},
-							item2: function(profile2) {
-								return profile2.params;
+							profilesParams: function(profile1, profile2) {
+								// funky way to do a unique (by id) union of param objects
+								return _.chain(profile1.params).union(profile2.params).unique('id').value();
 							}
 						}
 					}

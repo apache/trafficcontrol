@@ -17,54 +17,70 @@
  * under the License.
  */
 
-var DivisionService = function(Restangular, locationUtils, messageModel) {
+var DivisionService = function($http, ENV, locationUtils, messageModel) {
 
     this.getDivisions = function(queryParams) {
-        return Restangular.all('divisions').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'divisions', {params: queryParams}).then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.getDivision = function(id) {
-        return Restangular.one("divisions", id).get();
+        return $http.get(ENV.api['root'] + 'divisions', {params: {id: id}}).then(
+            function(result) {
+                return result.data.response[0];
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.createDivision = function(division) {
-        return Restangular.service('divisions').post(division)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Division created' } ], true);
-                    locationUtils.navigateToPath('/divisions');
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'divisions', division).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, true);
+                locationUtils.navigateToPath('/divisions');
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.updateDivision = function(division) {
-        return division.put()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Division updated' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.put(ENV.api['root'] + 'divisions/' + division.id, division).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, false);
+                return result;            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.deleteDivision = function(id) {
-        return Restangular.one("divisions", id).remove()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Division deleted' } ], true);
+        return $http.delete(ENV.api['root'] + 'divisions/' + id).then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, true);
+                    return result;
                 },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
+                function(err) {
+                    messageModel.setMessages(err.data.alerts, true);
+                    throw err;
                 }
             );
     };
 
 };
 
-DivisionService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+DivisionService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
 module.exports = DivisionService;

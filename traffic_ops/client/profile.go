@@ -185,3 +185,21 @@ func (to *Session) DeleteProfileByID(id int) (tc.Alerts, ReqInf, error) {
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
+
+// ExportProfile Returns an exported Profile
+func (to *Session) ExportProfile(id int) (*tc.ProfileExportedResponse, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d/export", API_v13_Profiles, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ProfileExportedResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return &data, reqInf, nil
+}

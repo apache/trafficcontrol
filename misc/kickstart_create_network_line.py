@@ -14,32 +14,30 @@
 #
 
 
-''' 
+'''
     This reads a configuration file and checks for functioning
-    network links in /sys/class/net/*, then emits a ks.cfg network line. 
+    network links in /sys/class/net/*, then emits a ks.cfg network line.
     '''
 
 import os
 import re
 
-# Global bad: 
-global DEBUG
-DEBUG = True
+from __future__ import print_function
 
 global TO_LOG
 # This "logs" to stdout which is captured during kickstart
 TO_LOG = True
 
-# This is the standard interface we install to. It is set to a speed value of 
-# 5 (vice 100,1000 or 10000) later on and any other interface will override it 
-# if you've got something faster installed. 
+# This is the standard interface we install to. It is set to a speed value of
+# 5 (vice 100,1000 or 10000) later on and any other interface will override it
+# if you've got something faster installed.
 standard_interface=['p4p1']
 
 ## These are configuration settings:
 # Name of Configuration file:
 cfg_file = "network.cfg"
 
-# Where linux is putting the interface stuff: 
+# Where linux is putting the interface stuff:
 iface_dir = '/sys/class/net/'
 
 ignore_interfaces = ['lo','bond']
@@ -47,27 +45,27 @@ ignore_interfaces = ['lo','bond']
 # Where we kickstart mounts the ISO, and our config directory:
 base_cfg_dir = '/mnt/stage2/ks_scripts/'
 
-# Remember the ? makes the match non-greedy. This is important. 
+# Remember the ? makes the match non-greedy. This is important.
 cfg_line = re.compile("\s*(?P<key>.*?)=(?P<value>.*)\s*$")
 
-# Pick the interface speed for bonding, or "Auto". 
+# Pick the interface speed for bonding, or "Auto".
 # Auto assumes you want the fastest connections with more than 1 interface,
 # Or if there's not 2 interfaces at the same speed you want the fastest.
-# auto is expected to be a string, otherwise use integers: 
-# Speed is in megs. 1000 is 1 gig, 10000 is 10G. 
+# auto is expected to be a string, otherwise use integers:
+# Speed is in megs. 1000 is 1 gig, 10000 is 10G.
 
 iface_speed = 'auto'
 
-restring="%(iface_dir)s(?P<iface>.*)/speed" %vars()
+restring = iface_dir + "(?P<iface>.*)/speed"
 iface_search = re.compile(restring)
 
 
 def read_config(config_file):
-    ''' Reads our network config file and hands back a dict of key:value 
+    ''' Reads our network config file and hands back a dict of key:value
     pairs '''
 
-    net_cfg = {} 
-    with open(config_file,'r') as cfg: 
+    net_cfg = {}
+    with open(config_file,'r') as cfg:
         network_lines = cfg.readlines()
         for line in network_lines:
             if cfg_line.match(line):
@@ -78,11 +76,11 @@ def read_config(config_file):
 
 
 def find_usable_net_devs(location):
-    ''' Search through iface_dir looking for /speed files. 
+    ''' Search through iface_dir looking for /speed files.
     Build a dict keyed on speed (in otherwords the speed is the key with a list of
     interfaces as teh value). '''
-    # We "pre-seed" the dictionary with the standard interface names at a 
-    # speed of 5 so that if there's nothing else we set that up. This 
+    # We "pre-seed" the dictionary with the standard interface names at a
+    # speed of 5 so that if there's nothing else we set that up. This
     # makes it easier  to reconfigure later.
     ifaces = {5:standard_interface}
     bad_ifaces={}
@@ -94,13 +92,13 @@ def find_usable_net_devs(location):
             with open(dev_path,'r') as iface:
                 try:
                     speed = iface.readlines()
-                    # speed should only have one line: 
+                    # speed should only have one line:
                     speed = int(speed[0])
-                # if there is no link some drivers/cards/whatever will 
-                # throw an IOError when you try to read the speed file. 
+                # if there is no link some drivers/cards/whatever will
+                # throw an IOError when you try to read the speed file.
                 except IOError:
                     speed = 0
-        # Other cards will return a -1, which is fine, but *some* of them 
+        # Other cards will return a -1, which is fine, but *some* of them
         # return a 65535. Those we set to 0 as well.
         if speed == 65535:
             speed = 0
@@ -109,7 +107,8 @@ def find_usable_net_devs(location):
                 add = False
         if speed  <= 0:
             add = False
-        if TO_LOG: print add, dev
+        if TO_LOG:
+            print(add, dev)
         if add:
             if speed in ifaces:
                 this_speed = ifaces[speed]
@@ -119,8 +118,9 @@ def find_usable_net_devs(location):
                 ifaces[speed]=[dev]
         else:
             bad_ifaces[dev] = speed
-    print "We find these interfaces have link and might be useful:", ifaces
-    if TO_LOG: print "And these aren't useful:", bad_ifaces
+    print("We find these interfaces have link and might be useful:", ifaces)
+    if TO_LOG:
+        print("And these aren't useful:", bad_ifaces)
     return ifaces
 
 
@@ -128,65 +128,74 @@ def useable_interfaces(net_devs, nc, iface_speed):
     ''' This takes a go at figuring out which interfaces to use.'''
     iface_list = False
     notes = False
-    if TO_LOG: print "in usable interfaces"
+    if TO_LOG:
+        print("in usable interfaces")
 
-    if not ("bond" in nc['BOND_DEVICE'].lower()):
-        if TO_LOG: print "useable interfaces if not", nc['BOND_DEVICE'] 
-        #  Not doing a bond, so  we check to make sure the requested device, 
-        #  nc['BOND_DEVICE'], is in the list of devices with carrier: 
-        if nc['BOND_DEVICE'] == '""': 
+    if "bond" not in nc['BOND_DEVICE'].lower():
+        if TO_LOG:
+            print("useable interfaces if not", nc['BOND_DEVICE'])
+        #  Not doing a bond, so  we check to make sure the requested device,
+        #  nc['BOND_DEVICE'], is in the list of devices with carrier:
+        if nc['BOND_DEVICE'] == '""':
             # In this case we have no network interface in the configuration but we
             # network settings.
-            # First we check how many net_devs we have: 
-            if TO_LOG: print "nc['BOND_DEVICE']=''", len(net_devs), net_devs
+            # First we check how many net_devs we have:
+            if TO_LOG:
+                print("nc['BOND_DEVICE']=''", len(net_devs), net_devs)
             if len(net_devs) == 1: # This is a dict of speed: devices
                 speeds = net_devs.keys()
                 speeds.sort(reverse=True)
                 speed = speeds[0]
                 possibles = net_devs[speed]
-                if TO_LOG: print possibles
-                # At this point we have options, but no information, so: 
+                if TO_LOG:
+                    print(possibles)
+                # At this point we have options, but no information, so:
                 notes = "No device in the configuration file and multiple devices found. Picking the first"
                 iface_list = [possibles[0]]
         else:
-            if TO_LOG: print "inner else"
+            if TO_LOG:
+                print("inner else")
             for speed in net_devs:
                 if nc['BOND_DEVICE'] in net_devs[speed]:
                     iface_list = [nc['BOND_DEVICE']]
                 else:
                     iface_list = [nc['BOND_DEVICE']]
                     notes = "{0} did not have carrier at install time, and may not work".format(nc['BOND_DEVICE'])
-    elif iface_speed is not 'auto':
+    elif iface_speed != 'auto':
         if len(net_devs[iface_speed]) > 0:
             iface_list = net_devs[iface_speed]
         else:
             notes = "no devices set to {0}".format(iface_speed)
-    else: # This SHOULD be iface_speed == auto, and nc['BOND_DEVCE'] containing bond. 
-        #  if not it is anyway. 
-        # Thus we are doing a bond of some sort. 
-        # This gives us the fastest interfaces first: 
+    else: # This SHOULD be iface_speed == auto, and nc['BOND_DEVCE'] containing bond.
+        #  if not it is anyway.
+        # Thus we are doing a bond of some sort.
+        # This gives us the fastest interfaces first:
         speeds = net_devs.keys()
         speeds.sort(reverse=True)
         fastest = speeds[0]
         # Walk through "speeds" and take the first one that has more than one
-        # interface. This will only set iface_list if there are 2 or more interfaces: 
+        # interface. This will only set iface_list if there are 2 or more interfaces:
         # previous_speed = 0
         for i in speeds:
-            if len(net_devs[i]) > 1: 
+            if len(net_devs[i]) > 1:
                 iface_list = net_devs[i]
                 break
-        if TO_LOG: print "iface list:", iface_list
-        # if iface_list is still false, and we are requesting a bond, we will 
-        # want the fastest interface with link: 
+        if TO_LOG:
+            print("iface list:", iface_list)
+        # if iface_list is still false, and we are requesting a bond, we will
+        # want the fastest interface with link:
         if (iface_list == False) and ("bond" in nc['BOND_DEVICE'].lower()):
-                if TO_LOG: print len(net_devs), net_devs, i
+                if TO_LOG:
+                    print(len(net_devs), net_devs, i)
                 if len(net_devs) == 0:
                     iface_list = net_devs
                     notes = "no devices found for the bond. Will not have network after reboot"
                 else:
                     iface_list = net_devs[fastest] # This is assuming that we'll want to bond the fastest interaface.
-                    if TO_LOG: print "dev:", net_devs[fastest]
-    if TO_LOG: print iface_list, notes
+                    if TO_LOG:
+                        print("dev:", net_devs[fastest])
+    if TO_LOG:
+        print(iface_list, notes)
     return iface_list, notes
 
 
@@ -195,10 +204,10 @@ if os.path.isfile(os.path.join(base_cfg_dir,cfg_file)):
     cfg_path = os.path.join(base_cfg_dir,cfg_file)
 elif os.path.isfile(cfg_file):
     cfg_path = cfg_file
-else: 
+else:
     cfg_path = ''
 
-if cfg_path: 
+if cfg_path:
     nc = read_config(cfg_path)
 else:
     # if we don't have a working config file we use this
@@ -215,12 +224,8 @@ else:
         IPV6_DEFAULTGW:" 2001:0db8:0a0b:12f0:0000:0000:0000:0001",
         BONDING_OPTS:"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4",
         DHCP:"no" }
-# This should be set to no in the config file, but that could change: 
-if not nc.has_key('DHCP'):
-    nc['DHCP']='no'
-
-# This should be set to no in the config file, but that could change: 
-if not nc.has_key('DHCP'):
+# This should be set to no in the config file, but that could change:
+if "DHCP" not in nc:
     nc['DHCP']='no'
 
 net_devs = find_usable_net_devs(iface_dir)
@@ -231,43 +236,46 @@ if bondable_iface and len(bondable_iface) > 1:
     dev_list = bondable_iface
     dev_str = dev_list.pop()
     for d in dev_list:
-        dev_str="%(dev_str)s,%(d)s" %vars()
+        dev_str = dev_str + "," + d
 else:
     dev_str = bondable_iface[0]
 
 
 if ('y' in nc['NETWORKING_IPV6'].lower()) and re.search(":",nc['IPV6ADDR']):
-    temp_var = nc['IPV6ADDR']
-    IPV6 = "--ipv6=%(temp_var)s" %vars()
+    IPV6 = "--ipv6=" + nc["IPV6ADDR"]
 else:
     if 'y' in nc['NETWORKING_IPV6'].lower():
-        if iface_problems is False: 
+        if iface_problems is False:
             iface_problems = "IPv6 enabled but no address provided"
-        else: 
+        else:
             iface_problems = "{0} and IPv6 enabled but no address provided".format(iface_problems)
     if re.search(":",nc['IPV6ADDR']):
         if iface_problems is False:
             iface_problems = "IPv6 is disabled, but IPV6ADDR was set to {0}".format(nc['IPV6ADDR'])
         else:
-            iface_problems = "{0} and IPv6 is disabled, but IPV6ADDR was set to {1}".format(iface_problems,nc['IPV6ADDR'])
+            iface_problems = "{0} and IPv6 is disabled, but IPV6ADDR was set to {1}".format(iface_problems, nc['IPV6ADDR'])
     IPV6 = "--noipv6"
 
 if "bond" in nc['BOND_DEVICE'].lower():
-    bond_stuff = "--device=%s --bondslaves=%s --bondopts=%s" %(nc['BOND_DEVICE'] , dev_str, nc['BONDING_OPTS'])
+    bond_stuff = "--device={BOND_DEVICE} --bondslaves={0} --bondopts={BONDING_OPTS}".format(dev_str, **nc)
 elif nc['BOND_DEVICE'] in dev_str:
     bond_stuff = "--device={0}".format(nc["BOND_DEVICE"])
 elif bondable_iface and nc['BOND_DEVICE'] == '""' :
-    print "**\nNo device (BOND_DEVICE) specified it he config, found {0} with link, using it. \n**\n".format(bondable_iface);
+    print("**")
+    print("No device (BOND_DEVICE) specified it he config, found", bondable_iface, "with link, using it.")
+    print("**")
     bond_stuff = "--device={0}".format(bondable_iface[0])
 else:
-    print "**\n{0} not found within $usable_devices, setting anyway, this probably won't work\n**\n".format(nc["BOND_DEVICE"]);
+    print("**")
+    print(nc["BOND_DEVICE"], "not found within $usable_devices, setting anyway, this probably won't work")
+    print("**")
     bond_stuff = "--device={0}".format(nc["BOND_DEVICE"])
 
 if 'yes' in nc['DHCP'].lower() or not bondable_iface:
-    network_line = "network --bootproto=dhcp --device={0} --hostname={1}".format(nc['BOND_DEVICE'], nc['HOSTNAME'])
+    network_line = "network --bootproto=dhcp --device={BOND_DEVICE} --hostname={HOSTNAME}".format(**nc)
 else:
-    network_line = "network --bootproto=static {0} --activate {1} --ip={2} --netmask={3} --gateway={4} --nameserver={5} --mtu={6} --hostname={7} \n".format(
-            bond_stuff, IPV6, nc['IPADDR'], nc['NETMASK'], nc['GATEWAY'], nc['NAMESERVER'], nc['MTU'], nc['HOSTNAME'] )
+    network_line = "network --bootproto=static {0} --activate {1} --ip={IPADDR} --netmask={NETMASK} --gateway={GATEWAY} --nameserver={NAMESERVER} --mtu={MTU} --hostname={HOSTNAME} \n".format(
+            bond_stuff, IPV6, **nc)
 
 if iface_problems:
     network_line = "# Problems found: {0}\n{1}".format(iface_problems,network_line)

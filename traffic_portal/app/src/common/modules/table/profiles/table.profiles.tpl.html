@@ -26,13 +26,13 @@ under the License.
             <button name="createProfileButton" class="btn btn-primary" title="Create Profile" ng-click="createProfile()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-click="importProfile()">Import Profile</a></li>
-                    <li role="menuitem"><a ng-click="compareProfiles()">Compare Profiles</a></li>
+                    <li name="compareProfilesBtn" role="menuitem"><a ng-click="compareProfiles()">Compare Profiles</a></li>
                 </ul>
             </div>
         </div>

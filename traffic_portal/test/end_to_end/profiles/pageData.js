@@ -18,6 +18,12 @@
  */
 
 module.exports = function(){
+	this.moreBtn=element(by.name('moreBtn'));
+	this.compareProfilesMenuItem=element(by.css('a[ng-click*=compareProfiles]'));
+	this.compareDropdown1=element(by.name('compareDropdown1'));
+	this.compareDropdown2=element(by.name('compareDropdown2'));
+	this.compareSubmit=element(by.name('compareSubmit'));
+	this.description=element(by.id('description'));
 	this.createProfileButton=element(by.name('createProfileButton'));
 	this.name=element(by.name('name'));
 	this.cdn=element(by.name('cdn'));
