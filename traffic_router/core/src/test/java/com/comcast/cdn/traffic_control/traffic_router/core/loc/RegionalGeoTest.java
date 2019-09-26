@@ -187,7 +187,20 @@ public class RegionalGeoTest {
         RegionalGeoResult result = RegionalGeo.enforce(dsvcId, url, ip, postal);
 
         assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE));
-        assertThat(result.getUrl(), equalTo("http://example.com/redirect_https"));
+        assertThat(result.getUrl(), equalTo("https://example.com/redirect_https"));
+    }
+
+    @Test
+    public void testEnforceSteeringReDirect() {
+        final String dsvcId = "ds-steering-1";
+        final String url = "http://ds1.example.com/steering";
+        final String postal = null;
+        final String ip = "129.100.254.4";
+
+        RegionalGeoResult result = RegionalGeo.enforce(dsvcId, url, ip, postal);
+
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE));
+        assertThat(result.getUrl(), equalTo("https://example.com/steering-test"));
     }
 
 
