@@ -259,6 +259,7 @@ func LoginWithToken(toURL string, token string, insecure bool, userAgent string,
 		Transport: &http.Transport {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 		},
+		Jar: jar,
 	}
 
 	to := NewSession("", "", toURL, userAgent, &client, useCache)
