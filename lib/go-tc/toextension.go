@@ -28,7 +28,7 @@ type TOExtensionNullable struct {
 	Version              *string         `json:"version"`
 	InfoURL              *string         `json:"info_url"`
 	ScriptFile           *string         `json:"script_file"`
-	IsActive             *bool           `json:"isactive"`
+	IsActive             *int            `json:"isactive"`
 	AdditionConfigJSON   json.RawMessage `json:"additional_config_json"`
 	Description          *string         `json:"description"`
 	ServercheckShortName *string         `json:"servercheck_short_name"`

@@ -2152,7 +2152,7 @@
             "version": "1.0.0",
             "info_url": "-",
             "script_file": "ToPingCheck.pl",
-            "isactive": true,
+            "isactive": 1,
             "description": "",
             "servercheck_short_name": "ILO",
             "type": "CHECK_EXTENSION_BOOL"
@@ -2162,7 +2162,7 @@
             "version": "1.0.0",
             "info_url": "-",
             "script_file": "ToORTCheck.pl",
-            "isactive": true,
+            "isactive": 1,
             "description": "",
             "servercheck_short_name": "ORT",
             "type": "CHECK_EXTENSION_NUM"
