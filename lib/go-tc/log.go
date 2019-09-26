@@ -24,12 +24,12 @@ type LogsResponse struct {
 }
 
 type Log struct {
-	ID           *int       `json:"id"`
-	LastUpdated  *Time      `json:"lastUpdated"`
-	Level        *string    `json:"level"`
-	Message      *string    `json:"message"`
-	TicketNum    *int       `json:"ticketNum"`
-	User         *string    `json:"user"`
+	ID          *int    `json:"id"`
+	LastUpdated *Time   `json:"lastUpdated"`
+	Level       *string `json:"level"`
+	Message     *string `json:"message"`
+	TicketNum   *int    `json:"ticketNum"`
+	User        *string `json:"user"`
 }
 
 type NewLogCountResp struct {

@@ -275,8 +275,8 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 }
 
 // GetServerIDFromName gets server id from a given name
-func GetServerIDFromName(serverName string, tx *sql.Tx) (int64, bool, error) {
-	id := int64(0)
+func GetServerIDFromName(serverName string, tx *sql.Tx) (int, bool, error) {
+	id := 0
 	if err := tx.QueryRow(`SELECT id FROM server WHERE host_name = $1`, serverName).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {
 			return id, false, nil
@@ -286,7 +286,7 @@ func GetServerIDFromName(serverName string, tx *sql.Tx) (int64, bool, error) {
 	return id, true, nil
 }
 
-func GetServerNameFromID(tx *sql.Tx, id int64) (string, bool, error) {
+func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT host_name FROM server WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {

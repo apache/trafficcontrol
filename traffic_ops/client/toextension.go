@@ -31,15 +31,14 @@ func (to *Session) CreateTOExtension(toExtension tc.TOExtensionNullable) (tc.Ale
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s", API_V14_TO_EXTENSION)
-	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_V14_TO_EXTENSION, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
 
 // DeleteToExtension deletes a to_extension
@@ -53,13 +52,12 @@ func (to *Session) DeleteTOExtension(id int) (tc.Alerts, ReqInf, error) {
 	defer resp.Body.Close()
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
 
 // GetTOExtensions gets all to_extensions
 func (to *Session) GetTOExtensions() (tc.TOExtensionResponse, ReqInf, error) {
-	URI := fmt.Sprintf("%s", API_V14_TO_EXTENSION)
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_V14_TO_EXTENSION, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.TOExtensionResponse{}, reqInf, err
@@ -67,5 +65,5 @@ func (to *Session) GetTOExtensions() (tc.TOExtensionResponse, ReqInf, error) {
 	defer resp.Body.Close()
 	var toExtResp tc.TOExtensionResponse
 	err = json.NewDecoder(resp.Body).Decode(&toExtResp)
-	return toExtResp, reqInf, nil
+	return toExtResp, reqInf, err
 }

@@ -19,9 +19,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestServerChecks(t *testing.T) {
@@ -56,14 +56,11 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 
-	strToPtr := func(s string) *string { return &s }
-	intToPtr := func(i int) *int { return &i }
-
 	invalidServerCheck := tc.ServercheckRequestNullable{
-		Name:     strToPtr("BOGUS"),
-		Value:    intToPtr(1),
-		ID:       intToPtr(-1),
-		HostName: strToPtr("bogus_hostname"),
+		Name:     util.StrPtr("BOGUS"),
+		Value:    util.IntPtr(1),
+		ID:       util.IntPtr(-1),
+		HostName: util.StrPtr("bogus_hostname"),
 	}
 
 	// Attempt to create a ServerCheck with invalid server ID
@@ -92,8 +89,7 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 
 func UpdateTestServerChecks(t *testing.T) {
 	for _, servercheck := range testData.Serverchecks {
-		newValue := *servercheck.Value - 1
-		servercheck.Value = &newValue
+		*servercheck.Value--
 		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
 		log.Debugf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
 		if err != nil {

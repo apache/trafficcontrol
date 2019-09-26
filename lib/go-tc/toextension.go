@@ -21,7 +21,7 @@ package tc
 
 import "encoding/json"
 
-// TOExtensionNullable ...
+// TOExtensionNullable represents a servercheck extension used by Traffic Ops
 type TOExtensionNullable struct {
 	ID                   *int            `json:"id"`
 	Name                 *string         `json:"name"`
@@ -35,6 +35,7 @@ type TOExtensionNullable struct {
 	Type                 *string         `json:"type"`
 }
 
+// TOExtensionResponse represents the response from Traffic Ops when creating a TOExtension
 type TOExtensionResponse struct {
 	Response []TOExtensionNullable `json:"response"`
 }

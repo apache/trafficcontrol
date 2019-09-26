@@ -50,7 +50,7 @@ func CreateUpdateServercheck(w http.ResponseWriter, r *http.Request) {
 	serverCheckReq := tc.ServercheckRequestNullable{}
 
 	if err := api.Parse(r.Body, inf.Tx.Tx, &serverCheckReq); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New(err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
@@ -87,11 +87,11 @@ func CreateUpdateServercheck(w http.ResponseWriter, r *http.Request) {
 
 func getServerID(id *int, hostname *string, tx *sql.Tx) (int, bool, error) {
 	if id != nil {
-		_, exists, err := dbhelpers.GetServerNameFromID(tx, int64(*id))
+		_, exists, err := dbhelpers.GetServerNameFromID(tx, *id)
 		return *id, exists, err
 	}
 	sID, exists, err := dbhelpers.GetServerIDFromName(*hostname, tx)
-	return int(sID), exists, err
+	return sID, exists, err
 }
 
 func getColName(shortName *string, tx *sql.Tx) (string, bool, error) {

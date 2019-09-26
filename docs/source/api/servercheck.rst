@@ -31,9 +31,11 @@ Post a server check result to the "serverchecks" table.
 
 Request Structure
 -----------------
-:host_name:              The hostname of the server to which this "servercheck" refers. This is not required if id is defined.
-:id:                     The id of the server to which this "servercheck" refers. This is not required if host_name is defined.
-:servercheck_short_name: The short name for the check for which the "servercheck" has been measured
+The request only requires to have either ``host_name`` or ``id`` defined.
+
+:host_name:              The hostname of the server to which this "servercheck" refers.
+:id:                     The id of the server to which this "servercheck" refers.
+:servercheck_short_name: The short name of the "servercheck".
 :value:                  The value of the "servercheck"
 
 .. code-block:: http

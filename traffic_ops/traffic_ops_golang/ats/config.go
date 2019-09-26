@@ -104,7 +104,7 @@ func getCDNNameFromNameOrID(tx *sql.Tx, cdnNameOrID string) (string, error, erro
 // Returns the name, any user error, any system error, and any error code.
 func getServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (string, error, error, int) {
 	if serverID, err := strconv.Atoi(serverNameOrID); err == nil {
-		serverName, ok, err := dbhelpers.GetServerNameFromID(tx, int64(serverID))
+		serverName, ok, err := dbhelpers.GetServerNameFromID(tx, serverID)
 		if err != nil {
 			return "", nil, fmt.Errorf("getting server name from id %v: %v", serverID, err), http.StatusInternalServerError
 		} else if !ok {
