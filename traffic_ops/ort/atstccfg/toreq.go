@@ -23,10 +23,10 @@ import (
 	"errors"
 	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func GetProfile(cfg TCCfg, profileID int) (tc.Profile, error) {
@@ -171,22 +171,25 @@ func GetCacheGroups(cfg TCCfg) ([]tc.CacheGroupNullable, error) {
 	return cacheGroups, nil
 }
 
-func GetDeliveryServiceServers(cfg TCCfg, serverIDs []int) ([]tc.DeliveryServiceServer, error) {
+func GetDeliveryServiceServers(cfg TCCfg, dsIDs []int, serverIDs []int) ([]tc.DeliveryServiceServer, error) {
 	serverIDsSorted := make([]int, 0, len(serverIDs))
 	for _, id := range serverIDs {
 		serverIDsSorted = append(serverIDsSorted, id)
 	}
 	sort.Ints(serverIDsSorted)
 
-	serverIDStrs := []string{}
-	for _, id := range serverIDs {
-		serverIDStrs = append(serverIDStrs, strconv.Itoa(id))
+	dsIDsSorted := make([]int, 0, len(dsIDs))
+	for _, id := range dsIDs {
+		dsIDsSorted = append(dsIDsSorted, id)
 	}
-	serverIDsStr := strings.Join(serverIDStrs, "-")
+	sort.Ints(dsIDsSorted)
+
+	serverIDsStr := util.HashInts(serverIDsSorted)
+	dsIDsStr := util.HashInts(dsIDsSorted)
 
 	dsServers := []tc.DeliveryServiceServer{}
 	// TODO make this filename shorter (but still unique) somehow. The filename is almost always too long.
-	err := GetCachedJSON(cfg, "deliveryservice_servers_"+serverIDsStr+".json", &dsServers, func(obj interface{}) error {
+	err := GetCachedJSON(cfg, "deliveryservice_servers_d_"+dsIDsStr+"_s_"+serverIDsStr+".json", &dsServers, func(obj interface{}) error {
 		const noLimit = 999999 // TODO add "no limit" param to DSS endpoint
 		toDSS, reqInf, err := (*cfg.TOClient).GetDeliveryServiceServersWithLimits(noLimit, nil, serverIDs)
 		if err != nil {
@@ -342,4 +345,21 @@ func GetParametersByName(cfg TCCfg, paramName string) ([]tc.Parameter, error) {
 		return nil, errors.New("getting params name '" + paramName + "': " + err.Error())
 	}
 	return params, nil
+}
+
+func GetDeliveryServiceRegexes(cfg TCCfg) ([]tc.DeliveryServiceRegexes, error) {
+	regexes := []tc.DeliveryServiceRegexes{}
+	err := GetCachedJSON(cfg, "ds_regexes.json", &regexes, func(obj interface{}) error {
+		toRegexes, reqInf, err := (*cfg.TOClient).GetDeliveryServiceRegexes()
+		if err != nil {
+			return errors.New("getting ds regexes from Traffic Ops '" + MaybeIPStr(reqInf) + "': " + err.Error())
+		}
+		regexes := obj.(*[]tc.DeliveryServiceRegexes)
+		*regexes = toRegexes
+		return nil
+	})
+	if err != nil {
+		return nil, errors.New("getting ds regexes: " + err.Error())
+	}
+	return regexes, nil
 }

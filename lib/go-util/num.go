@@ -20,6 +20,9 @@ package util
  */
 
 import (
+	"crypto/sha512"
+	"encoding/base64"
+	"encoding/binary"
 	"errors"
 	"strconv"
 )
@@ -105,4 +108,18 @@ func BytesLenSplit(s []byte, n int) [][]byte {
 		ss = append(ss, s[n*(len(s)/n):])
 	}
 	return ss
+}
+
+func HashInts(ints []int) string {
+	if len(ints) == 0 {
+		return ""
+	}
+	hsh := sha512.New()
+	buf := make([]byte, binary.MaxVarintLen64)
+	for _, i := range ints {
+		wroteLen := binary.PutVarint(buf, int64(i))
+		hsh.Write(buf[:wroteLen])
+	}
+	bts := hsh.Sum(nil)
+	return base64.RawURLEncoding.EncodeToString(bts)
 }
