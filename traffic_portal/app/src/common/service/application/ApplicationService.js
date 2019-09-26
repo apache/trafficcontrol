@@ -40,7 +40,7 @@ var ApplicationService = function($rootScope, $anchorScroll, $http, messageModel
         $.extend(true, $.fn.dataTable.defaults, {
             "dom": "lfBrtip",
             "buttons": [
-                { "extend": "csv", "className": "btn-link", "titleAttr": "Export to CSV" }
+                { "extend": "csv", "text": "Export as CSV", "titleAttr": "Export as CSV", "className": "btn-link" }
             ],
             "stateSave": true,
             "scrollX": true
