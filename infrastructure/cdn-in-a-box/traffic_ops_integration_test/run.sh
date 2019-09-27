@@ -45,4 +45,3 @@ to-get api/1.4/dbdump > dbdump.api
 diff dbdump.api dbdump.manual && rm -f dbdump.api dbdump.manual
 
 ./traffic_ops_integration_test -test.v -cfg=traffic-ops-test.conf 2>&1 | ./go-junit-report --package-name=golang.test.toapi --set-exit-code > /junit/golang.test.toapi.xml && find /junit -type 'f' | xargs chmod 664 && cat /junit/golang.test.toapi.xml
-sleep 8000
