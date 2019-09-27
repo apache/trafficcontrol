@@ -33,6 +33,11 @@ describe('Traffic Portal Profiles Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/profiles");
 	});
 
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
+	});
+
 	it('should compare profiles', function() {
 		pageData.moreBtn.click();
 		pageData.compareProfilesMenuItem.click();

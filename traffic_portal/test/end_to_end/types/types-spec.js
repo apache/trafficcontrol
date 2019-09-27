@@ -28,6 +28,11 @@ describe('Traffic Portal Types Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/types");
 	});
 
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
+	});
+
 	it('should toggle the visibility of the table columns leaving only one visible', function() {
 		browser.driver.findElement(by.id('toggleColumns')).click();
 		element.all(by.tagName('input[type=checkbox]')).each(function(item) {
