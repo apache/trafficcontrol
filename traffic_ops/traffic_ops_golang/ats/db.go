@@ -276,7 +276,7 @@ WHERE
 	return val, true, nil
 }
 
-// GetProfileParamValue gets the value of a parameter assigned to a profile, by name and config file.
+// GetServerProfileParamValue gets the value of a parameter assigned to a server's Profile, by name and config file.
 // Returns the parameter, whether it existed, and any error.
 func GetServerProfileParamValue(tx *sql.Tx, serverName tc.CacheName, configFile string, name string) (string, bool, error) {
 	qry := `
@@ -557,7 +557,7 @@ func GetServerNameFromID(tx *sql.Tx, id int) (tc.CacheName, bool, error) {
 	return name, true, nil
 }
 
-// getServerNameFromNameOrID returns the server name from a parameter which may be the name or ID.
+// GetServerNameFromNameOrID returns the server name from a parameter which may be the name or ID.
 // This also checks and verifies the existence of the given server, and returns an appropriate user error if it doesn't exist.
 // Returns the name, any user error, any system error, and any error code.
 func GetServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (tc.CacheName, error, error, int) {
@@ -580,12 +580,12 @@ func GetServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (tc.CacheName,
 	return serverName, nil, nil, http.StatusOK
 }
 
-// getServerInfo returns the necessary info about the server, whether the server exists, and any error.
+// GetServerInfoByID returns the necessary info about the server, whether the server exists, and any error.
 func GetServerInfoByID(tx *sql.Tx, id int) (*atscfg.ServerInfo, bool, error) {
 	return getServerInfo(tx, ServerInfoQuery()+`WHERE s.id = $1`, []interface{}{id})
 }
 
-// getServerInfo returns the necessary info about the server, whether the server exists, and any error.
+// GetServerInfoByHost returns the necessary info about the server, whether the server exists, and any error.
 func GetServerInfoByHost(tx *sql.Tx, host tc.CacheName) (*atscfg.ServerInfo, bool, error) {
 	return getServerInfo(tx, ServerInfoQuery()+` WHERE s.host_name = $1 `, []interface{}{host})
 }
