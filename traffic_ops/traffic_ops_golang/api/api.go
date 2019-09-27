@@ -52,7 +52,7 @@ const ReqIDContextKey = "reqid"
 const APIRespWrittenKey = "respwritten"
 
 const influxServersQuery = `
-SELECT (host_name||'.'||domain_name) as FQDN,
+SELECT (host_name||'.'||domain_name) as fqdn,
        tcp_port,
        https_port
 FROM server
@@ -430,12 +430,12 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 	}
 
 	var e error
-	var FQDN string
-	var TCPPort uint
-	var HTTPSPort sql.NullInt64 // this is the only one that's optional
+	var fqdn string
+	var tcpPort uint
+	var httpsPort sql.NullInt64 // this is the only one that's optional
 
 	row := inf.Tx.Tx.QueryRow(influxServersQuery)
-	if e = row.Scan(&FQDN, &TCPPort, &HTTPSPort); e != nil {
+	if e = row.Scan(&fqdn, &tcpPort, &httpsPort); e != nil {
 		e = fmt.Errorf("Failed to create influx client: %v", e)
 		return nil, e
 	}
@@ -443,17 +443,17 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 	useSSL := inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure
 	host := "http%s://%s"
 	if useSSL {
-		if !HTTPSPort.Valid {
-			log.Warnf("INFLUXDB Server %s has no secure ports, assuming default of 8086!", FQDN)
-			HTTPSPort = sql.NullInt64{8086, true}
+		if !httpsPort.Valid {
+			log.Warnf("INFLUXDB Server %s has no secure ports, assuming default of 8086!", fqdn)
+			httpsPort = sql.NullInt64{8086, true}
 		}
-		host = fmt.Sprintf(host, "s", FQDN)
+		host = fmt.Sprintf(host, "s", fqdn)
 	} else {
-		host = fmt.Sprintf(host, "", FQDN)
+		host = fmt.Sprintf(host, "", fqdn)
 	}
 
 	if useSSL {
-		value, err := HTTPSPort.Value()
+		value, err := httpsPort.Value()
 		if err != nil {
 			e = fmt.Errorf("Failed to create influx client: %v", err)
 			return nil, e
@@ -462,15 +462,15 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 		var v int64 = value.(int64)
 
 		if v <= 0 || v > 65535 {
-			log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", FQDN)
+			log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
 			v = 8086
 		}
 
 		host = fmt.Sprintf("%s:%d", host, v)
-	} else if TCPPort > 0 && TCPPort <= 65535 {
-		host = fmt.Sprintf("%s:%d", host, TCPPort)
+	} else if tcpPort > 0 && tcpPort <= 65535 {
+		host = fmt.Sprintf("%s:%d", host, tcpPort)
 	} else {
-		log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", FQDN)
+		log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
 		host += ":8086"
 	}
 
