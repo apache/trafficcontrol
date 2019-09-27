@@ -72,16 +72,19 @@ func GenericHeaderComment(name string, toolName string, url string) string {
 
 // GetATSMajorVersionFromATSVersion returns the major version of the given profile's package trafficserver parameter.
 // The atsVersion is typically a Parameter on the Server's Profile, with the configFile "package" name "trafficserver".
-// Returns an error if atsVersion is empty or not a number.
+// Returns an error if atsVersion is empty or does not start with an unsigned integer followed by a period or nothing.
 func GetATSMajorVersionFromATSVersion(atsVersion string) (int, error) {
-	if len(atsVersion) == 0 {
-		return 0, errors.New("ats version missing")
+	dotPos := strings.Index(atsVersion, ".")
+	if dotPos == -1 {
+		dotPos = len(atsVersion) // if there's no '.' then assume the whole string is just a major version.
 	}
-	atsMajorVer, err := strconv.Atoi(atsVersion[:1])
+	majorVerStr := atsVersion[:dotPos]
+
+	majorVer, err := strconv.ParseUint(majorVerStr, 10, 64)
 	if err != nil {
-		return 0, errors.New("ats version parameter '" + atsVersion + "' is not a number")
+		return 0, errors.New("unexpected version format, expected e.g. '7.1.2.whatever'")
 	}
-	return atsMajorVer, nil
+	return int(majorVer), nil
 }
 
 type DeliveryServiceID int

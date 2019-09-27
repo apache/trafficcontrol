@@ -184,7 +184,8 @@ func GetATSMajorVersionFromServerName(tx *sql.Tx, serverName tc.CacheName) (int,
 		atsVersion = atscfg.DefaultATSVersion
 		log.Warnln("Parameter package.trafficserver missing for server " + string(serverName) + " profile. Assuming version " + atsVersion)
 	}
-	atsMajorVer, err := strconv.Atoi(atsVersion[:1])
+
+	atsMajorVer, err := atscfg.GetATSMajorVersionFromATSVersion(atsVersion)
 	if err != nil {
 		return 0, errors.New("ats version parameter '" + atsVersion + "' on this profile is not a number (config_file 'package', name 'trafficserver')")
 	}
@@ -643,7 +644,7 @@ func GetATSMajorVersion(tx *sql.Tx, serverProfileID atscfg.ProfileID) (int, erro
 		atsVersion = atscfg.DefaultATSVersion
 		log.Warnln("Parameter package.trafficserver missing for profile " + strconv.Itoa(int(serverProfileID)) + ". Assuming version " + atsVersion)
 	}
-	atsMajorVer, err := strconv.Atoi(atsVersion[:1])
+	atsMajorVer, err := atscfg.GetATSMajorVersionFromATSVersion(atsVersion)
 	if err != nil {
 		return 0, errors.New("ats version parameter '" + atsVersion + "' on this profile is not a number (config_file 'package', name 'trafficserver')")
 	}
