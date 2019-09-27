@@ -426,7 +426,7 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 // that the caller will handle this situation appropriately.
 func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 	if !inf.Config.InfluxEnabled {
-		return
+		return nil, nil
 	}
 
 	var e error

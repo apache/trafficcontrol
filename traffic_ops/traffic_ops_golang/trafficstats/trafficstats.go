@@ -130,9 +130,9 @@ type config struct {
 	Unix            bool
 }
 
-func configFromRequest(r *http.Request, i *api.APIInfo) (c config, e error, code int) {
-	code = http.StatusBadRequest // this is so common I may as well do it right away
-
+func configFromRequest(r *http.Request, i *api.APIInfo) (config, error, int) {
+	var c config
+	var e error
 	if accept := r.Header.Get("Accept"); accept != "" {
 
 		mimes, err := rfc.MimeTypesFromAccept(accept)
@@ -156,8 +156,7 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (c config, e error, code
 
 			if !found {
 				e = fmt.Errorf("Failed to negotiate content; cannot produce output satisfying %s", accept)
-				code = http.StatusNotAcceptable
-				return
+				return c, e, http.StatusNotAcceptable
 			}
 		}
 	}
@@ -166,7 +165,7 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (c config, e error, code
 		lim, err := strconv.ParseUint(limit, 10, 64)
 		if err != nil {
 			e = errors.New("Invalid limit!")
-			return
+			return c, e, http.StatusBadRequest
 		}
 		c.Limit = &lim
 	}
@@ -175,7 +174,7 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (c config, e error, code
 		off, err := strconv.ParseUint(offset, 10, 64)
 		if err != nil {
 			e = errors.New("Invalid offset!")
-			return
+			return c, e, http.StatusBadRequest
 		}
 		c.Offset = &off
 	}
@@ -183,20 +182,20 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (c config, e error, code
 	if orderby, ok := i.Params["orderby"]; ok {
 		if c.OrderBy = orderableFromString(orderby); c.OrderBy == nil {
 			e = errors.New("Invalid orderby!")
-			return
+			return c, e, http.StatusBadRequest
 		}
 	}
 
 	if c.Start, e = parseTime(i.Params["startDate"]); e != nil {
 		log.Errorf("Parsing startDate: %v", e)
 		e = errors.New("Invalid startDate!")
-		return
+		return c, e, http.StatusBadRequest
 	}
 
 	if c.End, e = parseTime(i.Params["endDate"]); e != nil {
 		log.Errorf("Parsing endDate: %v", e)
 		e = errors.New("Invalid endDate!")
-		return
+		return c, e, http.StatusBadRequest
 	}
 
 	if interval, ok := i.Params["interval"]; !ok {
@@ -204,7 +203,7 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (c config, e error, code
 	} else if c.Interval = tc.TrafficStatsDurationFromString(interval); c.Interval == tc.InvalidDuration {
 		log.Errorf("Error parsing 'interval' query parameter: %v", e)
 		e = errors.New("Invalid interval!")
-		return
+		return c, e, http.StatusBadRequest
 	}
 
 	if ex, ok := i.Params["exclude"]; ok {
@@ -215,40 +214,39 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (c config, e error, code
 			c.ExcludeSummary = true
 		default:
 			e = errors.New("Invalid exclude! Must be 'series' or 'summary'")
-			return
+			return c, e, http.StatusBadRequest
 		}
 	}
 
 	c.MetricType = i.Params["metricType"]
 	if _, ok := metricTypes[c.MetricType]; !ok {
 		e = fmt.Errorf("Unknown metric type: %s", c.MetricType)
-		return
+		return c, e, http.StatusBadRequest
 	}
 
 	var ok bool
 	if c.DeliveryService, ok = i.Params["deliveryServiceName"]; !ok {
 		if c.DeliveryService, ok = i.Params["deliveryService"]; !ok {
 			e = errors.New("You must specify deliveryService or deliveryServiceName!")
-			return
+			return c, e, http.StatusBadRequest
 		}
 
 		if dsID, err := strconv.ParseUint(c.DeliveryService, 10, 64); err != nil {
 			// sql.ErrNoRows does not *necessarily* mean the DS doesn't exist - an XMLID can simply
 			// be numeric, and so it was wrong to treat it as an ID in the first place.
 			xmlid := c.DeliveryService
-			if c.DeliveryService, err = getXMLIDFromID(dsID, i.Tx.Tx); err != nil && err != sql.ErrNoRows {
+			var exists bool
+			if exists, c.DeliveryService, err = getXMLIDFromID(dsID, i.Tx.Tx); err != nil {
 				log.Errorf("Converting DSID to XMLID: %v", err)
 				e = errors.New("Internal Server Error")
-				code = http.StatusInternalServerError
-				return
-			} else if err == sql.ErrNoRows {
+				return c, e, http.StatusInternalServerError
+			} else if !exists {
 				c.DeliveryService = xmlid
 			}
 		}
 	}
 
-	code = http.StatusOK
-	return
+	return c, nil, http.StatusOK
 }
 
 func GetDSStats(w http.ResponseWriter, r *http.Request) {
@@ -290,18 +288,16 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	}
 	defer (*client).Close()
 
-	var dsTenant uint
-	if dsTenant, err = dsTenantIDFromXMLID(c.DeliveryService, tx); err != nil {
+	exists, dsTenant, err := dsTenantIDFromXMLID(c.DeliveryService, tx)
+	if err != nil {
 		sysErr = err
-
-		if err == sql.ErrNoRows {
-			userErr = fmt.Errorf("No such Delivery Service: %s", c.DeliveryService)
-			errCode = http.StatusNotFound
-		} else {
-			errCode = http.StatusInternalServerError
-		}
-
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		return
+	} else if !exists {
+		userErr = fmt.Errorf("No such Delivery Service: %s", c.DeliveryService)
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
 
@@ -585,30 +581,38 @@ func extractFloat64(k string, m map[string]interface{}) (float64, error) {
 	}
 }
 
-func parseTime(raw string) (t time.Time, e error) {
-	if t, e = time.Parse(time.RFC3339Nano, raw); e == nil {
-		return
+func parseTime(raw string) (time.Time, error) {
+	t, e := time.Parse(time.RFC3339Nano, raw)
+	if e == nil {
+		return t, nil
 	}
 
 	if i, err := strconv.ParseInt(raw, 10, 64); err == nil {
 		t = time.Unix(0, i)
-		return
+		return t, nil
 	}
 
-	t, e = time.Parse(tc.TimeLayout, raw)
-	return
+	return time.Parse(tc.TimeLayout, raw)
 }
 
-func dsTenantIDFromXMLID(xmlid string, tx *sql.Tx) (tid uint, err error) {
+func dsTenantIDFromXMLID(xmlid string, tx *sql.Tx) (bool, uint, error) {
 	row := tx.QueryRow(dsTenantIDFromXMLIDQuery, xmlid)
-	err = row.Scan(&tid)
-	return
+	var tid uint
+	err := row.Scan(&tid)
+	if err == sql.ErrNoRows {
+		return false, 0, nil
+	}
+	return true, tid, err
 }
 
-func getXMLIDFromID(id uint64, tx *sql.Tx) (xmlid string, err error) {
+func getXMLIDFromID(id uint64, tx *sql.Tx) (bool, string, error) {
 	row := tx.QueryRow(xmlidFromIDQuery, id)
-	err = row.Scan(&xmlid)
-	return
+	var xmlid string
+	err := row.Scan(&xmlid)
+	if err == sql.ErrNoRows {
+		return false, "", nil
+	}
+	return true, xmlid, err
 }
 
 // This is a stupid, dirty hack to try to convince Influx to not give back data that's outside of the
