@@ -97,28 +97,6 @@ const (
 		GROUP BY time(%s, %s), cachegroup%s`
 )
 
-type orderable string
-const (
-	timeOrder  orderable = "time"
-	valueOrder orderable = "value"
-)
-
-type APIResponse struct {
-	Response tc.TrafficStatsResponse `json:"response"`
-}
-
-func orderableFromString(v string) *orderable {
-	var o orderable
-	switch v {
-	case "time":
-		o = timeOrder
-	case "value":
-		o = valueOrder
-	default:
-		return nil
-	}
-	return &o
-}
 
 func configFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig, error, int) {
 	var c tc.TrafficStatsConfig
@@ -170,7 +148,7 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig, 
 	}
 
 	if orderby, ok := i.Params["orderby"]; ok {
-		if c.OrderBy = orderableFromString(orderby); c.OrderBy == nil {
+		if c.OrderBy = tc.OrderableFromString(orderby); c.OrderBy == nil {
 			e = errors.New("Invalid orderby!")
 			return c, e, http.StatusBadRequest
 		}
@@ -249,7 +227,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	var c config
+	var c tc.TrafficStatsConfig
 	if c, userErr, errCode = configFromRequest(r, inf); userErr != nil {
 		sysErr = fmt.Errorf("Unable to process deliveryservice_stats request: %v", userErr)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -309,8 +287,8 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var errBuilder strings.Builder
-	resp := APIResponse{
-		tc.TrafficStatsResponse{
+	resp := struct{Response tc.TrafficStatsResponse}{
+		Response: tc.TrafficStatsResponse{
 			Source:  tc.TRAFFIC_STATS_SOURCE,
 			Version: tc.TRAFFIC_STATS_VERSION,
 			Series:  nil,
@@ -418,7 +396,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	w.Write(respBts)
 }
 
-func getSummary(client *influx.Client, conf *config, db string) (tc.TrafficStatsSummary, []influx.Message, error) {
+func getSummary(client *influx.Client, conf *tc.TrafficStatsConfig, db string) (tc.TrafficStatsSummary, []influx.Message, error) {
 
 	msgs := []influx.Message{}
 	s := tc.TrafficStatsSummary{}
@@ -605,14 +583,7 @@ func getXMLIDFromID(id uint64, tx *sql.Tx) (bool, string, error) {
 	return true, xmlid, err
 }
 
-// This is a stupid, dirty hack to try to convince Influx to not give back data that's outside of the
-// range in a WHERE clause. It doesn't work, but it helps.
-// (https://github.com/influxdata/influxdb/issues/8010)
-func (c *config) OffsetString() string {
-	return fmt.Sprintf("%ds", int64(c.Start.Sub(time.Unix(0, 0))/time.Second)%c.Interval.Seconds())
-}
-
-func getSeries(client *influx.Client, conf *config, db string) (tc.TrafficStatsSeries, []influx.Message, error) {
+func getSeries(client *influx.Client, conf *tc.TrafficStatsConfig, db string) (tc.TrafficStatsSeries, []influx.Message, error) {
 	s := tc.TrafficStatsSeries{}
 	msgs := []influx.Message{}
 	extraClauses := strings.Builder{}

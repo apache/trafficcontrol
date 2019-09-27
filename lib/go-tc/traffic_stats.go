@@ -19,7 +19,9 @@ package tc
  * under the License.
  */
 
+import "fmt"
 import "strings"
+import "time"
 
 // TRAFFIC_STATS_VERSION was supposed to be the "API version", but actually the plugin (this route
 // used to be a plugin in Perl) always returned this static value
@@ -89,6 +91,26 @@ func (d TrafficStatsDuration) Seconds() int64 {
 	return -1
 }
 
+type TrafficStatsOrderable string
+const (
+	TimeOrder  TrafficStatsOrderable = "time"
+	ValueOrder TrafficStatsOrderable = "value"
+)
+
+func OrderableFromString(v string) *TrafficStatsOrderable {
+	var o TrafficStatsOrderable
+	switch v {
+	case "time":
+		o = TimeOrder
+	case "value":
+		o = ValueOrder
+	default:
+		return nil
+	}
+	return &o
+}
+
+
 // TrafficStatsConfig represents the configuration of a request made to Traffic Stats. This is
 // typically constructed by parsing a request body submitted to Traffic Ops.
 type TrafficStatsConfig struct {
@@ -96,15 +118,21 @@ type TrafficStatsConfig struct {
 	End             time.Time
 	ExcludeSeries   bool
 	ExcludeSummary  bool
-	Interval        tc.TrafficStatsDuration
+	Interval        TrafficStatsDuration
 	Limit           *uint64
 	MetricType      string
 	Offset          *uint64
-	OrderBy         *orderable
+	OrderBy         *TrafficStatsOrderable
 	Start           time.Time
 	Unix            bool
 }
 
+// This is a stupid, dirty hack to try to convince Influx to not give back data that's outside of the
+// range in a WHERE clause. It doesn't work, but it helps.
+// (https://github.com/influxdata/influxdb/issues/8010)
+func (c *TrafficStatsConfig) OffsetString() string {
+	return fmt.Sprintf("%ds", int64(c.Start.Sub(time.Unix(0, 0))/time.Second)%c.Interval.Seconds())
+}
 
 // TrafficStatsResponse represents a response from one of the "Traffic Stats endpoints" of the
 // Traffic Ops API, e.g. `/deliveryservice_stats`.

@@ -474,12 +474,12 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 		host += ":8086"
 	}
 
-	config := influx.HTTPConfig {
-		Addr: host,
-		Username: inf.Config.ConfigInflux.User,
-		Password: inf.Config.ConfigInflux.Password,
+	config := influx.HTTPConfig{
+		Addr:      host,
+		Username:  inf.Config.ConfigInflux.User,
+		Password:  inf.Config.ConfigInflux.Password,
 		UserAgent: fmt.Sprintf("TrafficOps/%s (Go)", inf.Config.Version),
-		Timeout: time.Duration(float64(inf.Config.ReadTimeout) / 2.1) * time.Second,
+		Timeout:   time.Duration(float64(inf.Config.ReadTimeout)/2.1) * time.Second,
 	}
 
 	var client influx.Client
