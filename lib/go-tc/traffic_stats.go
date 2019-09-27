@@ -19,9 +19,12 @@ package tc
  * under the License.
  */
 
+import "encoding/json"
 import "fmt"
 import "strings"
 import "time"
+
+import influx "github.com/influxdata/influxdb1-client/v2"
 
 // TRAFFIC_STATS_VERSION was supposed to be the "API version", but actually the plugin (this route
 // used to be a plugin in Perl) always returned this static value
@@ -190,4 +193,48 @@ type TrafficStatsSeries struct {
 	// slice where the first element is an RFC3339 timestamp (as a string) and the second/final
 	// element is a floating point number (or nil) indicating the value at that time.
 	Values [][]interface{} `json:"values"`
+}
+
+// FormatTimestamps formats the timestamps contained in the Values array as RFC3339 strings.
+// This returns an error if the data is not in the expected format.
+func (s TrafficStatsSeries) FormatTimestamps() error {
+	for i, v := range s.Values {
+		if len(v) != 2 {
+			return fmt.Errorf("Datapoint %d (%v) malformed", i, v)
+		}
+
+		switch v[0].(type) {
+		case int64:
+			s.Values[i][0] = time.Unix(0, v[0].(int64)).Format(time.RFC3339)
+		case float64:
+			s.Values[i][0] = time.Unix(0, int64(v[0].(float64))).Format(time.RFC3339)
+		case json.Number:
+			val, err := v[0].(json.Number).Int64()
+			if err != nil {
+				return fmt.Errorf("Datapoint %d (%v) malformed: %v", i, v, err)
+			}
+			s.Values[i][0] = time.Unix(0, val).Format(time.RFC3339)
+		default:
+			return fmt.Errorf("Invalid type %T for datapoint %d (%v)", v[0], i, v)
+		}
+	}
+	return nil
+}
+
+// MessagesToString converts a set of messages from an InfluxDB node into a single, print-able string
+func MessagesToString (msgs []influx.Message) string {
+	if msgs == nil || len(msgs) == 0 {
+		return ""
+	}
+
+	b := strings.Builder{}
+	b.Write([]byte("Messages: ["))
+	for _, m := range msgs {
+		b.WriteString(m.Level)
+		b.WriteRune(':')
+		b.WriteString(m.Text)
+		b.Write([]byte(", "))
+	}
+	b.WriteRune(']')
+	return b.String()
 }

@@ -236,16 +236,9 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 
 	client, err := inf.CreateInfluxClient()
 	if err != nil {
-		if err == sql.ErrNoRows {
-			errCode = http.StatusServiceUnavailable
-			userErr = errors.New("No InfluxDB servers available!")
-			sysErr = userErr
-		} else {
-			errCode = http.StatusInternalServerError
-			userErr = nil
-			sysErr = err
-		}
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		errCode = http.StatusInternalServerError
+		sysErr = err
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	} else if client == nil {
 		userErr = errors.New("Traffic Stats is not configured!")
@@ -286,7 +279,6 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var errBuilder strings.Builder
 	resp := struct{Response tc.TrafficStatsResponse}{
 		Response: tc.TrafficStatsResponse{
 			Source:  tc.TRAFFIC_STATS_SOURCE,
@@ -301,79 +293,29 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	// data sets, though.
 	if !c.ExcludeSummary {
 		summary, messages, err := getSummary(client, &c, inf.Config.ConfigInflux.DSDBName)
-
-		errBuilder := strings.Builder{}
-		if messages != nil && len(messages) > 0 {
-			errBuilder.Write([]byte("Messages: ["))
-			for _, m := range messages {
-				errBuilder.WriteString(m.Level)
-				errBuilder.WriteRune(':')
-				errBuilder.WriteString(m.Text)
-				errBuilder.Write([]byte(", "))
-			}
-			errBuilder.WriteRune(']')
-		}
+		log.Debugf("Messages from summary query: %s", tc.MessagesToString(messages))
 
 		if err != nil {
-			sysErr = fmt.Errorf("Getting summary response from Influx: %v - %s", err, errBuilder.String())
+			sysErr = fmt.Errorf("Getting summary response from Influx: %v", err)
 			api.HandleErr(w, r, tx, http.StatusBadGateway, nil, sysErr)
 			return
 		}
-
-		log.Debugf("Messages from summary query: %s", errBuilder.String())
-		errBuilder.Reset()
-		messages = nil
 
 		resp.Response.Summary = &summary
 	}
 
 	if !c.ExcludeSeries {
 		series, messages, err := getSeries(client, &c, inf.Config.ConfigInflux.DSDBName)
-		if messages != nil && len(messages) > 0 {
-			errBuilder.Write([]byte("Messages: ["))
-			for _, m := range messages {
-				errBuilder.WriteString(m.Level)
-				errBuilder.WriteRune(':')
-				errBuilder.WriteString(m.Text)
-				errBuilder.Write([]byte(", "))
-			}
-			errBuilder.WriteRune(']')
-		}
+		log.Debugf("Messages from series query: %s", tc.MessagesToString(messages))
 
 		if err != nil {
-			sysErr = fmt.Errorf("Getting summary response from Influx: %v - %s", err, errBuilder.String())
+			sysErr = fmt.Errorf("Getting summary response from Influx: %v", err)
 			api.HandleErr(w, r, tx, http.StatusBadGateway, nil, sysErr)
 			return
 		}
 
-		log.Debugf("Messages from series query: %s", errBuilder.String())
-		errBuilder.Reset()
-		messages = nil
-
 		if !c.Unix {
-			for i, v := range series.Values {
-				if len(v) != 2 {
-					log.Warnf("Malformed series data point: %v", v)
-					continue
-				}
-
-				// TODO: model the data better so this isn't as scary (possible?)
-				switch t := v[0].(type) {
-				case int64:
-					series.Values[i][0] = time.Unix(0, v[0].(int64)).Format(time.RFC3339)
-				case float64:
-					series.Values[i][0] = time.Unix(0, int64(v[0].(float64))).Format(time.RFC3339)
-				case json.Number:
-					val, err := v[0].(json.Number).Int64()
-					if err != nil {
-						log.Warnf("Error encountered trying to coerce %v to an int64: %v", v, err)
-					} else {
-						series.Values[i][0] = time.Unix(0, val).Format(time.RFC3339)
-					}
-				default:
-					log.Warnf("Invalid type %T for data point", t)
-				}
-			}
+			series.FormatTimestamps()
 		}
 
 		resp.Response.Series = &series
@@ -393,7 +335,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(tc.ContentType, jsonWithRFCTimestamps.String())
 	}
 	w.Header().Set(http.CanonicalHeaderKey("vary"), http.CanonicalHeaderKey("Accept"))
-	w.Write(respBts)
+	w.Write(append(respBts, '\n'))
 }
 
 func getSummary(client *influx.Client, conf *tc.TrafficStatsConfig, db string) (tc.TrafficStatsSummary, []influx.Message, error) {
