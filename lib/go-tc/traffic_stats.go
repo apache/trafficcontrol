@@ -89,6 +89,23 @@ func (d TrafficStatsDuration) Seconds() int64 {
 	return -1
 }
 
+// TrafficStatsConfig represents the configuration of a request made to Traffic Stats. This is
+// typically constructed by parsing a request body submitted to Traffic Ops.
+type TrafficStatsConfig struct {
+	DeliveryService string
+	End             time.Time
+	ExcludeSeries   bool
+	ExcludeSummary  bool
+	Interval        tc.TrafficStatsDuration
+	Limit           *uint64
+	MetricType      string
+	Offset          *uint64
+	OrderBy         *orderable
+	Start           time.Time
+	Unix            bool
+}
+
+
 // TrafficStatsResponse represents a response from one of the "Traffic Stats endpoints" of the
 // Traffic Ops API, e.g. `/deliveryservice_stats`.
 type TrafficStatsResponse struct {

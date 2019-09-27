@@ -120,22 +120,8 @@ func orderableFromString(v string) *orderable {
 	return &o
 }
 
-type config struct {
-	DeliveryService string
-	End             time.Time
-	ExcludeSeries   bool
-	ExcludeSummary  bool
-	Interval        tc.TrafficStatsDuration
-	Limit           *uint64
-	MetricType      string
-	Offset          *uint64
-	OrderBy         *orderable
-	Start           time.Time
-	Unix            bool
-}
-
-func configFromRequest(r *http.Request, i *api.APIInfo) (config, error, int) {
-	var c config
+func configFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig, error, int) {
+	var c tc.TrafficStatsConfig
 	var e error
 	if accept := r.Header.Get("Accept"); accept != "" {
 
