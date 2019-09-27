@@ -25,8 +25,6 @@ import "net/http/httptest"
 import "testing"
 import "time"
 
-// import "github.com/apache/trafficcontrol/lib/go-log"
-
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
