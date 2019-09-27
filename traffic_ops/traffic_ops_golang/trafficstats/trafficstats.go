@@ -36,72 +36,76 @@ import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 import influx "github.com/influxdata/influxdb1-client/v2"
 
-const DEFAULT_INTERVAL = tc.TrafficStatsDuration("1m")
 
-var metricTypes = map[string]interface{}{
-	"kbps":      struct{}{},
-	"tps_total": struct{}{},
-	"tps_2xx":   struct{}{},
-	"tps_3xx":   struct{}{},
-	"tps_4xx":   struct{}{},
-	"tps_5xx":   struct{}{},
-}
+var (
+	metricTypes = map[string]interface{}{
+		"kbps":      struct{}{},
+		"tps_total": struct{}{},
+		"tps_2xx":   struct{}{},
+		"tps_3xx":   struct{}{},
+		"tps_4xx":   struct{}{},
+		"tps_5xx":   struct{}{},
+	}
 
-var jsonWithRFCTimestamps = rfc.MimeType{
-	"application/json",
-	map[string]string{"timestamp": "rfc"},
-}
+	jsonWithRFCTimestamps = rfc.MimeType{
+		"application/json",
+		map[string]string{"timestamp": "rfc"},
+	}
 
-var jsonWithUnixTimestamps = rfc.MimeType{
-	"application/json",
-	map[string]string{"timestamp": "unix"},
-}
+	jsonWithUnixTimestamps = rfc.MimeType{
+		"application/json",
+		map[string]string{"timestamp": "unix"},
+	}
+)
 
-type APIResponse struct {
-	Response tc.TrafficStatsResponse `json:"response"`
-}
 
-const dsTenantIDFromXMLIDQuery = `
-	SELECT tenant_id
-	FROM deliveryservice
-	WHERE xml_id = $1`
+const (
+	DEFAULT_INTERVAL = tc.TrafficStatsDuration("1m")
+	dsTenantIDFromXMLIDQuery = `
+		SELECT tenant_id
+		FROM deliveryservice
+		WHERE xml_id = $1`
 
-const xmlidFromIDQuery = `
-	SELECT xml_id
-	FROM deliveryservice
-	WHERE id = $1`
+	xmlidFromIDQuery = `
+		SELECT xml_id
+		FROM deliveryservice
+		WHERE id = $1`
 
-// TODO: Pretty sure all of this could actually be calculated using the fetched data (assuming an
-// interval is given). Check to see if that's faster than doing another synchronous HTTP request.
-const summaryQuery = `
-	SELECT mean(value) AS "average",
-	       percentile(value, 5) AS "fifthPercentile",
-	       percentile(value, 95) AS "ninetyFifthPercentile",
-	       percentile(value, 98) AS "ninetyEighthPercentile",
-	       min(value) AS "min",
-	       max(value) AS "max",
-	       count(value) AS "count"
-	FROM "%s"."monthly"."%s.ds.1min"
-	WHERE time >= $start
-	AND time <= $end
-	AND cachegroup = 'total'
-	AND deliveryservice = $xmlid`
+	// TODO: Pretty sure all of this could actually be calculated using the fetched data (assuming an
+	// interval is given). Check to see if that's faster than doing another synchronous HTTP request.
+	summaryQuery = `
+		SELECT mean(value) AS "average",
+		       percentile(value, 5) AS "fifthPercentile",
+		       percentile(value, 95) AS "ninetyFifthPercentile",
+		       percentile(value, 98) AS "ninetyEighthPercentile",
+		       min(value) AS "min",
+		       max(value) AS "max",
+		       count(value) AS "count"
+		FROM "%s"."monthly"."%s.ds.1min"
+		WHERE time >= $start
+		AND time <= $end
+		AND cachegroup = 'total'
+		AND deliveryservice = $xmlid`
 
-const seriesQuery = `
-	SELECT mean(value) AS "value"
-	FROM "%s"."monthly"."%s.ds.1min"
-	WHERE cachegroup = 'total'
-	AND deliveryservice = $xmlid
-	AND time >= $start
-	AND time <= $end
-	GROUP BY time(%s, %s), cachegroup%s`
+	seriesQuery = `
+		SELECT mean(value) AS "value"
+		FROM "%s"."monthly"."%s.ds.1min"
+		WHERE cachegroup = 'total'
+		AND deliveryservice = $xmlid
+		AND time >= $start
+		AND time <= $end
+		GROUP BY time(%s, %s), cachegroup%s`
+)
 
 type orderable string
-
 const (
 	timeOrder  orderable = "time"
 	valueOrder orderable = "value"
 )
+
+type APIResponse struct {
+	Response tc.TrafficStatsResponse `json:"response"`
+}
 
 func orderableFromString(v string) *orderable {
 	var o orderable
