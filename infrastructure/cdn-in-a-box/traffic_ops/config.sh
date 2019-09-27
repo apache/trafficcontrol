@@ -168,6 +168,6 @@ cat <<-EOF >/opt/traffic_ops/app/conf/production/influx.conf
 {
     "user": "$INFLUXDB_ADMIN_USER",
     "password": "$INFLUXDB_ADMIN_PASSWORD",
-    "Secure": false
+    "secure": false
 }
 EOF

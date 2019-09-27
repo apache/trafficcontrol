@@ -47,15 +47,15 @@ type Config struct {
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
-	RiakAuthOptions *riak.AuthOptions
-	RiakEnabled     bool
-	ConfigLDAP      *ConfigLDAP
-	LDAPEnabled     bool
-	LDAPConfPath    string `json:"ldap_conf_location"`
-	ConfigInflux    *ConfigInflux
-	InfluxEnabled   bool
+	RiakAuthOptions  *riak.AuthOptions
+	RiakEnabled      bool
+	ConfigLDAP       *ConfigLDAP
+	LDAPEnabled      bool
+	LDAPConfPath     string `json:"ldap_conf_location"`
+	ConfigInflux     *ConfigInflux
+	InfluxEnabled    bool
 	InfluxDBConfPath string
-	Version         string
+	Version          string
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -145,11 +145,11 @@ type ConfigLDAP struct {
 }
 
 type ConfigInflux struct {
-	User string `json:"user"`
-	Password string `json:"password"`
-	DSDBName string `json:"deliveryservice_stats_db_name"`
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	DSDBName    string `json:"deliveryservice_stats_db_name"`
 	CacheDBName string `json:"cache_stats_db_name"`
-	Secure *bool
+	Secure      *bool  `json:"secure"`
 }
 
 const DefaultLDAPTimeoutSecs = 60
