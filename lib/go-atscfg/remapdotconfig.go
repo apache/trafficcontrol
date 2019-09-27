@@ -152,7 +152,7 @@ func GetServerConfigRemapDotConfigForMid(
 	for originFQDN, midRemap := range midRemaps {
 		textLines = append(textLines, "map "+originFQDN+" "+originFQDN+midRemap+"\n")
 	}
-	sort.Sort(sort.StringSlice(textLines))
+	sort.Strings(textLines)
 
 	text := header
 	for _, line := range textLines {
