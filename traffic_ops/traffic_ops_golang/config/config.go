@@ -31,6 +31,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/basho/riak-go-client"
 )
@@ -54,7 +55,7 @@ type Config struct {
 	LDAPConfPath     string `json:"ldap_conf_location"`
 	ConfigInflux     *ConfigInflux
 	InfluxEnabled    bool
-	InfluxDBConfPath string
+	InfluxDBConfPath string `json:"influxdb_conf_path"`
 	Version          string
 }
 
@@ -437,8 +438,7 @@ func GetInfluxConfig(path string) (bool, *ConfigInflux, error) {
 
 	if c.Secure == nil {
 		log.Warnln("InfluxDB configuration does not specify 'Secure', defaulting to 'true'")
-		tmp := true
-		c.Secure = &tmp
+		c.Secure = util.BoolPtr(true)
 	}
 
 	return true, &c, nil
