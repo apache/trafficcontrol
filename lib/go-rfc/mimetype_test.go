@@ -113,7 +113,7 @@ func ExampleMimeType_String() {
 	// Output: text/plain; charset=utf-8; foo=bar
 }
 
-func ExampleMimeType_Equal() {
+func ExampleMimeType_Satisfy() {
 	m, err := NewMimeType("text/plain")
 	if err != nil {
 		fmt.Println(err.Error())
@@ -126,7 +126,7 @@ func ExampleMimeType_Equal() {
 		return
 	}
 
-	fmt.Println(m.Equal(o), o.Equal(m))
+	fmt.Println(m.Satisfy(o), o.Satisfy(m))
 	// Output: true false
 }
 
@@ -242,7 +242,7 @@ func TestMimeType(t *testing.T) {
 
 }
 
-func TestMimeType_Equal(t *testing.T) {
+func TestMimeType_Satisfy(t *testing.T) {
 	m, err := NewMimeType(TEST_MIME)
 	if err != nil {
 		t.Fatalf("Failed to construct a MimeType from TEST_MIME: %v", err)
@@ -253,11 +253,11 @@ func TestMimeType_Equal(t *testing.T) {
 		t.Fatalf("Failed to construct a MimeType from '*/*': %v", err)
 	}
 
-	if !m.Equal(o) {
+	if !m.Satisfy(o) {
 		t.Errorf("Expected %s to satisfy %s, but it did not", m, o)
 	}
 
-	if o.Equal(m) {
+	if o.Satisfy(m) {
 		t.Errorf("Expected %s to not satisfy %s, but it did", o, m)
 	}
 
@@ -265,11 +265,11 @@ func TestMimeType_Equal(t *testing.T) {
 		t.Fatalf("Failed to construct a MimeType from 'text/*': %v", err)
 	}
 
-	if !m.Equal(o) {
+	if !m.Satisfy(o) {
 		t.Errorf("Expected %s to satisfy %s, but it did not", m, o)
 	}
 
-	if o.Equal(m) {
+	if o.Satisfy(m) {
 		t.Errorf("Expected %s to not satisfy %s, but it did", o, m)
 	}
 
@@ -277,11 +277,11 @@ func TestMimeType_Equal(t *testing.T) {
 		t.Fatalf("Failed to construct a MimeType from 'text/vnd.plain+crlf;q=2.1': %v", err)
 	}
 
-	if !m.Equal(o) {
+	if !m.Satisfy(o) {
 		t.Errorf("Expected %s to satisfy %s, but it did not", m, o)
 	}
 
-	if o.Equal(m) {
+	if o.Satisfy(m) {
 		t.Errorf("Expected %s to not satisfy %s, but it did", o, m)
 	}
 }

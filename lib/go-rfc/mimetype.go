@@ -119,17 +119,15 @@ func (m MimeType) String() string {
 	return mime.FormatMediaType(m.Name, m.Parameters)
 }
 
-/*
-Equal checks whether or not the MimeType is "equal to" some other MimeType, o.
-
-Note that this does not check if the two are literally the *same*. Specifically, if the Type or
-SubType of the given MimeType o is the special '*' name, then this will instead check whether or
-not this MimeType can *satisfy* the other according to RFC7231. This means that this equality
-check is NOT associative - that is a.Equal(b) does not imply b.Equal(a).
-
-See Also: The MDN documentation on the Accept Header: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
-*/
-func (m MimeType) Equal(o MimeType) bool {
+// Satisfy checks whether or not the MimeType "satifies" some other MimeType, o.
+//
+// Note that this does not check if the two are literally the *same*. Specifically, if the Type or
+// SubType of the given MimeType o is the special '*' name, then this will instead check whether or
+// not this MimeType can *satisfy* the other according to RFC7231. This means that this satisfaction
+// check is NOT associative - that is a.Satisfy(b) does not imply b.Satisfy(a).
+//
+// See Also: The MDN documentation on the Accept Header: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
+func (m MimeType) Satisfy(o MimeType) bool {
 	// literally anything will satisfy this
 	if o.Type() == "*" && o.SubType() == "*" {
 		return true

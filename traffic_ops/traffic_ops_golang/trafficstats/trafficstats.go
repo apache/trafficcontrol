@@ -142,12 +142,12 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (config, error, int) {
 
 			found := false
 			for _, m := range mimes {
-				if jsonWithRFCTimestamps.Equal(m) {
+				if jsonWithRFCTimestamps.Satisfy(m) {
 					found = true
 					break
 				}
 
-				if jsonWithUnixTimestamps.Equal(m) {
+				if jsonWithUnixTimestamps.Satisfy(m) {
 					found = true
 					c.Unix = true
 					break
