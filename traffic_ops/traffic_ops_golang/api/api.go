@@ -424,11 +424,12 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 //
 // If Influx connections are not enabled, this will return `nil` - but also no error. It is expected
 // that the caller will handle this situation appropriately.
-func (inf *APIInfo) CreateInfluxClient() (c *influx.Client, e error) {
+func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 	if !inf.Config.InfluxEnabled {
 		return
 	}
 
+	var e error
 	var fqdn string
 	var TCPPort uint
 	var HTTPSPort sql.NullInt64 // this is the only one that's optional
@@ -436,7 +437,7 @@ func (inf *APIInfo) CreateInfluxClient() (c *influx.Client, e error) {
 	row := inf.Tx.Tx.QueryRow(influxServersQuery)
 	if e = row.Scan(&fqdn, &TCPPort, &HTTPSPort); e != nil {
 		e = fmt.Errorf("Failed to create influx client: %v", e)
-		return
+		return nil, e
 	}
 
 	useSSL := inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure
@@ -455,7 +456,7 @@ func (inf *APIInfo) CreateInfluxClient() (c *influx.Client, e error) {
 		value, err := HTTPSPort.Value()
 		if err != nil {
 			e = fmt.Errorf("Failed to create influx client: %v", err)
-			return
+			return nil, e
 		}
 
 		var v int64 = value.(int64)
@@ -485,10 +486,8 @@ func (inf *APIInfo) CreateInfluxClient() (c *influx.Client, e error) {
 	client, e = influx.NewHTTPClient(config)
 	if client == nil {
 		e = fmt.Errorf("Failed to create influx client (client was nil): %v", e)
-	} else {
-		c = &client
 	}
-	return
+	return &client, e
 }
 
 // APIInfoImpl implements APIInfo via the APIInfoer interface
