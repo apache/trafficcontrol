@@ -384,137 +384,160 @@
   set_fact:
     default_cachegroup: infrastructure
 
-- name: Get All Profiles
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
-    method: GET
-  register: get_all_profiles
+- name: Create and Assign Profiles and Parameters
+  block:
+    - name: Collect information about eligible cache block drives
+      block:
+        - name: Force fact collection on ats edges and mids as well as grove, if not already performed
+          setup:
+          with_items: "{{ groups['atsec']+groups['atsmid']+groups['grove'] }}"
+          delegate_to: "{{ item }}"
+          delegate_facts: True
+          when: hostvars[item]['ansible_default_ipv4'] is not defined
 
-- name: Get All Parameters from GLOBAL profile
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/GLOBAL/parameters"
-    method: GET
-  register: get_global_parameters
+        - name: Fetch information about block without partitions and whitelisted prefixes
+          set_fact:
+            eligible_cache_disks_tmp: "{{ hostvars[item].ansible_facts.devices | dict2items | json_query(eligible_device_query) | sort }}"
+          vars:
+            eligible_device_query: "[?({{ dl_ds_merged_cache_block_device_prefix_whitelist | map('regex_replace', '^(.*)$', 'starts_with(key,`\\1`)==`true`') | list | join(' || ') }}) && length(value.partitions)==`0`].key"
+          with_items: "{{ groups['atsec']+groups['atsmid']+groups['grove'] }}"
+          register: eligible_cache_disks_tmp2
 
-- name: Unlink all Global Profile parameters to be recreated
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profileparameters/{{ get_all_profiles.json | to_json | from_json | json_query(profile_query) }}/{{ item }}"
-    method: DELETE
-  with_items: "{{ get_global_parameters.json.response | map(attribute='id') | list }}"
-  vars:
-    profile_query: "response[?name == 'GLOBAL'].id | [0]"
-    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
-  register: unassociate_global_params
-  failed_when: (unassociate_global_params.status == 400 and unassociate_global_params.json | to_json | from_json | json_query(error_query) | length != 0) or ( unassociate_global_params.status > 400 and unassociate_global_params.status < 600)
+        - name: Assemble information about eligible cache block drives in a more useful way
+          set_fact:
+            eligible_cache_rotational_disks: "{{ eligible_cache_disks_tmp2.results | json_query(combine_eligible_cache_disks_from_results_query) | items2dict }}"
+          vars:
+            combine_eligible_cache_disks_from_results_query: "[].{key: item, value: ansible_facts.eligible_cache_disks_tmp}"
 
-- name: Create Profiles - Global
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
-    method: POST
-    body: "{{ lookup('template', 'profile.j2') }}"
-  with_items: "{{ dl_ds_merged_profiles }}"
-  vars:
-    name: "{{ item.name }}"
-    description: "{{ item.description }}"
-    cdn: "{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
-    type: "{{ item.type }}"
-    routingDisabled: "{{ (item.routingDisabled | default(false)) | lower }}"
-    cdn_query: "response[?starts_with(domainName,`{{ item.cdn | default(ALL) | lower }}`) == `true` || name == `{{ item.cdn | default(ALL) }}`].id | [0]"
-    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
-  register: create_profiles_out
-  failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+        - name: Fetch information about ram disks
+          set_fact:
+            eligible_cache_ram_disks_tmp: "{{ hostvars[item].ansible_facts.devices | dict2items | json_query(eligible_device_query) | sort }}"
+          vars:
+            eligible_device_query: "[?({{ dl_ds_merged_cache_ram_device_prefix_whitelist | map('regex_replace', '^(.*)$', 'starts_with(key,`\\1`)==`true`') | list | join(' || ') }}) && length(value.partitions)==`0`].key"
+          with_items: "{{ groups['atsec']+groups['atsmid']+groups['grove'] }}"
+          register: eligible_cache_ram_disks_tmp2
 
-- name: Create and Associate Parameters - Global
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item.name }}/parameters"
-    method: POST
-    body: "{{ lookup('template', 'parameter.j2') }}"
-  with_items:
-    - "{{ dl_ds_merged_profiles }}"
-  vars:
-    cdn_query: "response[?starts_with(domainName,`{{ item.cdn | default(ALL) | lower }}`) == `true` || name == `{{ item.cdn | default(ALL) }}`].id | [0]"
-    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
-  register: create_profiles_out
-  failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+        - name: Assemble information about eligible cache ram drives in a more useful way
+          set_fact:
+            eligible_cache_ram_disks: "{{ eligible_cache_ram_disks_tmp2.results | json_query(combine_eligible_ram_disks_from_results_query) | items2dict }}"
+          vars:
+            combine_eligible_ram_disks_from_results_query: "[].{key: item, value: ansible_facts.eligible_cache_ram_disks_tmp}"
 
-- name: Handle Profile & Parameter CDN Templates
-  include_tasks: parameter_loader.yml
-  vars:
-    Target_cdn_delegation_fqdn: "{{ Target_cdn_delegation | default(MKGA) }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
-    Target_cdn_name: "{{ get_all_cdns.json | to_json | from_json | json_query(cdnName_query) }}"
-    Target_cdn_id: "{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
-    cdnName_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation | lower }}`) == `true`].name | [0]"
-    cdn_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation | lower }}`) == `true`].id | [0]"
-  with_items: "{{ cdnDelegationList }}"
-  loop_control:
-    loop_var: Target_cdn_delegation
+        - name: Combine hardware data of caches into a single data object
+          set_fact:
+            dl_ds_cache_hardware_info: "{{ (dl_ds_cache_hardware_info | default({})) | combine({ item: {'ram_disks': ram_disks, 'cache_disks': cache_disks, 'ram_cache_size': ram_cache_size, 'primary_network_interface': primary_network_interface, 'network_bandwidth_limit': network_bandwidth_limit, 'load_avg_limit': load_avg_limit } }) }}"
+          with_items: "{{ groups['atsec']+groups['atsmid']+groups['grove'] }}"
+          vars:
+            ram_disks: "{{ eligible_cache_ram_disks[item] | default([]) }}"
+            cache_disks: "{{ eligible_cache_rotational_disks[item] | default([]) }}"
+            ram_cache_size: "{{ ((ram_cache_size_percentage | int) / 100 * ( hostvars[item].ansible_memtotal_mb | float ) * 1000000) | int }}"
+            ram_cache_size_percentage: "{{ (hostvars[item].component == 'atsec') | ternary(dl_atsec_ram_cache_size_percentage,(hostvars[item].component == 'atsmid') | ternary(dl_atsmid_ram_cache_size_percentage,dl_grove_ram_cache_size_percentage)) }}"
+            primary_network_interface: "{{ hostvars[item].ansible_default_ipv4.interface }}"
+            network_bandwidth_limit: "{{ hostvars[item]['ansible_'+hostvars[item].ansible_default_ipv4.interface].speed }}"
+            load_avg_limit: "{{ [10, hostvars[item].ansible_processor_vcpus * hostvars[item].ansible_processor_threads_per_core] | max }}"
+      when: dl_ds_ats_hardware_info is not defined
 
-- name: Get All Profiles
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
-    method: GET
-  register: get_all_profiles
+    - name: Assemble mapping of hardware info to profile hardware index
+      set_fact:
+        cache_hardware_profile_index: "{{ cache_hardware_profile_index | default({}) | combine({profilename: item}) }}"
+      loop: "{{ dl_ds_cache_hardware_info.values() | unique | sort }}"
+      loop_control:
+        index_var: index
+      vars:
+        profilename: "hdwr{{ index }}"
 
-- name: Get All Parameters per Profile
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item }}/parameters"
-    method: GET
-  vars:
-    profile_query: "response.id"
-  with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
-  register: get_all_parameters_by_profile
+    - name: Assemble information about hardware profiles in a more useful way
+      set_fact:
+        cache_hardware_profile_map: "{{ cache_hardware_profile_map | default({}) | combine({ item: { 'hardware_profile': cache_hardware_profile_index | dict2items | json_query(hw_lookup_query), 'component': hostvars[item].component } }) }}"
+      with_items: "{{ groups['atsec']+groups['atsmid']+groups['grove'] }}"
+      vars:
+        hw_lookup_query: "[?value.ram_disks==`[{{ dl_ds_cache_hardware_info[item].ram_disks | map('to_json') | join(',') }}]` && value.cache_disks==`[{{ dl_ds_cache_hardware_info[item].cache_disks | map('to_json') | join(',') }}]` && value.ram_cache_size=='{{ dl_ds_cache_hardware_info[item].ram_cache_size }}'].key |[0]"
 
-- name: Map CDN Delegation to CDN Name
-  set_fact:
-    delegation_cdnName_map: "{{ (delegation_cdnName_map | default({})) | combine({ (tmp | lower): (item.name | lower) }) }}"
-  with_items: "{{ get_all_cdns.json.response }}"
-  vars:
-    tmp: "{{ (item.domainName == '-') | ternary('ALL', (item.domainName.split('.')[0])) }}"
+    - name: Get All Profiles
+      uri:
+        url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
+        method: GET
+      register: get_all_profiles
 
-- name: Map CDN Name to CDN Delegation
-  set_fact:
-    cdnName_delegation_map: "{{ (delegation_cdnName_map | default({})) | combine({ (item.name | lower): (tmp | lower) }) }}"
-  with_items: "{{ get_all_cdns.json.response }}"
-  vars:
-    tmp: "{{ (item.domainName == '-') | ternary('ALL', (item.domainName.split('.')[0])) }}"
+    - name: Get All Parameters from GLOBAL profile
+      uri:
+        url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/GLOBAL/parameters"
+        method: GET
+      register: get_global_parameters
 
-- name: Generate potential mappings between cdn/components and profiles
-  set_fact:
-    ccp_list: "{{ (ccp_list| default([])) +[{ 'cdnname': item.1, 'component': item.0 , 'profile_keys': profile_keys, 'compound_key': compound_key }] }}"
-  with_nested:
-    - "{{ dl_ds_merged_profile_prefix_ansible_component_map.keys() | map('lower') | list }}"
-    - "{{ lc_cdns | to_json | from_json | json_query(cdn_query) | lower }}"
-  vars:
-    lc_profiles: "{{ get_all_profiles.json.response | lower }}"
-    lc_cdns: "{{ get_all_cdns.json.response | lower }}"
-    profile_keys: "{{ lc_profiles | to_json | from_json | json_query(profile_query) }}"
-    profile_query: "[?starts_with(name,`{{ dl_ds_merged_profile_prefix_ansible_component_map[item.0] | lower }}`) {% if dl_ds_merged_profile_blacklist_ansible_component_map[item.0] != None %}{% for b in dl_ds_merged_profile_blacklist_ansible_component_map[item.0] %}&& !contains(name,`{{ b | lower }}`) {% endfor %}{% endif %}&& cdnname == `{{ item.1 }}`].name"
-    cdn_query: "[].name"
-    compound_key: "{{ item.1 }}_{{ item.0 }}"
+    - name: Unlink all Global Profile parameters to be recreated
+      uri:
+        url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profileparameters/{{ get_all_profiles.json | to_json | from_json | json_query(profile_query) }}/{{ item }}"
+        method: DELETE
+      with_items: "{{ get_global_parameters.json.response | map(attribute='id') | list }}"
+      vars:
+        profile_query: "response[?name == 'GLOBAL'].id | [0]"
+        error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+      register: unassociate_global_params
+      failed_when: (unassociate_global_params.status == 400 and unassociate_global_params.json | to_json | from_json | json_query(error_query) | length != 0) or ( unassociate_global_params.status > 400 and unassociate_global_params.status < 600)
 
-- name: Fabricate a compound_key for each host based on the cdn/component
-  set_fact:
-    host_keys_tmp: "{{ host_keys_tmp | default([]) + [{ 'host': item, 'compound_key': compound_key }] }}"
-  with_items: "{{ groups['all'] }}"
-  vars:
-    compound_key: "{{ delegation_cdnName_map[hostvars[item].cdn | lower ] }}_{{ hostvars[item].component | lower }}"
+    - name: Create Profiles - Global
+      uri:
+        url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
+        method: POST
+        body: "{{ lookup('template', 'profile.j2') }}"
+      with_items: "{{ dl_ds_merged_profiles }}"
+      vars:
+        name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        cdn: "{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
+        type: "{{ item.type }}"
+        routingDisabled: "{{ (item.routingDisabled | default(false)) | lower }}"
+        cdn_query: "response[?starts_with(domainName,`{{ item.cdn | default(ALL) | lower }}`) == `true` || name == `{{ item.cdn | default(ALL) }}`].id | [0]"
+        error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+      register: create_profiles_out
+      failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
 
-- name: Produce elegible pairings of keys and hosts
-  set_fact:
-    paired_elegible_keys_hosts: "{{ paired_elegible_keys_hosts | default({}) | combine( { item: { 'hosts': hosts, 'profiles': profile_keys } } ) }}"
-  with_items: "{{ compound_keys }}"
-  vars:
-    compound_key_query: "[].compound_key"
-    host_query: "[?compound_key == '{{ item }}'].host"
-    key_query: "[?compound_key == '{{ item }}'].profile_keys[]"
-    compound_keys: "{{ host_keys_tmp | to_json | from_json | json_query(compound_key_query) | unique }}"
-    hosts: "{{ host_keys_tmp | to_json | from_json | json_query(host_query) }}"
-    profile_keys: "{{ ccp_list | to_json | from_json | json_query(key_query) }}"
+    - name: Create and Associate Parameters - Global
+      uri:
+        url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item.name }}/parameters"
+        method: POST
+        body: "{{ lookup('template', 'parameter.j2') }}"
+      with_items:
+        - "{{ dl_ds_merged_profiles }}"
+      vars:
+        cdn_query: "response[?starts_with(domainName,`{{ item.cdn | default(ALL) | lower }}`) == `true` || name == `{{ item.cdn | default(ALL) }}`].id | [0]"
+        error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+      register: create_profiles_out
+      failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
 
-- name: Associate eligible profiles to hosts
-  set_fact:
-    profile_assignments: "{{ profile_assignments | default({}) | combine(paired_elegible_keys_hosts[item].profiles | associate_round_robin(paired_elegible_keys_hosts[item].hosts) | denormalize_association) }}"
-  with_items: "{{ paired_elegible_keys_hosts.keys() | list }}"
+    - name: Handle Profile & Parameter CDN Templates
+      include_tasks: parameter_loader.yml
+      vars:
+        Target_cdn_delegation_fqdn: "{{ Target_cdn_delegation | default(MKGA) }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
+        Target_cdn_name: "{{ get_all_cdns.json | to_json | from_json | json_query(cdnName_query) }}"
+        Target_cdn_id: "{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
+        cdnName_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation | lower }}`) == `true`].name | [0]"
+        cdn_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation | lower }}`) == `true`].id | [0]"
+      with_items: "{{ cdnDelegationList }}"
+      loop_control:
+        loop_var: Target_cdn_delegation
+
+    - name: Get All Profiles
+      uri:
+        url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
+        method: GET
+      register: get_all_profiles
+
+    - name: Get All Parameters per Profile
+      uri:
+        url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item }}/parameters"
+        method: GET
+      vars:
+        profile_query: "response.id"
+      with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
+      register: get_all_parameters_by_profile
+
+    - name: Associate eligible profiles to hosts2
+      set_fact:
+        profile_assignments: "{{ groups['all'] | associate_profile_to_servers(profile_names,cache_hardware_profile_map,hostvars,dl_ds_merged_profile_prefix_ansible_component_map) }}"
+      vars:
+        profile_names: "{{ get_all_profiles.json.response | map(attribute='name') | list | map('lower') | list | unique | sort }}"
 
 - name: Get All Server Statuses
   uri:
@@ -526,6 +549,13 @@
   set_fact:
     cdn_assignment_reverse_tmp: "{{ cdn_assignment_reverse_tmp | default([]) + [{'host': item.key, 'cdn': item.value}] }}"
   with_dict: "{{ cdn_assignments }}"
+
+- name: Map CDN Delegation to CDN Name
+  set_fact:
+    delegation_cdnName_map: "{{ (delegation_cdnName_map | default({})) | combine({ (tmp | lower): (item.name | lower) }) }}"
+  with_items: "{{ get_all_cdns.json.response }}"
+  vars:
+    tmp: "{{ (item.domainName == '-') | ternary('ALL', (item.domainName.split('.')[0])) }}"
 
 - name: Divide TM hosts in half per CDN (Phase 1)
   set_fact:

@@ -36,26 +36,39 @@ dl_ats_version: "7.1.4-2.el7"
 dl_mojo_token:
 # Information regarding how large the ATS ram cache ought to be on an edge tier cache
 dl_atsec_ram_cache_size_percentage: 18
-dl_atsec_ram_system_total_mb: 20000 # should be replaced by the `ansible_memtotal_mb` fact of a cache, assumed 20G
-dl_atsec_ram_cache_size_mb: "{{ dl_atsec_ram_cache_size_percentage / 100 * ( dl_atsec_ram_system_total_mb | float ) }}"
 # Largest object size to be held in the ram cache before going straght to block devices on an edge tier cache
 dl_atsec_ram_cache_max_obj_size_mb: 1073.741824 # 1 GiB
 # Information regarding how large the ATS ram cache ought to be on an mid tier cache
 dl_atsmid_ram_cache_size_percentage: "{{ dl_atsec_ram_cache_size_percentage }}"
-dl_atsmid_ram_system_total_mb: "{{ dl_atsec_ram_system_total_mb }}" # should be replaced by the `ansible_memtotal_mb` fact of a cache
-dl_atsmid_ram_cache_size_mb: "{{ dl_atsmid_ram_cache_size_percentage / 100 * ( dl_atsmid_ram_system_total_mb | float ) }}"
 # Largest object size to be held in the ram cache before going straght to block devices on a mid tier cache
 dl_atsmid_ram_cache_max_obj_size_mb: "{{ dl_atsec_ram_cache_max_obj_size_mb }}"
-# Information regarding how ramdisks on an edge tier cache are identified
-dl_atsec_ram_drive_prefix: "/dev/ram"
-dl_atsec_ram_drive_letters: "0,1,2"
-# Information regarding how ramdisks on a mid tier cache are identified
-dl_atsmid_ram_drive_prefix: "/dev/ram"
-dl_atsmid_ram_drive_letters: "0,1,2"
 # Information regarding how large the Grove ram cache ought to be
 dl_grove_ram_cache_size_percentage: 50
-dl_grove_ram_system_total_mb: 20000
-dl_grove_ram_cache_size_mb: "{{ dl_grove_ram_cache_size_percentage / 100 * ( dl_grove_ram_system_total_mb | float ) }}"
+# What block device prefixes should be examined for partitions and maybe used as cache disks as reported by ansible_facts.devices
+dl_ds_merged_cache_block_device_prefix_whitelist: "{{ dl_ds_default_cache_block_device_prefix_whitelist }}"
+dl_ds_default_cache_block_device_prefix_whitelist:
+  - vd
+  - hd
+  - sd
+  - nvme
+# What block device prefixes should be examinded for ram disks to use with caches
+dl_ds_merged_cache_ram_device_prefix_whitelist: "{{ dl_ds_default_cache_ram_device_prefix_whitelist }}"
+dl_ds_default_cache_ram_device_prefix_whitelist:
+  - ram
+# What percentage of available interface speed should be available to caches before becoming unhealthy
+dl_ds_reserved_bandwidth_percentage: 90
+
+# Handle to provide your own custom hardware information
+# Defining this variable disables automatic detection
+#dl_ds_cache_hardware_info:
+#  cdn-atsec-01.kabletown.invalid:
+#    cache_disks:
+#      - vdb
+#    ram_cache_size: 5762160000
+#    ram_disks:
+#      - ram0
+#      - ram1
+#      - ram2
 
 # TO CDN
 dl_ds_merged_cdns: "{{ dl_ds_default_cdns }}"
@@ -268,43 +281,22 @@ dl_ds_default_divisions:
               - tr-west
               - multi-site-org-west
 
-# Mapping of eligible TO Profile prefixes to inventory hostvar component name
+# Mapping of eligible TO Profile regex to inventory hostvar component name
 dl_ds_merged_profile_prefix_ansible_component_map: "{{ dl_ds_default_profile_prefix_ansible_component_map }}"
 dl_ds_default_profile_prefix_ansible_component_map:
-  grove: GROVE_EDGE_
-  atsec: ATS_EDGE_
-  atsmid: ATS_MID_
-  fakeorigin: MSO_
-  mso_parent_alias: MSO_
-  influxdb: INFLUXDB
-  riak: RIAK
-  traffic_monitor: RASCAL_
-  traffic_ops: TRAFFIC_OPS
-  traffic_opsdb: TRAFFIC_OPS_DB
-  traffic_portal: TRAFFIC_PORTAL
-  traffic_router: CCR_
-  traffic_stats: TRAFFIC_STATS
-
-# Exclusion papping of eligible TO Profile suffixes to inventory hostvar component name
-dl_ds_merged_profile_blacklist_ansible_component_map: "{{ dl_ds_default_profile_blacklist_ansible_component_map }}"
-dl_ds_default_profile_blacklist_ansible_component_map:
-  grove:
-  atsec:
-  atsmid:
-  fakeorigin:
-  mso_parent_alias:
-  influxdb:
-  riak:
-  traffic_monitor:
-  traffic_ops:
-    - _DB
-  traffic_opsdb:
-    - active
-    - standby
-    - replica
-  traffic_portal:
-  traffic_router:
-  traffic_stats:
+  grove: '(?i)^Grove_Edge_.*'
+  atsec: '(?i)^ATS_EDGE_.*'
+  atsmid: '(?i)^ATS_MID_.*'
+  fakeorigin: '(?i)^MSO_.*'
+  mso_parent_alias: '(?i)^MSO_.*'
+  influxdb: '(?i)^INFLUXDB$'
+  riak: '(?i)^RIAK.*'
+  traffic_monitor: '(?i)^RASCAL_.*'
+  traffic_ops: '(?i)^TRAFFIC_OPS$'
+  traffic_opsdb: '(?i)^TRAFFIC_OPS_DB$'
+  traffic_portal: '(?i)^TRAFFIC_PORTAL$'
+  traffic_router: '(?i)^CCR_.*'
+  traffic_stats: '(?i)^TRAFFIC_STATS$'
 
 # TO Servers
 dl_ds_merged_servers: "{{ dl_ds_default_servers }}"
@@ -888,7 +880,7 @@ dl_ds_default_profile_cdntemplates:
         value: "{{ dl_allow_ip6 }}"
       - name: cache_size_bytes
         configFile: grove.cfg
-        value: "{{ (dl_grove_ram_cache_size_mb | float * 1000000) | int }}"
+        value: "{{ cache_hardware_profile_index[(Target_hardware_profile | default({})).ram_cache_size | default(0)] | default(20000) }}"
       - name: cert_file
         configFile: grove.cfg
         value: "/etc/pki/tls/certs/server.crt"
@@ -903,7 +895,7 @@ dl_ds_default_profile_cdntemplates:
         value: '443'
       - name: interface_name
         configFile: grove.cfg
-        value: ens3
+        value: "{{ (Target_hardware_profile | default({})).primary_network_interface | default('eth0') }}"
       - name: key_file
         configFile: grove.cfg
         value: "/etc/pki/tls/private/server.key.pem"
@@ -1125,10 +1117,10 @@ dl_ds_default_profile_cdntemplates:
         value: http://${hostname}/_astats?application=&inf.name=${interface_name}
       - name: health.threshold.availableBandwidthInKbps
         configFile: rascal.properties
-        value: ">100000"
+        value: ">{{ ((Target_hardware_profile | default({})).network_bandwidth_limit | default('1000') | float * ((dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
       - name: health.threshold.loadavg
         configFile: rascal.properties
-        value: '30.0'
+        value: "{{ (Target_hardware_profile | default({})).load_avg_limit | default('10') }}.0"
       - name: health.threshold.queryTime
         configFile: rascal.properties
         value: '1000'
@@ -1245,7 +1237,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.cache.ram_cache.size
         configFile: records.config
-        value: "INT {{ (dl_atsec_ram_cache_size_mb | float * 1000000) | int }}"
+        value: "INT {{ cache_hardware_profile_index[(Target_hardware_profile | default({})).ram_cache_size | default(0)] | default(20000) }}"
       - name: CONFIG proxy.config.cache.ram_cache.use_seen_filter
         configFile: records.config
         value: INT 1
@@ -2355,16 +2347,16 @@ dl_ds_default_profile_cdntemplates:
         value: '1'
       - name: Drive_Letters
         configFile: storage.config
-        value: b
+        value: "{{ Target_hardware_profile_cache_disk_letters | default('') }}"
       - name: Drive_Prefix
         configFile: storage.config
-        value: "/dev/vd"
+        value: "/dev/{{ Target_hardware_profile_cache_disk_prefix | default('sd') }}"
       - name: RAM_Drive_Letters
         configFile: storage.config
-        value: "{{ dl_atsec_ram_drive_letters }}"
+        value: "{{ Target_hardware_profile_ram_disk_letters | default('') }}"
       - name: RAM_Drive_Prefix
         configFile: storage.config
-        value: "{{ dl_atsec_ram_drive_prefix }}"
+        value: "/dev/{{ Target_hardware_profile_ram_disk_prefix | default('ram') }}"
       - name: RAM_Volume
         configFile: storage.config
         value: '2'
@@ -2502,10 +2494,10 @@ dl_ds_default_profile_cdntemplates:
         value: http://${hostname}/_astats?application=&inf.name=${interface_name}
       - name: health.threshold.availableBandwidthInKbps
         configFile: rascal.properties
-        value: ">100000"
+        value: ">{{ ((Target_hardware_profile | default({})).network_bandwidth_limit | default('1000') | float * ((dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
       - name: health.threshold.loadavg
         configFile: rascal.properties
-        value: '25.0'
+        value: "{{ (Target_hardware_profile | default({})).load_avg_limit | default('10') }}.0"
       - name: health.threshold.queryTime
         configFile: rascal.properties
         value: '1000'
@@ -2619,7 +2611,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.cache.ram_cache.size
         configFile: records.config
-        value: "INT {{ (dl_atsmid_ram_cache_size_mb | float * 1000000) | int }}"
+        value: "INT {{ cache_hardware_profile_index[(Target_hardware_profile | default({})).ram_cache_size | default(0)] | default(20000) }}"
       - name: CONFIG proxy.config.cache.ram_cache.use_seen_filter
         configFile: records.config
         value: INT 1
@@ -3651,16 +3643,16 @@ dl_ds_default_profile_cdntemplates:
         value: '1'
       - name: Drive_Letters
         configFile: storage.config
-        value: b
+        value: "{{ Target_hardware_profile_cache_disk_letters | default('') }}"
       - name: Drive_Prefix
         configFile: storage.config
-        value: "/dev/vd"
+        value: "/dev/{{ Target_hardware_profile_cache_disk_prefix | default('sd') }}"
       - name: RAM_Drive_Letters
         configFile: storage.config
-        value: "{{ dl_atsmid_ram_drive_letters }}"
+        value: "{{ Target_hardware_profile_ram_disk_letters | default('') }}"
       - name: RAM_Drive_Prefix
         configFile: storage.config
-        value: "{{ dl_atsmid_ram_drive_prefix }}"
+        value: "/dev/{{ Target_hardware_profile_ram_disk_prefix | default('ram')  }}"
       - name: RAM_Volume
         configFile: storage.config
         value: '2'
