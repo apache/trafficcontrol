@@ -621,10 +621,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = setRevalFlags(dsid, inf.Tx.Tx); err != nil {
-		userErr = errors.New("Something wicked happened... Please queue server updates (or set reval_pending=true) manually to avoid problems!")
 		sysErr = fmt.Errorf("setting reval_pending after deleting job #%s: %v", inf.Params["id"], err)
 		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
 		return
 	}
 
