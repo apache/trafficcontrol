@@ -138,12 +138,10 @@ func GetTestInvalidationJobs(t *testing.T) {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v\n", err, toDSes)
 	}
 
-	dsIDNames := map[uint]string{}
 	for _, ds := range toDSes {
 		if ds.ID <= 0 {
 			t.Fatalf("Erroneous Delivery Service - has invalid ID: %+v\n", ds)
 		}
-		dsIDNames[uint(ds.ID)] = ds.XMLID
 	}
 
 	for _,testJob := range testData.InvalidationJobs {
