@@ -238,10 +238,9 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	} else if client == nil {
-		userErr = errors.New("Traffic Stats is not configured!")
-		sysErr = userErr
-		errCode = http.StatusServiceUnavailable
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		sysErr = errors.New("Traffic Stats is not configured, but DS stats were requested")
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
 	defer (*client).Close()
@@ -294,7 +293,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			sysErr = fmt.Errorf("Getting summary response from Influx: %v", err)
-			api.HandleErr(w, r, tx, http.StatusBadGateway, nil, sysErr)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 
@@ -307,7 +306,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			sysErr = fmt.Errorf("Getting summary response from Influx: %v", err)
-			api.HandleErr(w, r, tx, http.StatusBadGateway, nil, sysErr)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 
