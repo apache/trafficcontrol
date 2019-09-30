@@ -237,7 +237,7 @@ func (job *InvalidationJob) Read() ([]interface{}, error, error, int) {
 		"dsId":            dbhelpers.WhereColumnInfo{"job.job_deliveryservice", api.IsInt},
 	}
 
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(job.APIInfo().Params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(job.APIInfo().Params, queryParamsToSQLCols)
 	if len(errs) > 0 {
 		var b strings.Builder
 		b.WriteString("Reading jobs:")
@@ -250,7 +250,7 @@ func (job *InvalidationJob) Read() ([]interface{}, error, error, int) {
 	}
 
 	// TODO: check tenancy here
-	query := readQuery + where + orderBy
+	query := readQuery + where + orderBy + pagination
 
 	log.Debugln("generated job query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
