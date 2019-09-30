@@ -113,6 +113,24 @@ func OrderableFromString(v string) *TrafficStatsOrderable {
 	return &o
 }
 
+type TrafficStatsExclude string
+const (
+	ExcludeSeries TrafficStatsExclude = "series"
+	ExcludeSummary TrafficStatsExclude = "summary"
+	ExcludeInvalid TrafficStatsExclude = "INVALID"
+)
+
+func ExcludeFromString(v string) TrafficStatsExclude {
+	switch v {
+	case "series":
+		return ExcludeSeries
+	case "summary":
+		return ExcludeSummary
+	default:
+		return ExcludeInvalid
+	}
+}
+
 
 // TrafficStatsConfig represents the configuration of a request made to Traffic Stats. This is
 // typically constructed by parsing a request body submitted to Traffic Ops.

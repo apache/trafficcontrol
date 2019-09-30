@@ -449,7 +449,7 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 			return nil, fmt.Errorf("Failed to create influx client: %v", err)
 		}
 
-		p := value.(int64)
+		p := port.(int64)
 		if p <= 0 || p > 65535 {
 			log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
 			p = 8086

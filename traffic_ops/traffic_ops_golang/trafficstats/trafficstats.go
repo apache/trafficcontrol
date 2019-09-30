@@ -36,7 +36,6 @@ import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 import influx "github.com/influxdata/influxdb1-client/v2"
 
-
 var (
 	metricTypes = map[string]interface{}{
 		"kbps":      struct{}{},
@@ -58,9 +57,8 @@ var (
 	}
 )
 
-
 const (
-	DEFAULT_INTERVAL = tc.TrafficStatsDuration("1m")
+	DEFAULT_INTERVAL         = tc.TrafficStatsDuration("1m")
 	dsTenantIDFromXMLIDQuery = `
 		SELECT tenant_id
 		FROM deliveryservice
@@ -96,7 +94,6 @@ const (
 		AND time <= $end
 		GROUP BY time(%s, %s), cachegroup%s`
 )
-
 
 func configFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig, error, int) {
 	var c tc.TrafficStatsConfig
@@ -149,7 +146,7 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig, 
 
 	if orderby, ok := i.Params["orderby"]; ok {
 		if c.OrderBy = tc.OrderableFromString(orderby); c.OrderBy == nil {
-			e = errors.New("Invalid orderby!")
+			e = errors.New("Invalid orderby! Must be 'time' or 'value'")
 			return c, e, http.StatusBadRequest
 		}
 	}
@@ -175,11 +172,11 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig, 
 	}
 
 	if ex, ok := i.Params["exclude"]; ok {
-		switch ex {
-		case "series":
-			c.ExcludeSeries = true
-		case "summary":
+		switch tc.ExcludeFromString(ex) {
+		case tc.ExcludeSummary:
 			c.ExcludeSummary = true
+		case tc.ExcludeSeries:
+			c.ExcludeSeries = true
 		default:
 			e = errors.New("Invalid exclude! Must be 'series' or 'summary'")
 			return c, e, http.StatusBadRequest
@@ -279,7 +276,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := struct{Response tc.TrafficStatsResponse}{
+	resp := struct{ Response tc.TrafficStatsResponse }{
 		Response: tc.TrafficStatsResponse{
 			Source:  tc.TRAFFIC_STATS_SOURCE,
 			Version: tc.TRAFFIC_STATS_VERSION,
@@ -434,7 +431,7 @@ func getSummary(client *influx.Client, conf *tc.TrafficStatsConfig, db string) (
 		return s, msgs, resp.Error()
 	}
 
-	value := float64(s.Count * 60) * s.Average
+	value := float64(s.Count*60) * s.Average
 	if conf.MetricType == "kbps" {
 		value /= 1000
 		s.TotalBytes = &value
