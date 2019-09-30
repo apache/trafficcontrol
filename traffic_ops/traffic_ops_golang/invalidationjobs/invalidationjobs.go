@@ -309,16 +309,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	job := tc.InvalidationJobInput{}
 	cType := r.Header.Get(http.CanonicalHeaderKey("content-type"))
-	if cType == tc.ApplicationJson || cType == "" {
-		decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(&job); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Unable to parse Invalidation Job"), fmt.Errorf("parsing jobs/ POST: %v", err))
-			return
-		}
-	} else {
-		w.Header().Set(http.CanonicalHeaderKey("accept"), strings.Join([]string{tc.ApplicationJson, "application/x-www-form-urlencoded", "multipart/form-data"}, ";"))
-		err := fmt.Errorf("unsupported content-type: %s", cType)
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusUnsupportedMediaType, err, err)
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&job); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Unable to parse Invalidation Job"), fmt.Errorf("parsing jobs/ POST: %v", err))
 		return
 	}
 
@@ -452,20 +445,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input := tc.InvalidationJob{}
-	cType := r.Header.Get(http.CanonicalHeaderKey("content-type"))
-	if cType == tc.ApplicationJson || cType == "" {
-		decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(&input); err != nil {
-			userErr = fmt.Errorf("Unable to parse input: %v", err)
-			sysErr = fmt.Errorf("parsing input to PUT jobs?id=%s: %v", inf.Params["id"], err)
-			errCode = http.StatusBadRequest
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-			return
-		}
-	} else {
-		w.Header().Set(http.CanonicalHeaderKey("accept"), strings.Join([]string{tc.ApplicationJson, "application/x-www-form-urlencoded", "multipart/form-data"}, ";"))
-		err := fmt.Errorf("unsupported content-type: %s", cType)
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusUnsupportedMediaType, err, err)
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		userErr = fmt.Errorf("Unable to parse input: %v", err)
+		sysErr = fmt.Errorf("parsing input to PUT jobs?id=%s: %v", inf.Params["id"], err)
+		errCode = http.StatusBadRequest
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
