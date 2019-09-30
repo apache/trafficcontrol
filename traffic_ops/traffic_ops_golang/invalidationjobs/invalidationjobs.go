@@ -313,22 +313,25 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
-	if errs := job.Validate(inf.Tx.Tx); len(errs) > 0 {
-		response := []tc.Alert{}
-		for _, e := range errs {
-			response = append(response, tc.Alert{e, tc.ErrorLevel.String()})
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	if err := job.Validate(inf.Tx.Tx); err != nil {
+		response := tc.Alerts{
+			[]tc.Alert{
+				tc.Alert{
+					Text:  err.Error(),
+					Level: tc.ErrorLevel.String(),
+				},
+			},
 		}
 
-		resp, err := json.Marshal(tc.Alerts {response})
+		resp, err := json.Marshal(response)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Encoding bad request response: %v", err))
 			return
-		} else {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(resp)
-			w.Write([]byte{'\n'})
 		}
+
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(append(resp, '\n'))
 		return
 	}
 
@@ -505,7 +508,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 		return
 	}
-
 
 	row = inf.Tx.Tx.QueryRow(updateQuery,
 		input.AssetURL,

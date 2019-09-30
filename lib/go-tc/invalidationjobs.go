@@ -30,9 +30,17 @@ import "time"
 
 import "github.com/apache/trafficcontrol/lib/go-log"
 
+import "github.com/go-ozzo/ozzo-validation"
+import "github.com/go-ozzo/ozzo-validation/is"
+
 // This is the maximum value of TTL representable as a time.Duration object, which is used
 // internally by InvalidationJobInput objects to store the TTL.
 const MaxTTL = math.MaxInt64 / 3600000000000
+
+var twoDays = time.Hour * 48
+
+// ValidJobRegexPrefix matches the only valid prefixes for a relative-path Content Invalidation Job regex
+var ValidJobRegexPrefix = regexp.MustCompile(`^\?/.*$`)
 
 // Represents a content invalidation job as returned by the API.
 type InvalidationJob struct {
@@ -214,90 +222,80 @@ func (j *InvalidationJobInput) DSID(tx *sql.Tx) (uint, error) {
 // ensuring they actually exist. This method calls InvalidationJobInput.DSID to validate the
 // DeliveryService field.
 //
-// Returns an array of strings that describe what, if any, problematic fields were encountered in
-// validation.
-func (job *InvalidationJobInput) Validate(tx *sql.Tx) []string {
+// This returns an error describing any and all problematic fields encountered during validation.
+func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 	errs := []string{}
-	if job.DeliveryService == nil {
-		errs = append(errs, "'deliveryService' is a required field!")
-	} else if _, err := job.DSID(tx); err != nil {
+	err := validation.ValidateStruct(job,
+		validation.Field(job.DeliveryService, validation.Required),
+		validation.Field(job.Regex, validation.Required, validation.Match(ValidJobRegexPrefix)),
+		validation.Field(job.StartTime, validation.Required),
+		validation.Field(job.TTL, validation.Required),
+	)
+
+	if err != nil {
 		errs = append(errs, err.Error())
 	}
 
-	if job.Regex == nil || *job.Regex == "" {
-		errs = append(errs, "'regex' is a required field - and cannot be empty!")
-	} else {
-		if !strings.HasPrefix(*job.Regex, "\\/") && !strings.HasPrefix(*job.Regex, "/") {
-			errs = append(errs, "'regex' must start with '/' (or an escaped '/')!")
+	if job.DeliveryService != nil {
+		if _, err := job.DSID(tx); err != nil {
+			errs = append(errs, err.Error())
 		}
+	}
+
+	if job.Regex != nil && *job.Regex != "" {
 		if _, err := regexp.Compile(*job.Regex); err != nil {
 			errs = append(errs, "'regex' is not a valid Regular Expression: "+err.Error())
 		}
 	}
 
-	if job.StartTime == nil {
-		errs = append(errs, "'startTime' is a required field!")
-	} else if job.StartTime.Time.Before(time.Now()) {
+	if job.StartTime != nil && job.StartTime.Time.Before(time.Now()) {
 		errs = append(errs, "'startTime' must be in the future!")
 	}
 
-	if job.TTL == nil {
-		errs = append(errs, "'ttl' is a required field!")
-	} else if _, err := job.TTLHours(); err != nil {
-		errs = append(errs, "'ttl' must be a number of hours, or a duration string e.g. '48h'!")
+	if job.TTL != nil {
+		if _, err := job.TTLHours(); err != nil {
+			errs = append(errs, "'ttl' must be a number of hours, or a duration string e.g. '48h'!")
+		}
 	}
 
-	return errs
+	return errors.New(strings.Join(errs, ", "))
 }
 
 // Checks that the InvalidationJob is valid, by ensuring all of its fields are well-defined.
 //
 // This returns an error describing any and all problematic fields encountered during validation.
 func (job *InvalidationJob) Validate() error {
-	errs := []string{}
-	if job.AssetURL == nil || *job.AssetURL == "" {
-		errs = append(errs, "'assetUrl' is a required field (and cannot be empty)")
-	}
-
-	if job.CreatedBy == nil || *job.CreatedBy == "" {
-		errs = append(errs, "'createdBy' is a required field (and cannot be empty)")
-	}
-
-	if job.DeliveryService == nil || *job.DeliveryService == "" {
-		errs = append(errs, "'deliveryService' is a required field (and cannot be empty)")
-	}
-
-	if job.ID == nil {
-		errs = append(errs, "'id' is a required field!")
-	}
-
-	if job.Keyword == nil || *job.Keyword == "" {
-		errs = append(errs, "'keyword' is a required field (and cannot be empty)")
-	}
-
-	if job.Parameters == nil || *job.Parameters == "" {
-		errs = append(errs, "'parameters' is a required field (and cannot be empty)")
-	}
+	err := validation.ValidateStruct(job,
+		validation.Field(job.AssetURL, validation.Required, is.URL),
+		validation.Field(job.CreatedBy, validation.Required),
+		validation.Field(job.DeliveryService, validation.Required),
+		validation.Field(job.ID, validation.Required),
+		validation.Field(job.Keyword, validation.Required),
+		validation.Field(job.Parameters, validation.Required),
+		validation.Field(job.StartTime, validation.Required),
+	)
 
 	if job.StartTime == nil {
-		errs = append(errs, "'startTime' is a required field!")
-	} else {
-		twoDaysFromNow, err := time.ParseDuration("48h")
-		if err != nil {
-			errs = append(errs, "Unknown internal error occurred")
-			log.Errorf("Couldn't construct 2-day duration: %v\n", err)
-		} else if job.StartTime.After(time.Now().Add(twoDaysFromNow)) {
-			errs = append(errs, "'startTime' must be within two days from now")
-		} else if job.StartTime.Before(time.Now()) {
-			errs = append(errs, "'startTime' cannot be in the past!")
+		return err
+	}
+
+	if job.StartTime.After(time.Now().Add(twoDays)) {
+		e := errors.New("'startTime' must be within two days from now")
+		if err == nil {
+			return e
 		}
+		return fmt.Errorf("%v, %v", err, e)
 	}
 
-	if len(errs) == 0 {
-		return nil
+	if job.StartTime.Before(time.Now()) {
+		e := errors.New("'startTime' cannot be in the past")
+		if err == nil {
+			return e
+		}
+		return fmt.Errorf("%v, %v", err, e)
 	}
 
-	return errors.New(strings.Join(errs, ", "))
+	return err
 }
 
 // Given a transaction connected to the Traffic Ops database, this validates that the user input
@@ -309,31 +307,27 @@ func (job *InvalidationJob) Validate() error {
 // Returns an error describing any and all problematic fields encountered during validation.
 func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 	errs := []string{}
-	if job.StartTime == nil {
-		errs = append(errs, "'startTime' is a required field!")
-	} else {
-		twoDaysFromNow, err := time.ParseDuration("48h")
-		if err != nil {
-			log.Errorf("Couldn't construct 2-day duration: %v\n", err)
-		} else if job.StartTime.After(time.Now().Add(twoDaysFromNow)) {
-			errs = append(errs, "'startTime' must be within two days!")
-		}
+	err := validation.ValidateStruct(job,
+		validation.Field(job.StartTime, validation.Required),
+		validation.Field(job.Regex, validation.Required, validation.Match(ValidJobRegexPrefix)),
+		validation.Field(job.DSID, validation.Required),
+		validation.Field(job.TTL, validation.Required),
+	)
+	if err != nil {
+		errs = append(errs, err.Error())
 	}
 
-	if job.Regex == nil || *(job.Regex) == "" {
-		errs = append(errs, "'regex' is a required field!")
-	} else {
+	if job.StartTime != nil && job.StartTime.After(time.Now().Add(twoDays)) {
+		errs = append(errs, "'startTime' must be within two days!")
+	}
+
+	if job.Regex != nil && *(job.Regex) != "" {
 		if _, err := regexp.Compile(*(job.Regex)); err != nil {
 			errs = append(errs, "'regex' is not a valid regular expression: "+err.Error())
 		}
-		if !strings.HasPrefix(*(job.Regex), "/") {
-			errs = append(errs, "'regex' must start with '/'!")
-		}
 	}
 
-	if job.DSID == nil {
-		errs = append(errs, "'dsId' is a required field!")
-	} else {
+	if job.DSID != nil {
 		row := tx.QueryRow(`SELECT id FROM deliveryservice WHERE id = $1::bigint`, job.DSID)
 		var id uint
 		if err := row.Scan(&id); err != nil {
@@ -342,12 +336,13 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 		}
 	}
 
-	if job.TTL == nil {
-		errs = append(errs, "'ttl' is a required field!")
-	} else {
+	if job.TTL != nil {
 		row := tx.QueryRow(`SELECT value FROM parameter WHERE name='maxRevalDurationDays' AND config_file='regex_revalidate.config'`)
 		var max uint64
-		if err := row.Scan(&max); err == nil && max < *(job.TTL) {
+		err := row.Scan(&max)
+		if err == sql.ErrNoRows && MaxTTL < *(job.TTL) {
+			errs = append(errs, "'ttl' cannot exceed "+strconv.FormatUint(MaxTTL, 10)+"!")
+		} else if err == nil && max < *(job.TTL) { //silently ignore other errors to
 			errs = append(errs, "'ttl' cannot exceed "+strconv.FormatUint(max, 10)+"!")
 		} else if *(job.TTL) < 1 {
 			errs = append(errs, "'ttl' must be at least 1!")
