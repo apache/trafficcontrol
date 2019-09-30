@@ -108,7 +108,7 @@ WHERE
     SELECT DISTINCT deliveryservice
     FROM deliveryservice_server
     WHERE server IN (SELECT id FROM server WHERE profile = $1)
-  )p
+  )
 `
 	rows, err := tx.Query(qry, profileID)
 	if err != nil {
