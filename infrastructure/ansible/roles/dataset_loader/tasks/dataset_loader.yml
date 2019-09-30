@@ -501,6 +501,7 @@
       with_items:
         - "{{ dl_ds_merged_profiles }}"
       vars:
+        paramset: "{{ item.parameters | default([]) }}"
         cdn_query: "response[?starts_with(domainName,`{{ item.cdn | default(ALL) | lower }}`) == `true` || name == `{{ item.cdn | default(ALL) }}`].id | [0]"
         error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
       register: create_profiles_out
@@ -533,7 +534,7 @@
       with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
       register: get_all_parameters_by_profile
 
-    - name: Associate eligible profiles to hosts2
+    - name: Associate eligible profiles to hosts
       set_fact:
         profile_assignments: "{{ groups['all'] | associate_profile_to_servers(profile_names,cache_hardware_profile_map,hostvars,dl_ds_merged_profile_prefix_ansible_component_map) }}"
       vars:

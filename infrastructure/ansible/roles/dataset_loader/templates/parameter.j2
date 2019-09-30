@@ -12,8 +12,8 @@
 # limitations under the License.
 #}
 [
-{% if item.parameters is defined and item.parameters is not none and item.parameters|length > 0 %}
-{% for param in item.parameters %}
+{% if paramset is defined and paramset is not none and paramset|length > 0 %}
+{% for param in paramset %}
   {
     "name": "{{ param.name }}",
     "configFile": "{{ param.configFile }}",

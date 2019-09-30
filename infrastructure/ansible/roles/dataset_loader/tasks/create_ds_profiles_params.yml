@@ -38,6 +38,7 @@
   when: ( item.type == 'DS_PROFILE' and target_xmlId is defined )
   with_items: "{{ dl_ds_merged_profile_cdntemplates }}"
   vars:
+    paramset: "{{ item.parameters | default([]) }}"
     cdn_query: "response[?name == '{{ item.cdn | default('ALL') }}'].id | [0]"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     computed_xmlid: "{{ Target_ds.uniqueKey }}-{{ Target_cdn_delegation | lower }}"

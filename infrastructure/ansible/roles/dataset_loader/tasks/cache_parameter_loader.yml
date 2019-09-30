@@ -45,6 +45,7 @@
     - "{{ dl_ds_merged_profile_cdntemplates }}"
     - "{{ eligible_hardware_component_names }}"
   vars:
+    paramset: "{{ item.0.parameters | default([]) }}"
     cdn_query: "response[?name == '{{ item.0.cdn | default('ALL') }}'].id | [0]"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     target_xmlId: "Invalid (only for rendering)"

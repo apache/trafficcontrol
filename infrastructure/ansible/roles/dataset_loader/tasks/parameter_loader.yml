@@ -38,6 +38,7 @@
   with_items:
     - "{{ dl_ds_merged_profile_cdntemplates }}"
   vars:
+    paramset: "{{ item.parameters | default([]) }}"
     cdn_query: "response[?name == '{{ item.cdn | default('ALL') }}'].id | [0]"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     target_xmlId: "Invalid (only for rendering)"
