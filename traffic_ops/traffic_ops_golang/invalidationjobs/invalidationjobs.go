@@ -286,10 +286,10 @@ func (job *InvalidationJob) Read() ([]interface{}, error, error, int) {
 	// another query before exhausting the rows returned by an earlier query
 	filtered := []interface{}{}
 	for _, r := range returnable {
-		userErr, sysErr, errCode := IsUserAuthorizedToModifyDSXMLID(job.APIInfo(), *r.DeliveryService)
-		if sysErr != nil {
-			return nil, userErr, sysErr, errCode
-		} else if userErr == nil {
+		ok, err := IsUserAuthorizedToModifyDSXMLID(job.APIInfo(), *r.DeliveryService)
+		if err != nil {
+			return nil, nil, err, http.StatusInternalServerError
+		} else if ok {
 			filtered = append(filtered, r)
 		}
 	}
@@ -308,9 +308,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	job := tc.InvalidationJobInput{}
-	cType := r.Header.Get(http.CanonicalHeaderKey("content-type"))
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&job); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Unable to parse Invalidation Job"), fmt.Errorf("parsing jobs/ POST: %v", err))
 		return
 	}
@@ -322,11 +320,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			response = append(response, tc.Alert{e, tc.ErrorLevel.String()})
 		}
 
-		resp, err := json.Marshal(struct {
-			Alerts []tc.Alert `json:"alerts"`
-		}{response})
+		resp, err := json.Marshal(tc.Alerts {response})
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Encoding bad request response: %v", err))
+			return
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write(resp)
@@ -353,8 +350,15 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, errCode = IsUserAuthorizedToModifyDSID(inf, dsid); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	if ok, err := IsUserAuthorizedToModifyDSID(inf, dsid); err != nil {
+		sysErr = fmt.Errorf("Checking current user permissions for DS #%d: %v")
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = fmt.Errorf("No such Delivery Service!")
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 		return
 	}
 
@@ -383,17 +387,18 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := setRevalFlags(dsid, inf.Tx.Tx); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval flags: %v", err))
-	} else {
-		resp, err := json.Marshal(apiResponse{[]tc.Alert{{"Invalidation Job creation was successful", tc.SuccessLevel.String()}}, result})
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Marshaling JSON: %v", err))
-		} else {
-			w.Header().Set(http.CanonicalHeaderKey("location"), inf.Config.URL.Scheme+"://"+r.Host+"/api/1.4/jobs?id="+strconv.FormatUint(uint64(*result.ID), 10))
-			w.WriteHeader(http.StatusCreated)
-			w.Write(resp)
-			w.Write([]byte{'\n'})
-		}
+		return
 	}
+
+	resp, err := json.Marshal(apiResponse{[]tc.Alert{{"Invalidation Job creation was successful", tc.SuccessLevel.String()}}, result})
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Marshaling JSON: %v", err))
+		return
+	}
+
+	w.Header().Set(http.CanonicalHeaderKey("location"), inf.Config.URL.Scheme+"://"+r.Host+"/api/1.4/jobs?id="+strconv.FormatUint(uint64(*result.ID), 10))
+	w.WriteHeader(http.StatusCreated)
+	w.Write(append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Created+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)
 }
@@ -424,7 +429,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		&oFQDN)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			userErr = fmt.Errorf("No job found by id %s", inf.Params["id"])
+			userErr = fmt.Errorf("No job by id '%s'!", inf.Params["id"])
 			errCode = http.StatusNotFound
 		} else {
 			sysErr = fmt.Errorf("fetching job update info: %v", err)
@@ -434,13 +439,27 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, errCode = IsUserAuthorizedToModifyDSID(inf, dsid); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	if ok, err := IsUserAuthorizedToModifyDSID(inf, dsid); err != nil {
+		sysErr = fmt.Errorf("Checking user permissions on DS #%d: %v", dsid, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = errors.New("No such Delivery Service!")
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 		return
 	}
 
-	if userErr, sysErr, errCode = IsUserAuthorizedToModifyJobsMadeByUsername(inf, *job.CreatedBy); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	if ok, err := IsUserAuthorizedToModifyJobsMadeByUsername(inf, *job.CreatedBy); err != nil {
+		sysErr = fmt.Errorf("Checking user permissions against user %s: %v", *job.CreatedBy, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = fmt.Errorf("No job by id '%s'!", inf.Params["id"])
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 		return
 	}
 
@@ -528,11 +547,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		sysErr = fmt.Errorf("encoding response: %v", err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
-	} else {
-		w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
-		w.Write(resp)
-		w.Write([]byte{'\n'})
+		return
 	}
+
+	w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
+	w.Write(append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+"content invalidation job: #"+strconv.FormatUint(*job.ID, 10), inf.User, inf.Tx.Tx)
 }
@@ -561,13 +580,27 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, errCode = IsUserAuthorizedToModifyDSID(inf, dsid); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	if ok, err := IsUserAuthorizedToModifyDSID(inf, dsid); err != nil {
+		sysErr = fmt.Errorf("Checking user permissions on DS #%d: %v", dsid, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = errors.New("No such Delivery Service!")
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 		return
 	}
 
-	if userErr, sysErr, errCode = IsUserAuthorizedToModifyJobsMadeByUserID(inf, createdBy); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	if ok, err := IsUserAuthorizedToModifyJobsMadeByUserID(inf, createdBy); err != nil {
+		sysErr = fmt.Errorf("Checking user permissions against user %s: %v", createdBy, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = fmt.Errorf("No job by id '%s'!", inf.Params["id"])
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 		return
 	}
 
@@ -592,19 +625,20 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		sysErr = fmt.Errorf("setting reval_pending after deleting job #%s: %v", inf.Params["id"], err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-	} else {
-		response := apiResponse{[]tc.Alert{tc.Alert{"Content invalidation job was deleted", tc.SuccessLevel.String()}}, result}
-		resp, err := json.Marshal(response)
-		if err != nil {
-			sysErr = fmt.Errorf("encoding response: %v", err)
-			errCode = http.StatusInternalServerError
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
-		} else {
-			w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
-			w.Write(resp)
-			w.Write([]byte{'\n'})
-		}
+		return
 	}
+
+	response := apiResponse{[]tc.Alert{tc.Alert{"Content invalidation job was deleted", tc.SuccessLevel.String()}}, result}
+	resp, err := json.Marshal(response)
+	if err != nil {
+		sysErr = fmt.Errorf("encoding response: %v", err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	}
+
+	w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
+	w.Write(append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Deleted+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)
 }
@@ -801,112 +835,94 @@ func setRevalFlags(d interface{}, tx *sql.Tx) error {
 // edit a Delivery Service. `ds` is expected to be the integral, unique identifer of the
 // Delivery Service in question.
 //
-// This returns, in order, an error suitable for the requesting user to see (if an
-// error occurred), an error for printing to the logs (if an error occurred) and an
-// HTTP response code. The returned code only has meaning if at least one of the
+// This returns, in order, a boolean that indicates whether or not the current user
+// has the required tenancy to modify the indicated Delivery Service, and an error
+// indicating what, if anything, went wrong during the check.
 // returned errors is not nil, otherwise its value is undefined.
-func IsUserAuthorizedToModifyDSID(inf *api.APIInfo, ds uint) (error, error, int) {
+//
+// Note: If no such delivery service exists, the return values shall indicate that the
+// user isn't authorized.
+func IsUserAuthorizedToModifyDSID(inf *api.APIInfo, ds uint) (bool, error) {
 	var t uint
 	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id=$1`, ds)
 	if err := row.Scan(&t); err != nil {
-		return nil, fmt.Errorf("checking user #%d's permissions for ds #%d: %v", inf.User.ID, ds, err), http.StatusInternalServerError
+		if err == sql.ErrNoRows {
+			return false, nil //I do this to conceal the existence of DSes for which the user has no permission to see
+		}
+		return false, err
 	}
 
-	ok, err := tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
-	if err != nil {
-		return nil, fmt.Errorf("checking user #%d's permissions for ds #%d: %v", inf.User.ID, ds, err), http.StatusInternalServerError
-	}
-
-	if !ok {
-		return errors.New("No such Delivery Service!"),
-			fmt.Errorf("User %s attempted to modify DS %d, which is outside of its tenancy (have: %d, want: %d)", inf.User.UserName, ds, inf.User.TenantID, t),
-			http.StatusNotFound
-	}
-	return nil, nil, 0
+	return tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
 }
 
 // Checks if the current user's (identified in the APIInfo) tenant has permissions to
 // edit a Delivery Service. `ds` is expected to be the "xml_id" of the
 // Delivery Service in question.
 //
-// This returns, in order, an error suitable for the requesting user to see (if an
-// error occurred), an error for printing to the logs (if an error occurred) and an
-// HTTP response code. The returned code only has meaning if at least one of the
+// This returns, in order, a boolean that indicates whether or not the current user
+// has the required tenancy to modify the indicated Delivery Service, and an error
+// indicating what, if anything, went wrong during the check.
 // returned errors is not nil, otherwise its value is undefined.
-func IsUserAuthorizedToModifyDSXMLID(inf *api.APIInfo, ds string) (error, error, int) {
+//
+// Note: If no such delivery service exists, the return values shall indicate that the
+// user isn't authorized.
+func IsUserAuthorizedToModifyDSXMLID(inf *api.APIInfo, ds string) (bool, error) {
 	var t uint
 	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM deliveryservice where xml_id=$1`, ds)
 	if err := row.Scan(&t); err != nil {
-		return nil, fmt.Errorf("checking user #%d's permissions for ds '%s': %v", inf.User.ID, ds, err), http.StatusInternalServerError
+		if err == sql.ErrNoRows {
+			return false, nil //I do this to conceal the existence of DSes for which the user has no permission to see
+		}
+		return false, err
 	}
 
-	log.Debugln("passed initial SELECT")
-
-	ok, err := tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
-	if err != nil {
-		return nil, fmt.Errorf("checking user #%d's permissions for ds '%s': %v", inf.User.ID, ds, err), http.StatusInternalServerError
-	}
-
-	if !ok {
-		return errors.New("No such Delivery Service!"),
-			fmt.Errorf("User %s attempted to modify DS %s, which is outside of its tenancy (have: %d, want: %d)", inf.User.UserName, ds, inf.User.TenantID, t),
-			http.StatusNotFound
-	}
-	return nil, nil, 0
+	return tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
 }
 
 // Checks if the current user's (identified in the APIInfo) tenant has permissions to
 // edit on par with the user identified by `u`. `u` is expected to be the integral,
 // unique identifer of the user in question (not the current, requesting user).
 //
-// This returns, in order, an error suitable for the requesting user to see (if an
-// error occurred), an error for printing to the logs (if an error occurred) and an
-// HTTP response code. The returned code only has meaning if at least one of the
+// This returns, in order, a boolean that indicates whether or not the current user
+// has the required tenancy to modify the indicated Delivery Service, and an error
+// indicating what, if anything, went wrong during the check.
 // returned errors is not nil, otherwise its value is undefined.
-func IsUserAuthorizedToModifyJobsMadeByUserID(inf *api.APIInfo, u uint) (error, error, int) {
+//
+// Note: If no such delivery service exists, the return values shall indicate that the
+// user isn't authorized.
+func IsUserAuthorizedToModifyJobsMadeByUserID(inf *api.APIInfo, u uint) (bool, error) {
 	var t uint
 	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM tm_user where id=$1`, u)
 	if err := row.Scan(&t); err != nil {
-		return nil, fmt.Errorf("checking user #%d's permissions for user #%d: %v", inf.User.ID, u, err), http.StatusInternalServerError
+		if err == sql.ErrNoRows {
+			return false, nil //I do this to conceal the existence of DSes for which the user has no permission to see
+		}
+		return false, err
 	}
 
-	ok, err := tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
-	if err != nil {
-		return nil, fmt.Errorf("checking user #%d's permissions for user #%d: %v", inf.User.ID, u, err), http.StatusInternalServerError
-	}
-
-	if !ok {
-		return errors.New("Your tenant does not have permissions to modify this content invalidation job!"),
-			nil,
-			http.StatusForbidden
-	}
-	return nil, nil, 0
+	return tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
 }
 
 // Checks if the current user's (identified in the APIInfo) tenant has permissions to
 // edit on par with the user identified by `u`. `u` is expected to be the username of
 // the user in question (not the current, requesting user).
 //
-// This returns, in order, an error suitable for the requesting user to see (if an
-// error occurred), an error for printing to the logs (if an error occurred) and an
-// HTTP response code. The returned code only has meaning if at least one of the
+// This returns, in order, a boolean that indicates whether or not the current user
+// has the required tenancy to modify the indicated Delivery Service, and an error
+// indicating what, if anything, went wrong during the check.
 // returned errors is not nil, otherwise its value is undefined.
-func IsUserAuthorizedToModifyJobsMadeByUsername(inf *api.APIInfo, u string) (error, error, int) {
+//
+// Note: If no such delivery service exists, the return values shall indicate that the
+// user isn't authorized.
+func IsUserAuthorizedToModifyJobsMadeByUsername(inf *api.APIInfo, u string) (bool, error) {
 	var t uint
 	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM tm_user where username=$1`, u)
 	if err := row.Scan(&t); err != nil {
-		return nil, fmt.Errorf("checking user #%d's permissions for user '%s': %v", inf.User.ID, u, err), http.StatusInternalServerError
+		if err == sql.ErrNoRows {
+			return false, nil //I do this to conceal the existence of DSes for which the user has no permission to see
+		}
+		return false, err
 	}
 
-	ok, err := tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
-	if err != nil {
-		return nil, fmt.Errorf("checking user #%d's permissions for user '%s': %v", inf.User.ID, u, err), http.StatusInternalServerError
-	}
-
-	if !ok {
-		return errors.New("Your tenant does not have permissions to modify this content invalidation job!"),
-			nil,
-			http.StatusForbidden
-	}
-	return nil, nil, 0
+	return tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
 }

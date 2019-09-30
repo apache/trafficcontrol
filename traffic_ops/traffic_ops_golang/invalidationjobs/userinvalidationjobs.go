@@ -20,6 +20,7 @@ package invalidationjobs
  */
 
 import "encoding/json"
+import "errors"
 import "fmt"
 import "net/http"
 import "strconv"
@@ -73,8 +74,15 @@ func CreateUserJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, errCode = IsUserAuthorizedToModifyDSID(inf, *job.DSID); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	if ok, err := IsUserAuthorizedToModifyDSID(inf, *job.DSID); err != nil {
+		sysErr = fmt.Errorf("Checking user permissions on DS #%d: %v", *job.DSID, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = errors.New("No such Delivery Service!")
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 		return
 	}
 
@@ -103,28 +111,30 @@ func CreateUserJob(w http.ResponseWriter, r *http.Request) {
 
 	if err := setRevalFlags(*job.DSID, inf.Tx.Tx); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval flags: %v", err))
-	} else {
-		respObj := apiResponse{
-			[]tc.Alert{
-				tc.Alert{
-					Level: tc.SuccessLevel.String(),
-					Text: "Invalidation Job creation was successful.",
-				},
-				api.DeprecationWarning("POST /jobs"),
-			},
-			result,
-		}
-		resp, err := json.Marshal(respObj)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Marshaling JSON: %v", err))
-		} else {
-			w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
-			w.Header().Set(http.CanonicalHeaderKey("location"), inf.Config.URL.Scheme+"://"+r.Host+"/api/1.4/jobs?id="+strconv.FormatUint(uint64(*result.ID), 10))
-			w.WriteHeader(http.StatusCreated)
-			w.Write(resp)
-			w.Write([]byte("\n"))
-		}
+		return
 	}
+
+	respObj := apiResponse{
+		[]tc.Alert{
+			tc.Alert{
+				Level: tc.SuccessLevel.String(),
+				Text: "Invalidation Job creation was successful.",
+			},
+			api.DeprecationWarning("POST /jobs"),
+		},
+		result,
+	}
+	resp, err := json.Marshal(respObj)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Marshaling JSON: %v", err))
+		return
+	}
+
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(http.CanonicalHeaderKey("location"), inf.Config.URL.Scheme+"://"+r.Host+"/api/1.4/jobs?id="+strconv.FormatUint(uint64(*result.ID), 10))
+	w.WriteHeader(http.StatusCreated)
+	w.Write(append(resp, '\n'))
+
 	api.CreateChangeLogRawTx(api.ApiChange, api.Created+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)
 }
 
@@ -177,11 +187,13 @@ func GetUserJobs(w http.ResponseWriter, r *http.Request) {
 	// another query before exhausting the rows returned by an earlier query
 	filtered := []tc.UserInvalidationJob{}
 	for _, j := range jobs {
-		userErr, sysErr, errCode := IsUserAuthorizedToModifyDSXMLID(inf, *j.DeliveryService)
-		if sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		ok, err := IsUserAuthorizedToModifyDSXMLID(inf, *j.DeliveryService)
+		if err != nil {
+			sysErr = fmt.Errorf("Checking user permissions for DS %s: %v", *j.DeliveryService, err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
 			return
-		} else if userErr == nil {
+		} else if ok {
 			filtered = append(filtered, j)
 		}
 	}
@@ -194,9 +206,8 @@ func GetUserJobs(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(userResponse{[]tc.Alert{api.DeprecationWarning("GET /jobs?userId=")}, filtered})
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("encoding user jobs response: %v", err))
-	} else {
-		w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
-		w.Write(resp)
-		w.Write([]byte("\n"))
+		return
 	}
+	w.Header().Set(http.CanonicalHeaderKey("content-type"), tc.ApplicationJson)
+	w.Write(append(resp, '\n'))
 }
