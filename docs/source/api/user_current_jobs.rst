@@ -98,8 +98,8 @@ Response Structure
 
 	{ "response": [{
 		"agent": 1,
-		"assetUrl": "file",
-		"assetType": "http://origin.infra.ciab.test/.*",
+		"assetType": "file",
+		"assetUrl": "http://origin.infra.ciab.test/.*",
 		"deliveryService": "demo1",
 		"enteredTime": "2019-06-19 13:19:51+00",
 		"id": 3,
