@@ -429,49 +429,38 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 		return nil, nil
 	}
 
-	var e error
 	var fqdn string
 	var tcpPort uint
 	var httpsPort sql.NullInt64 // this is the only one that's optional
 
 	row := inf.Tx.Tx.QueryRow(influxServersQuery)
-	if e = row.Scan(&fqdn, &tcpPort, &httpsPort); e != nil {
-		e = fmt.Errorf("Failed to create influx client: %v", e)
-		return nil, e
+	if e := row.Scan(&fqdn, &tcpPort, &httpsPort); e != nil {
+		return nil, fmt.Errorf("Failed to create influx client: %v", e)
 	}
 
-	useSSL := inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure
-	host := "http%s://%s"
-	if useSSL {
+	host := "http%s://%s:%d"
+	if inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure {
 		if !httpsPort.Valid {
 			log.Warnf("INFLUXDB Server %s has no secure ports, assuming default of 8086!", fqdn)
 			httpsPort = sql.NullInt64{8086, true}
 		}
-		host = fmt.Sprintf(host, "s", fqdn)
-	} else {
-		host = fmt.Sprintf(host, "", fqdn)
-	}
-
-	if useSSL {
-		value, err := httpsPort.Value()
+		port, err := httpsPort.Value()
 		if err != nil {
-			e = fmt.Errorf("Failed to create influx client: %v", err)
-			return nil, e
+			return nil, fmt.Errorf("Failed to create influx client: %v", err)
 		}
 
-		var v int64 = value.(int64)
-
-		if v <= 0 || v > 65535 {
+		p := value.(int64)
+		if p <= 0 || p > 65535 {
 			log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
-			v = 8086
+			p = 8086
 		}
 
-		host = fmt.Sprintf("%s:%d", host, v)
+		host = fmt.Sprintf(host, "s", fqdn, p)
 	} else if tcpPort > 0 && tcpPort <= 65535 {
-		host = fmt.Sprintf("%s:%d", host, tcpPort)
+		host = fmt.Sprintf(host, "", fqdn, tcpPort)
 	} else {
 		log.Warnf("INFLUXDB Server %s has invalid port, assuming default of 8086!", fqdn)
-		host += ":8086"
+		host = fmt.Sprintf(host, "", fqdn, 8086)
 	}
 
 	config := influx.HTTPConfig{
@@ -483,9 +472,9 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 	}
 
 	var client influx.Client
-	client, e = influx.NewHTTPClient(config)
+	client, e := influx.NewHTTPClient(config)
 	if client == nil {
-		e = fmt.Errorf("Failed to create influx client (client was nil): %v", e)
+		return nil, fmt.Errorf("Failed to create influx client (client was nil): %v", e)
 	}
 	return &client, e
 }
