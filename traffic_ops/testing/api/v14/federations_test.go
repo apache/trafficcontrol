@@ -93,4 +93,16 @@ func PostTestFederationsDeliveryServices(t *testing.T) {
 	if _, err = TOSession.CreateFederationDeliveryServices(fedID, []int{ds.ID}, true); err != nil {
 		t.Errorf("creating federations delivery services: %v\n", err)
 	}
+
+	// Test get created Federation Delivery Service
+	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID)
+	if err != nil {
+		t.Errorf("cannot GET Federation DeliveryServices: %v\n", err)
+	}
+	if len(fedDSes) != 1 {
+		t.Errorf("one Federation DeliveryService exepected for Federation %v, %v was returned\n", fedID, len(fedDSes))
+	}
+	if *fedDSes[0].ID != ds.ID {
+		t.Errorf("expected DeliveryService %v to be returned for Federation %v DeliveryServices, %v was instead returned\n", ds.ID, fedID, *fedDSes[0].ID)
+	}
 }

@@ -28,6 +28,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -103,4 +104,38 @@ func getFedNameByID(tx *sql.Tx, id int) (string, bool, error) {
 		return "", false, errors.New("Error querying federation cname: " + err.Error())
 	}
 	return name, true, nil
+}
+
+// TOFedDSes data structure to use on read of federation deliveryservices
+type TOFedDSes struct {
+	api.APIInfoImpl `json:"-"`
+	tc.FederationDeliveryServiceNullable
+}
+
+func (v *TOFedDSes) NewReadObj() interface{} { return &tc.FederationDeliveryServiceNullable{} }
+func (v *TOFedDSes) SelectQuery() string     { return selectQuery() }
+func (v *TOFedDSes) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"id":                dbhelpers.WhereColumnInfo{"fds.federation", api.IsInt},
+		"deliveryserviceID": dbhelpers.WhereColumnInfo{"fds.deliveryservice", api.IsInt},
+	}
+}
+func (v *TOFedDSes) GetType() string {
+	return "federation_deliveryservice"
+}
+
+func (v *TOFedDSes) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
+
+func selectQuery() string {
+
+	query := `SELECT
+ds.id,
+ds.xml_id,
+c.name AS cdn,
+t.name as type
+FROM federation_deliveryservice fds
+RIGHT JOIN deliveryservice ds ON fds.deliveryservice = ds.id
+JOIN cdn c ON ds.cdn_id = c.id
+JOIN type t ON ds.type = t.id`
+	return query
 }
