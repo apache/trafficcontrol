@@ -36,7 +36,9 @@ Request Structure
 	+===========+==========+==========================================================================================+
 	| id        | no       | Return only the user identified by this integral, unique identifier                      |
 	+-----------+----------+------------------------------------------------------------------------------------------+
-	| tenant    | no       | Return only users belonging to the :term:`Tenant` identified by this integral, unique    |
+	| tenant    | no       | Return only users belonging to the :term:`Tenant` identified by tenant name              |
+	+-----------+----------+------------------------------------------------------------------------------------------+
+	| tenantId  | no       | Return only users belonging to the :term:`Tenant` identified by this integral, unique    |
 	|           |          | identifier                                                                               |
 	+-----------+----------+------------------------------------------------------------------------------------------+
 	| username  | no       | Return only the user with this username                                                  |
