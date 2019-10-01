@@ -33,7 +33,7 @@ import "github.com/apache/trafficcontrol/lib/go-log"
 import "github.com/go-ozzo/ozzo-validation"
 import "github.com/go-ozzo/ozzo-validation/is"
 
-// This is the maximum value of TTL representable as a time.Duration object, which is used
+// MaxTTL is the maximum value of TTL representable as a time.Duration object, which is used
 // internally by InvalidationJobInput objects to store the TTL.
 const MaxTTL = math.MaxInt64 / 3600000000000
 
@@ -42,7 +42,7 @@ var twoDays = time.Hour * 48
 // ValidJobRegexPrefix matches the only valid prefixes for a relative-path Content Invalidation Job regex
 var ValidJobRegexPrefix = regexp.MustCompile(`^\?/.*$`)
 
-// Represents a content invalidation job as returned by the API.
+// InvalidationJob represents a content invalidation job as returned by the API.
 type InvalidationJob struct {
 	AssetURL        *string `json:"assetUrl"`
 	CreatedBy       *string `json:"createdBy"`
@@ -51,28 +51,28 @@ type InvalidationJob struct {
 	Keyword         *string `json:"keyword"`
 	Parameters      *string `json:"parameters"`
 
-	// The time at which the job will come into effect. Must be in the future, but will fail to
-	// Validate if it is further in the future than two days.
+	// StartTime is the time at which the job will come into effect. Must be in the future, but will
+	// fail to Validate if it is further in the future than two days.
 	StartTime *Time `json:"startTime"`
 }
 
-// Represents user input intending to create or modify a content invalidation job.
+// InvalidationJobInput represents user input intending to create or modify a content invalidation job.
 type InvalidationJobInput struct {
 
-	// This needs to be an identifier for a Delivery Service. It can be either a string - in which
+	// DeliveryService needs to be an identifier for a Delivery Service. It can be either a string - in which
 	// case it is treated as an XML_ID - or a float64 (because that's the type used by encoding/json
 	// to represent all JSON numbers) - in which case it's treated as an integral, unique identifier
 	// (and any fractional part is discarded, i.e. 2.34 -> 2)
 	DeliveryService *interface{} `json:"deliveryService"`
 
-	// A regular expression which not only must be valid, but should also start with '/'
+	// Regex is a regular expression which not only must be valid, but should also start with '/'
 	// (or escaped: '\/')
 	Regex *string `json:"regex"`
 
-	// The time at which the job will come into effect. Must be in the future.
+	// StartTime is the time at which the job will come into effect. Must be in the future.
 	StartTime *Time `json:"startTime"`
 
-	// Indicates the Time-to-Live of the job. This can be either a valid string for
+	// TTL indicates the Time-to-Live of the job. This can be either a valid string for
 	// time.ParseDuration, or a float64 indicating the number of hours. Note that regardless of the
 	// actual value here, Traffic Ops will only consider it rounded down to the nearest natural
 	// number
@@ -82,45 +82,45 @@ type InvalidationJobInput struct {
 	ttl  *time.Duration `json:"-"`
 }
 
-// Represents legacy-style user input to the /user/current/jobs API endpoint. This is much less
-// flexible than InvalidationJobInput, which should be used instead when possible.
+// UserInvalidationJobInput Represents legacy-style user input to the /user/current/jobs API endpoint.
+// This is much less flexible than InvalidationJobInput, which should be used instead when possible.
 type UserInvalidationJobInput struct {
 	DSID  *uint   `json:"dsId"`
 	Regex *string `json:"regex"`
 
-	// The time at which the job will come into effect. Must be in the future, but will fail to
-	// Validate if it is further in the future than two days.
+	// StartTime is the time at which the job will come into effect. Must be in the future, but will
+	// fail to Validate if it is further in the future than two days.
 	StartTime *Time   `json:"startTime"`
 	TTL       *uint64 `json:"ttl"`
 	Urgent    *bool   `json:"urgent"`
 }
 
-// This is a full representation of content invalidation jobs as stored in the database, including
-// several unused fields.
+// UserInvalidationJob is a full representation of content invalidation jobs as stored in the
+// database, including several unused fields.
 type UserInvalidationJob struct {
 
-	// Unused
+	// Agent is unused, and developers should never count on it containing or meaning anything.
 	Agent    *uint   `json:"agent"`
 	AssetURL *string `json:"assetUrl"`
 
-	// Unused
+	// AssetType is unused, and developers should never count on it containing or meaning anything.
 	AssetType       *string `json:"assetType"`
 	DeliveryService *string `json:"deliveryService"`
 	EnteredTime     *Time   `json:"enteredTime"`
 	ID              *uint   `json:"id"`
 	Keyword         *string `json:"keyword"`
 
-	// Unused
+	// ObjectName is unused, and developers should never count on it containing or meaning anything.
 	ObjectName *string `json:"objectName"`
 
-	// Unused
+	// ObjectType is unused, and developers should never count on it containing or meaning anything.
 	ObjectType *string `json:"objectType"`
 	Parameters *string `json:"parameters"`
 	Username   *string `json:"username"`
 }
 
-// Gets the number of hours of the job's TTL - rounded down to the nearest natural number, or an
-// error if it is an invalid value.
+// TTLHours gets the number of hours of the job's TTL - rounded down to the nearest natural number,
+// or an error if it is an invalid value.
 func (j *InvalidationJobInput) TTLHours() (uint, error) {
 	if j.ttl != nil {
 		return uint((*j.ttl).Hours()), nil
@@ -159,7 +159,7 @@ func (j *InvalidationJobInput) TTLHours() (uint, error) {
 	return ret, nil
 }
 
-// Gets the integral, unique identifier of the Delivery Service identified by
+// DSID gets the integral, unique identifier of the Delivery Service identified by
 // InvalidationJobInput.DeliveryService
 //
 // This requires a transaction connected to a Traffic Ops database, because if DeliveryService is
@@ -217,7 +217,7 @@ func (j *InvalidationJobInput) DSID(tx *sql.Tx) (uint, error) {
 	}
 }
 
-// Given a transaction connected to the Traffic Ops database, this validates that the user input
+// Validate, given a transaction connected to the Traffic Ops database, validates that the user input
 // is correct. In particular, it enforces the constraints described on each field, as well as
 // ensuring they actually exist. This method calls InvalidationJobInput.DSID to validate the
 // DeliveryService field.
@@ -261,7 +261,7 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 	return errors.New(strings.Join(errs, ", "))
 }
 
-// Checks that the InvalidationJob is valid, by ensuring all of its fields are well-defined.
+// Validate checks that the InvalidationJob is valid, by ensuring all of its fields are well-defined.
 //
 // This returns an error describing any and all problematic fields encountered during validation.
 func (job *InvalidationJob) Validate() error {
@@ -298,11 +298,11 @@ func (job *InvalidationJob) Validate() error {
 	return err
 }
 
-// Given a transaction connected to the Traffic Ops database, this validates that the user input
+// Validate, given a transaction connected to the Traffic Ops database, validates that the user input
 // is correct.
 //
 // This requires a database transaction to check that the DSID is a valid identifier for an existing
-// Delivery Service
+// Delivery Service.
 //
 // Returns an error describing any and all problematic fields encountered during validation.
 func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
