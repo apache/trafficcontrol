@@ -110,6 +110,7 @@ func BytesLenSplit(s []byte, n int) [][]byte {
 	return ss
 }
 
+// HashInts returns a string hash of the given ints.
 func HashInts(ints []int) string {
 	if len(ints) == 0 {
 		return ""
