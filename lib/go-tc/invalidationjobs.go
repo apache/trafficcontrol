@@ -226,10 +226,11 @@ func (j *InvalidationJobInput) DSID(tx *sql.Tx) (uint, error) {
 func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 	errs := []string{}
 	err := validation.ValidateStruct(job,
-		validation.Field(job.DeliveryService, validation.Required),
-		validation.Field(job.Regex, validation.Required, validation.Match(ValidJobRegexPrefix)),
-		validation.Field(job.StartTime, validation.Required),
-		validation.Field(job.TTL, validation.Required),
+		validation.Field(&job.DeliveryService, validation.Required),
+		validation.Field(&job.Regex, validation.Required, validation.NewStringRule(func(s string) bool {
+			return strings.HasPrefix(s, `\/`) || strings.HasPrefix(s, "/")
+		}, `must start with '/' (or '\/')`)),
+		validation.Field(&job.TTL, validation.Required),
 	)
 
 	if err != nil {
@@ -244,58 +245,63 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 
 	if job.Regex != nil && *job.Regex != "" {
 		if _, err := regexp.Compile(*job.Regex); err != nil {
-			errs = append(errs, "'regex' is not a valid Regular Expression: "+err.Error())
+			errs = append(errs, "regex: is not a valid Regular Expression: "+err.Error())
 		}
 	}
 
-	if job.StartTime != nil && job.StartTime.Time.Before(time.Now()) {
-		errs = append(errs, "'startTime' must be in the future!")
+	if job.StartTime == nil {
+		errs = append(errs, "startTime: cannot be blank")
+	} else if job.StartTime.Time.Before(time.Now()) {
+		errs = append(errs, "startTime: must be in the future")
 	}
 
 	if job.TTL != nil {
 		if _, err := job.TTLHours(); err != nil {
-			errs = append(errs, "'ttl' must be a number of hours, or a duration string e.g. '48h'!")
+			errs = append(errs, "ttl: must be a number of hours, or a duration string e.g. '48h'")
 		}
 	}
 
-	return errors.New(strings.Join(errs, ", "))
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, ", "))
+	}
+	return nil
 }
 
 // Validate checks that the InvalidationJob is valid, by ensuring all of its fields are well-defined.
 //
 // This returns an error describing any and all problematic fields encountered during validation.
 func (job *InvalidationJob) Validate() error {
+	errs := []string{}
 	err := validation.ValidateStruct(job,
-		validation.Field(job.AssetURL, validation.Required, is.URL),
-		validation.Field(job.CreatedBy, validation.Required),
-		validation.Field(job.DeliveryService, validation.Required),
-		validation.Field(job.ID, validation.Required),
-		validation.Field(job.Keyword, validation.Required),
-		validation.Field(job.Parameters, validation.Required),
-		validation.Field(job.StartTime, validation.Required),
+		validation.Field(&job.AssetURL, validation.Required, is.URL),
+		validation.Field(&job.CreatedBy, validation.Required),
+		validation.Field(&job.DeliveryService, validation.Required),
+		validation.Field(&job.ID, validation.Required),
+		validation.Field(&job.Keyword, validation.Required),
+		validation.Field(&job.Parameters, validation.Required),
 	)
 
+	if err != nil {
+		errs = append(errs, err.Error())
+	}
+
 	if job.StartTime == nil {
-		return err
+		return errors.New(strings.Join(append(errs, "startTime: cannot be blank"), ", "))
 	}
 
 	if job.StartTime.After(time.Now().Add(twoDays)) {
-		e := errors.New("'startTime' must be within two days from now")
-		if err == nil {
-			return e
-		}
-		return fmt.Errorf("%v, %v", err, e)
+		errs = append(errs, "startTime: must be within two days from now")
 	}
 
 	if job.StartTime.Before(time.Now()) {
-		e := errors.New("'startTime' cannot be in the past")
-		if err == nil {
-			return e
-		}
-		return fmt.Errorf("%v, %v", err, e)
+		errs = append(errs, "startTime: cannot be in the past")
 	}
 
-	return err
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, ", "))
+	}
+
+	return nil
 }
 
 // Validate, given a transaction connected to the Traffic Ops database, validates that the user input
@@ -308,22 +314,25 @@ func (job *InvalidationJob) Validate() error {
 func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 	errs := []string{}
 	err := validation.ValidateStruct(job,
-		validation.Field(job.StartTime, validation.Required),
-		validation.Field(job.Regex, validation.Required, validation.Match(ValidJobRegexPrefix)),
-		validation.Field(job.DSID, validation.Required),
-		validation.Field(job.TTL, validation.Required),
+		validation.Field(&job.Regex, validation.Required, validation.NewStringRule(func (s string) bool {
+			return strings.HasPrefix(s, `\/`) || strings.HasPrefix(s, "/")
+		}, `must start with '/' (or '\/')`)),
+		validation.Field(&job.DSID, validation.Required),
+		validation.Field(&job.TTL, validation.Required),
 	)
 	if err != nil {
 		errs = append(errs, err.Error())
 	}
 
-	if job.StartTime != nil && job.StartTime.After(time.Now().Add(twoDays)) {
-		errs = append(errs, "'startTime' must be within two days!")
+	if job.StartTime == nil {
+		errs = append(errs, "startTime: cannot be blank")
+	} else if job.StartTime.After(time.Now().Add(twoDays)) {
+		errs = append(errs, "startTime: must be within two days!")
 	}
 
 	if job.Regex != nil && *(job.Regex) != "" {
 		if _, err := regexp.Compile(*(job.Regex)); err != nil {
-			errs = append(errs, "'regex' is not a valid regular expression: "+err.Error())
+			errs = append(errs, "regex: is not a valid regular expression: "+err.Error())
 		}
 	}
 
@@ -341,11 +350,11 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 		var max uint64
 		err := row.Scan(&max)
 		if err == sql.ErrNoRows && MaxTTL < *(job.TTL) {
-			errs = append(errs, "'ttl' cannot exceed "+strconv.FormatUint(MaxTTL, 10)+"!")
+			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(MaxTTL, 10)+"!")
 		} else if err == nil && max < *(job.TTL) { //silently ignore other errors to
-			errs = append(errs, "'ttl' cannot exceed "+strconv.FormatUint(max, 10)+"!")
+			errs = append(errs, "ttl: cannot exceed "+strconv.FormatUint(max, 10)+"!")
 		} else if *(job.TTL) < 1 {
-			errs = append(errs, "'ttl' must be at least 1!")
+			errs = append(errs, "ttl: must be at least 1!")
 		}
 	}
 
