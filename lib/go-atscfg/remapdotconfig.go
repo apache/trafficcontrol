@@ -155,9 +155,7 @@ func GetServerConfigRemapDotConfigForMid(
 	sort.Strings(textLines)
 
 	text := header
-	for _, line := range textLines {
-		text += line
-	}
+	text += strings.Join(textLines, "")
 	return text
 }
 
@@ -205,10 +203,8 @@ func GetServerConfigRemapDotConfigForEdge(
 	}
 
 	text := header
-	sort.Sort(sort.StringSlice(textLines))
-	for _, line := range textLines {
-		text += line
-	}
+	sort.Strings(textLines)
+	text += strings.Join(textLines, "")
 	return text
 }
 
