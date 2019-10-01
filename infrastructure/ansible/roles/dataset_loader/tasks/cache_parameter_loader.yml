@@ -55,9 +55,9 @@
     Target_hardware_profile_cache_disk_letters: "{{ Target_hardware_profile.value.cache_disks | map('regex_replace',cache_drive_letter_regex,'\\1') | list | join(',') }}"
     cache_drive_letter_prefix_regex: "^({{ dl_ds_merged_cache_block_device_prefix_whitelist | join('|') }})(\\w+)$"
     Target_hardware_profile_cache_disk_prefix: "{{ Target_hardware_profile.value.cache_disks | map('regex_replace',cache_drive_letter_prefix_regex,'\\1') | list | first | default('INVALID_DRIVE_PREFIX') }}"
-    ram_drive_letter_regex: "^(?:{{ dl_ds_merged_cache_block_device_prefix_whitelist | join('|') }})(\\w+)$"
+    ram_drive_letter_regex: "^(?:{{ dl_ds_merged_cache_ram_device_prefix_whitelist | join('|') }})(\\w+)$"
     Target_hardware_profile_ram_disk_letters: "{{ Target_hardware_profile.value.ram_disks | map('regex_replace',ram_drive_letter_regex,'\\1') | list | join(',') }}"
-    ram_drive_letter_prefix_regex: "^({{ dl_ds_merged_cache_block_device_prefix_whitelist | join('|') }})(\\w+)$"
+    ram_drive_letter_prefix_regex: "^({{ dl_ds_merged_cache_ram_device_prefix_whitelist | join('|') }})(\\w+)$"
     Target_hardware_profile_ram_disk_prefix: "{{ Target_hardware_profile.value.ram_disks | map('regex_replace',ram_drive_letter_prefix_regex,'\\1') | list | first | default('INVALID_RAM_DRIVE_PREFIX') }}"
   register: create_profiles_out
   failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
