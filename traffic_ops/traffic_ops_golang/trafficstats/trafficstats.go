@@ -95,7 +95,7 @@ const (
 		GROUP BY time(%s, %s), cachegroup%s`
 )
 
-func configFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig, error, int) {
+func ConfigFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig, error, int) {
 	var c tc.TrafficStatsConfig
 	var e error
 	if accept := r.Header.Get("Accept"); accept != "" {
@@ -196,7 +196,7 @@ func configFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig, 
 			return c, e, http.StatusBadRequest
 		}
 
-		if dsID, err := strconv.ParseUint(c.DeliveryService, 10, 64); err != nil {
+		if dsID, err := strconv.ParseUint(c.DeliveryService, 10, 64); err == nil {
 			// sql.ErrNoRows does not *necessarily* mean the DS doesn't exist - an XMLID can simply
 			// be numeric, and so it was wrong to treat it as an ID in the first place.
 			xmlid := c.DeliveryService
@@ -225,7 +225,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	var c tc.TrafficStatsConfig
-	if c, userErr, errCode = configFromRequest(r, inf); userErr != nil {
+	if c, userErr, errCode = ConfigFromRequest(r, inf); userErr != nil {
 		sysErr = fmt.Errorf("Unable to process deliveryservice_stats request: %v", userErr)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
