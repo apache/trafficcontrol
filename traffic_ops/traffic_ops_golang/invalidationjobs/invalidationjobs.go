@@ -143,24 +143,24 @@ RETURNING job.asset_url,
           job.start_time
 `
 
-const patchUpdateQuery = `
-UPDATE job
-SET asset_url=$1,
-    parameters=$2,
-    start_time=$3
-WHERE id=$4
-RETURNING job.asset_url,
-          (SELECT tm_user.username
-           FROM tm_user
-           WHERE tm_user.id=job.job_user) AS created_by,
-           (SELECT deliveryservice.xml_id
-            FROM deliveryservice
-            WHERE deliveryservice.id=job.job_deliveryservice) AS deliveryservice,
-           job.id,
-           job.keyword,
-           job.parameters,
-           job.start_time
-`
+// const patchUpdateQuery = `
+// UPDATE job
+// SET asset_url=$1,
+//     parameters=$2,
+//     start_time=$3
+// WHERE id=$4
+// RETURNING job.asset_url,
+//           (SELECT tm_user.username
+//            FROM tm_user
+//            WHERE tm_user.id=job.job_user) AS created_by,
+//            (SELECT deliveryservice.xml_id
+//             FROM deliveryservice
+//             WHERE deliveryservice.id=job.job_deliveryservice) AS deliveryservice,
+//            job.id,
+//            job.keyword,
+//            job.parameters,
+//            job.start_time
+// `
 
 // See the commented-out 'Patch' function for why this is commented out
 // const patchInfoQuery = `
@@ -477,6 +477,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	if err := input.Validate(); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if !strings.HasPrefix(*input.AssetURL, oFQDN) {
+		userErr = fmt.Errorf("Cannot set asset URL that does not start with Delivery Service origin URL: %s", oFQDN)
+		errCode = http.StatusBadRequest
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 		return
 	}
 
