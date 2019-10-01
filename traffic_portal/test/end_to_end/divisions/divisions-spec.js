@@ -67,11 +67,4 @@ describe('Traffic Portal Divisions Test Suite', function() {
 		expect(pageData.name.getText() === myNewDiv.name + ' updated');
 	});
 
-	it('should delete the new division', function() {
-		console.log('Deleting the new division: ' + myNewDiv.name + ' updated');
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(myNewDiv.name + ' updated');
-		pageData.deletePermanentlyButton.click();
-	});
-
 });
