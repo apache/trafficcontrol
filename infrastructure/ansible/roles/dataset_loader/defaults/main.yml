@@ -880,7 +880,7 @@ dl_ds_default_profile_cdntemplates:
         value: "{{ dl_allow_ip6 }}"
       - name: cache_size_bytes
         configFile: grove.cfg
-        value: "{{ cache_hardware_profile_index[(Target_hardware_profile | default({})).ram_cache_size | default(0)] | default(20000) }}"
+        value: "{{ cache_hardware_profile_index[Target_hardware_profile.value.ram_cache_size | default(0)] | default(20000) }}"
       - name: cert_file
         configFile: grove.cfg
         value: "/etc/pki/tls/certs/server.crt"
@@ -895,7 +895,7 @@ dl_ds_default_profile_cdntemplates:
         value: '443'
       - name: interface_name
         configFile: grove.cfg
-        value: "{{ (Target_hardware_profile | default({})).primary_network_interface | default('eth0') }}"
+        value: "{{ Target_hardware_profile.value.primary_network_interface | default('eth0') }}"
       - name: key_file
         configFile: grove.cfg
         value: "/etc/pki/tls/private/server.key.pem"
@@ -1117,10 +1117,10 @@ dl_ds_default_profile_cdntemplates:
         value: http://${hostname}/_astats?application=&inf.name=${interface_name}
       - name: health.threshold.availableBandwidthInKbps
         configFile: rascal.properties
-        value: ">{{ ((Target_hardware_profile | default({})).network_bandwidth_limit | default('1000') | float * ((dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
+        value: ">{{ (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float * ((dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
       - name: health.threshold.loadavg
         configFile: rascal.properties
-        value: "{{ (Target_hardware_profile | default({})).load_avg_limit | default('10') }}.0"
+        value: "{{ Target_hardware_profile.value.load_avg_limit | default('10') }}.0"
       - name: health.threshold.queryTime
         configFile: rascal.properties
         value: '1000'
@@ -1237,7 +1237,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.cache.ram_cache.size
         configFile: records.config
-        value: "INT {{ cache_hardware_profile_index[(Target_hardware_profile | default({})).ram_cache_size | default(0)] | default(20000) }}"
+        value: "INT {{ cache_hardware_profile_index[Target_hardware_profile.value.ram_cache_size | default(0)] | default(20000) }}"
       - name: CONFIG proxy.config.cache.ram_cache.use_seen_filter
         configFile: records.config
         value: INT 1
@@ -2494,10 +2494,10 @@ dl_ds_default_profile_cdntemplates:
         value: http://${hostname}/_astats?application=&inf.name=${interface_name}
       - name: health.threshold.availableBandwidthInKbps
         configFile: rascal.properties
-        value: ">{{ ((Target_hardware_profile | default({})).network_bandwidth_limit | default('1000') | float * ((dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
+        value: ">{{ (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float * ((dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
       - name: health.threshold.loadavg
         configFile: rascal.properties
-        value: "{{ (Target_hardware_profile | default({})).load_avg_limit | default('10') }}.0"
+        value: "{{ Target_hardware_profile.value.load_avg_limit | default('10') }}.0"
       - name: health.threshold.queryTime
         configFile: rascal.properties
         value: '1000'
@@ -2611,7 +2611,7 @@ dl_ds_default_profile_cdntemplates:
         value: INT 0
       - name: CONFIG proxy.config.cache.ram_cache.size
         configFile: records.config
-        value: "INT {{ cache_hardware_profile_index[(Target_hardware_profile | default({})).ram_cache_size | default(0)] | default(20000) }}"
+        value: "INT {{ cache_hardware_profile_index[Target_hardware_profile.value.ram_cache_size | default(0)] | default(20000) }}"
       - name: CONFIG proxy.config.cache.ram_cache.use_seen_filter
         configFile: records.config
         value: INT 1
