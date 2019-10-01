@@ -149,6 +149,7 @@ type ConfigLetsEncrypt struct {
 	SendExpEmail              bool   `json:"send_expiration_email"`
 	ConvertSelfSigned         bool   `json:"convert_self_signed"`
 	RenewDaysBeforeExpiration int    `json:"renew_days_before_expiration"`
+	Environment               string `json:"environment"`
 }
 
 type ConfigSmtp struct {

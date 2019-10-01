@@ -135,7 +135,8 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "user_email" : "",
         "send_expiration_email": true,
         "convert_self_signed": true,
-        "renew_days_before_expiration": 500
+        "renew_days_before_expiration": 30
+        "environment": "staging"
     }
 }
 EOF

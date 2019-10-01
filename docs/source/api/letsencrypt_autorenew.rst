@@ -19,7 +19,7 @@
 ``letsencrypt/autorenew``
 *************************
 
-``GET``
+``POST``
 ========
 Generates an SSL certificate and private key using Let's Encrypt for a :term:`Delivery Service`
 

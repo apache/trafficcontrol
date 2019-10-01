@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/go-acme/lego/certcrypto"
@@ -42,6 +43,8 @@ import (
 	"github.com/go-acme/lego/registration"
 	"github.com/jmoiron/sqlx"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -146,28 +149,51 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	error := GetLetsEncryptCertificates(inf.Config, req, ctx)
+	go GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User)
 
-	if error != nil {
-		api.HandleErr(w, r, nil, http.StatusInternalServerError, error, nil)
-		return
-	}
-
-	api.WriteRespAlert(w, r, tc.WarnLevel, "Successfully created ssl keys for "+*req.DeliveryService)
+	api.WriteRespAlert(w, r, tc.WarnLevel, "Beginning async call to Let's Encrypt for "+*req.DeliveryService+".  This may take a few minutes.")
 
 }
 
-func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSSLKeysReq, ctx context.Context) error {
+func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSSLKeysReq, ctx context.Context, currentUser *auth.CurrentUser) error {
 
 	db, err := api.GetDB(ctx)
-	tx, err := db.BeginTxx(ctx, nil)
+	if err != nil {
+		log.Errorf(*req.DeliveryService+": Error getting db: %s", err.Error())
+		return err
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		log.Errorf(*req.DeliveryService+": Error getting tx: %s", err.Error())
+		return err
+	}
+
+	logTx, err := db.Begin()
+	if err != nil {
+		log.Errorf(*req.DeliveryService+": Error getting logTx: %s", err.Error())
+		return err
+	}
+	defer logTx.Commit()
 
 	domainName := *req.HostName
 	deliveryService := *req.DeliveryService
 
+	dsID, ok, err := getDSIDFromName(tx, *req.DeliveryService)
+	if err != nil {
+		log.Errorf("deliveryservice.GenerateSSLKeys: getting DS ID from name " + err.Error() + " " + ctx.Err().Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+		return errors.New("deliveryservice.GenerateSSLKeys: getting DS ID from name " + err.Error())
+	} else if !ok {
+		log.Errorf("no DS with name " + *req.DeliveryService)
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
+		return errors.New("no DS with name " + *req.DeliveryService)
+	}
+	tx.Commit()
+
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		log.Errorf(deliveryService+": Error generating private key: %s", err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return err
 	}
 
@@ -177,12 +203,18 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 
 	config := lego.NewConfig(&myUser)
-	config.CADirURL = lego.LEDirectoryStaging // TODO take this out after testing
+	if strings.EqualFold(cfg.ConfigLetsEncrypt.Environment, "staging") {
+		config.CADirURL = lego.LEDirectoryStaging // provides certificate signed by invalid authority for testing purposes
+	} else {
+		config.CADirURL = lego.LEDirectoryProduction // provides certificate signed by valid LE authority
+	}
+
 	config.Certificate.KeyType = certcrypto.RSA2048
 
 	client, err := lego.NewClient(config)
 	if err != nil {
 		log.Errorf(deliveryService+": Error creating lets encrypt client: %s", err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return err
 	}
 
@@ -192,6 +224,7 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	trafficRouterDns.db = db
 	if err != nil {
 		log.Errorf(deliveryService+": Error creating Traffic Router DNS provider: %s", err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return err
 	}
 	client.Challenge.SetDNS01Provider(trafficRouterDns)
@@ -199,6 +232,7 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
 	if err != nil {
 		log.Errorf(deliveryService+": Error registering lets encrypt client: %s", err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return err
 	}
 	myUser.Registration = reg
@@ -206,6 +240,7 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		log.Errorf(deliveryService + ": Error generating private key")
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return err
 	}
 	request := certificate.ObtainRequest{
@@ -213,26 +248,22 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 		Bundle:     true,
 		PrivateKey: priv,
 	}
+
 	certificates, err := client.Certificate.Obtain(request)
 	if err != nil {
 		log.Errorf(deliveryService+": Error obtaining lets encrypt certificate: %s", err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt "+err.Error(), currentUser, logTx)
 		return err
 	}
 
 	fmt.Printf("%#v\n", certificates)
 
-	block, _ := pem.Decode([]byte(certificates.Certificate))
-	if block == nil {
-		log.Errorf(deliveryService + ": Error parsing cert")
-		return errors.New(deliveryService + ": parsing cert")
-	}
-	x509cert, err := x509.ParseCertificate(block.Bytes)
+	expiration, err := parseExpirationFromCert(certificates.Certificate)
 	if err != nil {
-		log.Errorf(deliveryService+": Error parsing cert to get expiry - %s", err.Error())
+		log.Errorf(deliveryService+": %s", err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return err
 	}
-
-	expiration := x509cert.NotAfter
 
 	// Save certs into Riak
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
@@ -246,19 +277,38 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 
 	keyDer := x509.MarshalPKCS1PrivateKey(priv)
 	if keyDer == nil {
+		log.Errorf("marshalling private key: nil der")
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return errors.New("marshalling private key: nil der")
 	}
 	keyBuf := bytes.Buffer{}
 	if err := pem.Encode(&keyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: keyDer}); err != nil {
+		log.Errorf("pem-encoding private key: " + err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return errors.New("pem-encoding private key: " + err.Error())
 	}
 	keyPem := keyBuf.Bytes()
 
 	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(EncodePEMToLegacyPerlRiakFormat(certificates.Certificate)), Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)), CSR: ""}
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx.Tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
+	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
 		return errors.New(deliveryService + ": putting riak keys: " + err.Error())
 	}
+
+	tx2, err := db.Begin()
+	if err != nil {
+		log.Errorf("starting sql transaction for delivery service " + *req.DeliveryService + ": " + err.Error())
+		return errors.New("starting sql transaction for delivery service " + *req.DeliveryService + ": " + err.Error())
+	}
+
+	if err := updateSSLKeyVersion(*req.DeliveryService, req.Version.ToInt64(), tx2); err != nil {
+		log.Errorf("updating SSL key version for delivery service '" + *req.DeliveryService + "': " + err.Error())
+		return errors.New("updating SSL key version for delivery service '" + *req.DeliveryService + "': " + err.Error())
+	}
+	tx2.Commit()
+
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: ? "+", ACTION: Added SSL keys with Lets Encrypt", currentUser, logTx)
 
 	return nil
 }

@@ -94,7 +94,7 @@ if ( ! $login_response->is_success ) {
 
 my $url       = "$b_url/api/1.4/letsencrypt/autorenew/";
 TRACE "getting $url";
-my $response = $ua->get($url);
+my $response = $ua->post($url);
 if ( $response->is_success ) {
 	DEBUG "Successfully refreshed keys response was " . $response->decoded_content;
 }

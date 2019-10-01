@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/cdns/routing
   - /api/1.1/cachegroupparameters/ `(GET, POST)`
   - /api/1.4/deliveryservices/sslkeys/generate/letsencrypt `POST`
-  - /api/1.4/letsencrypt/autorenew `GET`
+  - /api/1.4/letsencrypt/autorenew `POST`
   - /api/1.4/letsencrypt/dnsrecord `GET`
   - /api/1.4/letsencrypt/dnsrecords `GET`
 

@@ -49,6 +49,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
     }
 
     @Override
+    @SuppressWarnings("PMD.CyclomaticComplexity")
     public boolean useData(final String data) {
         try {
             final ObjectMapper mapper = new ObjectMapper(new JsonFactory());
@@ -68,8 +69,20 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
                 final String challengeDomain = sb.toString();
                 final String fqdn = challengeDomain.substring(0, challengeDomain.length() - 1).replace("_acme-challenge.", "");
 
-                final String dsLabel = fqdn.split("\\.")[0];
-                final ObjectNode deliveryServiceConfig = (ObjectNode) deliveryServicesNode.get(dsLabel);
+                ObjectNode deliveryServiceConfig = null;
+                String dsLabel = "";
+                final StringBuilder nameSb = new StringBuilder();
+                nameSb.append("_acme-challenge");
+                for (final String label : fqdn.split("\\.")) {
+                    deliveryServiceConfig = (ObjectNode) deliveryServicesNode.get(label);
+                    if (deliveryServiceConfig != null) {
+                        dsLabel = label;
+                        break;
+                    } else {
+                        nameSb.append('.');
+                        nameSb.append(label);
+                    }
+                }
 
                 ArrayNode staticDnsEntriesNode;
 
@@ -89,7 +102,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
 
                     final ObjectNode newChildNode = mapper.createObjectNode();
                     newChildNode.put("type", "TXT");
-                    newChildNode.put("name", "_acme-challenge");
+                    newChildNode.put("name", nameSb.toString());
                     newChildNode.put("value", challenge.getRecord());
                     newChildNode.put("ttl", 10);
 
@@ -116,7 +129,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
 
             return true;
         } catch (Exception e) {
-            LOGGER.warn("Failed updating dns challenge txt record with data from " + dataBaseURL);
+            LOGGER.warn("Failed updating dns challenge txt record with data from " + dataBaseURL + ": " + e.getMessage());
         }
 
         return false;

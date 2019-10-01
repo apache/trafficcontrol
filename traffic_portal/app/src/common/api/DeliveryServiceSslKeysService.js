@@ -18,15 +18,18 @@
  */
 
 var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel, ENV) {
+    this.successMessage = 'SSL Keys generated and updated for ';
+    this.letsEncryptSuccessMessage = 'Call to Lets Encrypt has been made successfully. This may take a few minutes. Please watch for a notification in the Change Log. Delivery Service = ';
+
 	this.generateSslKeys = function(deliveryService, sslKeys, generateSslKeyForm) {
-		 return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, "deliveryservices/sslkeys/generate");
+		 return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate', this.successMessage);
 	};
 
     this.generateSslKeysWithLetsEncrypt = function(deliveryService, sslKeys, generateSslKeyForm) {
-        return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, "deliveryservices/sslkeys/generate/letsencrypt");
+        return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate/letsencrypt', this.letsEncryptSuccessMessage);
     };
 
-	this.generateSslKeysBase = function(deliveryService, sslKeys, generateSslKeyForm, endpoint) {
+	this.generateSslKeysBase = function(deliveryService, sslKeys, generateSslKeyForm, endpoint, message) {
         if (sslKeys.hasOwnProperty('version')){
             generateSslKeyForm.version = parseInt(sslKeys.version, 10) + 1;
         } else {
@@ -39,7 +42,7 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
 
         return $http.post(ENV.api['root'] + endpoint, generateSslKeyForm).then(
             function(result) {
-            	messageModel.setMessages([{level: "success", text: result.data.response}], true);
+            	messageModel.setMessages([{level: 'success', text: message + deliveryService.xmlId}], true);
                 return result.data.response;
             },
             function(err) {

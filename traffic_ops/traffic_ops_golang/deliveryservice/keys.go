@@ -94,6 +94,11 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 	req.Certificate.Key = certPrivateKey
 
 	base64EncodeCertificate(req.Certificate)
+
+	authType := ""
+	if req.AuthType != nil {
+		authType = *req.AuthType
+	}
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
 		CDN:             *req.CDN,
 		DeliveryService: *req.DeliveryService,
@@ -101,7 +106,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		Key:             *req.Key,
 		Version:         *req.Version,
 		Certificate:     *req.Certificate,
-		AuthType:        *req.AuthType,
+		AuthType:        authType,
 	}
 
 	expiration := *new(time.Time)
@@ -235,7 +240,29 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 			return
 		}
 	}
+
+	if keyObj.Expiration.IsZero() {
+		exp, err := parseExpirationFromCert([]byte(keyObj.Certificate.Crt))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(xmlID+": "+err.Error()))
+		}
+		keyObj.Expiration = exp
+	}
 	api.WriteResp(w, r, keyObj)
+}
+
+func parseExpirationFromCert(cert []byte) (time.Time, error) {
+	block, _ := pem.Decode(cert)
+	if block == nil {
+		return time.Time{}, errors.New("Error decoding cert to parse expiration")
+	}
+
+	x509cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return time.Time{}, errors.New("Error parsing cert to get expiration - " + err.Error())
+	}
+
+	return x509cert.NotAfter, nil
 }
 
 func base64DecodeCertificate(cert *tc.DeliveryServiceSSLKeysCertificate) error {

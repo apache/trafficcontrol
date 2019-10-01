@@ -20,6 +20,7 @@ package deliveryservice
  */
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
@@ -30,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"html/template"
 	"net/http"
 	"net/smtp"
 	"strconv"
@@ -108,6 +110,20 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		err = base64DecodeCertificate(&keyObj.Certificate)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+ds.XmlId+"': "+err.Error()))
+			return
+		}
+		if keyObj.Expiration.IsZero() {
+			expiration, err := parseExpirationFromCert([]byte(keyObj.Certificate.Crt))
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(ds.XmlId+": "+err.Error()))
+				return
+			}
+			keyObj.Expiration = expiration
+		}
+
 		// Renew only certificates within configured limit plus 3 days
 		if keyObj.Expiration.After(time.Now().Add(time.Hour * 24 * time.Duration(inf.Config.ConfigLetsEncrypt.RenewDaysBeforeExpiration)).Add(time.Hour * 24 * 3)) {
 			continue
@@ -131,7 +147,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 			}
 			ctx, _ := context.WithTimeout(r.Context(), GetLetsEncryptTimeout())
 
-			if error := GetLetsEncryptCertificates(inf.Config, req, ctx); error != nil {
+			if error := GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User); error != nil {
 				dsExpInfo.Error = error
 			}
 			keysFound.LetsEncryptExpirations = append(keysFound.LetsEncryptExpirations, dsExpInfo)
@@ -148,7 +164,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 				}
 				ctx, _ := context.WithTimeout(r.Context(), GetLetsEncryptTimeout())
 
-				if error := GetLetsEncryptCertificates(inf.Config, req, ctx); error != nil {
+				if error := GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User); error != nil {
 					dsExpInfo.Error = error
 				}
 			}
@@ -162,6 +178,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 	if inf.Config.ConfigSmtp.Enabled && inf.Config.ConfigLetsEncrypt.SendExpEmail {
 		err = AlertExpiringCerts(keysFound, *inf.Config)
 		if err != nil {
+			log.Errorf(err.Error())
 			api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
 		}
 	}
@@ -175,34 +192,12 @@ func AlertExpiringCerts(certsFound ExpirationSummary, config config.Config) erro
 	if config.ConfigLetsEncrypt.Email != "" {
 		email = config.ConfigLetsEncrypt.Email
 	}
-	msg := "To: " + email + "\r\n" +
-		"Subject: Certificate Expiration Summary\r\n" +
-		"\r\n" +
-		"Summary of automated certificate renewal:\nLet's Encrypt Certificates:\n"
-	for _, leCert := range certsFound.LetsEncryptExpirations {
-		if leCert.Error != nil {
-			msg = msg + "Certificate for " + leCert.XmlId + " Version: " + leCert.Version.String() + " FAILED to renew with error: " + leCert.Error.Error() + "\n"
-		} else {
-			msg = msg + "Certificate for " + leCert.XmlId + " Version: " + leCert.Version.String() + " SUCCESSFULLY renewed" + "\n"
-		}
-	}
-	msg = msg + "\nSelf Signed Certificates:\n"
-	for _, ssCert := range certsFound.SelfSignedExpirations {
-		if config.ConfigLetsEncrypt.ConvertSelfSigned && ssCert.Error != nil {
-			msg = msg + "Certificate for " + ssCert.XmlId + " Version: " + ssCert.Version.String() + " FAILED to renew with error: " + ssCert.Error.Error() + "\n"
-		} else if config.ConfigLetsEncrypt.ConvertSelfSigned && ssCert.Error == nil {
-			msg = msg + "Certificate for " + ssCert.XmlId + " Version: " + ssCert.Version.String() + " SUCCESSFULLY renewed" + "\n"
-		} else {
-			msg = msg + "Certificate for " + ssCert.XmlId + " Version: " + ssCert.Version.String() + " needs to be renewed.  It expires " + ssCert.Expiration.String()
-		}
-	}
+	header := "From: " + config.ConfigSmtp.FromEmail + "\n" +
+		"To: " + email + "\n" +
+		"MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n" +
+		"Subject: Certificate Expiration Summary\n\n"
 
-	msg = msg + "\nOther Certificates:\n"
-	for _, otherCert := range certsFound.OtherExpirations {
-		msg = msg + "Certificate for " + otherCert.XmlId + " Version: " + otherCert.Version.String() + " needs to be renewed.  It expires " + otherCert.Expiration.String()
-	}
-
-	error := SendEmail(config, msg)
+	error := SendEmail(config, header, certsFound)
 	if error != nil {
 		return error
 	}
@@ -210,7 +205,7 @@ func AlertExpiringCerts(certsFound ExpirationSummary, config config.Config) erro
 	return nil
 }
 
-func SendEmail(config config.Config, msg string) error {
+func SendEmail(config config.Config, header string, data interface{}) error {
 	var auth smtp.Auth
 	if config.ConfigSmtp.User != "" {
 		auth = LoginAuth("", config.ConfigSmtp.User, config.ConfigSmtp.Password, strings.Split(config.ConfigSmtp.Address, ":")[0])
@@ -220,12 +215,30 @@ func SendEmail(config config.Config, msg string) error {
 	if config.ConfigLetsEncrypt.Email != "" {
 		email = []string{config.ConfigLetsEncrypt.Email}
 	}
+
+	msgBodyBuffer, err := parseTemplate("/opt/traffic_ops/app/templates/send_mail/autorenewcerts_mail.ep", data)
+	if err != nil {
+		return err
+	}
+	msg := append([]byte(header), msgBodyBuffer.Bytes()...)
+
 	error := smtp.SendMail(config.ConfigSmtp.Address, auth, config.ConfigSmtp.FromEmail, email, []byte(msg))
 	if error != nil {
 		return errors.New("Failed to send email: " + error.Error())
 	}
 	return nil
+}
 
+func parseTemplate(templateFileName string, data interface{}) (*bytes.Buffer, error) {
+	t, err := template.ParseFiles(templateFileName)
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	if err = t.Execute(buf, data); err != nil {
+		return nil, err
+	}
+	return buf, nil
 }
 
 type loginAuth struct {

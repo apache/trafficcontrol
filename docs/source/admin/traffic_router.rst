@@ -719,6 +719,8 @@ Let's Encrypt can be set up through :file:`/opt/traffic_ops/app/conf/cdn.conf` b
 	+------------------------------+---------+----------------------------------------------------------------------------------------------------+
 	| renew_days_before_expiration | int     | Number of days before expiration date to renew certificates                                        |
 	+------------------------------+---------+----------------------------------------------------------------------------------------------------+
+	| environment                  | string  | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production' |
+	+------------------------------+---------+----------------------------------------------------------------------------------------------------+
 
 .. table:: Fields to update for sending emails under `smtp`
 
