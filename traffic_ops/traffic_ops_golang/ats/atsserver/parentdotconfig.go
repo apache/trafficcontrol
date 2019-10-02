@@ -36,14 +36,14 @@ import (
 )
 
 func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id-or-host"}, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"server-name-or-id"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	idOrHost := strings.TrimSuffix(inf.Params["id-or-host"], ".json")
+	idOrHost := strings.TrimSuffix(inf.Params["server-name-or-id"], ".json")
 	hostName := ""
 	isHost := false
 	id, err := strconv.Atoi(idOrHost)
