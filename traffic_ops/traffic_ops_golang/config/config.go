@@ -437,7 +437,7 @@ func GetInfluxConfig(path string) (bool, *ConfigInflux, error) {
 	}
 
 	if c.Secure == nil {
-		log.Warnln("InfluxDB configuration does not specify 'Secure', defaulting to 'true'")
+		log.Warnln("InfluxDB configuration does not specify 'secure', defaulting to 'true'")
 		c.Secure = util.BoolPtr(true)
 	}
 
