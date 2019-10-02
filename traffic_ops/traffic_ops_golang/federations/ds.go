@@ -116,8 +116,8 @@ func (v *TOFedDSes) NewReadObj() interface{} { return &tc.FederationDeliveryServ
 func (v *TOFedDSes) SelectQuery() string     { return selectQuery() }
 func (v *TOFedDSes) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":                dbhelpers.WhereColumnInfo{"fds.federation", api.IsInt},
-		"deliveryserviceID": dbhelpers.WhereColumnInfo{"fds.deliveryservice", api.IsInt},
+		"id":   dbhelpers.WhereColumnInfo{"fds.federation", api.IsInt},
+		"dsID": dbhelpers.WhereColumnInfo{"fds.deliveryservice", api.IsInt},
 	}
 }
 func (v *TOFedDSes) GetType() string {
