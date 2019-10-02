@@ -42,12 +42,11 @@ func CreateTestServerChecks(t *testing.T) {
 			t.Errorf("could not CREATE servercheck: %v\n", err)
 		}
 	}
+	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }
 
 func CreateTestInvalidServerChecks(t *testing.T) {
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 
 	_, _, err := TOSession.InsertServerCheckStatus(testData.Serverchecks[0])
 	if err == nil {
@@ -84,10 +83,11 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected to receive error with invalid servercheck name\n")
 	}
-
+	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }
 
 func UpdateTestServerChecks(t *testing.T) {
+	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 	for _, servercheck := range testData.Serverchecks {
 		*servercheck.Value--
 		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
@@ -96,6 +96,7 @@ func UpdateTestServerChecks(t *testing.T) {
 			t.Errorf("could not update servercheck: %v\n", err)
 		}
 	}
+	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }
 
 func GetTestServerChecks(t *testing.T) {

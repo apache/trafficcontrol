@@ -42,21 +42,21 @@ func CreateTestTOExtensions(t *testing.T) {
 			t.Errorf("could not create to_extension %v: %v\n", ext.Name, err)
 		}
 	}
+
+	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }
 
 func CreateTestInvalidTOExtensions(t *testing.T) {
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
-
 	// Fail Attempt to Create ToExtension as non extension user
 	_, _, err := TOSession.CreateTOExtension(testData.TOExtensions[0])
 	if err == nil {
 		t.Errorf("expected to receive error with non extension user\n")
 	}
-
-	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 }
 
 func DeleteTestTOExtensions(t *testing.T) {
+	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
+
 	extensions, _, err := TOSession.GetTOExtensions()
 	if err != nil {
 		t.Errorf("could not get to_extensions: %v\n", err)
@@ -94,4 +94,5 @@ func DeleteTestTOExtensions(t *testing.T) {
 	if len(extensions.Response) != 0 {
 		t.Errorf("%v to_extensions returned - expected %v\n", len(extensions.Response), 0)
 	}
+	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }
