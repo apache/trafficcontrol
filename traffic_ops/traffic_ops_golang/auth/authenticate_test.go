@@ -53,10 +53,15 @@ func TestScryptPasswordIsRequired(t *testing.T) {
 
 // The purpose of this test is to show that all password requirements are being met
 func TestUsernamePassword(t *testing.T) {
+	if commonPasswords == nil {
+		defer func() { commonPasswords = nil }() // global variable, reset after this test
+	}
 
 	passwords := []string{"username", "password", "pa$$word", "", "red"}
 	expected := []bool{false, false, true, false, false}
-	LoadPasswordBlacklist("app/conf/invalid_passwords.txt")
+	if err := LoadPasswordBlacklist("app/conf/invalid_passwords.txt"); err != nil {
+		t.Fatalf("LoadPasswordBlacklist err expected: nil, actual: %v", err)
+	}
 
 	for i, password := range passwords {
 		if ok, err := IsGoodLoginPair("username", password); ok != expected[i] {
@@ -75,10 +80,16 @@ func TestUsernamePassword(t *testing.T) {
 
 // The purpose of this test is to show that the file is being read, and we can tell if a password is in the file
 func TestCommonPassword(t *testing.T) {
+	if commonPasswords == nil {
+		defer func() { commonPasswords = nil }() // global variable, reset after this test
+	}
 
 	passwords := []string{"password", "pa$$word"}
 	expected := []bool{true, false}
-	LoadPasswordBlacklist("app/conf/invalid_passwords.txt")
+
+	if err := LoadPasswordBlacklist("app/conf/invalid_passwords.txt"); err != nil {
+		t.Fatalf("LoadPasswordBlacklist err expected: nil, actual: %v", err)
+	}
 
 	for i, password := range passwords {
 		if IsCommonPassword(password) != expected[i] {
