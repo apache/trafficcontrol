@@ -86,7 +86,7 @@ func OrderableFromString(v string) *TrafficStatsOrderable {
 	switch v {
 	case "time":
 		o = TimeOrder
-	case "sum_count":
+	case "value":
 		o = ValueOrder
 	default:
 		return nil

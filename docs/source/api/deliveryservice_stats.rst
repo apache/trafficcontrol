@@ -49,24 +49,8 @@ Request Structure
 	| interval            | no                | Specifies the interval within which data will be "bucketed"; e.g. when requesting data from 2019-07-25T00:00:00Z to 2019-07-25T23:59:59Z with an interval of "1m",                        |
 	|                     |                   | the resulting data series (assuming it is not excluded) should contain                                                                                                                    |
 	|                     |                   | :math:`24\frac{\mathrm{hours}}{\mathrm{day}}\times60\frac{\mathrm{minutes}}{\mathrm{hour}}\times1\mathrm{day}\times1\frac{\mathrm{minute}}{\mathrm{data point}}=1440\mathrm{data\;points}`|
-	|                     |                   | The allowed values for this parameter are:                                                                                                                                                |
+	|                     |                   | The allowed values for this parameter are valid InfluxQL duration literal strings matching :regexp:`^\d+[mhdw]$`                                                                          |
 	|                     |                   |                                                                                                                                                                                           |
-	|                     |                   | 1m                                                                                                                                                                                        |
-	|                     |                   |   Groups data in intervals of one minute                                                                                                                                                  |
-	|                     |                   | 5m                                                                                                                                                                                        |
-	|                     |                   |   Groups data in intervals of five minutes                                                                                                                                                |
-	|                     |                   | 1h                                                                                                                                                                                        |
-	|                     |                   |   Groups data in intervals of one hour                                                                                                                                                    |
-	|                     |                   | 6h                                                                                                                                                                                        |
-	|                     |                   |   Groups data in intervals of six hours                                                                                                                                                   |
-	|                     |                   | 1d                                                                                                                                                                                        |
-	|                     |                   |   Groups data in intervals of one day                                                                                                                                                     |
-	|                     |                   | 1w                                                                                                                                                                                        |
-	|                     |                   |   Groups data in intervals of one week                                                                                                                                                    |
-	|                     |                   | 4w                                                                                                                                                                                        |
-	|                     |                   |   Groups data in intervals of one month (literally 4 weeks or 28 days)                                                                                                                    |
-	|                     |                   |                                                                                                                                                                                           |
-	|                     |                   | If this parameter is not provided, a default of "1m" is used.                                                                                                                             |
 	+---------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| limit               | no                | A natural number indicating the maximum amount of data points should be returned in the ``series`` object                                                                                 |
 	+---------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -130,7 +114,7 @@ Response Structure
 ------------------
 :series: An object containing the actual data series and information necessary for working with it.
 
-	:columns: This is an array of names of the columns of the data contained in the "values" array - should always be ``["time", "value"]``
+	:columns: This is an array of names of the columns of the data contained in the "values" array - should always be ``["time", "sum_count"]``
 	:count:   The number of data points contained in the "values" array
 	:name:    The name of the data set. Should always match :samp:`{metric}.ds.1min` where ``metric`` is the requested ``metricType``
 	:values:  The actual array of data points. Each represents a length of time specified by the ``interval`` query parameter
@@ -180,7 +164,7 @@ Response Structure
 		"series": {
 			"columns": [
 				"time",
-				"value"
+				"sum_count"
 			],
 			"count": 2,
 			"name": "tps_total.ds.1min",
