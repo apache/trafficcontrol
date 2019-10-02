@@ -200,7 +200,7 @@ func GetConfigFileServerParentDotConfig(cfg TCCfg, serverNameOrID string) (strin
 	}
 	cgServerIDs = append(cgServerIDs, server.ID)
 
-	cgDSServers, err := GetDeliveryServiceServers(cfg, cgServerIDs)
+	cgDSServers, err := GetDeliveryServiceServers(cfg, nil, cgServerIDs)
 	if err != nil {
 		return "", errors.New("getting parent.config cachegroup parent server delivery service servers: " + err.Error())
 	}

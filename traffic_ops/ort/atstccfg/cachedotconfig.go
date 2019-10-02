@@ -54,7 +54,7 @@ func GetConfigFileProfileCacheDotConfig(cfg TCCfg, profileNameOrID string) (stri
 		profileServerIDsMap[sv.ID] = struct{}{}
 	}
 
-	dsServers, err := GetDeliveryServiceServers(cfg, profileServerIDs)
+	dsServers, err := GetDeliveryServiceServers(cfg, nil, profileServerIDs)
 	if err != nil {
 		return "", errors.New("getting parent.config cachegroup parent server delivery service servers: " + err.Error())
 	}

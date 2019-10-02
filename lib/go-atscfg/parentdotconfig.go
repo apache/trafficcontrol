@@ -31,8 +31,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-const InvalidID = -1
-
 const ParentConfigParamQStringHandling = "psel.qstring_handling"
 const ParentConfigParamMSOAlgorithm = "mso.algorithm"
 const ParentConfigParamMSOParentRetry = "mso.parent_retry"
@@ -56,8 +54,6 @@ const ParentConfigCacheParamNotAParent = "not_a_parent"
 
 // TODO change, this is terrible practice, using a hard-coded key. What if there were a delivery service named "all_parents" (transliterated Perl)
 const DeliveryServicesAllParentsKey = "all_parents"
-
-const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer officially supports ATS 5.
 
 type ParentConfigDS struct {
 	Name            tc.DeliveryServiceName
