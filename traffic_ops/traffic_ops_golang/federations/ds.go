@@ -44,8 +44,10 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 	fedName, ok, err := getFedNameByID(inf.Tx.Tx, fedID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting federation cname from ID '"+string(fedID)+"': "+err.Error()))
+		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("federation not found: "+err.Error()), nil)
+		return
 	}
 
 	post := tc.FederationDSPost{}

@@ -160,7 +160,11 @@ func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, timeout time.Duratio
 	}
 	err = VerifySCRYPTPassword(form.Password, hashedPassword)
 	if err != nil {
-		if hashedPassword == sha1Hex(form.Password) { // for backwards compatibility
+		hashedInput, err := sha1Hex(form.Password)
+		if err != nil {
+			return false, err, nil
+		}
+		if hashedPassword == hashedInput { // for backwards compatibility
 			return true, nil, nil
 		}
 		return false, err, nil
@@ -168,15 +172,14 @@ func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, timeout time.Duratio
 	return true, nil, nil
 }
 
-func sha1Hex(s string) string {
-	// SHA1 hash
+func sha1Hex(s string) (string, error) {
 	hash := sha1.New()
-	hash.Write([]byte(s))
+	if _, err := hash.Write([]byte(s)); err != nil {
+		return "", err
+	}
 	hashBytes := hash.Sum(nil)
-
-	// Hexadecimal conversion
 	hexSha1 := hex.EncodeToString(hashBytes)
-	return hexSha1
+	return hexSha1, nil
 }
 
 func CheckLDAPUser(form PasswordForm, cfg *config.ConfigLDAP) (bool, error) {

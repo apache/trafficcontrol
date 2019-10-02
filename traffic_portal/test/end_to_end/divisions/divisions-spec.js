@@ -33,6 +33,11 @@ describe('Traffic Portal Divisions Test Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/divisions");
 	});
 
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
+	});
+
 	it('should open new division form page', function() {
 		console.log("Open new division form page");
 		browser.driver.findElement(by.name('createDivisionButton')).click();
@@ -60,13 +65,6 @@ describe('Traffic Portal Divisions Test Suite', function() {
 		pageData.name.sendKeys(myNewDiv.name + ' updated');
 		pageData.updateButton.click();
 		expect(pageData.name.getText() === myNewDiv.name + ' updated');
-	});
-
-	it('should delete the new division', function() {
-		console.log('Deleting the new division: ' + myNewDiv.name + ' updated');
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(myNewDiv.name + ' updated');
-		pageData.deletePermanentlyButton.click();
 	});
 
 });

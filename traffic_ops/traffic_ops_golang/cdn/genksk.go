@@ -70,6 +70,7 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
 	}
 
 	ttl, multiplier, err := getKSKParams(inf.Tx.Tx, cdnName)
