@@ -276,7 +276,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := struct{ Response tc.TrafficStatsResponse }{
+	resp := struct{ Response tc.TrafficStatsResponse `json:"response"` }{
 		Response: tc.TrafficStatsResponse{
 			Source:  tc.TRAFFIC_STATS_SOURCE,
 			Version: tc.TRAFFIC_STATS_VERSION,
