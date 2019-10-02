@@ -20,9 +20,14 @@ package tc
  */
 
 import "encoding/json"
+import "errors"
 import "fmt"
+import "regexp"
+import "strconv"
 import "strings"
 import "time"
+
+import "github.com/apache/trafficcontrol/lib/go-log"
 
 import influx "github.com/influxdata/influxdb1-client/v2"
 
@@ -34,78 +39,54 @@ const TRAFFIC_STATS_VERSION = "1.2"
 // source="TrafficStats", so we do too
 const TRAFFIC_STATS_SOURCE = "TrafficStats"
 
-// TrafficStatsDuration reflects all the possible durations that can be requested via the
+// TrafficStatsDurationPattern reflects all the possible durations that can be requested via the
 // deliveryservice_stats endpoint
-type TrafficStatsDuration string
+var TrafficStatsDurationPattern = regexp.MustCompile(`^\d+[mhdw]$`)
 
-const (
-	InvalidDuration TrafficStatsDuration = ""
-	OneMinute       TrafficStatsDuration = "1m"
-	FiveMinutes     TrafficStatsDuration = "5m"
-	OneHour         TrafficStatsDuration = "1h"
-	SixHours        TrafficStatsDuration = "6h"
-	OneDay          TrafficStatsDuration = "1d"
-	OneWeek         TrafficStatsDuration = "1w"
-	OneMonth        TrafficStatsDuration = "4w"
-)
-
-// TrafficStatsDurationFromString converts the given string into the appropriate
-// TrafficStatsDuration if possible - returns the InvalidDuration constant if not.
-func TrafficStatsDurationFromString(v string) TrafficStatsDuration {
-	switch TrafficStatsDuration(strings.Trim(v, " ")) {
-	case OneMinute:
-		return OneMinute
-	case FiveMinutes:
-		return FiveMinutes
-	case OneHour:
-		return OneHour
-	case SixHours:
-		return SixHours
-	case OneDay:
-		return OneDay
-	case OneWeek:
-		return OneWeek
-	case OneMonth:
-		return OneMonth
-	}
-	return InvalidDuration
-}
-
-// Seconds returns the number of seconds to which a TrafficStatsDuration is equivalent.
-// For invalid objects, it returns -1 - otherwise it will always, of course be > 0.
-func (d TrafficStatsDuration) Seconds() int64 {
-	switch d {
-	case OneMinute:
-		return 60
-	case FiveMinutes:
-		return 300
-	case OneHour:
-		return 3600
-	case SixHours:
-		return 21600
-	case OneDay:
-		return 86400
-	case OneWeek:
-		return 604800
-	case OneMonth:
-		return 2419200
+// DurationLiteralToSeconds returns the number of seconds to which an InfluxQL duration literal is
+// equivalent. For invalid objects, it returns -1 - otherwise it will always, of course be > 0.
+func DurationLiteralToSeconds(d string) (int64, error) {
+	if strings.HasSuffix(d, "m") {
+		v,err := strconv.ParseInt(strings.Split(d, "m")[0], 10, 64)
+		return v*60, err
 	}
 
-	return -1
+	if strings.HasSuffix(d, "h") {
+		v,err := strconv.ParseInt(strings.Split(d, "h")[0], 10, 64)
+		return v*3600, err
+	}
+
+	if strings.HasSuffix(d, "d") {
+		v,err := strconv.ParseInt(strings.Split(d, "d")[0], 10, 64)
+		return v*86400, err
+	}
+
+	if strings.HasSuffix(d, "w") {
+		v,err := strconv.ParseInt(strings.Split(d, "w")[0], 10, 64)
+		return v*604800, err
+	}
+
+	return -1, errors.New("Invalid duration literal, no recognized suffix")
 }
 
+// TrafficStatsOrderable encodes what columns by which the data returned from a Traffic Stats query
+// may be ordered.
 type TrafficStatsOrderable string
 const (
+	// TimeOrder indicates an ordering by time at which the measurement was taken
 	TimeOrder  TrafficStatsOrderable = "time"
-	ValueOrder TrafficStatsOrderable = "value"
+	// ValueOrder indicates an ordering by the actual value of the measurement
+	ValueOrder TrafficStatsOrderable = "sum_count"
 )
 
+// OrderableFromString parses the passed string and returns the corresponding value as a pointer to
+// a TrafficStatsOrderable - or nil if the value was invalid.
 func OrderableFromString(v string) *TrafficStatsOrderable {
 	var o TrafficStatsOrderable
 	switch v {
 	case "time":
 		o = TimeOrder
-	case "value":
+	case "sum_count":
 		o = ValueOrder
 	default:
 		return nil
@@ -113,6 +94,8 @@ func OrderableFromString(v string) *TrafficStatsOrderable {
 	return &o
 }
 
+// TrafficStatsExclude encodes what parts of a response to a request to a "Traffic Stats" endpoint
+// of the TO API may be omitted.
 type TrafficStatsExclude string
 const (
 	ExcludeSeries TrafficStatsExclude = "series"
@@ -120,6 +103,7 @@ const (
 	ExcludeInvalid TrafficStatsExclude = "INVALID"
 )
 
+// ExcludeFromString parses the passed string and returns the corresponding value as a TrafficStatsExclude.
 func ExcludeFromString(v string) TrafficStatsExclude {
 	switch v {
 	case "series":
@@ -139,7 +123,7 @@ type TrafficStatsConfig struct {
 	End             time.Time
 	ExcludeSeries   bool
 	ExcludeSummary  bool
-	Interval        TrafficStatsDuration
+	Interval        string
 	Limit           *uint64
 	MetricType      string
 	Offset          *uint64
@@ -152,7 +136,12 @@ type TrafficStatsConfig struct {
 // range in a WHERE clause. It doesn't work, but it helps.
 // (https://github.com/influxdata/influxdb/issues/8010)
 func (c *TrafficStatsConfig) OffsetString() string {
-	return fmt.Sprintf("%ds", int64(c.Start.Sub(time.Unix(0, 0))/time.Second)%c.Interval.Seconds())
+	iSecs, err := DurationLiteralToSeconds(c.Interval)
+	if err != nil {
+		log.Errorf("Parsing duration literal: %v", err)
+		return "0s"
+	}
+	return fmt.Sprintf("%ds", int64(c.Start.Sub(time.Unix(0, 0))/time.Second)%iSecs)
 }
 
 // TrafficStatsResponse represents a response from one of the "Traffic Stats endpoints" of the

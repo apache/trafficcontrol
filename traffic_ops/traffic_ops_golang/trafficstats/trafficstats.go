@@ -58,7 +58,7 @@ var (
 )
 
 const (
-	DEFAULT_INTERVAL         = tc.TrafficStatsDuration("1m")
+	DEFAULT_INTERVAL         = "1m"
 	dsTenantIDFromXMLIDQuery = `
 		SELECT tenant_id
 		FROM deliveryservice
@@ -86,7 +86,7 @@ const (
 		AND deliveryservice = $xmlid`
 
 	seriesQuery = `
-		SELECT mean(value) AS "value"
+		SELECT mean(value)
 		FROM "%s"."monthly"."%s.ds.1min"
 		WHERE cachegroup = 'total'
 		AND deliveryservice = $xmlid
@@ -165,10 +165,11 @@ func ConfigFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig, 
 
 	if interval, ok := i.Params["interval"]; !ok {
 		c.Interval = DEFAULT_INTERVAL
-	} else if c.Interval = tc.TrafficStatsDurationFromString(interval); c.Interval == tc.InvalidDuration {
-		log.Errorf("Error parsing 'interval' query parameter: %v", e)
-		e = errors.New("Invalid interval!")
+	} else if !tc.TrafficStatsDurationPattern.MatchString(interval) {
+		e = errors.New("interval: must be a valid InfluxQL duration literal (resolution no less than minute)")
 		return c, e, http.StatusBadRequest
+	} else {
+		c.Interval = interval
 	}
 
 	if ex, ok := i.Params["exclude"]; ok {
