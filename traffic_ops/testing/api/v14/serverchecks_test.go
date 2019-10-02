@@ -103,15 +103,12 @@ func GetTestServerChecks(t *testing.T) {
 	// Get server checks
 	serverChecksResp, _, err := TOSession.GetServerChecks()
 	if err != nil {
-		t.Errorf("could not GET serverchecks: %v\n", err)
+		t.Fatalf("could not GET serverchecks: %v\n", err)
 	}
 	found := false
 	for _, sc := range serverChecksResp.Response {
 		if sc.HostName == *hostname {
 			found = true
-			if err != nil {
-				t.Errorf("could not update servercheck: %v\n", err)
-			}
 			if sc.Checks.ORT != 12 {
 				t.Errorf("%v returned for ORT value servercheck - expected 12\n", sc.Checks.ORT)
 			}
