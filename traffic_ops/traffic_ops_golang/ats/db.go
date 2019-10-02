@@ -563,7 +563,7 @@ func GetServerNameFromID(tx *sql.Tx, id int) (tc.CacheName, bool, error) {
 // Returns the name, any user error, any system error, and any error code.
 func GetServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (tc.CacheName, error, error, int) {
 	if serverID, err := strconv.Atoi(serverNameOrID); err == nil {
-		serverName, ok, err := dbhelpers.GetServerNameFromID(tx, int64(serverID))
+		serverName, ok, err := dbhelpers.GetServerNameFromID(tx, serverID)
 		if err != nil {
 			return "", nil, fmt.Errorf("getting server name from id %v: %v", serverID, err), http.StatusInternalServerError
 		} else if !ok {
@@ -573,7 +573,7 @@ func GetServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (tc.CacheName,
 	}
 
 	serverName := tc.CacheName(serverNameOrID)
-	if ok, err := dbhelpers.ServerExists(string(serverName), tx); err != nil {
+	if _, ok, err := dbhelpers.GetServerIDFromName(string(serverName), tx); err != nil {
 		return "", nil, fmt.Errorf("checking server name '%v' existence: %v", serverName, err), http.StatusInternalServerError
 	} else if !ok {
 		return "", errors.New("server not found"), nil, http.StatusNotFound
