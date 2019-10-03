@@ -192,7 +192,7 @@ SELECT job.id AS id,
        job.start_time AS start_time,
        origin.protocol || '://' || origin.fqdn || rtrim(concat(':', origin.port), ':') AS OFQDN
 FROM job
-INNER JOIN origin ON origin.deliveryservice=job.job_deliveryservice
+INNER JOIN origin ON origin.deliveryservice=job.job_deliveryservice AND origin.is_primary
 INNER JOIN tm_user ON tm_user.id=job.job_user
 INNER JOIN deliveryservice ON deliveryservice.id=job.job_deliveryservice
 WHERE job.id=$1
