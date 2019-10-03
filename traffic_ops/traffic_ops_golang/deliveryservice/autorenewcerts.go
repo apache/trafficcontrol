@@ -20,20 +20,16 @@ package deliveryservice
  */
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
-	"html/template"
 	"net/http"
-	"net/smtp"
 	"strconv"
 	"strings"
 	"time"
@@ -189,96 +185,16 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 
 func AlertExpiringCerts(certsFound ExpirationSummary, config config.Config) error {
 	email := strings.Join(config.ConfigSmtp.ToEmail, ",")
-	if config.ConfigLetsEncrypt.Email != "" {
-		email = config.ConfigLetsEncrypt.Email
-	}
+
 	header := "From: " + config.ConfigSmtp.FromEmail + "\n" +
 		"To: " + email + "\n" +
 		"MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n" +
 		"Subject: Certificate Expiration Summary\n\n"
 
-	error := SendEmail(config, header, certsFound)
+	error := api.SendEmail(config, header, certsFound, "/opt/traffic_ops/app/templates/send_mail/autorenewcerts_mail.ep", config.ConfigLetsEncrypt.Email)
 	if error != nil {
 		return error
 	}
 
 	return nil
-}
-
-func SendEmail(config config.Config, header string, data interface{}) error {
-	var auth smtp.Auth
-	if config.ConfigSmtp.User != "" {
-		auth = LoginAuth("", config.ConfigSmtp.User, config.ConfigSmtp.Password, strings.Split(config.ConfigSmtp.Address, ":")[0])
-	}
-
-	email := config.ConfigSmtp.ToEmail
-	if config.ConfigLetsEncrypt.Email != "" {
-		email = []string{config.ConfigLetsEncrypt.Email}
-	}
-
-	msgBodyBuffer, err := parseTemplate("/opt/traffic_ops/app/templates/send_mail/autorenewcerts_mail.ep", data)
-	if err != nil {
-		return err
-	}
-	msg := append([]byte(header), msgBodyBuffer.Bytes()...)
-
-	error := smtp.SendMail(config.ConfigSmtp.Address, auth, config.ConfigSmtp.FromEmail, email, []byte(msg))
-	if error != nil {
-		return errors.New("Failed to send email: " + error.Error())
-	}
-	return nil
-}
-
-func parseTemplate(templateFileName string, data interface{}) (*bytes.Buffer, error) {
-	t, err := template.ParseFiles(templateFileName)
-	if err != nil {
-		return nil, err
-	}
-	buf := new(bytes.Buffer)
-	if err = t.Execute(buf, data); err != nil {
-		return nil, err
-	}
-	return buf, nil
-}
-
-type loginAuth struct {
-	identity, username, password string
-	host                         string
-}
-
-func LoginAuth(identity, username, password, host string) smtp.Auth {
-	return &loginAuth{identity, username, password, host}
-}
-
-func isLocalhost(name string) bool {
-	return name == "localhost" || name == "127.0.0.1" || name == "::1"
-}
-
-func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
-	if !server.TLS && !isLocalhost(server.Name) {
-		return "", nil, errors.New("unencrypted connection")
-	}
-	if server.Name != a.host {
-		return "", nil, errors.New("wrong host name")
-	}
-	resp := []byte(a.identity + "\x00" + a.username + "\x00" + a.password)
-	return "LOGIN", resp, nil
-}
-
-func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
-	command := string(fromServer)
-	command = strings.TrimSpace(command)
-	command = strings.TrimSuffix(command, ":")
-	command = strings.ToLower(command)
-
-	if more {
-		if command == "username" {
-			return []byte(fmt.Sprintf("%s", a.username)), nil
-		} else if command == "password" {
-			return []byte(fmt.Sprintf("%s", a.password)), nil
-		} else {
-			return nil, fmt.Errorf("unexpected server challenge: %s", command)
-		}
-	}
-	return nil, nil
 }

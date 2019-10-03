@@ -22,11 +22,13 @@ package api
  */
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"net/smtp"
@@ -849,6 +851,42 @@ func AddUserToReq(r *http.Request, u auth.CurrentUser) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey, u)
 	*r = *r.WithContext(ctx)
+}
+
+func SendEmail(config config.Config, header string, data interface{}, templateFile string, toEmailOverride string) error {
+	var auth smtp.Auth
+	if config.ConfigSmtp.User != "" {
+		auth = LoginAuth("", config.ConfigSmtp.User, config.ConfigSmtp.Password, strings.Split(config.ConfigSmtp.Address, ":")[0])
+	}
+
+	email := config.ConfigSmtp.ToEmail
+	if toEmailOverride != "" {
+		email = []string{toEmailOverride}
+	}
+
+	msgBodyBuffer, err := parseTemplate(templateFile, data)
+	if err != nil {
+		return err
+	}
+	msg := append([]byte(header), msgBodyBuffer.Bytes()...)
+
+	error := smtp.SendMail(config.ConfigSmtp.Address, auth, config.ConfigSmtp.FromEmail, email, []byte(msg))
+	if error != nil {
+		return errors.New("Failed to send email: " + error.Error())
+	}
+	return nil
+}
+
+func parseTemplate(templateFileName string, data interface{}) (*bytes.Buffer, error) {
+	t, err := template.ParseFiles(templateFileName)
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	if err = t.Execute(buf, data); err != nil {
+		return nil, err
+	}
+	return buf, nil
 }
 
 type loginAuth struct {

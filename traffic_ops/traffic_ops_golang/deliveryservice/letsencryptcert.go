@@ -308,7 +308,7 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 	}
 	tx2.Commit()
 
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: ? "+", ACTION: Added SSL keys with Lets Encrypt", currentUser, logTx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: Added SSL keys with Lets Encrypt", currentUser, logTx)
 
 	return nil
 }
