@@ -25,6 +25,11 @@ type UserCredentials struct {
 	Password string `json:"p"`
 }
 
+// UserToken represents a request payload containing a UUID token for authentication
+type UserToken struct {
+	Token string `json:"t"`
+}
+
 // UserV13 contains non-nullable TO user information
 type UserV13 struct {
 	Username         string    `json:"username"`
@@ -71,6 +76,7 @@ type commonUserFields struct {
 	StateOrProvince *string `json:"stateOrProvince" db:"state_or_province"`
 	Tenant          *string `json:"tenant"`
 	TenantID        *int    `json:"tenantId" db:"tenant_id"`
+	Token           *string `json:"-" db:"token"`
 	UID             *int    `json:"uid"`
 	//Username        *string    `json:"username" db:"username"`  //not including major change due to naming incompatibility
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`

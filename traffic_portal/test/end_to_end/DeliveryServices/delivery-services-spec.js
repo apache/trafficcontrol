@@ -58,6 +58,11 @@ describe('Traffic Portal Delivery Services Suite', function() {
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/delivery-services");
 	});
 
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
+	});
+
 	// ANY_MAP delivery service
 
 	it('should click new delivery service and select ANY_MAP category from the dropdown', function() {

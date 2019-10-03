@@ -55,6 +55,8 @@ type DeliveryServiceName string
 // CacheType is the type (or tier) of a CDN cache.
 type CacheType string
 
+const OriginLocationType = "ORG_LOC"
+
 const (
 	// CacheTypeEdge represents an edge cache.
 	CacheTypeEdge = CacheType("EDGE")
@@ -63,6 +65,8 @@ const (
 	// CacheTypeInvalid represents an cache type enumeration. Note this is the default construction for a CacheType.
 	CacheTypeInvalid = CacheType("")
 )
+
+const AlgorithmConsistentHash = "consistent_hash"
 
 const MonitorTypeName = "RASCAL"
 const MonitorProfilePrefix = "RASCAL"
@@ -110,6 +114,16 @@ func CacheTypeFromString(s string) CacheType {
 	return CacheTypeInvalid
 }
 
+// These are prefixed "QueryStringIgnore" even though the values don't always indicate ignoring, because the database column is named "qstring_ignore"
+
+const QueryStringIgnoreUseInCacheKeyAndPassUp = 0
+const QueryStringIgnoreIgnoreInCacheKeyAndPassUp = 1
+const QueryStringIgnoreDropAtEdge = 2
+
+const RangeRequestHandlingDontCache = 0
+const RangeRequestHandlingBackgroundFetch = 1
+const RangeRequestHandlingCacheRangeRequest = 2
+
 // DSTypeCategory is the Delivery Service type category: HTTP or DNS
 type DSTypeCategory string
 
@@ -148,6 +162,12 @@ func DSTypeCategoryFromString(s string) DSTypeCategory {
 }
 
 const SigningAlgorithmURLSig = "url_sig"
+const SigningAlgorithmURISigning = "uri_signing"
+
+const DSProtocolHTTP = 0
+const DSProtocolHTTPS = 1
+const DSProtocolHTTPAndHTTPS = 2
+const DSProtocolHTTPToHTTPS = 3
 
 // CacheStatus represents the Traffic Server status set in Traffic Ops (online, offline, admin_down, reported). The string values of this type should match the Traffic Ops values.
 type CacheStatus string

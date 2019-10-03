@@ -253,6 +253,7 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 	keys, err := GenerateURLSigKeys()
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating URL sig keys: "+err.Error()))
+		return
 	}
 
 	if err := riaksvc.PutURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort, ds, keys); err != nil {

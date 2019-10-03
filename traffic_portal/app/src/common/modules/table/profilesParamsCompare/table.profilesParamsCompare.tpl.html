@@ -48,8 +48,8 @@ under the License.
                 <td data-search="^{{::pp.name}}$">{{::pp.name}}</td>
                 <td data-search="^{{::pp.configFile}}$">{{::pp.configFile}}</td>
                 <td data-search="^{{::pp.value}}$">{{::pp.value}}</td>
-                <td class="center" data-order="{{pp.selected1}}"><input type="checkbox" ng-change="onChange(1)" ng-class="{'dirty': isCheckboxDirty(pp, 1)}" ng-model="pp.selected1"></td>
-                <td class="center" data-order="{{pp.selected2}}"><input type="checkbox" ng-change="onChange(2)" ng-class="{'dirty': isCheckboxDirty(pp, 2)}" ng-model="pp.selected2"></td>
+                <td class="center" data-order="{{pp.selected1}}"><input type="checkbox" ng-change="onChange(1)" ng-class="{'dirty': isCheckboxDirty(pp, 1)}" ng-model="pp.selected1"><span hidden>{{pp.selected1}}</span></td>
+                <td class="center" data-order="{{pp.selected2}}"><input type="checkbox" ng-change="onChange(2)" ng-class="{'dirty': isCheckboxDirty(pp, 2)}" ng-model="pp.selected2"><span hidden>{{pp.selected2}}</span></td>
             </tr>
             </tbody>
         </table>

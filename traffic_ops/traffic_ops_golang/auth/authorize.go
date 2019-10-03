@@ -160,7 +160,11 @@ func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, timeout time.Duratio
 	}
 	err = VerifySCRYPTPassword(form.Password, hashedPassword)
 	if err != nil {
-		if hashedPassword == sha1Hex(form.Password) { // for backwards compatibility
+		hashedInput, err := sha1Hex(form.Password)
+		if err != nil {
+			return false, err, nil
+		}
+		if hashedPassword == hashedInput { // for backwards compatibility
 			return true, nil, nil
 		}
 		return false, err, nil
@@ -168,15 +172,32 @@ func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, timeout time.Duratio
 	return true, nil, nil
 }
 
-func sha1Hex(s string) string {
+// CheckLocalUserToken checks the passed token against the records in the db for a match, up to a
+// maximum duration of timeout.
+func CheckLocalUserToken(token string, db *sqlx.DB, timeout time.Duration) (bool, string, error) {
+	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
+	defer dbClose()
+
+	var username string
+	err := db.GetContext(dbCtx, &username, `SELECT username FROM tm_user WHERE token=$1 AND role!=(SELECT role.id FROM role WHERE role.name=$2)`, token, disallowed)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, "", nil
+		}
+		return false, "", err
+	}
+	return true, username, nil
+}
+
+func sha1Hex(s string) (string, error) {
 	// SHA1 hash
 	hash := sha1.New()
-	hash.Write([]byte(s))
+	if _, err := hash.Write([]byte(s)); err != nil {
+		return "", err
+	}
 	hashBytes := hash.Sum(nil)
-
-	// Hexadecimal conversion
 	hexSha1 := hex.EncodeToString(hashBytes)
-	return hexSha1
+	return hexSha1, nil
 }
 
 func CheckLDAPUser(form PasswordForm, cfg *config.ConfigLDAP) (bool, error) {

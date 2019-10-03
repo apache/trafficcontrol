@@ -32,6 +32,7 @@ func TestLoginFail(t *testing.T) {
 		PostTestLoginFail(t)
 		LoginWithEmptyCredentialsTest(t)
 	})
+	WithObjs(t, []TCObj{Users, Roles})
 }
 
 func PostTestLoginFail(t *testing.T) {
@@ -65,6 +66,29 @@ func LoginWithEmptyCredentialsTest(t *testing.T) {
 	_, _, err := toclient.LoginWithAgent(Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, "", true, userAgent, false, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
 	if err == nil {
 		t.Fatalf("expected error when logging in with empty credentials, actual nil")
+	}
+}
+
+func LoginWithTokenTest(t *testing.T) {
+	userAgent := "to-api-v14-client-tests-loginfailtest"
+	s, _, err := toclient.LoginWithToken(Config.TrafficOps.URL, "test", true, userAgent, false, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
+	if err != nil {
+		t.Fatalf("unexpected error when logging in with a token: %v", err)
+	}
+	if s == nil {
+		t.Fatalf("returned client was nil")
+	}
+
+	// disallowed token
+	_, _, err := toclient.LoginWithToken(Config.TrafficOps.URL, "quest", true, userAgent, false, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
+	if err == nil {
+		t.Fatalf("expected an error when logging in with a disallowed token, actual nil")
+	}
+
+	// nonexistent token
+	_, _, err := toclient.LoginWithToken(Config.TrafficOps.URL, "notarealtoken", true, userAgent, false, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
+	if err == nil {
+		t.Fatalf("expected an error when logging in with a nonexistent token, actual nil")
 	}
 }
 

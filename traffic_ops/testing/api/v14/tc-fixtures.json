@@ -481,7 +481,7 @@
             "rangeRequestHandling": 0,
             "regexRemap": "",
             "regionalGeoBlocking": false,
-            "remapText": "some raw remap text",
+            "remapText": "map some raw remap text",
             "routingName": "",
             "signed": false,
             "signingAlgorithm": "url_sig",
@@ -1986,6 +1986,7 @@
             "role": 4,
             "stateOrProvince": "LA",
             "tenant": "root",
+            "token": "test",
             "uid": 0,
             "username": "adminuser"
         },
@@ -2008,6 +2009,7 @@
             "role": 1,
             "stateOrProvince": "",
             "tenant": "tenant1",
+            "token": "quest",
             "uid": 0,
             "username": "disalloweduser"
         },
@@ -2144,6 +2146,40 @@
                 "ttl": 2160,
                 "regex": "/foo"
             }
+        }
+    ],
+    "to_extensions": [
+        {
+            "name": "ILO_PING",
+            "version": "1.0.0",
+            "info_url": "-",
+            "script_file": "ToPingCheck.pl",
+            "isactive": 1,
+            "description": "",
+            "servercheck_short_name": "ILO",
+            "type": "CHECK_EXTENSION_BOOL"
+        },
+        {
+            "name": "ORT_ERROR_COUNT",
+            "version": "1.0.0",
+            "info_url": "-",
+            "script_file": "ToORTCheck.pl",
+            "isactive": 1,
+            "description": "",
+            "servercheck_short_name": "ORT",
+            "type": "CHECK_EXTENSION_NUM"
+        }
+    ],
+    "serverchecks": [
+        {
+            "servercheck_short_name": "ILO",
+            "host_name": "atlanta-edge-01",
+            "value": 1
+        },
+        {
+            "servercheck_short_name": "ORT",
+            "host_name": "atlanta-edge-01",
+            "value": 13
         }
     ]
 }

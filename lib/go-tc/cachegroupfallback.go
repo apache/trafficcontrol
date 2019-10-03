@@ -1,6 +1,5 @@
 package tc
 
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -38,18 +37,14 @@ type CacheGroupFallbackResponse struct {
 
 // CacheGroupFallback ...
 type CacheGroupFallback struct {
-
 	PrimaryCgId int `json:"primaryId" db:"primary_cg"`
 	BackupCgId  int `json:"backupId" db:"backup_cg"`
 	SetOrder    int `json:"setOrder" db:"set_order"`
-
 }
 
 // CacheGroupFallbackNullable ...
 type CacheGroupFallbackNullable struct {
-
 	PrimaryCgId *int `json:"primaryId" db:"primary_cg"`
 	BackupCgId  *int `json:"backupId" db:"backup_cg"`
 	SetOrder    *int `json:"setOrder" db:"set_order"`
 }
-

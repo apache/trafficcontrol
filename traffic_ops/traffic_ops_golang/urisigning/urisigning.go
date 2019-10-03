@@ -109,8 +109,10 @@ func RemoveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request)
 	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("error finding delivery service with xmlID: "+xmlID), errors.New("getting DS id from name failed: "+err.Error()))
+		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
 	}
 
 	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
@@ -160,8 +162,10 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("error finding delivery service with xmlID: "+xmlID), errors.New("getting DS id from name failed: "+err.Error()))
+		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -172,6 +176,7 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 	keySet := map[string]URISignerKeyset{}
 	if err := json.Unmarshal(data, &keySet); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
+		return
 	}
 	if err := validateURIKeyset(keySet); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid keyset: "+err.Error()), nil)

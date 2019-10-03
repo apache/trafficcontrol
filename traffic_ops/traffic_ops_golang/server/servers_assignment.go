@@ -62,12 +62,13 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
-	serverName, ok, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, int64(server))
+	serverName, ok, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, server)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
+		return
 	}
 
 	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
@@ -108,14 +109,14 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 	SELECT * FROM q1,q2 ON CONFLICT DO NOTHING
 `
 	if _, err := tx.Exec(q, dsPqArray, server); err != nil {
-		log.Errorf("could not execute deliveryservice_server bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("inserting deliveryservice_server: " + err.Error())
 	}
 
 	//need remap config location
-	row := tx.QueryRow("SELECT value FROM parameter WHERE name = 'location' AND config_file = '" + ats.RemapFile + "'")
 	var atsConfigLocation string
-	row.Scan(&atsConfigLocation)
+	if err := tx.QueryRow("SELECT value FROM parameter WHERE name = 'location' AND config_file = '" + ats.RemapFile + "'").Scan(&atsConfigLocation); err != nil {
+		return nil, errors.New("scanning location parameter: " + err.Error())
+	}
 	if strings.HasSuffix(atsConfigLocation, "/") {
 		atsConfigLocation = atsConfigLocation[:len(atsConfigLocation)-1]
 	}
@@ -123,8 +124,7 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 	//we need dses: xmlids and edge_header_rewrite, regex_remap, and cache_url
 	rows, err := tx.Query(`SELECT xml_id, edge_header_rewrite, regex_remap, cacheurl FROM deliveryservice WHERE id = ANY($1::bigint[])`, dsPqArray)
 	if err != nil {
-		log.Error.Printf("could not execute ds fields select query: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("querying deliveryservice: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -141,10 +141,8 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 		var edgeHeaderRewrite sql.NullString
 		var regexRemap sql.NullString
 		var cacheURL sql.NullString
-
 		if err := rows.Scan(&xmlID, &edgeHeaderRewrite, &regexRemap, &cacheURL); err != nil {
-			log.Error.Printf("could not scan ds fields row: %s\n", err)
-			return nil, tc.DBError
+			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
 		if xmlID.Valid && len(xmlID.String) > 0 {
 			//param := "hdr_rw_" + xmlID.String + ".config"
@@ -181,15 +179,13 @@ INSERT INTO parameter (config_file, name, value)
 `
 	fileNamePqArray := pq.Array(insert)
 	if _, err = tx.Exec(q, fileNamePqArray, "location", atsConfigLocation); err != nil {
-		log.Error.Printf("could not execute parameter bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("inserting parameters: " + err.Error())
 	}
 
 	//select the ids associated with the parameters we created above (may be able to get them from insert above to optimize)
 	rows, err = tx.Query(`SELECT id FROM parameter WHERE name = 'location' AND config_file IN ($1)`, fileNamePqArray)
 	if err != nil {
-		log.Error.Printf("could not execute parameter id select query: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("selecting location parameter after insert: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -213,14 +209,12 @@ INSERT INTO profile_parameter (profile, parameter)
 	ON CONFLICT DO NOTHING
 `
 	if _, err = tx.Exec(q, dsPqArray, pq.Array(parameterIds)); err != nil {
-		log.Error.Printf("could not execute profile_parameter bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("inserting profile_parameter: " + err.Error())
 	}
 
 	//process delete list
 	if _, err = tx.Exec(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`, pq.Array(delete)); err != nil {
-		log.Error.Printf("could not execute parameter delete query: %s\n", err)
-		return nil, tc.DBError
+		return nil, errors.New("deleting parameters: " + err.Error())
 	}
 
 	return dses, nil

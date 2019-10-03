@@ -21,23 +21,27 @@ package atsprofile
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
-const AstatsSeparator = "="
-const AstatsFileName = "astats.config"
-
 func GetAstats(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, makeAstats)
+	WithProfileData(w, r, tc.ContentTypeTextPlain, makeAstats)
 }
 
 func makeAstats(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, _ string) (string, error) {
-	txt, err := GenericProfileConfig(tx, profile, AstatsFileName, AstatsSeparator)
-	if err == nil && txt == "" {
-		txt = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
+	toolName, toURL, err := ats.GetToolNameAndURL(tx)
+	if err != nil {
+		return "", errors.New("getting tool name and URL: " + err.Error())
 	}
-	return txt, err
+	paramData, err := ats.GetProfileParamData(tx, profile.ID, atscfg.AstatsFileName)
+	if err != nil {
+		return "", errors.New("getting profile param data: " + err.Error())
+	}
+	return atscfg.MakeAStatsDotConfig(profile.Name, paramData, toolName, toURL), nil
 }

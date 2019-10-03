@@ -54,7 +54,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serverName, exists, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, int64(serverID))
+	serverName, exists, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, serverID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from id: "+err.Error()))
 		return
