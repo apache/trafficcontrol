@@ -282,3 +282,20 @@ type ParameterWithProfiles struct {
 	tc.Parameter
 	ProfileNames []string
 }
+
+type ParameterWithProfilesMap struct {
+	tc.Parameter
+	ProfileNames map[string]struct{}
+}
+
+func ParameterWithProfilesToMap(tcParams []ParameterWithProfiles) []ParameterWithProfilesMap {
+	params := []ParameterWithProfilesMap{}
+	for _, tcParam := range tcParams {
+		param := ParameterWithProfilesMap{Parameter: tcParam.Parameter, ProfileNames: map[string]struct{}{}}
+		for _, profile := range tcParam.ProfileNames {
+			param.ProfileNames[profile] = struct{}{}
+		}
+		params = append(params, param)
+	}
+	return params
+}

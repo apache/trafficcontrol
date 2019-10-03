@@ -53,8 +53,10 @@ func PostProfileParam(w http.ResponseWriter, r *http.Request) {
 	profileName, ok, err := dbhelpers.GetProfileNameFromID(int(*profileParam.ProfileID), inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting profile name from id: "+err.Error()))
+		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("profile not found"), nil)
+		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "PROFILE: "+profileName+", ID: "+strconv.FormatInt(*profileParam.ProfileID, 10)+", ACTION: Assigned "+strconv.Itoa(len(*profileParam.ParamIDs))+" parameters to profile", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d parameters were assigned to the %s profile", len(*profileParam.ParamIDs), profileName), profileParam)

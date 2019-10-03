@@ -18,7 +18,6 @@
 ********************
 ``user/login/token``
 ********************
-.. caution:: This page is a stub! Much of it may be missing or just downright wrong - it needs a lot of love from people with the domain knowledge required to update it.
 
 ``POST``
 ========
@@ -30,7 +29,9 @@ Authentication of a user using a token. Normally, the token is obtained via a ca
 
 Request Structure
 -----------------
-:t: The login token
+:t: A :abbr:`UUID (Universal Unique Identifier)` generated for the user.
+
+	.. impl-detail:: Though not strictly necessary for authentication provided direct database access, the tokens generated for use with this endpoint are compliant with :RFC:`4122`.
 
 .. code-block:: http
 	:caption: Request Example
@@ -54,21 +55,19 @@ Response Structure
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
-	Date: Thu, 13 Dec 2018 22:16:25 GMT
-	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Fri, 14 Dec 2018 02:16:25 GMT; path=/; HttpOnly
-	Vary: Accept-Encoding
-	Whole-Content-Sha512: uDowfYsW7ADmZyfahD21A+KuDdycQ3a4ma5kbPO/9RXsvgL9bqNC0Ocpi4QLxJN1Ffe1jroYoiqcnjlK9KX/5Q==
-	Content-Length: 65
+	Set-Cookie: mojolicious=...; Path=/; Expires=Fri, 20 Sep 2019 21:02:43 GMT; HttpOnly
+	Whole-Content-Sha512: FuS3TkVosxHtpxRGMJ2on+WnFdYTNSPjxz/Gh1iT4UCJ2/P0twUbAGQ3tTx9EfGiAzg9CNQiVUFGnYjJZ6NCpg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Fri, 20 Sep 2019 15:02:43 GMT
+	Content-Length: 66
 
 	{ "alerts": [
 		{
-			"level": "success",
-			"text": "Successfully logged in."
+			"text": "Successfully logged in.",
+			"level": "success"
 		}
 	]}

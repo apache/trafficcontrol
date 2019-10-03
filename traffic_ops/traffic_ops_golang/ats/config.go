@@ -106,29 +106,6 @@ func getCDNNameFromNameOrID(tx *sql.Tx, cdnNameOrID string) (string, error, erro
 	return cdnName, nil, nil, http.StatusOK
 }
 
-// getServerNameFromNameOrID returns the server name from a parameter which may be the name or ID.
-// This also checks and verifies the existence of the given server, and returns an appropriate user error if it doesn't exist.
-// Returns the name, any user error, any system error, and any error code.
-func getServerNameFromNameOrID(tx *sql.Tx, serverNameOrID string) (string, error, error, int) {
-	if serverID, err := strconv.Atoi(serverNameOrID); err == nil {
-		serverName, ok, err := dbhelpers.GetServerNameFromID(tx, int64(serverID))
-		if err != nil {
-			return "", nil, fmt.Errorf("getting server name from id %v: %v", serverID, err), http.StatusInternalServerError
-		} else if !ok {
-			return "", errors.New("server not found"), nil, http.StatusNotFound
-		}
-		return string(serverName), nil, nil, http.StatusOK
-	}
-
-	serverName := serverNameOrID
-	if ok, err := dbhelpers.ServerExists(serverName, tx); err != nil {
-		return "", nil, fmt.Errorf("checking server name '%v' existence: %v", serverName, err), http.StatusInternalServerError
-	} else if !ok {
-		return "", errors.New("server not found"), nil, http.StatusNotFound
-	}
-	return serverName, nil, nil, http.StatusOK
-}
-
 func HeaderComment(tx *sql.Tx, name string) (string, error) {
 	nameVersionStr, err := GetNameVersionString(tx)
 	if err != nil {

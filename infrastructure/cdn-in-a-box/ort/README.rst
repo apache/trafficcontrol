@@ -18,3 +18,5 @@
 ********************************************
 Traffic Ops Operational Readiness Test (ORT)
 ********************************************
+
+Please read `the official documentation <https://traffic-control-cdn.readthedocs.io/en/latest/development/ort/traffic_ops_ort.html>`_.

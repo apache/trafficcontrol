@@ -27,6 +27,60 @@ Traffic Portal is the official Traffic Control UI. Traffic Portal typically runs
 
 	Traffic Portal Start Page
 
+Change Logs
+===========
+At the top-right of every page is a bubble icon and badge count indicating the number of changes made to the CDN since the last viewing. Clicking on this expands a short list, with an option to :guilabel:`See All Change Logs`. Clicking on this will navigate to the "Changelog" page.
+
+.. figure:: images/changelog_dialog.png
+	:width: 15%
+	:align: center
+	:alt: The changelog dialog
+
+	The Changelog Dialog
+
+.. figure:: images/changelog_page.png
+	:width: 45%
+	:align: center
+	:alt: The 'full' change logs page
+
+	The Full Change Logs Page
+
+Sidebar Bottom Buttons
+======================
+At the bottom of the sidebar, a few action buttons may be found. At the far left, is the :guilabel:`Logout` button.
+
+.. figure:: images/logout_button.png
+	:align: center
+	:alt: The logout button
+
+	The Logout Button
+
+Clicking on this button will cause the current user session to end; further use of the Traffic Portal UI will require re-authentication. Next to this is the :guilabel:`User Profile` button.
+
+.. figure:: images/profile_button.png
+	:align: center
+	:alt: The profile button
+
+	The User Profile Button
+
+Clicking on this button will take the user to his or her user profile page, where much of their information (contact, username etc.) is editable. The next button to the right is the :guilabel:`Release Info` button.
+
+.. figure:: images/release_info_button.png
+	:align: center
+	:alt: The release info button
+
+	The Release Info Button
+
+When this button is clicked, a modal window will appear, displaying the Traffic Portal version, the date on which it was built, and the network location of the Traffic Ops server that serves the :ref:`to-api` used by the Traffic Portal instance. The final button is the :guilabel:`Popout` button.
+
+.. figure:: images/popout_button.png
+	:align: center
+	:alt: The popout button
+
+	The Popout Button
+
+This button will open the current view in a new browsing context. Most browsers will implement this as a new tab, but can be configured instead to open them in a new window - check your browser's configuration and set it as desired.
+
 Dashboard
 =========
 The Dashboard is the default landing page for Traffic Portal. It provides a real-time view into the main performance indicators of the CDNs managed by Traffic Control. It also displays various statistics about the overall health of your CDN.

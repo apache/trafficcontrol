@@ -481,7 +481,7 @@
             "rangeRequestHandling": 0,
             "regexRemap": "",
             "regionalGeoBlocking": false,
-            "remapText": "some raw remap text",
+            "remapText": "map some raw remap text",
             "routingName": "",
             "signed": false,
             "signingAlgorithm": "url_sig",
@@ -1986,6 +1986,7 @@
             "role": 4,
             "stateOrProvince": "LA",
             "tenant": "root",
+            "token": "test",
             "uid": 0,
             "username": "adminuser"
         },
@@ -2008,6 +2009,7 @@
             "role": 1,
             "stateOrProvince": "",
             "tenant": "tenant1",
+            "token": "quest",
             "uid": 0,
             "username": "disalloweduser"
         },
