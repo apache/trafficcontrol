@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -143,7 +144,7 @@ type ProfileImportResponse struct {
 
 type ProfileImportResponseObj struct {
 	ProfileExportImportNullable
-	ID *int64 `json:"id"`
+	ID *int `json:"id"`
 }
 
 // Validate validates an profile import request
@@ -162,7 +163,9 @@ func (profileImport *ProfileImportRequest) Validate(tx *sql.Tx) error {
 	// Validate CDN exist
 	if profile.CDNName != nil {
 		if ok, err := CDNExistsByName(*profile.CDNName, tx); err != nil {
-			errs = append(errs, fmt.Errorf("checking cdn name %v existence: %v", *profile.CDNName, err.Error()))
+			errString := fmt.Sprintf("checking cdn name %v existence", *profile.CDNName)
+			log.Errorf("%v: %v", errString, err.Error())
+			errs = append(errs, errors.New(errString))
 		} else if !ok {
 			errs = append(errs, fmt.Errorf("%v CDN does not exist", *profile.CDNName))
 		}
@@ -171,7 +174,9 @@ func (profileImport *ProfileImportRequest) Validate(tx *sql.Tx) error {
 	// Validate profile does not already exist
 	if profile.Name != nil {
 		if ok, err := ProfileExistsByName(*profile.Name, tx); err != nil {
-			errs = append(errs, fmt.Errorf("checking profile name %v existence: %v", *profile.Name, err.Error()))
+			errString := fmt.Sprintf("checking profile name %v existence", *profile.Name)
+			log.Errorf("%v: %v", errString, err.Error())
+			errs = append(errs, errors.New(errString))
 		} else if ok {
 			errs = append(errs, fmt.Errorf("A profile with the name \"%v\" already exists", *profile.Name))
 		}

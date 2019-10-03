@@ -2,7 +2,6 @@ package tc
 
 import (
 	"database/sql"
-	"errors"
 )
 
 /*
@@ -126,9 +125,7 @@ type CDNConfig struct {
 // CDNExistsByName returns whether a cdn with the given name exists, and any error.
 // TODO move to helper package.
 func CDNExistsByName(name string, tx *sql.Tx) (bool, error) {
-	count := 0
-	if err := tx.QueryRow(`SELECT count(*) from cdn where name = $1`, name).Scan(&count); err != nil {
-		return false, errors.New("querying cdn existence from name: " + err.Error())
-	}
-	return count > 0, nil
+	exists := false
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * FROM cdn WHERE name = $1)`).Scan(&exists)
+	return exists, err
 }

@@ -43,7 +43,7 @@ func ImportProfileHandler(w http.ResponseWriter, r *http.Request) {
 	importedProfile := tc.ProfileImportRequest{}
 
 	if err := api.Parse(r.Body, inf.Tx.Tx, &importedProfile); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New(err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
@@ -71,8 +71,8 @@ func ImportProfileHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, successMsg, importedProfileResponse)
 }
 
-func importProfile(importedProfile *tc.ProfileExportImportNullable, tx *sql.Tx) (int64, error) {
-	var id int64
+func importProfile(importedProfile *tc.ProfileExportImportNullable, tx *sql.Tx) (int, error) {
+	var id int
 	insertQuery := `
 INSERT INTO profile (name, description, cdn, type)
 SELECT $1, $2, id, $4
@@ -93,12 +93,12 @@ RETURNING id`
 	return id, nil
 }
 
-func importProfileParameters(profileID int64, importedParameters []tc.ProfileExportImportParameterNullable, tx *sql.Tx) (int, int, error) {
+func importProfileParameters(profileID int, importedParameters []tc.ProfileExportImportParameterNullable, tx *sql.Tx) (int, int, error) {
 	if len(importedParameters) == 0 {
 		return 0, 0, nil
 	}
-	idSet := map[int64]struct{}{}
-	ids := []int64{}
+	idSet := map[int]struct{}{}
+	ids := []int{}
 	existingCnt := 0
 	newCnt := 0
 	selectQuery := `
@@ -107,7 +107,7 @@ FROM parameter
 WHERE name=$1 AND config_file=$2 AND value=$3`
 
 	for _, param := range importedParameters {
-		var id int64
+		var id int
 		existingParam := true
 		if err := tx.QueryRow(selectQuery, param.Name, param.ConfigFile, param.Value).Scan(&id); err != nil {
 			if err == sql.ErrNoRows {
@@ -145,8 +145,8 @@ VALUES ($1, unnest($2::int[]))`
 	return newCnt, existingCnt, nil
 }
 
-func insertParameter(param *tc.ProfileExportImportParameterNullable, tx *sql.Tx) (int64, error) {
-	var id int64
+func insertParameter(param *tc.ProfileExportImportParameterNullable, tx *sql.Tx) (int, error) {
+	var id int
 	insertQuery := `
 INSERT INTO parameter (
 name,

@@ -79,11 +79,11 @@ Request Structure
 
 Response Structure
 ------------------
-	:cdn:         The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
-	:description: The :term:`Profile`'s :ref:`profile-description`
-	:name:        The :term:`Profile`'s :ref:`profile-name`
-	:type:        The :term:`Profile`'s :ref:`profile-type`
-	:id:          The :term:`Profile`'s :ref:`profile-id`
+:cdn:         The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:description: The :term:`Profile`'s :ref:`profile-description`
+:name:        The :term:`Profile`'s :ref:`profile-name`
+:type:        The :term:`Profile`'s :ref:`profile-type`
+:id:          The :term:`Profile`'s :ref:`profile-id`
 
 .. code-block:: http
 	:caption: Response Example

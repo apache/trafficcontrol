@@ -49,7 +49,7 @@ Response Structure
 ------------------
 :profile:     The exported :term:`Profile`
 
-	:cdn:     The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+	:cdn:         The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
 	:description: The :term:`Profile`'s :ref:`profile-description`
 	:name:        The :term:`Profile`'s :ref:`profile-name`
 	:type:        The :term:`Profile`'s :ref:`profile-type`
