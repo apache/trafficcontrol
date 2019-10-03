@@ -1,5 +1,13 @@
 package tc
 
+import (
+	"database/sql"
+	"errors"
+	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,15 +26,6 @@ package tc
  * specific language governing permissions and limitations
  * under the License.
  */
-
-// Health monitor checks for servers
-// A Single Servercheck Response for Update and Create to depict what changed
-// swagger:response ServercheckResponse
-// in: body
-type ServercheckResponse struct {
-	// in: body
-	Response Servercheck `json:"response"`
-}
 
 // A list of Servercheck Responses
 // swagger:response ServerchecksResponse
@@ -108,7 +107,6 @@ type Servercheck struct {
 }
 
 // A Single Servercheck struct for Update and Create to depict what changed
-// swagger:model ServercheckPost
 type ServercheckPost struct {
 
 	// The Servercheck data to submit
@@ -116,29 +114,46 @@ type ServercheckPost struct {
 	// Name of the server check type
 	//
 	// required: true
-	Name string `json:"servercheck_short_name" db:"servercheck_short_name"`
+	Name string `json:"servercheck_short_name"`
 
 	// ID of the server
 	//
-	// required: true
-	ID int `json:"id" db:"id"`
+	ID int `json:"id"`
 
 	// Name of the server
-	HostName string `json:"name" db:"name"`
+	HostName string `json:"name" `
 
 	// Value of the check result
 	//
 	// required: true
-	Value int `json:"value" db:"value"`
+	Value int `json:"value"`
 }
 
-type ServercheckPostNullable struct {
-	Name  string `json:"servercheck_short_name" db:"servercheck_short_name"`
-	ID    int    `json:"id" db:"id"`
-	Value int    `json:"value" db:"value"`
+type ServercheckRequestNullable struct {
+	Name     *string `json:"servercheck_short_name"`
+	ID       *int    `json:"id"`
+	Value    *int    `json:"value"`
+	HostName *string `json:"host_name"`
+}
+
+// Validate ServercheckRequestNullable
+func (scp ServercheckRequestNullable) Validate(tx *sql.Tx) error {
+	errs := []string{}
+
+	if scp.ID == nil && scp.HostName == nil {
+		errs = append(errs, "id or host_name")
+	}
+
+	if scp.Name == nil || *scp.Name == "" {
+		errs = append(errs, "servercheck_short_name")
+	}
+
+	if len(errs) > 0 {
+		return util.JoinErrs([]error{errors.New("required fields missing: " + strings.Join(errs, ", "))})
+	}
+	return nil
 }
 
 type ServercheckPostResponse struct {
-	Alerts   []Alert                 `json:"alerts"`
-	Response DeliveryServiceUserPost `json:"response"`
+	Alerts []Alert `json:"alerts"`
 }

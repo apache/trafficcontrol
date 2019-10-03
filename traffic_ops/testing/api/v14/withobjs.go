@@ -52,11 +52,13 @@ const (
 	ProfileParameters
 	Regions
 	Roles
+	ServerChecks
 	Servers
 	Statuses
 	StaticDNSEntries
 	SteeringTargets
 	Tenants
+	TOExtensions
 	Types
 	Users
 	UsersDeliveryServices
@@ -84,11 +86,13 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	ProfileParameters:              {CreateTestProfileParameters, DeleteTestProfileParameters},
 	Regions:                        {CreateTestRegions, DeleteTestRegions},
 	Roles:                          {CreateTestRoles, DeleteTestRoles},
+	ServerChecks:                   {CreateTestServerChecks, DeleteTestServerChecks},
 	Servers:                        {CreateTestServers, DeleteTestServers},
 	Statuses:                       {CreateTestStatuses, DeleteTestStatuses},
 	StaticDNSEntries:               {CreateTestStaticDNSEntries, DeleteTestStaticDNSEntries},
 	SteeringTargets:                {SetupSteeringTargets, DeleteTestSteeringTargets},
 	Tenants:                        {CreateTestTenants, DeleteTestTenants},
+	TOExtensions:                   {CreateTestTOExtensions, DeleteTestTOExtensions},
 	Types:                          {CreateTestTypes, DeleteTestTypes},
 	Users:                          {CreateTestUsers, ForceDeleteTestUsers},
 	UsersDeliveryServices:          {CreateTestUsersDeliveryServices, DeleteTestUsersDeliveryServices},

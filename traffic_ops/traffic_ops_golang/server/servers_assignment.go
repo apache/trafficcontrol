@@ -62,7 +62,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
-	serverName, ok, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, int64(server))
+	serverName, ok, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, server)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
 		return
