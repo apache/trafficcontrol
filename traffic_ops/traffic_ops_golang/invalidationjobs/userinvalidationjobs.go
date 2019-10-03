@@ -159,8 +159,8 @@ func GetUserJobs(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var j tc.UserInvalidationJob
 		err := rows.Scan(&j.Agent,
-			&j.AssetType,
 			&j.AssetURL,
+			&j.AssetType,
 			&j.Username,
 			&j.DeliveryService,
 			&j.EnteredTime,
