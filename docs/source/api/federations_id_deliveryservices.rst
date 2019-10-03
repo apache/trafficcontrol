@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves :term:`Delivery Service`\ s assigned to a :term:`Federation`.
+Retrieves :term:`Delivery Services` assigned to a :term:`Federation`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -101,7 +101,7 @@ Response Structure
 
 ``POST``
 ========
-Assigns one or more :term:`Delivery Service`\ s to a federation.
+Assigns one or more :term:`Delivery Services` to a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -117,7 +117,7 @@ Request Structure
 	|  ID  | The integral, unique identifier for the federation to be inspected |
 	+------+--------------------------------------------------------------------+
 
-:dsIds:   An array of integral, unique identifiers for :term:`Delivery Service`\ s which will be assigned to this federation
+:dsIds:   An array of integral, unique identifiers for :term:`Delivery Services` which will be assigned to this federation
 :replace: An optional boolean (default: ``false``) which, if ``true``, will cause any conflicting assignments already in place to be overridden by this request
 
 	.. note:: If ``replace`` is not given (and/or not ``true``), then any conflicts with existing assignments will cause the entire operation to fail.
@@ -140,7 +140,7 @@ Request Structure
 
 Response Structure
 ------------------
-:dsIds:   An array of integral, unique identifiers for :term:`Delivery Service`\ s which are now assigned to this federation
+:dsIds:   An array of integral, unique identifiers for :term:`Delivery Services` which are now assigned to this federation
 :replace: An optional boolean (default: ``false``) which, if ``true``, means any conflicting assignments already in place were overridden by this request
 
 .. code-block:: http

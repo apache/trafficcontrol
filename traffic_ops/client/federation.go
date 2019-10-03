@@ -80,6 +80,7 @@ func (to *Session) CreateFederationDeliveryServices(federationID int, deliverySe
 	return inf, err
 }
 
+// GetFederationDeliveryServices Returns a given Federation's Delivery Services
 func (to *Session) GetFederationDeliveryServices(federationID int) ([]tc.FederationDeliveryServiceNullable, ReqInf, error) {
 	type FederationDSesResponse struct {
 		Response []tc.FederationDeliveryServiceNullable `json:"response"`
