@@ -126,6 +126,6 @@ type CDNConfig struct {
 // TODO move to helper package.
 func CDNExistsByName(name string, tx *sql.Tx) (bool, error) {
 	exists := false
-	err := tx.QueryRow(`SELECT EXISTS(SELECT * FROM cdn WHERE name = $1)`).Scan(&exists)
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * FROM cdn WHERE name = $1)`, name).Scan(&exists)
 	return exists, err
 }
