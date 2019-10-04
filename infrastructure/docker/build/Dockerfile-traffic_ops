@@ -35,7 +35,6 @@ RUN	yum -y install \
 		expat-devel \
 		gcc \
 		git \
-		golang \
 		libcurl-devel \
 		make \
 		openssl-devel \
@@ -43,6 +42,11 @@ RUN	yum -y install \
 		rpm-build \
 		tar && \
 	yum -y clean all
+
+RUN curl -LO https://dl.google.com/go/go1.11.13.linux-amd64.tar.gz && \
+    tar -C /usr/local -xvzf go1.11.13.linux-amd64.tar.gz && \
+    ln -s /usr/local/go/bin/go /usr/bin/go && \
+    rm go1.11.13.linux-amd64.tar.gz
 
 ###
 
