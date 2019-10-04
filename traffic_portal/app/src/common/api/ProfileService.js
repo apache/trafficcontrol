@@ -91,17 +91,6 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
-    this.getParamUnassignedProfiles = function(paramId) {
-        return $http.get(ENV.api['root'] + 'parameters/' + paramId + '/unassigned_profiles').then(
-            function (result) {
-                return result.data.response;
-            },
-            function (err) {
-                throw err;
-            }
-        );
-    };
-
     this.cloneProfile = function(sourceName, cloneName) {
         return $http.post(ENV.api['root'] + "profiles/name/" + cloneName + "/copy/" + sourceName).then(
             function(result) {
