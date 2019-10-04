@@ -78,7 +78,8 @@ WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/app/cpanfile traffic_ops/install/bin/install_goose.sh ./
 RUN cpanm -l ./local Carton && \
     POSTGRES_HOME=/usr/pgsql-9.6 PERL5LIB=$(pwd)/local/lib/perl5 ./local/bin/carton  && \
-    rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile && ./install_goose.sh
+    rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz ./cpanfile
+RUN ./install_goose.sh
 
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
 ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
