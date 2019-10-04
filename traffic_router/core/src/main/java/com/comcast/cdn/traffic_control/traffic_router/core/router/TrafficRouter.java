@@ -548,7 +548,7 @@ public class TrafficRouter {
 					if (routeResult.getUrl() != null) {
 					return routeResult;
 			}
-				}
+		}
 
 		final List<SteeringResult> resultsToRemove = new ArrayList<>();
 

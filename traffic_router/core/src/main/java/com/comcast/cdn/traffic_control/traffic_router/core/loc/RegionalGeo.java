@@ -373,6 +373,12 @@ public final class RegionalGeo {
         final RegionalGeoResult result = enforce(deliveryService.getId(), httpRequest.getRequestedUrl(), 
                                                  httpRequest.getClientIP(), postalCode);
 
+        if (cache == null && result.getType() == ALTERNATE_WITH_CACHE) {
+            LOGGER.debug("RegionalGeo: denied for dsvc " + deliveryService.getId() + ", url " + httpRequest.getRequestedUrl() + ", postal " + postalCode + ". Relative re-direct URLs not allowed for Multi Route Delivery Services.");
+            result.setHttpResponseCode(RegionalGeoResult.REGIONAL_GEO_DENIED_HTTP_CODE);
+            result.setType(DENIED);
+        }
+
         updateTrack(track, result);
 
         if (result.getType() == DENIED) {
