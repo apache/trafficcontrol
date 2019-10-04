@@ -88,11 +88,10 @@ func getCachesStats(tx *sql.Tx) ([]CacheData, error) {
 			continue
 		}
 
-		success := true
+		success := false
 		errs := []error{}
 		for _, monitorFQDN := range monitorFQDNs {
 			crStates, err := getCRStates(monitorFQDN, client)
-			// TODO on err, try another online monitor
 			if err != nil {
 				errs = append(errs, errors.New("getting CRStates for CDN '"+string(cdn)+"' monitor '"+monitorFQDN+"': "+err.Error()))
 				continue
