@@ -17,7 +17,7 @@
  * under the License.
  */
 
-let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $state, $timeout, $uibModal, locationUtils, cdnService, propertiesModel) {
+let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $state, $uibModal, locationUtils, cdnService, propertiesModel) {
 
 	const oldConfig = currentSnapshot.config,
 		newConfig = newSnapshot.config;
@@ -157,10 +157,10 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 
 	$scope.tabSelected = function() {
 		// issue 3863 - adjust column headers when tab is selected and data table is visible. hacky...sorry...
-		$timeout(function () {
+		window.setTimeout(function() {
 			$($.fn.dataTable.tables(true)).DataTable()
 				.columns.adjust();
-		}, 10);
+			},10);
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -195,5 +195,5 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 
 };
 
-ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$timeout', '$uibModal', 'locationUtils', 'cdnService', 'propertiesModel'];
+ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$uibModal', 'locationUtils', 'cdnService', 'propertiesModel'];
 module.exports = ConfigController;
