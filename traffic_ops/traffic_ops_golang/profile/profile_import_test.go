@@ -48,7 +48,7 @@ func TestGetImportProfile(t *testing.T) {
 		mockStorageReturn mockStorageReturn
 		profile           tc.ProfileExportImportNullable
 		returnedErr       bool
-		returnedID        int64
+		returnedID        int
 	}{
 		{
 			description: "Success: Import profile successful",
@@ -58,7 +58,7 @@ func TestGetImportProfile(t *testing.T) {
 			},
 			profile:     generateExportImportProfile("profile", "test profile", "cdn", "type"),
 			returnedErr: false,
-			returnedID:  int64(1),
+			returnedID:  1,
 		},
 		{
 			description: "Failure: Import profile didn't insert row",
@@ -68,7 +68,7 @@ func TestGetImportProfile(t *testing.T) {
 			},
 			profile:     generateExportImportProfile("profile", "test profile", "cdn", "type"),
 			returnedErr: true,
-			returnedID:  int64(0),
+			returnedID:  0,
 		},
 		{
 			description: "Failure: Import profile storage error",
@@ -78,7 +78,7 @@ func TestGetImportProfile(t *testing.T) {
 			},
 			profile:     generateExportImportProfile("profile", "test profile", "cdn", "type"),
 			returnedErr: true,
-			returnedID:  int64(0),
+			returnedID:  0,
 		},
 	}
 	for _, testCase := range testCases {
@@ -317,7 +317,7 @@ func TestGetImportProfileParameters(t *testing.T) {
 
 			mock.ExpectExec("profile_parameter").WillReturnResult(sqlmock.NewResult(1, int64(len(testCase.parameters))))
 
-			newParams, existingParams, err := importProfileParameters(int64(1), testCase.parameters, db.MustBegin().Tx)
+			newParams, existingParams, err := importProfileParameters(1, testCase.parameters, db.MustBegin().Tx)
 
 			mock.ExpectCommit()
 			if testCase.returnedNewParameters != newParams {
