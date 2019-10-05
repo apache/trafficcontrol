@@ -168,10 +168,6 @@ func GetServerConfigRemapDotConfigForEdge(
 	atsMajorVersion int,
 	header string,
 ) string {
-	for name, val := range serverPackageParamData {
-		serverPackageParamData[name] = strings.Replace(val, "__HOSTNAME__", server.HostName+"."+server.DomainName, -1)
-	}
-
 	textLines := []string{}
 
 	for _, ds := range dses {
