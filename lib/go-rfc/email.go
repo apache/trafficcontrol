@@ -26,7 +26,7 @@ import "strconv"
 
 // EmailAddress is an alias of net/mail.Address that implements JSON encoding and decoding, as well
 // as scanning from database driver values.
-type EmailAddress struct { mail.Address }
+type EmailAddress struct{ mail.Address }
 
 // UnmarshalJSON implements the encoding/json.Unmarshaler interface
 func (a *EmailAddress) UnmarshalJSON(data []byte) error {

@@ -43,7 +43,7 @@ type Config struct {
 	ConfigHypnotoad        `json:"hypnotoad"`
 	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
 	ConfigTO               `json:"to"`
-	SMTP                   *ConfigSMTP `json:"smtp"`
+	SMTP                   *ConfigSMTP    `json:"smtp"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
@@ -114,7 +114,7 @@ type ConfigTO struct {
 // server.
 type ConfigSMTP struct {
 	Address  string `json:"address"`
-	Enabled  bool `json:"enabled"`
+	Enabled  bool   `json:"enabled"`
 	Password string `json:"password"`
 	User     string `json:"user"`
 }

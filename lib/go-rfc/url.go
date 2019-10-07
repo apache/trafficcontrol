@@ -26,7 +26,7 @@ import "strconv"
 
 // URL is an alias of net/url.URL that implements JSON encoding and decoding, as well as scanning
 // from database driver values.
-type URL struct { url.URL }
+type URL struct{ url.URL }
 
 // UnmarshalJSON implements the encoding/json.Unmarshaler interface
 func (u *URL) UnmarshalJSON(data []byte) error {
