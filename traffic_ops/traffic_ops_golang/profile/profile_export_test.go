@@ -44,29 +44,29 @@ func TestGetExportProfileResponse(t *testing.T) {
 	var testCases = []struct {
 		description  string
 		storageError error
-		profile      tc.ProfileExportedNullable
-		parameters   []tc.ProfileExportedParameterNullable
+		profile      tc.ProfileExportImportNullable
+		parameters   []tc.ProfileExportImportParameterNullable
 	}{
 		{
 			description:  "Success: Read export profile successful",
 			storageError: nil,
-			profile:      generateExportProfile("profile", "test profile", "cdn", "type"),
-			parameters: []tc.ProfileExportedParameterNullable{
-				generateExportParameter("config", "param1", "val1"),
-				generateExportParameter("config", "param2", "val2"),
+			profile:      generateExportImportProfile("profile", "test profile", "cdn", "type"),
+			parameters: []tc.ProfileExportImportParameterNullable{
+				generateExportImportParameter("config", "param1", "val1"),
+				generateExportImportParameter("config", "param2", "val2"),
 			},
 		},
 		{
 			description:  "Success: Read export profile with no parameters successful",
 			storageError: nil,
-			profile:      generateExportProfile("profile", "test profile", "cdn", "type"),
-			parameters:   []tc.ProfileExportedParameterNullable{},
+			profile:      generateExportImportProfile("profile", "test profile", "cdn", "type"),
+			parameters:   []tc.ProfileExportImportParameterNullable{},
 		},
 		{
 			description:  "Failure: Storage error reading profile",
 			storageError: errors.New("Storage error"),
-			profile:      tc.ProfileExportedNullable{},
-			parameters:   []tc.ProfileExportedParameterNullable{},
+			profile:      tc.ProfileExportImportNullable{},
+			parameters:   []tc.ProfileExportImportParameterNullable{},
 		},
 	}
 	for _, testCase := range testCases {
@@ -139,16 +139,16 @@ func TestGetExportProfileResponse(t *testing.T) {
 	}
 }
 
-func generateExportParameter(configFile, param, val string) tc.ProfileExportedParameterNullable {
-	return tc.ProfileExportedParameterNullable{
+func generateExportImportParameter(configFile, param, val string) tc.ProfileExportImportParameterNullable {
+	return tc.ProfileExportImportParameterNullable{
 		ConfigFile: &configFile,
 		Name:       &param,
 		Value:      &val,
 	}
 }
 
-func generateExportProfile(name, description, cdnName, profileType string) tc.ProfileExportedNullable {
-	return tc.ProfileExportedNullable{
+func generateExportImportProfile(name, description, cdnName, profileType string) tc.ProfileExportImportNullable {
+	return tc.ProfileExportImportNullable{
 		Name:        &name,
 		CDNName:     &cdnName,
 		Description: &description,

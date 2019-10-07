@@ -179,9 +179,9 @@
       }
     },
     "dsRequests": {
-      "_comments": "Should all delivery service changes go through the delivery service review process? You can also provide a role that will skip the process.",
+      "_comments": "Should all delivery service changes go through the delivery service request/review process? You can also provide a override role name (i.e. admin) that will allow users with the given role to circumvent the delivery service request process.",
       "enabled": false,
-      "roleNeededToSkip": "admin"
+      "overrideRole": ""
     },
     "servers": {
       "_comment": "Server settings",

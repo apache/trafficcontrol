@@ -64,7 +64,7 @@ func ExportProfileHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespRaw(w, r, exportedProfileResp)
 }
 
-func getExportProfileResponse(profileID int, tx *sqlx.Tx) (*tc.ProfileExportedResponse, error) {
+func getExportProfileResponse(profileID int, tx *sqlx.Tx) (*tc.ProfileExportResponse, error) {
 	queryValues := map[string]interface{}{
 		IDQueryParam: profileID,
 	}
@@ -87,7 +87,7 @@ func getExportProfileResponse(profileID int, tx *sqlx.Tx) (*tc.ProfileExportedRe
 		ParameterValue      *string `db:"parm_value"`
 	}
 
-	exportedProfileResp := &tc.ProfileExportedResponse{}
+	exportedProfileResp := &tc.ProfileExportResponse{}
 
 	hasNext := rows.Next()
 	if !hasNext {
@@ -99,17 +99,17 @@ func getExportProfileResponse(profileID int, tx *sqlx.Tx) (*tc.ProfileExportedRe
 	}
 
 	for hasNext { // Set Profile
-		exportedProfileResp.Profile = tc.ProfileExportedNullable{
+		exportedProfileResp.Profile = tc.ProfileExportImportNullable{
 			Name:        r.ProfileName,
 			Description: r.ProfileDescription,
 			Type:        r.ProfileType,
 			CDNName:     r.CDN,
 		}
-		exportedProfileResp.Parameters = []tc.ProfileExportedParameterNullable{}
+		exportedProfileResp.Parameters = []tc.ProfileExportImportParameterNullable{}
 		for hasNext { // Loop through parameters
 			if r.ParameterName != nil {
 				exportedProfileResp.Parameters = append(exportedProfileResp.Parameters,
-					tc.ProfileExportedParameterNullable{
+					tc.ProfileExportImportParameterNullable{
 						ConfigFile: r.ParameterConfigFile,
 						Name:       r.ParameterName,
 						Value:      r.ParameterValue,

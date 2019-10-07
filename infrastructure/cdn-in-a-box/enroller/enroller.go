@@ -832,6 +832,7 @@ func main() {
 	toSession, err := newSession(reqTimeout, toCreds.URL, toCreds.User, toCreds.Password)
 	if err != nil {
 		log.Errorln("error starting TrafficOps session: " + err.Error())
+		os.Exit(1)
 	}
 	log.Infoln("TrafficOps session established")
 

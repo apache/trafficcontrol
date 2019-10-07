@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, $location, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
+var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, $location, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
 
 	var createComment = function (request, placeholder) {
 		var params = {
@@ -141,7 +141,8 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 	$scope.rejectRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
-		if (request.assigneeId != userModel.user.id) {
+		// only the user assigned to the request can mark it as rejected (unless the user has override capabilities)
+		if ((request.assigneeId != userModel.user.id) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
 			messageModel.setMessages([{
 				level: 'error',
 				text: 'Only the assignee can mark a delivery service request as rejected'
@@ -178,7 +179,8 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 	$scope.completeRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
-		if (request.assigneeId != userModel.user.id) {
+		// only the user assigned to the request can mark it as complete (unless the user has override capabilities)
+		if ((request.assigneeId != userModel.user.id) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
 			messageModel.setMessages([{
 				level: 'error',
 				text: 'Only the assignee can mark a delivery service request as complete'
@@ -283,5 +285,5 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 
 };
 
-TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$q', '$location', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
+TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$q', '$location', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
 module.exports = TableDeliveryServicesRequestsController;

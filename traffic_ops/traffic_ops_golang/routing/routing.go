@@ -193,10 +193,10 @@ func Handler(
 	reqID := getReqID()
 
 	reqIDStr := strconv.FormatUint(reqID, 10)
-	log.Infoln(r.Method + " " + r.URL.Path + " handling (reqid " + reqIDStr + ")")
+	log.Infoln(r.Method + " " + r.URL.Path + "?" + r.URL.RawQuery + " handling (reqid " + reqIDStr + ")")
 	start := time.Now()
 	defer func() {
-		log.Infoln(r.Method + " " + r.URL.Path + " handled (reqid " + reqIDStr + ") in " + time.Since(start).String())
+		log.Infoln(r.Method + " " + r.URL.Path + "?" + r.URL.RawQuery + " handled (reqid " + reqIDStr + ") in " + time.Since(start).String())
 	}()
 
 	ctx := r.Context()
