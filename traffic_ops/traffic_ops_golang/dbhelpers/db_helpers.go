@@ -570,3 +570,14 @@ func GetGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
 	}
 	return val, true, nil
 }
+
+// UsernameExists reports whether or not the the given username exists as a user in the database to
+// which the passed transaction refers. If anything goes wrong when checking the existence of said
+// user, the error is directly returned to the caller. Note that in that case, no real meaning
+// should be assigned to the returned boolean value.
+func UsernameExists(uname string, tx *sql.Tx) (bool, error) {
+	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM tm_user WHERE tm_user.username=$1)`, uname)
+	var exists bool
+	err := row.Scan(&exists);
+	return exists, err
+}
