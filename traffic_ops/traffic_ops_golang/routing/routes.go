@@ -68,6 +68,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/region"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/role"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/server"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercheck"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/staticdnsentry"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/status"
@@ -264,6 +265,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPut, `servers/{id}$`, api.UpdateHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `servers/?$`, api.CreateHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodDelete, `servers/{id}$`, api.DeleteHandler(&server.TOServer{}), auth.PrivLevelOperations, Authenticated, nil},
+
+		//Server Capability
+		{1.4, http.MethodGet, `server_capabilities$`, api.ReadHandler(&servercapability.TOServerCapability{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodPost, `server_capabilities$`, api.CreateHandler(&servercapability.TOServerCapability{}), auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodDelete, `server_capabilities$`, api.DeleteHandler(&servercapability.TOServerCapability{}), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Status: CRUD
 		{1.1, http.MethodGet, `statuses/?(\.json)?$`, api.ReadHandler(&status.TOStatus{}), auth.PrivLevelReadOnly, Authenticated, nil},

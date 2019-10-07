@@ -85,6 +85,31 @@ func GenericCreate(val GenericCreator) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+// GenericCreateNameBasedID does a Create (POST) for the given GenericCreator object and type. This exists as a generic function, for the use case of a single "name" key (not a numerical "id" key) and a lastUpdated field.
+func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
+	resultRows, err := val.APIInfo().Tx.NamedQuery(val.InsertQuery(), val)
+	if err != nil {
+		return ParseDBError(err)
+	}
+	defer resultRows.Close()
+
+	lastUpdated := tc.TimeNoMod{}
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&lastUpdated); err != nil {
+			return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
+		}
+	}
+	if rowsAffected == 0 {
+		return nil, errors.New(val.GetType() + " create: no " + val.GetType() + " was inserted, no row was returned"), http.StatusInternalServerError
+	} else if rowsAffected > 1 {
+		return nil, errors.New("too many rows returned from " + val.GetType() + " insert"), http.StatusInternalServerError
+	}
+	val.SetLastUpdated(lastUpdated)
+	return nil, nil, http.StatusOK
+}
+
 func GenericRead(val GenericReader) ([]interface{}, error, error, int) {
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns())
 	if len(errs) > 0 {
