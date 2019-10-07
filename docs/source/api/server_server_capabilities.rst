@@ -107,7 +107,7 @@ Response Structure
 Associates a :term:`Server Capability` to a server.
 
 :Auth. Required: Yes
-:Roles Required: "admin"
+:Roles Required: "admin" or "operations"
 :Response Type:  Object
 
 Request Structure
@@ -171,7 +171,7 @@ Response Structure
 Disassociate a server from a :term:`Server Capability`
 
 :Auth. Required: Yes
-:Roles Required: "admin"
+:Roles Required: "admin" or "operations"
 :Response Type:  Object
 
 Request Structure
