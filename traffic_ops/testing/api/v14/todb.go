@@ -103,6 +103,12 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
+	err = SetupServerCapabilities(db)
+	if err != nil {
+		fmt.Printf("\nError setting up server capabilities %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
 	return err
 }
 
@@ -275,10 +281,26 @@ INSERT INTO to_extension (name, version, info_url, isactive, script_file, server
 	return nil
 }
 
+// SetupServerCapabilities setsup seed server capabilities
+func SetupServerCapabilities(db *sql.DB) error {
+
+	sqlStmt := `
+INSERT INTO server_capability (name) VALUES ('mem');
+INSERT INTO server_capability (name) VALUES ('disk');
+`
+	err := execSQL(db, sqlStmt, "server_capability")
+	if err != nil {
+		return fmt.Errorf("exec failed %v", err)
+	}
+	return nil
+}
+
 // Teardown - ensures that the data is cleaned up for a fresh run
 func Teardown(db *sql.DB) error {
 
 	sqlStmt := `
+	DELETE FROM server_server_capability;
+	DELETE FROM server_capability;
 	DELETE FROM to_extension;
 	DELETE FROM staticdnsentry;
 	DELETE FROM job;
