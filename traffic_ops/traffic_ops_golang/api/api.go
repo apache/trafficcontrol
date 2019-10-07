@@ -388,12 +388,12 @@ func (inf *APIInfo) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error
 // and the HTTP status code indicates the type of failure.
 func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, error) {
 	if !cfg.SMTP.Enabled {
-		return http.StatusServiceUnavailable, errors.New("SMTP is not enabled!"), nil
+		return http.StatusInternalServerError, nil, errors.New("SMTP is not enabled; mail cannot be sent")
 	}
 	auth := smtp.PlainAuth("", cfg.SMTP.User, cfg.SMTP.Password, strings.Split(cfg.SMTP.Address, ":")[0])
 	err := smtp.SendMail(cfg.SMTP.Address, auth, cfg.ConfigTO.EmailFrom.String(), []string{to.String()}, msg)
 	if err != nil {
-		return http.StatusBadGateway, nil, err
+		return http.StatusInternalServerError, nil, fmt.Errorf("Failed to send email: %v", err)
 	}
 	return http.StatusOK, nil, nil
 }
