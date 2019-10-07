@@ -29,3 +29,8 @@ type ServerCapability struct {
 	Name        string     `json:"name" db:"name"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
+
+type ServerCapabilityDetailResponse struct {
+	Response ServerCapability `json:"response"`
+	Alerts
+}
