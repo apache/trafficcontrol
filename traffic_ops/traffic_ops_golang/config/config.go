@@ -42,7 +42,7 @@ type Config struct {
 	KeyPath                string   `json:"-"`
 	ConfigHypnotoad        `json:"hypnotoad"`
 	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
-	ConfigTO               `json:"to"`
+	ConfigTO               *ConfigTO      `json:"to"`
 	SMTP                   *ConfigSMTP    `json:"smtp"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
@@ -105,9 +105,9 @@ type ConfigTrafficOpsGolang struct {
 
 // ConfigTO contains information to identify Traffic Ops in a network sense.
 type ConfigTO struct {
-	BaseURL               rfc.URL          `json:"base_url"`
-	EmailFrom             rfc.EmailAddress `json:"email_from"`
-	NoAccountFoundMessage string           `json:"no_account_found_msg"`
+	BaseURL               *rfc.URL          `json:"base_url"`
+	EmailFrom             *rfc.EmailAddress `json:"email_from"`
+	NoAccountFoundMessage *string           `json:"no_account_found_msg"`
 }
 
 // ConfigSMTP contains configuration information for connecting to and authenticating with an SMTP
@@ -321,6 +321,20 @@ func ParseConfig(cfg Config) (Config, error) {
 
 		newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
 		cfg.URL = &newURL
+	}
+
+	if cfg.ConfigTO == nil {
+		missings += "to, "
+	} else {
+		if cfg.ConfigTO.BaseURL == nil || cfg.ConfigTO.BaseURL.String() == "" {
+			missings += "to.base_url, "
+		}
+		if cfg.ConfigTO.EmailFrom == nil || cfg.ConfigTO.EmailFrom.String() == "<@>" {
+			missings += "to.email_from, "
+		}
+		if cfg.ConfigTO.NoAccountFoundMessage == nil || *cfg.ConfigTO.NoAccountFoundMessage == "" {
+			missings += "to.no_account_found_msg, "
+		}
 	}
 
 	if len(missings) > 0 {
