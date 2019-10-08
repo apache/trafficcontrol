@@ -15,9 +15,9 @@
 
 .. _to-api-server-server-capabilities:
 
-**************
+******************************
 ``server_server_capabilities``
-**************
+******************************
 
 ``GET``
 =======
@@ -167,7 +167,7 @@ Response Structure
 	}
 
 ``DELETE``
-=======
+==========
 Disassociate a server from a :term:`Server Capability`
 
 :Auth. Required: Yes
