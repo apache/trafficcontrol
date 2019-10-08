@@ -67,7 +67,16 @@ func (ssc TOServerServerCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 
 // Need to satisfy Identifier interface but is a no-op as path does not have Update
 func (ssc TOServerServerCapability) GetKeys() (map[string]interface{}, bool) {
-	return map[string]interface{}{}, true
+	if ssc.ServerID == nil {
+		return map[string]interface{}{ServerQueryParam: 0}, false
+	}
+	if ssc.ServerCapability == nil {
+		return map[string]interface{}{ServerCapabilityQueryParam: 0}, false
+	}
+	return map[string]interface{}{
+		ServerQueryParam:           *ssc.ServerID,
+		ServerCapabilityQueryParam: *ssc.ServerCapability,
+	}, true
 }
 
 func (ssc *TOServerServerCapability) SetKeys(keys map[string]interface{}) {
