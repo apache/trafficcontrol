@@ -79,18 +79,30 @@ func GetTestFederations(t *testing.T) {
 func PostTestFederationsDeliveryServices(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, dses)
+		t.Fatalf("cannot GET DeliveryServices: %v - %v\n", err, dses)
 	}
 	if len(dses) == 0 {
-		t.Errorf("no delivery services, must have at least 1 ds to test federations deliveryservices\n")
+		t.Fatalf("no delivery services, must have at least 1 ds to test federations deliveryservices\n")
 	}
 	ds := dses[0]
 	if len(fedIDs) == 0 {
-		t.Errorf("no federations, must have at least 1 federation to test federations deliveryservices\n")
+		t.Fatalf("no federations, must have at least 1 federation to test federations deliveryservices\n")
 	}
 	fedID := fedIDs[0]
 
 	if _, err = TOSession.CreateFederationDeliveryServices(fedID, []int{ds.ID}, true); err != nil {
-		t.Errorf("creating federations delivery services: %v\n", err)
+		t.Fatalf("creating federations delivery services: %v\n", err)
+	}
+
+	// Test get created Federation Delivery Service
+	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID)
+	if err != nil {
+		t.Fatalf("cannot GET Federation DeliveryServices: %v\n", err)
+	}
+	if len(fedDSes) != 1 {
+		t.Fatalf("one Federation DeliveryService exepected for Federation %v, %v was returned\n", fedID, len(fedDSes))
+	}
+	if *fedDSes[0].ID != ds.ID {
+		t.Errorf("expected DeliveryService %v to be returned for Federation %v DeliveryServices, %v was instead returned\n", ds.ID, fedID, *fedDSes[0].ID)
 	}
 }
