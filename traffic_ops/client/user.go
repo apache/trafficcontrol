@@ -78,10 +78,11 @@ func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
 }
 
 // UpdateCurrentUser replaces the current user data with the provided tc.User structure.
-func (to *Session) UpdateCurrentUser(user *tc.User) (*tc.UpdateUserResponse, ReqInf, error) {
+func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, ReqInf, error) {
 	var a net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: a}
 
+	user := struct{ User tc.User `json:"user"` }{ u }
 	reqBody, err := json.Marshal(user)
 	if err != nil {
 		return nil, reqInf, err
