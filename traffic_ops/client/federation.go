@@ -18,6 +18,7 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -77,4 +78,14 @@ func (to *Session) CreateFederationDeliveryServices(federationID int, deliverySe
 	resp := map[string]interface{}{}
 	inf, err := makeReq(to, http.MethodPost, apiBase+`/federations/`+strconv.Itoa(federationID)+`/deliveryservices`, jsonReq, &resp)
 	return inf, err
+}
+
+// GetFederationDeliveryServices Returns a given Federation's Delivery Services
+func (to *Session) GetFederationDeliveryServices(federationID int) ([]tc.FederationDeliveryServiceNullable, ReqInf, error) {
+	type FederationDSesResponse struct {
+		Response []tc.FederationDeliveryServiceNullable `json:"response"`
+	}
+	data := FederationDSesResponse{}
+	inf, err := get(to, fmt.Sprintf("%s/federations/%v/deliveryservices", apiBase, federationID), &data)
+	return data.Response, inf, err
 }

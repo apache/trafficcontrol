@@ -551,6 +551,13 @@ type UserAvailableDS struct {
 	TenantID    *int    `json:"-"` // tenant is necessary to check authorization, but not serialized
 }
 
+type FederationDeliveryServiceNullable struct {
+	ID    *int    `json:"id" db:"id"`
+	CDN   *string `json:"cdn" db:"cdn"`
+	Type  *string `json:"type" db:"type"`
+	XMLID *string `json:"xmlId" db:"xml_id"`
+}
+
 type DeliveryServiceUserPost struct {
 	UserID           *int   `json:"userId"`
 	DeliveryServices *[]int `json:"deliveryServices"`

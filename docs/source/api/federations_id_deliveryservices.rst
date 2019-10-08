@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves :term:`Delivery Service`\ s assigned to a federation.
+Retrieves :term:`Delivery Services` assigned to a :term:`Federation`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -37,6 +37,26 @@ Request Structure
 	|  ID  | The integral, unique identifier for the federation to be inspected |
 	+------+--------------------------------------------------------------------+
 
+.. table:: Request Query Parameters
+
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                                          |
+	+===========+==========+======================================================================================================================================+
+	| dsID      | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                     |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                        |
+	|           |          | array                                                                                                                                |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                             |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                                                                       |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                 |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. |
+	|           |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                    |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+
 .. code-block:: http
 	:caption: Request Example
 
@@ -49,7 +69,7 @@ Request Structure
 Response Structure
 ------------------
 :cdn:   The CDN to which this :term:`Delivery Service` Belongs
-:id:    The integral, unique identifier for the Deliver Service
+:id:    The integral, unique identifier for the :term:`Delivery Service`
 :type:  The routing type used by this :term:`Delivery Service`
 :xmlId: The 'xml_id' which uniquely identifies this :term:`Delivery Service`
 
@@ -81,7 +101,7 @@ Response Structure
 
 ``POST``
 ========
-Assigns one or more :term:`Delivery Service`\ s to a federation.
+Assigns one or more :term:`Delivery Services` to a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -97,7 +117,7 @@ Request Structure
 	|  ID  | The integral, unique identifier for the federation to be inspected |
 	+------+--------------------------------------------------------------------+
 
-:dsIds:   An array of integral, unique identifiers for :term:`Delivery Service`\ s which will be assigned to this federation
+:dsIds:   An array of integral, unique identifiers for :term:`Delivery Services` which will be assigned to this federation
 :replace: An optional boolean (default: ``false``) which, if ``true``, will cause any conflicting assignments already in place to be overridden by this request
 
 	.. note:: If ``replace`` is not given (and/or not ``true``), then any conflicts with existing assignments will cause the entire operation to fail.
@@ -120,7 +140,7 @@ Request Structure
 
 Response Structure
 ------------------
-:dsIds:   An array of integral, unique identifiers for :term:`Delivery Service`\ s which are now assigned to this federation
+:dsIds:   An array of integral, unique identifiers for :term:`Delivery Services` which are now assigned to this federation
 :replace: An optional boolean (default: ``false``) which, if ``true``, means any conflicting assignments already in place were overridden by this request
 
 .. code-block:: http
