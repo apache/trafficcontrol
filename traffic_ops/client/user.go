@@ -77,6 +77,28 @@ func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
 	return &resp.Response, reqInf, nil
 }
 
+// UpdateCurrentUser replaces the current user data with the provided tc.User structure.
+func (to *Session) UpdateCurrentUser(user *tc.User) (*tc.UpdateUserResponse, ReqInf, error) {
+	var a net.Addr
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: a}
+
+	reqBody, err := json.Marshal(user)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	var resp *http.Response
+	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, apiBase+"/user/current", reqBody)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var clientResp tc.UpdateUserResponse
+	err = json.NewDecoder(resp.Body).Decode(&clientResp)
+	return &clientResp, reqInf, err
+}
+
 // CreateUser creates a user
 func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, ReqInf, error) {
 	if user.TenantID == nil && user.Tenant != nil {
