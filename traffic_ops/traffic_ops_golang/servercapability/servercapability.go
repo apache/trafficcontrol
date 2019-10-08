@@ -49,7 +49,7 @@ func (v TOServerCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"name", api.GetStringKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
+// Implementation of the Identifier, Validator interface functions
 func (v TOServerCapability) GetKeys() (map[string]interface{}, bool) {
 	return map[string]interface{}{"name": v.Name}, true
 }

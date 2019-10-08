@@ -66,7 +66,7 @@ func (to *Session) GetServerCapabilities() ([]tc.ServerCapability, ReqInf, error
 }
 
 // GetServerCapability returns the given server capability by name
-func (to *Session) GetServerCapability(name string) ([]tc.ServerCapability, ReqInf, error) {
+func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", APIServerCapabilities, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -80,7 +80,10 @@ func (to *Session) GetServerCapability(name string) ([]tc.ServerCapability, ReqI
 		return nil, reqInf, err
 	}
 
-	return data.Response, reqInf, nil
+	if len(data.Response) == 1 {
+		return &data.Response[0], reqInf, nil
+	}
+	return nil, reqInf, fmt.Errorf("expected one server capability in response, instead got: %+v", data.Response)
 }
 
 // DeleteServerCapability deletes the given server capability by name

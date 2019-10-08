@@ -47,10 +47,9 @@ func GetTestServerCapabilities(t *testing.T) {
 		resp, _, err := TOSession.GetServerCapability(sc.Name)
 		if err != nil {
 			t.Errorf("cannot GET server capability: %v - %v\n", err, resp)
-
+		} else if resp == nil {
+			t.Errorf("GET server capability expected non-nil response")
 		}
-
-		log.Debugln("Response: ", resp)
 	}
 
 	resp, _, err := TOSession.GetServerCapabilities()
@@ -72,11 +71,11 @@ func DeleteTestServerCapabilities(t *testing.T) {
 		}
 
 		serverCapability, _, err := TOSession.GetServerCapability(sc.Name)
-		if err != nil {
-			t.Errorf("error deleting server capability: %s\n", err.Error())
+		if err == nil {
+			t.Errorf("expected error trying to GET deleted server capability: %s, actual: nil\n", sc.Name)
 		}
-		if len(serverCapability) > 0 {
-			t.Errorf("expected server capability: %s to be deleted\n", sc.Name)
+		if serverCapability != nil {
+			t.Errorf("expected nil trying to GET deleted server capability: %s, actual: non-nil\n", sc.Name)
 		}
 	}
 }
