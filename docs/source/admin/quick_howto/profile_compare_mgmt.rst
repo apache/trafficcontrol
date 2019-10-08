@@ -15,32 +15,32 @@
 
 .. _profile_compare_mgmt:
 
-*******************************
-Profile Comparison / Management
-*******************************
-In Traffic Portal *all* users can compare the :term:`Parameters` of any 2 :term:`Profiles` side-by-side, and users with a higher level :term:`Role` ("operations" or "admin") can easily add or remove parameters from each profile as necessary.
+***********************
+Profile Parameters Diff
+***********************
+In Traffic Portal *all* users can diff the :term:`Parameters` of any 2 :term:`Profiles` side-by-side, and users with a higher level :term:`Role` ("operations" or "admin") can easily add or remove parameters from each profile as necessary.
 
-The ability to compare and manage 2 profiles can be found under :menuselection:`Configure --> Profiles --> More --> Compare Profiles`
+The ability to diff 2 profiles can be found under :menuselection:`Configure --> Profiles --> More --> Diff Profile Parameters`
 
 .. figure:: profile_compare_mgmt/compare_profiles_menu.png
 	:align: center
-	:alt: A screenshot of the "Compare Profiles" menu item
+	:alt: A screenshot of the "Diff Profile Parameters" menu item
 
-	The "Compare Profiles" menu item
+	The "Diff Profile Parameters" menu item
 
-Once you have selected the :guilabel:`Compare Profiles` menu item, you will be asked to choose 2 profiles to compare.
+Once you have selected the :guilabel:`Diff Profile Parameters` menu item, you will be asked to choose 2 profiles to diff.
 
 .. figure:: profile_compare_mgmt/select_profiles_dialog.png
 	:width: 60%
 	:align: center
-	:alt: A screenshot of the "Compare Profile Parameters" dialog
+	:alt: A screenshot of the "Diff Profile Parameters" dialog
 
-	The "Compare Profile Parameters" dialog
+	The "Diff Profile Parameters" dialog
 
-A superset of all parameters across the 2 profiles will be displayed with their profile membership displayed side-by-side. This view also provides users with higher level permissions ("operations" or "admin") the ability to easily remove or add parameters for each profile and persist the final state of both profiles (or restore the original state and discard changes). In addition, as the user makes changes, a blue shadow is added to all modified checkboxes.
+All parameters exclusively assigned to one profile but not the other will be displayed with their profile membership displayed side-by-side. In addition, by selecting the :guilabel:`Show All Params` link, the user can see a superset of all parameters across the 2 profiles. Both views provide users with higher level permissions ("operations" or "admin") the ability to easily remove or add parameters for each profile and persist the final state of both profiles (or restore the original state and discard changes). As the user makes changes, a blue shadow is added to all modified checkboxes.
 
 .. figure:: profile_compare_mgmt/compare_profiles_table.png
 	:align: center
-	:alt: A screenshot of the "Compare Profile Parameters" table
+	:alt: A screenshot of the "Diff Profile Parameters" table
 
-	The "Compare Profile Parameters" table
+	The "Diff Profile Parameters" table
