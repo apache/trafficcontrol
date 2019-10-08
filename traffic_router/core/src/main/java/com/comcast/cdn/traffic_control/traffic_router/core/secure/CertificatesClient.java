@@ -80,7 +80,7 @@ public class CertificatesClient {
 
 		try {
 			final ProtectedFetcher fetcher = new ProtectedFetcher(trafficOpsUtils.getAuthUrl(), trafficOpsUtils.getAuthJSON().toString(), 15000);
-			return fetcher.getIfModifiedSince(certificatesUrl, lastValidfetchTimestamp, stringBuilder);
+			return fetcher.getIfModifiedSince(certificatesUrl, 0L, stringBuilder);
 		} catch (Exception e) {
 			LOGGER.warn("Failed to fetch data for certificates from " + certificatesUrl + "(" + e.getClass().getSimpleName() + ") : " + e.getMessage(), e);
 		}
@@ -90,6 +90,7 @@ public class CertificatesClient {
 
 	public List<CertificateData> getCertificateData(final String jsonData) {
 		try {
+			LOGGER.debug("Certificates successfully updated @ "+lastValidfetchTimestamp);
 			return ((CertificatesResponse) new ObjectMapper().readValue(jsonData, new TypeReference<CertificatesResponse>() { })).getResponse();
 		} catch (Exception e) {
 			LOGGER.warn("Failed parsing json data: " + e.getMessage());
