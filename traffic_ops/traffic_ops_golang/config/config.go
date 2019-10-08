@@ -30,6 +30,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/basho/riak-go-client"
 )
@@ -41,6 +42,8 @@ type Config struct {
 	KeyPath                string   `json:"-"`
 	ConfigHypnotoad        `json:"hypnotoad"`
 	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
+	ConfigTO               *ConfigTO      `json:"to"`
+	SMTP                   *ConfigSMTP    `json:"smtp"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
@@ -98,6 +101,22 @@ type ConfigTrafficOpsGolang struct {
 	// CRConfigEmulateOldPath is whether to emulate the legacy CRConfig request path when generating a new CRConfig. This primarily exists in the event a tool relies on the legacy path '/tools/write_crconfig'.
 	// Deprecated: will be removed in the next major version.
 	CRConfigEmulateOldPath bool `json:"crconfig_emulate_old_path"`
+}
+
+// ConfigTO contains information to identify Traffic Ops in a network sense.
+type ConfigTO struct {
+	BaseURL               *rfc.URL          `json:"base_url"`
+	EmailFrom             *rfc.EmailAddress `json:"email_from"`
+	NoAccountFoundMessage *string           `json:"no_account_found_msg"`
+}
+
+// ConfigSMTP contains configuration information for connecting to and authenticating with an SMTP
+// server.
+type ConfigSMTP struct {
+	Address  string `json:"address"`
+	Enabled  bool   `json:"enabled"`
+	Password string `json:"password"`
+	User     string `json:"user"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
@@ -162,6 +181,9 @@ func LoadCdnConfig(cdnConfPath string) (Config, error) {
 	err = json.Unmarshal(confBytes, &cfg)
 	if err != nil {
 		return Config{}, fmt.Errorf("unmarshalling '%s': %v", cdnConfPath, err)
+	}
+	if cfg.SMTP == nil {
+		cfg.SMTP = &ConfigSMTP{}
 	}
 	return cfg, nil
 }
@@ -299,6 +321,20 @@ func ParseConfig(cfg Config) (Config, error) {
 
 		newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
 		cfg.URL = &newURL
+	}
+
+	if cfg.ConfigTO == nil {
+		missings += "to, "
+	} else {
+		if cfg.ConfigTO.BaseURL == nil || cfg.ConfigTO.BaseURL.String() == "" {
+			missings += "to.base_url, "
+		}
+		if cfg.ConfigTO.EmailFrom == nil || cfg.ConfigTO.EmailFrom.String() == "<@>" {
+			missings += "to.email_from, "
+		}
+		if cfg.ConfigTO.NoAccountFoundMessage == nil || *cfg.ConfigTO.NoAccountFoundMessage == "" {
+			missings += "to.no_account_found_msg, "
+		}
 	}
 
 	if len(missings) > 0 {
