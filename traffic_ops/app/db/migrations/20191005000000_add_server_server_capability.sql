@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS server_server_capability (
 
     PRIMARY KEY (server, server_capability),
     CONSTRAINT fk_server FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE,
-    CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON DELETE CASCADE
+    CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON DELETE RESTRICT
 );
 
 -- +goose Down

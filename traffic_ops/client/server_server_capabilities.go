@@ -26,11 +26,11 @@ import (
 )
 
 const (
-	API_v14_Server_Server_Capabilities = "/api/1.4/server_server_capabilities"
+	API_v14_Server_Server_Capabilities = apiBase + "/server_server_capabilities"
 )
 
 // CreateServerServerCapability assigns a Server Capability to a Server
-func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapabilityNullable) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -52,7 +52,7 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 
 // GetServerServerCapabilities retrieves a list of Server Capabilities that are assigned to a Server
 // Callers can filter the results by server id, server host name and/or server capability via the optional parameters
-func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, serverCapability *string) ([]tc.ServerServerCapabilityNullable, ReqInf, error) {
+func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, serverCapability *string) ([]tc.ServerServerCapability, ReqInf, error) {
 	v := url.Values{}
 	if serverID != nil {
 		v.Add("serverId", strconv.Itoa(*serverID))
@@ -69,7 +69,7 @@ func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, se
 	}
 
 	resp := struct {
-		Response []tc.ServerServerCapabilityNullable `json:"response"`
+		Response []tc.ServerServerCapability `json:"response"`
 	}{}
 	reqInf, err := get(to, queryURL, &resp)
 	if err != nil {

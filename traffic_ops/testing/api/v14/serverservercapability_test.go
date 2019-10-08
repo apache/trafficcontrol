@@ -17,7 +17,6 @@ package v14
 
 import (
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -63,7 +62,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Attempt to assign an server capability with no ID
-	sscNilID := tc.ServerServerCapabilityNullable{
+	sscNilID := tc.ServerServerCapability{
 		ServerCapability: ssc.ServerCapability,
 	}
 	_, _, err = TOSession.CreateServerServerCapability(sscNilID)
@@ -72,7 +71,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Attempt to assign an server capability with no server capability
-	sscNilCapability := tc.ServerServerCapabilityNullable{
+	sscNilCapability := tc.ServerServerCapability{
 		ServerID: ssc.ServerID,
 	}
 	_, _, err = TOSession.CreateServerServerCapability(sscNilCapability)
@@ -81,7 +80,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Attempt to assign an server capability with invalid server capability
-	sscInvalidCapability := tc.ServerServerCapabilityNullable{
+	sscInvalidCapability := tc.ServerServerCapability{
 		ServerID:         ssc.ServerID,
 		ServerCapability: util.StrPtr("bogus"),
 	}
@@ -91,7 +90,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Attempt to assign an server capability with invalid server capability
-	sscInvalidID := tc.ServerServerCapabilityNullable{
+	sscInvalidID := tc.ServerServerCapability{
 		ServerID:         util.IntPtr(-1),
 		ServerCapability: ssc.ServerCapability,
 	}
@@ -116,7 +115,7 @@ func GetTestServerServerCapabilities(t *testing.T) {
 
 	for _, ssc := range sscs {
 
-		checkResp := func(t *testing.T, sscs []tc.ServerServerCapabilityNullable) {
+		checkResp := func(t *testing.T, sscs []tc.ServerServerCapability) {
 			if sscs == nil {
 				t.Fatalf("returned server capabilities assigned to servers was nil\n")
 			}
@@ -147,7 +146,6 @@ func GetTestServerServerCapabilities(t *testing.T) {
 }
 
 func DeleteTestServerServerCapabilities(t *testing.T) {
-	time.Sleep(10 * time.Minute)
 	// Get Server Capabilities to delete them
 	sscs, _, err := TOSession.GetServerServerCapabilities(nil, nil, nil)
 	if err != nil {

@@ -40,12 +40,12 @@ const (
 //we need a type alias to define functions on
 type TOServerServerCapability struct {
 	api.APIInfoImpl `json:"-"`
-	tc.ServerServerCapabilityNullable
+	tc.ServerServerCapability
 }
 
 func (ssc *TOServerServerCapability) SetLastUpdated(t tc.TimeNoMod) { ssc.LastUpdated = &t }
 func (ssc *TOServerServerCapability) NewReadObj() interface{} {
-	return &tc.ServerServerCapabilityNullable{}
+	return &tc.ServerServerCapability{}
 }
 func (ssc *TOServerServerCapability) SelectQuery() string { return scSelectQuery() }
 func (ssc *TOServerServerCapability) ParamColumns() map[string]dbhelpers.WhereColumnInfo {

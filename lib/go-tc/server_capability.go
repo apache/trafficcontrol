@@ -1,7 +1,7 @@
 package tc
 
-// ServerServerCapabilityNullable
-type ServerServerCapabilityNullable struct {
+// ServerServerCapability represents an association between a server capability and a server
+type ServerServerCapability struct {
 	LastUpdated      *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Server           *string    `json:"serverHostName,omitempty" db:"host_name"`
 	ServerID         *int       `json:"serverId" db:"server"`
