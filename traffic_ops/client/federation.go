@@ -89,3 +89,19 @@ func (to *Session) GetFederationDeliveryServices(federationID int) ([]tc.Federat
 	inf, err := get(to, fmt.Sprintf("%s/federations/%v/deliveryservices", apiBase, federationID), &data)
 	return data.Response, inf, err
 }
+
+// DeleteFederationDeliveryService Deletes a given Delivery Service from a Federation
+func (to *Session) DeleteFederationDeliveryService(federationID, deliveryServiceID int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/federations/%v/deliveryservices?dsID=%v", apiBase, federationID, deliveryServiceID)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	if err = json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	return alerts, reqInf, nil
+}

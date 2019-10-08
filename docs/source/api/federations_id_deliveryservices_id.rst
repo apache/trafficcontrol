@@ -21,6 +21,9 @@
 
 ``DELETE``
 ==========
+.. deprecated:: 1.1
+	Use the  ``dsID`` query parameter of a ``DELETE`` request to :ref:`to-api-federations-id-deliveryservices` instead.
+
 Removes a :term:`Delivery Service` from a federation. A :term:`Delivery Service` cannot be removed from a federation if it is the only :term:`Delivery Service` assigned to said federation
 
 :Auth. Required: Yes
