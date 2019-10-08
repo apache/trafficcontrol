@@ -160,7 +160,7 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 		window.setTimeout(function() {
 			$($.fn.dataTable.tables(true)).DataTable()
 				.columns.adjust();
-			},10);
+			},100);
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
