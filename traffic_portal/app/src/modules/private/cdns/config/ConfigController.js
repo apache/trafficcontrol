@@ -174,6 +174,7 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 			"language": {
 				"emptyTable": "No pending changes"
 			},
+			"buttons": [],
 			"columnDefs": [
 				{ 'orderable': false, 'targets': [2, 3] }
 			]
