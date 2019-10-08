@@ -281,7 +281,7 @@ INSERT INTO to_extension (name, version, info_url, isactive, script_file, server
 	return nil
 }
 
-// SetupServerCapabilities setsup seed server capabilities
+// SetupServerCapabilities sets up seed server capabilities
 func SetupServerCapabilities(db *sql.DB) error {
 
 	sqlStmt := `

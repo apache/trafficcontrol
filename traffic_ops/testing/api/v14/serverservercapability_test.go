@@ -39,7 +39,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 		if err != nil {
 			t.Fatalf("cannot GET Server by hostname: %v - %v\n", *ssc.Server, err)
 		}
-		if servResp == nil || len(servResp) != 1 {
+		if len(servResp) != 1 {
 			t.Fatalf("cannot GET Server by hostname: %v. Response did not include record.\n", *ssc.Server)
 		}
 		server := servResp[0]
@@ -58,7 +58,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	// Attempt to assign already assigned server capability
 	_, _, err := TOSession.CreateServerServerCapability(ssc)
 	if err == nil {
-		t.Errorf("expected to receive error when assigning a already assigned server capability\n")
+		t.Error("expected to receive error when assigning a already assigned server capability\n")
 	}
 
 	// Attempt to assign an server capability with no ID
@@ -67,7 +67,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 	_, _, err = TOSession.CreateServerServerCapability(sscNilID)
 	if err == nil {
-		t.Errorf("expected to receive error when assigning a server capability without a server ID\n")
+		t.Error("expected to receive error when assigning a server capability without a server ID\n")
 	}
 
 	// Attempt to assign an server capability with no server capability
@@ -76,7 +76,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 	_, _, err = TOSession.CreateServerServerCapability(sscNilCapability)
 	if err == nil {
-		t.Errorf("expected to receive error when assigning a server capability to a server without a server capability\n")
+		t.Error("expected to receive error when assigning a server capability to a server without a server capability\n")
 	}
 
 	// Attempt to assign an server capability with invalid server capability
@@ -86,7 +86,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 	_, _, err = TOSession.CreateServerServerCapability(sscInvalidCapability)
 	if err == nil {
-		t.Errorf("expected to receive error when assigning a non existent server capability to a server\n")
+		t.Error("expected to receive error when assigning a non existent server capability to a server\n")
 	}
 
 	// Attempt to assign an server capability with invalid server capability
@@ -96,7 +96,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 	_, _, err = TOSession.CreateServerServerCapability(sscInvalidID)
 	if err == nil {
-		t.Errorf("expected to receive error when assigning a server capability to a non existent server ID\n")
+		t.Error("expected to receive error when assigning a server capability to a non existent server ID\n")
 	}
 }
 
@@ -107,7 +107,7 @@ func GetTestServerServerCapabilities(t *testing.T) {
 		t.Fatalf("cannot GET server capabilities assigned to servers: %v\n", err)
 	}
 	if sscs == nil {
-		t.Fatalf("returned server capabilities assigned to servers was nil\n")
+		t.Fatal("returned server capabilities assigned to servers was nil\n")
 	}
 	if len(sscs) != len(testData.ServerServerCapabilities) {
 		t.Errorf("expect %v server capabilities assigned to servers received %v \n", len(testData.ServerServerCapabilities), len(sscs))
@@ -117,7 +117,7 @@ func GetTestServerServerCapabilities(t *testing.T) {
 
 		checkResp := func(t *testing.T, sscs []tc.ServerServerCapability) {
 			if sscs == nil {
-				t.Fatalf("returned server capabilities assigned to servers was nil\n")
+				t.Fatal("returned server capabilities assigned to servers was nil\n")
 			}
 			if len(sscs) != 1 {
 				t.Errorf("expect 1 server capabilities assigned to server received %v \n", len(sscs))
@@ -152,7 +152,7 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		t.Fatalf("cannot GET server capabilities assigned to servers: %v\n", err)
 	}
 	if sscs == nil {
-		t.Fatalf("returned server capabilities assigned to servers was nil\n")
+		t.Fatal("returned server capabilities assigned to servers was nil\n")
 	}
 
 	// Delete them

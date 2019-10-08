@@ -37,7 +37,7 @@ const (
 	ServerHostNameQueryParam   = "serverHostName"
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TOServerServerCapability struct {
 	api.APIInfoImpl `json:"-"`
 	tc.ServerServerCapability

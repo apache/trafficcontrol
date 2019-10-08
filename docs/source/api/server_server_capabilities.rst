@@ -82,7 +82,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; HttpOnly
 	Whole-Content-Sha512: UFO3/jcBFmFZM7CsrsIwTfPc5v8gUiXqJm6BNp1boPb4EQBnWNXZh/DbBwhMAOJoeqDImoDlrLnrVjQGO4AooA==
 	X-Server-Name: traffic_ops_golang/
-	Mon, 07 Oct 2019 22:15:11 GMT
+	Date: Mon, 07 Oct 2019 22:15:11 GMT
 	Content-Length: 150
 
 	{
@@ -210,7 +210,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; HttpOnly
 	Whole-Content-Sha512: UFO3/jcBFmFZM7CsrsIwTfPc5v8gUiXqJm6BNp1boPb4EQBnWNXZh/DbBwhMAOJoeqDImoDlrLnrVjQGO4AooA==
 	X-Server-Name: traffic_ops_golang/
-	Mon, 07 Oct 2019 22:15:11 GMT
+	Date: Mon, 07 Oct 2019 22:15:11 GMT
 	Content-Length: 96
 
 	{

@@ -1,11 +1,5 @@
 package server
 
-import (
-	"testing"
-
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -24,6 +18,13 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"testing"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+)
+
 func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TOServerServerCapability{}
