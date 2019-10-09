@@ -129,8 +129,7 @@ sub register {
 			my $response_object = shift;
 
 			my $builder ||= MojoPlugins::Response::Builder->new($self, @_);
-			my @alerts_response = [{$LEVEL_KEY => $level, $TEXT_KEY => $alert}];
-			push(@alerts_response, {$LEVEL_KEY => $WARNING_LEVEL, $TEXT_KEY => "This endpoint is deprecated, please use '" . $alternative . "' instead"});
+			my @alerts_response = ({$LEVEL_KEY => $level, $TEXT_KEY => $alert}, {$LEVEL_KEY => $WARNING_LEVEL, $TEXT_KEY => "This endpoint is deprecated, please use '" . $alternative . "' instead"});
 
 			if (defined($response_object)) {
 				return $self->render( $STATUS_KEY => $code, $JSON_KEY => { $ALERTS_KEY => \@alerts_response, $RESPONSE_KEY => $response_object } );
