@@ -64,6 +64,15 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, cdnName)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ID from name '"+string(cdnName)+"': "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+
 	ttl, multiplier, err := getKSKParams(inf.Tx.Tx, cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN KSK parameters: "+err.Error()))
@@ -100,6 +109,7 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting CDN DNSSEC keys: "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(cdnID)+", ACTION: Generated KSK DNSSEC keys", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "Successfully generated ksk dnssec keys for "+string(cdnName))
 }
 

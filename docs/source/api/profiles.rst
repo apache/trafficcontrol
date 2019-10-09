@@ -29,17 +29,17 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------+----------+------------------------------------------------------------------------------------------------+
-	|  Name | Required |                    Description                                                                 |
-	+=======+==========+================================================================================================+
-	|  cdn  |   no     | Used to filter profiles by the integral, unique identifier of the CDN to which they belong     |
-	+-------+----------+------------------------------------------------------------------------------------------------+
-	|  id   |   no     | Filters profiles by integral, unique identifier                                                |
-	+-------+----------+------------------------------------------------------------------------------------------------+
-	| name  |   no     | Filters profiles by name                                                                       |
-	+-------+----------+------------------------------------------------------------------------------------------------+
-	| param |   no     | Used to filter profiles by the integral, unique identifier of a parameter associated with them |
-	+-------+----------+------------------------------------------------------------------------------------------------+
+	+-------+----------+--------------------------------------------------------------------------------------------------------+
+	|  Name | Required | Description                                                                                            |
+	+=======+==========+========================================================================================================+
+	|  cdn  |   no     | Used to filter :term:`Profiles` by the integral, unique identifier of the CDN to which they belong     |
+	+-------+----------+--------------------------------------------------------------------------------------------------------+
+	|  id   |   no     | Filters :term:`Profiles` by :ref:`profile-id`                                                          |
+	+-------+----------+--------------------------------------------------------------------------------------------------------+
+	| name  |   no     | Filters :term:`Profiles` by :ref:`profile-name`                                                        |
+	+-------+----------+--------------------------------------------------------------------------------------------------------+
+	| param |   no     | Used to filter :term:`Profiles` by the :ref:`parameter-id` of a :term:`Parameter` associated with them |
+	+-------+----------+--------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -52,14 +52,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cdn:             The integral, unique identifier of the CDN to which this profile belongs
-:cdnName:         The CDN name
-:description:     A description of the profile
-:id:              The integral, unique identifier of this profile
-:lastUpdated:     The date and time at which this profile was last updated
-:name:            The name of the profile
-:routingDisabled: A boolean which, if ``true`` will disable Traffic Router's routing to servers using this profile
-:type:            The name of the 'type' of the profile
+:cdn:             The integral, unique identifier of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:cdnName:         The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:description:     The :term:`Profile`'s :ref:`profile-description`
+:id:              The :term:`Profile`'s :ref:`profile-id`
+:lastUpdated:     The date and time at which this :term:`Profile` was last updated, in an ISO-like format
+:name:            The :term:`Profile`'s :ref:`profile-name`
+:routingDisabled: The :term:`Profile`'s :ref:`profile-routing-disabled` setting
+:type:            The :term:`Profile`'s :ref:`profile-type`
 
 .. code-block:: http
 	:caption: Response Example
@@ -91,7 +91,7 @@ Response Structure
 
 ``POST``
 ========
-Creates a new profile.
+Creates a new :term:`Profile`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -99,11 +99,11 @@ Creates a new profile.
 
 Request Structure
 -----------------
-:name:            Name of the new profile
-:description:     A description of the new profile
-:cdn:             The integral, unique identifier of the CDN to which the profile shall be assigned
-:type:            The type of the profile
-:routingDisabled: A boolean which, if ``true``, will prevent the Traffic Router from directing traffic to any servers assigned this profile
+:cdn:             The integral, unique identifier of the :ref:`profile-cdn` to which this :term:`Profile` shall belong
+:description:     The :term:`Profile`'s :ref:`profile-description`
+:name:            The :term:`Profile`'s :ref:`profile-name`
+:routingDisabled: The :term:`Profile`'s :ref:`profile-routing-disabled` setting
+:type:            The :term:`Profile`'s :ref:`profile-type`
 
 .. code-block:: http
 	:caption: Request Example
@@ -126,14 +126,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cdn:             The integral, unique identifier of the CDN to which this profile belongs
-:cdnName:         The CDN name
-:description:     A description of the profile
-:id:              The integral, unique identifier of this profile
-:lastUpdated:     The date and time at which this profile was last updated
-:name:            The name of the profile
-:routingDisabled: A boolean which, if ``true`` will disable Traffic Router's routing to servers using this profile
-:type:            The name of the 'type' of the profile
+:cdn:             The integral, unique identifier of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:cdnName:         The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:description:     The :term:`Profile`'s :ref:`profile-description`
+:id:              The :term:`Profile`'s :ref:`profile-id`
+:lastUpdated:     The date and time at which this :term:`Profile` was last updated, in an ISO-like format
+:name:            The :term:`Profile`'s :ref:`profile-name`
+:routingDisabled: The :term:`Profile`'s :ref:`profile-routing-disabled` setting
+:type:            The :term:`Profile`'s :ref:`profile-type`
 
 .. code-block:: http
 	:caption: Response Example

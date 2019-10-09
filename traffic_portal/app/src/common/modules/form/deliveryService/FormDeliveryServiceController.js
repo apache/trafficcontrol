@@ -48,6 +48,12 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
     $scope.deliveryService = deliveryService;
 
+    $scope.showGeneralConfig = true;
+
+    $scope.showCacheConfig = true;
+
+    $scope.showRoutingConfig = true;
+
     $scope.dsCurrent = dsCurrent; // this ds is used primarily for showing the diff between a ds request and the current DS
 
     $scope.origin = origin[0];
@@ -59,13 +65,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
     $scope.edgeFQDNs = function(ds) {
-        var urlString = '';
-        if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
-            for (var i = 0; i < ds.exampleURLs.length; i++) {
-                urlString += ds.exampleURLs[i] + '\n';
-            }
-        }
-        return urlString;
+        return ds.exampleURLs.join('<br/>');
     };
 
     $scope.DRAFT = 0;
@@ -204,10 +204,6 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         { value: 4, label: "4 - Latch on Failover" }
     ];
 
-    $scope.label = function(field, attribute) {
-        return propertiesModel.properties.deliveryServices.defaults.descriptions[field][attribute];
-    };
-
     $scope.tenantLabel = function(tenant) {
         return '-'.repeat(tenant.level) + ' ' + tenant.name;
     };
@@ -260,6 +256,21 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         }
     };
 
+    $scope.addQueryParam = function() {
+        $scope.deliveryService.consistentHashQueryParams.push('');
+    };
+
+    $scope.removeQueryParam = function(index) {
+        if ($scope.deliveryService.consistentHashQueryParams.length > 1) {
+            $scope.deliveryService.consistentHashQueryParams.splice(index, 1);
+        } else {
+            // if only one query param is left, don't remove the item from the array. instead, just blank it out
+            // so the dynamic form widget will still be visible. empty strings get stripped out on save anyhow.
+            $scope.deliveryService.consistentHashQueryParams[index] = '';
+        }
+        $scope.deliveryServiceForm.$pristine = false; // this enables the 'update' button in the ds form
+    };
+
     $scope.viewTargets = function() {
         $location.path($location.path() + '/targets');
     };
@@ -310,6 +321,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         getCDNs();
         getProfiles();
         getTenants();
+        if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
+            // add an empty one so the dynamic form widget is visible. empty strings get stripped out on save anyhow.
+            $scope.deliveryService.consistentHashQueryParams = [ '' ];
+        }
     };
     init();
 

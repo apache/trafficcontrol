@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves the *pending* snapshot for a CDN, which represents the current *configuration* of the CDN, **not** the current *operating state* of the CDN. The contents of this snapshot are currently used by Traffic Monitor and Traffic Router.
+Retrieves the *pending* :term:`Snapshot` for a CDN, which represents the current *configuration* of the CDN, **not** the current *operating state* of the CDN. The contents of this :term:`Snapshot` are currently used by Traffic Monitor and Traffic Router.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,11 +31,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+------------------------------------------------------------+
-	| Name | Description                                                |
-	+======+============================================================+
-	| name | The name of the CDN for which a snapshot shall be returned |
-	+------+------------------------------------------------------------+
+	+------+--------------------------------------------------------------------+
+	| Name | Description                                                        |
+	+======+====================================================================+
+	| name | The name of the CDN for which a :term:`Snapshot` shall be returned |
+	+------+--------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -107,22 +107,23 @@ Response Structure
 
 :contentRouters: An object containing keys which are the (short) hostnames of the Traffic Routers that serve requests for :term:`Delivery Service`\ s in this CDN
 
-	:api.port:  A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router
-	:fqdn:      This Traffic Router's Fully Qualified Domain Name (FQDN)
-	:httpsPort: The port number on which this Traffic Router listens for incoming HTTPS requests
-	:ip:        This Traffic Router's IPv4 address
-	:ip6:       This Traffic Router's IPv6 address
-	:location:  The name of the Cache Group to which this Traffic Router belongs
-	:port:      The port number on which this Traffic Router listens for incoming HTTP requests
-	:profile:   The name of the profile used by this Traffic Router
-	:status:    The health status of this Traffic Router
+	:api.port:        A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTP
+	:secure.api.port: A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTPS (optional)
+	:fqdn:            This Traffic Router's Fully Qualified Domain Name (FQDN)
+	:httpsPort:       The port number on which this Traffic Router listens for incoming HTTPS requests
+	:ip:              This Traffic Router's IPv4 address
+	:ip6:             This Traffic Router's IPv6 address
+	:location:        The name of the :term:`Cache Group` to which this Traffic Router belongs
+	:port:            The port number on which this Traffic Router listens for incoming HTTP requests
+	:profile:         The :ref:`profile-name` of the :term:`Profile` used by this Traffic Router
+	:status:          The health status of this Traffic Router
 
 		.. seealso:: :ref:`health-proto`
 
-:contentServers: An object containing keys which are the (short) hostnames of the Edge-Tier :term:`cache server` s in the CDN; the values corresponding to those keys are routing information for said servers
+:contentServers: An object containing keys which are the (short) hostnames of the :term:`Edge-Tier cache servers` in the CDN; the values corresponding to those keys are routing information for said servers
 
-	:cacheGroup:       The name of the Cache Group to which the server belongs
-	:deliveryServices: An object containing keys which are the names of :term:`Delivery Service`\ s to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of FQDNs that resolve to this :term:`cache server`
+	:cacheGroup:       The name of the :term:`Cache Group` to which the server belongs
+	:deliveryServices: An object containing keys which are the names of :term:`Delivery Services` to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of FQDNs that resolve to this :term:`cache server`
 
 		.. note:: Only Edge-tier :term:`cache server` s can be assigned to a Delivery SErvice, and therefore this field will only be present when ``type`` is ``"EDGE"``.
 
@@ -135,7 +136,7 @@ Response Structure
 	:ip:              The server's IPv4 address
 	:locationId:      This field is exactly the same as ``cacheGroup`` and only exists for legacy compatibility reasons
 	:port:            The port on which this :term:`cache server` listens for incoming HTTP requests
-	:profile:         The name of the profile used by the :term:`cache server`
+	:profile:         The :ref:`profile-name` of the :term:`Profile` used by the :term:`cache server`
 	:routingDisabled: An integer representing the boolean concept of whether or not Traffic Routers should route client traffic this :term:`cache server`; one of:
 
 		0
@@ -164,6 +165,16 @@ Response Structure
 			Anonymized IP addresses are not blocked by this :term:`Delivery Service`
 
 		.. seealso:: :ref:`anonymous_blocking-qht`
+
+	:consistentHashQueryParameters: A set of query parameters that Traffic Router should consider when determining a consistent hash for a given client request.
+
+		.. versionadded:: ATCv4
+			This endpoint does not, in general, obey the same versioning rules as all others. So this will appear in all API versions, but *only* if the Traffic Ops server is on version 4+
+
+	:consistentHashRegex: An optional regular expression that will ensure clients are consistently routed to a :term:`cache server` based on matches to it.
+
+		.. versionadded:: ATCv4
+			This endpoint does not, in general, obey the same versioning rules as all others. So this will appear in all API versions, but *only* if the Traffic Ops server is on version 4+
 
 	:coverageZoneOnly: A string containing a boolean that tells whether or not this :term:`Delivery Service` routes traffic based only on its Coverage Zone file
 	:deepCachingType:  A string that tells when Deep Caching is used by this :term:`Delivery Service`; one of:
@@ -202,13 +213,13 @@ Response Structure
 		:type:      The type of match performed using ``pattern`` to determine whether or not to use this :term:`Delivery Service`
 
 			HOST_REGEXP
-				Use the :term:`Delivery Service` if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request\ [1]_
+				Use the :term:`Delivery Service` if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request, or the name requested for resolution in a DNS request
 			HEADER_REGEXP
-				Use the :term:`Delivery Service` if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [1]_
+				Use the :term:`Delivery Service` if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [#httpOnly]_
 			PATH_REGEXP
-				Use the :term:`Delivery Service` if ``pattern`` matches the request path of this :term:`Delivery Service`'s URL
+				Use the :term:`Delivery Service` if ``pattern`` matches the request path of this :term:`Delivery Service`'s URL\ [#httpOnly]_
 			STEERING_REGEXP
-				Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Service`\ s
+				Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Services`
 
 	:missLocation: An object representing the default geographic coordinates to use for a client when lookup of their IP has failed in both the Coverage Zone file(s) and the IP-to-geographic-location database
 
@@ -290,13 +301,10 @@ Response Structure
 	:httpsPort: The port number on which this Traffic Monitor listens for incoming HTTPS requests
 	:ip6:       This Traffic Monitor's IPv6 address
 	:ip:        This Traffic Monitor's IPv4 address
-	:location:  The name of the Cache Group to which this Traffic Monitor belongs
+	:location:  The name of the :term:`Cache Group` to which this Traffic Monitor belongs
 	:port:      The port number on which this Traffic Monitor listens for incoming HTTP requests
-	:profile:   The name of the profile used by this Traffic Monitor
-
-		.. note:: For legacy reasons, this must always start with "RASCAL-".
-
-	:status: The health status of this Traffic Monitor
+	:profile:   The :ref:`profile-name` of the :term:`Profile` used by this Traffic Monitor
+	:status:    The health status of this Traffic Monitor
 
 		.. seealso:: :ref:`health-proto`
 
@@ -305,7 +313,7 @@ Response Structure
 	:CDN_name: The name of this CDN
 	:date:     The UNIX epoch timestamp date in the Traffic Ops server's own timezone
 	:tm_host:  The FQDN of the Traffic Ops server
-	:tm_path:  A path relative to the root of the Traffic Ops server where a request may be replaced to have this snapshot overwritten by the current *configured state* of the CDN
+	:tm_path:  A path relative to the root of the Traffic Ops server where a request may be replaced to have this :term:`Snapshot` overwritten by the current *configured state* of the CDN
 
 		.. deprecated:: 1.1
 			This field is still present for legacy compatibility reasons, but its contents should be ignored. Instead, make a ``PUT`` request to :ref:`to-api-snapshot-name`.
@@ -426,6 +434,7 @@ Response Structure
 		"contentRouters": {
 			"trafficrouter": {
 				"api.port": "3333",
+				"secure.api.port": "3443",
 				"fqdn": "trafficrouter.infra.ciab.test",
 				"httpsPort": 443,
 				"ip": "172.16.239.60",
@@ -540,4 +549,4 @@ Response Structure
 		}
 	}}
 
-.. [1] These only apply to HTTP-routed :term:`Delivery Service`\ s
+.. [#httpOnly] These only apply to HTTP-:ref:`routed <ds-types>` :term:`Delivery Services`

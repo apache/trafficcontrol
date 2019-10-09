@@ -80,17 +80,21 @@ type ProfileParameterByNamePost struct {
 }
 
 func (p *ProfileParameterByNamePost) Validate(tx *sql.Tx) []error {
+	return validateProfileParamPostFields(p.ConfigFile, p.Name, p.Value, p.Secure)
+}
+
+func validateProfileParamPostFields(configFile, name, value *string, secure *int) []error {
 	errs := []string{}
-	if p.ConfigFile == nil || *p.ConfigFile == "" {
+	if configFile == nil || *configFile == "" {
 		errs = append(errs, "configFile")
 	}
-	if p.Name == nil || *p.Name == "" {
+	if name == nil || *name == "" {
 		errs = append(errs, "name")
 	}
-	if p.Secure == nil {
+	if secure == nil {
 		errs = append(errs, "secure")
 	}
-	if p.Value == nil {
+	if value == nil {
 		errs = append(errs, "value")
 	}
 	if len(errs) > 0 {
@@ -165,7 +169,7 @@ func (pp *PostProfileParam) Validate(tx *sql.Tx) error {
 	errs := []error{}
 	if pp.ProfileID == nil {
 		errs = append(errs, errors.New("profileId missing"))
-	} else if ok, err := ProfileExists(*pp.ProfileID, tx); err != nil {
+	} else if ok, err := ProfileExistsByID(*pp.ProfileID, tx); err != nil {
 		errs = append(errs, errors.New("checking profile ID "+strconv.Itoa(int(*pp.ProfileID))+" existence: "+err.Error()))
 	} else if !ok {
 		errs = append(errs, errors.New("no profile with ID "+strconv.Itoa(int(*pp.ProfileID))+" exists"))
@@ -208,7 +212,7 @@ func (pp *PostParamProfile) Validate(tx *sql.Tx) error {
 	}
 	if pp.ProfileIDs == nil {
 		errs = append(errs, errors.New("profileIds missing"))
-	} else if ok, err := ProfilesExist(*pp.ProfileIDs, tx); err != nil {
+	} else if ok, err := ProfilesExistByIDs(*pp.ProfileIDs, tx); err != nil {
 		errs = append(errs, errors.New(fmt.Sprintf("checking profiles IDs %v existence: "+err.Error(), *pp.ProfileIDs)))
 	} else if !ok {
 		errs = append(errs, errors.New(fmt.Sprintf("profiles with IDs %v don't all exist", *pp.ProfileIDs)))
@@ -229,26 +233,6 @@ func ParamExists(id int64, tx *sql.Tx) (bool, error) {
 	return count > 0, nil
 }
 
-// ProfilesExist returns whether profiles exist for all the given ids, and any error.
-// TODO move to helper package.
-func ProfilesExist(ids []int64, tx *sql.Tx) (bool, error) {
-	count := 0
-	if err := tx.QueryRow(`SELECT count(*) from profile where id = ANY($1)`, pq.Array(ids)).Scan(&count); err != nil {
-		return false, errors.New("querying profiles existence from id: " + err.Error())
-	}
-	return count == len(ids), nil
-}
-
-// ProfileExists returns whether a profile with the given id exists, and any error.
-// TODO move to helper package.
-func ProfileExists(id int64, tx *sql.Tx) (bool, error) {
-	count := 0
-	if err := tx.QueryRow(`SELECT count(*) from profile where id = $1`, id).Scan(&count); err != nil {
-		return false, errors.New("querying profile existence from id: " + err.Error())
-	}
-	return count > 0, nil
-}
-
 // ParamsExist returns whether parameters exist for all the given ids, and any error.
 // TODO move to helper package.
 func ParamsExist(ids []int64, tx *sql.Tx) (bool, error) {
@@ -264,4 +248,12 @@ type ProfileParametersNullable struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Profile     *string    `json:"profile" db:"profile"`
 	Parameter   *int       `json:"parameter" db:"parameter_id"`
+}
+
+// ProfileExportImportParameterNullable is an object of the form used by Traffic Ops
+// to represent parameters for exported and imported profiles.
+type ProfileExportImportParameterNullable struct {
+	ConfigFile *string `json:"config_file"`
+	Name       *string `json:"name"`
+	Value      *string `json:"value"`
 }

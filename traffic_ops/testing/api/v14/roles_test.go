@@ -34,11 +34,12 @@ func TestRoles(t *testing.T) {
 	WithObjs(t, []TCObj{Parameters, Roles}, func() {
 		UpdateTestRoles(t)
 		GetTestRoles(t)
+		VerifyGetRolesOrder(t)
 	})
 }
 
 func CreateTestRoles(t *testing.T) {
-	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"role was created.", "success"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"can not add non-existent capabilities: [invalid-capability]", "error"}}}}
+	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"role was created.", "success"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"can not add non-existent capabilities: [invalid-capability]", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"role was created.", "success"}}}}
 	for i, role := range testData.Roles {
 		var alerts tc.Alerts
 		alerts, _, status, err := TOSession.CreateRole(role)
@@ -103,6 +104,36 @@ func GetTestRoles(t *testing.T) {
 		t.Errorf("cannot GET Role by role: %v - %v\n", err, resp)
 	}
 
+}
+
+func VerifyGetRolesOrder(t *testing.T) {
+	params := map[string]string{
+		"orderby":   "name",
+		"sortOrder": "desc",
+	}
+	descResp, _, status, err := TOSession.GetRoleByQueryParams(params)
+	log.Debugln("Status Code: ", status)
+	if err != nil {
+		t.Errorf("cannot GET Role by role: %v - %v\n", err, descResp)
+	}
+	params["sortOrder"] = "asc"
+	ascResp, _, status, err := TOSession.GetRoleByQueryParams(params)
+	log.Debugln("Status Code: ", status)
+	if err != nil {
+		t.Errorf("cannot GET Role by role: %v - %v\n", err, ascResp)
+	}
+
+	if reflect.DeepEqual(descResp, ascResp) {
+		t.Errorf("Role responses for descending and ascending are the same: %v - %v\n", descResp, ascResp)
+	}
+
+	// reverse the descending-sorted response and compare it to the ascending-sorted one
+	for start, end := 0, len(descResp)-1; start < end; start, end = start+1, end-1 {
+		descResp[start], descResp[end] = descResp[end], descResp[start]
+	}
+	if !reflect.DeepEqual(descResp, ascResp) {
+		t.Errorf("Role responses are not equal after reversal: %v - %v\n", descResp, ascResp)
+	}
 }
 
 func DeleteTestRoles(t *testing.T) {

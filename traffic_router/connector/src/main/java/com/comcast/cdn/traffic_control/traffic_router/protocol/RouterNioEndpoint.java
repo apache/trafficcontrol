@@ -27,7 +27,6 @@ import org.apache.tomcat.util.net.SSLHostConfigCertificate;
 import org.apache.tomcat.util.net.SocketEvent;
 import org.apache.tomcat.util.net.SocketProcessorBase;
 import org.apache.tomcat.util.net.SocketWrapperBase;
-
 import java.util.Map;
 import java.util.Set;
 
@@ -40,8 +39,8 @@ public class RouterNioEndpoint extends NioEndpoint {
 	// certificates.  When we are done we call the parent classes initialiseSsl.
 	@SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
 	@Override
-	protected void initialiseSsl() throws Exception{
-		if (isSSLEnabled()){
+	protected void initialiseSsl() throws Exception {
+		if (isSSLEnabled()) {
 			destroySsl();
 			sslHostConfigs.clear();
 			final KeyManager keyManager = new KeyManager();
@@ -54,20 +53,22 @@ public class RouterNioEndpoint extends NioEndpoint {
 		}
 	}
 
-	synchronized public void replaceSSLHosts(final Map<String, HandshakeData> sslHostsData){
+	@SuppressWarnings({"PMD.NPathComplexity", "PMD.UseStringBufferForStringAppends"})
+	synchronized public void replaceSSLHosts(final Map<String, HandshakeData> sslHostsData) {
 		final Set<String> aliases = sslHostsData.keySet();
 		String lastHostName = "";
 
-		for (final String alias : aliases){
+		for (final String alias : aliases) {
 			final SSLHostConfig sslHostConfig = new SSLHostConfig();
 			final SSLHostConfigCertificate cert = new SSLHostConfigCertificate(sslHostConfig, SSLHostConfigCertificate.Type.RSA);
+			sslHostConfig.setHostName(sslHostsData.get(alias).getHostname());
 			cert.setCertificateKeyAlias(alias);
 			sslHostConfig.addCertificate(cert);
 			sslHostConfig.setCertificateKeyAlias(alias);
-			sslHostConfig.setHostName(sslHostsData.get(alias).getHostname());
 			sslHostConfig.setProtocols("all");
+			sslHostConfig.setConfigType(getSslConfigType());
 			sslHostConfig.setCertificateVerification("none");
-			LOGGER.info("sslHostConfig: " + sslHostConfig.getHostName() + " " + sslHostConfig.getTruststoreAlgorithm());
+			LOGGER.info("sslHostConfig: "+sslHostConfig.getHostName() + " " + sslHostConfig.getTruststoreAlgorithm());
 
 			if (!sslHostConfig.getHostName().equals(lastHostName)){
 				addSslHostConfig(sslHostConfig, true);

@@ -101,6 +101,20 @@ func loginCreds(toUser string, toPasswd string) ([]byte, error) {
 	return js, nil
 }
 
+// loginToken gathers token login credentials for Traffic Ops.
+func loginToken(token string) ([]byte, error) {
+	form := tc.UserToken {
+		Token: token,
+	}
+
+	j, e := json.Marshal(form)
+	if e != nil {
+		e := fmt.Errorf("Error creating token login json: %v", e)
+		return nil, e
+	}
+	return j, nil
+}
+
 // Deprecated: Login is deprecated, use LoginWithAgent instead. The `Login` function with its present signature will be removed in the next version and replaced with `Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string)`. The `LoginWithAgent` function will be removed the version after that.
 func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
 	s, _, err := LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client", false, DefaultTimeout)
@@ -140,6 +154,29 @@ func (to *Session) login() (net.Addr, error) {
 	}
 
 	return remoteAddr, nil
+}
+
+func (to *Session) loginWithToken(token []byte) (net.Addr, error) {
+	path := apiBase + "/user/login/token"
+	resp, remoteAddr, err := to.rawRequest(http.MethodPost, path, token)
+	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
+	if err != nil {
+		return remoteAddr, fmt.Errorf("requesting: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var alerts tc.Alerts
+	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return remoteAddr, fmt.Errorf("decoding response JSON: %v", err)
+	}
+
+	for _, alert := range alerts.Alerts {
+		if alert.Level == tc.SuccessLevel.String() && alert.Text == "Successfully logged in." {
+			return remoteAddr, nil
+		}
+	}
+
+	return remoteAddr, fmt.Errorf("Login failed, alerts string: %+v", alerts)
 }
 
 // logout of Traffic Ops
@@ -207,6 +244,37 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 	return to, remoteAddr, nil
 }
 
+func LoginWithToken(toURL string, token string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, net.Addr, error) {
+	options := cookiejar.Options {
+		PublicSuffixList: publicsuffix.List,
+	}
+
+	jar, err := cookiejar.New(&options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client := http.Client {
+		Timeout: requestTimeout,
+		Transport: &http.Transport {
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		},
+		Jar: jar,
+	}
+
+	to := NewSession("", "", toURL, userAgent, &client, useCache)
+	tBts, err := loginToken(token)
+	if err != nil {
+		return nil, nil, fmt.Errorf("logging in: %v", err)
+	}
+
+	remoteAddr, err := to.loginWithToken(tBts)
+	if err != nil {
+		return nil, remoteAddr, fmt.Errorf("logging in: %v", err)
+	}
+	return to, remoteAddr, nil
+}
+
 // Logout of traffic_ops
 func LogoutWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, net.Addr, error) {
 	options := cookiejar.Options{
@@ -269,6 +337,8 @@ func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err err
 func (to *Session) getURL(path string) string { return to.URL + path }
 
 // request performs the HTTP request to Traffic Ops, trying to refresh the cookie if an Unauthorized or Forbidden code is received. It only tries once. If the login fails, the original Unauthorized/Forbidden response is returned. If the login succeeds and the subsequent re-request fails, the re-request's response is returned even if it's another Unauthorized/Forbidden.
+// Returns the response, the remote address of the Traffic Ops instance used, and any error.
+// The returned net.Addr is guaranteed to be either nil or valid, even if the returned error is not nil. Callers are encouraged to check and use the net.Addr if an error is returned, and use the remote address in their own error messages. This violates the Go idiom that a non-nil error implies all other values are undefined, but it's more straightforward than alternatives like typecasting.
 func (to *Session) request(method, path string, body []byte) (*http.Response, net.Addr, error) {
 	r, remoteAddr, err := to.rawRequest(method, path, body)
 	if err != nil {
@@ -287,6 +357,8 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, ne
 }
 
 // rawRequest performs the actual HTTP request to Traffic Ops, simply, without trying to refresh the cookie if an Unauthorized code is returned.
+// Returns the response, the remote address of the Traffic Ops instance used, and any error.
+// The returned net.Addr is guaranteed to be either nil or valid, even if the returned error is not nil. Callers are encouraged to check and use the net.Addr if an error is returned, and use the remote address in their own error messages. This violates the Go idiom that a non-nil error implies all other values are undefined, but it's more straightforward than alternatives like typecasting.
 func (to *Session) rawRequest(method, path string, body []byte) (*http.Response, net.Addr, error) {
 	url := to.getURL(path)
 

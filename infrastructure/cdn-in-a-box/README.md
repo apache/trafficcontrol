@@ -166,10 +166,14 @@ To expose the ports of each service on the host, add the `docker-compose.expose-
 
 If you scroll back through the output ( or use `docker-compose logs trafficops-perl | grep "User defined signal 2"` ) and see a line that says something like `/run.sh: line 79: 118 User defined signal 2 $TO_DIR/local/bin/hypnotoad script/cdn` then you've hit a mysterious known error. We don't know what this is or why it happens, but your best bet is to send up a quick prayer and restart the stack.
 
+### Traffic Monitor is stuck waiting for a valid Snapshot
+
+Often times you must take a CDN [Snapshot](https://traffic-control-cdn.readthedocs.io/en/latest/glossary.html#term-snapshot) in order for a valid Snapshot to be generated. This can be done through [Traffic Portal's "CDNs" view](https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_portal/usingtrafficportal.html#cdns), clicking on the "CDN-in-a-Box" CDN, then pressing the camera button, and finally the "Perform Snapshot" button.
+
 ### I'm seeing a failure to open a socket and/or set a socket option
 
 Try disabling SELinux or setting it to 'permissive'. SELinux hates letting containers bind to certain ports. You can also try re-labeling the `docker` executable if you feel comfortable.
 
 ### Traffic Vault container exits with cp /usr/local/share/ca-certificates cp: missing destination
 
-Remove the `traffic_ops/ca` directory, which will force regeneration of the certificates.
+Bring all components down, remove the `traffic_ops/ca` directory, and delete the volumes with `docker volume prune`. This will force the regeneration of the certificates.

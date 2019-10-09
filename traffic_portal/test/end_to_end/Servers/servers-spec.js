@@ -22,11 +22,11 @@ var cfunc = require('../common/commonFunctions.js');
 
 describe('Traffic Portal Servers Test Suite', function() {
 
-	var pageData = new pd();
-	var commonFunctions = new cfunc();
-	var mockVals = {
+	const pageData = new pd();
+	const commonFunctions = new cfunc();
+	const mockVals = {
 		status: "OFFLINE",
-		hostName: "testHost",
+		hostName: "testHost-" + commonFunctions.shuffle('abcdefghijklmonpqrstuvwxyz0123456789'),
 		domainName: "servertest.com",
 		interfaceName: "testInterfaceName",
 		ipAddress: "10.42.80.118",
@@ -37,8 +37,13 @@ describe('Traffic Portal Servers Test Suite', function() {
 
 	it('should go to the Servers page', function() {
 		console.log('Looading Configure/Servers');
-		browser.get(browser.baseUrl + "/#!/servers");
+		browser.setLocation("servers");
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
+	});
+
+	it('should verify CSV link exists ', function() {
+		console.log("Verify CSV button exists");
+		expect(element(by.css('.dt-button.buttons-csv')).isPresent()).toBe(true);
 	});
 
 	it('should open new Servers form page', function() {
@@ -67,6 +72,16 @@ describe('Traffic Portal Servers Test Suite', function() {
 		expect(pageData.createButton.isEnabled()).toBe(true);
 		pageData.createButton.click();
 		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/servers");
+	});
+
+	it('should toggle the visibility of the first table column ', function() {
+		browser.driver.findElement(by.id('toggleColumns')).click();
+		let first = element.all(by.css('input[type=checkbox]')).first();
+		expect(first.isSelected()).toBe(true);
+		first.click();
+		expect(first.isSelected()).toBe(false);
+		let tableColumns = element.all(by.css('#serversTable tr:first-child td'));
+		expect(tableColumns.count()).toBe(11);
 	});
 
 	it('should verify the new Server and then update Server', function() {

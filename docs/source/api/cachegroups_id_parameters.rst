@@ -18,9 +18,7 @@
 *********************************
 ``cachegroups/{{ID}}/parameters``
 *********************************
-Gets all the parameters associated with a :term:`Cache Group`
-
-.. seealso:: :ref:`param-prof`
+Gets all the :term:`Parameters` associated with a :term:`Cache Group`
 
 ``GET``
 =======
@@ -30,6 +28,27 @@ Gets all the parameters associated with a :term:`Cache Group`
 
 Request Structure
 -----------------
+.. table:: Request Query Parameters
+
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                                   |
+	+=============+==========+===============================================================================================================+
+	| parameterId | no       | Show only the :term:`Parameter` with the given ID                                                             |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|             |          | array                                                                                                         |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder   | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| limit       | no       | Choose the maximum number of results to return                                                                |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|             |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|             |          | defined to make use of ``page``.                                                                              |
+	+-------------+----------+---------------------------------------------------------------------------------------------------------------+
+
 .. table:: Request Path Parameters
 
 	+-----------+----------------------------------------------------------+
@@ -41,12 +60,12 @@ Request Structure
 
 Response Structure
 ------------------
-:configFile:  Configuration file associated with the parameter
-:id:          A numeric, unique identifier for this parameter
-:lastUpdated: The date and time at which this parameter was last updated, in an ISO-like format
-:name:        Name of the parameter
-:secure:      If ``true``, the parameter value is only visible to "admin"-role users
-:value:       Value of the parameter
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:id:          The :term:`Parameter`'s :ref:`parameter-id`
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:secure:      A boolean value describing whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: http
 	:caption: Response Example

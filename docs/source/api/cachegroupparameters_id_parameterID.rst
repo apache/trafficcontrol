@@ -21,7 +21,7 @@
 
 ``DELETE``
 ==========
-De-associate a parameter with a :term:`Cache Group`
+De-associate a :term:`Parameter` with a :term:`Cache Group`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-------------+-------------------------------------------------------------------------------------------------+
-	| Name        | Description                                                                                     |
-	+=============+=================================================================================================+
-	| ID          | Unique identifier for the :term:`Cache Group` which will have the parameter association deleted |
-	+-------------+-------------------------------------------------------------------------------------------------+
-	| parameterID | Unique identifier for the parameter which will be removed from a :term:`Cache Group`            |
-	+-------------+-------------------------------------------------------------------------------------------------+
+	+-------------+---------------------------------------------------------------------------------------------------------+
+	| Name        | Description                                                                                             |
+	+=============+=========================================================================================================+
+	| ID          | Unique identifier for the :term:`Cache Group` which will have the :term:`Parameter` association deleted |
+	+-------------+---------------------------------------------------------------------------------------------------------+
+	| parameterID | Unique identifier for the :term:`Parameter` which will be removed from a :term:`Cache Group`            |
+	+-------------+---------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

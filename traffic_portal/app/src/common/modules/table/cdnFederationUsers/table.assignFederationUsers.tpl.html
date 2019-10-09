@@ -35,8 +35,8 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr id="{{u.id}}" class="user-row" ng-repeat="u in ::users">
-            <td><input type="checkbox" ng-checked="u.selected" ng-model="u.selected" ng-change="onChange()"></td>
+        <tr id="{{u.id}}" class="user-row" ng-class="::{'active': u.selected}" ng-repeat="u in ::users" ng-click="u.selected = !u.selected; onChange()">
+            <td><input type="checkbox" ng-model="u.selected"></td>
             <td data-search="^{{::u.fullName}}$">{{::u.fullName}}</td>
             <td data-search="^{{::u.username}}$">{{::u.username}}</td>
             <td data-search="^{{::u.email}}$">{{::u.email}}</td>

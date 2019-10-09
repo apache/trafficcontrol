@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,22 +17,24 @@
  * under the License.
  */
 
-var LoginController = function($scope, $log, $uibModal, authService, userService) {
+var LoginController = function($scope, $log, $uibModal, $location, authService, userService, propertiesModel) {
+
+    $scope.oAuthEnabled = propertiesModel.properties.oAuth.enabled;
 
     $scope.credentials = {
         username: '',
         password: ''
     };
 
-    $scope.login = function($event, credentials) {
-        var $btn = $($event.target);
-        $btn.prop('disabled', true); // disable the login button to prevent multiple clicks
-        authService.login(credentials.username, credentials.password)
-            .then(
-                function() {
-                    $btn.prop('disabled', false); // re-enable it
-                }
-            );
+    $scope.login = function(event, credentials) {
+        event.stopImmediatePropagation();
+        const btn = event.currentTarget;
+        btn.disabled = true; // disable the login button to prevent multiple clicks
+        authService.login(credentials.username, credentials.password).finally(
+            function() {
+                btn.disabled = false; // re-enable it
+            }
+        );
     };
 
     $scope.resetPassword = function() {
@@ -48,9 +50,28 @@ var LoginController = function($scope, $log, $uibModal, authService, userService
         });
     };
 
+    $scope.loginOauth = function() {
+        const redirectUriParamKey = propertiesModel.properties.oAuth.redirectUriParameterOverride !== '' ? propertiesModel.properties.oAuth.redirectUriParameterOverride : 'redirect_uri';
+        const redirectParam = $location.search()['redirect'] !== undefined ? $location.search()['redirect'] : '';
+
+        // Builds redirect_uri parameter value to be sent with request to OAuth provider.  This will redirect to the /sso page with any previous redirect information
+        var redirectUriParam = new URL(window.location.href.replace(window.location.hash, '') + 'sso');
+
+        // Builds the URL to redirect to the OAuth provider including the redirect_uri (or override), client_id, and response_type fields
+        var continueURL = new URL(propertiesModel.properties.oAuth.oAuthUrl);
+        continueURL.searchParams.append(redirectUriParamKey, redirectUriParam);
+        continueURL.searchParams.append('client_id', propertiesModel.properties.oAuth.clientId);
+        continueURL.searchParams.append('response_type', 'code');
+
+        localStorage.setItem('redirectUri', redirectUriParam.toString());
+        localStorage.setItem('redirectParam', redirectParam);
+
+        window.location.href = continueURL.href;
+    };
+
     var init = function() {};
     init();
 };
 
-LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService', 'userService'];
+LoginController.$inject = ['$scope', '$log', '$uibModal', '$location', 'authService', 'userService', 'propertiesModel'];
 module.exports = LoginController;

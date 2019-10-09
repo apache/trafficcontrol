@@ -1,9 +1,4 @@
-.project
-.*.swp
 .DS_Store
-*.bak
-*.iml
-.idea/
 cpanfile.snapshot
 rpm/build.number
 rpmbuild/
@@ -30,3 +25,18 @@ bin/docker-compose
 /.m2
 # local storage for cdn-in-a-box Carton packages
 local.tar.gz
+# Editor/IDE configuration files
+*.sublime-project
+*.sublime-workspace
+.vscode/
+*.pydevproject
+.idea/
+.project
+.*.swp
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.elc
+.projectile
+*.bak
+*.iml

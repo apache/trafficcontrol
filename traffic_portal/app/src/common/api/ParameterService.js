@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,72 +17,104 @@
  * under the License.
  */
 
-var ParameterService = function(Restangular, $http, $q, locationUtils, messageModel, ENV) {
+var ParameterService = function($http, locationUtils, messageModel, ENV) {
 
     this.getParameters = function(queryParams) {
-        return Restangular.all('parameters').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'parameters', {params: queryParams}).then(
+            function (result) {
+                return result.data.response
+            },
+            function (err) {
+                throw err;
+            }
+        );
     };
 
     this.getParameter = function(id) {
-        return Restangular.one("parameters", id).get();
+        return $http.get(ENV.api['root'] + 'parameters', {params: {id: id}}).then(
+            function (result) {
+                return result.data.response[0];
+            },
+            function (err) {
+                throw err;
+            }
+        );
     };
 
     this.createParameter = function(parameter) {
-        return Restangular.service('parameters').post(parameter)
-            .then(
-            function() {
+        return $http.post(ENV.api['root'] + 'parameters', parameter).then(
+            function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter created' } ], true);
-                locationUtils.navigateToPath('/parameters');
+                locationUtils.navigateToPath('/parameters/' + result.data.response.id + '/profiles');
+                return result;
             },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, false);
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
 
     this.updateParameter = function(parameter) {
-        return parameter.put()
-            .then(
-            function() {
+        return $http.put(ENV.api['root'] + 'parameters/' + parameter.id, parameter).then(
+            function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter updated' } ], false);
+                return result;
             },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, false);
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
             }
         );
     };
 
     this.deleteParameter = function(id) {
-        var request = $q.defer();
-
-        $http.delete(ENV.api['root'] + "parameters/" + id)
-            .then(
-                function(result) {
-                    request.resolve(result.data);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.delete(ENV.api['root'] + "parameters/" + id).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
 
     this.getProfileParameters = function(profileId) {
-        return Restangular.one('profiles', profileId).getList('parameters');
+        return $http.get(ENV.api['root'] + 'profiles/' + profileId + '/parameters').then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        );
     };
 
     this.getProfileUnassignedParams = function(profileId) {
-        return Restangular.one('profiles', profileId).getList('unassigned_parameters');
+        return $http.get(ENV.api['root'] + 'profiles/' + profileId + 'unassigned_parameters').then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        );
     };
 
     this.getCacheGroupUnassignedParams = function(cgId) {
-        return Restangular.one('cachegroups', cgId).getList('unassigned_parameters');
+        return $http.get(ENV.api['root'] + 'cachegroups/' + cgId + '/unassigned_parameters').then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        );
     };
 
 };
 
-ParameterService.$inject = ['Restangular', '$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
+ParameterService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ParameterService;

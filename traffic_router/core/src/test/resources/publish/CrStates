@@ -99,7 +99,10 @@
     "edge-cache-096": {"isAvailable": true},
     "edge-cache-097": {"isAvailable": true},
     "edge-cache-098": {"isAvailable": true},
-    "edge-cache-099": {"isAvailable": true}
+    "edge-cache-099": {"isAvailable": true},
+    "edge-cache-csd-1": {"isAvailable": true},
+    "edge-cache-csd-2": {"isAvailable": true},
+    "edge-cache-csd-3": {"isAvailable": true}
   },
   "deliveryServices": {
     "steering-test-1": {
@@ -143,6 +146,30 @@
       "isAvailable": true
     },
     "test-dns": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-diversity-test": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "csd-target-1": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "csd-target-2": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "csd-target-3": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "csd-target-4": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "csd-target-5": {
       "disabledLocations": [],
       "isAvailable": true
     },

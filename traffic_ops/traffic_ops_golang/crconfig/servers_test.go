@@ -82,6 +82,7 @@ func ExpectedGetServerParams() map[string]ServerParams {
 	return map[string]ServerParams{
 		"cache0": ServerParams{
 			APIPort:          randStr(),
+			SecureAPIPort:    randStr(),
 			Weight:           randFloat64(),
 			WeightMultiplier: randFloat64(),
 		},
@@ -96,6 +97,7 @@ func ExpectedGetServerParams() map[string]ServerParams {
 func MockGetServerParams(mock sqlmock.Sqlmock, expected map[string]ServerParams, cdn string) {
 	rows := sqlmock.NewRows([]string{"host_name", "name", "value"})
 	rows = rows.AddRow("cache0", "api.port", *expected["cache0"].APIPort)
+	rows = rows.AddRow("cache0", "secure.api.port", *expected["cache0"].SecureAPIPort)
 	rows = rows.AddRow("cache0", "weight", *expected["cache0"].Weight)
 	rows = rows.AddRow("cache0", "weightMultiplier", *expected["cache0"].WeightMultiplier)
 	rows = rows.AddRow("cache1", "api.port", *expected["cache1"].APIPort)
@@ -151,6 +153,7 @@ func ExpectedGetAllServers(params map[string]ServerParams) map[string]ServerUnio
 	for name, param := range params {
 		s := ServerUnion{
 			APIPort:                  param.APIPort,
+			SecureAPIPort:            param.SecureAPIPort,
 			CRConfigTrafficOpsServer: randServer(),
 		}
 		i := int(*param.Weight * *param.WeightMultiplier)

@@ -24,7 +24,7 @@ under the License.
     <h3 class="modal-title">Link Parameters to {{::profile.name}}</h3>
 </div>
 <div class="modal-body">
-    <table id="assignParamsTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
+    <table id="assignParamsTable" class="table responsive-utilities jambo_table params" style="table-layout:fixed; width:100%;">
         <thead>
         <tr class="headings">
             <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
@@ -34,8 +34,8 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr id="{{::p.id}}" class="param-row" ng-repeat="p in ::selectedParams">
-            <td><input type="checkbox" ng-checked="p.selected" ng-model="p.selected" ng-change="onChange()"></td>
+        <tr id="{{::p.id}}" class="param-row" ng-class="::{'active': p.selected}" ng-repeat="p in ::selectedParams" ng-click="p.selected = !p.selected; onChange()">
+            <td><input type="checkbox" ng-model="p.selected"></td>
             <td data-search="^{{::p.name}}$">{{::p.name}}</td>
             <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
             <td data-search="^{{::p.value}}$">{{::p.value}}</td>

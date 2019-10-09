@@ -55,6 +55,8 @@ type DeliveryServiceName string
 // CacheType is the type (or tier) of a CDN cache.
 type CacheType string
 
+const OriginLocationType = "ORG_LOC"
+
 const (
 	// CacheTypeEdge represents an edge cache.
 	CacheTypeEdge = CacheType("EDGE")
@@ -64,11 +66,17 @@ const (
 	CacheTypeInvalid = CacheType("")
 )
 
+const AlgorithmConsistentHash = "consistent_hash"
+
 const MonitorTypeName = "RASCAL"
 const MonitorProfilePrefix = "RASCAL"
 const RouterTypeName = "CCR"
 const EdgeTypePrefix = "EDGE"
 const MidTypePrefix = "MID"
+
+const OriginTypeName = "ORG"
+
+const CacheGroupOriginTypeName = "ORG_LOC"
 
 func (c CacheName) String() string {
 	return string(c)
@@ -105,6 +113,16 @@ func CacheTypeFromString(s string) CacheType {
 	}
 	return CacheTypeInvalid
 }
+
+// These are prefixed "QueryStringIgnore" even though the values don't always indicate ignoring, because the database column is named "qstring_ignore"
+
+const QueryStringIgnoreUseInCacheKeyAndPassUp = 0
+const QueryStringIgnoreIgnoreInCacheKeyAndPassUp = 1
+const QueryStringIgnoreDropAtEdge = 2
+
+const RangeRequestHandlingDontCache = 0
+const RangeRequestHandlingBackgroundFetch = 1
+const RangeRequestHandlingCacheRangeRequest = 2
 
 // DSTypeCategory is the Delivery Service type category: HTTP or DNS
 type DSTypeCategory string
@@ -144,6 +162,12 @@ func DSTypeCategoryFromString(s string) DSTypeCategory {
 }
 
 const SigningAlgorithmURLSig = "url_sig"
+const SigningAlgorithmURISigning = "uri_signing"
+
+const DSProtocolHTTP = 0
+const DSProtocolHTTPS = 1
+const DSProtocolHTTPAndHTTPS = 2
+const DSProtocolHTTPToHTTPS = 3
 
 // CacheStatus represents the Traffic Server status set in Traffic Ops (online, offline, admin_down, reported). The string values of this type should match the Traffic Ops values.
 type CacheStatus string
@@ -558,6 +582,31 @@ func (t DSType) UsesMidCache() bool {
 		return false
 	}
 	return true
+}
+
+// QStringIgnore is an entry in the delivery_service table qstring_ignore column, and represents how to treat the URL query string for requests to that delivery service.
+// This enum's String function returns the numeric representation, because it is a legacy database value, and the number should be kept for both database and API JSON uses. For the same reason, this enum has no FromString function.
+type QStringIgnore int
+
+const (
+	QStringIgnoreUseInCacheKeyAndPassUp    QStringIgnore = 0
+	QStringIgnoreIgnoreInCacheKeyAndPassUp QStringIgnore = 1
+	QStringIgnoreDrop                      QStringIgnore = 2
+)
+
+// String returns the string number of the QStringIgnore value.
+// Note this returns the number, not a human-readable value, because QStringIgnore is a legacy database sigil, and both database and API JSON uses should use the number. This also returns 'INVALID' for unknown values, to fail fast in the event of bad data.
+func (e QStringIgnore) String() string {
+	switch e {
+	case QStringIgnoreUseInCacheKeyAndPassUp:
+		fallthrough
+	case QStringIgnoreIgnoreInCacheKeyAndPassUp:
+		fallthrough
+	case QStringIgnoreDrop:
+		return strconv.Itoa(int(e))
+	default:
+		return "INVALID"
+	}
 }
 
 type DSMatchType string

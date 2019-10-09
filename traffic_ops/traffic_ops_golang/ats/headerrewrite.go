@@ -21,14 +21,15 @@ package ats
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
-	"github.com/jmoiron/sqlx"
 	"math"
 	"net/http"
 	"regexp"
 	"strconv"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
+	"github.com/jmoiron/sqlx"
 )
 
 func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +46,7 @@ func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	text, err := headerComment(inf.Tx.Tx, "CDN "+cdnName)
+	text, err := HeaderComment(inf.Tx.Tx, "CDN "+cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_xml-id.config text: "+err.Error()))
 		return
@@ -73,12 +74,14 @@ func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ds server count: "+err.Error()))
 			return
 		}
-		maxOriginConnectionsPerEdge := int(math.Round(float64(maxOriginConnections) / float64(dsOnlineEdgeCount)))
-		text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge)
-		if ds.EdgeHeaderRewrite == nil {
-			text += " [L]"
-		} else {
-			text += "\n"
+		if dsOnlineEdgeCount > 0 {
+			maxOriginConnectionsPerEdge := int(math.Round(float64(maxOriginConnections) / float64(dsOnlineEdgeCount)))
+			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge)
+			if ds.EdgeHeaderRewrite == nil {
+				text += " [L]"
+			} else {
+				text += "\n"
+			}
 		}
 	}
 
@@ -108,7 +111,7 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	text, err := headerComment(inf.Tx.Tx, "CDN "+cdnName)
+	text, err := HeaderComment(inf.Tx.Tx, "CDN "+cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
 		return
@@ -136,12 +139,14 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ds server count: "+err.Error()))
 			return
 		}
-		maxOriginConnectionsPerMid := int(math.Round(float64(maxOriginConnections) / float64(dsOnlineMidCount)))
-		text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid)
-		if ds.MidHeaderRewrite == nil {
-			text += " [L]"
-		} else {
-			text += "\n"
+		if dsOnlineMidCount > 0 {
+			maxOriginConnectionsPerMid := int(math.Round(float64(maxOriginConnections) / float64(dsOnlineMidCount)))
+			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid)
+			if ds.MidHeaderRewrite == nil {
+				text += " [L]"
+			} else {
+				text += "\n"
+			}
 		}
 	}
 
@@ -165,6 +170,7 @@ func getDeliveryService(tx *sqlx.Tx, xmlId string) (tc.DeliveryServiceNullable, 
 	}
 	return ds, nil
 }
+
 // getOnlineDSEdgeCount gets the count of online or reported edges assigned to a delivery service
 func getOnlineDSEdgeCount(tx *sqlx.Tx, dsID int) (int, error) {
 	count := 0

@@ -37,6 +37,7 @@ type TCObj int
 
 const (
 	CacheGroups TCObj = iota
+	CacheGroupParameters
 	CDNs
 	CDNFederations
 	Coordinates
@@ -51,11 +52,13 @@ const (
 	ProfileParameters
 	Regions
 	Roles
+	ServerChecks
 	Servers
 	Statuses
 	StaticDNSEntries
 	SteeringTargets
 	Tenants
+	TOExtensions
 	Types
 	Users
 	UsersDeliveryServices
@@ -68,6 +71,7 @@ type TCObjFuncs struct {
 
 var withFuncs = map[TCObj]TCObjFuncs{
 	CacheGroups:                    {CreateTestCacheGroups, DeleteTestCacheGroups},
+	CacheGroupParameters:           {CreateTestCacheGroupParameters, DeleteTestCacheGroupParameters},
 	CDNs:                           {CreateTestCDNs, DeleteTestCDNs},
 	CDNFederations:                 {CreateTestCDNFederations, DeleteTestCDNFederations},
 	Coordinates:                    {CreateTestCoordinates, DeleteTestCoordinates},
@@ -82,12 +86,14 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	ProfileParameters:              {CreateTestProfileParameters, DeleteTestProfileParameters},
 	Regions:                        {CreateTestRegions, DeleteTestRegions},
 	Roles:                          {CreateTestRoles, DeleteTestRoles},
+	ServerChecks:                   {CreateTestServerChecks, DeleteTestServerChecks},
 	Servers:                        {CreateTestServers, DeleteTestServers},
 	Statuses:                       {CreateTestStatuses, DeleteTestStatuses},
 	StaticDNSEntries:               {CreateTestStaticDNSEntries, DeleteTestStaticDNSEntries},
 	SteeringTargets:                {SetupSteeringTargets, DeleteTestSteeringTargets},
 	Tenants:                        {CreateTestTenants, DeleteTestTenants},
+	TOExtensions:                   {CreateTestTOExtensions, DeleteTestTOExtensions},
 	Types:                          {CreateTestTypes, DeleteTestTypes},
 	Users:                          {CreateTestUsers, ForceDeleteTestUsers},
-	UsersDeliveryServices: {CreateTestUsersDeliveryServices, DeleteTestUsersDeliveryServices},
+	UsersDeliveryServices:          {CreateTestUsersDeliveryServices, DeleteTestUsersDeliveryServices},
 }

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfileParamsUnassignedController = function(cg, parameters, $scope, $uibModalInstance) {
+var TableCacheGroupParamsUnassignedController = function(cg, parameters, $scope, $uibModalInstance) {
 
 	var selectedParams = [];
 
@@ -44,6 +44,10 @@ var TableProfileParamsUnassignedController = function(cg, parameters, $scope, $u
 		}
 	};
 
+	$scope.handleRowClick = function($index) {
+		$('#checkbox-' + $index).trigger('click');
+	};
+
 	$scope.submit = function() {
 		$uibModalInstance.close(selectedParams);
 	};
@@ -58,12 +62,13 @@ var TableProfileParamsUnassignedController = function(cg, parameters, $scope, $u
 			"iDisplayLength": 25,
 			"order": [[ 1, 'asc' ]],
 			"columnDefs": [
-				{ "width": "5%", "targets": 0 }
+				{ "width": "5%", "targets": 0 },
+				{ "width": "50%", "targets": 3 }
 			]
 		});
 	});
 
 };
 
-TableProfileParamsUnassignedController.$inject = ['cg', 'parameters', '$scope', '$uibModalInstance'];
-module.exports = TableProfileParamsUnassignedController;
+TableCacheGroupParamsUnassignedController.$inject = ['cg', 'parameters', '$scope', '$uibModalInstance'];
+module.exports = TableCacheGroupParamsUnassignedController;

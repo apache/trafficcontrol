@@ -121,12 +121,12 @@ func (pa *TOParameter) Create() (error, error, int) {
 
 func (param *TOParameter) Read() ([]interface{}, error, error, int) {
 	queryParamsToQueryCols := param.ParamColumns()
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(param.APIInfo().Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(param.APIInfo().Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
-	query := selectQuery() + where + ParametersGroupBy() + orderBy
+	query := selectQuery() + where + ParametersGroupBy() + orderBy + pagination
 	rows, err := param.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("querying " + param.GetType() + ": " + err.Error()), http.StatusInternalServerError

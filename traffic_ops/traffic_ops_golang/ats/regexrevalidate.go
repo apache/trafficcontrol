@@ -75,7 +75,7 @@ func getRegexRevalidate(tx *sql.Tx, cdnName string) (string, error) {
 		return "", errors.New("getting jobs: " + err.Error())
 	}
 
-	text, err := headerComment(tx, "CDN "+cdnName)
+	text, err := HeaderComment(tx, "CDN "+cdnName)
 	if err != nil {
 		return "", errors.New("getting header comment: " + err.Error())
 	}

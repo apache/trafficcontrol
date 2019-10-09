@@ -16,10 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import java.io.File;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -51,6 +48,7 @@ import static com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGe
 public final class RegionalGeo {
     private static final Logger LOGGER = Logger.getLogger(RegionalGeo.class);
     public static final String HTTP_SCHEME = "http://";
+    public static final String HTTPS_SCHEME = "https://";
     private boolean fallback = false;
     private final Map<String, RegionalGeoDsvc> regionalGeoDsvcs = new HashMap<String, RegionalGeoDsvc>();
 
@@ -101,7 +99,7 @@ public final class RegionalGeo {
             return false;
         }
 
-        if (alternateUrl.toLowerCase().startsWith(HTTP_SCHEME)
+        if ((alternateUrl.toLowerCase().startsWith(HTTP_SCHEME) || alternateUrl.toLowerCase().startsWith(HTTPS_SCHEME))
             && urlRegexPattern.matcher(alternateUrl).matches()) {
             LOGGER.error("RegionalGeo ERR: possible LOOP detected, alternate fqdn url " + alternateUrl
                          + " matches regex " + urlRegex + " in dsvc " +  dsvcId);
@@ -298,12 +296,12 @@ public final class RegionalGeo {
             result.setUrl(url);
             result.setType(ALLOWED);
         } else {
-            // For a disallowed client, if alternateUrl starts with "http://"
+            // For a disallowed client, if alternateUrl starts with "http://" or "https://"
             // just redirect the client to this url without any cache selection;
             // if alternateUrl only has path and file name like "/path/abc.html",
             // then cache selection process will be needed, and hostname will be
             // added to make it like "http://cache01.example.com/path/abc.html" later.
-            if (alternateUrl.toLowerCase().startsWith(HTTP_SCHEME)) {
+            if (alternateUrl.toLowerCase().startsWith(HTTP_SCHEME) || alternateUrl.toLowerCase().startsWith(HTTPS_SCHEME)) {
                 result.setUrl(alternateUrl);
                 result.setType(ALTERNATE_WITHOUT_CACHE);
             } else {
@@ -357,7 +355,12 @@ public final class RegionalGeo {
         if (result.getType() == DENIED) {
             routeResult.setResponseCode(result.getHttpResponseCode());
         } else {
-            routeResult.addUrl(new URL(createRedirectURIString(httpRequest, deliveryService, cache, result)));
+            final String redirectURIString = createRedirectURIString(httpRequest, deliveryService, cache, result);
+            if(!"Denied".equals(redirectURIString)){
+                routeResult.addUrl(new URL(redirectURIString));
+            }else{
+                LOGGER.warn("RegionalGeo: this needs a better error message, createRedirectURIString returned denied");
+            }
         }
     }
 
@@ -403,7 +406,7 @@ public final class RegionalGeo {
             return regionalGeoResult.getUrl();
         }
 
-        return null; // DENIED
+        return "Denied"; // DENIED
     }
 }
 

@@ -523,8 +523,10 @@ sub routing {
 			# TODO: what happens when the request to CCR times out? -jse
 			my $c = $self->get_traffic_router_connection( { hostname => $ccr_host } );
 			my $s = $c->get_crs_stats();
+			my $url = $c->get_url();
+
 			if ( !defined($s) ) {
-				$self->app->log->error("Unable to contact $ccr_host for $cdn_name.");
+				$self->app->log->error("Unable to contact $ccr_host for $cdn_name. Traffic Router Url = $url");
 				return $self->internal_server_error( { "Internal Server" => "Error: Unable to contact $ccr_host" } );
 			}
 			else {
@@ -740,6 +742,15 @@ sub gen_traffic_router_config {
 			my $api_port =
 				( defined($r) && defined( $r->value ) ) ? $r->value : 3333;
 
+			my $sap_param = $self->db->resultset('Parameter')->search(
+				{
+					'profile_parameters.profile' => $row->profile->id,
+					'name'                       => 'secure.api.port'
+				},
+				{ join => 'profile_parameters' }
+			);
+			my $secure_api_port = $rs_param->single;
+
 			my $traffic_router;
 
 			$traffic_router->{'hostName'} = $row->host_name;
@@ -751,6 +762,10 @@ sub gen_traffic_router_config {
 			$traffic_router->{'ip'}       = $row->ip_address;
 			$traffic_router->{'ip6'}      = $row->ip6_address;
 			$traffic_router->{'profile'}  = $row->profile->name;
+			if ( defined($secure_api_port) && defined( $secure_api_port->value ) ) {
+				$traffic_router->{'secureApiPort'}  = int($secure_api_port->value);
+			}
+
 			push( @{ $data_obj->{'trafficRouters'} }, $traffic_router );
 		}
 		elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {

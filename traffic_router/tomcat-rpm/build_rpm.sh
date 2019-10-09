@@ -29,7 +29,7 @@ function checkEnvironment() {
 	fi
 	. "$functions_sh"
 
-	# 
+	#
 	# get traffic_control src path -- relative to build_rpm.sh script
 	export PACKAGE="tomcat"
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
@@ -55,7 +55,7 @@ function initBuildArea() {
         export RELEASE=$TOMCAT_RELEASE
 
         echo "Downloading Tomcat $VERSION.$RELEASE..."
-        curl -fo "$RPMBUILD"/SOURCES/apache-tomcat-$VERSION.$RELEASE.tar.gz http://archive.apache.org/dist/tomcat/tomcat-8/v$VERSION.$RELEASE/bin/apache-tomcat-$VERSION.$RELEASE.tar.gz || \
+        curl -fo "$RPMBUILD"/SOURCES/apache-tomcat-$VERSION.$RELEASE.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v$VERSION.$RELEASE/bin/apache-tomcat-$VERSION.$RELEASE.tar.gz || \
         { echo "Could not download Tomcat $VERSION.$RELEASE: $?"; exit 1; }
 
         cp "$TR_DIR/tomcat-rpm/tomcat.service" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }

@@ -21,6 +21,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestProfiles(t *testing.T) {
@@ -29,6 +30,7 @@ func TestProfiles(t *testing.T) {
 		UpdateTestProfiles(t)
 		GetTestProfiles(t)
 		GetTestProfilesWithParameters(t)
+		ImportProfile(t)
 	})
 }
 
@@ -136,6 +138,7 @@ func GetTestProfiles(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
 		}
+		profileID := resp[0].ID
 
 		resp, _, err = TOSession.GetProfileByParameter(pr.Parameter)
 		if err != nil {
@@ -146,7 +149,79 @@ func GetTestProfiles(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Profile by cdn: %v - %v\n", err, resp)
 		}
+
+		// Export Profile
+		exportResp, _, err := TOSession.ExportProfile(profileID)
+		if err != nil {
+			t.Errorf("error exporting Profile: %v - %v\n", profileID, err)
+		}
+		if exportResp == nil {
+			t.Errorf("error exporting Profile: response nil\n")
+		}
 	}
+}
+
+func ImportProfile(t *testing.T) {
+	// Get ID of Profile to export
+	resp, _, err := TOSession.GetProfileByName(testData.Profiles[0].Name)
+	if err != nil {
+		t.Fatalf("cannot GET Profile by name: %v - %v\n", err, resp)
+	}
+	if resp == nil {
+		t.Fatalf("error getting Profile: response nil\n")
+	}
+	if len(resp) != 1 {
+		t.Fatalf("Profiles expected 1, actual %v\n", len(resp))
+	}
+	profileID := resp[0].ID
+
+	// Export Profile to import
+	exportResp, _, err := TOSession.ExportProfile(profileID)
+	if err != nil {
+		t.Fatalf("error exporting Profile: %v - %v\n", profileID, err)
+	}
+	if exportResp == nil {
+		t.Fatalf("error exporting Profile: response nil\n")
+	}
+
+	// Modify Profile and import
+
+	// Add parameter and change name
+	profile := exportResp.Profile
+	profile.Name = util.StrPtr("TestProfileImport")
+
+	newParam := tc.ProfileExportImportParameterNullable{
+		ConfigFile: util.StrPtr("config_file_import_test"),
+		Name:       util.StrPtr("param_import_test"),
+		Value:      util.StrPtr("import_test"),
+	}
+	parameters := append(exportResp.Parameters, newParam)
+	// Import Profile
+	importReq := tc.ProfileImportRequest{
+		Profile:    profile,
+		Parameters: parameters,
+	}
+	importResp, _, err := TOSession.ImportProfile(&importReq)
+	if err != nil {
+		t.Fatalf("error importing Profile: %v - %v\n", profileID, err)
+	}
+	if importResp == nil {
+		t.Errorf("error importing Profile: response nil\n")
+	}
+
+	// Add newly create profile and parameter to testData so it gets deleted
+	testData.Profiles = append(testData.Profiles, tc.Profile{
+		Name:        *profile.Name,
+		CDNName:     *profile.CDNName,
+		Description: *profile.Description,
+		Type:        *profile.Type,
+	})
+
+	testData.Parameters = append(testData.Parameters, tc.Parameter{
+		ConfigFile: *newParam.ConfigFile,
+		Name:       *newParam.Name,
+		Value:      *newParam.Value,
+	})
 }
 
 func GetTestProfilesWithParameters(t *testing.T) {
@@ -216,6 +291,12 @@ func DeleteTestProfiles(t *testing.T) {
 		}
 		if len(prs) > 0 {
 			t.Errorf("expected Profile Name: %s to be deleted\n", pr.Name)
+		}
+
+		// Attempt to export Profile
+		profile, _, err := TOSession.ExportProfile(profileID)
+		if profile != nil {
+			t.Errorf("expected Profile: %s to be nil on export\n", pr.Name)
 		}
 	}
 }

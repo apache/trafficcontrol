@@ -162,7 +162,7 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		"tenant":          dbhelpers.WhereColumnInfo{"o.tenant", api.IsInt},
 	}
 
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
@@ -174,7 +174,7 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "o.tenant", tenantIDs)
 
-	query := selectQuery() + where + orderBy
+	query := selectQuery() + where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
 	rows, err = tx.NamedQuery(query, queryValues)
@@ -275,6 +275,9 @@ func (origin *TOOrigin) Update() (error, error, int) {
 	ds := 0
 	q := `SELECT is_primary, deliveryservice FROM origin WHERE id = $1`
 	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary, &ds); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("origin not found"), nil, http.StatusNotFound
+		}
 		return nil, errors.New("origin update: querying: " + err.Error()), http.StatusInternalServerError
 	}
 	if isPrimary && *origin.DeliveryServiceID != ds {
@@ -397,6 +400,9 @@ func (origin *TOOrigin) Delete() (error, error, int) {
 	isPrimary := false
 	q := `SELECT is_primary FROM origin WHERE id = $1`
 	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("origin not found"), nil, http.StatusNotFound
+		}
 		return nil, errors.New("origin delete: is_primary scanning: " + err.Error()), http.StatusInternalServerError
 	}
 	if isPrimary {
@@ -412,11 +418,7 @@ func (origin *TOOrigin) Delete() (error, error, int) {
 		return nil, errors.New("origin delete: getting rows affected: " + err.Error()), http.StatusInternalServerError
 	}
 	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return nil, nil, http.StatusNotFound
-		} else {
-			return nil, errors.New("origin delete: multiple rows affected"), http.StatusInternalServerError
-		}
+		return nil, errors.New("origin delete: multiple rows affected"), http.StatusInternalServerError
 	}
 
 	return nil, nil, http.StatusOK

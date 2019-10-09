@@ -77,9 +77,11 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIp;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
 
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
 	public static final String XTC_STEERING_OPTION = "x-tc-steering-option";
+	public static final String CLIENT_STEERING_DIVERSITY = "client.steering.forced.diversity";
 
 	private final CacheRegister cacheRegister;
 	private final ZoneManager zoneManager;
@@ -88,6 +90,7 @@ public class TrafficRouter {
 	private final AnonymousIpDatabaseService anonymousIpService;
 	private final FederationRegistry federationRegistry;
 	private final boolean consistentDNSRouting;
+	private final boolean clientSteeringDiversityEnabled;
 
 	private final Random random = new Random(System.nanoTime());
 	private Set<String> requestHeaders = new HashSet<String>();
@@ -99,8 +102,8 @@ public class TrafficRouter {
 
 	private final Map<String, Geolocation> defaultGeolocationsOverride = new HashMap<String, Geolocation>();
 
-	public TrafficRouter(final CacheRegister cr, 
-			final GeolocationService geolocationService, 
+	public TrafficRouter(final CacheRegister cr,
+			final GeolocationService geolocationService,
 			final GeolocationService geolocationService6,
 			final AnonymousIpDatabaseService anonymousIpService,
 			final StatTracker statTracker,
@@ -113,6 +116,7 @@ public class TrafficRouter {
 		this.anonymousIpService = anonymousIpService;
 		this.federationRegistry = federationRegistry;
 		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing");
+		this.clientSteeringDiversityEnabled = JsonUtils.optBoolean(cr.getConfig(), CLIENT_STEERING_DIVERSITY);
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
 
 		if (cr.getConfig() != null) {
@@ -137,7 +141,7 @@ public class TrafficRouter {
 	 * Returns a {@link List} of all of the online {@link Cache}s that support the specified
 	 * {@link DeliveryService}. If no online caches are found to support the specified
 	 * DeliveryService an empty list is returned.
-	 * 
+	 *
 	 * @param ds
 	 *            the DeliveryService to check
 	 * @return collection of supported caches
@@ -278,11 +282,15 @@ public class TrafficRouter {
 		return null;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track) throws GeolocationException {
+		return selectCaches(request, ds, track, true);
+	}
+
+	@SuppressWarnings("PMD.CyclomaticComplexity")
+	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track, final boolean enableDeep) throws GeolocationException {
 		CacheLocation cacheLocation;
 		ResultType result = ResultType.CZ;
-		final boolean useDeep = (ds.getDeepCache() == DeliveryService.DeepCachingType.ALWAYS);
+		final boolean useDeep = enableDeep && (ds.getDeepCache() == DeliveryService.DeepCachingType.ALWAYS);
 
 		if (useDeep) {
 			// Deep caching is enabled. See if there are deep caches available
@@ -313,7 +321,7 @@ public class TrafficRouter {
 				track.setResult(ResultType.MISS);
 				track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 			}
-		} else if (track.continueGeo) { 
+		} else if (track.continueGeo) {
 			// continue Geo can be disabled when backup group is used -- ended up an empty cache list if reach here
 			caches = selectCachesByGeo(request.getClientIP(), ds, cacheLocation, track);
 		}
@@ -515,6 +523,14 @@ public class TrafficRouter {
 		return caches;
 	}
 
+	/**
+	 * Gets multiple routes for STEERING Delivery Services
+	 *
+	 * @param request The client's HTTP Request
+	 * @param track A {@link Track} object used to track routing statistics
+	 * @return The list of routes available to service the client's request.
+	 */
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public HTTPRouteResult multiRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request, true);
 
@@ -529,16 +545,40 @@ public class TrafficRouter {
 
 		final List<SteeringResult> resultsToRemove = new ArrayList<>();
 
+		final Set<Cache> selectedCaches = new HashSet<>();
+
 		// Pattern based consistent hashing - use consistentHashRegex from steering DS instead of targets
-		final String pathToHash = buildPatternBasedHashString(entryDeliveryService, request.getPath());
+		final String steeringHash = buildPatternBasedHashString(entryDeliveryService.getConsistentHashRegex(), request.getPath());
 		for (final SteeringResult steeringResult : steeringResults) {
 			final DeliveryService ds = steeringResult.getDeliveryService();
+			List<Cache> caches = selectCaches(request, ds, track);
 
-			final List<Cache> caches = selectCaches(request, ds, track);
+			// child Delivery Services can use their query parameters
+			final String pathToHash = steeringHash + ds.extractSignificantQueryParams(request);
 
 			if (caches != null && !caches.isEmpty()) {
+				if (isClientSteeringDiversityEnabled()) {
+					List<Cache> tryCaches = new ArrayList<>(caches);
+					tryCaches.removeAll(selectedCaches);
+					if (!tryCaches.isEmpty()) {
+						caches = tryCaches;
+					} else if (track.result == ResultType.DEEP_CZ) {
+						// deep caches have been selected already, try non-deep selection
+						tryCaches = selectCaches(request, ds, track, false);
+						track.setResult(ResultType.DEEP_CZ); // request should still be tracked as a DEEP_CZ hit
+						tryCaches.removeAll(selectedCaches);
+						if (!tryCaches.isEmpty()) {
+							caches = tryCaches;
+						}
+					}
+				}
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
+				if (ds.isRegionalGeoEnabled()) {
+					RegionalGeo.enforce(this, request, ds, cache, routeResult, track);
+					return routeResult;
+				}
 				steeringResult.setCache(cache);
+				selectedCaches.add(cache);
 			} else {
 				resultsToRemove.add(steeringResult);
 			}
@@ -559,19 +599,49 @@ public class TrafficRouter {
 		return routeResult;
 	}
 
-	public String buildPatternBasedHashString(final DeliveryService deliveryService, final String requestPath) {
-		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty() && !requestPath.isEmpty()) {
-			return buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), requestPath);
+	/**
+	 * Creates a string to be used in consistent hashing.
+	 *<p>
+	 * This uses simply the request path by default, but will consider any and all Query Parameters
+	 * that are in deliveryService's {@link DeliveryService.consistentHashQueryParams} set as well.
+	 * It will also fall back on the request path if the query parameters are not UTF-8-encoded.
+	 *</p>
+	 * @param deliveryService The {@link DeliveryService} being requested
+	 * @param request An {@link HTTPRequest} representing the client's request.
+	 * @return A string appropriate to use for consistent hashing to service the request
+	*/
+	@SuppressWarnings({"PMD.CyclomaticComplexity"})
+	public String buildPatternBasedHashString(final DeliveryService deliveryService, final HTTPRequest request) {
+		final String requestPath = request.getPath();
+		final StringBuilder hashString = new StringBuilder("");
+		if (deliveryService.getConsistentHashRegex() != null && !requestPath.isEmpty()) {
+			hashString.append(buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), requestPath));
 		}
-		return requestPath;
+
+		hashString.append(deliveryService.extractSignificantQueryParams(request));
+
+		return hashString.toString();
 	}
 
+	/**
+	 * Constructs a string to be used in consistent hashing
+	 * <p>
+	 * If `regex` is `null` or empty - or if an error occurs applying it -, returns `requestPath` unaltered.
+	 * </p>
+	 * @param regex A regular expression matched against the client's request path to extract information important to consistent hashing
+	 * @param requestPath The client's request path - e.g. '/some/path' from 'https://example.com/some/path'
+	 * @return The parts of requestPath that matched regex
+	 */
 	public String buildPatternBasedHashString(final String regex, final String requestPath) {
+		if (regex == null || regex.isEmpty()) {
+			return requestPath;
+		}
+
 		try {
 			final Pattern pattern = Pattern.compile(regex);
 			final Matcher matcher = pattern.matcher(requestPath);
 
-			final StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder("");
 			if (matcher.find() && matcher.groupCount() > 0) {
 				for (int i = 1; i <= matcher.groupCount(); i++) {
 					final String text = matcher.group(i);
@@ -579,11 +649,16 @@ public class TrafficRouter {
 				}
 				return sb.toString();
 			}
-			return requestPath;
 		} catch (final Exception e) {
-			return requestPath;
+			final StringBuilder error = new StringBuilder("Failed to construct hash string using regular expression: '");
+			error.append(regex);
+			error.append("' against request path: '");
+			error.append(requestPath);
+			error.append("' Exception: ");
+			error.append(e.toString());
+			LOGGER.error(error.toString());
 		}
-
+		return requestPath;
 	}
 
 	@SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.NPathComplexity" })
@@ -629,7 +704,7 @@ public class TrafficRouter {
 		}
 
 		// Pattern based consistent hashing
-		final String pathToHash = buildPatternBasedHashString(deliveryService, request.getPath());
+		final String pathToHash = buildPatternBasedHashString(deliveryService, request);
 		final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
 
 		// Enforce anonymous IP blocking if a DS has anonymous blocking enabled
@@ -662,7 +737,7 @@ public class TrafficRouter {
 			return null;
 		}
 
-		final List<SteeringResult> steeringResults = consistentHashMultiDeliveryService(entryDeliveryService, request.getPath());
+		final List<SteeringResult> steeringResults = consistentHashMultiDeliveryService(entryDeliveryService, request);
 
 		if (steeringResults == null || steeringResults.isEmpty()) {
 			track.setResult(ResultType.DS_MISS);
@@ -678,10 +753,7 @@ public class TrafficRouter {
 				track.setResultDetails(ResultDetails.DS_TLS_MISMATCH);
 				return null;
 			}
-			if (ds.isRegionalGeoEnabled()) {
-				LOGGER.error("Regional Geo Blocking is not supported with multi-route delivery services.. skipping " + entryDeliveryService.getId() + "/" + ds.getId());
-				toBeRemoved.add(steeringResult);
-			} else if (!ds.isAvailable()) {
+			if (!ds.isAvailable()) {
 				toBeRemoved.add(steeringResult);
 			}
 
@@ -693,7 +765,7 @@ public class TrafficRouter {
 
 	private DeliveryService getDeliveryService(final HTTPRequest request, final Track track) {
 		final String xtcSteeringOption = request.getHeaderValue(XTC_STEERING_OPTION);
-		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request, true), request.getPath(), xtcSteeringOption);
+		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request, true), request, xtcSteeringOption);
 
 		if (deliveryService == null) {
 			track.setResult(ResultType.DS_MISS);
@@ -812,7 +884,7 @@ public class TrafficRouter {
 			    track.continueGeo = false;
 			    return null;
 			}
-		} 
+		}
 
 		// We had a hit in the CZF but the name does not match a known cache location.
 		// Check whether the CZF entry has a geolocation and use it if so.
@@ -846,11 +918,35 @@ public class TrafficRouter {
 		return getCoverageZoneCacheLocation(ip, deliveryService.getId());
 	}
 
+	/**
+	 * Chooses a {@link Cache} for a Delivery Service based on the Coverage Zone File given a clients IP and request *path*.
+	 *
+	 * @param ip The client's IP address
+	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
+	 * @param requestPath The client's requested path - e.g. 'http://test.example.com/request/path' -> '/request/path'
+	 * @return A cache object chosen to serve the client's request
+	 */
 	public Cache consistentHashForCoverageZone(final String ip, final String deliveryServiceId, final String requestPath) {
 		return consistentHashForCoverageZone(ip, deliveryServiceId, requestPath, false);
 	}
 
+	/**
+	 * Chooses a {@link Cache} for a Delivery Service based on the Coverage Zone File or Deep Coverage Zone File given a clients IP and request *path*.
+	 *
+	 * @param ip The client's IP address
+	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
+	 * @param requestPath The client's requested path - e.g. 'http://test.example.com/request/path' -> '/request/path'
+	 * @param useDeep if `true` will attempt to use Deep Coverage Zones - otherwise will only use Coverage Zone File
+	 * @return A cache object chosen to serve the client's request
+	 */
 	public Cache consistentHashForCoverageZone(final String ip, final String deliveryServiceId, final String requestPath, final boolean useDeep) {
+		final HTTPRequest r = new HTTPRequest();
+		r.setPath(requestPath);
+		r.setQueryString("");
+		return consistentHashForCoverageZone(ip, deliveryServiceId, r, useDeep);
+	}
+
+	public Cache consistentHashForCoverageZone(final String ip, final String deliveryServiceId, final HTTPRequest request, final boolean useDeep) {
 		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 		if (deliveryService == null) {
 			LOGGER.error("Failed getting delivery service from cache register for id '" + deliveryServiceId + "'");
@@ -864,11 +960,26 @@ public class TrafficRouter {
 			return null;
 		}
 
-		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		final String pathToHash = buildPatternBasedHashString(deliveryService, request);
 		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
 	}
 
+	/**
+	 * Chooses a {@link Cache} for a Delivery Service based on GeoLocation given a clients IP and request *path*.
+	 *
+	 * @param ip The client's IP address
+	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
+	 * @param requestPath The client's requested path - e.g. 'http://test.example.com/request/path' -> '/request/path'
+	 * @return A cache object chosen to serve the client's request
+	 */
 	public Cache consistentHashForGeolocation(final String ip, final String deliveryServiceId, final String requestPath) {
+		final HTTPRequest r = new HTTPRequest();
+		r.setPath(requestPath);
+		r.setQueryString("");
+		return consistentHashForGeolocation(ip, deliveryServiceId, r);
+	}
+
+	public Cache consistentHashForGeolocation(final String ip, final String deliveryServiceId, final HTTPRequest request) {
 		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 		if (deliveryService == null) {
 			LOGGER.error("Failed getting delivery service from cache register for id '" + deliveryServiceId + "'");
@@ -893,12 +1004,15 @@ public class TrafficRouter {
 			return null;
 		}
 
-		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		final String pathToHash = buildPatternBasedHashString(deliveryService, request);
 		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
 	}
 
 	public String buildPatternBasedHashStringDeliveryService(final String deliveryServiceId, final String requestPath) {
-		return buildPatternBasedHashString(cacheRegister.getDeliveryService(deliveryServiceId), requestPath);
+		final HTTPRequest r = new HTTPRequest();
+		r.setPath(requestPath);
+		r.setQueryString("");
+		return buildPatternBasedHashString(cacheRegister.getDeliveryService(deliveryServiceId), r);
 	}
 
 	private boolean isSteeringDeliveryService(final DeliveryService deliveryService) {
@@ -943,7 +1057,7 @@ public class TrafficRouter {
 		}
 	}
 
-	public List<SteeringResult> consistentHashMultiDeliveryService(final DeliveryService deliveryService, final String requestPath) {
+	public List<SteeringResult> consistentHashMultiDeliveryService(final DeliveryService deliveryService, final HTTPRequest request) {
 		if (deliveryService == null) {
 			return null;
 		}
@@ -958,7 +1072,7 @@ public class TrafficRouter {
 		final Steering steering = steeringRegistry.get(deliveryService.getId());
 
 		// Pattern based consistent hashing
-		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		final String pathToHash = buildPatternBasedHashString(deliveryService, request);
 		final List<SteeringTarget> steeringTargets = consistentHasher.selectHashables(steering.getTargets(), pathToHash);
 
 		for (final SteeringTarget steeringTarget : steeringTargets) {
@@ -972,8 +1086,23 @@ public class TrafficRouter {
 		return steeringResults;
 	}
 
+ 	/**
+	 * Chooses a {@link Cache} for a Steering Delivery Service target based on the Coverage Zone File given a clients IP and request *path*.
+	 *
+	 * @param ip The client's IP address
+	 * @param deliveryServiceId The "xml_id" of a Delivery Service being routed
+	 * @param requestPath The client's requested path - e.g. 'http://test.example.com/request/path' -> '/request/path'
+	 * @return A cache object chosen to serve the client's request
+	 */
 	public Cache consistentHashSteeringForCoverageZone(final String ip, final String deliveryServiceId, final String requestPath) {
-		final DeliveryService deliveryService = consistentHashDeliveryService(deliveryServiceId, requestPath);
+		final HTTPRequest r = new HTTPRequest();
+		r.setPath(requestPath);
+		r.setQueryString("");
+		return consistentHashSteeringForCoverageZone(ip, deliveryServiceId, r);
+	}
+
+	public Cache consistentHashSteeringForCoverageZone(final String ip, final String deliveryServiceId, final HTTPRequest request) {
+		final DeliveryService deliveryService = consistentHashDeliveryService(deliveryServiceId, request);
 		if (deliveryService == null) {
 			LOGGER.error("Failed getting delivery service from cache register for id '" + deliveryServiceId + "'");
 			return null;
@@ -986,16 +1115,30 @@ public class TrafficRouter {
 			return null;
 		}
 
-		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		final String pathToHash = buildPatternBasedHashString(deliveryService, request);
 		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
 	}
 
+	/**
+	 * Chooses a target Delivery Service of a given Delivery Service to service a given request path
+	 *
+	 * @param deliveryServiceId The "xml_id" of the Delivery Service being requested
+	 * @param requestPath The requested path - e.g. 'http://test.example.com/request/path' -> '/request/path'
+	 * @return The chosen target Delivery Service
+	*/
 	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final String requestPath) {
-		return consistentHashDeliveryService(cacheRegister.getDeliveryService(deliveryServiceId), requestPath, "");
+		final HTTPRequest r = new HTTPRequest();
+		r.setPath(requestPath);
+		r.setQueryString("");
+		return consistentHashDeliveryService(deliveryServiceId, r);
+	}
+
+	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final HTTPRequest request) {
+		return consistentHashDeliveryService(cacheRegister.getDeliveryService(deliveryServiceId), request, "");
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
-	public DeliveryService consistentHashDeliveryService(final DeliveryService deliveryService, final String requestPath, final String xtcSteeringOption) {
+	public DeliveryService consistentHashDeliveryService(final DeliveryService deliveryService, final HTTPRequest request, final String xtcSteeringOption) {
 		if (deliveryService == null) {
 			return null;
 		}
@@ -1010,7 +1153,7 @@ public class TrafficRouter {
 			return steering.hasTarget(xtcSteeringOption) ? cacheRegister.getDeliveryService(xtcSteeringOption) : null;
 		}
 
-		final String bypassDeliveryServiceId = steering.getBypassDestination(requestPath);
+		final String bypassDeliveryServiceId = steering.getBypassDestination(request.getPath());
 		if (bypassDeliveryServiceId != null && !bypassDeliveryServiceId.isEmpty()) {
 			final DeliveryService bypass = cacheRegister.getDeliveryService(bypassDeliveryServiceId);
 			if (bypass != null) { // bypass DS target might not be in CRConfig yet. Until then, try existing targets
@@ -1024,7 +1167,7 @@ public class TrafficRouter {
 				.collect(Collectors.toList());
 
 		// Pattern based consistent hashing
-		final String pathToHash = buildPatternBasedHashString(deliveryService, requestPath);
+		final String pathToHash = buildPatternBasedHashString(deliveryService, request);
 		final SteeringTarget steeringTarget = consistentHasher.selectHashable(availableTargets, deliveryService.getDispersion(), pathToHash);
 
 		// set target.consistentHashRegex from steering DS, if it is set
@@ -1039,7 +1182,7 @@ public class TrafficRouter {
 	 * Returns a list {@link CacheLocation}s sorted by distance from the client.
 	 * If the client's location could not be determined, then the list is
 	 * unsorted.
-	 * 
+	 *
 	 * @param cacheLocations
 	 *            the collection of CacheLocations to order
 	 * @return the ordered list of locations
@@ -1065,9 +1208,9 @@ public class TrafficRouter {
 		return null;
 	}
 
-	/*
+	/**
 	 * Selects a {@link Cache} from the {@link CacheLocation} provided.
-	 * 
+	 *
 	 * @param location
 	 *            the caches that will considered
 	 * @param ds
@@ -1107,6 +1250,10 @@ public class TrafficRouter {
 
 	public boolean isConsistentDNSRouting() {
 		return consistentDNSRouting;
+	}
+
+	public boolean isClientSteeringDiversityEnabled() {
+		return clientSteeringDiversityEnabled;
 	}
 
 	private List<Cache> enforceGeoRedirect(final Track track, final DeliveryService ds, final String clientIp, final Geolocation queriedClientLocation) {

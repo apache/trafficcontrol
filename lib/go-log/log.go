@@ -72,56 +72,36 @@ func Init(eventW, errW, warnW, infoW, debugW io.WriteCloser) {
 	initLogger(&Event, &eventCloser, eventW, "", 0)
 }
 
+func logf(logger *log.Logger, format string, v ...interface{}) {
+	if logger == nil {
+		return
+	}
+	logger.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
+}
+
+func logln(logger *log.Logger, v ...interface{}) {
+	if logger == nil {
+		return
+	}
+	logger.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintln(v...))
+}
+
 const timeFormat = time.RFC3339Nano
 const stackFrame = 3
 
-func Errorf(format string, v ...interface{}) {
-	if Error == nil {
-		return
-	}
-	Error.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
-}
-func Errorln(v ...interface{}) {
-	if Error == nil {
-		return
-	}
-	Error.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintln(v...))
-}
-func Warnf(format string, v ...interface{}) {
-	if Warning == nil {
-		return
-	}
-	Warning.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
-}
-func Warnln(v ...interface{}) {
-	if Warning == nil {
-		return
-	}
-	Warning.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintln(v...))
-}
-func Infof(format string, v ...interface{}) {
-	if Info == nil {
-		return
-	}
-	Info.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
-}
-func Infoln(v ...interface{}) {
-	if Info == nil {
-		return
-	}
-	Info.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintln(v...))
-}
-func Debugf(format string, v ...interface{}) {
-	if Debug == nil {
-		return
-	}
-	Debug.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
-}
-func Debugln(v ...interface{}) {
-	if Debug == nil {
-		return
-	}
-	Debug.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintln(v...))
+func Errorf(format string, v ...interface{}) { logf(Error, format, v...) }
+func Errorln(v ...interface{})               { logln(Error, v...) }
+func Warnf(format string, v ...interface{})  { logf(Warning, format, v...) }
+func Warnln(v ...interface{})                { logln(Warning, v...) }
+func Infof(format string, v ...interface{})  { logf(Info, format, v...) }
+func Infoln(v ...interface{})                { logln(Info, v...) }
+func Debugf(format string, v ...interface{}) { logf(Debug, format, v...) }
+func Debugln(v ...interface{})               { logln(Debug, v...) }
+
+const eventFormat = "%.3f %s"
+
+func eventTime(t time.Time) float64 {
+	return float64(t.Unix()) + (float64(t.Nanosecond()) / 1e9)
 }
 
 // event log entries (TM event.log, TR access.log, etc)
@@ -130,7 +110,7 @@ func Eventf(t time.Time, format string, v ...interface{}) {
 		return
 	}
 	// 1484001185.287 ...
-	Event.Printf("%.3f %s", float64(t.Unix())+(float64(t.Nanosecond())/1e9), fmt.Sprintf(format, v...))
+	Event.Printf(eventFormat, eventTime(t), fmt.Sprintf(format, v...))
 }
 
 // EventfRaw writes to the event log with no prefix.

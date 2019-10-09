@@ -46,7 +46,7 @@ Response Structure
 :hostname:    The (short) hostname of the cache
 :ip:          The IP address of the cache
 :kbps:        Cache upload speed (to clients) in Kilobits per second
-:profile:     The name of the profile in use by this cache
+:profile:     The :ref:`profile-name` of the :term:`Profile` in use by this :term:`cache server`
 :status:      The status of the cache
 
 .. code-block:: http

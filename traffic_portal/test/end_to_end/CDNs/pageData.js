@@ -25,6 +25,16 @@ module.exports = function(){
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
 	this.searchFilter=element(by.id('cdnsTable_filter')).element(by.css('label')).element(by.css('input'));
-	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+	this.moreButton=element(by.buttonText('More'));
+	this.manageDnssecKeysButton=element(by.linkText('Manage DNSSEC Keys'));
+	this.generateDnssecKeysButton=element(by.buttonText('Generate DNSSEC Keys'));
+	this.kskExpirationDays=element(by.name('kskExpirationDays'));
+	this.regenerateButton=element(by.buttonText('Regenerate'));
+	this.confirmInput=element(by.name('confirmEnterForm')).element(by.tagName('input'));
+	this.confirmButton=element(by.buttonText('Confirm'));
+	this.expirationDate=element(by.name('expirationDate'));
+	this.regenerateDnssecKeysButton=element(by.buttonText('Regenerate DNSSEC Keys'));
+	this.regenerateKskButton=element(by.buttonText('Regenerate KSK'));
+	this.generateButton=element(by.buttonText('Generate'));
 };

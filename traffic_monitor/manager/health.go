@@ -184,7 +184,9 @@ func processHealthResult(
 		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
 	}
 
-	health.CalcAvailability(results, "health", monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
+	pollerName := "health"
+	statResultHistoryNil := (*threadsafe.ResultStatHistory)(nil) // health poller doesn't have stats
+	health.CalcAvailability(results, pollerName, statResultHistoryNil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
 
 	healthHistory.Set(healthHistoryCopy)
 	// TODO determine if we should combineCrStates() here

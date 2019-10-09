@@ -178,6 +178,20 @@ public class RegionalGeoTest {
     }
 
     @Test
+    public void testEnforceAllowedHttpsRedirect() {
+        final String dsvcId = "ds-geoblock-redirect-https";
+        final String url = "http://ds1.example.com/httpsredirect";
+        final String postal = null;
+        final String ip = "129.100.254.2";
+
+        RegionalGeoResult result = RegionalGeo.enforce(dsvcId, url, ip, postal);
+
+        assertThat(result.getType(), equalTo(RegionalGeoResultType.ALTERNATE_WITHOUT_CACHE));
+        assertThat(result.getUrl(), equalTo("http://example.com/redirect_https"));
+    }
+
+
+    @Test
     public void testEnforceNotInWhiteListAlternate() {
         final String dsvcId = "ds-geoblock-include";
         final String url = "http://ds1.example.com/live4";

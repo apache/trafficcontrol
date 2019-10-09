@@ -33,8 +33,8 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr id="{{::r.id}}" class="resolver-row" ng-repeat="r in ::resolvers">
-            <td><input type="checkbox" ng-checked="r.selected" ng-model="r.selected" ng-change="onChange()"></td>
+        <tr id="{{::r.id}}" class="resolver-row" ng-class="::{'active': r.selected}" ng-repeat="r in ::resolvers" ng-click="r.selected = !r.selected; onChange()">
+            <td><input type="checkbox" ng-model="r.selected"></td>
             <td data-search="^{{::r.ipAddress}}$">{{::r.ipAddress}}</td>
             <td data-search="^{{::r.type}}$">{{::r.type}}</td>
         </tr>

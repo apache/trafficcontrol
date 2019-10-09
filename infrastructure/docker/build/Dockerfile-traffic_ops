@@ -24,7 +24,7 @@ VOLUME /trafficcontrol
 
 ### Common for all sub-component builds
 RUN	rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
-	rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
+	rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7 && \
 	yum -y update ca-certificates && \
 	yum -y install \
 		epel-release && \
@@ -35,7 +35,6 @@ RUN	yum -y install \
 		expat-devel \
 		gcc \
 		git \
-		golang \
 		libcurl-devel \
 		make \
 		openssl-devel \
@@ -43,6 +42,11 @@ RUN	yum -y install \
 		rpm-build \
 		tar && \
 	yum -y clean all
+
+RUN curl -LO https://dl.google.com/go/go1.11.13.linux-amd64.tar.gz && \
+    tar -C /usr/local -xvzf go1.11.13.linux-amd64.tar.gz && \
+    ln -s /usr/local/go/bin/go /usr/bin/go && \
+    rm go1.11.13.linux-amd64.tar.gz
 
 ###
 

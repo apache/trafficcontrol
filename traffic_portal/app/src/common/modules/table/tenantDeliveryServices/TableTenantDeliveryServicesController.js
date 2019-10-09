@@ -22,16 +22,33 @@ var TableTenantDeliveryServicesController = function(tenant, deliveryServices, $
 	// extends the TableDeliveryServicesController to inherit common methods
 	angular.extend(this, $controller('TableDeliveryServicesController', { deliveryServices: deliveryServices, $scope: $scope }));
 
+	let tenantDSsTable;
+
 	$scope.tenant = tenant;
 
+	$scope.toggleVisibility = function(colName) {
+		const col = tenantDSsTable.column(colName + ':name');
+		col.visible(!col.visible());
+		tenantDSsTable.rows().invalidate().draw();
+	};
+
 	angular.element(document).ready(function () {
-		$('#tenantDSsTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+		tenantDSsTable = $('#tenantDSsTable').DataTable({
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
-			],
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"colReorder": {
+				realtime: false
+			},
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_tenantDeliveryServicesTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_tenantDeliveryServicesTable_/):", e);
+				}
+			}
 		});
 	});
 

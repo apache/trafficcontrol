@@ -17,68 +17,67 @@
  * under the License.
  */
 
-var CapabilityService = function(Restangular, $q, $http, messageModel, ENV) {
+var CapabilityService = function($http, messageModel, ENV) {
 
 	this.getCapabilities = function(queryParams) {
-		return Restangular.all('capabilities').getList(queryParams);
+		return $http.get(ENV.api['root'] + 'capabilities', {params: queryParams}).then(
+			function(result) {
+				return result.data.response;
+			},
+			function(err) {
+				throw err;
+			}
+		);
 	};
 
 	this.getCapability = function(name) {
-		return Restangular.one("capabilities", name).get();
+		return $http.get(ENV.api['root'] + 'capabilities/' + name).then(
+			function(result) {
+				return result.data.response[0];
+			},
+			function(err) {
+				throw err;
+			}
+		);
 	};
 
 	this.createCapability = function(cap) {
-		var request = $q.defer();
-
-		$http.post(ENV.api['root'] + "capabilities", cap)
-			.then(
-				function(result) {
-					request.resolve(result.data);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject(fault);
-				}
-			);
-
-		return request.promise;
+		return $http.post(ENV.api['root'] + "capabilities", cap).then(
+			function(result) {
+				return result.data;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 	this.updateCapability = function(cap) {
-		var request = $q.defer();
-
-		$http.put(ENV.api['root'] + "capabilities/" + cap.name, cap)
-			.then(
-				function(result) {
-					request.resolve(result.data);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
-				}
-			);
-
-		return request.promise;
+		return $http.put(ENV.api['root'] + "capabilities/" + cap.name, cap).then(
+			function(result) {
+				return result.data;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 	this.deleteCapability = function(cap) {
-		var request = $q.defer();
-
-		$http.delete(ENV.api['root'] + "capabilities/" + cap.name)
-			.then(
-				function(result) {
-					request.resolve(result.data);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject(fault);
-				}
-			);
-
-		return request.promise;
+		return $http.delete(ENV.api['root'] + "capabilities/" + cap.name).then(
+			function(result) {
+				return result.data;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 };
 
-CapabilityService.$inject = ['Restangular', '$q', '$http', 'messageModel', 'ENV'];
+CapabilityService.$inject = ['$http', 'messageModel', 'ENV'];
 module.exports = CapabilityService;

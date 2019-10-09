@@ -51,32 +51,32 @@ Configure Regional Geo-blocking (RGB)
 	``geoLocation``
 		An object that currently supports only the keys ``includePostalCode`` and ``excludePostalCode`` (mutually exclusive). When the ``includePostalCode`` key is used, only the clients whose :abbr:`FSA (Forward Sortation Areas)`\ s - the first three postal characters of Canadian postal codes - are in the ``includePostalCode`` list are able to view the content at URLs matched by the ``urlRegex``. When ``excludePostalCode`` is used, any client whose :abbr:`FSA (Forward Sortation Areas)` is not in the ``excludePostalCode`` list will be allowed to view the content
 	``redirectUrl``
-		The URL that will be returned to the blocked clients. Without a domain name in the URL, the URL will still be served in the same :term:`Delivery Service`. Thus Traffic Router will redirect the client to a chosen :term:`cache server` assigned to the :term:`Delivery Service`. If the URL includes a domain name, Traffic Router simply redirects the client to the defined URL. In the later case, the redirect URL must not match the ``urlRegex`` value, or an infinite loop of  HTTP ``302 Found`` responses will occur at the Traffic Router
+		The URL that will be returned to the blocked clients. Without a domain name in the URL, the URL will still be served in the same :term:`Delivery Service`. Thus Traffic Router will redirect the client to a chosen :term:`cache server` assigned to the :term:`Delivery Service`. If the URL includes a domain name, Traffic Router simply redirects the client to the defined URL. In the latter case, the redirect URL must not match the ``urlRegex`` value, or an infinite loop of  HTTP ``302 Found`` responses will occur at the Traffic Router
 	``ipWhiteList``
 		An optional element that is an array of :abbr:`CIDR (Classless Inter-Domain Routing)` blocks indicating the IPv4 subnets that are allowed by the rule. If this list exists and the value is not empty, client IP will be matched against the :abbr:`CIDR (Classless Inter-Domain Routing)` list, bypassing the value of ``geoLocation``. If there is no match in the white list, Traffic Router defers to the value of ``geoLocation`` to determine if content ought to be blocked.
 
 
-#. Add :abbr:`RGB (Regional Geographic-based Blocking)` parameters in Traffic Portal to the :term:`Delivery Service`'s Traffic Router(s)'s profile(s). The ``configFile`` field should be set to ``CRConfig.json``, and the following two parameter name/values need to be specified:
+#. Add :abbr:`RGB (Regional Geographic-based Blocking)` :term:`Parameters` in Traffic Portal to the :term:`Delivery Service`'s Traffic Router(s)'s :term:`Profile`\ (s). The :ref:`parameter-config-file` value should be set to ``CRConfig.json``, and the following two :term:`Parameter` :ref:`parameter-name`/:ref:`parameter-value` pairs need to be specified:
 
-	``regional_geoblocking.polling.url``
+	``regional_geoblock.polling.url``
 		The URL of the RGB configuration file. Traffic Router will fetch the file from this URL using an HTTP ``GET`` request.
-	``regional_geoblocking.polling.interval``
+	``regional_geoblock.polling.interval``
 		The interval on which Traffic Router polls the :abbr:`RGB (Regional Geographic-based Blocking)` configuration file.
 
 	.. figure:: regionalgeo/01.png
-		:scale: 100%
+		:width: 40%
 		:align: center
 
-#. Enable RGB for a :term:`Delivery Service`
+#. Enable :abbr:`RGB (Regional Geographic-based Blocking)` for a :term:`Delivery Service` using the :ref:`Delivery Services view in Traffic Portal <tp-services-delivery-service>` (don't forget to save changes!)
 
 	.. figure:: regionalgeo/02.png
-		:scale: 100%
+		:width: 40%
 		:align: center
 
-#. Go to :menuselection:`Tools --> Snapshot CRConfig`, perform :guilabel:`Diff CRConfig` and click :guilabel:`Write CRConfig`.
+#. Go to :ref:`the Traffic Portal CDNs view <tp-cdns>`, click on :guilabel:`Diff CDN Config Snapshot`, and click :guilabel:`Perform Snapshot`.
 
 	.. figure:: regionalgeo/03.png
-		:scale: 70%
+		:width: 40%
 		:align: center
 
 Traffic Router Access Log

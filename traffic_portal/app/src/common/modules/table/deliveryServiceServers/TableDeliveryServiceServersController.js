@@ -22,6 +22,8 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 	// extends the TableServersController to inherit common methods
 	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
 
+	let dsServersTable;
+
 	var removeServer = function(serverId) {
 		deliveryServiceService.deleteDeliveryServiceServer($scope.deliveryService.id, serverId)
 			.then(
@@ -37,7 +39,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 	$scope.contextMenuItems.splice(2, 0,
 		{
 			text: 'Unlink Server from Delivery Service',
-			hasTopDivider: function() {
+			hasBottomDivider: function() {
 				return true;
 			},
 			click: function ($itemScope) {
@@ -101,14 +103,29 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 		});
 	};
 
+	$scope.toggleVisibility = function(colName) {
+		const col = dsServersTable.column(colName + ':name');
+		col.visible(!col.visible());
+		dsServersTable.rows().invalidate().draw();
+	};
+
 	angular.element(document).ready(function () {
-		$('#dsServersTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+		dsServersTable = $('#dsServersTable').DataTable({
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 12 }
-			],
-			"aaSorting": []
+			"aaSorting": [],
+			"columns": $scope.columns,
+			"colReorder": {
+				realtime: false
+			},
+			"initComplete": function(settings, json) {
+				try {
+					// need to create the show/hide column checkboxes and bind to the current visibility
+					$scope.columns = JSON.parse(localStorage.getItem('DataTables_dsServersTable_/')).columns;
+				} catch (e) {
+					console.error("Failure to retrieve required column info from localStorage (key=DataTables_dsServersTable_/):", e);
+				}
+			}
 		});
 	});
 

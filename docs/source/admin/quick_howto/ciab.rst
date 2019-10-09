@@ -42,7 +42,7 @@ These can all be supplied manually via the steps in :ref:`dev-building` (for Tra
 
 Usage
 -----
-In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the containers are exposed locally to the host on specific ports. These are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
+In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the environment are by default not exposed locally to the host. If this is the desired behavior when bringing up CDN in a Box the command ``docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`` should be run. The ports are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.expose-ports.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
 
 .. _ciab-service-info:
 .. table:: Service Info
@@ -69,7 +69,7 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 	| Traffic Portal                  | Web interface on 443 (Javascript required)                   | ``TO_ADMIN_USER`` in `variables.env`_ | ``TO_ADMIN_PASSWORD`` in `variables.env`_ |
 	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Router                  | Web interfaces on ports 3080 (HTTP) and 3443 (HTTPS), with a | N/A                                   | N/A                                       |
-	|                                 | DNS service on 53 and an API on 3333                         |                                       |                                           |
+	|                                 | DNS service on 53 and an API on 3333 (HTTP) and 2222 (HTTPS) |                                       |                                           |
 	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Traffic Vault                   | Riak key-value store on port 8010                            | ``TV_ADMIN_USER`` in `variables.env`_ | ``TV_ADMIN_PASSWORD`` in `variables.env`_ |
 	+---------------------------------+--------------------------------------------------------------+---------------------------------------+-------------------------------------------+
@@ -201,9 +201,9 @@ The enroller runs within CDN in a Box using :option:`--dir` which provides the a
 
 Auto Snapshot/Queue-Updates
 ---------------------------
-An automatic snapshot of the current Traffic Ops CDN configuration/toplogy will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled.  To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [8]_.  The snapshot and queue-updates actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled.  The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (snapshot and queue-updates) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [9]_.
+An automatic :term:`Snapshot` of the current Traffic Ops CDN configuration/topology will be performed once the "enroller" has finished loading all of the data and a minimum number of servers have been enrolled. To enable this feature, set the boolean ``AUTO_SNAPQUEUE_ENABLED`` to ``true`` [8]_. The :term:`Snapshot` and :term:`Queue Updates` actions will not be performed until all servers in ``AUTO_SNAPQUEUE_SERVERS`` (comma-delimited string) have been enrolled. The current enrolled servers will be polled every ``AUTO_SNAPQUEUE_POLL_INTERVAL`` seconds, and each action (:term:`Snapshot` and :term:`Queue Updates`) will be delayed ``AUTO_SNAPQUEUE_ACTION_WAIT`` seconds [9]_.
 
-.. [8] Automatic Snapshot/Queue-Updates is enabled by default in :file:`infrastructure/cdn-in-a-box/variables.env`.
+.. [8] Automatic :term:`Snapshot`/:term:`Queue Updates` is enabled by default in `variables.env`_.
 .. [9] Server poll interval and delay action wait are defaulted to a value of 2 seconds.
 
 Mock Origin Service

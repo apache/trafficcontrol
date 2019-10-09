@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Copy profile to a new profile. The new profile name must not exist.
+Copy :term:`Profile` to a new :term:`Profile`. The new :term:`Profile`'s :ref:`profile-name` must not already exist.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,13 +31,13 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+------------------------------------------------------+
-	| Name | Description                                          |
-	+======+======================================================+
-	| name | The name of the new profile                          |
-	+------+------------------------------------------------------+
-	| copy | The name of profile from which the copy will be made |
-	+------+------------------------------------------------------+
+	+------+-----------------------------------------------------------------------------+
+	| Name | Description                                                                 |
+	+======+=============================================================================+
+	| name | The :ref:`profile-name` of the new :term:`Profile`                          |
+	+------+-----------------------------------------------------------------------------+
+	| copy | The :ref:`profile-name` of :term:`Profile` from which the copy will be made |
+	+------+-----------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -50,11 +50,11 @@ Request Structure
 
 Response Structure
 ------------------
-:description:     The description of the new profile
-:id:              An integral, unique identifier for the new profile
-:idCopyFrom:      The integral, unique identifier for the profile from which the copy was made
-:name:            The name of the new profile
-:profileCopyFrom: The name of the profile from which the copy was made
+:description:     The new :term:`Profile`'s :ref:`profile-description`
+:id:              The :ref:`profile-id` of the new :term:`Profile`
+:idCopyFrom:      The :ref:`profile-id` of the :term:`Profile` from which the copy was made
+:name:            The :ref:`profile-name` of the new :term:`Profile`
+:profileCopyFrom: The :ref:`profile-name` of the :term:`Profile` from which the copy was made
 
 .. code-block:: http
 	:caption: Response Example

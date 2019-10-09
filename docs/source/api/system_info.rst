@@ -33,7 +33,7 @@ Response Structure
 ------------------
 :parameters: An object containing information about the Traffic Ops server
 
-	.. note:: These are all the parameters in the ``GLOBAL`` profile, so the keys below are merely those present by default required for Traffic Control to operate
+	.. note:: These are all the :term:`Parameters` in :ref:`the-global-profile`, so the keys below are merely those present by default required for Traffic Control to operate
 
 	:default_geo_miss_latitude:  The default latitude used when geographic lookup of an IP address fails
 	:default_geo_miss_longitude: The default longitude used when geographic lookup of an IP address fails

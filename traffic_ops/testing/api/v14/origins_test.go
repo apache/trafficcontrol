@@ -16,6 +16,8 @@ package v14
 */
 
 import (
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,7 +30,9 @@ func TestOrigins(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Users, DeliveryServices, Coordinates, Origins}, func() {
 		UpdateTestOrigins(t)
 		GetTestOrigins(t)
+		NotFoundDeleteTest(t)
 		OriginTenancyTest(t)
+		VerifyPaginationSupport(t)
 	})
 }
 
@@ -39,6 +43,13 @@ func CreateTestOrigins(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE origins: %v\n", err)
 		}
+	}
+}
+
+func NotFoundDeleteTest(t *testing.T) {
+	_, _, err := TOSession.DeleteOriginByID(2020)
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("deleted origin with what should be a non-existent id\n")
 	}
 }
 
@@ -139,6 +150,47 @@ func OriginTenancyTest(t *testing.T) {
 	tenant3Origin.FQDN = util.StrPtr("origin.tenancy.test.example.com")
 	if _, _, err = tenant4TOClient.CreateOrigin(tenant3Origin); err == nil {
 		t.Errorf("expected tenant4user to be unable to create an origin outside of its tenant")
+	}
+}
+
+func VerifyPaginationSupport(t *testing.T) {
+	origins, _, err := TOSession.GetOriginsByQueryParams("?orderby=id")
+	if err != nil {
+		t.Fatalf("cannot GET origins: %v\n", err)
+	}
+
+	originsWithLimit, _, err := TOSession.GetOriginsByQueryParams("?orderby=id&limit=1")
+	if !reflect.DeepEqual(origins[:1], originsWithLimit) {
+		t.Errorf("expected GET origins with limit = 1 to return first result")
+	}
+
+	originsWithOffset, _, err := TOSession.GetOriginsByQueryParams("?orderby=id&limit=1&offset=1")
+	if !reflect.DeepEqual(origins[1:2], originsWithOffset) {
+		t.Errorf("expected GET origins with limit = 1, offset = 1 to return second result")
+	}
+
+	originsWithPage, _, err := TOSession.GetOriginsByQueryParams("?orderby=id&limit=1&page=2")
+	if !reflect.DeepEqual(origins[1:2], originsWithPage) {
+		t.Errorf("expected GET origins with limit = 1, page = 2 to return second result")
+	}
+
+	_, _, err = TOSession.GetOriginsByQueryParams("?limit=0")
+	if err == nil {
+		t.Errorf("expected GET origins to return an error when limit is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET origins to return an error for limit is not a positive integer, actual error: " + err.Error())
+	}
+	_, _, err = TOSession.GetOriginsByQueryParams("?limit=1&offset=0")
+	if err == nil {
+		t.Errorf("expected GET origins to return an error when offset is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET origins to return an error for offset is not a positive integer, actual error: " + err.Error())
+	}
+	_, _, err = TOSession.GetOriginsByQueryParams("?limit=1&page=0")
+	if err == nil {
+		t.Errorf("expected GET origins to return an error when page is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET origins to return an error for page is not a positive integer, actual error: " + err.Error())
 	}
 }
 

@@ -26,6 +26,19 @@ under the License.
         </ol>
         <div class="pull-right">
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <div class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-columns"></i>&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
+                        <div class="checkbox">
+                            <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
+                        </div>
+                    </li>
+                </menu>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -33,40 +46,120 @@ under the License.
         <br>
         <table id="typeDeliveryServicesTable" class="table responsive-utilities jambo_table">
             <thead>
-            <tr class="headings">
-                <th>Key (XML ID)</th>
-                <th>Tenant</th>
-                <th>Origin</th>
-                <th>Active</th>
-                <th>Type</th>
-                <th>Protocol</th>
-                <th>CDN</th>
-                <th>IPv6 Enabled</th>
-                <th>DSCP</th>
-                <th>Signing Algorithm</th>
-                <th>Qstring Handling</th>
-                <th>Last Updated</th>
-                <th style="text-align: right;">Actions</th>
-            </tr>
+                <tr class="headings">
+                    <th>Active</th>
+                    <th>Anonymous Blocking</th>
+                    <th>CDN</th>
+                    <th>Check Path</th>
+                    <th>Consistent Hash Query Params</th>
+                    <th>Consistent Hash Regex</th>
+                    <th>Deep Caching Type</th>
+                    <th>Display Name</th>
+                    <th>DNS Bypass CNAME</th>
+                    <th>DNS Bypass IP</th>
+                    <th>DNS Bypass IPv6</th>
+                    <th>DNS Bypass TTL</th>
+                    <th>DNS TTL</th>
+                    <th>DSCP</th>
+                    <th>Edge Header Rewrite Rules</th>
+                    <th>FQ Pacing Rate</th>
+                    <th>Geo Limit</th>
+                    <th>Geo Limit Countries</th>
+                    <th>Geo Limit Redirect URL</th>
+                    <th>Geolocation Provider</th>
+                    <th>Geo Miss Latitude</th>
+                    <th>Geo Miss Longitude</th>
+                    <th>Global Max Mbps</th>
+                    <th>Global Max TPS</th>
+                    <th>HTTP Bypass FQDN</th>
+                    <th>ID</th>
+                    <th>Info URL</th>
+                    <th>Initial Dispersion</th>
+                    <th>IPv6 Routing</th>
+                    <th>Last Updated</th>
+                    <th>Long Desc 1</th>
+                    <th>Long Desc 2</th>
+                    <th>Long Desc 3</th>
+                    <th>Max DNS Answers</th>
+                    <th>Max Origin Connections</th>
+                    <th>Mid Header Rewrite Rules</th>
+                    <th>Multi-Site Origin</th>
+                    <th>Origin Shield</th>
+                    <th>Origin FQDN</th>
+                    <th>Profile</th>
+                    <th>Protocol</th>
+                    <th>Qstring Handling</th>
+                    <th>Range Request Handling</th>
+                    <th>Regex Remap Expression</th>
+                    <th>Regional Geoblocking</th>
+                    <th>Raw Remap Text</th>
+                    <th>Routing Name</th>
+                    <th>Signed</th>
+                    <th>Signing Algorithm</th>
+                    <th>Tenant</th>
+                    <th>TR Request Headers</th>
+                    <th>TR Response Headers</th>
+                    <th>Type</th>
+                    <th>XML ID (Key)</th>
+                </tr>
             </thead>
             <tbody>
-            <tr ng-click="editDeliveryService(ds)" ng-repeat="ds in ::deliveryServices" context-menu="contextMenuItems">
-                <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
-                <td data-search="^{{::ds.tenant}}$">{{::ds.tenant}}</td>
-                <td data-search="^{{::ds.orgServerFqdn}}$">{{::ds.orgServerFqdn}}</td>
-                <td data-search="^{{::ds.active}}$">{{::ds.active}}</td>
-                <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
-                <td data-search="^{{::protocol(ds)}}$">{{::protocol(ds)}}</td>
-                <td data-search="^{{::ds.cdnName}}$">{{::ds.cdnName}}</td>
-                <td data-search="^{{::ds.ipv6RoutingEnabled}}$">{{::ds.ipv6RoutingEnabled}}</td>
-                <td data-search="^{{::ds.dscp}}$">{{::ds.dscp}}</td>
-                <td data-search="^{{::ds.signingAlgorithm}}$">{{::ds.signingAlgorithm}}</td>
-                <td data-search="^{{::qstring(ds)}}$">{{::qstring(ds)}}</td>
-                <td data-search="^{{::getRelativeTime(ds.lastUpdated)}}$" data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
-                <td style="text-align: right;">
-                    <span ng-if="showChartsButton"><a class="link action-link" title="View Charts" ng-click="openCharts(ds, $event)"><i class="fa fa-sm fa-bar-chart"></i></a></span>
-                </td>
-            </tr>
+                <tr ng-click="editDeliveryService(ds)" ng-repeat="ds in ::deliveryServices" context-menu="contextMenuItems">
+                    <td data-search="^{{::ds.active}}$">{{::ds.active}}</td>
+                    <td data-search="^{{::ds.anonymousBlockingEnabled}}$">{{::ds.anonymousBlockingEnabled}}</td>
+                    <td data-search="^{{::ds.cdnName}}$">{{::ds.cdnName}}</td>
+                    <td data-search="^{{::ds.checkPath}}$">{{::ds.checkPath}}</td>
+                    <td data-search="^{{::ds.consistentHashQueryParams}}$">{{::ds.consistentHashQueryParams.join(', ')}}</td>
+                    <td data-search="^{{::ds.consistentHashRegex}}$">{{::ds.consistentHashRegex}}</td>
+                    <td data-search="^{{::ds.deepCachingType}}$">{{::ds.deepCachingType}}</td>
+                    <td data-search="^{{::ds.displayName}}$">{{::ds.displayName}}</td>
+                    <td data-search="^{{::ds.dnsBypassCname}}$">{{::ds.dnsBypassCname}}</td>
+                    <td data-search="^{{::ds.dnsBypassIp}}$">{{::ds.dnsBypassIp}}</td>
+                    <td data-search="^{{::ds.dnsBypassIp6}}$">{{::ds.dnsBypassIp6}}</td>
+                    <td data-search="^{{::ds.dnsBypassTtl}}$">{{::ds.dnsBypassTtl}}</td>
+                    <td data-search="^{{::ds.ccrDnsTtl}}$">{{::ds.ccrDnsTtl}}</td>
+                    <td data-search="^{{::ds.dscp}}$">{{::ds.dscp}}</td>
+                    <td data-search="^{{::ds.edgeHeaderRewrite}}$">{{::ds.edgeHeaderRewrite}}</td>
+                    <td data-search="^{{::ds.fqPacingRate}}$">{{::ds.fqPacingRate}}</td>
+                    <td data-search="^{{::geoLimit(ds)}}$">{{::geoLimit(ds)}}</td>
+                    <td data-search="^{{::ds.geoLimitCountries}}$">{{::ds.geoLimitCountries}}</td>
+                    <td data-search="^{{::ds.geoLimitRedirectURL}}$">{{::ds.geoLimitRedirectURL}}</td>
+                    <td data-search="^{{::geoProvider(ds)}}$">{{::geoProvider(ds)}}</td>
+                    <td data-search="^{{::ds.missLat}}$">{{::ds.missLat}}</td>
+                    <td data-search="^{{::ds.missLong}}$">{{::ds.missLong}}</td>
+                    <td data-search="^{{::ds.globalMaxMbps}}$">{{::ds.globalMaxMbps}}</td>
+                    <td data-search="^{{::ds.globalMaxTps}}$">{{::ds.globalMaxTps}}</td>
+                    <td data-search="^{{::ds.httpBypassFqdn}}$">{{::ds.httpBypassFqdn}}</td>
+                    <td data-search="^{{::ds.id}}$">{{::ds.id}}</td>
+                    <td data-search="^{{::ds.infoUrl}}$">{{::ds.infoUrl}}</td>
+                    <td data-search="^{{::ds.initialDispersion}}$">{{::ds.initialDispersion}}</td>
+                    <td data-search="^{{::ds.ipv6RoutingEnabled}}$">{{::ds.ipv6RoutingEnabled}}</td>
+                    <td data-search="^{{::getRelativeTime(ds.lastUpdated)}}$" data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
+                    <td data-search="^{{::ds.longDesc}}$">{{::ds.longDesc}}</td>
+                    <td data-search="^{{::ds.longDesc1}}$">{{::ds.longDesc1}}</td>
+                    <td data-search="^{{::ds.longDesc2}}$">{{::ds.longDesc2}}</td>
+                    <td data-search="^{{::ds.maxDnsAnswers}}$">{{::ds.maxDnsAnswers}}</td>
+                    <td data-search="^{{::ds.maxOriginConnections}}$">{{::ds.maxOriginConnections}}</td>
+                    <td data-search="^{{::ds.midHeaderRewrite}}$">{{::ds.midHeaderRewrite}}</td>
+                    <td data-search="^{{::ds.multiSiteOrigin}}$">{{::ds.multiSiteOrigin}}</td>
+                    <td data-search="^{{::ds.originShield}}$">{{::ds.originShield}}</td>
+                    <td data-search="^{{::ds.orgServerFqdn}}$">{{::ds.orgServerFqdn}}</td>
+                    <td data-search="^{{::ds.profileName}}$">{{::ds.profileName}}</td>
+                    <td data-search="^{{::protocol(ds)}}$">{{::protocol(ds)}}</td>
+                    <td data-search="^{{::qstring(ds)}}$">{{::qstring(ds)}}</td>
+                    <td data-search="^{{::rrh(ds)}}$">{{::rrh(ds)}}</td>
+                    <td data-search="^{{::ds.regexRemap}}$">{{::ds.regexRemap}}</td>
+                    <td data-search="^{{::ds.regionalGeoBlocking}}$">{{::ds.regionalGeoBlocking}}</td>
+                    <td data-search="^{{::ds.remapText}}$">{{::ds.remapText}}</td>
+                    <td data-search="^{{::ds.routingName}}$">{{::ds.routingName}}</td>
+                    <td data-search="^{{::ds.signed}}$">{{::ds.signed}}</td>
+                    <td data-search="^{{::ds.signingAlgorithm}}$">{{::ds.signingAlgorithm}}</td>
+                    <td data-search="^{{::ds.tenant}}$">{{::ds.tenant}}</td>
+                    <td data-search="^{{::ds.trResponseHeaders}}$">{{::ds.trResponseHeaders}}</td>
+                    <td data-search="^{{::ds.trRequestHeaders}}$">{{::ds.trRequestHeaders}}</td>
+                    <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
+                    <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
+                </tr>
             </tbody>
         </table>
     </div>

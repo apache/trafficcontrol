@@ -59,15 +59,16 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 		case *s.ServerType == tc.RouterTypeName:
 			status := tc.CRConfigRouterStatus(*s.ServerStatus)
 			routers[host] = tc.CRConfigRouter{
-				APIPort:      s.APIPort,
-				FQDN:         s.Fqdn,
-				HTTPSPort:    s.HttpsPort,
-				IP:           s.Ip,
-				IP6:          s.Ip6,
-				Location:     s.LocationId,
-				Port:         s.Port,
-				Profile:      s.Profile,
-				ServerStatus: &status,
+				APIPort:       s.APIPort,
+				FQDN:          s.Fqdn,
+				HTTPSPort:     s.HttpsPort,
+				IP:            s.Ip,
+				IP6:           s.Ip6,
+				Location:      s.LocationId,
+				Port:          s.Port,
+				Profile:       s.Profile,
+				SecureAPIPort: s.SecureAPIPort,
+				ServerStatus:  &status,
 			}
 		case *s.ServerType == tc.MonitorTypeName:
 			monitors[host] = tc.CRConfigMonitor{
@@ -93,7 +94,8 @@ func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 // ServerUnion has all fields from all servers. This is used to select all server data with a single query, and then convert each to the proper type afterwards.
 type ServerUnion struct {
 	tc.CRConfigTrafficOpsServer
-	APIPort *string
+	APIPort       *string
+	SecureAPIPort *string
 }
 
 const DefaultWeightMultiplier = 1000.0
@@ -163,6 +165,10 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		params, hasParams := serverParams[host]
 		if hasParams && params.APIPort != nil {
 			s.APIPort = params.APIPort
+		}
+
+		if hasParams && params.SecureAPIPort != nil {
+			s.SecureAPIPort = params.SecureAPIPort
 		}
 
 		weightMultiplier := DefaultWeightMultiplier
@@ -301,6 +307,7 @@ order by dsr.set_number asc
 // ServerParams contains parameter data filled in the CRConfig Servers objects. If a given param doesn't exist on the given server, it will be nil.
 type ServerParams struct {
 	APIPort          *string
+	SecureAPIPort    *string
 	Weight           *float64
 	WeightMultiplier *float64
 }
@@ -315,7 +322,7 @@ left join profile_parameter as pp on pp.profile = s.profile
 left join parameter as p on p.id = pp.parameter
 inner join status as st ON st.id = s.status
 where s.cdn_id = (select id from cdn where name = $1)
-and ((p.config_file = 'CRConfig.json' and (p.name = 'weight' or p.name = 'weightMultiplier')) or (p.name = 'api.port'))
+and ((p.config_file = 'CRConfig.json' and (p.name = 'weight' or p.name = 'weightMultiplier')) or (p.name = 'api.port') or (p.name = 'secure.api.port'))
 and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 `
 	rows, err := tx.Query(q, cdn)
@@ -336,6 +343,8 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		switch name {
 		case "api.port":
 			param.APIPort = &val
+		case "secure.api.port":
+			param.SecureAPIPort = &val
 		case "weight":
 			i, err := strconv.ParseFloat(val, 64)
 			if err != nil {

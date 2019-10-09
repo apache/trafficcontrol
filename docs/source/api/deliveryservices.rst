@@ -21,176 +21,144 @@
 
 ``GET``
 =======
-Retrieves all :term:`Delivery Service`\ s
+Retrieves :term:`Delivery Services`
 
 :Auth. Required: Yes
-:Roles Required: None\ [1]_
+:Roles Required: None\ [#tenancy]_
 :Response Type:  Array
 
 Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
-	| Name        | Required | Description                                                                                                                                    |
-	+=============+==========+================================================================================================================================================+
-	| cdn         | no       | Show only the :term:`Delivery Service`\ s belonging to the CDN identified by this integral, unique identifier                                  |
-	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
-	| id          | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                               |
-	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
-	| logsEnabled | no       | If true, return only :term:`Delivery Service`\ s with logging enabled, otherwise return only :term:`Delivery Service`\ s with logging disabled |
-	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
-	| profile     | no       | Return only :term:`Delivery Service`\ s using the :term:`Profile` identified by this integral, unique identifier                               |
-	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
-	| tenant      | no       | Show only the :term:`Delivery Service`\ s belonging to the :term:`Tenant` identified by this integral, unique identifier                       |
-	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
-	| type        | no       | Return only :term:`Delivery Service`\ s of the :term:`Delivery Service` type identified by this integral, unique identifier                    |
-	+-------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------+
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| Name        | Required | Description                                                                                                                          |
+	+=============+==========+======================================================================================================================================+
+	| cdn         | no       | Show only the :term:`Delivery Services` belonging to the :ref:`ds-cdn` identified by this integral, unique identifier                |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| id          | no       | Show only the :term:`Delivery Service` that has this integral, unique identifier                                                     |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| logsEnabled | no       | Show only the :term:`Delivery Services` that have :ref:`ds-logs-enabled` set or not based on this boolean                            |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| profile     | no       | Return only :term:`Delivery Services` using the :term:`Profile` that has this :ref:`profile-id`                                      |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| tenant      | no       | Show only the :term:`Delivery Services` belonging to the :term:`Tenant` identified by this integral, unique identifier               |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| type        | no       | Return only :term:`Delivery Services` of the :term:`Delivery Service` :ref:`ds-types` identified by this integral, unique identifier |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby     | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                        |
+	|             |          | array                                                                                                                                |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder   | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                             |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| limit       | no       | Choose the maximum number of results to return                                                                                       |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                 |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. |
+	|             |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                    |
+	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
-:active:                   ``true`` if the :term:`Delivery Service` is active, ``false`` otherwise
-:anonymousBlockingEnabled: ``true`` if :ref:`Anonymous Blocking <anonymous_blocking-qht>` has been configured for the :term:`Delivery Service`, ``false`` otherwise
-:cacheurl:                 A setting for a deprecated feature of now-unsupported Trafficserver versions
+:active:                   A boolean that defines :ref:`ds-active`.
+:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:cacheurl:                 A :ref:`ds-cacheurl`
 
 	.. deprecated:: ATCv3.0
 		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
-:ccrDnsTtl:                The Time To Live (TTL) of the DNS response for A or AAAA record queries requesting the IP address of the Traffic Router - named "ccrDnsTtl" for legacy reasons
-:cdnId:                    The integral, unique identifier of the CDN to which the :term:`Delivery Service` belongs
-:cdnName:                  Name of the CDN to which the :term:`Delivery Service` belongs
-:checkPath:                The path portion of the URL to check connections to this :term:`Delivery Service`'s origin server
-:consistentHashRegex:      If defined, this is a regex used for the Pattern-Based Consistent Hashing feature. It is only applicable for HTTP and Steering Delivery Services
-:displayName:              The display name of the :term:`Delivery Service`
-:dnsBypassCname:           Domain name to overflow requests for HTTP :term:`Delivery Service`\ s - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
-:dnsBypassIp:              The IPv4 IP to use for bypass on a DNS :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
-:dnsBypassIp6:             The IPv6 IP to use for bypass on a DNS :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
-:dnsBypassTtl:             The time for which a DNS bypass of this :term:`Delivery Service`\ shall remain active\ [4]_
-:dscp:                     The Differentiated Services Code Point (DSCP) with which to mark traffic as it leaves the CDN and reaches clients
-:edgeHeaderRewrite:        Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
-:fqPacingRate:             The Fair-Queuing Pacing Rate in Bytes per second set on the all TCP connection sockets in the :term:`Delivery Service` (see ``man tc-fc_codel`` for more information) - Linux only
-:geoLimit:                 The setting that determines how content is geographically limited - this is an integer on the interval [0-2] where the values have these meanings:
-
-	0
-		None - no limitations
-	1
-		Only route when the client's IP is found in the Coverage Zone File (CZF)
-	2
-		Only route when the client's IP is found in the CZF, or when the client can be determined to be from the United States of America
-
-	.. warning:: This does not prevent access to content or make content secure; it merely prevents routing to the content through Traffic Router
-
-:geoLimitCountries:   A string containing a comma-separated list of country codes (e.g. "US,AU") which are allowed to request content through this :term:`Delivery Service`
-:geoLimitRedirectUrl: A URL to which clients blocked by :ref:`Regional Geographic Blocking <regionalgeo-qht>` or the ``geoLimit`` settings will be re-directed
-:geoProvider:         An integer that represents the provider of a database for mapping IPs to geographic locations; currently only the following values are supported:
-
-	0
-		The "Maxmind" GeoIP2 database (default)
-	1
-		Neustar
-
-:globalMaxMbps:       The maximum global bandwidth allowed on this :term:`Delivery Service`. If exceeded, traffic will be routed to ``dnsBypassIp`` (or ``dnsBypassIp6`` for IPv6 traffic) for DNS :term:`Delivery Service`\ s and to ``httpBypassFqdn`` for HTTP :term:`Delivery Service`\ s
-:globalMaxTps:        The maximum global transactions per second allowed on this :term:`Delivery Service`. When this is exceeded traffic will be sent to the ``dnsBypassIp`` (and/or ``dnsBypassIp6``) for DNS :term:`Delivery Service`\ s and to the httpBypassFqdn for HTTP :term:`Delivery Service`\ s
-:httpBypassFqdn:      The HTTP destination to use for bypass on an HTTP :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`
-:id:                  An integral, unique identifier for this :term:`Delivery Service`
-:infoUrl:             This is a string which is expected to contain at least one URL pointing to more information about the :term:`Delivery Service`. Historically, this has been used to link relevant JIRA tickets
-:initialDispersion:  The number of caches between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses. For most use-cases, this should be 1\ [2]_
-:ipv6RoutingEnabled: If ``true``, clients that connect to Traffic Router using IPv6 will be given the IPv6 address of a suitable Edge-tier cache; if ``false`` all addresses will be IPv4, regardless of the client connection\ [2]_
-:lastUpdated:        The date and time at which this :term:`Delivery Service` was last updated, in a ``ctime``-like format
-:logsEnabled:        If ``true``, logging is enabled for this :term:`Delivery Service`, otherwise it is disabled
-:longDesc:           A description of the :term:`Delivery Service`
-:longDesc1:          A field used when more detailed information that that provided by ``longDesc`` is desired
-:longDesc2:          A field used when even more detailed information that that provided by either ``longDesc`` or ``longDesc1`` is desired
-:matchList:          An array of methods used by Traffic Router to determine whether or not a request can be serviced by this :term:`Delivery Service`
-
-	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
-	:setNumber: An integral, unique identifier for the set of types to which the ``type`` field belongs
-	:type:      The type of match performed using ``pattern`` to determine whether or not to use this :term:`Delivery Service`
-
-		HOST_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request\ [2]_
-		HEADER_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [2]_
-		PATH_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches the request path of this :term:`Delivery Service`'s URL
-		STEERING_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Service`\ s
-
-:maxDnsAnswers:    The maximum number of IPs to put in responses to A/AAAA DNS record requests (0 means all available)\ [4]_
-:maxOriginConnections:      The maximum number of connections allowed to the origin (0 means no maximum).
+:ccrDnsTtl:           The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
+:cdnId:               The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+:cdnName:             Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+:checkPath:           A :ref:`ds-check-path`
+:consistentHashRegex: A :ref:`ds-consistent-hashing-regex`
 
 	.. versionadded:: 1.4
 
-:midHeaderRewrite: Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
-:missLat:          The latitude to use when the client cannot be found in the CZF or a geographic IP lookup
-:missLong:         The longitude to use when the client cannot be found in the CZF or a geographic IP lookup
-:multiSiteOrigin:  ``true`` if the Multi Site Origin feature is enabled for this :term:`Delivery Service`, ``false`` otherwise\ [3]_
-:orgServerFqdn:    The URL of the :term:`Delivery Service`'s origin server for use in retrieving content from the origin server
+:consistentHashQueryParams: An array of :ref:`ds-consistent-hashing-qparams`
 
-	.. note:: Despite the field name, this must truly be a full URL - including the protocol (e.g. ``http://`` or ``https://``) - **NOT** merely the server's Fully Qualified Domain Name (FQDN)
+	.. versionadded:: 1.4
 
-:originShield:       An "origin shield" is a forward proxy that sits between Mid-tier caches and the origin and performs further caching beyond what's offered by a standard CDN. This field is a string of FQDNs to use as origin shields, delimited by ``|``
-:profileDescription: The description of the Traffic Router Profile with which this :term:`Delivery Service` is associated
-:profileId:          The integral, unique identifier for the Traffic Router profile with which this :term:`Delivery Service` is associated
-:profileName:        The name of the Traffic Router Profile with which this :term:`Delivery Service` is associated
-:protocol:           The protocol which clients will use to communicate with Edge-tier :term:`cache server` s\ [2]_ - this is an integer on the interval [0-2] where the values have these meanings:
+:deepCachingType:     The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
 
-	0
-		HTTP
-	1
-		HTTPS
-	2
-		Both HTTP and HTTPS
+	.. versionadded:: 1.3
 
-:qstringIgnore: Tells caches whether or not to consider URLs with different query parameter strings to be distinct - this is an integer on the interval [0-2] where the values have these meanings:
+:displayName:       The :ref:`ds-display-name`
+:dnsBypassCname:    A :ref:`ds-dns-bypass-cname`
+:dnsBypassIp:       A :ref:`ds-dns-bypass-ip`
+:dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
+:dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
+:dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+:edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
+:exampleURLs:       An array of :ref:`ds-example-urls`
+:fqPacingRate:      The :ref:`ds-fqpr`
 
-	0
-		URLs with different query parameter strings will be considered distinct for caching purposes, and query strings will be passed upstream to the origin
-	1
-		URLs with different query parameter strings will be considered identical for caching purposes, and query strings will be passed upstream to the origin
-	2
-		Query strings are stripped out by Edge-tier caches, and thus are neither taken into consideration for caching purposes, nor passed upstream in requests to the origin
+	.. versionadded:: 1.3
 
-:rangeRequestHandling: Tells caches how to handle range requests\ [7]_ - this is an integer on the interval [0,2] where the values have these meanings:
+:geoLimit:            An integer that defines the :ref:`ds-geo-limit`
+:geoLimitCountries:   A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`
+:geoLimitRedirectUrl: A :ref:`ds-geo-limit-redirect-url`
+:geoProvider:         The :ref:`ds-geo-provider`
+:globalMaxMbps:       The :ref:`ds-global-max-mbps`
+:globalMaxTps:        The :ref:`ds-global-max-tps`
+:httpBypassFqdn:      A :ref:`ds-http-bypass-fqdn`
+:id:                  An integral, unique identifier for this :term:`Delivery Service`
+:infoUrl:             An :ref:`ds-info-url`
+:initialDispersion:  The :ref:`ds-initial-dispersion`
+:ipv6RoutingEnabled: A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastUpdated:        The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
+:logsEnabled:        A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
+:longDesc:           The :ref:`ds-longdesc` of this :term:`Delivery Service`
+:longDesc1:          The :ref:`ds-longdesc2` of this :term:`Delivery Service`
+:longDesc2:          The :ref:`ds-longdesc3` of this :term:`Delivery Service`
+:matchList:          The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
-	0
-		Range requests will not be cached, but range requests that request ranges of content already cached will be served from the cache
-	1
-		Use the `background_fetch plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>`_ to service the range request while caching the whole object
-	2
-		Use the `experimental cache_range_requests plugin <https://github.com/apache/trafficserver/tree/master/plugins/experimental/cache_range_requests>`_ to treat unique ranges as unique objects
+	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
+	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
+	:type:      The type of match performed using ``pattern``.
 
-:regexRemap: A regular expression remap rule to apply to this :term:`Delivery Service` at the Edge tier
+:maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
+:maxOriginConnections: The :ref:`ds-max-origin-connections`
 
-	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
+	.. versionadded:: 1.4
 
-:regionalGeoBlocking: ``true`` if Regional Geo Blocking is in use within this :term:`Delivery Service`, ``false`` otherwise - see :ref:`regionalgeo-qht` for more information
-:remapText:           Additional, raw text to add to the remap line for caches
+:midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
+:missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
+:missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
+:multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
+:orgServerFqdn:        The :ref:`ds-origin-url`
+:originShield:         A :ref:`ds-origin-shield` string
+:profileDescription:   The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileId:            The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileName:          The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
+:qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
+:rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
+:regexRemap:           A :ref:`ds-regex-remap`
+:regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
+:remapText:            :ref:`ds-raw-remap`
+:signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
+:signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 
-	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
+	.. versionadded:: 1.3
 
-:signed:           ``true`` if token-based authentication is enabled for this :term:`Delivery Service`, ``false`` otherwise
-:signingAlgorithm: Type of URL signing method to sign the URLs, basically comes down to one of two plugins or ``null``:
+:sslKeyVersion: This integer indicates the :ref:`ds-ssl-key-version`
+:tenantId:      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 
-	``null``
-		Token-based authentication is not enabled for this :term:`Delivery Service`
-	url_sig:
-		URL Signing token-based authentication is enabled for this :term:`Delivery Service`
-	uri_signing
-		URI Signing token-based authentication is enabled for this :term:`Delivery Service`
+	.. versionadded:: 1.3
 
-	.. seealso:: `The Apache Trafficserver documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/url_sig.en.html>`_ and `the draft RFC for uri_signing <https://tools.ietf.org/html/draft-ietf-cdni-uri-signing-16>`_ - note, however that the current implementation of uri_signing uses Draft 12 of that RFC document, **NOT** the latest
+:trRequestHeaders: If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 
-:sslKeyVersion: This integer indicates the generation of keys in use by the :term:`Delivery Service` - if any - and is incremented by the Traffic Portal client whenever new keys are generated
+	.. versionadded:: 1.3
 
-	.. warning:: This number will not be correct if keys are manually replaced using the API, as the key generation API does not increment it!
+:trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 
-:tenantId:            The integral, unique identifier of the tenant who owns this :term:`Delivery Service`
-:trRequestHeaders:    If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:trResponseHeaders:   If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:type:                The name of the routing type of this :term:`Delivery Service` e.g. "HTTP"
-:typeId:              The integral, unique identifier of the routing type of this :term:`Delivery Service`
-:xmlId:               A unique string that describes this :term:`Delivery Service` - exists for legacy reasons
+	.. versionadded:: 1.3
+
+:type:   The :ref:`ds-types` of this :term:`Delivery Service`
+:typeId: The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
+:xmlId:  This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
 .. code-block:: http
 	:caption: Response Example
@@ -207,8 +175,7 @@ Response Structure
 	Date: Thu, 15 Nov 2018 19:04:29 GMT
 	Transfer-Encoding: chunked
 
-	{ "response": [
-	{
+	{ "response": [{
 		"active": true,
 		"anonymousBlockingEnabled": false,
 		"cacheurl": null,
@@ -234,7 +201,7 @@ Response Structure
 		"infoUrl": null,
 		"initialDispersion": 1,
 		"ipv6RoutingEnabled": true,
-		"lastUpdated": "2018-11-14 18:21:17+00",
+		"lastUpdated": "2019-05-15 14:32:05+00",
 		"logsEnabled": true,
 		"longDesc": "Apachecon North America 2018",
 		"longDesc1": null,
@@ -247,7 +214,6 @@ Response Structure
 			}
 		],
 		"maxDnsAnswers": null,
-		"maxOriginConnections": 0,
 		"midHeaderRewrite": null,
 		"missLat": 42,
 		"missLong": -88,
@@ -257,7 +223,7 @@ Response Structure
 		"profileDescription": null,
 		"profileId": null,
 		"profileName": null,
-		"protocol": 0,
+		"protocol": 2,
 		"qstringIgnore": 0,
 		"rangeRequestHandling": 0,
 		"regexRemap": null,
@@ -271,160 +237,122 @@ Response Structure
 		"typeId": 1,
 		"xmlId": "demo1",
 		"exampleURLs": [
-			"http://video.demo1.mycdn.ciab.test"
+			"http://video.demo1.mycdn.ciab.test",
+			"https://video.demo1.mycdn.ciab.test"
 		],
 		"deepCachingType": "NEVER",
+		"fqPacingRate": null,
 		"signingAlgorithm": null,
-		"tenant": "root"
+		"tenant": "root",
+		"trResponseHeaders": null,
+		"trRequestHeaders": null,
+		"consistentHashRegex": null,
+		"consistentHashQueryParams": [
+			"abc",
+			"pdq",
+			"xxx",
+			"zyx"
+		],
+		"maxOriginConnections": 0
 	}]}
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to see *all* :term:`Delivery Service`\ s, whereas any other user will only see the :term:`Delivery Service`\ s their Tenant is allowed to see.
-.. [2] This only applies to HTTP-routed :term:`Delivery Service`\ s
-.. [3] See :ref:`multi-site-origin`
-.. [4] This only applies to DNS-routed :term:`Delivery Service`\ s
 
 ``POST``
 ========
 Allows users to create :term:`Delivery Service`.
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"
+:Roles Required: "admin" or "operations"\ [#tenancy]_
 :Response Type:  Array
 
 Request Structure
 -----------------
-:active:                   If ``true``, the :term:`Delivery Service` will immediately become active and serves traffic
-:anonymousBlockingEnabled: An optional field which, if defined and ``true`` will cause :ref:`Anonymous Blocking <anonymous_blocking-qht>` to be used with the new :term:`Delivery Service`
-:cacheurl:                 An optional setting for a deprecated feature of now-unsupported Trafficserver versions (read: "Don't use this")
+:active:                   A boolean that defines :ref:`ds-active`.
+:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:cacheurl:                 A :ref:`ds-cacheurl`
 
 	.. deprecated:: ATCv3.0
 		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
-:ccrDnsTtl:                The Time To Live (TTL) in seconds of the DNS response for A or AAAA record queries requesting the IP address of the Traffic Router - named "ccrDnsTtl" for legacy reasons
-:cdnId:                    The integral, unique identifier for the CDN to which this :term:`Delivery Service`\ shall be assigned
-:checkPath:                The path portion of the URL which will be used to check connections to this :term:`Delivery Service`'s origin server
-:consistentHashRegex:      If defined, this is a regex used for the Pattern-Based Consistent Hashing feature. It is only applicable for HTTP and Steering Delivery Services
-:deepCachingType:          A string describing when to do Deep Caching for this :term:`Delivery Service`:
-
-	NEVER
-		Deep Caching will never be used by this :term:`Delivery Service` (default)
-	ALWAYS
-		Deep Caching will always be used by this :term:`Delivery Service`
-
-:displayName:       The human-friendly name for this :term:`Delivery Service`
-:dnsBypassCname:    Domain name to overflow requests for HTTP :term:`Delivery Service`\ s - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`
-:dnsBypassIp:       The IPv4 IP to use for bypass on a DNS :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`
-:dnsBypassIp6:      The IPv6 IP to use for bypass on a DNS :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`
-:dnsBypassTtl:      The time for which a DNS bypass of this :term:`Delivery Service`\ shall remain active
-:dscp:              The Differentiated Services Code Point (DSCP) with which to mark downstream (EDGE -> customer) traffic. This should be zero in most cases
-:edgeHeaderRewrite: An optional string which, if present, defines rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
-:fqPacingRate:      An optional integer which, if present, sets the Fair-Queuing Pacing Rate in bytes per second set on the all TCP connection sockets in the :term:`Delivery Service` (see ``man tc-fc_codel`` for more information) - Linux only, defaults to 0 meaning "disabled"
-:geoLimit:          The setting that determines how content is geographically limited - this is an integer on the interval [0-2] where the values have these meanings:
-
-	0
-		None - no limitations
-	1
-		Only route when the client's IP is found in the Coverage Zone File (CZF)
-	2
-		Only route when the client's IP is found in the CZF, or when the client can be determined to be from the United States of America
-
-	.. warning:: This does not prevent access to content or make content secure; it merely prevents routing to the content through Traffic Router
-
-:geoLimitCountries:   A string containing a comma-separated list of country codes (e.g. "US,AU") which are allowed to request content through this :term:`Delivery Service`\ [5]_
-:geoLimitRedirectUrl: A URL to which clients blocked by :ref:`Regional Geographic Blocking <regionalgeo-qht>` or the ``geoLimit`` settings will be re-directed\ [5]_
-:geoProvider:         An integer that represents the provider of a database for mapping IPs to geographic locations; currently only the following values are supported:
-
-	0
-		The "Maxmind" GeoIP2 database (default)
-	1
-		Neustar
-
-:globalMaxMbps:      An optional integer that will set the maximum global bandwidth allowed on this :term:`Delivery Service`. If exceeded, traffic will be routed to ``dnsBypassIp`` (or ``dnsBypassIp6`` for IPv6 traffic) for DNS :term:`Delivery Service`\ s and to ``httpBypassFqdn`` for HTTP :term:`Delivery Service`\ s
-:globalMaxTps:       An optional integer that will set the maximum global transactions per second allowed on this :term:`Delivery Service`. When this is exceeded traffic will be sent to the ``dnsBpassIp`` (and/or ``dnsBypassIp6``)for DNS :term:`Delivery Service`\ s and to the ``httpBypassFqdn`` for HTTP :term:`Delivery Service`\ s
-:httpBypassFqdn:     An optional Fully Qualified Domain Name (FQDN) to use for bypass on an HTTP :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [2]_
-:infoUrl:            An optional string which, if present, is expected to contain at least one URL pointing to more information about the :term:`Delivery Service`. Historically, this has been used to link relevant JIRA tickets
-:initialDispersion:  The number of caches between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses. For most use-cases, this should be 1\ [2]_\ [6]_
-:ipv6RoutingEnabled: If ``true``, clients that connect to Traffic Router using IPv6 will be given the IPv6 address of a suitable Edge-tier cache; if ``false`` all addresses will be IPv4, regardless of the client connection - optional for ANY_MAP :term:`Delivery Service`\ s
-:logsEnabled:        If ``true``, logging is enabled for this :term:`Delivery Service`, otherwise it is disabled
-:longDesc:           An optional description of the :term:`Delivery Service`
-:longDesc1:          An optional field used when more detailed information that that provided by ``longDesc`` is desired
-:longDesc2:          An optional field used when even more detailed information that that provided by either ``longDesc`` or ``longDesc1`` is desired
-:maxDnsAnswers:      An optional field which, when present, specifies the maximum number of IPs to put in responses to A/AAAA DNS record requests - defaults to 0, meaning "no limit"\ [4]_
-:maxOriginConnections:      The maximum number of connections allowed to the origin (0 means no maximum).
+:ccrDnsTtl:           The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
+:cdnId:               The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+:checkPath:           A :ref:`ds-check-path`
+:consistentHashRegex: A :ref:`ds-consistent-hashing-regex`
 
 	.. versionadded:: 1.4
 
-:midHeaderRewrite:   An optional string containing rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
-:missLat:            The latitude to use when the client cannot be found in the CZF or a geographic IP lookup\ [7]_
-:missLong:           The longitude to use when the client cannot be found in the CZF or a geographic IP lookup\ [7]_
-:multiSiteOrigin:    ``true`` if the Multi Site Origin feature is enabled for this :term:`Delivery Service`, ``false`` otherwise\ [3]_\ [7]_
-:orgServerFqdn:      The URL of the :term:`Delivery Service`'s origin server for use in retrieving content from the origin server\ [7]_
+:consistentHashQueryParams: An array of :ref:`ds-consistent-hashing-qparams`
 
-	.. note:: Despite the field name, this must truly be a full URL - including the protocol (e.g. ``http://`` or ``https://``) - **NOT** merely the server's Fully Qualified Domain Name (FQDN)
+	.. versionadded:: 1.4
 
-:originShield: An "origin shield" is a forward proxy that sits between Mid-tier caches and the origin and performs further caching beyond what's offered by a standard CDN. This optional field is a string of FQDNs to use as origin shields, delimited by ``|``
-:profileId:    An optional, integral, unique identifier for the Traffic Router profile with which this :term:`Delivery Service`\ shall be associated
-:protocol:     The protocol which clients will use to communicate with Edge-tier :term:`cache server` s - this is an (optional for ANY_MAP :term:`Delivery Service`\ s) integer on the interval [0,2] where the values have these meanings:
+:deepCachingType: The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
 
-	0
-		HTTP
-	1
-		HTTPS
-	2
-		Both HTTP and HTTPS
+	.. versionadded:: 1.3
 
-:qstringIgnore: Tells caches whether or not to consider URLs with different query parameter strings to be distinct\ [7]_ - this is an integer on the interval [0-2] where the values have these meanings:
+:displayName:       The :ref:`ds-display-name`
+:dnsBypassCname:    A :ref:`ds-dns-bypass-cname`
+:dnsBypassIp:       A :ref:`ds-dns-bypass-ip`
+:dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
+:dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
+:dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+:edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
+:fqPacingRate:      The :ref:`ds-fqpr`
 
-	0
-		URLs with different query parameter strings will be considered distinct for caching purposes, and query strings will be passed upstream to the origin
-	1
-		URLs with different query parameter strings will be considered identical for caching purposes, and query strings will be passed upstream to the origin
-	2
-		Query strings are stripped out by Edge-tier caches, and thus are neither taken into consideration for caching purposes, nor passed upstream in requests to the origin
+	.. versionadded:: 1.3
 
-:rangeRequestHandling: Tells caches how to handle range requests\ [7]_ - this is an integer on the interval [0,2] where the values have these meanings:
+:geoLimit:             An integer that defines the :ref:`ds-geo-limit`
+:geoLimitCountries:    A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`\ [#geolimit]_
+:geoLimitRedirectUrl:  A :ref:`ds-geo-limit-redirect-url`\ [#geolimit]_
+:geoProvider:          The :ref:`ds-geo-provider`
+:globalMaxMbps:        The :ref:`ds-global-max-mbps`
+:globalMaxTps:         The :ref:`ds-global-max-tps`
+:httpBypassFqdn:       A :ref:`ds-http-bypass-fqdn`
+:infoUrl:              An :ref:`ds-info-url`
+:initialDispersion:    The :ref:`ds-initial-dispersion`
+:ipv6RoutingEnabled:   A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:logsEnabled:          A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
+:longDesc:             The :ref:`ds-longdesc` of this :term:`Delivery Service`
+:longDesc1:            An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
+:longDesc2:            An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
+:maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
+:maxOriginConnections: The :ref:`ds-max-origin-connections`
 
-	0
-		Range requests will not be cached, but range requests that request ranges of content already cached will be served from the cache
-	1
-		Use the `background_fetch plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>`_ to service the range request while caching the whole object
-	2
-		Use the `experimental cache_range_requests plugin <https://github.com/apache/trafficserver/tree/master/plugins/experimental/cache_range_requests>`_ to treat unique ranges as unique objects
+	.. versionadded:: 1.4
 
-:regexRemap: An optional, regular expression remap rule to apply to this :term:`Delivery Service` at the Edge tier
+:midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
+:missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
+:missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
+:multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
+:orgServerFqdn:        The :ref:`ds-origin-url`
+:originShield:         A :ref:`ds-origin-shield` string
+:profileId:            An optional :ref:`profile-id` of a :ref:`ds-profile` with which this :term:`Delivery Service` shall be associated
+:protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
+:qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
+:rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
+:regexRemap:           A :ref:`ds-regex-remap`
+:regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
+:remapText:            :ref:`ds-raw-remap`
+:signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
+:signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 
-	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
+	.. versionadded:: 1.3
 
-:regionalGeoBlocking: ``true`` if Regional Geo Blocking is in use within this :term:`Delivery Service`, ``false`` otherwise - see :ref:`regionalgeo-qht` for more information
-:remapText:           Optional, raw text to add to the remap line for caches
+:sslKeyVersion: This integer indicates the :ref:`ds-ssl-key-version`
+:tenantId:      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 
-	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
+	.. versionadded:: 1.3
 
-:routingName:      The routing name of this :term:`Delivery Service`, used as the top-level part of the FQDN used by clients to request content from the :term:`Delivery Service` e.g. ``routingName.xml_id.CDNName.com``
-:signed:           An optional field which should be ``true`` if token-based authentication will be enabled for this :term:`Delivery Service`, ``false`` (default) otherwise
-:signingAlgorithm: Type of URL signing method to sign the URLs, basically comes down to one of two plugins or ``null``:
+:trRequestHeaders: If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 
-	``null``
-		Token-based authentication is not enabled for this :term:`Delivery Service`
-	url_sig:
-		URL Signing token-based authentication is enabled for this :term:`Delivery Service`
-	uri_signing
-		URI Signing token-based authentication is enabled for this :term:`Delivery Service`
+	.. versionadded:: 1.3
 
-	.. seealso:: `The Apache Trafficserver documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/url_sig.en.html>`_ and `the draft RFC for uri_signing <https://tools.ietf.org/html/draft-ietf-cdni-uri-signing-16>`_ - note, however that the current implementation of uri_signing uses Draft 12 of that RFC document, **NOT** the latest
+:trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 
-:sslKeyVersion: This optional integer indicates the generation of keys to be used by the :term:`Delivery Service` - if any - and is incremented by the Traffic Portal client whenever new keys are generated
+	.. versionadded:: 1.3
 
-	.. warning:: This number will not be correct if keys are manually replaced using the API, as the key generation API does not increment it!
-
-:tenantId:            An optional, integral, unique identifier of the tenant who will own this :term:`Delivery Service`
-:trRequestHeaders:    If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:trResponseHeaders:   If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:typeId:              The integral, unique identifier for the routing type of this :term:`Delivery Service`
-:xmlId:               A unique string that describes this :term:`Delivery Service` - exists for legacy reasons
-
-	.. note:: This should almost never be different from the :term:`Delivery Service`'s ``displayName``
-
+:type:   The :ref:`ds-types` of this :term:`Delivery Service`
+:typeId: The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
+:xmlId:  This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
 .. code-block:: http
 	:caption: Request Example
@@ -441,22 +369,17 @@ Request Structure
 		"active": false,
 		"anonymousBlockingEnabled": false,
 		"cdnId": 2,
-		"cdnName": "CDN-in-a-Box",
 		"deepCachingType": "NEVER",
 		"displayName": "test",
-		"exampleURLs": [
-			"http://test.test.mycdn.ciab.test"
-		],
 		"dscp": 0,
 		"geoLimit": 0,
 		"geoProvider": 0,
 		"initialDispersion": 1,
 		"ipv6RoutingEnabled": false,
-		"lastUpdated": "2018-11-14 18:21:17+00",
 		"logsEnabled": true,
-		"longDesc": "A :term:`Delivery Service` created expressly for API documentation examples",
-		"missLat": -1,
-		"missLong": -1,
+		"longDesc": "A Delivery Service created expressly for API documentation examples",
+		"missLat": 0,
+		"missLong": 0,
 		"maxOriginConnections": 0,
 		"multiSiteOrigin": false,
 		"orgServerFqdn": "http://origin.infra.ciab.test",
@@ -472,154 +395,107 @@ Request Structure
 		"xmlId": "test"
 	}
 
-.. [5] These fields must be defined if and only if ``geoLimit`` is non-zero
-.. [6] These fields are required for HTTP-routed :term:`Delivery Service`\ s, and optional for all others
-.. [7] These fields are required for HTTP-routed and DNS-routed :term:`Delivery Service`\ s, but are optional for (and in fact may have no effect on) STEERING and ANY_MAP :term:`Delivery Service`\ s
 
 Response Structure
 ------------------
-:active:                   ``true`` if the :term:`Delivery Service` is active, ``false`` otherwise
-:anonymousBlockingEnabled: ``true`` if :ref:`Anonymous Blocking <anonymous_blocking-qht>` has been configured for the :term:`Delivery Service`, ``false`` otherwise
-:cacheurl:                 A setting for a deprecated feature of now-unsupported Trafficserver versions
+:active:                   A boolean that defines :ref:`ds-active`.
+:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:cacheurl:                 A :ref:`ds-cacheurl`
 
 	.. deprecated:: ATCv3.0
 		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
-:ccrDnsTtl:                The Time To Live (TTL) of the DNS response for A or AAAA record queries requesting the IP address of the Traffic Router - named "ccrDnsTtl" for legacy reasons
-:cdnId:                    The integral, unique identifier of the CDN to which the :term:`Delivery Service` belongs
-:cdnName:                  Name of the CDN to which the :term:`Delivery Service` belongs
-:checkPath:                The path portion of the URL to check connections to this :term:`Delivery Service`'s origin server
-:consistentHashRegex:      If defined, this is a regex used for the Pattern-Based Consistent Hashing feature. It is only applicable for HTTP and Steering Delivery Services
-:displayName:              The display name of the :term:`Delivery Service`
-:dnsBypassCname:           Domain name to overflow requests for HTTP :term:`Delivery Service`\ s - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
-:dnsBypassIp:              The IPv4 IP to use for bypass on a DNS :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
-:dnsBypassIp6:             The IPv6 IP to use for bypass on a DNS :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`\ [4]_
-:dnsBypassTtl:             The time for which a DNS bypass of this :term:`Delivery Service`\ shall remain active\ [4]_
-:dscp:                     The Differentiated Services Code Point (DSCP) with which to mark traffic as it leaves the CDN and reaches clients
-:edgeHeaderRewrite:        Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
-:fqPacingRate:             The Fair-Queuing Pacing Rate in Bytes per second set on the all TCP connection sockets in the :term:`Delivery Service` (see ``man tc-fc_codel`` for more information) - Linux only
-:geoLimit:                 The setting that determines how content is geographically limited - this is an integer on the interval [0-2] where the values have these meanings:
-
-	0
-		None - no limitations
-	1
-		Only route when the client's IP is found in the Coverage Zone File (CZF)
-	2
-		Only route when the client's IP is found in the CZF, or when the client can be determined to be from the United States of America
-
-	.. warning:: This does not prevent access to content or make content secure; it merely prevents routing to the content through Traffic Router
-
-:geoLimitCountries:   A string containing a comma-separated list of country codes (e.g. "US,AU") which are allowed to request content through this :term:`Delivery Service`
-:geoLimitRedirectUrl: A URL to which clients blocked by :ref:`Regional Geographic Blocking <regionalgeo-qht>` or the ``geoLimit`` settings will be re-directed
-:geoProvider:         An integer that represents the provider of a database for mapping IPs to geographic locations; currently only the following values are supported:
-
-	0
-		The "Maxmind" GeoIP2 database (default)
-	1
-		Neustar
-
-:globalMaxMbps:       The maximum global bandwidth allowed on this :term:`Delivery Service`. If exceeded, traffic will be routed to ``dnsBypassIp`` (or ``dnsBypassIp6`` for IPv6 traffic) for DNS :term:`Delivery Service`\ s and to ``httpBypassFqdn`` for HTTP :term:`Delivery Service`\ s
-:globalMaxTps:        The maximum global transactions per second allowed on this :term:`Delivery Service`. When this is exceeded traffic will be sent to the ``dnsBypassIp`` (and/or ``dnsBypassIp6``) for DNS :term:`Delivery Service`\ s and to the httpBypassFqdn for HTTP :term:`Delivery Service`\ s
-:httpBypassFqdn:      The HTTP destination to use for bypass on an HTTP :term:`Delivery Service` - bypass starts when the traffic on this :term:`Delivery Service` exceeds ``globalMaxMbps``, or when more than ``globalMaxTps`` is being exceeded within the :term:`Delivery Service`
-:id:                  An integral, unique identifier for this :term:`Delivery Service`
-:infoUrl:             This is a string which is expected to contain at least one URL pointing to more information about the :term:`Delivery Service`. Historically, this has been used to link relevant JIRA tickets
-:initialDispersion:  The number of caches between which traffic requesting the same object will be randomly split - meaning that if 4 clients all request the same object (one after another), then if this is above 4 there is a possibility that all 4 are cache misses. For most use-cases, this should be 1\ [2]_
-:ipv6RoutingEnabled: If ``true``, clients that connect to Traffic Router using IPv6 will be given the IPv6 address of a suitable Edge-tier cache; if ``false`` all addresses will be IPv4, regardless of the client connection\ [2]_
-:lastUpdated:        The date and time at which this :term:`Delivery Service` was last updated, in a ``ctime``-like format
-:logsEnabled:        If ``true``, logging is enabled for this :term:`Delivery Service`, otherwise it is disabled
-:longDesc:           A description of the :term:`Delivery Service`
-:longDesc1:          A field used when more detailed information that that provided by ``longDesc`` is desired
-:longDesc2:          A field used when even more detailed information that that provided by either ``longDesc`` or ``longDesc1`` is desired
-:matchList:          An array of methods used by Traffic Router to determine whether or not a request can be serviced by this :term:`Delivery Service`
-
-	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
-	:setNumber: An integral, unique identifier for the set of types to which the ``type`` field belongs
-	:type:      The type of match performed using ``pattern`` to determine whether or not to use this :term:`Delivery Service`
-
-		HOST_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches the ``Host:`` HTTP header of an HTTP request\ [2]_
-		HEADER_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches an HTTP header (both the name and value) in an HTTP request\ [2]_
-		PATH_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches the request path of this :term:`Delivery Service`'s URL
-		STEERING_REGEXP
-			Use the :term:`Delivery Service` if ``pattern`` matches the ``xml_id`` of one of this :term:`Delivery Service`'s "Steering" target :term:`Delivery Service`\ s
-
-:maxDnsAnswers:    The maximum number of IPs to put in responses to A/AAAA DNS record requests (0 means all available)\ [4]_
-:maxOriginConnections:      The maximum number of connections allowed to the origin (0 means no maximum).
+:ccrDnsTtl:           The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
+:cdnId:               The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+:cdnName:             Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
+:checkPath:           A :ref:`ds-check-path`
+:consistentHashRegex: A :ref:`ds-consistent-hashing-regex`
 
 	.. versionadded:: 1.4
 
-:midHeaderRewrite: Rewrite operations to be performed on TCP headers at the Edge-tier cache level - used by the Header Rewrite Apache Trafficserver plugin
-:missLat:          The latitude to use when the client cannot be found in the CZF or a geographic IP lookup
-:missLong:         The longitude to use when the client cannot be found in the CZF or a geographic IP lookup
-:multiSiteOrigin:  ``true`` if the Multi Site Origin feature is enabled for this :term:`Delivery Service`, ``false`` otherwise\ [3]_
-:orgServerFqdn:    The URL of the :term:`Delivery Service`'s origin server for use in retrieving content from the origin server
+:consistentHashQueryParams: An array of :ref:`ds-consistent-hashing-qparams`
 
-	.. note:: Despite the field name, this must truly be a full URL - including the protocol (e.g. ``http://`` or ``https://``) - **NOT** merely the server's Fully Qualified Domain Name (FQDN)
+	.. versionadded:: 1.4
 
-:originShield:       An "origin shield" is a forward proxy that sits between Mid-tier caches and the origin and performs further caching beyond what's offered by a standard CDN. This field is a string of FQDNs to use as origin shields, delimited by ``|``
-:profileDescription: The description of the Traffic Router Profile with which this :term:`Delivery Service` is associated
-:profileId:          The integral, unique identifier for the Traffic Router profile with which this :term:`Delivery Service` is associated
-:profileName:        The name of the Traffic Router Profile with which this :term:`Delivery Service` is associated
-:protocol:           The protocol which clients will use to communicate with Edge-tier :term:`cache server` s\ [2]_ - this is an integer on the interval [0-2] where the values have these meanings:
+:deepCachingType:     The :ref:`ds-deep-caching` setting for this :term:`Delivery Service`
 
-	0
-		HTTP
-	1
-		HTTPS
-	2
-		Both HTTP and HTTPS
+	.. versionadded:: 1.3
 
-:qstringIgnore: Tells caches whether or not to consider URLs with different query parameter strings to be distinct - this is an integer on the interval [0-2] where the values have these meanings:
+:displayName:       The :ref:`ds-display-name`
+:dnsBypassCname:    A :ref:`ds-dns-bypass-cname`
+:dnsBypassIp:       A :ref:`ds-dns-bypass-ip`
+:dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
+:dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
+:dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+:edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
+:exampleURLs:       An array of :ref:`ds-example-urls`
+:fqPacingRate:      The :ref:`ds-fqpr`
 
-	0
-		URLs with different query parameter strings will be considered distinct for caching purposes, and query strings will be passed upstream to the origin
-	1
-		URLs with different query parameter strings will be considered identical for caching purposes, and query strings will be passed upstream to the origin
-	2
-		Query strings are stripped out by Edge-tier caches, and thus are neither taken into consideration for caching purposes, nor passed upstream in requests to the origin
+	.. versionadded:: 1.3
 
-:rangeRequestHandling: Tells caches how to handle range requests\ [7]_ - this is an integer on the interval [0,2] where the values have these meanings:
+:geoLimit:            An integer that defines the :ref:`ds-geo-limit`
+:geoLimitCountries:   A string containing a comma-separated list defining the :ref:`ds-geo-limit-countries`
+:geoLimitRedirectUrl: A :ref:`ds-geo-limit-redirect-url`
+:geoProvider:         The :ref:`ds-geo-provider`
+:globalMaxMbps:       The :ref:`ds-global-max-mbps`
+:globalMaxTps:        The :ref:`ds-global-max-tps`
+:httpBypassFqdn:      A :ref:`ds-http-bypass-fqdn`
+:id:                  An integral, unique identifier for this :term:`Delivery Service`
+:infoUrl:             An :ref:`ds-info-url`
+:initialDispersion:   The :ref:`ds-initial-dispersion`
+:ipv6RoutingEnabled:  A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
+:lastUpdated:         The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
+:logsEnabled:         A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
+:longDesc:            The :ref:`ds-longdesc` of this :term:`Delivery Service`
+:longDesc1:           The :ref:`ds-longdesc2` of this :term:`Delivery Service`
+:longDesc2:           The :ref:`ds-longdesc3` of this :term:`Delivery Service`
+:matchList:           The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
-	0
-		Range requests will not be cached, but range requests that request ranges of content already cached will be served from the cache
-	1
-		Use the `background_fetch plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>`_ to service the range request while caching the whole object
-	2
-		Use the `experimental cache_range_requests plugin <https://github.com/apache/trafficserver/tree/master/plugins/experimental/cache_range_requests>`_ to treat unique ranges as unique objects
+	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
+	:setNumber: An integer that provides explicit ordering of :ref:`ds-matchlist` items - this is used as a priority ranking by Traffic Router, and is not guaranteed to correspond to the ordering of items in the array.
+	:type:      The type of match performed using ``pattern``.
 
-:regexRemap: A regular expression remap rule to apply to this :term:`Delivery Service` at the Edge tier
+:maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
+:maxOriginConnections: The :ref:`ds-max-origin-connections`
 
-	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
+	.. versionadded:: 1.4
 
-:regionalGeoBlocking: ``true`` if Regional Geo Blocking is in use within this :term:`Delivery Service`, ``false`` otherwise - see :ref:`regionalgeo-qht` for more information
-:remapText:           Additional, raw text to add to the remap line for caches
+:midHeaderRewrite:     A set of :ref:`ds-mid-header-rw-rules`
+:missLat:              The :ref:`ds-geo-miss-default-latitude` used by this :term:`Delivery Service`
+:missLong:             The :ref:`ds-geo-miss-default-longitude` used by this :term:`Delivery Service`
+:multiSiteOrigin:      A boolean that defines the use of :ref:`ds-multi-site-origin` by this :term:`Delivery Service`
+:orgServerFqdn:        The :ref:`ds-origin-url`
+:originShield:         A :ref:`ds-origin-shield` string
+:profileDescription:   The :ref:`profile-description` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileId:            The :ref:`profile-id` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:profileName:          The :ref:`profile-name` of the :ref:`ds-profile` with which this :term:`Delivery Service` is associated
+:protocol:             An integral, unique identifier that corresponds to the :ref:`ds-protocol` used by this :term:`Delivery Service`
+:qstringIgnore:        An integral, unique identifier that corresponds to the :ref:`ds-qstring-handling` setting on this :term:`Delivery Service`
+:rangeRequestHandling: An integral, unique identifier that corresponds to the :ref:`ds-range-request-handling` setting on this :term:`Delivery Service`
+:regexRemap:           A :ref:`ds-regex-remap`
+:regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
+:remapText:            :ref:`ds-raw-remap`
+:signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
+:signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 
-	.. seealso:: `The Apache Trafficserver documentation for the Regex Remap plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_
+	.. versionadded:: 1.3
 
-:signed:           ``true`` if token-based authentication is enabled for this :term:`Delivery Service`, ``false`` otherwise
-:signingAlgorithm: Type of URL signing method to sign the URLs, basically comes down to one of two plugins or ``null``:
+:sslKeyVersion: This integer indicates the :ref:`ds-ssl-key-version`
+:tenantId:      The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 
-	``null``
-		Token-based authentication is not enabled for this :term:`Delivery Service`
-	url_sig:
-		URL Signing token-based authentication is enabled for this :term:`Delivery Service`
-	uri_signing
-		URI Signing token-based authentication is enabled for this :term:`Delivery Service`
+	.. versionadded:: 1.3
 
-	.. seealso:: `The Apache Trafficserver documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/url_sig.en.html>`_ and `the draft RFC for uri_signing <https://tools.ietf.org/html/draft-ietf-cdni-uri-signing-16>`_ - note, however that the current implementation of uri_signing uses Draft 12 of that RFC document, **NOT** the latest
+:trRequestHeaders: If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 
-:sslKeyVersion:       This integer indicates the generation of keys in use by the :term:`Delivery Service` - if any - and is incremented by the Traffic Portal client whenever new keys are generated
+	.. versionadded:: 1.3
 
-	.. warning:: This number will not be correct if keys are manually replaced using the API, as the key generation API does not increment it!
+:trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 
-:tenantId:            The integral, unique identifier of the tenant who owns this :term:`Delivery Service`
-:trRequestHeaders:    If defined, this takes the form of a string of HTTP headers to be included in Traffic Router access logs for requests - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:trResponseHeaders:   If defined, this takes the form of a string of HTTP headers to be included in Traffic Router responses - it's a template where ``__RETURN__`` translates to a carriage return and line feed (``\r\n``)\ [2]_
-:type:                The name of the routing type of this :term:`Delivery Service` e.g. "HTTP"
-:typeId:              The integral, unique identifier of the routing type of this :term:`Delivery Service`
-:xmlId:               A unique string that describes this :term:`Delivery Service` - exists for legacy reasons
+	.. versionadded:: 1.3
+
+:type:   The :ref:`ds-types` of this :term:`Delivery Service`
+:typeId: The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
+:xmlId:  This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
 .. code-block:: http
 	:caption: Response Example
@@ -671,7 +547,7 @@ Response Structure
 			"ipv6RoutingEnabled": false,
 			"lastUpdated": "2018-11-19 19:45:49+00",
 			"logsEnabled": true,
-			"longDesc": "A :term:`Delivery Service` created expressly for API documentation examples",
+			"longDesc": "A Delivery Service created expressly for API documentation examples",
 			"longDesc1": null,
 			"longDesc2": null,
 			"matchList": [
@@ -713,3 +589,6 @@ Response Structure
 			"tenant": "root"
 		}
 	]}
+
+.. [#tenancy] Only those :term:`Delivery Services` assigned to :term:`Tenants` that are the requesting user's :term:`Tenant` or children thereof will appear in the output of a ``GET`` request, and the same constraints are placed on the allowed values of the ``tenantId`` field of a ``POST`` request to create a new :term:`Delivery Service`
+.. [#geoLimit] These fields must be defined if and only if ``geoLimit`` is non-zero

@@ -38,6 +38,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 	private static final Logger LOGGER = Logger.getLogger(TrafficRouterManager.class);
 
 	public static final int DEFAULT_API_PORT = 3333;
+	public static final int DEFAULT_SECURE_API_PORT = 0; // Must be set through server.xml properties
 
 	private JsonNode state;
 	private TrafficRouter trafficRouter;
@@ -52,6 +53,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 	private SteeringRegistry steeringRegistry;
 	private ApplicationContext applicationContext;
 	private int apiPort = DEFAULT_API_PORT;
+	private int secureApiPort = DEFAULT_SECURE_API_PORT;
 
 	public NameServer getNameServer() {
 		return nameServer;
@@ -163,5 +165,13 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 
 	public int getApiPort() {
 		return apiPort;
+	}
+
+	public int getSecureApiPort() {
+		return secureApiPort;
+	}
+
+	public void setSecureApiPort(final int secureApiPort) {
+		this.secureApiPort = secureApiPort;
 	}
 }

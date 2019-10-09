@@ -46,7 +46,7 @@ it includes tests (and most should), outline here the steps needed to run the
 tests. If not, lay out the manual testing procedure and please explain why
 tests are unnecessary for this Pull Request. -->
 
-## If this is a bug fix, what versions of Traffic Ops are affected?
+## If this is a bug fix, what versions of Traffic Control are affected?
 <!-- If this PR fixes a bug, please list here all of the affected versions - to
 the best of your knowledge. It's also pretty helpful to include a commit hash
 of where 'master' is at the time this PR is opened (if it affects master),

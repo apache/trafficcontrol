@@ -20,9 +20,15 @@ package login
  */
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/lestrrat-go/jwx/jwk"
 	"net/http"
+	"net/url"
+	"path/filepath"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -43,6 +49,10 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		form := auth.PasswordForm{}
 		if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
 			handleErrs(http.StatusBadRequest, err)
+			return
+		}
+		if form.Username == "" || form.Password == "" {
+			api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("username and password are required"), nil)
 			return
 		}
 		resp := struct {
@@ -103,4 +113,227 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 		fmt.Fprintf(w, "%s", respBts)
 	}
+}
+
+func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		var t tc.UserToken
+		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+			api.HandleErr(w, r, nil, http.StatusBadRequest, fmt.Errorf("Invalid request: %v", err), nil)
+			return
+		}
+
+		tokenMatches, username, err := auth.CheckLocalUserToken(t.Token, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		if err != nil {
+			sysErr := fmt.Errorf("Checking token: %v", err)
+			errCode := http.StatusInternalServerError
+			api.HandleErr(w, r, nil, errCode, nil, sysErr)
+			return
+		} else if !tokenMatches {
+			userErr := errors.New("Invalid token. Please contact your administrator.")
+			errCode := http.StatusUnauthorized
+			api.HandleErr(w, r, nil, errCode, userErr, nil)
+			return
+		}
+
+		expiry := time.Now().Add(time.Hour * 6)
+		cookie := tocookie.New(username, expiry, cfg.Secrets[0])
+		httpCookie := http.Cookie{Name: "mojolicious", Value: cookie, Path: "/", Expires: expiry, HttpOnly: true}
+		http.SetCookie(w, &httpCookie)
+		respBts, err := json.Marshal(tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in."))
+		if err != nil {
+			sysErr := fmt.Errorf("Marshaling response: %v", err)
+			errCode := http.StatusInternalServerError
+			api.HandleErr(w, r, nil, errCode, nil, sysErr)
+			return
+		}
+
+		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Write(append(respBts, '\n'))
+
+		// TODO: afaik, Perl never clears these tokens. They should be reset to NULL on login, I think.
+	}
+}
+
+// OauthLoginHandler accepts a JSON web token previously obtained from an OAuth provider, decodes it, validates it, authorizes the user against the database, and returns the login result as either an error or success message
+func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		defer r.Body.Close()
+		authenticated := false
+		resp := struct {
+			tc.Alerts
+		}{}
+
+		form := auth.PasswordForm{}
+		parameters := struct {
+			AuthCodeTokenUrl string `json:"authCodeTokenUrl"`
+			Code             string `json:"code"`
+			ClientId         string `json:"clientId"`
+			RedirectUri      string `json:"redirectUri"`
+		}{}
+
+		if err := json.NewDecoder(r.Body).Decode(&parameters); err != nil {
+			handleErrs(http.StatusBadRequest, err)
+			return
+		}
+
+		data := url.Values{}
+		data.Add("code", parameters.Code)
+		data.Add("client_id", parameters.ClientId)
+		data.Add("client_secret", cfg.ConfigTrafficOpsGolang.OAuthClientSecret)
+		data.Add("grant_type", "authorization_code") // Required by RFC6749 section 4.1.3
+		data.Add("redirect_uri", parameters.RedirectUri)
+
+		req, err := http.NewRequest(http.MethodPost, parameters.AuthCodeTokenUrl, bytes.NewBufferString(data.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		if err != nil {
+			log.Errorf("obtaining token using code from oauth provider: %s", err.Error())
+			return
+		}
+
+		client := http.Client{
+			Timeout: 30 * time.Second,
+		}
+		response, err := client.Do(req)
+		if err != nil {
+			log.Errorf("getting an http client: %s", err.Error())
+			return
+		}
+		defer response.Body.Close()
+
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(response.Body)
+		encodedToken := ""
+
+		var result map[string]interface{}
+		if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
+			log.Warnf("Error parsing JSON response from oAuth: %s", err.Error())
+			encodedToken = buf.String()
+		} else if _, ok := result["access_token"]; !ok {
+			sysErr := fmt.Errorf("Missing access token in response: %s\n", buf.String())
+			usrErr := errors.New("Bad response from OAuth2.0 provider")
+			api.HandleErr(w, r, nil, http.StatusBadGateway, usrErr, sysErr)
+			return
+		} else {
+			switch t := result["access_token"].(type) {
+			case string:
+				encodedToken = result["access_token"].(string)
+			default:
+				sysErr := fmt.Errorf("Incorrect type of access_token! Expected 'string', got '%v'\n", t)
+				usrErr := errors.New("Bad response from OAuth2.0 provider")
+				api.HandleErr(w, r, nil, http.StatusBadGateway, usrErr, sysErr)
+				return
+			}
+		}
+
+		if encodedToken == "" {
+			log.Errorf("Token not found in request but is required")
+			handleErrs(http.StatusBadRequest, errors.New("Token not found in request but is required"))
+			return
+		}
+
+		decodedToken, err := jwt.Parse(encodedToken, func(unverifiedToken *jwt.Token) (interface{}, error) {
+			publicKeyUrl := unverifiedToken.Header["jku"].(string)
+			publicKeyId := unverifiedToken.Header["kid"].(string)
+
+			matched, err := VerifyUrlOnWhiteList(publicKeyUrl, cfg.ConfigTrafficOpsGolang.WhitelistedOAuthUrls)
+			if err != nil {
+				return nil, err
+			}
+			if !matched {
+				return nil, errors.New("Key URL from token is not included in the whitelisted urls. Received: " + publicKeyUrl)
+			}
+
+			keys, err := jwk.FetchHTTP(publicKeyUrl)
+			if err != nil {
+				return nil, errors.New("Error fetching JSON key set with message: " + err.Error())
+			}
+
+			keyById := keys.LookupKeyID(publicKeyId)
+			if len(keyById) == 0 {
+				return nil, errors.New("No public key found for id: " + publicKeyId + " at url: " + publicKeyUrl)
+			}
+
+			selectedKey, err := keyById[0].Materialize()
+			if err != nil {
+				return nil, errors.New("Error materializing key from JSON key set with message: " + err.Error())
+			}
+
+			return selectedKey, nil
+		})
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, errors.New("Error decoding token with message: "+err.Error()))
+			log.Errorf("Error decoding token: %s\n", err.Error())
+			return
+		}
+
+		authenticated = decodedToken.Valid
+
+		userId := decodedToken.Claims.(jwt.MapClaims)["sub"].(string)
+		form.Username = userId
+
+		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		if blockingErr != nil {
+			api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
+			return
+		}
+		if err != nil {
+			log.Errorf("checking local user: %s\n", err.Error())
+		}
+
+		if userAllowed && authenticated {
+			expiry := time.Now().Add(time.Hour * 6)
+			cookie := tocookie.New(userId, expiry, cfg.Secrets[0])
+			httpCookie := http.Cookie{Name: "mojolicious", Value: cookie, Path: "/", Expires: expiry, HttpOnly: true}
+			http.SetCookie(w, &httpCookie)
+			resp = struct {
+				tc.Alerts
+			}{tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")}
+		} else {
+			resp = struct {
+				tc.Alerts
+			}{tc.CreateAlerts(tc.ErrorLevel, "Invalid username or password.")}
+		}
+
+		respBts, err := json.Marshal(resp)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		if !authenticated {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		if !userAllowed {
+			w.WriteHeader(http.StatusForbidden)
+		}
+		fmt.Fprintf(w, "%s", respBts)
+
+	}
+}
+
+func VerifyUrlOnWhiteList(urlString string, whiteListedUrls []string) (bool, error) {
+
+	for _, listing := range whiteListedUrls {
+		if listing == "" {
+			continue
+		}
+
+		urlParsed, err := url.Parse(urlString)
+		if err != nil {
+			return false, err
+		}
+
+		matched, err := filepath.Match(listing, urlParsed.Hostname())
+		if err != nil {
+			return false, err
+		}
+
+		if matched {
+			return true, nil
+		}
+	}
+	return false, nil
 }

@@ -27,12 +27,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/smtp"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -131,6 +133,7 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
 		return
 	}
+	log.Debugln(userErr.Error())
 	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, statusCode))
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
 	w.Write(respBts)
@@ -286,6 +289,7 @@ type APIInfo struct {
 	IntParams map[string]int
 	User      *auth.CurrentUser
 	ReqID     uint64
+	Version   *Version
 	Tx        *sqlx.Tx
 	Config    *config.Config
 }
@@ -332,6 +336,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
 	}
+	version := getRequestedAPIVersion(r.URL.Path)
 
 	user, err := auth.GetCurrentUser(r.Context())
 	if err != nil {
@@ -349,6 +354,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	return &APIInfo{
 		Config:    cfg,
 		ReqID:     reqID,
+		Version:   version,
 		Params:    params,
 		IntParams: intParams,
 		User:      user,
@@ -365,6 +371,33 @@ func (inf *APIInfo) Close() {
 	}
 }
 
+// SendMail is a convenience method used to call SendMail using an APIInfo structure's configuration.
+func (inf *APIInfo) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
+	return SendMail(to, msg, inf.Config)
+}
+
+// SendMail sends an email msg to the address identified by to. The msg parameter should be an
+// RFC822-style email with headers first, a blank line, and then the message body. The lines of msg
+// should be CRLF terminated. The msg headers should usually include fields such as "From", "To",
+// "Subject", and "Cc". Sending "Bcc" messages is accomplished by including an email address in the
+// to parameter but not including it in the msg headers.
+// The cfg parameter is used to set things like the "From" field, as well as for connection
+// and authentication with an external SMTP server.
+// SendMail returns (in order) an HTTP status code, a user-friendly error, and an error fit for
+// logging to system error logs. If either the user or system error is non-nil, the operation failed,
+// and the HTTP status code indicates the type of failure.
+func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, error) {
+	if !cfg.SMTP.Enabled {
+		return http.StatusInternalServerError, nil, errors.New("SMTP is not enabled; mail cannot be sent")
+	}
+	auth := smtp.PlainAuth("", cfg.SMTP.User, cfg.SMTP.Password, strings.Split(cfg.SMTP.Address, ":")[0])
+	err := smtp.SendMail(cfg.SMTP.Address, auth, cfg.ConfigTO.EmailFrom.String(), []string{to.String()}, msg)
+	if err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("Failed to send email: %v", err)
+	}
+	return http.StatusOK, nil, nil
+}
+
 // APIInfoImpl implements APIInfo via the APIInfoer interface
 type APIInfoImpl struct {
 	ReqInfo *APIInfo
@@ -376,6 +409,40 @@ func (val *APIInfoImpl) SetInfo(inf *APIInfo) {
 
 func (val APIInfoImpl) APIInfo() *APIInfo {
 	return val.ReqInfo
+}
+
+type Version struct {
+	Major uint64
+	Minor uint64
+}
+
+// getRequestedAPIVersion returns a pointer to the requested API Version from the request if it exists or returns nil otherwise.
+func getRequestedAPIVersion(path string) *Version {
+	pathParts := strings.Split(path, "/")
+	if len(pathParts) < 2 {
+		return nil // path doesn't start with `/api`, so it's not an api request
+	}
+	if strings.ToLower(pathParts[1]) != "api" {
+		return nil // path doesn't start with `/api`, so it's not an api request
+	}
+	if len(pathParts) < 3 {
+		return nil // path starts with `/api` but not `/api/{version}`, so it's an api request, and an unknown/nonexistent version.
+	}
+	version := pathParts[2]
+
+	versionParts := strings.Split(version, ".")
+	if len(versionParts) != 2 {
+		return nil
+	}
+	majorVersion, err := strconv.ParseUint(versionParts[0], 10, 64)
+	if err != nil {
+		return nil
+	}
+	minorVersion, err := strconv.ParseUint(versionParts[1], 10, 64)
+	if err != nil {
+		return nil
+	}
+	return &Version{Major: majorVersion, Minor: minorVersion}
 }
 
 // GetDB returns the database from the context. This should very rarely be needed, rather `NewInfo` should always be used to get a transaction, except in extenuating circumstances.
@@ -490,6 +557,16 @@ func parseNotNullConstraint(err *pq.Error) (error, error, int) {
 	return fmt.Errorf("%s is a required field", toCamelCase(match[1])), nil, http.StatusBadRequest
 }
 
+// parses pq errors for empty string check constraint
+func parseEmptyConstraint(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`new row for relation "[^"]*" violates check constraint "(.*)_empty"`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s cannot be ", match[1]), nil, http.StatusBadRequest
+}
+
 // parses pq errors for violated foreign key constraints
 func parseNotPresentFKConstraint(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`Key \(.+\)=\(.+\) is not present in table "(.+)"`)
@@ -507,7 +584,7 @@ func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 	if match == nil {
 		return nil, nil, http.StatusOK
 	}
-	return fmt.Errorf("%s %s already exists.", match[1], match[2]), nil, http.StatusBadRequest
+	return fmt.Errorf("%v %s '%s' already exists.", err.Table, match[1], match[2]), nil, http.StatusBadRequest
 }
 
 // parses pq errors for ON DELETE RESTRICT fk constraint violations
@@ -548,11 +625,8 @@ func ParseDBError(ierr error) (error, error, int) {
 
 	err, ok := ierr.(*pq.Error)
 	if !ok {
-		return nil, errors.New("database returned non pq error: " + err.Error()), http.StatusInternalServerError
-	}
-
-	if usrErr, sysErr, errCode := parseNotNullConstraint(err); errCode != http.StatusOK {
-		return usrErr, sysErr, errCode
+		log.Errorf("a non-pq error was given")
+		return nil, ierr, http.StatusInternalServerError
 	}
 
 	if usrErr, sysErr, errCode := parseNotPresentFKConstraint(err); errCode != http.StatusOK {
@@ -564,6 +638,14 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	if usrErr, sysErr, errCode := parseRestrictFKConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseNotNullConstraint(err); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := parseEmptyConstraint(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 

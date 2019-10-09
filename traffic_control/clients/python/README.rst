@@ -17,7 +17,7 @@ The official installation method is to use ``pip`` to install directly from from
 	pip install git+https://github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python"
 
 	# or
-	# pip install "git+ssh://git@github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python"
+	# pip install git+ssh://git@github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python"
 
 Local Installation
 ------------------
@@ -63,7 +63,7 @@ Development Dependencies
 ------------------------
 To install the development dependencies, first ensure that your system has ``pip`` and ``setuptools`` then use ``pip`` to install the development environment.
 
-.. note:: Currently, the development environment only "requires" `Pylint <https://www.pylint.org/>`_, which is a simple linter for which a configuration file is provided at :file:`traffic_control/clients/python/pylint.rc`. This linter might be nice to catch common mistakes, but is in no way enforced by the project at this time. Once Python2 support is dropped with the release of the Apache-TrafficControl package 2.0, it will hopefully be refined and put to use. In the meantime, feel free to use it - or not.
+.. note:: Currently, the development environment only requires `Pylint <https://www.pylint.org/>`_, which is a simple linter for which a configuration file is provided at :file:`traffic_control/clients/python/pylint.rc`.
 
 .. code-block:: shell
 	:caption: Development Dependencies Installation

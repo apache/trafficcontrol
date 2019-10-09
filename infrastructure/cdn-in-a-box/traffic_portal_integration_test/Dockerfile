@@ -24,7 +24,7 @@ WORKDIR /lang/traffic_portal/test/end_to_end
 RUN printf "\n\
 [google-chrome] \n\
 name=google-chrome \n\
-baseurl=http://dl.google.com/linux/chrome/rpm/stable/x86_64 \n\
+baseurl=https://dl.google.com/linux/chrome/rpm/stable/x86_64 \n\
 enabled=1 \n\
 gpgcheck=1 \n\
 gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub \n\
@@ -32,7 +32,7 @@ gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub \n\
 
 RUN yum update -y
 
-RUN yum install -y java-1.8.0-openjdk git google-chrome bind-utils net-tools
+RUN yum install -y java-1.8.0-openjdk git google-chrome-stable bind-utils net-tools
 
 RUN curl -LO https://nodejs.org/dist/v10.15.0/node-v10.15.0-linux-x64.tar.xz
 
@@ -49,25 +49,26 @@ RUN ls -lah /lang/traffic_portal/test/end_to_end
 RUN sed -i "s/baseUrl: 'https:\/\/localhost:4443/baseUrl: 'https:\/\/trafficportal.infra.ciab.test:443/" /lang/traffic_portal/test/end_to_end/conf.js
 RUN sed -i "s/baseUrl: 'https:\/\/localhost:4443/baseUrl: 'https:\/\/trafficportal.infra.ciab.test:443/" /lang/traffic_portal/test/end_to_end/login/conf.js
 
-RUN export junit_conf_jasmine=" \
-        onPrepare: function() { \
-            var jasmineReporters = require('jasmine-reporters'); \
-            jasmine.getEnv().addReporter( \
-                        new jasmineReporters.JUnitXmlReporter({savePath:'/portaltestresults', filePrefix: 'portaltestresults', consolidateAll:true}) \
-                    ); \
-        }, \
-" && perl -p -i -e 's/(\s*suites)/$ENV{junit_conf_jasmine}\1/g' conf.js
+RUN export junit_conf_jasmine="\n\
+	onPrepare: function() {\n\
+		var jasmineReporters = require('jasmine-reporters');\n\
+		jasmine.getEnv().addReporter(\n\
+			new jasmineReporters.JUnitXmlReporter({savePath:'/portaltestresults', filePrefix: 'portaltestresults', consolidateAll:true})\n\
+		);\n\
+	},\n\
+" && perl -p -i -e 'BEGIN{ ($e=$ENV{junit_conf_jasmine}) =~ s/\\n/\n/g } if (/^\s*suites\b/) {print $e}' conf.js
 
-RUN export junit_conf_chrome=", \
-                'chromeOptions': { \
-                      'args': ['--headless', '--disable-gpu', '--no-sandbox', '--ignore-certificate-errors'] \
-                    } \
-" && perl -p -i -e 's/(\s*'"'"'browserName'"'"':\s*'"'"'chrome'"'"')/\1\n$ENV{junit_conf_chrome}/g' conf.js
+RUN export junit_conf_chrome="\
+		chromeOptions: {\n\
+			args: ['--headless', '--disable-gpu', '--no-sandbox', '--ignore-certificate-errors', '--disable-extensions', '--whitelisted-ips'] \n\
+		},\n\
+" && perl -p -i -e 'BEGIN{ ($e=$ENV{junit_conf_chrome}) =~ s/\\n/\n/g } if (/\bbrowserName\b/../}/) {print $e; $e=""}' conf.js
 
 # debug
 RUN cat conf.js
 RUN cat login/conf.js
 
+RUN webdriver-manager clean
 RUN webdriver-manager update
 
 COPY ./infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh /lang/traffic_portal/test/end_to_end/

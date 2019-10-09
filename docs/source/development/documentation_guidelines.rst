@@ -107,17 +107,31 @@ Notes and Footnotes
 """""""""""""""""""
 Instead of ``**NOTE**`` or similar, consider using the ``.. note`` directive, or one of the appropriate admonitions supported by :abbr:`RST (reStructuredText)`:
 
-- attention
-- caution
-- danger
-- error
-- hint
-- important
-- note
-- tip
-- warning
+attention
+	The default admonition that calls attention to something without any specific semantics or attached context. Use when none of the others seem appropriate.
+caution
+	Includes cautionary information. Should be used when advising the reader that the containing section includes instructions or information that frequently confuse people/trip people up, and how to avoid these pitfalls.
+danger
+	Advises the reader of potential security risks or system damage that could occur as a result of following instructions in the containing section, or as a result of making assumptions about and/or improperly utilizing information in the containing section.
+error
+	Denotes an error. This has limited uses in the :abbr:`ATC (Apache Traffic Control)` documentation.
+hint
+	Offers a hint to nudge readers in the direction of a solution. This has limited uses in the :abbr:`ATC (Apache Traffic Control)` documentation.
+impl-detail
+	Contains information describing the details of an implementation of a feature described in the containing section. For an example, see :ref:`the DSCP section of the Delivery Services page <ds-dscp>`.
 
-In a similar vein, instead of e.g. "(See also: some-link-or-reference)" please use the special ``.. seealso`` admonition. If the same admonition is required more than twice on the same page, it most likely ought to be a footnote instead. Footnotes should ideally be labeled sequentially in the order of appearance, and appear at the end of the major section in which they first or last appear. In practice, however, placement of the footnote is left to the writer's discretion.
+	.. note:: This is an `extension`_ provided by the :abbr:`ATC (Apache Traffic Control)` documentation build system, and will not appear in the Sphinx project documentation nor the reStructuredText standard.
+
+important
+	Contains information that is important to consider while reading the containing section. Typically content that is related to a section's content in an important way should appear as content of that section, but if a section is in danger of readers "skimming" it for information this can be useful to catch their eye.
+note
+	Used to segregate content that is only tangentially related to the containing section, but is noteworthy nonetheless. Historically the most used admonition, containing caveats, exceptions etc.
+tip
+	Provides the reader with information that can be helpful - particularly to users/administrators/developers new to :abbr:`ATC (Apache Traffic Control)` - but not strictly necessary to understand the containing section.
+warning
+	Warns the reader about possible unintended consequences of following instructions/utilizing information in the containing section. If the behavior warned about constitutes a security risk and/or serious damage to one or more systems - including clients and origins - please use ``.. danger`` instead.
+
+In a similar vein, instead of e.g. "(See also: some-link-or-reference)" please use the special ``.. seealso`` admonition. If the same admonition is required more than twice on the same page, it most likely ought to be a footnote instead. Footnotes should ideally use human-readable labels or, failing that, be labeled sequentially in the order of appearance. Footnotes should appear at the end of the major section in which they first or last appear. In practice, however, placement of the footnote is left to the writer's discretion.
 
 Section Headings
 """"""""""""""""
@@ -175,7 +189,7 @@ Documenting API Routes
 ----------------------
 Follow all of the formatting conventions in `Formatting`_. Maintain the structural format of the API documentation as outlined in the :ref:`to-api` section. API routes that have variable paths e.g. :ref:`to-api-profiles-id` should use `mustache templates <https://mustache.github.io/mustache.5.html>`_ **not** the Mojolicious-specific ``:param`` syntax. This keeps the templates generic, familiar, and reflects the inability of a request path to contain procedural instructions or program logic. Please do not include the ``/api/1.x/`` part of the request path for Traffic Ops API endpoints. If an endpoint is unavailable prior to a specific version, use the ``.. versionadded`` directive to indicate that version. Likewise, do not make a new page for an endpoint when it changes across versions, instead call out the changes using the ``.. versionchanged`` directive. If an endpoint should not be used because newer endpoints provide the same functionality in a better way, use the ``.. deprecated`` directive to link to them and explain why they are better.
 
-When documenting an API route, be sure to include *all* methods, request/response JSON payload fields, path parameters, and query parameters, whether they are optional or not. When describing a field in a JSON payload, remember that JSON does not have "hashes" it has "objects" or even "maps". When documenting path parameters such as profile ID in :ref:`to-api-profiles-id`, consider that the endpoint path cannot be formed without defining **all** path parameters, and so to label them as "required" is superfluous.
+When documenting an API route, be sure to include *all* methods, request/response JSON payload fields, path parameters, and query parameters, whether they are optional or not. When describing a field in a JSON payload, remember that JSON does not have "hashes" it has "objects" or even "maps". When documenting path parameters such as :term:`Profile` :ref:`profile-id` in :ref:`to-api-profiles-id`, consider that the endpoint path cannot be formed without defining **all** path parameters, and so to label them as "required" is superfluous.
 
 The "Response Example" must **always** exist. "TODO" is **not** an acceptable Response Example for new endpoints. The "Request Example" must only exist if the request requires data in the body (most commonly this will be for ``PATCH``, ``POST`` and ``PUT`` methods). It is, however, strongly advised that a request example be given if the endpoint takes Query Parameters or Path Parameters, and it is required if the Response Example is a response to a request that used a query or path parameter. If the Request Example *is* present, then the Response Example **must** be the appropriate response **to that request**. When generating Request/Response Examples, attempt to use the :ref:`ciab` environment whenever possible to provide a common basis and familiarity to new users who likely set up "CDN in a Box" as a primer for understanding CDNs/Traffic Control. Responses are sometimes hundreds of lines long, and in those cases only as much as is required for an understanding of the structure needs to be included in the example - along with a note mentioning that the output was trimmed. Also always attempt to place structure explanations before any example so that the content of the example can be understood by the reader (though in general the placement of a floating environment like a code listing is not known at compile-time). Whenever possible, the Request and Response examples should include the *complete HTTP stack*, which captures behavior like Query Parameters, Path Parameters and HTTP cookie operations like those used by e.g. :ref:`to-api-logs`. A few caveats to the "include all headers" rule:
 
@@ -185,3 +199,29 @@ The "Response Example" must **always** exist. "TODO" is **not** an acceptable Re
 - API output is often beautified by inserting line breaks and indentation, which will make the ``Content-Length`` header (if any) incorrect. Don't worry about fixing that - just try to leave the output as close as possible to what will actually be returned by leaving it the way it is.
 
 File names should reflect the request path of the endpoint, e.g. a file for an endpoint of the Traffic Ops API ``/api/1.7/foo/{{fooID}}/bar/{{barID}}`` should be named ``foo_fooID_bar_barID.rst``. Similarly, reference labels linking to the document title for API route pages should follow the convention: ``<component>-api-<path>`` in all lowercase where ``<component>`` is an abbreviated Traffic Control component name e.g. ``to`` and ``<path>`` is the request path e.g. ``foo_bar``. So a label for an endpoint of the Traffic Ops API at ``/api/1.7/foo_bar/{{ID}}`` should be ``to-api-foo_bar-id``.
+
+Extension
+---------
+The :abbr:`ATC (Apache Traffic Control)` documentation provides an extension to the standard roles and directives offered by Sphinx, located at :file:`docs/source/_ext/atc.py`. It provides the following roles and directives:
+
+impl-detail
+	An admonition directive used to contain implementation-specific notes on a subject.
+
+	.. code-block:: rst
+		:caption: Example impl-detail usage
+
+		.. impl-detail:: Implementation-specific information here.
+
+	This example usage renders like so:
+
+	.. impl-detail:: Implementation-specific information here.
+
+atc-file
+	Creates a link to the specified file on the ``master`` branch of the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:atc-file:`docs/source/development/documentation_guidelines```" renders as a link to the source of this documenting section like so: :atc-file:`docs/source/development/documentation_guidelines`. You can also link to directories as well as files.
+
+issue
+	A text role that can be used to easily link to GitHub Issues for the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:issue:`1```" renders as: :issue:`1`.
+pr
+	A text role that can be used to easily link to GitHub Pull Requests for the :abbr:`ATC (Apache Traffic Control)` repository. For example, "``:pr:`1```" renders as :pr:`1`.
+pull-request
+	A synonym for ``pr``

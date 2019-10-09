@@ -185,3 +185,44 @@ func (to *Session) DeleteProfileByID(id int) (tc.Alerts, ReqInf, error) {
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
+
+// ExportProfile Returns an exported Profile
+func (to *Session) ExportProfile(id int) (*tc.ProfileExportResponse, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d/export", API_v13_Profiles, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ProfileExportResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return &data, reqInf, nil
+}
+
+// ImportProfile imports an exported Profile
+func (to *Session) ImportProfile(importRequest *tc.ProfileImportRequest) (*tc.ProfileImportResponse, ReqInf, error) {
+	var remoteAddr net.Addr
+	route := fmt.Sprintf("%s/import", API_v13_Profiles)
+	reqBody, err := json.Marshal(importRequest)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, route, reqBody)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ProfileImportResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return &data, reqInf, nil
+}

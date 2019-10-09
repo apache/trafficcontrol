@@ -25,6 +25,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -186,7 +187,16 @@ func (s *Server) RunHTTPSRedirect(addr string, addrForRedirect string, readTimeo
 }
 
 func (s *Server) redirectTLS(w http.ResponseWriter, r *http.Request) {
-	host, _, _ := net.SplitHostPort(r.Host)
+	host, _, err := net.SplitHostPort(r.Host)
+	if err != nil {
+		if strings.Contains(err.Error(), "missing port in address") {
+			host = r.Host
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"error": "getting host from request: ` + err.Error() + `"}`))
+			return
+		}
+	}
 	http.Redirect(w, r, "https://"+host+s.addrToRedirect+r.RequestURI, http.StatusMovedPermanently)
 }
 

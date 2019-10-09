@@ -27,8 +27,7 @@ RUN yum install -y \
     epel-release \
     https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm \
     git && \
-    yum-config-manager --add-repo 'http://vault.centos.org/7.5.1804/os/x86_64/' && \
-    yum -y install --enablerepo=vault* golang-1.9.4
+    yum -y install golang
 
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
 ARG TRAFFIC_OPS_RPM=traffic_ops.rpm
@@ -46,6 +45,6 @@ ADD run-db-test.sh \
     goose-config.sh \
     /
 
-COPY initdb.d/*dump /db_dumps/
+COPY initdb.d/ /db_dumps/
 
 CMD /run-db-test.sh

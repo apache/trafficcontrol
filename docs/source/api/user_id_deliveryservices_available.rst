@@ -19,10 +19,10 @@
 
 ``GET``
 =======
-Lists identifying information for all of the :term:`Delivery Service`\ s assigned to a user - **not**, as the name implies, the :term:`Delivery Service`\ s *available* to be assigned to that user.
+Lists identifying information for all of the :term:`Delivery Services` assigned to a user - **not**, as the name implies, the :term:`Delivery Services` *available* to be assigned to that user.
 
 :Auth. Required: Yes
-:Roles Required: None
+:Roles Required: None\ [#tenancy]_
 :Response Type:  Array
 
 Request Structure
@@ -46,9 +46,9 @@ Request Structure
 
 Response Structure
 ------------------
-:displayName: This :term:`Delivery Service`'s name
+:displayName: This :term:`Delivery Service`'s :ref:`ds-display-name`
 :id:          The integral, unique identifier of this :term:`Delivery Service`
-:xmlId:       The 'xml_id' which (also) uniquely identifies this :term:`Delivery Service`
+:xmlId:       The :ref:`ds-xmlid` which (also) uniquely identifies this :term:`Delivery Service`
 
 .. code-block:: http
 	:caption: Response Example
@@ -72,3 +72,5 @@ Response Structure
 			"xmlId": "demo1"
 		}
 	]}
+
+.. [#tenancy] Only the :term:`Delivery Services` visible to the requesting user's :term:`Tenant` will appear, regardless of :term:`Role` or actual 'assignment' status.

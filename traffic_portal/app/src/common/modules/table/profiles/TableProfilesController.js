@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -164,7 +164,8 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
     $scope.compareProfiles = function() {
         var params = {
             title: 'Compare Profile Parameters',
-            message: "Please select 2 profiles to compare parameters"
+            message: "Please select 2 profiles to compare",
+            labelFunction: function(item) { return item['name'] + ' (' + item['type'] + ')' }
         };
         var modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/compare/dialog.compare.tpl.html',

@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -38,10 +39,13 @@ type WhereColumnInfo struct {
 
 const BaseWhere = "\nWHERE"
 const BaseOrderBy = "\nORDER BY"
+const BaseLimit = "\nLIMIT"
+const BaseOffset = "\nOFFSET"
 
-func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, map[string]interface{}, []error) {
+func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
 	orderBy := BaseOrderBy
+	paginationClause := BaseLimit
 	var criteria string
 	var queryValues map[string]interface{}
 	var errs []error
@@ -51,7 +55,7 @@ func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map
 		whereClause += " " + criteria
 	}
 	if len(errs) > 0 {
-		return "", "", queryValues, errs
+		return "", "", "", queryValues, errs
 	}
 
 	if orderby, ok := parameters["orderby"]; ok {
@@ -59,22 +63,63 @@ func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map
 		if colInfo, ok := queryParamsToSQLCols[orderby]; ok {
 			log.Debugln("orderby column ", colInfo)
 			orderBy += " " + colInfo.Column
+
+			// if orderby is specified and valid, also check for sortOrder
+			if sortOrder, exists := parameters["sortOrder"]; exists {
+				log.Debugln("sortOrder: ", sortOrder)
+				if sortOrder == "desc" {
+					orderBy += " DESC"
+				} else if sortOrder != "asc" {
+					log.Debugln("sortOrder value must be desc or asc. Invalid value provided: ", sortOrder)
+				}
+			}
 		} else {
-			log.Debugln("Incorrect name for orderby: ", orderby)
+			log.Debugln("This column is not configured to support orderby: ", orderby)
 		}
 	}
+
+	if limit, exists := parameters["limit"]; exists {
+		// try to convert to int, if it fails the limit parameter is invalid, so return an error
+		limitInt, err := strconv.Atoi(limit)
+		if err != nil || limitInt < 1 {
+			errs = append(errs, errors.New("limit parameter must be a positive integer"))
+			return "", "", "", queryValues, errs
+		}
+		log.Debugln("limit: ", limit)
+		paginationClause += " " + limit
+		if offset, exists := parameters["offset"]; exists {
+			// check that offset is valid
+			offsetInt, err := strconv.Atoi(offset)
+			if err != nil || offsetInt < 1 {
+				errs = append(errs, errors.New("offset parameter must be a positive integer"))
+				return "", "", "", queryValues, errs
+			}
+			paginationClause += BaseOffset + " " + offset
+		} else if page, exists := parameters["page"]; exists {
+			// check that offset is valid
+			page, err := strconv.Atoi(page)
+			if err != nil || page < 1 {
+				errs = append(errs, errors.New("page parameter must be a positive integer"))
+				return "", "", "", queryValues, errs
+			}
+			paginationClause += BaseOffset + " " + strconv.Itoa((page-1)*limitInt)
+		}
+	}
+
 	if whereClause == BaseWhere {
 		whereClause = ""
 	}
 	if orderBy == BaseOrderBy {
 		orderBy = ""
 	}
-	log.Debugf("\n--\n Where: %s \n Order By: %s", whereClause, orderBy)
-	return whereClause, orderBy, queryValues, errs
+	if paginationClause == BaseLimit {
+		paginationClause = ""
+	}
+	log.Debugf("\n--\n Where: %s \n Order By: %s \n Limit+Offset: %s", whereClause, orderBy, paginationClause)
+	return whereClause, orderBy, paginationClause, queryValues, errs
 }
 
 func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {
-	m := make(map[string]interface{})
 	var criteria string
 
 	var criteriaArgs []string
@@ -89,7 +134,6 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 			if err != nil {
 				errs = append(errs, errors.New(key+" "+err.Error()))
 			} else {
-				m[key] = urlValue
 				criteria = colInfo.Column + "=:" + key
 				criteriaArgs = append(criteriaArgs, criteria)
 				queryValues[key] = urlValue
@@ -230,6 +274,29 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 	return domain, true, nil
 }
 
+// GetServerIDFromName gets server id from a given name
+func GetServerIDFromName(serverName string, tx *sql.Tx) (int, bool, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id FROM server WHERE host_name = $1`, serverName).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, errors.New("querying server name: " + err.Error())
+	}
+	return id, true, nil
+}
+
+func GetServerNameFromID(tx *sql.Tx, id int) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT host_name FROM server WHERE id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying server name: " + err.Error())
+	}
+	return name, true, nil
+}
+
 func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}, error) {
 	dses := map[tc.DeliveryServiceName]struct{}{}
 	qry := `SELECT xml_id from deliveryservice where cdn_id = (select id from cdn where name = $1)`
@@ -266,4 +333,16 @@ func GetCDNs(tx *sql.Tx) (map[tc.CDNName]struct{}, error) {
 		cdns[cdn] = struct{}{}
 	}
 	return cdns, nil
+}
+
+// GetCacheGroupNameFromID Get Cache Group name from a given ID
+func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name FROM cachegroup WHERE id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying cachegroup ID: " + err.Error())
+	}
+	return tc.CacheGroupName(name), true, nil
 }

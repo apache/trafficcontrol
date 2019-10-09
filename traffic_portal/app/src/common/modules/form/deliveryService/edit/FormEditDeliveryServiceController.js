@@ -40,7 +40,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 						{ id: $scope.DRAFT, name: 'Save Request as Draft' },
 						{ id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
 					];
-					if (userModel.user.roleName == propertiesModel.properties.dsRequests.roleNeededToSkip) {
+					if (userModel.user.roleName == propertiesModel.properties.dsRequests.overrideRole) {
 						statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
 					}
 					return statuses;
@@ -59,46 +59,42 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 				deliveryService: deliveryService
 			};
 
-			// if the user chooses to complete/fulfill the delete request immediately, the ds will be deleted and behind the
-			// scenes a delivery service request will be created and marked as complete
-			if (options.status.id == $scope.COMPLETE) {
-				// first delete the ds
-				deliveryServiceService.deleteDeliveryService(deliveryService)
-					.then(
-						function() {
-							// then create the ds request
-							deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
-								then(
-									function(response) {
-										var comment = {
-											deliveryServiceRequestId: response.id,
-											value: options.comment
-										};
-										// then create the ds request comment
-										deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
-											then(
-												function() {
-													var promises = [];
-													// assign the ds request
-													promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
-													// set the status to 'complete'
-													promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
-													// and finally navigate to the /delivery-services page
-													messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted' } ], true);
-													locationUtils.navigateToPath('/delivery-services');
-												}
-											);
-									}
-								);
-						},
-						function(fault) {
-							$anchorScroll(); // scrolls window to top
-							messageModel.setMessages(fault.data.alerts, false);
-						}
-					);
-
-
-
+			// if the user chooses to complete/fulfill the delete request immediately, a delivery service request will be made and marked as complete, 
+			// then if that is successful, the DS will be deleted
+			if (options.status.id === $scope.COMPLETE) {
+				// first create the ds request
+				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest)
+					.then(function(response) {
+						var comment = {
+							deliveryServiceRequestId: response.id,
+							value: options.comment
+						};
+						// then create the ds request comment
+						deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
+							then(
+								function() {
+									var promises = [];
+									// assign the ds request
+									promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
+									// set the status to 'complete'
+									promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
+									// and finally navigate to the /delivery-services page
+									messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted' } ], true);
+									locationUtils.navigateToPath('/delivery-services');
+								}
+							// then, if all that works, delete the ds	
+							).then(
+								function() {
+									deliveryServiceService.deleteDeliveryService(deliveryService);
+								}
+							);
+					}
+					// handle any failures just once
+					).catch(function(fault) {
+						$anchorScroll(); // scrolls window to top
+						messageModel.setMessages(fault.data.alerts, false);
+					}
+				);
 			} else {
 				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
 					then(
@@ -123,7 +119,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 	};
 
 	var createDeliveryServiceUpdateRequest = function(dsRequest, dsRequestComment, autoFulfilled) {
-		deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
+		return deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
 			then(
 				function(response) {
 					var comment = {
@@ -181,7 +177,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 							{ id: $scope.DRAFT, name: 'Save Request as Draft' },
 							{ id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
 						];
-						if (userModel.user.roleName == propertiesModel.properties.dsRequests.roleNeededToSkip) {
+						if (userModel.user.roleName == propertiesModel.properties.dsRequests.overrideRole) {
 							statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
 						}
 						return statuses;
@@ -198,21 +194,19 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 					status: status,
 					deliveryService: deliveryService
 				};
-				// if the user chooses to complete/fulfill the update request immediately, the ds will be updated and behind the
-				// scenes a delivery service request will be created and marked as complete
+				// if the user chooses to complete/fulfill the update request immediately, a delivery service request will be made and marked as complete, 
+				// then if that is successful, the DS will be updated
 				if (options.status.id == $scope.COMPLETE) {
-					deliveryServiceService.updateDeliveryService(deliveryService).
-						then(
-							function() {
-								$state.reload(); // reloads all the resolves for the view
-								messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
-								createDeliveryServiceUpdateRequest(dsRequest, options.comment, true);
-							},
-							function(fault) {
-								$anchorScroll(); // scrolls window to top
-								messageModel.setMessages(fault.data.alerts, false);
-							}
-						);
+					createDeliveryServiceUpdateRequest(dsRequest, options.comment, true).then(
+						function() {
+							deliveryServiceService.updateDeliveryService(deliveryService);
+						}).then(function() {
+							$state.reload(); // reloads all the resolves for the view
+							messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
+						}).catch(function(fault) {
+							$anchorScroll(); // scrolls window to top
+							messageModel.setMessages(fault.data.alerts, false);
+					});
 				} else {
 					createDeliveryServiceUpdateRequest(dsRequest, options.comment, false);
 				}

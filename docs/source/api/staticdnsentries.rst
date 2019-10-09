@@ -32,27 +32,36 @@ Request Structure
 .. table:: Request Query Parameters
 
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	|        Name       | Required | Description                                                                                                                                |
+	| Name              | Required | Description                                                                                                                                |
 	+===================+==========+============================================================================================================================================+
-	|      address      | no       | Return only static DNS entries that operate on this address/:abbr:`CNAME (Canonical Name)`                                                 |
+	| address           | no       | Return only static DNS entries that operate on this address/:abbr:`CNAME (Canonical Name)`                                                 |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	|     cachegroup    | no       | Return only static DNS entries assigned to this :term:`Cache Group`                                                                        |
+	| cachegroup        | no       | Return only static DNS entries assigned to this :term:`Cache Group`                                                                        |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	|    cachegroupId   | no       | Return only static DNS entries assigned to the :term:`Cache Group` identified by this integral, unique identifier                          |
+	| cachegroupId      | no       | Return only static DNS entries assigned to the :term:`Cache Group` identified by this integral, unique identifier                          |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	|  deliveryservice  | no       | Return only static DNS entries that apply within the domain of the :term:`Delivery Service` with this 'xml_id'                             |
+	| deliveryservice   | no       | Return only static DNS entries that apply within the domain of the :term:`Delivery Service` with this 'xml_id'                             |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
 	| deliveryserviceId | no       | Return only static DNS entries that apply within the domain of the :term:`Delivery Service` identified by this integral, unique identifier |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	|       host        | no       | Return only static DNS entries that resolve this :abbr:`FQDN (Fully Qualified Domain Name)`                                                |
+	| host              | no       | Return only static DNS entries that resolve this :abbr:`FQDN (Fully Qualified Domain Name)`                                                |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	|        id         | no       | Return only the static DNS entry with this integral, unique identifier                                                                     |
+	| id                | no       | Return only the static DNS entry with this integral, unique identifier                                                                     |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	|       ttl         | no       | Return only static DNS entries with this :abbr:`TTL (Time To Live)`                                                                        |
+	| ttl               | no       | Return only static DNS entries with this :abbr:`TTL (Time To Live)`                                                                        |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	|       type        | no       | Return only static DNS entries of this type                                                                                                |
+	| type              | no       | Return only static DNS entries of this type                                                                                                |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
-	|      typeId       | no       | Return only static DNS entries of the type identified by this integral, unique identifier                                                  |
+	| typeId            | no       | Return only static DNS entries of the type identified by this integral, unique identifier                                                  |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder         | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                   |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| limit             | no       | Choose the maximum number of results to return                                                                                             |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| offset            | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                       |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
+	| page              | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.       |
+	|                   |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                          |
 	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http

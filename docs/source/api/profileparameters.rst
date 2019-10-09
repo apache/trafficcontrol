@@ -22,9 +22,9 @@
 ``GET``
 =======
 .. deprecated:: 1.1
-	To get the profiles associated with a particular parameter, use the ``param`` query parameter of :ref:`to-api-profiles` instead. To see the parameters associated with a particular profile, refer to the ``params`` key in the response of a ``GET`` request to :ref:`to-api-profiles-id` instead.
+	To get the :term:`Profiles` associated with a particular :term:`Parameter`, use the ``param`` query parameter of :ref:`to-api-profiles` instead. To see the :term:`Parameters` associated with a particular :term:`Profile`, refer to the ``params`` key in the response of a ``GET`` request to :ref:`to-api-profiles-id` instead.
 
-Retrieves all parameter/profile assignments.
+Retrieves all :term:`Parameter`/:term:`Profile` assignments.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -32,13 +32,30 @@ Retrieves all parameter/profile assignments.
 
 Request Structure
 -----------------
-No parameters available
+.. table:: Request Query Parameters
+
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                   |
+	+===========+==========+===============================================================================================================+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|           |          | array                                                                                                         |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                                                |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|           |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|           |          | defined to make use of ``page``.                                                                              |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
-:lastUpdated: The date and time at which this profile/parameter association was last modified
-:parameter:   An integral, unique identifier for a parameter assigned to ``profile``
-:profile:     The name of the profile to which the parameter identified by ``parameter`` is assigned
+:lastUpdated: The date and time at which this :term:`Profile`/:term:`Parameter` association was last modified, in an ISO-like format
+:parameter:   The :ref:`parameter-id` of a :term:`Parameter` assigned to ``profile``
+:profile:     The :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameter`` is assigned
 
 .. code-block:: http
 	:caption: Response Structure
@@ -72,7 +89,7 @@ Response Structure
 
 ``POST``
 ========
-Associate parameter to profile.
+Associate a :term:`Parameter` to a :term:`Profile`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -83,14 +100,14 @@ Request Structure
 This endpoint accepts two formats for the request payload:
 
 Single Object Format
-	For assigning a single parameter to a single profile
+	For assigning a single :term:`Parameter` to a single :term:`Profile`
 Array Format
-	For making multiple assignments of parameters to profiles simultaneously
+	For making multiple assignments of :term:`Parameters` to :term:`Profiles` simultaneously
 
 Single Object Format
 """"""""""""""""""""
-:parameterId: The integral, unique identifier of a parameter to assign to some profile
-:profileId:   The integral, unique identifier of the profile to which the parameter identified by ``parameterId`` will be assigned
+:parameterId: The :ref:`parameter-id` of a :term:`Parameter` to assign to some :term:`Profile`
+:profileId:   The :ref:`profile-id` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameterId`` will be assigned
 
 .. code-block:: http
 	:caption: Request Example - Single Object Format
@@ -110,10 +127,10 @@ Single Object Format
 
 Array Format
 """"""""""""
-.. caution:: Array format is broken as of the time of this writing. Follow `GitHub Issue #3103 <https://github.com/apache/trafficcontrol/issues/3103>`_ for further developments.
+.. caution:: Array format is broken as of the time of this writing. Follow :issue:`3103` for further developments.
 
-:parameterId: The integral, unique identifier of a parameter to assign to some profile
-:profileId:   The integral, unique identifier of the profile to which the parameter identified by ``parameterId`` will be assigned
+:parameterId: The :ref:`parameter-id` of a :term:`Parameter` to assign to some :term:`Profile`
+:profileId:   The :ref:`profile-id` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameterId`` will be assigned
 
 .. code-block:: http
 	:caption: Request Example - Array Format
@@ -137,11 +154,11 @@ Array Format
 
 Response Structure
 ------------------
-:lastUpdated: The date and time at which the profile/parameter assignment was last modified, in ISO format
-:parameter:   Name of the parameter which is assigned to ``profile``
-:parameterId: The integral, unique identifier of the assigned parameter
-:profile:     Name of the profile to which the parameter is assigned
-:profileId:   The integral, unique identifier of the profile to which the parameter identified by ``parameterId`` is assigned
+:lastUpdated: The date and time at which the :term:`Profile`/:term:`Parameter` assignment was last modified, in an ISO-like format
+:parameter:   :ref:`parameter-name` of the :term:`Parameter` which is assigned to ``profile``
+:parameterId: The :ref:`parameter-id` of the assigned :term:`Parameter`
+:profile:     :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` is assigned
+:profileId:   The :ref:`profile-id` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameterId`` is assigned
 
 .. code-block:: http
 	:caption: Response Example - Single Object Format

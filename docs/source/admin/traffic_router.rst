@@ -32,11 +32,11 @@ Requirements
 
 Installing Traffic Router
 =========================
-#. If no suitable :term:`Profile` exists, create a new :term:`Profile` for Traffic Router via the :guilabel:`+` button on the :ref:`tp-profiles-page` page in Traffic Portal
+#. If no suitable :term:`Profile` exists, create a new :term:`Profile` for Traffic Router via the :guilabel:`+` button on the :ref:`tp-configure-profiles` page in Traffic Portal
 
-	.. warning:: Traffic Ops will *only* recognize a profile as assignable to a Traffic Router if its name starts with the prefix ``ccr-``. The reason for this is a legacy limitation related to the old name for Traffic Router (Comcast Cloud Router), and will (hopefully) be rectified in the future as the old Perl parts of Traffic Ops are re-written in Go.
+	.. warning:: Traffic Ops will *only* recognize a :term:`Profile` as assignable to a Traffic Router if its :ref:`profile-name` starts with the prefix ``ccr-``. The reason for this is a legacy limitation related to the old name for Traffic Router (Comcast Cloud Router), and will (hopefully) be rectified in the future as the old Perl parts of Traffic Ops are re-written in Go.
 
-#. Enter the Traffic Router server into Traffic Portal on the :ref:`tp-servers-page` (or via the :ref:`to-api`), assign to it a Traffic Router :term:`Profile`, and ensure that its status is set to ``ONLINE``.
+#. Enter the Traffic Router server into Traffic Portal on the :ref:`tp-configure-servers` page (or via the :ref:`to-api`), assign to it a Traffic Router :term:`Profile`, and ensure that its status is set to ``ONLINE``.
 #. Ensure the :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Router is resolvable in DNS. This :abbr:`FQDN (Fully Qualified Domain Name)` must be resolvable by the clients expected to use this CDN.
 #. Install a Traffic Router server package, either from source or using a :file:`traffic_router-{version string}.rpm` package generated using the instructions in :ref:`dev-building`.
 
@@ -81,8 +81,6 @@ Installing Traffic Router
 
 #. Perform a CDN :term:`Snapshot`.
 
-	.. SeeAlso:: :ref:`snapshot-crconfig`
-
 	.. Note:: Once the :term:`Snapshot` is taken, live traffic will be sent to the new Traffic Routers provided that their status has been set to ``ONLINE``.
 
 #. Ensure that the parent domain (e.g.: ``cdn.local``) for the CDN's top level domain (e.g.: ``ciab.cdn.local``) contains a delegation (Name Server records) for the new Traffic Router, and that the value specified matches the :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Router.
@@ -95,13 +93,13 @@ Configuring Traffic Router
 .. versionchanged:: 3.0
 	Traffic Router 3.0 has been converted to a formal Tomcat instance, meaning that is now installed separately from the Tomcat servlet engine. The Traffic Router installation package contains all of the Traffic Router-specific software, configuration and startup scripts including some additional configuration files needed for Tomcat. These new configuration files can all be found in the :file:`/opt/traffic_router/conf` directory and generally serve to override Tomcat's default settings.
 
-For the most part, the configuration files and :term:`Parameter`\ s used by Traffic Router are used to bring it online and start communicating with various Traffic Control components. Once Traffic Router is successfully communicating with Traffic Control, configuration should mostly be performed in Traffic Portal, and will be distributed throughout Traffic Control via CDN :term:`Snapshot` process. See :ref:`snapshot-crconfig` for more information. Please see the :term:`Parameter` documentation for Traffic Router in the Using Traffic Ops guide documented under :ref:`ccr-profile` for :term:`Parameter`\ s that influence the behavior of Traffic Router via the :term:`Snapshot`.
+For the most part, the configuration files and :term:`Parameters` used by Traffic Router are used to bring it online and start communicating with various Traffic Control components. Once Traffic Router is successfully communicating with Traffic Control, configuration should mostly be performed in Traffic Portal, and will be distributed throughout Traffic Control via CDN :term:`Snapshot` process.
 
 .. _tr-config-files:
-.. table:: Traffic Router Parameters
+.. table:: Traffic Router Configuration File Parameters
 
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
-	| ConfigFile                 | Parameter Name                            | Description                                                                      | Default Value                                      |
+	| Configuration File         | Parameter Name                            | Description                                                                      | Default Value                                      |
 	+============================+===========================================+==================================================================================+====================================================+
 	| traffic_monitor.properties | traffic_monitor.bootstrap.hosts           | Semicolon-delimited Traffic Monitor                                              | N/A                                                |
 	|                            |                                           | :abbr:`FQDN (Fully Qualified Domain Name)`\ s with port numbers as necessary     |                                                    |
@@ -169,6 +167,179 @@ For the most part, the configuration files and :term:`Parameter`\ s used by Traf
 	|                            |                                           | of Tomcat                                                                        |                                                    |
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 
+.. _tr-profile:
+
+The Traffic Router Profile
+--------------------------
+Much of a Traffic Router's configuration can be obtained through the :term:`Parameters` on its :term:`Profile`. The :term:`Parameters` of a Traffic Router's :term:`Profile` that have meaning (others are just ignored) are detailed in the :ref:`tr-profile-parameters`.
+
+.. _tr-profile-parameters:
+
+.. table:: The Parameters of a Traffic Router Profile
+
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| :ref:`parameter-name`                   | :ref:`parameter-config-file` | :ref:`parameter-value` Description                                                                                                    |
+	+=========================================+==============================+=======================================================================================================================================+
+	| location                                | dns.zone                     | Location to store the DNS zone files in the local file system of Traffic Router.                                                      |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| location                                | http-log4j.properties        | Location to find the log4j.properties file for Traffic Router.                                                                        |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| location                                | dns-log4j.properties         | Location to find the dns-log4j.properties file for Traffic Router.                                                                    |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| location                                | geolocation.properties       | Location to find the log4j.properties file for Traffic Router.                                                                        |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| CDN_name                                | rascal-config.txt            | The human readable name of the CDN for this :term:`Profile`.                                                                          |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| CoverageZoneJsonURL                     | CRConfig.xml                 | The location (URL) where a :term:`Coverage Zone Map` may be found.                                                                    |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| ecsEnable                               | CRConfig.json                | Boolean value to enable or disable ENDS0 client subnet extensions.                                                                    |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| geolocation.polling.url                 | CRConfig.json                | The location (URL) where a geographic IP mapping database may be found.                                                               |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| geolocation.polling.interval            | CRConfig.json                | How often - in milliseconds - Traffic Router should check for an updated geographic IP mapping database.                              |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| coveragezone.polling.interval           | CRConfig.json                | How often - in milliseconds - Traffic Router should check for an updated :term:`Coverage Zone Map`.                                   |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| coveragezone.polling.url                | CRConfig.json                | The location (URL) where a :term:`Coverage Zone Map` may be found.                                                                    |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| deepcoveragezone.polling.interval       | CRConfig.json                | How often - in milliseconds - Traffic Router should check for an updated :term:`Deep Coverage Zone Map`                               |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| deepcoveragezone.polling.url            | CRConfig.json                | The location (URL) where a :term:`Deep Coverage Zone Map` may be found.                                                               |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| client.steering.forced.diversity        | CRConfig.json                | When this :term:`Parameter` exists and is exactly "true", it enables the "Client Steering Forced Diversity" feature to diversify      |
+	|                                         |                              | CLIENT_STEERING results by including more unique :term:`Edge-Tier Cache Servers` in the response to the client's request.             |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.soa.expire                          | CRConfig.json                | The value for the "expire" field the Traffic Router DNS Server will respond with on :abbr:`SOA (Start of Authority)` records.         |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.soa.minimum                         | CRConfig.json                | The value for the minimum field the Traffic Router DNS Server will respond with on :abbr:`SOA (Start of Authority)` records.          |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.soa.admin                           | CRConfig.json                | The DNS Start of Authority administration email address, which clients will be directed to contact for support if DNS is not working  |
+	|                                         |                              | correctly.                                                                                                                            |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.soa.retry                           | CRConfig.json                | The value for the "retry" field the Traffic Router DNS Server will respond with on :abbr:`SOA (Start of Authority)` records.          |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.soa.refresh                         | CRConfig.json                | The value for the "refresh" field the Traffic Router DNS Server will respond with on :abbr:`SOA (Start of Authority)` records.        |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.ttls.NS                             | CRConfig.json                | The :abbr:`TTL (Time To Live)` the Traffic Router DNS Server will respond with on NS records.                                         |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.ttls.SOA                            | CRConfig.json                | The :abbr:`TTL (Time To Live)` the Traffic Router DNS Server will respond with on :abbr:`SOA (Start of Authority)` records.           |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.ttls.AAAA                           | CRConfig.json                | The :abbr:`TTL (Time To Live)` the Traffic Router DNS Server will respond with on AAAA records.                                       |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.ttls.A                              | CRConfig.json                | The :abbr:`TTL (Time To Live)` the Traffic Router DNS Server will respond with on A records.                                          |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.ttls.DNSKEY                         | CRConfig.json                | The :abbr:`TTL (Time To Live)` the Traffic Router DNS Server will respond with on DNSKEY records.                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| tld.ttls.DS                             | CRConfig.json                | The :abbr:`TTL (Time To Live)` the Traffic Router DNS Server will respond with on DS records.                                         |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| api.port                                | server.xml                   | The TCP port on which Traffic Router servers the :ref:`tr-api`.                                                                       |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| api.cache-control.max-age               | CRConfig.json                | The value of the ``Cache-Control: max-age=`` HTTP header in the of the :ref:`tr-api`.                                                 |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| api.auth.url                            | CRConfig.json                | The URL of the authentication endpoint of the :ref:`to-api` (:ref:`to-api-user-login`). The actual                                    |
+	|                                         |                              | :abbr:`FQDN (Fully Qualified Domain Name)` can be subsituted with ``${tmHostname}`` to have Traffic Router automatically fill it in,  |
+	|                                         |                              | e.g. ``https://${tmHostname}/api/1.1/user/login``.                                                                                    |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| consistent.dns.routing                  | CRConfig.json                | Control whether :ref:`DNS-routed <ds-types>` :term:`Delivery Services` use `Consistent Hashing`. May improve performance if set to    |
+	|                                         |                              | "true"; defaults to "false".                                                                                                          |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| dnssec.enabled                          | CRConfig.json                | Whether DNSSEC is enabled; this parameter is updated via the DNSSEC administration user interface in Traffic Portal.                  |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| dnssec.allow.expired.keys               | CRConfig.json                | Allow Traffic Router to use expired DNSSEC keys to sign zones; default is "true". This helps prevent DNSSEC related outages due to    |
+	|                                         |                              | failed Traffic Control components or connectivity issues.                                                                             |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| dynamic.cache.primer.enabled            | CRConfig.json                | Allow Traffic Router to attempt to prime the dynamic zone cache; defaults to "true".                                                  |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| dynamic.cache.primer.limit              | CRConfig.json                | Limit the number of permutations to prime when dynamic zone cache priming is enabled; defaults to "500".                              |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| keystore.maintenance.interval           | CRConfig.json                | The interval in seconds which Traffic Router will check the :ref:`to-api` for new DNSSEC keys.                                        |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| keystore.api.url                        | CRConfig.json                | The URL of the DNSSEC key management endpoint of the :ref:`to-api` (:ref:`to-api-cdns-name-name-dnsseckeys`). The actual              |
+	|                                         |                              | :abbr:`FQDN (Fully Qualified Domain Name)` may be substituted with ``${tmHostname}`` to and the name of a CDN may be substituted with |
+	|                                         |                              | ``${cdnName}`` to have Traffic Router automatically fill them in.                                                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| keystore.fetch.timeout                  | CRConfig.json                | The timeout in milliseconds for requests to the DNSSEC Key management endpoint of the :ref:`to-api`                                   |
+	|                                         |                              | (:ref:`to-api-cdns-name-name-dnsseckeys`).                                                                                            |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| keystore.fetch.retries                  | CRConfig.json                | The number of times Traffic Router will attempt to load DNSSEC keys before giving up; defaults to "5".                                |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| keystore.fetch.wait                     | CRConfig.json                | The number of milliseconds Traffic Router will wait in between attempts to load DNSSEC keys                                           |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| signaturemanager.expiration.multiplier  | CRConfig.json                | Multiplier used in conjunction with a zone's maximum :abbr:`TTL (Time To Live)` to calculate DNSSEC signature durations; defaults to  |
+	|                                         |                              | "5".                                                                                                                                  |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| zonemanager.threadpool.scale            | CRConfig.json                | Multiplier used to determine the number of CPU cores to use for zone signing operations; defaults to "0.75".                          |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| zonemanager.cache.maintenance.interval  | CRConfig.json                | The interval in seconds on which Traffic Router will check for zones that need to be re-signed or if dynamic zones need to be expired |
+	|                                         |                              | from its cache.                                                                                                                       |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| zonemanager.dynamic.response.expiration | CRConfig.json                | A duration (e.g.: "300s") that defines how long a dynamic zone will remain valid before expiring.                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| DNSKEY.generation.multiplier            | CRConfig.json                | Used to determine when new DNSSEC keys need to be generated. Keys are re-generated if expiration is less than the generation          |
+	|                                         |                              | multiplier multiplied by the :abbr:`TTL (Time To Live)`. If this :term:`Parameter` does not exist, the default is "10".               |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| DNSKEY.effective.multiplier             | CRConfig.json                | Used when creating an effective date for a new key set. New keys are generated with an effective date of that is the effective        |
+	|                                         |                              | multiplier multiplied by the :abbr:`TTL (Time To Live)` less than the old key's expiration date. Default is "2".                      |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+
+.. deprecated:: ATCv4.0
+	The use of "CRConfig.xml" as a :ref:`Parameter "Config File" value <parameter-config-file>` has no known meaning, and its use for configuring Traffic Router is deprecated. All configuration (?) that previously used that value should instead use the equivalent :term:`Parameter` with the :ref:`parameter-config-file` value "CRConfig.json".
+
+.. _consistent-hashing:
+
+Consistent Hashing
+==================
+Traffic Router does special optimization for some requests to ensure that requests for specific content are consistently fetched from a small number (often exactly one, but dependent on :ref:`ds-initial-dispersion`) of :term:`cache servers` - thus ensuring it stays "fresh" in the cache. This is done by performing "consistent hashing" on request paths (when HTTP routing) or names requested for resolution (when DNS routing). To an extent, this behavior is configurable by modifying fields on :term:`Delivery Services`. Consistent hashing acts differently on a :term:`Delivery Service` based on how :term:`Delivery Services` of its :ref:`ds-types` route content.
+
+- HTTP, HTTP_NO_CACHE, HTTP_LIVE, HTTP_LIVE_NATNL, DNS, DNS_LIVE, and DNS_NATNL
+	These :ref:`Delivery Service Types <ds-types>` route directly to :term:`cache servers`, so consistent hashing is used to choose a :term:`cache server` to which the client will be redirected.
+
+- STEERING and CLIENT_STEERING
+	These :ref:`Delivery Service Types <ds-types>` route to "target" :term:`Delivery Services`, so consistent hashing is used to choose a "target" which will service the client request.
+
+.. seealso:: See `the Wikipedia article on consistent hashing <http://en.wikipedia.org/wiki/Consistent_hashing>`_.
+
+.. _pattern-based-consistenthash:
+
+Consistent Hashing Patterns
+---------------------------
+.. versionadded:: 4.0
+
+Regular expressions ("patterns") can be provided in the :ref:`ds-consistent-hashing-regex` field of an HTTP-:ref:`routed <ds-types>` Delivery Service to influence what parts of an HTTP request path are considered when performing consistent hashing. These patterns propagate to Traffic Router through :term:`Snapshots`.
+
+.. important:: Consistent Hashing Patterns on STEERING-:ref:`ds-types` :term:`Delivery Services` will be used for Consistent Hashing - the Consistent Hashing Pattern(s) of said :term:`Delivery Service`'s target(s) will **not** be considered. If Consistent Hashing Patterns are important to the routing of content on a STEERING-:ref:`ds-types` or CLIENT_STEERING-:ref:`ds-types` :term:`Delivery Service`, they **must** be defined *on that* :term:`Delivery Service` *itself, and* **not** *on its target(s)*.
+
+How it Works
+""""""""""""
+The supplied :ref:`ds-consistent-hashing-regex` is applied to the request path to extract matching elements to build a new string *before* consistent hashing is done. For example, using the pattern :regexp:`/.*?(/.*?/).*?(m3u8)` and given the request paths ``/test/path/asset.m3u8`` and ``/other/path/asset.m3u8`` the resulting string used for consistent hashing will be ``/path/m3u8``
+
+.. seealso:: See Oracle's `documentation for the java.util.regex.Pattern <https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html>`_ implementation in Java.
+
+Testing Pattern-Based Consistent Hashing
+""""""""""""""""""""""""""""""""""""""""
+In order to test this feature without affecting the delivery of traffic through a CDN, there are several test tools in place.
+
+- :ref:`tr-api`
+	Several Traffic Router endpoints exist to test regular expression application against a request path, :term:`cache server` selection, and :term:`Delivery Service` selection.
+- :ref:`to-api`
+	The :ref:`to-api-consistenthash` endpoint will proxy request data through to one of the Traffic Router endpoints in order to test regular expression application against a request path, in the event that direct access to the :ref:`tr-api` is not possible and/or desired.
+- Traffic Portal
+	On the :term:`Delivery Service` creation/modification form in Traffic Portal (under :ref:`tp-services-delivery-service`), there is a :guilabel:`Test Regex` section that the user can use to validate a regular expression before saving it to a :term:`Delivery Service`.
+
+Consistent Hash Query Parameters
+--------------------------------
+Normally, when performing consistent hashing for an HTTP-:ref:`routed <ds-types>` :term:`Delivery Service`, any query parameters present in the request are ignored. That is, if a client requests ``/some/path?key=value`` consistent hashing is only performed on the string '``/some/path``'. However, query parameters that are part of uniquely identifying content can be specified by adding them to the set of :ref:`ds-consistent-hashing-qparams` of a :term:`Delivery Service`. For example, suppose that the file ``/video.mp4`` is available on the :term:`origin server` in different resolutions, which are specified by the ``resolution`` query parameter. This means that ``/video.mp4?resolution=480p`` and ``/video.mp4?resolution=720p`` share a *request path*, but represent different *content*. In that case, adding ``resolution`` to the :term:`Delivery Service`'s :ref:`ds-consistent-hashing-qparams` will cause consistent hashing to be done on e.g. ``/video.mp4?resolution=480p`` instead of just ``/video.mp4`` - however if the client requests e.g. ``/video.mp4?resolution=480p&bitrate=120kbps`` consistent hashing will *only* consider ``/video.mp4?resolution=480p``.
+
+.. note:: `Consistent Hashing Patterns`_ are applied *before* query parameters are considered - i.e. a pattern cannot match against query parameters, and need not worry about query parameters contaminating matches.
+
+.. important:: Consistent Hash Query Parameters on the *targets* of STEERING-:ref:`ds-types` :term:`Delivery Services` will be used for Consistent Hashing - the Consistent Hash Query Parameters of said :term:`Delivery Services` themselves will **not** be considered. If Consistent Hash Query Parameters are important to the routing of content on a STEERING-:ref:`ds-types` or CLIENT_STEERING-:ref:`ds-types` :term:`Delivery Service`, they **must** be defined *on that* :term:`Delivery Service`'s' *target(s), and* **not** *on the* :term:`Delivery Service` *itself*.
+
+.. caution:: Certain query parameters are reserved by Traffic Router for its own use, and thus cannot be present in any Consistent Hash Query Parameters. These reserved parameters are:
+
+	 - trred
+	 - format
+	 - fakeClientIPAddress
+
 .. _tr-dnssec:
 
 DNSSEC
@@ -181,7 +352,7 @@ Overview
 
 Operation
 ---------
-Upon startup or a configuration change, Traffic Router obtains keys from the 'keystore' API in Traffic Ops which returns :abbr:`KSK (Key Signing Key)`\ s and :abbr:`ZSK (Zone Signing Key)`\ s for each :term:`Delivery Service` that is a sub-domain of the CDN's :abbr:`TLD (Top Level Domain)` in addition to the keys for the CDN :abbr:`TLD (Top Level Domain)` itself. Each key has timing information that allows Traffic Router to determine key validity (expiration, inception, and effective dates) in addition to the appropriate :abbr:`TTL (Time To Live)` to use for the DNSKEY record(s). All :abbr:`TTL (Time To Live)`\ s are configurable :term:`Parameter`\ s; see the :ref:`ccr-profile` documentation for more information.
+Upon startup or a configuration change, Traffic Router obtains keys from the 'keystore' API in Traffic Ops which returns :abbr:`KSK (Key Signing Key)`\ s and :abbr:`ZSK (Zone Signing Key)`\ s for each :term:`Delivery Service` that is a sub-domain of the CDN's :abbr:`TLD (Top Level Domain)` in addition to the keys for the CDN :abbr:`TLD (Top Level Domain)` itself. Each key has timing information that allows Traffic Router to determine key validity (expiration, inception, and effective dates) in addition to the appropriate :abbr:`TTL (Time To Live)` to use for the DNSKEY record(s). All :abbr:`TTL (Time To Live)`\ s are configurable :term:`Parameters` in :ref:`tr-profile`.
 
 Once Traffic Router obtains the key data from the API, it converts each public key into the appropriate record types (DNSKEY, DS) to place in zones and uses the private key to sign zones. DNSKEY records are added to each :term:`Delivery Service`'s zone (e.g.: ``demo1.mycdn.ciab.test``) for every valid key that exists, in addition to the CDN :abbr:`TLD (Top Level Domain)`'s zone. A DS record is generated from each zone's :abbr:`KSK (Key Signing Key)` and is placed in the CDN :abbr:`TLD (Top Level Domain)`'s zone (e.g.: ``mycdn.ciab.test``); the DS record for the CDN :abbr:`TLD (Top Level Domain)` must be placed in its parent zone, which is not managed by Traffic Control.
 
@@ -252,7 +423,7 @@ Items within brackets are detailed under the HTTP and DNS sections
 	144140678.000 qtype=DNS chi=192.168.10.11 rhi=- ttms=789 [Fields Specific to the DNS request] rtype=CZ rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the DNS result]
 	144140678.000 qtype=HTTP chi=192.168.10.11 rhi=- ttms=789 [Fields Specific to the HTTP request] rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" [Fields Specific to the HTTP result]
 
-.. Note:: These samples contain fields that are always present for every single access event to Traffic Router
+.. note:: These samples contain fields that are always present for every single access event to Traffic Router
 
 
 ``rtype`` Meanings
@@ -296,7 +467,7 @@ DS_BYPASS
 DS_CLIENT_GEO_UNSUPPORTED
 	Traffic Router did not find a resource supported by coverage zone data and was unable to determine the geographic location of the requesting client
 DS_CZ_BACKUP_CG
-	Traffic Router found a backup cache via fall-back (CRconfig's ``edgeLocation``)  or via coordinates (:abbr:`CZF (Coverage Zone File)`) configuration
+	Traffic Router found a backup cache via fall-back (through the ``edgeLocation`` field of a :term:`Snapshot`)  or via coordinates (:term:`Coverage Zone File`) configuration
 DS_CZ_ONLY
 	The selected :term:`Delivery Service` only supports resource lookup based on coverage zone data
 DS_NO_BYPASS
@@ -386,40 +557,10 @@ DNS Specifics
 	|      |                                                                     | NXDOMAIN (the domain/name requested does not exist) |
 	+------+---------------------------------------------------------------------+-----------------------------------------------------+
 
-.. _tr-ngb:
-
-GeoLimit Failure Redirect Feature
-=================================
-
-Overview
---------
-This feature is also called :abbr:`NGB (National GeoBlock)`.
-
-In the past, if the Geolimit check fails (for example, the client IP is not in the ``US`` :term:`Region` but the Geolimit is set to 'CZF + US'), Traffic Router will respond with ``503 Service Unavailable``, but with this feature, when the check fails, it will respond with ``302 Found`` if the redirect URL is set in the :term:`Delivery Service`.
-
-The Geolimit check will fail in the following scenarios:
-	- When the GeoLimit is set to 'CZF + only' and the client IP is not in the the CZ file
-	- When the GeoLimit is set to any region e.g. 'CZF + US' and the client IP is not in such region, and the client IP is not in the CZ file
-
-Configuration
--------------
-To enable the :abbr:`NGB (National GeoBlock)` feature, the :term:`Delivery Service` must be configured with the proper redirect URL. The setting for this can be found by clicking on :guilabel:`Advanced Options` at the bottom of a :term:`Delivery Service` details page, and is specified by the 'Geo Limit Redirect URL' field. An individual :term:`Delivery Service` details page can be viewed by clicking on the desired :term:`Delivery Service` under :menuselection:`Services --> Delivery Services`. If no URL is put in this field, the feature is disabled.
-
-The URL has 3 kinds of formats, which have different meanings:
-
-URL with no domain
-	If no domain is in the URL (e.g. ``vod/dance.mp4``), Traffic Router will try to find a proper :term:`cache server` within the :term:`Delivery Service` and return the redirect URL in the format: ``http://[cache server name]. :term:`Delivery Service`'s Fully Qualified Domain]/[configured relative path]``
-
-URL with domain that matches with the :term:`Delivery Service`
-	For this URL, Traffic Router will also try to find a proper :term:`cache server` within the :term:`Delivery Service` and return a redirect URL in the format: ``http://[cache server name]. :term:`Delivery Service`'s Fully Qualified Domain Name]/[configured relative path]``
-
-URL with domain that doesn't match with the :term:`Delivery Service`
-	Traffic Router will return the configured URL directly to the client.
-
 .. _deep-cache:
 
-Deep Caching - Deep Coverage Zone Topology
-==========================================
+Deep Caching
+============
 
 Overview
 --------
@@ -428,11 +569,13 @@ Deep Caching is a feature that enables clients to be routed to the closest possi
 What You Need
 -------------
 #. Edge cache deployed in "deep" locations and registered in Traffic Ops
-#. A :abbr:`DCZF (Deep Coverage Zone File)` mapping these deep cache hostnames to specific network prefixes (see :ref:`deep-czf` for details)
-#. Deep caching parameters in the Traffic Router Profile (see :ref:`ccr-profile` for details):
+#. A :term:`Deep Coverage Zone File` mapping these deep cache hostnames to specific network prefixes
+#. Deep caching :term:`Parameters` in the Traffic Router :term:`Profile`
 
 	- ``deepcoveragezone.polling.interval``
 	- ``deepcoveragezone.polling.url``
+
+	.. seealso:: See :ref:`tr-profile` for details.
 
 #. Deep Caching enabled on one or more HTTP :term:`Delivery Service`\ s (i.e. 'Deep Caching' field on the :term:`Delivery Service` details page (under :guilabel:`Advanced Options`) set to ``ALWAYS``)
 
@@ -447,39 +590,38 @@ Steering Feature
 
 Overview
 --------
-A Steering :term:`Delivery Service` is a :term:`Delivery Service` that is used to route a client to another :term:`Delivery Service`. The :term:`Type` of a Steering :term:`Delivery Service` is either STEERING or CLIENT_STEERING. A Steering :term:`Delivery Service` will have target :term:`Delivery Service`\ s configured for it with weights assigned to them. Traffic Router uses the weights to make a consistent hash ring which it then uses to make sure that requests are routed to a target based on the configured weights. This consistent hash ring is separate from the consistent hash ring used in cache selection.
+A Steering :term:`Delivery Service` is a :term:`Delivery Service` that is used to route a client to another :term:`Delivery Service`. The :ref:`Type <ds-types>` of a Steering :term:`Delivery Service` is either STEERING or CLIENT_STEERING. A Steering :term:`Delivery Service` will have target :term:`Delivery Service`\ s configured for it with weights assigned to them. Traffic Router uses the weights to make a consistent hash ring which it then uses to make sure that requests are routed to a target based on the configured weights. This consistent hash ring is separate from the consistent hash ring used in cache selection.
 
-Special regular expressions - referred to as 'filters' - can also be configured for target :term:`Delivery Service`\ s to pin traffic to a specific :term:`Delivery Service`. For example, if the filter :regexp:`.*/news/.*` for a target called ``target-ds-1`` is created, any requests to Traffic Router with "news" in them will be routed to ``target-ds-1``. This will happen regardless of the configured weights.
+Special regular expressions - referred to as 'filters' - can also be configured for target :term:`Delivery Services` to pin traffic to a specific :term:`Delivery Service`. For example, if the filter :regexp:`.*/news/.*` for a target called ``target-ds-1`` is created, any requests to Traffic Router with "news" in them will be routed to ``target-ds-1``. This will happen regardless of the configured weights.
 
 Some other points of interest
 """""""""""""""""""""""""""""
-- Steering is currently only available for HTTP :term:`Delivery Service`\ s that are a part of the same CDN.
+- Steering is currently only available for HTTP :term:`Delivery Services` that are a part of the same CDN.
 - A new role called STEERING has been added to the Traffic Ops database. Only users with the Steering :term:`Role` or higher can modify steering assignments for a :term:`Delivery Service`.
-- A new API has been created in Traffic Ops under ``/internal``. A Steering user can either directly access this API to modify assignments, or use the Traffic Portal UI (:menuselection:`More --> View Targets` on a Steering :term:`Delivery Service`'s details page), however a filter can only be created via the API.
-- Traffic Router uses the steering API in Traffic Ops to poll for steering assignments, the assignments are then used when routing traffic.
+- Traffic Router uses the steering endpoints of the :ref:`to-api` to poll for steering assignments, the assignments are then used when routing traffic.
 
 A couple simple use-cases for Steering are:
 
 - Migrating traffic from one :term:`Delivery Service` to another over time.
 - Trying out new functionality for a subset of traffic with an experimental :term:`Delivery Service`.
-- Load balancing between :term:`Delivery Service`\ s
+- Load balancing between :term:`Delivery Services`
 
 The Difference Between STEERING and CLIENT_STEERING
 ---------------------------------------------------
-The only difference between the STEERING and CLIENT_STEERING :term:`Delivery Service` :term:`Type`\ s is that CLIENT_STEERING explicitly allows a client to bypass Steering by choosing a destination :term:`Delivery Service`. A client can accomplish this by providing the ``X-TC-Steering-Option`` HTTP header with a value of the ``xml_id`` of the target :term:`Delivery Service` to which they desire to be routed. When Traffic Router receives this header it will route to the requested target :term:`Delivery Service` regardless of weight configuration. This header is ignored by STEERING :term:`Delivery Service`\ s.
+The only difference between the STEERING and CLIENT_STEERING :term:`Delivery Service` :term:`Type`\ s is that CLIENT_STEERING explicitly allows a client to bypass Steering by choosing a destination :term:`Delivery Service`. A client can accomplish this by providing the ``X-TC-Steering-Option`` HTTP header with a value of the ``xml_id`` of the target :term:`Delivery Service` to which they desire to be routed. When Traffic Router receives this header it will route to the requested target :term:`Delivery Service` regardless of weight configuration. This header is ignored by STEERING :term:`Delivery Services`.
 
 Configuration
 -------------
 The following needs to be completed for Steering to work correctly:
 
-#. Two target :term:`Delivery Service`\ s are created in Traffic Ops. They must both be HTTP :term:`Delivery Service`\ s part of the same CDN.
+#. Two target :term:`Delivery Services` are created in Traffic Ops. They must both be HTTP :term:`Delivery Services` part of the same CDN.
 #. A :term:`Delivery Service` with type STEERING or CLIENT_STEERING is created in Traffic Portal.
-#. Target :term:`Delivery Service`\ s are assigned to the Steering :term:`Delivery Service` using Traffic Portal.
+#. Target :term:`Delivery Services` are assigned to the Steering :term:`Delivery Service` using Traffic Portal.
 #. A user with the role of Steering is created.
-#. The Steering user assigns weights to the target :term:`Delivery Service`\ s.
-#. If desired, the Steering user can create filters for the target :term:`Delivery Service`\ s.
+#. The Steering user assigns weights to the target :term:`Delivery Services`.
+#. If desired, the Steering user can create filters for the target :term:`Delivery Services`.
 
-.. seealso:: For more information see the `Steering how-to guide <quick_howto/steering.html>`_.
+.. seealso:: For more information see :ref:`steering-qht`.
 
 HTTPS for HTTP Delivery Services
 ================================
@@ -600,40 +742,3 @@ The following is an example of the command line parameters set in :file:`/opt/tr
 	-XX:+UseG1GC \
 	-XX:+UnlockExperimentalVMOptions \
 	-XX:InitiatingHeapOccupancyPercent=30"
-
-.. _pattern-based-consistenthash:
-
-Pattern-Based Consistent Hashing Feature
-========================================
-
-.. versionadded:: 3.1
-	Traffic Router now has the ability to influence consisting hashing using a regular expression on a per-HTTP :term:`Delivery Service` basis.
-
-Overview
---------
-Pattern-Based Consistent Hashing is a feature to modify the request path given to Traffic Router's consistent hasher for Cache selection (and :term:`Delivery Service` selection for Steering Delivery Services) using a regular expression. This new regular expression field 'Consistent Hash Regex' is applied on a per-Delivery Service basis and is given to Traffic Router via the CDN :term:`Snapshot`. The purpose of this feature is to increase cache efficiency by directing requests for the same asset, but with varying request paths, to the same Cache.
-
-.. Note:: Pattern-Based Consistent Hashing is only available for HTTP and Steering Delivery Services
-
-How it Works
-------------
-
-With Pattern-Based Consistent Hashing, a regular expression (Consistent Hash Regex) is applied to the request path to extract matching elements to build a new string to pass to the consistent hasher. i.e.: using the Consistent Hash Regex :regexp:`/.*?(/.*?/).*?(m3u8)` given the request paths ``/test/path/asset.m3u8`` and ``/other/path/asset.m3u8`` the resulting path to hash will be ``/path/m3u8``
-
-.. seealso:: See Oracle's `documentation for the java.util.regex.Pattern <https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html>`_ implementation in Java.
-
-HTTP
-	When routing requests for an HTTP Delivery Service, Traffic Router compiles a list of eligible caches and uses consistent hashing on the request path to select one. With Pattern-Based Consistent Hashing, the request path is rebuilt prior to consistent hashing for Cache Selection.
-Steering
-	For a Steering Delivery Service, Traffic Router uses consistent hashing on the request path to select a Target Delivery Service. In the case of Pattern-Based Consistent Hashing, the request path is rebuilt using the Consistent Hash Regex assigned to the Steering Delivery Service prior to consistent hashing. Then, the Target Delivery Service inherits the Consistent Hash Regex from the Steering Delivery Service and uses it for Cache selection.
-
-Testing Pattern-Based Consistent Hashing
-----------------------------------------
-In order to test this feature without affecting the delivery of traffic through a CDN, there are several test tools in place.
-
-Traffic Router API
-	Several Traffic Router endpoints have been added to test regular expression application against a request path, Cache selection, and Delivery Service selection using Pattern-Based Consistent Hashing. For more information see the :ref:`Traffic Router API documentation <tr-api>`.
-Traffic Ops API
-	A Traffic Ops endpoint has been added that will proxy request data through to one of the Traffic Router endpoints in order to test regular expression application against a request path. For more information see the :ref:`Traffic Ops API documentation <to-api-consistenthash>`.
-Traffic Portal Test Tool
-	On the Delivery Service (HTTP and Steering) form in Traffic Portal, a "Test Regex" link has been added so that the user can validate a regular expression before saving it to a Delivery Service.

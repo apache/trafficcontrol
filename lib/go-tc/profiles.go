@@ -1,5 +1,18 @@
 package tc
 
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"strconv"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/lib/pq"
+)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -84,6 +97,136 @@ type ProfileNullable struct {
 	//
 	Parameters []ParameterNullable `json:"params,omitempty"`
 }
+
 type ProfileTrimmed struct {
 	Name string `json:"name"`
+}
+
+// ProfileExportImportNullable is an object of the form used by Traffic Ops
+// to represent exported and imported profiles.
+type ProfileExportImportNullable struct {
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	CDNName     *string `json:"cdn"`
+	Type        *string `json:"type"`
+}
+
+// ProfileExportResponse is an object of the form used by Traffic Ops
+// to represent exported profile response
+type ProfileExportResponse struct {
+	// Parameters associated to the profile
+	//
+	Profile ProfileExportImportNullable `json:"profile"`
+
+	// Parameters associated to the profile
+	//
+	Parameters []ProfileExportImportParameterNullable `json:"parameters"`
+}
+
+// ProfileImportRequest is an object of the form used by Traffic Ops
+// to represent a request to import a profile
+type ProfileImportRequest struct {
+	// Parameters associated to the profile
+	//
+	Profile ProfileExportImportNullable `json:"profile"`
+
+	// Parameters associated to the profile
+	//
+	Parameters []ProfileExportImportParameterNullable `json:"parameters"`
+}
+
+// ProfileImportResponse is an object of the form used by Traffic Ops
+// to represent a response from importing a profile
+type ProfileImportResponse struct {
+	Response ProfileImportResponseObj `json:"response"`
+	Alerts
+}
+
+type ProfileImportResponseObj struct {
+	ProfileExportImportNullable
+	ID *int `json:"id"`
+}
+
+// Validate validates an profile import request
+func (profileImport *ProfileImportRequest) Validate(tx *sql.Tx) error {
+
+	profile := profileImport.Profile
+
+	// Profile fields are valid
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name":        validation.Validate(profile.Name, validation.Required),
+		"description": validation.Validate(profile.Description, validation.Required),
+		"cdnName":     validation.Validate(profile.CDNName, validation.Required),
+		"type":        validation.Validate(profile.Type, validation.Required),
+	})
+
+	// Validate CDN exist
+	if profile.CDNName != nil {
+		if ok, err := CDNExistsByName(*profile.CDNName, tx); err != nil {
+			errString := fmt.Sprintf("checking cdn name %v existence", *profile.CDNName)
+			log.Errorf("%v: %v", errString, err.Error())
+			errs = append(errs, errors.New(errString))
+		} else if !ok {
+			errs = append(errs, fmt.Errorf("%v CDN does not exist", *profile.CDNName))
+		}
+	}
+
+	// Validate profile does not already exist
+	if profile.Name != nil {
+		if ok, err := ProfileExistsByName(*profile.Name, tx); err != nil {
+			errString := fmt.Sprintf("checking profile name %v existence", *profile.Name)
+			log.Errorf("%v: %v", errString, err.Error())
+			errs = append(errs, errors.New(errString))
+		} else if ok {
+			errs = append(errs, fmt.Errorf("A profile with the name \"%v\" already exists", *profile.Name))
+		}
+	}
+
+	// Validate all parameters
+	// export/import does not include secure flag
+	// default value to not flag on validation
+	secure := 1
+	for i, pp := range profileImport.Parameters {
+		if ppErrs := validateProfileParamPostFields(pp.ConfigFile, pp.Name, pp.Value, &secure); len(ppErrs) > 0 {
+			for _, err := range ppErrs {
+				errs = append(errs, errors.New("parameter "+strconv.Itoa(i)+": "+err.Error()))
+			}
+		}
+	}
+
+	if len(errs) > 0 {
+		return util.JoinErrs(errs)
+	}
+
+	return nil
+}
+
+// ProfilesExistByIDs returns whether profiles exist for all the given ids, and any error.
+// TODO move to helper package.
+func ProfilesExistByIDs(ids []int64, tx *sql.Tx) (bool, error) {
+	count := 0
+	if err := tx.QueryRow(`SELECT count(*) from profile where id = ANY($1)`, pq.Array(ids)).Scan(&count); err != nil {
+		return false, errors.New("querying profiles existence from id: " + err.Error())
+	}
+	return count == len(ids), nil
+}
+
+// ProfileExistsByID returns whether a profile with the given id exists, and any error.
+// TODO move to helper package.
+func ProfileExistsByID(id int64, tx *sql.Tx) (bool, error) {
+	count := 0
+	if err := tx.QueryRow(`SELECT count(*) from profile where id = $1`, id).Scan(&count); err != nil {
+		return false, errors.New("querying profile existence from id: " + err.Error())
+	}
+	return count > 0, nil
+}
+
+// ProfileExistsByName returns whether a profile with the given name exists, and any error.
+// TODO move to helper package.
+func ProfileExistsByName(name string, tx *sql.Tx) (bool, error) {
+	count := 0
+	if err := tx.QueryRow(`SELECT count(*) from profile where name = $1`, name).Scan(&count); err != nil {
+		return false, errors.New("querying profile existence from name: " + err.Error())
+	}
+	return count > 0, nil
 }

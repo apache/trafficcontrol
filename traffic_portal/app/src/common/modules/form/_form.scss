@@ -16,6 +16,30 @@
 
 */
 
+@supports not(-moz-animation: auto) {
+	math {
+		mfenced::before {
+			content: "(";
+		}
+		mfenced::after {
+			content: ")";
+		}
+		mfenced[open]::before {
+			content: attr(open);
+		}
+		mfenced[close]::after {
+			content: attr(close);
+		}
+
+		ms::before {
+			content: open-quote;
+		}
+		ms::after {
+			content: close-quote;
+		}
+	}
+}
+
 .btn-link.request-status {
 	font-size: 20px;
 	color: #cd1323;
@@ -94,6 +118,13 @@ textarea.autosize:read-only {
 	font-size: medium;
 }
 
+.add-more-inputs {
+	margin-bottom: 0;
+	.btn {
+		margin-right: 0;
+	}
+}
+
 @media (min-width: 768px) {
 	form label.has-tooltip {
 		div.helptooltip {
@@ -164,3 +195,22 @@ aside.current-value {
 		margin-top: 10px;
 	}
 }
+
+#deliveryServiceForm, #deliveryServiceURLs {
+	fieldset {
+		margin: 0 0 20px 0;
+		legend {
+			font-size: 18px;
+			font-weight: bold;
+			.fa {
+				float: right;
+				margin-right: 10px;
+			}
+		}
+		legend.fieldset-error {
+			color: #a94442;
+		}
+	}
+}
+
+

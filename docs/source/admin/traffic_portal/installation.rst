@@ -41,6 +41,11 @@ Configuring Traffic Portal
 - Optional: update :file:`/opt/traffic_portal/public/resources/assets/css/custom.css` to customize Traffic Portal styling.
 
 
+Configuring OAuth Through Traffic Portal
+========================================
+See :ref:`oauth_login`.
+
+
 Starting Traffic Portal
 =======================
 The Traffic Portal RPM comes with a :manpage:`systemd(1)` unit file, so under normal circumstances Traffic Portal may be started with :manpage:`systemctl(1)`.

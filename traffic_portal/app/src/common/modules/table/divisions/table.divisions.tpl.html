@@ -23,7 +23,7 @@ under the License.
             <li class="active">Divisions</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Create Division" ng-click="createDivision()"><i class="fa fa-plus"></i></button>
+            <button name="createDivisionButton" class="btn btn-primary" title="Create Division" ng-click="createDivision()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -38,7 +38,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editDivision(d.id)" ng-repeat="d in ::divisions">
-                <td data-search="^{{::d.name}}$">{{::d.name}}</td>
+                <td name="name" data-search="^{{::d.name}}$">{{::d.name}}</td>
             </tr>
             </tbody>
         </table>

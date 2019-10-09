@@ -31,15 +31,32 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+----------+----------+------------------------------------------------------------------------------------------+
-	|   Name   | Required | Description                                                                              |
-	+==========+==========+==========================================================================================+
-	|    id    | no       | Return only the user identified by this integral, unique identifier                      |
-	+----------+----------+------------------------------------------------------------------------------------------+
-	|  tenant  | no       | Return only users belonging to the tenant identified by this integral, unique identifier |
-	+----------+----------+------------------------------------------------------------------------------------------+
-	| username | no       | Return only the user with this username                                                  |
-	+----------+----------+------------------------------------------------------------------------------------------+
+	+-----------+----------+------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                              |
+	+===========+==========+==========================================================================================+
+	| id        | no       | Return only the user identified by this integral, unique identifier                      |
+	+-----------+----------+------------------------------------------------------------------------------------------+
+	| tenant    | no       | Return only users belonging to the :term:`Tenant` identified by tenant name              |
+	+-----------+----------+------------------------------------------------------------------------------------------+
+	| tenantId  | no       | Return only users belonging to the :term:`Tenant` identified by this integral, unique    |
+	|           |          | identifier                                                                               |
+	+-----------+----------+------------------------------------------------------------------------------------------+
+	| username  | no       | Return only the user with this username                                                  |
+	+-----------+----------+------------------------------------------------------------------------------------------+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the        |
+	|           |          | objects in the ``response`` array                                                        |
+	+-----------+----------+------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc") |
+	+-----------+----------+------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                           |
+	+-----------+----------+------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in            |
+	|           |          | conjunction with limit                                                                   |
+	+-----------+----------+------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages |
+	|           |          | are ``limit`` long and the first page is 1. If ``offset`` was defined, this query        |
+	|           |          | parameter has no effect. ``limit`` must be defined to make use of ``page``.              |
+	+-----------+----------+------------------------------------------------------------------------------------------+
 
 .. versionadded:: 1.4
 	The ``id`` and ``username`` query parameters were added in the 1.4 API.

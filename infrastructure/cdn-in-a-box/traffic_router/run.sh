@@ -90,6 +90,8 @@ do
   fi; 
 done
 
+/opt/traffic_router/conf/generatingCerts.sh
+
 # Configure TO properties
 # File: /opt/traffic_router/conf/traffic_ops.properties
 echo "" > $TO_PROPERTIES

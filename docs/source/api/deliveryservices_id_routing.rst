@@ -24,7 +24,7 @@
 Retrieves routing method statistics for a particular :term:`Delivery Service`
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [1]_
+:Roles Required: "admin" or "operations"\ [#tenancy]_
 :Response Type:  Object
 
 Request Structure
@@ -48,7 +48,7 @@ Request Structure
 
 Response Structure
 ------------------
-:cz:                The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a coverage zone file (CZF)
+:cz:                The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Coverage Zone File`
 :dsr:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to an overflow :term:`Delivery Service`
 :err:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that resulted in an error
 :fed:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to a federated CDN
@@ -56,7 +56,7 @@ Response Structure
 :miss:              The percent of requests to the Traffic Router for this :term:`Delivery Service` that could not be satisfied
 :regionalAlternate: The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to the alternate, Regional Geo-blocking URL
 :regionalDenied:    The percent of Traffic Router requests for this :term:`Delivery Service` that were denied due to geographic location policy
-:staticRoute:       The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied with pre-configured DNS entries
+:staticRoute:       The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied with :ref:`ds-static-dns-entries`
 
 .. code-block:: http
 	:caption: Response Example
@@ -88,4 +88,4 @@ Response Structure
 		"miss": 0
 	}}
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to see details for *all* :term:`Delivery Service`\ s, whereas any other user will only see details for the :term:`Delivery Service`\ s their Tenant is allowed to see.
+.. [#tenancy] Users will only be able to view routing details for the :term:`Delivery Services` their :term:`Tenant` is allowed to see.

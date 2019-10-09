@@ -243,9 +243,22 @@ For the JSON formatter component:
 
 For the DataTables component:
 @traffic_portal/app/src/assets/css/jquery.dataTables.min_1.10.9.css
-@traffic_portal/app/src/assets/js/jquery.dataTables.min_1.10.16.js
+@traffic_portal/app/src/assets/js/jquery.dataTables.min_1.10.19_patched.js
 @traffic_portal/app/src/assets/images/sort_*
 ./licenses/MIT-datatables
+
+For the DataTables ColReorder component:
+@traffic_portal/app/src/assets/css/colReorder.dataTables.min_1.5.1.css
+@traffic_portal/app/src/assets/js/colReorder.dataTables.min_1.5.1.js
+./licenses/MIT-ColReorder
+
+For the DataTables Buttons component:
+@traffic_portal/app/src/assets/js/dataTables.buttons.min_1.5.6.js
+./licenses/MIT-datatables-buttons
+
+For the HTML5 Buttons component:
+@traffic_portal/app/src/assets/js/buttons.html5.min_1.5.6.js
+./licenses/MIT-buttons-html5
 
 For the moment.js component:
 @traffic_portal/app/src/assets/js/moment-min_2.22.1.js
@@ -427,3 +440,19 @@ The modern-go/concurrent component is used under the Apache 2.0 license:
 The modern-go/reflect2 component is used under the Apache 2.0 license:
 @vendor/github.com/modern-go/reflect2/*
 ./vendor/github.com/modern-go/reflect2/LICENSE
+
+For the lestrrat-go/jwx (commit e35178a) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat-go/jwx/LICENSE
+
+For the dgrijalva/jwt-go (commit 5e25c22) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/dgrijalva/jwt-go/LICENSE
+
+For the ogier/pflag (commit 45c278a) component:
+@vendor/github.com/ogier/pflag/*
+./licenses/BSD-pflag
+
+For the errors (commit 27936f6) component:
+@vendor/github.com/pkg/errors/*
+./vendor/github.com/pkg/errors/LICENSE

@@ -45,6 +45,6 @@ ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
     /
 
-EXPOSE 53 80 3333
+EXPOSE 53 80 3333 3443
 
 CMD /run.sh

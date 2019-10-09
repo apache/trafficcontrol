@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Gets details about a specific parameter
+Gets details about a specific :term:`Parameter`
 
 .. deprecated:: 1.1
 	Use the ``id`` query parameter of the :ref:`to-api-parameters` endpoint instead
@@ -34,11 +34,28 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+------------------------------------------------------------------------+
-	| Name | Description                                                            |
-	+======+========================================================================+
-	|  ID  | The integral, unique identifier of the parameter which will be deleted |
-	+------+------------------------------------------------------------------------+
+	+------+------------------------------------------------------------------+
+	| Name | Description                                                      |
+	+======+==================================================================+
+	| ID   | The :ref:`parameter-id` of the :term:`Parameter` to be inspected |
+	+------+------------------------------------------------------------------+
+
+.. table:: Request Query Parameters
+
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name      | Description                                                                                                                                                                                 |
+	+===========+=============================================================================================================================================================================================+
+	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array                                                                         |
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                                                                    |
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| limit     | Choose the maximum number of results to return                                                                                                                                              |
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| offset    | The number of results to skip before beginning to return results. Must use in conjunction with limit                                                                                        |
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| page      | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no |
+	|           | effect. ``limit`` must be defined to make use of ``page``.                                                                                                                                  |
+	+-----------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -51,13 +68,13 @@ Request Structure
 
 Response Structure
 ------------------
-:configFile:  The *base* filename to which this parameter belongs
-:id:          An integral, unique identifier for this parameter
-:lastUpdated: The date and time at which this parameter was last modified in ISO format
-:name:        The parameter name
-:profiles:    An array of profile names that use this parameter
-:secure:      When ``true``, the parameter value is visible only to "admin"-role users
-:value:       The parameter value - if ``secure`` is true and the user does not have the "admin" role this will be obfuscated (at the time of this writing the obfuscation value is defined to be ``"********"``) but **not** missing
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:id:          The :term:`Parameter`'s :ref:`parameter-id`
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
+:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: http
 	:caption: Response Example
@@ -91,7 +108,7 @@ Response Structure
 
 ``PUT``
 =======
-Replaces a parameter.
+Replaces a :term:`Parameter`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -104,13 +121,13 @@ Request Structure
 	+------+------------------------------------------------------------------------+
 	| Name | Description                                                            |
 	+======+========================================================================+
-	|  ID  | The integral, unique identifier of the parameter which will be deleted |
+	|  ID  | The :ref:`parameter-id` of the :term:`Parameter` which will be deleted |
 	+------+------------------------------------------------------------------------+
 
-:name:       Parameter name
-:configFile: The *base* filename of the configuration file to which this parameter shall belong e.g. "foo" not "/path/to/foo"
-:secure:     A boolean value which, when ``true`` will prohibit users who do not have the "admin" role from viewing the parameter's ``value`` (at the time of this writing the obfuscation value is defined to be ``"********"``)
-:value:      Parameter value
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: http
 	:caption: Request Example
@@ -132,13 +149,13 @@ Request Structure
 
 Response Structure
 ------------------
-:configFile:  The *base* filename to which this parameter belongs
-:id:          An integral, unique identifier for this parameter
-:lastUpdated: The date and time at which this parameter was last modified in ISO format
-:name:        The parameter name
-:profiles:    An array of profile names that use this parameter
-:secure:      When ``true``, the parameter value is visible only to "admin"-role users
-:value:       The parameter value - if ``secure`` is true and the user does not have the "admin" role this will be obfuscated (at the time of this writing the obfuscation value is defined to be ``"********"``) but **not** missing
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:id:          The :term:`Parameter`'s :ref:`parameter-id`
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
+:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: http
 	:caption: Response Example
@@ -173,7 +190,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Deletes the specified parameter. If, however, the parameter is associated with one or more profiles, deletion will fail.
+Deletes the specified :term:`Parameter`. If, however, the :term:`Parameter` is associated with one or more :term:`Profiles`, deletion will fail.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -186,7 +203,7 @@ Request Structure
 	+------+------------------------------------------------------------------------+
 	| Name | Description                                                            |
 	+======+========================================================================+
-	|  ID  | The integral, unique identifier of the parameter which will be deleted |
+	|  ID  | The :ref:`parameter-id` of the :term:`Parameter` which will be deleted |
 	+------+------------------------------------------------------------------------+
 
 .. code-block:: http

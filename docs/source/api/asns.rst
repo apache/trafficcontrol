@@ -32,11 +32,26 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+----------------+----------+-----------------------------------------------------------------------------------------------------+
-	| Parameter      | Required |                                 Description                                                         |
-	+================+==========+=====================================================================================================+
-	|   cachegroup   | no       | An integral, unique identifier for a Cache Group - only ANSs for this Cache Group will be returned. |
-	+----------------+----------+-----------------------------------------------------------------------------------------------------+
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| Parameter  | Required | Description                                                                                         |
+	+============+==========+=====================================================================================================+
+	| cachegroup | no       | An integral, unique identifier for a :term:`Cache Group` - only ANSs for this :term:`Cache Group`   |
+	|            |          | will be returned.                                                                                   |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| orderby    | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the    |
+	|            |          | ``response`` array                                                                                  |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| sortOrder  | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")            |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| limit      | no       | Choose the maximum number of results to return                                                      |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| offset     | no       | The number of results to skip before beginning to return results. Must use in conjunction with      |
+	|            |          | limit                                                                                               |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| page       | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are        |
+	|            |          | ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no      |
+	|            |          | effect. ``limit`` must be defined to make use of ``page``.                                          |
+	+------------+----------+-----------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------

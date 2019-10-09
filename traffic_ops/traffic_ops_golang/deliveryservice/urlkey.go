@@ -57,7 +57,7 @@ func GetURLKeysByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dsTenantID, ok, err := GetDSTenantIDByIDTx(inf.Tx.Tx, inf.IntParams["id"])
+	dsTenantID, ok, err := getDSTenantIDByID(inf.Tx.Tx, inf.IntParams["id"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 		return
@@ -101,7 +101,7 @@ func GetURLKeysByName(w http.ResponseWriter, r *http.Request) {
 
 	ds := tc.DeliveryServiceName(inf.Params["name"])
 
-	dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, ds)
+	dsTenantID, ok, err := getDSTenantIDByName(inf.Tx.Tx, ds)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 		return
@@ -146,7 +146,7 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 	ds := tc.DeliveryServiceName(inf.Params["name"])
 	copyDS := tc.DeliveryServiceName(inf.Params["copy-name"])
 
-	dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, ds)
+	dsTenantID, ok, err := getDSTenantIDByName(inf.Tx.Tx, ds)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 		return
@@ -164,7 +164,7 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 	}
 
 	{
-		copyDSTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, copyDS)
+		copyDSTenantID, ok, err := getDSTenantIDByName(inf.Tx.Tx, copyDS)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
@@ -182,6 +182,15 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, string(copyDS))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.CopyURLKeys: getting DS ID from name "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+string(copyDS)), nil)
+		return
+	}
+
 	keys, ok, err := riaksvc.GetURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort, copyDS)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from riak: "+err.Error()))
@@ -196,6 +205,7 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+" copied from "+string(copyDS)+": "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(ds)+", ID: "+strconv.Itoa(dsID)+", ACTION: Copied URL sig keys from "+string(copyDS), inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully copied and stored keys")
 }
 
@@ -214,7 +224,7 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 
 	ds := tc.DeliveryServiceName(inf.Params["name"])
 
-	dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, ds)
+	dsTenantID, ok, err := getDSTenantIDByName(inf.Tx.Tx, ds)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 		return
@@ -231,15 +241,26 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, string(ds))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateURLKeys: getting DS ID from name "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+string(ds)), nil)
+		return
+	}
+
 	keys, err := GenerateURLSigKeys()
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating URL sig keys: "+err.Error()))
+		return
 	}
 
 	if err := riaksvc.PutURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort, ds, keys); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+": "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(ds)+", ID: "+strconv.Itoa(dsID)+", ACTION: Generated URL sig keys", inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully generated and stored keys")
 }
 

@@ -108,6 +108,24 @@
 			"value": "INT 10000"
 		},
 		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.output.logfile.rolling_enabled",
+			"secure": false,
+			"value": "INT 2"
+		},
+		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.output.logfile.rolling_size_mb",
+			"secure": false,
+			"value": "INT 500"
+		},
+		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.output.logfile.rolling_min_count",
+			"secure": false,
+			"value": "INT 2"
+		},
+		{
 			"configFile": "cache.config",
 			"name": "location",
 			"secure": false,

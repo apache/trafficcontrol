@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Gets details about a specific profile's parameters
+Gets details about a specific :term:`Profile`'s :term:`Parameters`
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -33,11 +33,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------+
-	| Name | Description                                                 |
-	+======+=============================================================+
-	| name | The name of the profile for which parameters will be listed |
-	+------+-------------------------------------------------------------+
+	+------+--------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                |
+	+======+============================================================================================+
+	| name | The :ref:`profile-name` of the :term:`Profile` for which :term:`Parameters` will be listed |
+	+------+--------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -50,13 +50,13 @@ Request Structure
 
 Response Structure
 ------------------
-:configFile:  The *base* filename to which this parameter belongs
-:id:          An integral, unique identifier for this parameter
-:lastUpdated: The date and time at which this parameter was last modified in ISO format
-:name:        The parameter name
-:profiles:    An array of profile names that use this parameter
-:secure:      When ``true``, the parameter value is visible only to "admin"-role users
-:value:       The parameter value - if ``secure`` is true and the user does not have the "admin" role this will be obfuscated (at the time of this writing the obfuscation value is defined to be ``"********"``) but **not** missing
+:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
+:id:          The :term:`Parameter`'s :ref:`parameter-id`
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:name:        :ref:`parameter-name` of the :term:`Parameter`
+:profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
+:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
+:value:       The :term:`Parameter`'s :ref:`parameter-value`
 
 .. code-block:: http
 	:caption: Response Example

@@ -24,7 +24,7 @@
 Retrieves routing regular expressions for a specific :term:`Delivery Service`.
 
 :Auth. Required: Yes
-:Roles Required: None\ [1]_
+:Roles Required: None\ [#tenancy]_
 :Response Type:  Array
 
 Request Structure
@@ -32,7 +32,7 @@ Request Structure
 .. table:: Request Path Parameters
 
 	+------+---------------------------------------------------------------------------------+
-	| Name |                Description                                                      |
+	| Name | Description                                                                     |
 	+======+=================================================================================+
 	|  ID  | The integral, unique identifier of the :term:`Delivery Service` being inspected |
 	+------+---------------------------------------------------------------------------------+
@@ -79,14 +79,13 @@ Response Structure
 		}
 	]}
 
-.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to see.
 
 ``POST``
 ========
 Creates a routing regular expression for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
-:Roles Required: "admin" or "operations"\ [2]_
+:Roles Required: "admin" or "operations"\ [#tenancy]_
 :Response Type:  Object
 
 Request Structure
@@ -161,4 +160,4 @@ Response Structure
 	}}
 
 
-.. [2] If tenancy is used, then users (regardless of role) will only be able to edit the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to edit. Assuming tenancy is satisfied, a routing regular expression can only be created by a user with the "admin" or "operations" role.
+.. [#tenancy] Users will only be able to view and create regular expressions for the :term:`Delivery Services` their :term:`Tenant` is allowed to see.

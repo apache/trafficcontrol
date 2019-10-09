@@ -37,11 +37,14 @@ import org.junit.runners.MethodSorters;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.greaterThan;
@@ -549,6 +552,66 @@ public class SteeringTest {
 			assertThat(json.get("locations").get(5).asText(), endsWith(location6));
 			assertThat(json.get("locations").get(6).asText(), endsWith(location7));
 			assertThat(json.get("locations").get(7).asText(), endsWith(location8));
+		} finally {
+			if (response != null) { response.close(); }
+		}
+	}
+
+	@Test
+	public void itSupportsClientSteeringDiversity() throws Exception {
+		final String path = "/foo?fakeClientIpAddress=192.168.42.10"; // this IP should get a DEEP_CZ hit (via dczmap.json)
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path);
+		httpGet.addHeader("Host", "cdn.client-steering-diversity-test.thecdn.example.com");
+
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+
+			HttpEntity entity = response.getEntity();
+			assertThat("Failed getting 302 for request " + httpGet.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(302));
+
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+			assertThat(entity.getContent(), not(nullValue()));
+
+			JsonNode json = objectMapper.readTree(entity.getContent());
+
+			assertThat(json.has("locations"), equalTo(true));
+			assertThat(json.get("locations").size(), equalTo(5));
+
+			List<String> actualEdgesList = new ArrayList<>();
+			Set<String> actualTargets = new HashSet<>();
+
+			for (JsonNode n : json.get("locations")) {
+				String l = n.asText();
+				l = l.replaceFirst("http://", "");
+				String[] parts = l.split("\\.");
+				actualEdgesList.add(parts[0]);
+				actualTargets.add(parts[1]);
+			}
+
+			// assert that:
+			// - 1st and 2nd targets are edges from the deep cachegroup (because this is a deep hit)
+			// - 3rd target is the last unselected edge, which is *not* in the deep cachegroup
+			//   (because once all the deep edges have been selected, we select from the regular cachegroup)
+			// - 4th and 5th targets are any of the three edges (because all available edges have already been selected)
+			Set<String> deepEdges = new HashSet<>();
+			deepEdges.add("edge-cache-csd-1");
+			deepEdges.add("edge-cache-csd-2");
+			Set<String> allEdges = new HashSet<>(deepEdges);
+			allEdges.add("edge-cache-csd-3");
+			assertThat(actualEdgesList.get(0), isIn(deepEdges));
+			assertThat(actualEdgesList.get(1), isIn(deepEdges));
+			assertThat(actualEdgesList.get(2), equalTo("edge-cache-csd-3"));
+			assertThat(actualEdgesList.get(3), isIn(allEdges));
+			assertThat(actualEdgesList.get(4), isIn(allEdges));
+
+			// assert that all 5 steering targets are included in the response
+			String[] expectedTargetsArray = {"csd-target-1", "csd-target-2", "csd-target-3", "csd-target-4", "csd-target-5"};
+			Set<String> expectedTargets = new HashSet<>(Arrays.asList(expectedTargetsArray));
+			assertThat(actualTargets, equalTo(expectedTargets));
+
 		} finally {
 			if (response != null) { response.close(); }
 		}
