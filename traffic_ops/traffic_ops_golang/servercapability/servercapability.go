@@ -35,15 +35,41 @@ type TOServerCapability struct {
 }
 
 func (v *TOServerCapability) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOServerCapability) InsertQuery() string           { return insertQuery() }
 func (v *TOServerCapability) NewReadObj() interface{}       { return &tc.ServerCapability{} }
-func (v *TOServerCapability) SelectQuery() string           { return selectQuery() }
+
+func (v *TOServerCapability) InsertQuery() string {
+	return `
+INSERT INTO server_capability (
+  name
+)
+VALUES (
+  :name
+)
+RETURNING last_updated
+`
+}
+
+func (v *TOServerCapability) SelectQuery() string {
+	return `
+SELECT
+  name,
+  last_updated
+FROM
+  server_capability sc
+`
+}
+
+func (v *TOServerCapability) DeleteQuery() string {
+	return `
+DELETE FROM server_capability WHERE name=:name
+`
+}
+
 func (v *TOServerCapability) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"name": {"sc.name", nil},
 	}
 }
-func (v *TOServerCapability) DeleteQuery() string { return deleteQuery() }
 
 func (v TOServerCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"name", api.GetStringKey}}
@@ -76,25 +102,3 @@ func (v *TOServerCapability) Validate() error {
 func (v *TOServerCapability) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
 func (v *TOServerCapability) Create() (error, error, int)              { return api.GenericCreateNameBasedID(v) }
 func (v *TOServerCapability) Delete() (error, error, int)              { return api.GenericDelete(v) }
-
-func selectQuery() string {
-	return `SELECT
-name,
-last_updated
-FROM server_capability sc`
-}
-
-func insertQuery() string {
-	query := `INSERT INTO server_capability (
-name
-) VALUES (
-:name
-) RETURNING last_updated`
-	return query
-}
-
-func deleteQuery() string {
-	query := `DELETE FROM server_capability
-WHERE name=:name`
-	return query
-}

@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// ServerCapabilitiesResponse contains the result data from a GET /server_capabilities request
+// ServerCapabilitiesResponse contains the result data from a GET /server_capabilities request.
 type ServerCapabilitiesResponse struct {
 	Response []ServerCapability `json:"response"`
 }
@@ -30,7 +30,7 @@ type ServerCapability struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
-// ServerCapabilityDetailResponse contains the result data from a POST /server_capabilities request
+// ServerCapabilityDetailResponse contains the result data from a POST /server_capabilities request.
 type ServerCapabilityDetailResponse struct {
 	Response ServerCapability `json:"response"`
 	Alerts

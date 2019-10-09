@@ -28,7 +28,6 @@ func TestServerCapabilities(t *testing.T) {
 }
 
 func CreateTestServerCapabilities(t *testing.T) {
-	log.Debugln("---- CreateTestServerCapabilities ----")
 
 	for _, sc := range testData.ServerCapabilities {
 		resp, _, err := TOSession.CreateServerCapability(sc)
@@ -41,7 +40,6 @@ func CreateTestServerCapabilities(t *testing.T) {
 }
 
 func GetTestServerCapabilities(t *testing.T) {
-	log.Debugln("---- GetTestServerCapabilities ----")
 
 	for _, sc := range testData.ServerCapabilities {
 		resp, _, err := TOSession.GetServerCapability(sc.Name)
@@ -62,7 +60,6 @@ func GetTestServerCapabilities(t *testing.T) {
 }
 
 func DeleteTestServerCapabilities(t *testing.T) {
-	log.Debugln("---- DeleteTestServerCapabilities ----")
 
 	for _, sc := range testData.ServerCapabilities {
 		delResp, _, err := TOSession.DeleteServerCapability(sc.Name)

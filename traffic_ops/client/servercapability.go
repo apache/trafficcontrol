@@ -28,7 +28,7 @@ const (
 	APIServerCapabilities = apiBase + "/server_capabilities"
 )
 
-// CreateServerCapability creates a server capability and returns the response
+// CreateServerCapability creates a server capability and returns the response.
 func (to *Session) CreateServerCapability(sc tc.ServerCapability) (*tc.ServerCapabilityDetailResponse, ReqInf, error) {
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(sc)
@@ -48,7 +48,7 @@ func (to *Session) CreateServerCapability(sc tc.ServerCapability) (*tc.ServerCap
 	return &scResp, reqInf, nil
 }
 
-// GetServerCapabilities returns all the server capabilities
+// GetServerCapabilities returns all the server capabilities.
 func (to *Session) GetServerCapabilities() ([]tc.ServerCapability, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, APIServerCapabilities, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -65,7 +65,7 @@ func (to *Session) GetServerCapabilities() ([]tc.ServerCapability, ReqInf, error
 	return data.Response, reqInf, nil
 }
 
-// GetServerCapability returns the given server capability by name
+// GetServerCapability returns the given server capability by name.
 func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", APIServerCapabilities, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
@@ -86,7 +86,7 @@ func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, ReqIn
 	return nil, reqInf, fmt.Errorf("expected one server capability in response, instead got: %+v", data.Response)
 }
 
-// DeleteServerCapability deletes the given server capability by name
+// DeleteServerCapability deletes the given server capability by name.
 func (to *Session) DeleteServerCapability(name string) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APIServerCapabilities, name)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
