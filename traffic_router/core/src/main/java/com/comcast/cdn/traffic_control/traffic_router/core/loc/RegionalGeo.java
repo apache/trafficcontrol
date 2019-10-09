@@ -345,7 +345,7 @@ public final class RegionalGeo {
                                final HTTPRouteResult routeResult, final Track track) throws MalformedURLException {
     enforce(trafficRouter, request, deliveryService, cache, routeResult, track, false);
     }
-
+    @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
     public static void enforce(final TrafficRouter trafficRouter, final Request request,
         final DeliveryService deliveryService, final Cache cache,
         final HTTPRouteResult routeResult, final Track track, final boolean isSteering) throws MalformedURLException {
@@ -377,6 +377,13 @@ public final class RegionalGeo {
             LOGGER.debug("RegionalGeo: denied for dsvc " + deliveryService.getId() + ", url " + httpRequest.getRequestedUrl() + ", postal " + postalCode + ". Relative re-direct URLs not allowed for Multi Route Delivery Services.");
             result.setHttpResponseCode(RegionalGeoResult.REGIONAL_GEO_DENIED_HTTP_CODE);
             result.setType(DENIED);
+        }
+
+        if (cache == null && result.getType() == ALLOWED) {
+            LOGGER.debug("RegionalGeo: Client is allowed to access steering service, returning null re-direct URL");
+            result.setUrl(null);
+            updateTrack(track, result);
+            return;
         }
 
         updateTrack(track, result);
