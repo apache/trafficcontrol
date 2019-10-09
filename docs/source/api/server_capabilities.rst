@@ -137,7 +137,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Deletes a specific tenant.
+Deletes a specific server capability.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
