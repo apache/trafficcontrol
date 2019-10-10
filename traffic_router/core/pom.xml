@@ -33,6 +33,7 @@
 		         command line -->
 			<java.library.path>must be passed on the Maven commandline</java.library.path>
 			<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+			<jacoco.version>0.8.2</jacoco.version>
     </properties>
 	<repositories>
 		<repository>
@@ -215,6 +216,20 @@
 								<include>**/*.java</include>
 							</includes>
 						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.2</version>
+				<executions>
+					<execution>
+						<id>default</id>
+						<goals>
+							<goal>prepare-agent</goal>
+							<goal>report</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
