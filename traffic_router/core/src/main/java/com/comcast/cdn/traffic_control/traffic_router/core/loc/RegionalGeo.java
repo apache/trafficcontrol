@@ -340,10 +340,9 @@ public final class RegionalGeo {
         return result;
     }
 
-    public static void enforce(final TrafficRouter trafficRouter, final Request request,
-                               final DeliveryService deliveryService, final Cache cache,
+    public static void enforce(final TrafficRouter trafficRouter, final Request request, final DeliveryService deliveryService, final Cache cache,
                                final HTTPRouteResult routeResult, final Track track) throws MalformedURLException {
-    enforce(trafficRouter, request, deliveryService, cache, routeResult, track, false);
+        enforce(trafficRouter, request, deliveryService, cache, routeResult, track, false);
     }
 
     @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
