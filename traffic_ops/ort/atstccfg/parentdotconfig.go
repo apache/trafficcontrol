@@ -200,6 +200,11 @@ func GetConfigFileServerParentDotConfig(cfg TCCfg, serverNameOrID string) (strin
 	}
 	cgServerIDs = append(cgServerIDs, server.ID)
 
+	serverCapabilities, err := GetServerCapabilitiesByID(cfg, cgServerIDs)
+	if err != nil {
+		return "", errors.New("getting server capabilities: " + err.Error())
+	}
+
 	cgDSServers, err := GetDeliveryServiceServers(cfg, nil, cgServerIDs)
 	if err != nil {
 		return "", errors.New("getting parent.config cachegroup parent server delivery service servers: " + err.Error())
@@ -280,89 +285,6 @@ func GetConfigFileServerParentDotConfig(cfg TCCfg, serverNameOrID string) (strin
 			}
 			profileParentConfigParams[profile][param.Name] = param.Value
 		}
-	}
-
-	parentConfigDSes := []atscfg.ParentConfigDSTopLevel{}
-	for _, tcDS := range deliveryServices {
-		if tcDS.ID == nil {
-			continue // TODO warn?
-		}
-
-		if !serverInfo.IsTopLevelCache() {
-			if _, ok := parentServerDSes[server.ID][*tcDS.ID]; !ok {
-				continue // skip DSes not assigned to this server.
-			}
-		}
-
-		if !tcDS.Type.IsHTTP() && !tcDS.Type.IsDNS() {
-			continue // skip ANY_MAP, STEERING, etc
-		}
-		if tcDS.XMLID == nil || *tcDS.XMLID == "" {
-			log.Errorln("got delivery service with no XMLID! Skipping!")
-			continue
-		}
-		if tcDS.OrgServerFQDN == nil || *tcDS.OrgServerFQDN == "" {
-			log.Errorln("ds  '" + *tcDS.XMLID + "' has no origin server! Skipping!")
-			continue
-		}
-
-		xmlID := tc.DeliveryServiceName(*tcDS.XMLID)
-		originFQDN := *tcDS.OrgServerFQDN
-		qStringIgnore := 0
-		multiSiteOrigin := false
-		originShield := ""
-		dsType := tc.DSTypeFromString("")
-		if tcDS.QStringIgnore != nil {
-			qStringIgnore = *tcDS.QStringIgnore
-		}
-		if tcDS.MultiSiteOrigin != nil {
-			multiSiteOrigin = *tcDS.MultiSiteOrigin
-		}
-		if tcDS.OriginShield != nil {
-			originShield = *tcDS.OriginShield
-		}
-		if tcDS.Type != nil {
-			dsType = *tcDS.Type
-		}
-
-		ds := atscfg.ParentConfigDSTopLevel{
-			ParentConfigDS: atscfg.ParentConfigDS{
-				Name:            xmlID,
-				QStringIgnore:   tc.QStringIgnore(qStringIgnore),
-				OriginFQDN:      originFQDN,
-				MultiSiteOrigin: multiSiteOrigin,
-				OriginShield:    originShield,
-				Type:            dsType,
-			},
-		}
-
-		ds.MSOAlgorithm = atscfg.ParentConfigDSParamDefaultMSOAlgorithm
-		ds.MSOParentRetry = atscfg.ParentConfigDSParamDefaultMSOParentRetry
-		ds.MSOUnavailableServerRetryResponses = atscfg.ParentConfigDSParamDefaultMSOUnavailableServerRetryResponses
-		ds.MSOMaxSimpleRetries = atscfg.ParentConfigDSParamDefaultMaxSimpleRetries
-		ds.MSOMaxUnavailableServerRetries = atscfg.ParentConfigDSParamDefaultMaxUnavailableServerRetries
-
-		if tcDS.ProfileName != nil && *tcDS.ProfileName != "" {
-			if dsParams, ok := profileParentConfigParams[*tcDS.ProfileName]; ok {
-				ds.QStringHandling = dsParams[atscfg.ParentConfigParamQStringHandling] // may be blank, no default
-				if v, ok := dsParams[atscfg.ParentConfigParamMSOAlgorithm]; ok && strings.TrimSpace(v) != "" {
-					ds.MSOAlgorithm = v
-				}
-				if v, ok := dsParams[atscfg.ParentConfigParamMSOParentRetry]; ok {
-					ds.MSOParentRetry = v
-				}
-				if v, ok := dsParams[atscfg.ParentConfigParamUnavailableServerRetryResponses]; ok {
-					ds.MSOUnavailableServerRetryResponses = v
-				}
-				if v, ok := dsParams[atscfg.ParentConfigParamMaxSimpleRetries]; ok {
-					ds.MSOMaxSimpleRetries = v
-				}
-				if v, ok := dsParams[atscfg.ParentConfigParamMaxUnavailableServerRetries]; ok {
-					ds.MSOMaxUnavailableServerRetries = v
-				}
-			}
-		}
-		parentConfigDSes = append(parentConfigDSes, ds)
 	}
 
 	serverParams := map[string]string{}
@@ -458,6 +380,102 @@ func GetConfigFileServerParentDotConfig(cfg TCCfg, serverNameOrID string) (strin
 		}
 	}
 
+	allDSes := []int{}
+	for ds, _ := range allDSMap {
+		allDSes = append(allDSes, int(ds))
+	}
+
+	dsRequiredCapabilities, err := GetDeliveryServiceRequiredCapabilitiesByID(cfg, allDSes)
+	if err != nil {
+		return "", errors.New("getting DS required capabilities: " + err.Error())
+	}
+
+	parentConfigDSes := []atscfg.ParentConfigDSTopLevel{}
+	for _, tcDS := range deliveryServices {
+		if tcDS.ID == nil {
+			continue // TODO warn?
+		}
+
+		if !serverInfo.IsTopLevelCache() {
+			if _, ok := parentServerDSes[server.ID][*tcDS.ID]; !ok {
+				continue // skip DSes not assigned to this server.
+			}
+		}
+
+		if !tcDS.Type.IsHTTP() && !tcDS.Type.IsDNS() {
+			continue // skip ANY_MAP, STEERING, etc
+		}
+		if tcDS.XMLID == nil || *tcDS.XMLID == "" {
+			log.Errorln("got delivery service with no XMLID! Skipping!")
+			continue
+		}
+		if tcDS.OrgServerFQDN == nil || *tcDS.OrgServerFQDN == "" {
+			log.Errorln("ds  '" + *tcDS.XMLID + "' has no origin server! Skipping!")
+			continue
+		}
+
+		xmlID := tc.DeliveryServiceName(*tcDS.XMLID)
+		originFQDN := *tcDS.OrgServerFQDN
+		qStringIgnore := 0
+		multiSiteOrigin := false
+		originShield := ""
+		dsType := tc.DSTypeFromString("")
+		if tcDS.QStringIgnore != nil {
+			qStringIgnore = *tcDS.QStringIgnore
+		}
+		if tcDS.MultiSiteOrigin != nil {
+			multiSiteOrigin = *tcDS.MultiSiteOrigin
+		}
+		if tcDS.OriginShield != nil {
+			originShield = *tcDS.OriginShield
+		}
+		if tcDS.Type != nil {
+			dsType = *tcDS.Type
+		}
+
+		ds := atscfg.ParentConfigDSTopLevel{
+			ParentConfigDS: atscfg.ParentConfigDS{
+				Name:            xmlID,
+				QStringIgnore:   tc.QStringIgnore(qStringIgnore),
+				OriginFQDN:      originFQDN,
+				MultiSiteOrigin: multiSiteOrigin,
+				OriginShield:    originShield,
+				Type:            dsType,
+			},
+		}
+
+		ds.MSOAlgorithm = atscfg.ParentConfigDSParamDefaultMSOAlgorithm
+		ds.MSOParentRetry = atscfg.ParentConfigDSParamDefaultMSOParentRetry
+		ds.MSOUnavailableServerRetryResponses = atscfg.ParentConfigDSParamDefaultMSOUnavailableServerRetryResponses
+		ds.MSOMaxSimpleRetries = atscfg.ParentConfigDSParamDefaultMaxSimpleRetries
+		ds.MSOMaxUnavailableServerRetries = atscfg.ParentConfigDSParamDefaultMaxUnavailableServerRetries
+
+		if tcDS.ProfileName != nil && *tcDS.ProfileName != "" {
+			if dsParams, ok := profileParentConfigParams[*tcDS.ProfileName]; ok {
+				ds.QStringHandling = dsParams[atscfg.ParentConfigParamQStringHandling] // may be blank, no default
+				if v, ok := dsParams[atscfg.ParentConfigParamMSOAlgorithm]; ok && strings.TrimSpace(v) != "" {
+					ds.MSOAlgorithm = v
+				}
+				if v, ok := dsParams[atscfg.ParentConfigParamMSOParentRetry]; ok {
+					ds.MSOParentRetry = v
+				}
+				if v, ok := dsParams[atscfg.ParentConfigParamUnavailableServerRetryResponses]; ok {
+					ds.MSOUnavailableServerRetryResponses = v
+				}
+				if v, ok := dsParams[atscfg.ParentConfigParamMaxSimpleRetries]; ok {
+					ds.MSOMaxSimpleRetries = v
+				}
+				if v, ok := dsParams[atscfg.ParentConfigParamMaxUnavailableServerRetries]; ok {
+					ds.MSOMaxUnavailableServerRetries = v
+				}
+			}
+		}
+
+		ds.RequiredCapabilities = dsRequiredCapabilities[*tcDS.ID]
+
+		parentConfigDSes = append(parentConfigDSes, ds)
+	}
+
 	log.Infof("len(parentServerDSes) %v!\n", len(parentServerDSes))
 	log.Infof("len(dsIDMap) %v!\n", len(dsIDMap))
 	log.Infof("len(allDSMap) %v!\n", len(allDSMap))
@@ -472,7 +490,7 @@ func GetConfigFileServerParentDotConfig(cfg TCCfg, serverNameOrID string) (strin
 
 	profileParams := parentConfigServerCacheProfileParams
 
-	originServers := map[string][]atscfg.CGServer{}             // "deliveryServices" in Perl
+	originServers := map[atscfg.OriginHost][]atscfg.CGServer{}  // "deliveryServices" in Perl
 	profileCaches := map[atscfg.ProfileID]atscfg.ProfileCache{} // map[profileID]ProfileCache
 
 	for _, cgServer := range cgServers {
@@ -488,6 +506,7 @@ func GetConfigFileServerParentDotConfig(cfg TCCfg, serverNameOrID string) (strin
 			CDN:          cgServer.CDNID,
 			TypeName:     cgServer.Type,
 			Domain:       cgServer.DomainName,
+			Capabilities: serverCapabilities[cgServer.ID],
 		}
 
 		if cgServer.Type == tc.OriginTypeName {
@@ -497,7 +516,12 @@ func GetConfigFileServerParentDotConfig(cfg TCCfg, serverNameOrID string) (strin
 					// log.Warnln("ds %v has no origins! Skipping!\n", dsID) // TODO determine if this is normal
 					continue
 				}
-				originServers[orgURI.Host] = append(originServers[orgURI.Host], realCGServer)
+				if atscfg.HasRequiredCapabilities(serverCapabilities[int(cgServer.ID)], dsRequiredCapabilities[dsID]) {
+					orgHost := atscfg.OriginHost(orgURI.Host)
+					originServers[orgHost] = append(originServers[orgHost], realCGServer)
+				} else {
+					log.Errorf("ds %v server %v missing required caps, skipping!\n", dsID, orgURI.Host)
+				}
 			}
 		} else {
 			originServers[atscfg.DeliveryServicesAllParentsKey] = append(originServers[atscfg.DeliveryServicesAllParentsKey], realCGServer)
@@ -516,7 +540,6 @@ func GetConfigFileServerParentDotConfig(cfg TCCfg, serverNameOrID string) (strin
 	parentInfos := atscfg.MakeParentInfo(&serverInfo, serverCDNDomain, profileCaches, originServers)
 
 	return atscfg.MakeParentDotConfig(&serverInfo, atsMajorVer, toToolName, toURL, parentConfigDSes, serverParams, parentInfos), nil
-
 }
 
 // GetDSOrigins takes a map[deliveryServiceID]DeliveryService, and returns a map[DeliveryServiceID]OriginURI.

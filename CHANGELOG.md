@@ -62,6 +62,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an optional SMTP server configuration to the TO configuration file, api now has unused abilitiy to send emails
 - Traffic Monitor now has "gbps" calculated stat, allowing operators to monitor bandwidth in Gbps.
 - Added an API 1.4 endpoint, /api/1.4/deliveryservices_required_capabilities, to create, read, and delete associations between a delivery service and a required capability.
+- Added ATS config generation omitting parents without Delivery Service Required Capabilities.
 - In Traffic Portal, added the ability to create, view and delete server capabilities and associate those server capabilities with servers and delivery services. See [blueprint](./blueprints/server-capabilitites.md)
 
 ### Changed

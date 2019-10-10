@@ -63,6 +63,8 @@ type ParentConfigDS struct {
 	OriginShield    string
 	Type            tc.DSType
 	QStringHandling string
+
+	RequiredCapabilities map[ServerCapability]struct{}
 }
 
 type ParentConfigDSTopLevel struct {
@@ -84,6 +86,7 @@ type ParentInfo struct {
 	IP              string
 	PrimaryParent   bool
 	SecondaryParent bool
+	Capabilities    map[ServerCapability]struct{}
 }
 
 func (p ParentInfo) Format() string {
@@ -97,6 +100,7 @@ func (p ParentInfo) Format() string {
 }
 
 type OriginHost string
+type OriginFQDN string
 
 type ParentInfos map[OriginHost]ParentInfo
 
@@ -146,6 +150,7 @@ type CGServer struct {
 	CDN          int
 	TypeName     string
 	Domain       string
+	Capabilities map[ServerCapability]struct{}
 }
 
 type OriginURI struct {
@@ -161,7 +166,7 @@ func MakeParentDotConfig(
 	toURL string, // tm.url global parameter (TODO: cache itself?)
 	parentConfigDSes []ParentConfigDSTopLevel, // getParentConfigDSTopLevel(cdn) OR getParentConfigDS(server) (TODO determine how to handle non-top missing MSO?)
 	serverParams map[string]string, // getParentConfigServerProfileParams(serverID)
-	parentInfos map[string][]ParentInfo, // getParentInfo(profileID, parentCachegroupID, secondaryParentCachegroupID)
+	parentInfos map[OriginHost][]ParentInfo, // getParentInfo(profileID, parentCachegroupID, secondaryParentCachegroupID)
 ) string {
 
 	// parentInfos := makeParentInfo(serverInfo)
@@ -216,55 +221,13 @@ func MakeParentDotConfig(
 				if len(parentInfos) == 0 {
 				}
 
-				if len(parentInfos[orgURI.Hostname()]) == 0 {
+				if len(parentInfos[OriginHost(orgURI.Hostname())]) == 0 {
 					// TODO error? emulates Perl
 					log.Warnln("ParentInfo: delivery service " + ds.Name + " has no parent servers")
 				}
 
-				rankedParents := ParentInfoSortByRank(parentInfos[orgURI.Hostname()])
-				sort.Sort(rankedParents)
-
-				parentInfo := []string{}
-				secondaryParentInfo := []string{}
-				nullParentInfo := []string{}
-				for _, parent := range ([]ParentInfo)(rankedParents) {
-					if parent.PrimaryParent {
-						parentInfo = append(parentInfo, parent.Format())
-					} else if parent.SecondaryParent {
-						secondaryParentInfo = append(secondaryParentInfo, parent.Format())
-					} else {
-						nullParentInfo = append(nullParentInfo, parent.Format())
-					}
-				}
-
-				if len(parentInfo) == 0 {
-					// If no parents are found in the secondary parent either, then set the null parent list (parents in neither secondary or primary)
-					// as the secondary parent list and clear the null parent list.
-					if len(secondaryParentInfo) == 0 {
-						secondaryParentInfo = nullParentInfo
-						nullParentInfo = []string{}
-					}
-					parentInfo = secondaryParentInfo
-					secondaryParentInfo = []string{} // TODO should thi be '= secondary'? Currently emulates Perl
-				}
-
-				// TODO benchmark, verify this isn't slow. if it is, it could easily be made faster
-				seen := map[string]struct{}{} // TODO change to host+port? host isn't unique
-				parentInfo, seen = util.RemoveStrDuplicates(parentInfo, seen)
-				secondaryParentInfo, seen = util.RemoveStrDuplicates(secondaryParentInfo, seen)
-				nullParentInfo, seen = util.RemoveStrDuplicates(nullParentInfo, seen)
-
-				// If the ats version supports it and the algorithm is consistent hash, put secondary and non-primary parents into secondary parent group.
-				// This will ensure that secondary and tertiary parents will be unused unless all hosts in the primary group are unavailable.
-
-				parents := ""
-
-				if atsMajorVer >= 6 && ds.MSOAlgorithm == "consistent_hash" && (len(secondaryParentInfo) > 0 || len(nullParentInfo) > 0) {
-					parents = `parent="` + strings.Join(parentInfo, "") + `" secondary_parent="` + strings.Join(secondaryParentInfo, "") + strings.Join(nullParentInfo, "") + `"`
-				} else {
-					parents = `parent="` + strings.Join(parentInfo, "") + strings.Join(secondaryParentInfo, "") + strings.Join(nullParentInfo, "") + `"`
-				}
-				textLine += parents + ` round_robin=` + ds.MSOAlgorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
+				parents, secondaryParents := getMSOParentStrs(ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer)
+				textLine += parents + secondaryParents + ` round_robin=` + ds.MSOAlgorithm + ` qstring=` + parentQStr + ` go_direct=false parent_is_proxy=false`
 
 				parentRetry := ds.MSOParentRetry
 				if atsMajorVer >= 6 && parentRetry != "" {
@@ -288,47 +251,15 @@ func MakeParentDotConfig(
 		processedOriginsToDSNames := map[string]tc.DeliveryServiceName{}
 
 		queryStringHandling := serverParams[ParentConfigParamQStringHandling] // "qsh" in Perl
-		parentInfo := []string{}
-		secondaryParentInfo := []string{}
-
-		parentInfosAllParents := parentInfos[DeliveryServicesAllParentsKey]
-		sort.Sort(ParentInfoSortByRank(parentInfosAllParents))
-
-		for _, parent := range parentInfosAllParents { // TODO fix magic key
-			pTxt := parent.Format()
-			if parent.PrimaryParent {
-				parentInfo = append(parentInfo, pTxt)
-			} else if parent.SecondaryParent {
-				secondaryParentInfo = append(secondaryParentInfo, pTxt)
-			}
-		}
-
-		if len(parentInfo) == 0 {
-			parentInfo = secondaryParentInfo
-			secondaryParentInfo = []string{}
-		}
-
-		// TODO remove duplicate code with top level if block
-		seen := map[string]struct{}{} // TODO change to host+port? host isn't unique
-		parentInfo, seen = util.RemoveStrDuplicates(parentInfo, seen)
-		secondaryParentInfo, seen = util.RemoveStrDuplicates(secondaryParentInfo, seen)
-
-		parents := ""
-		secondaryParents := "" // "secparents" in Perl
-		sort.Sort(sort.StringSlice(parentInfo))
-		sort.Sort(sort.StringSlice(secondaryParentInfo))
-		if atsMajorVer >= 6 && len(secondaryParentInfo) > 0 {
-			parents = `parent="` + strings.Join(parentInfo, "") + `"`
-			secondaryParents = ` secondary_parent="` + strings.Join(secondaryParentInfo, "") + `"`
-		} else {
-			parents = `parent="` + strings.Join(parentInfo, "") + strings.Join(secondaryParentInfo, "") + `"`
-		}
 
 		roundRobin := `round_robin=consistent_hash`
 		goDirect := `go_direct=false`
 
 		sort.Sort(ParentConfigDSTopLevelSortByName(parentConfigDSes))
+
 		for _, ds := range parentConfigDSes {
+			parents, secondaryParents := getParentStrs(ds, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
+
 			text := ""
 			originFQDN := ds.OriginFQDN
 			if originFQDN == "" {
@@ -388,6 +319,8 @@ func MakeParentDotConfig(
 			processedOriginsToDSNames[originFQDN] = ds.Name
 		}
 
+		parents, secondaryParents := getParentStrs(ParentConfigDSTopLevel{}, parentInfos[DeliveryServicesAllParentsKey], atsMajorVer)
+		// TODO determine if this is necessary. It's super-dangerous, and moreover ignores Server Capabilitites.
 		defaultDestText := `dest_domain=. ` + parents
 		if serverParams[ParentConfigParamAlgorithm] == tc.AlgorithmConsistentHash {
 			defaultDestText += secondaryParents
@@ -405,17 +338,118 @@ func MakeParentDotConfig(
 	return text
 }
 
+// getParentStrs returns the parents= and secondary_parents= strings for ATS parent.config lines.
+func getParentStrs(ds ParentConfigDSTopLevel, parentInfos []ParentInfo, atsMajorVer int) (string, string) {
+	parentInfo := []string{}
+	secondaryParentInfo := []string{}
+
+	sort.Sort(ParentInfoSortByRank(parentInfos))
+
+	for _, parent := range parentInfos { // TODO fix magic key
+		if !HasRequiredCapabilities(parent.Capabilities, ds.RequiredCapabilities) {
+			continue
+		}
+
+		pTxt := parent.Format()
+		if parent.PrimaryParent {
+			parentInfo = append(parentInfo, pTxt)
+		} else if parent.SecondaryParent {
+			secondaryParentInfo = append(secondaryParentInfo, pTxt)
+		}
+	}
+
+	if len(parentInfo) == 0 {
+		parentInfo = secondaryParentInfo
+		secondaryParentInfo = []string{}
+	}
+
+	// TODO remove duplicate code with top level if block
+	seen := map[string]struct{}{} // TODO change to host+port? host isn't unique
+	parentInfo, seen = util.RemoveStrDuplicates(parentInfo, seen)
+	secondaryParentInfo, seen = util.RemoveStrDuplicates(secondaryParentInfo, seen)
+
+	parents := ""
+	secondaryParents := "" // "secparents" in Perl
+	sort.Sort(sort.StringSlice(parentInfo))
+	sort.Sort(sort.StringSlice(secondaryParentInfo))
+
+	if atsMajorVer >= 6 && len(secondaryParentInfo) > 0 {
+		parents = `parent="` + strings.Join(parentInfo, "") + `"`
+		secondaryParents = ` secondary_parent="` + strings.Join(secondaryParentInfo, "") + `"`
+	} else {
+		parents = `parent="` + strings.Join(parentInfo, "") + strings.Join(secondaryParentInfo, "") + `"`
+	}
+	return parents, secondaryParents
+}
+
+// getMSOParentStrs returns the parents= and secondary_parents= strings for ATS parent.config lines, for MSO.
+func getMSOParentStrs(ds ParentConfigDSTopLevel, parentInfos []ParentInfo, atsMajorVer int) (string, string) {
+	// TODO determine why MSO is different, and if possible, combine with getParentAndSecondaryParentStrs.
+
+	rankedParents := ParentInfoSortByRank(parentInfos)
+	sort.Sort(rankedParents)
+
+	parentInfo := []string{}
+	secondaryParentInfo := []string{}
+	nullParentInfo := []string{}
+	for _, parent := range ([]ParentInfo)(rankedParents) {
+		if !HasRequiredCapabilities(parent.Capabilities, ds.RequiredCapabilities) {
+			continue
+		}
+
+		if parent.PrimaryParent {
+			parentInfo = append(parentInfo, parent.Format())
+		} else if parent.SecondaryParent {
+			secondaryParentInfo = append(secondaryParentInfo, parent.Format())
+		} else {
+			nullParentInfo = append(nullParentInfo, parent.Format())
+		}
+	}
+
+	if len(parentInfo) == 0 {
+		// If no parents are found in the secondary parent either, then set the null parent list (parents in neither secondary or primary)
+		// as the secondary parent list and clear the null parent list.
+		if len(secondaryParentInfo) == 0 {
+			secondaryParentInfo = nullParentInfo
+			nullParentInfo = []string{}
+		}
+		parentInfo = secondaryParentInfo
+		secondaryParentInfo = []string{} // TODO should thi be '= secondary'? Currently emulates Perl
+	}
+
+	// TODO benchmark, verify this isn't slow. if it is, it could easily be made faster
+	seen := map[string]struct{}{} // TODO change to host+port? host isn't unique
+	parentInfo, seen = util.RemoveStrDuplicates(parentInfo, seen)
+	secondaryParentInfo, seen = util.RemoveStrDuplicates(secondaryParentInfo, seen)
+	nullParentInfo, seen = util.RemoveStrDuplicates(nullParentInfo, seen)
+
+	secondaryParentStr := strings.Join(secondaryParentInfo, "") + strings.Join(nullParentInfo, "")
+
+	// If the ats version supports it and the algorithm is consistent hash, put secondary and non-primary parents into secondary parent group.
+	// This will ensure that secondary and tertiary parents will be unused unless all hosts in the primary group are unavailable.
+
+	parents := ""
+	secondaryParents := ""
+
+	if atsMajorVer >= 6 && ds.MSOAlgorithm == "consistent_hash" && len(secondaryParents) > 0 {
+		parents = `parent="` + strings.Join(parentInfo, "") + `"`
+		secondaryParents = `" secondary_parent="` + secondaryParentStr + `"`
+	} else {
+		parents = `parent="` + strings.Join(parentInfo, "") + secondaryParentStr + `"`
+	}
+	return parents, secondaryParents
+}
+
 func MakeParentInfo(
 	server *ServerInfo,
 	serverDomain string, // getCDNDomainByProfileID(tx, server.ProfileID)
 	profileCaches map[ProfileID]ProfileCache, // getServerParentCacheGroupProfiles(tx, server)
-	originServers map[string][]CGServer, // getServerParentCacheGroupProfiles(tx, server)
-) map[string][]ParentInfo {
-	parentInfos := map[string][]ParentInfo{}
+	originServers map[OriginHost][]CGServer, // getServerParentCacheGroupProfiles(tx, server)
+) map[OriginHost][]ParentInfo {
+	parentInfos := map[OriginHost][]ParentInfo{}
 
 	// note servers also contains an "all" key
-	// originFQDN is "prefix" in Perl; ds is not really a "ds", that's what it's named in Perl
-	for originFQDN, servers := range originServers {
+	for originHost, servers := range originServers {
 		for _, row := range servers {
 			profile := profileCaches[row.ProfileID]
 			if profile.NotAParent {
@@ -436,11 +470,12 @@ func MakeParentInfo(
 				IP:              row.ServerIP,
 				PrimaryParent:   server.ParentCacheGroupID == row.CacheGroupID,
 				SecondaryParent: server.SecondaryParentCacheGroupID == row.CacheGroupID,
+				Capabilities:    row.Capabilities,
 			}
 			if parentInf.Port < 1 {
 				parentInf.Port = row.ServerPort
 			}
-			parentInfos[originFQDN] = append(parentInfos[originFQDN], parentInf)
+			parentInfos[originHost] = append(parentInfos[originHost], parentInf)
 		}
 	}
 	return parentInfos
@@ -454,4 +489,14 @@ func unavailableServerRetryResponsesValid(s string) bool {
 	}
 	re := regexp.MustCompile(`^"(:?\d{3},)+\d{3}"\s*$`) // TODO benchmark, cache if performance matters
 	return re.MatchString(s)
+}
+
+// HasRequiredCapabilities returns whether the given caps has all the required capabilities in the given reqCaps.
+func HasRequiredCapabilities(caps map[ServerCapability]struct{}, reqCaps map[ServerCapability]struct{}) bool {
+	for reqCap, _ := range reqCaps {
+		if _, ok := caps[reqCap]; !ok {
+			return false
+		}
+	}
+	return true
 }

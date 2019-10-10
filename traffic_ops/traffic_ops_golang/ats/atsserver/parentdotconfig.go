@@ -85,6 +85,10 @@ func GetParentDotConfig(w http.ResponseWriter, r *http.Request) {
 	} else {
 		parentConfigDSes, err = getParentConfigDS(inf.Tx.Tx, serverInfo.ID)
 	}
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server params: "+err.Error()))
+		return
+	}
 
 	serverParams, err := getParentConfigServerProfileParams(inf.Tx.Tx, serverInfo.ID)
 	if err != nil {
@@ -209,6 +213,7 @@ SELECT
     AND o.is_primary), '') as org_server_fqdn,
   COALESCE(ds.multi_site_origin, false),
   COALESCE(ds.origin_shield, ''),
+  ARRAY(SELECT required_capability FROM deliveryservices_required_capability dsrc WHERE dsrc.deliveryservice_id = ds.id),
   dt.name AS ds_type
 `
 }
@@ -271,9 +276,7 @@ func getParentConfigDSTopLevel(tx *sql.Tx, cdnName tc.CDNName) ([]atscfg.ParentC
 }
 
 func getParentConfigDS(tx *sql.Tx, serverID int) ([]atscfg.ParentConfigDSTopLevel, error) {
-
 	dses, err := getParentConfigDSRaw(tx, ParentConfigDSQuery(), []interface{}{serverID})
-
 	if err != nil {
 		return nil, errors.New("getting raw parent config ds: " + err.Error())
 	}
@@ -330,8 +333,9 @@ func getParentConfigDSRaw(tx *sql.Tx, qry string, qryParams []interface{}) ([]at
 	defer rows.Close()
 	dses := []atscfg.ParentConfigDSTopLevel{}
 	for rows.Next() {
-		d := atscfg.ParentConfigDS{}
-		if err := rows.Scan(&d.Name, &d.QStringIgnore, &d.OriginFQDN, &d.MultiSiteOrigin, &d.OriginShield, &d.Type); err != nil {
+		d := atscfg.ParentConfigDS{RequiredCapabilities: map[atscfg.ServerCapability]struct{}{}}
+		requiredCaps := []string{}
+		if err := rows.Scan(&d.Name, &d.QStringIgnore, &d.OriginFQDN, &d.MultiSiteOrigin, &d.OriginShield, pq.Array(&requiredCaps), &d.Type); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
 		if d.OriginFQDN == "" {
@@ -340,8 +344,13 @@ func getParentConfigDSRaw(tx *sql.Tx, qry string, qryParams []interface{}) ([]at
 			continue
 		}
 		d.Type = tc.DSTypeFromString(string(d.Type))
+		for _, cap := range requiredCaps {
+
+			d.RequiredCapabilities[atscfg.ServerCapability(cap)] = struct{}{}
+		}
 		dses = append(dses, atscfg.ParentConfigDSTopLevel{ParentConfigDS: d})
 	}
+
 	return dses, nil
 }
 
@@ -482,8 +491,8 @@ func getParentConfigDSParamsRaw(tx *sql.Tx, qry string, dsNames []string) (map[t
 	return params, nil
 }
 
-func getParentInfo(tx *sql.Tx, server *atscfg.ServerInfo) (map[string][]atscfg.ParentInfo, error) {
-	parentInfos := map[string][]atscfg.ParentInfo{}
+func getParentInfo(tx *sql.Tx, server *atscfg.ServerInfo) (map[atscfg.OriginHost][]atscfg.ParentInfo, error) {
+	parentInfos := map[atscfg.OriginHost][]atscfg.ParentInfo{}
 
 	serverDomain, ok, err := getCDNDomainByProfileID(tx, server.ProfileID)
 	if err != nil {
@@ -501,11 +510,11 @@ func getParentInfo(tx *sql.Tx, server *atscfg.ServerInfo) (map[string][]atscfg.P
 }
 
 // getServerParentCacheGroupProfiles gets the profile information for servers belonging to the parent cachegroup, and secondary parent cachegroup, of the cachegroup of each server.
-func getServerParentCacheGroupProfiles(tx *sql.Tx, server *atscfg.ServerInfo) (map[atscfg.ProfileID]atscfg.ProfileCache, map[string][]atscfg.CGServer, error) {
+func getServerParentCacheGroupProfiles(tx *sql.Tx, server *atscfg.ServerInfo) (map[atscfg.ProfileID]atscfg.ProfileCache, map[atscfg.OriginHost][]atscfg.CGServer, error) {
 	// TODO make this more efficient - should be a single query - this was transliterated from Perl - it's extremely inefficient.
 
 	profileCaches := map[atscfg.ProfileID]atscfg.ProfileCache{}
-	originServers := map[string][]atscfg.CGServer{} // "deliveryServices" in Perl
+	originServers := map[atscfg.OriginHost][]atscfg.CGServer{} // "deliveryServices" in Perl
 
 	qry := ""
 	if server.IsTopLevelCache() {
@@ -545,6 +554,7 @@ SELECT
   s.profile,
   s.cdn_id,
   stype.name as type_name,
+  ARRAY(SELECT server_capability FROM server_server_capability ssc WHERE ssc.server = s.id),
   s.domain_name
 FROM
   server s
@@ -576,12 +586,21 @@ WHERE
 	cgServerIDs := []int{}
 	cgServers := []atscfg.CGServer{}
 	for rows.Next() {
-		s := atscfg.CGServer{}
-		if err := rows.Scan(&s.ServerID, &s.ServerHost, &s.ServerIP, &s.ServerPort, &s.CacheGroupID, &s.Status, &s.Type, &s.ProfileID, &s.CDN, &s.TypeName, &s.Domain); err != nil {
+		s := atscfg.CGServer{Capabilities: map[atscfg.ServerCapability]struct{}{}}
+		caps := []string{}
+		if err := rows.Scan(&s.ServerID, &s.ServerHost, &s.ServerIP, &s.ServerPort, &s.CacheGroupID, &s.Status, &s.Type, &s.ProfileID, &s.CDN, &s.TypeName, pq.Array(&caps), &s.Domain); err != nil {
 			return nil, nil, errors.New("scanning: " + err.Error())
+		}
+		for _, cap := range caps {
+			s.Capabilities[atscfg.ServerCapability(cap)] = struct{}{}
 		}
 		cgServers = append(cgServers, s)
 		cgServerIDs = append(cgServerIDs, int(s.ServerID))
+	}
+
+	serverCapabilities, err := ats.GetServerCapabilitiesByID(tx, cgServerIDs)
+	if err != nil {
+		return nil, nil, errors.New("getting server capabilities: " + err.Error())
 	}
 
 	cgServerDSes, err := getServerDSes(tx, cgServerIDs)
@@ -605,6 +624,11 @@ WHERE
 		allDSes = append(allDSes, int(ds))
 	}
 
+	dsRequiredCapabilities, err := ats.GetDeliveryServiceRequiredCapabilities(tx, allDSes)
+	if err != nil {
+		return nil, nil, errors.New("getting DS required capabilities: " + err.Error())
+	}
+
 	dsOrigins, err := getDSOrigins(tx, allDSes)
 	if err != nil {
 		return nil, nil, errors.New("getting deliveryservice origins: " + err.Error())
@@ -615,7 +639,9 @@ WHERE
 			dses := cgServerDSes[cgServer.ServerID]
 			for _, ds := range dses {
 				orgURI := dsOrigins[ds]
-				originServers[orgURI.Host] = append(originServers[orgURI.Host], cgServer)
+				if atscfg.HasRequiredCapabilities(serverCapabilities[int(cgServer.ServerID)], dsRequiredCapabilities[int(ds)]) {
+					originServers[atscfg.OriginHost(orgURI.Host)] = append(originServers[atscfg.OriginHost(orgURI.Host)], cgServer)
+				}
 			}
 		} else {
 			originServers[atscfg.DeliveryServicesAllParentsKey] = append(originServers[atscfg.DeliveryServicesAllParentsKey], cgServer)
