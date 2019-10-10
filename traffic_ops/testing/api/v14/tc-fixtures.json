@@ -2180,6 +2180,20 @@
             "servercheck_short_name": "ORT",
             "host_name": "atlanta-edge-01",
             "value": 13
+        },
+    ],
+    "invalidationJobs": [
+        {
+            "deliveryService": "ds1",
+            "regex": "/.*",
+            "startTime": 4117118271000,
+            "ttl": "121m"
+        },
+        {
+            "deliveryService":  "ds2",
+            "regex": "\\/some-path?.+\\.jpg",
+            "startTime": "2100-06-19T13:57:51-06:00",
+            "ttl": 2.1
         }
     ]
 }

@@ -21,6 +21,8 @@ package tc
 
 import (
 	"database/sql/driver"
+	"math"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -33,6 +35,9 @@ type Time struct {
 
 // TimeLayout is the format used in lastUpdated fields in Traffic Ops
 const TimeLayout = "2006-01-02 15:04:05-07"
+
+// Do not ever use this. It only exists for compatibility with Perl
+const legacyLayout = "2006-01-02 15:04:05"
 
 // Scan implements the database/sql Scanner interface.
 func (t *Time) Scan(value interface{}) error {
@@ -48,19 +53,46 @@ func (t Time) Value() (driver.Value, error) {
 	return t.Time, nil
 }
 
-// MarshalJSON implements the json.Marshaller interface
+// MarshalJSON implements the json.Marshaller interface.
+//
+// Time structures marshal in the format defined by TimeLayout.
 func (t Time) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + t.Time.Format(TimeLayout) + `"`), nil
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface
+//
+// Time structures accept both RFC3339-compliant date/time strings as well as
+// the format defined by TimeLayout and Unix(-ish) timestamps. Timestamps are
+// expected to be integer numbers that represend milliseconds since Jan 1,
+// 1970 00:00:00.000 UTC
 func (t *Time) UnmarshalJSON(b []byte) (err error) {
 	s := strings.Trim(string(b), "\"")
 	if s == "null" {
 		t.Time = time.Time{}
 		return
 	}
+
+	// timestamp support
+	var i int64
+	i, err = strconv.ParseInt(s, 10, 64)
+	if err == nil {
+		seconds := float64(i) / 1000.0
+		t.Time = time.Unix(int64(seconds), int64(math.Copysign(float64(int64(math.Abs(seconds))) - math.Abs(seconds), seconds) * 1000000))
+		return
+	}
+
+	t.Time, err = time.Parse(time.RFC3339, s)
+	if err == nil {
+		return
+	}
 	t.Time, err = time.Parse(TimeLayout, s)
+	if err == nil {
+		return
+	}
+
+	// legacy
+	t.Time, err = time.Parse(legacyLayout, s)
 	return
 }
 
@@ -94,3 +126,5 @@ func (t TimeNoMod) MarshalJSON() ([]byte, error) {
 func (t *TimeNoMod) UnmarshalJSON([]byte) (err error) {
 	return nil
 }
+
+type TimeStamp time.Time

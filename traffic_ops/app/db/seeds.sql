@@ -574,6 +574,10 @@ insert into api_capability (http_method, route, capability) values ('GET', 'osve
 insert into api_capability (http_method, route, capability) values ('POST', 'isos', 'iso-generate') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- jobs
 insert into api_capability (http_method, route, capability) values ('GET', 'jobs', 'jobs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('POST', 'jobs', 'jobs-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('PUT', 'jobs', 'jobs-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('PATCH', 'jobs', 'jobs-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+INSERT INTO api_capability (http_method, route, capability) VALUES ('DELETE', 'jobs', 'jobs-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'jobs/*', 'jobs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'user/current/jobs', 'jobs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('POST', 'user/current/jobs', 'jobs-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
