@@ -191,7 +191,7 @@ public final class RegionalGeo {
                     LOGGER.error("RegionalGeo ERR: deliveryServiceId empty");
                     return null;
                 }
-                 Boolean isSteeringDS = false;
+                Boolean isSteeringDS = false;
                 try {
                     isSteeringDS = JsonUtils.getBoolean(ruleJson, "isSteeringDS");
                 } catch (JsonUtilsException e) {
@@ -345,6 +345,7 @@ public final class RegionalGeo {
                                final HTTPRouteResult routeResult, final Track track) throws MalformedURLException {
     enforce(trafficRouter, request, deliveryService, cache, routeResult, track, false);
     }
+
     @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
     public static void enforce(final TrafficRouter trafficRouter, final Request request,
         final DeliveryService deliveryService, final Cache cache,
