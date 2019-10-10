@@ -544,10 +544,10 @@ public class TrafficRouter {
 		routeResult.setDeliveryService(entryDeliveryService);
 
 		if (entryDeliveryService.isRegionalGeoEnabled()) {
-            RegionalGeo.enforce(this, request, entryDeliveryService, null, routeResult, track);
-            if (routeResult.getUrl() != null) {
-                return routeResult;
-            }
+		    RegionalGeo.enforce(this, request, entryDeliveryService, null, routeResult, track);
+		    if (routeResult.getUrl() != null) {
+		        return routeResult;
+		    }
 		}
 
 		final List<SteeringResult> resultsToRemove = new ArrayList<>();
