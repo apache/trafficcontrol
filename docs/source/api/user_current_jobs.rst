@@ -134,7 +134,7 @@ Request Structure
 
 	.. note:: Be careful to only match on the content that must be removed - revalidation is an expensive operation for many origins, and a simple ``/.*`` can cause an overload in requests to the origin.
 
-:startTime: This can be a string in the legacy ``YYYY-MM-DD HH:MM:SS`` format, or a string in :rfc:`3339` format, or a string representing a date in the same non-standard format as the ``last_updated`` fields common in other API responses, or finally it can be a number indicating the number of milliseconds since the Unix Epoch (January 1, 1970 UTC). This date must be in the future, and unlike a ``PATCH`` or ``POST`` request to :ref:`to-api-jobs`, it must be *within two days from the time of creation*.
+:startTime: This can be a string in the legacy ``YYYY-MM-DD HH:MM:SS`` format, or a string in :rfc:`3339` format, or a string representing a date in the same non-standard format as the ``last_updated`` fields common in other API responses, or finally it can be a number indicating the number of milliseconds since the Unix Epoch (January 1, 1970 UTC). This date must be in the future, and unlike a ``POST`` request to :ref:`to-api-jobs`, it must be *within two days from the time of creation*.
 
 	.. versionchanged:: ATCv4
 		Prior to Traffic Control version 4, this used to **only** accept the legacy ``YYYY-MM-DD HH:MM:SS`` date string format, but this constraint has been relaxed. Developers are encouraged to submit date/time strings in either :rfc:`3339` format or as a numerical Unix timestamp (in milliseconds).
