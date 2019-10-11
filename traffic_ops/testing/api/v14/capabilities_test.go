@@ -89,8 +89,7 @@ func GetTestCapabilities(t *testing.T) {
 		t.Fatalf("could not get all capabilities: %v", err)
 	}
 	if len(caps) != testDataLen {
-		t.Errorf("response returned different number of capabilities than those that exist; got %d, want %d", len(caps), testDataLen)
-		return // we can't FATAL because this testing.T object is shared
+		t.Fatalf("response returned different number of capabilities than those that exist; got %d, want %d", len(caps), testDataLen)
 	}
 
 	for _,c := range caps {
@@ -111,7 +110,7 @@ func GetTestCapabilities(t *testing.T) {
 
 func ReplaceTestCapability(t *testing.T) {
 	if len(testData.Capabilities) < 1 {
-		t.Skip("There aren't any test capabilities, skipping (this should probably be rectified!)")
+		t.Fatalf("No test capabilities!")
 	}
 
 	c := testData.Capabilities[0]
@@ -121,8 +120,7 @@ func ReplaceTestCapability(t *testing.T) {
 	alerts, _, err := TOSession.ReplaceCapabilityByName(testData.Capabilities[0].Name, c)
 	log.Debugln("alerts:", alerts)
 	if err != nil {
-		t.Errorf("Failed to replace capability %s: %v", testData.Capabilities[0].Name, err)
-		return // we can't FATAL because this testing.T object is shared
+		t.Fatalf("Failed to replace capability %s: %v", testData.Capabilities[0].Name, err)
 	}
 
 	// The old one shouldn't exist anymore
