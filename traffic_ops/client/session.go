@@ -103,7 +103,7 @@ func loginCreds(toUser string, toPasswd string) ([]byte, error) {
 
 // loginToken gathers token login credentials for Traffic Ops.
 func loginToken(token string) ([]byte, error) {
-	form := tc.UserToken {
+	form := tc.UserToken{
 		Token: token,
 	}
 
@@ -245,7 +245,7 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 }
 
 func LoginWithToken(toURL string, token string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, net.Addr, error) {
-	options := cookiejar.Options {
+	options := cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	}
 
@@ -254,9 +254,9 @@ func LoginWithToken(toURL string, token string, insecure bool, userAgent string,
 		return nil, nil, err
 	}
 
-	client := http.Client {
+	client := http.Client{
 		Timeout: requestTimeout,
-		Transport: &http.Transport {
+		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 		},
 		Jar: jar,
@@ -317,7 +317,7 @@ func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err err
 	if err != nil {
 		return resp, remoteAddr, err
 	}
-	if resp.StatusCode == http.StatusOK {
+	if resp.StatusCode < 300 {
 		return resp, remoteAddr, err
 	}
 

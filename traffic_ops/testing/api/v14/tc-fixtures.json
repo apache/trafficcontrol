@@ -2135,7 +2135,7 @@
             "dsName": "ds1",
             "request": {
                 "startTime": "2019-01-01 00:00:00",
-                "ttl": 2160,
+                "ttl": 80,
                 "regex": "/foo"
             }
         },
@@ -2143,7 +2143,7 @@
             "dsName": "ds1",
             "request": {
                 "startTime": "2019-01-01 00:00:00",
-                "ttl": 2160,
+                "ttl": 80,
                 "regex": "/foo"
             }
         }
@@ -2180,7 +2180,7 @@
             "servercheck_short_name": "ORT",
             "host_name": "atlanta-edge-01",
             "value": 13
-        },
+        }
     ],
     "invalidationJobs": [
         {
