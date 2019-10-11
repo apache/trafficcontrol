@@ -354,7 +354,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ok, err := IsUserAuthorizedToModifyDSID(inf, dsid); err != nil {
-		sysErr = fmt.Errorf("Checking current user permissions for DS #%d: %v")
+		sysErr = fmt.Errorf("Checking current user permissions for DS #%d: %v", dsid, err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
 		return
@@ -602,7 +602,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ok, err := IsUserAuthorizedToModifyJobsMadeByUserID(inf, createdBy); err != nil {
-		sysErr = fmt.Errorf("Checking user permissions against user %s: %v", createdBy, err)
+		sysErr = fmt.Errorf("Checking user permissions against user %v: %v", createdBy, err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
 		return
