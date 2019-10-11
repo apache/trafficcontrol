@@ -15,9 +15,10 @@ package client
  */
 
 import "encoding/json"
-import "fmt"
+import "errors"
 import "net"
 import "net/http"
+import "net/url"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
 
@@ -55,7 +56,9 @@ func (to *Session) ReplaceCapabilityByName(name string, c tc.Capability) (tc.Ale
 		return tc.Alerts{}, reqInf, err
 	}
 
-	endpoint := fmt.Sprintf("%s?name=%s", API_v14_CAPABILITIES, name)
+	var v url.Values
+	v.Add("name", name)
+	endpoint := API_v14_CAPABILITIES + "?" + v.Encode()
 
 	var resp *http.Response
 	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, endpoint, reqBody)
@@ -85,7 +88,9 @@ func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
 
 // GetCapability retrieves only the capability named 'c'
 func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
-	endpoint := fmt.Sprintf("%s?name=%s", API_v14_CAPABILITIES, c)
+	var v url.Values
+	v.Add("name", c)
+	endpoint := API_v14_CAPABILITIES + "?" + v.Encode()
 	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -98,7 +103,7 @@ func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
 	if err != nil {
 		return tc.Capability{}, reqInf, err
 	} else if data.Response == nil || len(data.Response) < 1 {
-		return tc.Capability{}, reqInf, fmt.Errorf("Invalid response - no capability returned!")
+		return tc.Capability{}, reqInf, errors.New("Invalid response - no capability returned!")
 	}
 
 	return data.Response[0], reqInf, nil
@@ -107,7 +112,9 @@ func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
 // DeleteCapability deletes the capability named 'c'.
 func (to *Session) DeleteCapability(c string) (alerts tc.Alerts, reqInf ReqInf, err error) {
 	reqInf.CacheHitStatus = CacheHitStatusMiss
-	endpoint := fmt.Sprintf("%s?name=%s", API_v14_CAPABILITIES, c)
+	var v url.Values
+	v.Add("name", c)
+	endpoint := API_v14_CAPABILITIES + "?" + v.Encode()
 
 	var resp *http.Response
 	resp, reqInf.RemoteAddr, err = to.request(http.MethodDelete, endpoint, nil)
