@@ -317,7 +317,7 @@ func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err err
 	if err != nil {
 		return resp, remoteAddr, err
 	}
-	if resp.StatusCode == http.StatusOK {
+	if resp.StatusCode < 300 {
 		return resp, remoteAddr, err
 	}
 

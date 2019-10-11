@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.4/cdns/name/:name/dnsseckeys `GET`
   - /api/1.4/user/login/oauth `POST`
   - /api/1.1/profiles/:name/configfiles/ats/* `GET`
+  - /api/1.1/servers/:name/configfiles/ats/* `GET`
   - /api/1.1/dbdump `GET`
   - /api/1.1/servers/:name/configfiles/ats/parent.config
   - /api/1.1/servers/:name/configfiles/ats/remap.config
@@ -48,6 +49,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added cache-side config generator, atstccfg, installed with ORT. Currently includes parent.config and all profile configs, proxies others to Traffic Ops.
 - In Traffic Portal, all tables now include a 'CSV' link to enable the export of table data in CSV format.
 - Pylint configuration now enforced (present in [a file in the Python client directory](./traffic_control/clients/python/pylint.rc))
+- Added an optional SMTP server configuration to the TO configuration file, api now has unused abilitiy to send emails
 
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)
@@ -71,6 +73,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Issue 3476: Traffic Router returns partial result for CLIENT_STEERING Delivery Services when Regional Geoblocking or Anonymous Blocking is enabled.
 - Upgraded Traffic Portal to AngularJS 1.7.8
 - Issue 3275: Improved the snapshot diff performance and experience.
+- Issue 3550: Fixed TC golang client setting for cache control max age
 - Issue #3605: Fixed Traffic Monitor custom ports in health polling URL.
 - Issue 3587: Fixed Traffic Ops Golang reverse proxy and Riak logs to be consistent with the format of other error logs.
 - Database migrations have been collapsed. Rollbacks to migrations that previously existed are no longer possible.

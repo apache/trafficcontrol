@@ -1,3 +1,5 @@
+package atscfg
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,24 +19,34 @@
  * under the License.
  */
 
-var TableParameterCacheGroupsController = function(parameter, cacheGroups, $controller, $scope, $state, locationUtils) {
+import (
+	"encoding/json"
+	"testing"
+)
 
-	// extends the TableCacheGroupsController to inherit common methods
-	angular.extend(this, $controller('TableCacheGroupsController', { cacheGroups: cacheGroups, $scope: $scope }));
+func TestMakeChkconfig(t *testing.T) {
+	params := map[string][]string{
+		"p0": []string{"p0v0", "p0v1"},
+		"1":  []string{"p1v0"},
+	}
 
-	$scope.parameter = parameter;
+	txt := MakeChkconfig(params)
 
-	$scope.addCacheGroup = function() {
-		alert('not hooked up yet: add cg to parameter');
-	};
+	chkconfig := []ChkConfigEntry{}
+	if err := json.Unmarshal([]byte(txt), &chkconfig); err != nil {
+		t.Fatalf("MakePackages expected a JSON array of objects, actual: " + err.Error())
+	}
 
-	$scope.removeCacheGroup = function() {
-		alert('not hooked up yet: remove cg from parameter');
-	};
+	for _, chkConfigEntry := range chkconfig {
+		vals, ok := params[chkConfigEntry.Name]
+		if !ok {
+			t.Errorf("expected %+v actual %v\n", params, chkConfigEntry.Name)
+		}
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+		if !strArrContains(vals, chkConfigEntry.Val) {
+			t.Errorf("expected %+v actual %v\n", vals, chkConfigEntry.Val)
+		}
 
-};
-
-TableParameterCacheGroupsController.$inject = ['parameter', 'cacheGroups', '$controller', '$scope', '$state', 'locationUtils'];
-module.exports = TableParameterCacheGroupsController;
+		params[chkConfigEntry.Name] = strArrRemove(vals, chkConfigEntry.Val)
+	}
+}

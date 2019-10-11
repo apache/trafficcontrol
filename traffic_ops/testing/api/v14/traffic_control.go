@@ -48,6 +48,7 @@ type TrafficControl struct {
 	Serverchecks                   []tc.ServercheckRequestNullable    `json:"serverchecks"`
 	Users                          []tc.User                          `json:"users"`
 	Jobs                           []JobRequest                       `json:"jobs"`
+	InvalidationJobs               []tc.InvalidationJobInput          `json:"invalidationJobs"`
 }
 
 type JobRequest struct {

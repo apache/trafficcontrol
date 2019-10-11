@@ -51,7 +51,7 @@
             "urlRegex": ".*live4"
         },
         {
-            "redirectUrl": "http://example.com/redirect_https",
+            "redirectUrl": "https://example.com/redirect_https",
             "deliveryServiceId": "ds-geoblock-redirect-https",
             "geoLocation": {
                 "excludePostalCode": [
@@ -60,6 +60,18 @@
                 ]
             },
             "urlRegex": ".*httpsredirect"
+        },
+        {
+            "redirectUrl": "https://example.com/steering-test",
+            "deliveryServiceId": "ds-steering-1",
+            "isSteeringDS": "true",
+            "geoLocation": {
+                "excludePostalCode": [
+                    "V5G",
+                    "M7A"
+                ]
+            },
+            "urlRegex": ".*steering"
         }
     ],
     "customer": "CU",

@@ -42,3 +42,7 @@ func BoolPtr(b bool) *bool {
 func FloatPtr(f float64) *float64 {
 	return &f
 }
+
+func InterfacePtr(i interface{}) *interface{} {
+	return &i
+}
