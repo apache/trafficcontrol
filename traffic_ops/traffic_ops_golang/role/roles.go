@@ -122,7 +122,7 @@ func (role *TORole) Create() (error, error, int) {
 	}
 
 	//after we have role ID we can associate the capabilities:
-	if role.Capabilities != nil && *role.Capabilities != nil && len(*role.Capabilities) > 0 {
+	if role.Capabilities != nil && len(*role.Capabilities) > 0 {
 		userErr, sysErr, errCode = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
