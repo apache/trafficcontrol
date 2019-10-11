@@ -31,9 +31,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serverCapabilityForm.name), 'has-feedback': hasError(serverCapabilityForm.name)}">
                 <label for="name" class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="name" name="name" type="text" class="form-control" ng-disabled="!settings.isNew" ng-model="serverCapability.name" required pattern="^[a-zA-Z0-9._-]+$" autofocus>
+                    <input id="name" name="name" type="text" class="form-control" ng-disabled="!settings.isNew" ng-model="serverCapability.name" required pattern="^[a-zA-Z0-9_-]+$" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverCapabilityForm.name, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverCapabilityForm.name, 'pattern')">Must be alphamumeric with no spaces. Dash, dot and underscore also allowed.</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverCapabilityForm.name, 'pattern')">Must be alphamumeric with no spaces. Dashes and underscores also allowed.</small>
                     <span ng-show="hasError(serverCapabilityForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
