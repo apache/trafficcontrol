@@ -21,7 +21,7 @@ import "net/http"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
 
-const API_v4_CAPABILITIES = "/api/1.4/capabilities"
+const API_v14_CAPABILITIES = "/api/1.4/capabilities"
 
 // CreateCapability creates the passed capability.
 func (to *Session) CreateCapability(c tc.Capability) (tc.Alerts, ReqInf, error) {
@@ -33,7 +33,7 @@ func (to *Session) CreateCapability(c tc.Capability) (tc.Alerts, ReqInf, error) 
 		return tc.Alerts{}, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v4_CAPABILITIES, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v14_CAPABILITIES, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -55,7 +55,7 @@ func (to *Session) ReplaceCapabilityByName(name string, c tc.Capability) (tc.Ale
 		return tc.Alerts{}, reqInf, err
 	}
 
-	endpoint := fmt.Sprintf("%s?name=%s", API_v4_CAPABILITIES, name)
+	endpoint := fmt.Sprintf("%s?name=%s", API_v14_CAPABILITIES, name)
 
 	var resp *http.Response
 	resp, reqInf.RemoteAddr, err = to.request(http.MethodPut, endpoint, reqBody)
@@ -71,7 +71,7 @@ func (to *Session) ReplaceCapabilityByName(name string, c tc.Capability) (tc.Ale
 
 // GetCapabilities retrieves all capabilities.
 func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v4_CAPABILITIES, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v14_CAPABILITIES, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -85,7 +85,7 @@ func (to *Session) GetCapabilities() ([]tc.Capability, ReqInf, error) {
 
 // GetCapability retrieves only the capability named 'c'
 func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
-	endpoint := fmt.Sprintf("%s?name=%s", API_v4_CAPABILITIES, c)
+	endpoint := fmt.Sprintf("%s?name=%s", API_v14_CAPABILITIES, c)
 	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -107,7 +107,7 @@ func (to *Session) GetCapability(c string) (tc.Capability, ReqInf, error) {
 // DeleteCapability deletes the capability named 'c'.
 func (to *Session) DeleteCapability(c string) (alerts tc.Alerts, reqInf ReqInf, err error) {
 	reqInf.CacheHitStatus = CacheHitStatusMiss
-	endpoint := fmt.Sprintf("%s?name=%s", API_v4_CAPABILITIES, c)
+	endpoint := fmt.Sprintf("%s?name=%s", API_v14_CAPABILITIES, c)
 
 	var resp *http.Response
 	resp, reqInf.RemoteAddr, err = to.request(http.MethodDelete, endpoint, nil)
