@@ -92,16 +92,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		caps = append(caps, cap)
 	}
 
-	respBts, err := json.Marshal(struct{R []tc.Capability `json:"response"`}{caps})
-	if err != nil {
-		errCode = http.StatusInternalServerError
-		sysErr = fmt.Errorf("Marshaling response: %v", err)
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
-	}
-
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(append(respBts, '\n'))
+	api.WriteResp(w, r, caps)
 }
 
 func Create(w http.ResponseWriter, r *http.Request) {
@@ -156,20 +147,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alert := []tc.Alert{tc.Alert{Level: tc.SuccessLevel.String(), Text: "Capability created."}}
-	responseObj := struct{A []tc.Alert `json:"alerts"`; R tc.Capability `json:"response"`}{alert, cap}
-	respBts, err := json.Marshal(responseObj)
-	if err != nil {
-		errCode = http.StatusInternalServerError
-		sysErr = fmt.Errorf("Marshaling response: %v", err)
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
-	}
-
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Capability created.", cap)
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CAPABILITY: %s, ACTION: Created", cap.Name), inf.User, tx)
-
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(append(respBts, '\n'))
 }
 
 func Replace(w http.ResponseWriter, r *http.Request) {
@@ -217,22 +196,8 @@ func Replace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alert := []tc.Alert{tc.Alert{Level: tc.SuccessLevel.String(), Text: "Capability was updated."}}
-	resp := struct{A []tc.Alert `json:"alerts"`; R tc.Capability `json:"response"`}{alert, cap}
-	respBts, err := json.Marshal(resp)
-	if err != nil {
-		sysErr = fmt.Errorf("Marshaling response: %v", err)
-		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
-	}
-
-	msg := "CAPABILITY: %s, ACTION: Replaced with capability '%s' (%s)'"
-	msg = fmt.Sprintf(msg, inf.Params["name"], cap.Name, cap.Description)
 	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, tx)
-
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(append(respBts, '\n'))
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Capability was updated.", cap)
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
@@ -276,20 +241,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alert := []tc.Alert{tc.Alert{Level: tc.SuccessLevel.String(), Text: "Capability deleted."}}
-	resp := struct{A []tc.Alert `json:"alerts"`; R tc.Capability `json:"response"`}{alert, cap}
-	respBts, err := json.Marshal(resp)
-	if err != nil {
-		sysErr = fmt.Errorf("Marshaling response: %v", err)
-		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
-	}
-
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Capability deleted.", cap)
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("CAPABILITY: %s, ACTION: Deleted", capName), inf.User, tx)
-
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(append(respBts, '\n'))
 }
 
 func capabilityNameExists(c string, tx *sql.Tx) (bool, error) {
