@@ -196,6 +196,8 @@ func Replace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	msg := "CAPABILITY: %s, ACTION: Replaced with capability '%s' (%s)'"
+	msg = fmt.Sprintf(msg, inf.Params["name"], cap.Name, cap.Description)
 	api.CreateChangeLogRawTx(api.ApiChange, msg, inf.User, tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Capability was updated.", cap)
 }
