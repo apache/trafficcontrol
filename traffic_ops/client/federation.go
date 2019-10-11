@@ -92,7 +92,7 @@ func (to *Session) GetFederationDeliveryServices(federationID int) ([]tc.Federat
 
 // DeleteFederationDeliveryService Deletes a given Delivery Service from a Federation
 func (to *Session) DeleteFederationDeliveryService(federationID, deliveryServiceID int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/federations/%v/deliveryservices?dsID=%v", apiBase, federationID, deliveryServiceID)
+	route := fmt.Sprintf("%s/federations/%v/deliveryservices/%v", apiBase, federationID, deliveryServiceID)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
