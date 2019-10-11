@@ -105,5 +105,4 @@ ADD infrastructure/cdn-in-a-box/enroller/server_template.json \
 
 ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 
-# RUN chown -R trafops:trafops /opt/traffic_ops
 CMD /run.sh
