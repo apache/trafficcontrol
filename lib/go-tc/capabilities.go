@@ -26,9 +26,9 @@ package tc
 // afforded by said Role. Note that enforcement of Capability-based permisions is not currently
 // implemented.
 type Capability struct {
-	Description string `json:"description"`
-	LastUpdated TimeNoMod `json:"lastUpdated"`
-	Name string `json:"name"`
+	Description string    `json:"description" db:"description"`
+	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        string    `json:"name" db:"name"`
 }
 
 // CapabilitiesResponse models the structure of a minimal response from the Capabilities API in
