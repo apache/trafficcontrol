@@ -174,14 +174,9 @@ func (server TOServer) ChangeLogMessage(action string) (string, error) {
 func (server *TOServer) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 
-	servers, errs, errType := getServers(server.ReqInfo.Params, server.ReqInfo.Tx, server.ReqInfo.User)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			if err.Error() == `id cannot parse to integer` {
-				return nil, errors.New("Resource not found."), nil, http.StatusInternalServerError //matches perl response
-			}
-		}
-		userErr, sysErr, errCode := api.TypeErrsToAPIErr(errs, errType)
+	servers, userErr, sysErr, errCode := getServers(server.ReqInfo.Params, server.ReqInfo.Tx, server.ReqInfo.User)
+
+	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}
 
@@ -192,7 +187,7 @@ func (server *TOServer) Read() ([]interface{}, error, error, int) {
 	return returnable, nil, nil, http.StatusOK
 }
 
-func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
+func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
@@ -214,11 +209,11 @@ func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) (
 		// don't allow query on ds outside user's tenant
 		dsID, err := strconv.Atoi(dsIDStr)
 		if err != nil {
-			return nil, []error{errors.New("dsId must be an integer")}, tc.DataMissingError
+			return nil, errors.New("dsId must be an integer"), nil, http.StatusNotFound
 		}
 		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
 		if userErr != nil || sysErr != nil {
-			return nil, []error{errors.New("Forbidden")}, tc.ForbiddenError
+			return nil, errors.New("Forbidden"), sysErr, http.StatusForbidden
 		}
 		// only if dsId is part of params: add join on deliveryservice_server table
 		queryAddition = `
@@ -227,7 +222,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 		// depending on ds type, also need to add mids
 		dsType, err := deliveryservice.GetDeliveryServiceType(dsID, tx.Tx)
 		if err != nil {
-			return nil, []error{err}, tc.DataConflictError
+			return nil, err, nil, http.StatusBadRequest
 		}
 		usesMids = dsType.UsesMidCache()
 		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
@@ -235,7 +230,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	query := selectQuery() + queryAddition + where + orderBy + pagination
@@ -243,7 +238,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
+		return nil, nil, errors.New("querying: " + err.Error()), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -254,7 +249,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 	for rows.Next() {
 		var s tc.ServerNullable
 		if err = rows.StructScan(&s); err != nil {
-			return nil, []error{fmt.Errorf("getting servers: %v", err)}, tc.SystemError
+			return nil, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError
 		}
 		if user.PrivLevel < auth.PrivLevelOperations {
 			s.ILOPassword = &HiddenField
@@ -265,32 +260,32 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 	// if ds requested uses mid-tier caches, add those to the list as well
 	if usesMids {
-		mids, errs, errType := getMidServers(servers, tx)
+		mids, userErr, sysErr, errCode := getMidServers(servers, tx)
 
-		log.Debugf("getting mids: %v, %v\n", errs, errType)
-		if len(errs) > 0 {
-			for _, err := range errs {
-				if err.Error() == `id cannot parse to integer` {
-					return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
-				}
-			}
-			return nil, errs, errType
+		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
+
+		if userErr != nil && userErr.Error() == `id cannot parse to integer` {
+			return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
+		}
+
+		if userErr != nil || sysErr != nil {
+			return nil, userErr, sysErr, errCode
 		}
 		for _, server := range mids {
 			servers = append(servers, server)
 		}
 	}
 
-	return servers, nil, tc.NoError
+	return servers, nil, nil, http.StatusOK
 }
 
 // getMidServers gets mids used by the servers in this ds
 // Original comment from the Perl code:
 // if the delivery service employs mids, we're gonna pull mid servers too by pulling the cachegroups of the edges and finding those cachegroups parent cachegroup...
 // then we see which servers have cachegroup in parent cachegroup list...that's how we find mids for the ds :)
-func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
+func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullable, error, error, int) {
 	if len(servers) == 0 {
-		return nil, nil, tc.NoError
+		return nil, nil, nil, http.StatusOK
 	}
 	var ids []string
 	for _, s := range servers {
@@ -311,7 +306,7 @@ WHERE s.id IN (
 `
 	rows, err := tx.Queryx(q)
 	if err != nil {
-		return nil, []error{err}, tc.DataConflictError
+		return nil, err, nil, http.StatusBadRequest
 	}
 	defer rows.Close()
 
@@ -320,11 +315,11 @@ WHERE s.id IN (
 		var s tc.ServerNullable
 		if err := rows.StructScan(&s); err != nil {
 			log.Error.Printf("could not scan mid servers: %s\n", err)
-			return nil, []error{err}, tc.SystemError
+			return nil, nil, err, http.StatusInternalServerError
 		}
 		mids = append(mids, s)
 	}
-	return mids, nil, tc.NoError
+	return mids, nil, nil, http.StatusOK
 }
 
 func (sv *TOServer) Update() (error, error, int) {
