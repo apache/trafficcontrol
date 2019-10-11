@@ -132,7 +132,7 @@ func CreateUserJob(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
 	w.Header().Set(http.CanonicalHeaderKey("location"), inf.Config.URL.Scheme+"://"+r.Host+"/api/1.4/jobs?id="+strconv.FormatUint(uint64(*result.ID), 10))
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	w.Write(append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Created+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)
