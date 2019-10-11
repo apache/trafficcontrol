@@ -154,6 +154,9 @@ func ComputedStats() map[string]StatComputeFunc {
 		"kbps": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.KbpsOut
 		},
+		"gbps": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
+			return info.Vitals.KbpsOut / 1000000
+		},
 		"loadavg": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.LoadAvg
 		},
