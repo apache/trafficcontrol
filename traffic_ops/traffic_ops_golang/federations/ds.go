@@ -191,7 +191,7 @@ func (v *TOFedDSes) Delete() (error, error, int) {
 func checkFedDSDeletion(tx *sql.Tx, fedID, dsID int) (int, error, error) {
 
 	q := `SELECT ARRAY(SELECT deliveryservice FROM federation_deliveryservice WHERE federation=$1)`
-	dsIDs := []int64{} // pg.Array does not support int slice needs to be int64
+	dsIDs := []int64{} // pq.Array does not support int slice needs to be int64
 	err := tx.QueryRow(q, fedID).Scan(pq.Array(&dsIDs))
 	if err != nil {
 		return http.StatusInternalServerError, nil, fmt.Errorf("querying federation %v delivery services - %v", fedID, err)
