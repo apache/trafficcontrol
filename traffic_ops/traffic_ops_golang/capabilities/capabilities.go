@@ -26,7 +26,10 @@ import "fmt"
 import "net/http"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/lib/go-util"
+
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 const readQuery = `
 SELECT description,
@@ -63,14 +66,20 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-
-	var rows *sql.Rows
-	var err error
-	if name, ok := inf.Params["name"]; ok {
-		rows, err = tx.Query(readQuery + "WHERE name=$1", name)
-	} else {
-		rows, err = tx.Query(readQuery)
+	cols := map[string]dbhelpers.WhereColumnInfo{
+		"name": dbhelpers.WhereColumnInfo{"capability.name", nil},
 	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
+	if len(errs) > 0 {
+		errCode = http.StatusBadRequest
+		userErr = util.JoinErrs(errs)
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
+		return
+	}
+
+	query := readQuery + where + orderBy + pagination
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil && err != sql.ErrNoRows {
 		errCode = http.StatusInternalServerError
 		sysErr = fmt.Errorf("querying capabilities: %v", err)
