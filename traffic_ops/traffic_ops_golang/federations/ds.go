@@ -162,7 +162,6 @@ func (v *TOFedDSes) GetKeyFieldsInfo() []api.KeyFieldInfo {
 func (v *TOFedDSes) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
 
 func (v *TOFedDSes) Delete() (error, error, int) {
-	// Get delivery service ID from query params
 	dsIDStr, ok := v.APIInfo().Params["dsID"]
 	if !ok {
 		return errors.New("dsID must be specified for deletion"), nil, http.StatusBadRequest
