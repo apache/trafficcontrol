@@ -88,7 +88,6 @@ func GetTestCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not get all capabilities: %v", err)
 	}
-	log.Debugln("capacities:", caps)
 	if len(caps) != testDataLen {
 		t.Errorf("response returned different number of capabilities than those that exist; got %d, want %d", len(caps), testDataLen)
 		return // we can't FATAL because this testing.T object is shared
