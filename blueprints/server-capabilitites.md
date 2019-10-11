@@ -44,6 +44,8 @@ Server Capabilities will be arbitrary strings. The ATS project will not "seed" a
     - If an EDGE server does not have all capabilities required by a DS, that server SHOULD NOT be assignable to that DS. 
     - If an EDGE server is assigned to a DS which requires capabilities that server has, it SHOULD NOT be possible to remove those capabilities from that server.
 
+- Initially, Server Capability names are limited to `[a-Z]`, `[0-9]`, `_`, and `-`. This allows them to be put in most parts of a URI, as well as being the characters of Base64 URL Encoding. We may decide to allow high unicode later. But for now, since we're not sure yet what usage will look like, it's much easier to add characters later without breaking people, than it is to remove them.
+
 ### Traffic Portal Impact
 
 - Server Page
