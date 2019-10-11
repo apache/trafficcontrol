@@ -19,11 +19,13 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestServerCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{ServerCapabilities}, func() {
 		GetTestServerCapabilities(t)
+		ValidationTestServerCapabilities(t)
 	})
 }
 
@@ -56,6 +58,13 @@ func GetTestServerCapabilities(t *testing.T) {
 	}
 	if len(resp) != len(testData.ServerCapabilities) {
 		t.Errorf("expected to GET %d server capabilities, actual: %d", len(testData.ServerCapabilities), len(resp))
+	}
+}
+
+func ValidationTestServerCapabilities(t *testing.T) {
+	_, _, err := TOSession.CreateServerCapability(tc.ServerCapability{Name: "b@dname"})
+	if err == nil {
+		t.Errorf("expected POST with invalid name to return an error, actual: nil")
 	}
 }
 

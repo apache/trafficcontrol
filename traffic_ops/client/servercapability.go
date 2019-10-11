@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -67,8 +68,8 @@ func (to *Session) GetServerCapabilities() ([]tc.ServerCapability, ReqInf, error
 
 // GetServerCapability returns the given server capability by name.
 func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", APIServerCapabilities, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqUrl := fmt.Sprintf("%s?name=%s", APIServerCapabilities, url.QueryEscape(name))
+	resp, remoteAddr, err := to.request(http.MethodGet, reqUrl, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -88,8 +89,8 @@ func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, ReqIn
 
 // DeleteServerCapability deletes the given server capability by name.
 func (to *Session) DeleteServerCapability(name string) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", APIServerCapabilities, name)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqUrl := fmt.Sprintf("%s?name=%s", APIServerCapabilities, url.QueryEscape(name))
+	resp, remoteAddr, err := to.request(http.MethodDelete, reqUrl, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

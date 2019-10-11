@@ -166,7 +166,7 @@ func GenericDelete(val GenericDeleter) (error, error, int) {
 	if rowsAffected, err := result.RowsAffected(); err != nil {
 		return nil, errors.New("deleting " + val.GetType() + ": getting rows affected: " + err.Error()), http.StatusInternalServerError
 	} else if rowsAffected < 1 {
-		return errors.New("no " + val.GetType() + " with that id found"), nil, http.StatusNotFound
+		return errors.New("no " + val.GetType() + " with that key found"), nil, http.StatusNotFound
 	} else if rowsAffected > 1 {
 		return nil, fmt.Errorf(val.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
 	}

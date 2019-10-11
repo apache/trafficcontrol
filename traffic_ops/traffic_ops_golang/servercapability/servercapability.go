@@ -93,8 +93,9 @@ func (v *TOServerCapability) GetType() string {
 }
 
 func (v *TOServerCapability) Validate() error {
+	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
 	errs := validation.Errors{
-		"name": validation.Validate(v.Name, validation.Required),
+		"name": validation.Validate(v.Name, validation.Required, rule),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
