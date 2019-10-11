@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added cache-side config generator, atstccfg, installed with ORT. Currently includes parent.config and all profile configs, proxies others to Traffic Ops.
 - In Traffic Portal, all tables now include a 'CSV' link to enable the export of table data in CSV format.
 - Pylint configuration now enforced (present in [a file in the Python client directory](./traffic_control/clients/python/pylint.rc))
+- In Traffic Portal, added the ability to create, view and delete server capabilities.
 
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)
