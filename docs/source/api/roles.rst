@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves all user roles.
+Retrieves all user :term:`Roles`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -34,6 +34,12 @@ Request Structure
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 	| Name      | Required | Description                                                                                                   |
 	+===========+==========+===============================================================================================================+
+	| id        | no       | Return only the :term:`Role` identified by this integral, unique identifier                                   |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| name      | no       | Return only the :term:`Role` with this name                                                                   |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	| privLevel | no       | Return only those :term:`Roles` that have this privilege level                                                |
+	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
 	|           |          | array                                                                                                         |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
@@ -48,12 +54,25 @@ Request Structure
 	|           |          | defined to make use of ``page``.                                                                              |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/roles?name=admin HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
-:description: A description of the role
-:id:          The integral, unique identifier for this role
-:name:        The name of the role
-:privLevel:   An integer that allows for comparison between roles
+:capabilities: An array of the names of the Capabilities given to this :term:`Role`
+
+	.. versionadded:: 1.3
+
+:description: A description of the :term:`Role`
+:id:          The integral, unique identifier for this :term:`Role`
+:name:        The name of the :term:`Role`
+:privLevel:   An integer that allows for comparison between :term:`Roles`
 
 .. code-block:: http
 	:caption: Response Example
@@ -65,19 +84,236 @@ Response Structure
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
 	Set-Cookie: mojolicious=...; Path=/; HttpOnly
-	Whole-Content-Sha512: caagePqpL6u9Mn1UBIDCJSgiLAKOHm72/DcrkxCuS7oLekMe87BkGhyJzkhQqUJh/CTmokr9x053GQ5FjhSKhg==
+	Whole-Content-Sha512: TEDXlQqWMSnJbL10JtFdbw0nqciNpjc4bd6m7iAB8aymakWeF+ghs1k5LayjdzHcjeDE8UNF/HXSxOFvoLFEuA==
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 10 Dec 2018 15:34:05 GMT
-	Transfer-Encoding: chunked
+	Date: Wed, 04 Sep 2019 17:15:36 GMT
+	Content-Length: 120
 
 	{ "response": [
 		{
 			"id": 4,
-			"name": "disallowed",
-			"description": "Block all access",
-			"privLevel": 0,
-			"capabilities": []
+			"name": "admin",
+			"description": "super-user",
+			"privLevel": 30,
+			"capabilities": [
+				"all-write",
+				"all-read"
+			]
 		}
 	]}
 
-.. note:: The response example for this method of this endpoint has been truncated to only the last element of the resultant array, as the full response was hundreds of lines long.
+``POST``
+========
+.. versionadded:: 1.3
+
+Creates a new :term:`Role`.
+
+:Auth. Required: Yes
+:Roles Required: "admin"
+:Response Type: Object
+
+Request Structure
+-----------------
+:capabilities: An optional array of capability names that will be granted to the new :term:`Role`
+:description:  A helpful description of the :term:`Role`'s purpose.
+:name:         The name of the new :term:`Role`
+:privLevel:    The privilege level of the new :term:`Role`\ [#privlevel]_
+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/1.3/roles HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 56
+	Content-Type: application/json
+
+	{
+		"name": "test",
+		"description": "quest",
+		"privLevel": 30
+	}
+
+
+Response Structure
+------------------
+:capabilities: An array of the names of the Capabilities given to this :term:`Role`
+
+	.. tip:: This can be ``null`` *or* empty, depending on whether it was present in the request body, or merely empty. Obviously, it can also be a populated array.
+
+:description: A description of the :term:`Role`
+:id:          The integral, unique identifier for this :term:`Role`
+:name:        The name of the :term:`Role`
+:privLevel:   An integer that allows for comparison between :term:`Roles`
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: gzfc7m/in5vVsVP+Y9h6JJfDhgpXKn9VAzoiPENhKbQfP8Q6jug08Rt2AK/3Nz1cx5zZ8P9IjVxDdIg7mlC8bw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 04 Sep 2019 17:44:42 GMT
+	Content-Length: 150
+
+	{ "alerts": [{
+		"text": "role was created.",
+		"level": "success"
+	}],
+	"response": {
+		"id": 5,
+		"name": "test",
+		"description": "quest",
+		"privLevel": 30,
+		"capabilities": null
+	}}
+
+``PUT``
+=======
+.. versionadded:: 1.3
+
+Replaces an existing :term:`Role` with one provided by the request.
+
+:Auth. Required: Yes
+:Roles Required: "admin"
+:Response Type:
+
+Request Structure
+-----------------
+.. table:: Request Query Parameters
+
+	+------+----------+--------------------------------------------------------------------+
+	| Name | Required | Description                                                        |
+	+======+==========+====================================================================+
+	| id   | yes      | The integral, unique identifier of the :term:`Role` to be replaced |
+	+------+----------+--------------------------------------------------------------------+
+
+:capabilities: An optional array of capability names that will be granted to the new :term:`Role`
+
+	.. warning:: When not present, the affected :term:`Role`'s Capabilities will be unchanged - *not* removed, unlike when the array is empty.
+
+:description: A helpful description of the :term:`Role`'s purpose.
+:name:        The new name of the :term:`Role`
+:privLevel:   The new privilege level of the new :term:`Role`\ [#privlevel]_
+
+.. code-block:: http
+	:caption: Request Example
+
+	PUT /api/1.3/roles?id=5 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 56
+	Content-Type: application/json
+
+	{
+		"name":"test",
+		"privLevel": 29,
+		"description": "quest"
+	}
+
+Response Structure
+------------------
+:capabilities: An array of the names of the Capabilities given to this :term:`Role`
+
+	.. tip:: This can be ``null`` *or* empty, depending on whether it was present in the request body, or merely empty. Obviously, it can also be a populated array.
+
+	.. warning:: If no ``capabilities`` array was given in the request, this will *always* be ``null``, even if the :term:`Role` has Capabilities that would have gone unchanged.
+
+:description: A description of the :term:`Role`
+:id:          The integral, unique identifier for this :term:`Role`
+:name:        The name of the :term:`Role`
+:privLevel:   An integer that allows for comparison between :term:`Roles`
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: mlHQenE1Q3gjrIK2lC2hfueQOaTCpdYEfboN0A9vYPUIwTiaF5ZaAMPQBdfGyiAhgHRxowITs3bR7s1L++oFTQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 05 Sep 2019 12:56:46 GMT
+	Content-Length: 150
+
+	{
+		"alerts": [
+			{
+				"text": "role was updated.",
+				"level": "success"
+			}
+		],
+		"response": {
+			"id": 5,
+			"name": "test",
+			"description": "quest",
+			"privLevel": 29,
+			"capabilities": null
+		}
+	}
+
+
+``DELETE``
+==========
+.. versionadded:: 1.3
+
+Deletes a :term:`Role`
+
+:Auth. Required: Yes
+:Roles Required: "admin"
+:Response Type: ``undefined``
+
+Request Structure
+-----------------
+.. table:: Request  Query Parameters
+
+	+------+----------+--------------------------------------------------------------------+
+	| Name | Required | Description                                                        |
+	+======+==========+====================================================================+
+	| id   | yes      | The integral, unique identifier of the :term:`Role` to be replaced |
+	+------+----------+--------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.3/roles?id=5 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: 10jeFZihtbvAus/XyHAW8rhgS9JBD+X/ezCp1iExYkEcHxN4gjr1L6x8zDFXORueBSlFldgtbWKT7QsmwCHUWA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 05 Sep 2019 13:02:06 GMT
+	Content-Length: 59
+
+	{ "alerts": [{
+		"text": "role was deleted.",
+		"level": "success"
+	}]}
+
+.. [#privlevel] ``privLevel`` cannot exceed the privilege level of the requesting user. Which, of course, must be the privilege level of "admin". Basically, this means that there can never exist a :term:`Role` with a higher privilege level than "admin".
