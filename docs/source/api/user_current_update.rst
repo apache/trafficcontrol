@@ -107,5 +107,9 @@ Response Structure
 		{
 			"level": "success",
 			"text": "User profile was successfully updated"
+		},
+		{
+			"level": "warning",
+			"text": "This endpoint is deprecated, please use 'PUT /api/1.4/user/current' instead"
 		}
 	]}
