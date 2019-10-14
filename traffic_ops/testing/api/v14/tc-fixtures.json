@@ -1696,20 +1696,22 @@
             "xmppPasswd": ""
         }
     ],
-    "serverServerCapabilities": [
-        {
-            "serverHostName": "atlanta-org-1",
-            "serverCapability": "mem"
-        },
-        {
-            "serverHostName": "atlanta-org-2",
-            "serverCapability": "disk"
     "serverCapabilities": [
         {
             "name": "foo"
         },
         {
             "name": "bar"
+        }
+    ],
+    "serverServerCapabilities": [
+        {
+            "serverHostName": "atlanta-org-1",
+            "serverCapability": "foo"
+        },
+        {
+            "serverHostName": "atlanta-org-2",
+            "serverCapability": "bar"
         }
     ],
     "staticdnsentries": [
