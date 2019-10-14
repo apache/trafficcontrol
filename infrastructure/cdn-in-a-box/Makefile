@@ -57,8 +57,6 @@ traffic_monitor/traffic_monitor.rpm: ../../dist/traffic_monitor-$(SPECIAL_SAUCE)
 	cp -f $? $@
 traffic_ops/traffic_ops.rpm: ../../dist/traffic_ops-$(SPECIAL_SAUCE)
 	cp -f $? $@
-mid/traffic_ops_ort.rpm edge/traffic_ops_ort.rpm: ../../dist/traffic_ops_ort-$(SPECIAL_SAUCE)
-	cp -f $? $@
 traffic_portal/traffic_portal.rpm: ../../dist/traffic_portal-$(SPECIAL_SAUCE)
 	cp -f $? $@
 traffic_router/traffic_router.rpm: ../../dist/traffic_router-$(SPECIAL_SAUCE)
@@ -75,13 +73,10 @@ traffic_stats/traffic_stats.rpm: ../../dist/traffic_stats-$(SPECIAL_SAUCE)
 ../../dist/traffic_ops-$(SPECIAL_SAUCE): $(TO_SOURCE)
 	sudo ../../pkg -v traffic_ops_build
 
-../../dist/traffic_ops_ort-$(SPECIAL_SAUCE): $(ORT_SOURCE)
-	sudo ../../pkg -v traffic_ops_build
-
 ../../dist/traffic_portal-$(SPECIAL_SAUCE): $(TP_SOURCE)
 	sudo ../../pkg -v traffic_portal_build
 
-../../dist/traffic_router-$(SPECIAL_SAUCE) ../../dist/tomcat-$(SPECIAL_SEASONING): $(TR_SOURCE)
+../../dist/traffic_rou%er-$(SPECIAL_SAUCE) ../../dist/tomca%-$(SPECIAL_SEASONING): $(TR_SOURCE)
 	sudo ../../pkg -v traffic_router_build
 
 ../../dist/traffic_stats-$(SPECIAL_SAUCE): $(TS_SOURCE)

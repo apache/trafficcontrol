@@ -25,6 +25,9 @@ import (
 	"time"
 )
 
+// Represents a content invalidation job as stored in the database
+//
+// Deprecated: Use InvalidationJob instead, as it's more flexible
 type Job struct {
 	Parameters      string `json:"parameters"`
 	Keyword         string `json:"keyword"`
@@ -37,6 +40,8 @@ type Job struct {
 
 // JobRequest contains the data to create a job.
 // Note this is a convenience struct for posting users; the actual JSON object is a JobRequestAPI
+//
+// Deprecated: Use InvalidationJobInput instead, as it's more flexible
 type JobRequest struct {
 	TTL               time.Duration
 	StartTime         time.Time
@@ -45,12 +50,19 @@ type JobRequest struct {
 	Urgent            bool
 }
 
-// JobRequestTimeFormat is a Go reference time format, for use with time.Format, of the format required for Traffic Ops POST /user/current/jobs.
+// JobRequestTimeFormat is a Go reference time format, for use with time.Format, of the format
+// used by the Perl version of the /jobs and /user/current/jobs endpoints.
+//
+// Deprecated: Since job inputs no longer strictly require this format, an RFC 3339 format or a
+// timestamp in milliseconds should be used instead
 const JobRequestTimeFormat = `2006-01-02 15:04:05`
 
-// JobTimeFormat is a Go reference time format, for use with time.Format, of the format sent by Traffic Ops GET /jobs
+// JobTimeFormat is a Go reference time format, for use with time.Format.
+//
+// Deprecated: this format is the same as TimeLayout - which should be used instead.
 const JobTimeFormat = `2006-01-02 15:04:05-07`
 
+// Implements the encoding/json.Marshaler interface.
 func (jr JobRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(JobRequestAPI{
 		TTLSeconds: int64(jr.TTL / time.Second),
@@ -61,6 +73,7 @@ func (jr JobRequest) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// Implements the encoding/json Unmarshaler interface.
 func (jr *JobRequest) UnmarshalJSON(b []byte) error {
 	jri := JobRequestAPI{}
 	if err := json.Unmarshal(b, &jri); err != nil {
@@ -80,6 +93,10 @@ func (jr *JobRequest) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// Represents the JSON input accepted by the API for creating new content invalidation jobs
+//
+// Deprecated: This structure is technically incorrect, and has been superseded by the
+// InvalidationJobInput structure.
 type JobRequestAPI struct {
 	TTLSeconds int64  `json:"ttl"`
 	StartTime  string `json:"startTime"`

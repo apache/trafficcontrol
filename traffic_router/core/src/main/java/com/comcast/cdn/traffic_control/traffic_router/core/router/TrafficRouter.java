@@ -543,6 +543,13 @@ public class TrafficRouter {
 		final HTTPRouteResult routeResult = new HTTPRouteResult(true);
 		routeResult.setDeliveryService(entryDeliveryService);
 
+		if (entryDeliveryService.isRegionalGeoEnabled()) {
+		    RegionalGeo.enforce(this, request, entryDeliveryService, null, routeResult, track);
+		    if (routeResult.getUrl() != null) {
+		        return routeResult;
+		    }
+		}
+
 		final List<SteeringResult> resultsToRemove = new ArrayList<>();
 
 		final Set<Cache> selectedCaches = new HashSet<>();
@@ -573,17 +580,12 @@ public class TrafficRouter {
 					}
 				}
 				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
-				if (ds.isRegionalGeoEnabled()) {
-					RegionalGeo.enforce(this, request, ds, cache, routeResult, track);
-					return routeResult;
-				}
 				steeringResult.setCache(cache);
 				selectedCaches.add(cache);
 			} else {
 				resultsToRemove.add(steeringResult);
 			}
 		}
-
 		steeringResults.removeAll(resultsToRemove);
 
 		geoSortSteeringResults(steeringResults, request.getClientIP(), entryDeliveryService);

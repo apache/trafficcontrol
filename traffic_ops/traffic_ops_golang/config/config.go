@@ -21,15 +21,17 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
-
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/basho/riak-go-client"
 )
@@ -41,15 +43,20 @@ type Config struct {
 	KeyPath                string   `json:"-"`
 	ConfigHypnotoad        `json:"hypnotoad"`
 	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
+	ConfigTO               *ConfigTO      `json:"to"`
+	SMTP                   *ConfigSMTP    `json:"smtp"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
-	RiakAuthOptions *riak.AuthOptions
-	RiakEnabled     bool
-	ConfigLDAP      *ConfigLDAP
-	LDAPEnabled     bool
-	LDAPConfPath    string `json:"ldap_conf_location"`
-	Version         string
+	RiakAuthOptions  *riak.AuthOptions
+	RiakEnabled      bool
+	ConfigLDAP       *ConfigLDAP
+	LDAPEnabled      bool
+	LDAPConfPath     string `json:"ldap_conf_location"`
+	ConfigInflux     *ConfigInflux
+	InfluxEnabled    bool
+	InfluxDBConfPath string `json:"influxdb_conf_path"`
+	Version          string
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -100,6 +107,22 @@ type ConfigTrafficOpsGolang struct {
 	CRConfigEmulateOldPath bool `json:"crconfig_emulate_old_path"`
 }
 
+// ConfigTO contains information to identify Traffic Ops in a network sense.
+type ConfigTO struct {
+	BaseURL               *rfc.URL          `json:"base_url"`
+	EmailFrom             *rfc.EmailAddress `json:"email_from"`
+	NoAccountFoundMessage *string           `json:"no_account_found_msg"`
+}
+
+// ConfigSMTP contains configuration information for connecting to and authenticating with an SMTP
+// server.
+type ConfigSMTP struct {
+	Address  string `json:"address"`
+	Enabled  bool   `json:"enabled"`
+	Password string `json:"password"`
+	User     string `json:"user"`
+}
+
 // ConfigDatabase reflects the structure of the database.conf file
 type ConfigDatabase struct {
 	Description string `json:"description"`
@@ -120,6 +143,14 @@ type ConfigLDAP struct {
 	SearchQuery     string `json:"search_query"`
 	Insecure        bool   `json:"insecure"`
 	LDAPTimeoutSecs int    `json:"ldap_timeout_secs"`
+}
+
+type ConfigInflux struct {
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	DSDBName    string `json:"deliveryservice_stats_db_name"`
+	CacheDBName string `json:"cache_stats_db_name"`
+	Secure      *bool  `json:"secure"`
 }
 
 const DefaultLDAPTimeoutSecs = 60
@@ -162,6 +193,9 @@ func LoadCdnConfig(cdnConfPath string) (Config, error) {
 	err = json.Unmarshal(confBytes, &cfg)
 	if err != nil {
 		return Config{}, fmt.Errorf("unmarshalling '%s': %v", cdnConfPath, err)
+	}
+	if cfg.SMTP == nil {
+		cfg.SMTP = &ConfigSMTP{}
 	}
 	return cfg, nil
 }
@@ -213,9 +247,23 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appV
 				return cfg, []error{err}, BlockStartup
 			}
 		} else {
-			cfg.LDAPEnabled = false
-			return cfg, []error{}, AllowStartup // no ldap.conf, disable and allow startup
+			cfg.LDAPEnabled = false // no ldap.conf, disable and allow startup
 		}
+	}
+
+	idbPath := cfg.InfluxDBConfPath
+	if idbPath == "" {
+		idbPath = filepath.Join(filepath.Dir(cdnConfPath), "influxdb.conf")
+	}
+
+	if _, err = os.Stat(idbPath); err != nil {
+		if os.IsNotExist(err) {
+			cfg.InfluxEnabled = false
+		} else {
+			return cfg, []error{err}, BlockStartup
+		}
+	} else if cfg.InfluxEnabled, cfg.ConfigInflux, err = GetInfluxConfig(idbPath); err != nil {
+		return cfg, []error{err}, BlockStartup
 	}
 
 	return cfg, []error{}, AllowStartup
@@ -301,6 +349,20 @@ func ParseConfig(cfg Config) (Config, error) {
 		cfg.URL = &newURL
 	}
 
+	if cfg.ConfigTO == nil {
+		missings += "to, "
+	} else {
+		if cfg.ConfigTO.BaseURL == nil || cfg.ConfigTO.BaseURL.String() == "" {
+			missings += "to.base_url, "
+		}
+		if cfg.ConfigTO.EmailFrom == nil || cfg.ConfigTO.EmailFrom.String() == "<@>" {
+			missings += "to.email_from, "
+		}
+		if cfg.ConfigTO.NoAccountFoundMessage == nil || *cfg.ConfigTO.NoAccountFoundMessage == "" {
+			missings += "to.no_account_found_msg, "
+		}
+	}
+
 	if len(missings) > 0 {
 		missings = "missing fields: " + missings[:len(missings)-2] // strip final `, `
 	}
@@ -343,6 +405,43 @@ func GetLDAPConfig(LDAPConfPath string) (bool, *ConfigLDAP, error) {
 	}
 
 	return true, LDAPconf, nil
+}
+
+func GetInfluxConfig(path string) (bool, *ConfigInflux, error) {
+	raw, err := ioutil.ReadFile(path)
+	if err != nil {
+		return false, nil, fmt.Errorf("reading InfluxDB configuration from '%s': %v", path, err)
+	}
+
+	c := ConfigInflux{}
+	if err := json.Unmarshal(raw, &c); err != nil {
+		return false, nil, fmt.Errorf("parsing InfluxDB configuration from '%s': %v", path, err)
+	}
+
+	if c.User == "" {
+		return false, &c, errors.New("InfluxDB configuration missing a username")
+	}
+
+	if c.Password == "" {
+		return false, &c, errors.New("InfluxDB configuration missing a password")
+	}
+
+	if c.DSDBName == "" {
+		log.Warnln("InfluxDB configuration does not specify a DS stats DB name - falling back on 'deliveryservice_stats'")
+		c.DSDBName = "deliveryservice_stats"
+	}
+
+	if c.CacheDBName == "" {
+		log.Warnln("InfluxDB configuration does not specify a Cache Stats DB name - falling back on 'cache_stats'")
+		c.CacheDBName = "cache_stats"
+	}
+
+	if c.Secure == nil {
+		log.Warnln("InfluxDB configuration does not specify 'secure', defaulting to 'true'")
+		c.Secure = util.BoolPtr(true)
+	}
+
+	return true, &c, nil
 }
 
 func getLDAPConf(s string) (*ConfigLDAP, error) {

@@ -52,7 +52,7 @@ source /to-access.sh
 . /config.sh
 
 while ! nc "$TO_PERL_FQDN" $TO_PERL_PORT </dev/null 2>/dev/null; do
-        echo "waiting for $TO_PERL_FQDN:$TO_PERL_PORT" 
+        echo "waiting for $TO_PERL_FQDN:$TO_PERL_PORT"
         sleep 3
 done
 

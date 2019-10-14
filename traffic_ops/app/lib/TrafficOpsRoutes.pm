@@ -654,8 +654,8 @@ sub api_routes {
 	$r->post("/api/$version/isos")->over( authenticated => 1, not_ldap => 1 )->to( 'Iso#generate', namespace => $namespace );
 
 	# -- JOBS (CURRENTLY LIMITED TO INVALIDATE CONTENT (PURGE) JOBS)
-	$r->get("/api/$version/jobs")->over( authenticated => 1, not_ldap => 1 )->to( 'Job#index', namespace => $namespace );
-	$r->get("/api/$version/jobs/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Job#show', namespace => $namespace );
+	# $r->get("/api/$version/jobs")->over( authenticated => 1, not_ldap => 1 )->to( 'Job#index', namespace => $namespace );
+	# $r->get("/api/$version/jobs/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Job#show', namespace => $namespace );
 
 	# -- JOBS: CURRENT USER (CURRENTLY LIMITED TO INVALIDATE CONTENT (PURGE) JOBS)
 	$r->get("/api/$version/user/current/jobs")->over( authenticated => 1, not_ldap => 1 )->to( 'Job#get_current_user_jobs', namespace => $namespace );
@@ -851,7 +851,7 @@ sub api_routes {
 	$r->put("/api/$version/user/current")->over( authenticated => 1, not_ldap => 1 )->to( 'User#update_current', namespace => $namespace );
 
 	# alternate current user routes
-	$r->post("/api/$version/user/current/update")->over( authenticated => 1, not_ldap => 1 )->to( 'User#update_current', namespace => $namespace );
+	$r->post("/api/$version/user/current/update")->over( authenticated => 1, not_ldap => 1 )->to( 'User#user_current_update', namespace => $namespace );
 
 	# -- USERS: LOGIN
 	# login w/ username and password

@@ -1,3 +1,5 @@
+package tc
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,24 +19,19 @@
  * under the License.
  */
 
-var TableParameterCacheGroupsController = function(parameter, cacheGroups, $controller, $scope, $state, locationUtils) {
+// ServerCapabilitiesResponse contains the result data from a GET /server_capabilities request.
+type ServerCapabilitiesResponse struct {
+	Response []ServerCapability `json:"response"`
+}
 
-	// extends the TableCacheGroupsController to inherit common methods
-	angular.extend(this, $controller('TableCacheGroupsController', { cacheGroups: cacheGroups, $scope: $scope }));
+// ServerCapability contains information about a given ServerCapability in Traffic Ops.
+type ServerCapability struct {
+	Name        string     `json:"name" db:"name"`
+	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+}
 
-	$scope.parameter = parameter;
-
-	$scope.addCacheGroup = function() {
-		alert('not hooked up yet: add cg to parameter');
-	};
-
-	$scope.removeCacheGroup = function() {
-		alert('not hooked up yet: remove cg from parameter');
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
-};
-
-TableParameterCacheGroupsController.$inject = ['parameter', 'cacheGroups', '$controller', '$scope', '$state', 'locationUtils'];
-module.exports = TableParameterCacheGroupsController;
+// ServerCapabilityDetailResponse contains the result data from a POST /server_capabilities request.
+type ServerCapabilityDetailResponse struct {
+	Response ServerCapability `json:"response"`
+	Alerts
+}

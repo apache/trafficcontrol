@@ -52,6 +52,7 @@ const (
 	ProfileParameters
 	Regions
 	Roles
+	ServerCapabilities
 	ServerChecks
 	ServerServerCapabilities
 	Servers
@@ -87,6 +88,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	ProfileParameters:              {CreateTestProfileParameters, DeleteTestProfileParameters},
 	Regions:                        {CreateTestRegions, DeleteTestRegions},
 	Roles:                          {CreateTestRoles, DeleteTestRoles},
+	ServerCapabilities:             {CreateTestServerCapabilities, DeleteTestServerCapabilities},
 	ServerChecks:                   {CreateTestServerChecks, DeleteTestServerChecks},
 	ServerServerCapabilities:       {CreateTestServerServerCapabilities, DeleteTestServerServerCapabilities},
 	Servers:                        {CreateTestServers, DeleteTestServers},
