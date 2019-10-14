@@ -23,7 +23,7 @@ var DeliveryServiceStatsService = function($http, $q, ENV, messageModel) {
 		var request = $q.defer();
 
 		var url = ENV.api['root'] + "deliveryservice_stats",
-			params = { deliveryServiceName: xmlId, metricType: 'kbps', serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '60s' };
+			params = { deliveryServiceName: xmlId, metricType: 'kbps', serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '1m' };
 
 		$http.get(url, { params: params })
 			.then(
@@ -43,7 +43,7 @@ var DeliveryServiceStatsService = function($http, $q, ENV, messageModel) {
 		var request = $q.defer();
 
 		var url = ENV.api['root'] + "deliveryservice_stats",
-			params = { deliveryServiceName: xmlId, metricType: 'tps_total', serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '60s' };
+			params = { deliveryServiceName: xmlId, metricType: 'tps_total', serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '1m' };
 
 		$http.get(url, { params: params })
 			.then(
@@ -63,7 +63,7 @@ var DeliveryServiceStatsService = function($http, $q, ENV, messageModel) {
 		var request = $q.defer();
 
 		var url = ENV.api['root'] + "deliveryservice_stats",
-			params = { deliveryServiceName: xmlId, metricType: 'tps_' + httpStatus, serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '60s' };
+			params = { deliveryServiceName: xmlId, metricType: 'tps_' + httpStatus, serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '1m' };
 
 		$http.get(url, { params: params })
 			.then(
