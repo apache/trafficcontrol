@@ -137,6 +137,10 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         });
     };
 
+    $scope.viewCapabilities = function() {
+        $location.path($location.path() + '/capabilities');
+    };
+
     $scope.viewConfigFiles = function() {
         $location.path($location.path() + '/config-files');
     };
