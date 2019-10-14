@@ -31,6 +31,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"net/mail"
 	"net/smtp"
 	"regexp"
 	"strconv"
@@ -853,15 +854,9 @@ func AddUserToReq(r *http.Request, u auth.CurrentUser) {
 	*r = *r.WithContext(ctx)
 }
 
-func SendEmail(config config.Config, header string, data interface{}, templateFile string, toEmailOverride string) error {
-	var auth smtp.Auth
-	if config.ConfigSmtp.User != "" {
-		auth = LoginAuth("", config.ConfigSmtp.User, config.ConfigSmtp.Password, strings.Split(config.ConfigSmtp.Address, ":")[0])
-	}
-
-	email := config.ConfigSmtp.ToEmail
-	if toEmailOverride != "" {
-		email = []string{toEmailOverride}
+func SendEmail(config config.Config, header string, data interface{}, templateFile string, toEmail string) error {
+	email := rfc.EmailAddress{
+		Address: mail.Address{Name: "", Address: toEmail},
 	}
 
 	msgBodyBuffer, err := parseTemplate(templateFile, data)
@@ -870,9 +865,15 @@ func SendEmail(config config.Config, header string, data interface{}, templateFi
 	}
 	msg := append([]byte(header), msgBodyBuffer.Bytes()...)
 
-	error := smtp.SendMail(config.ConfigSmtp.Address, auth, config.ConfigSmtp.FromEmail, email, []byte(msg))
-	if error != nil {
-		return errors.New("Failed to send email: " + error.Error())
+	int, userError, systemError := SendMail(email, msg, &config)
+	if userError != nil {
+		return errors.New("Failed to send email: " + userError.Error())
+	}
+	if systemError != nil {
+		return errors.New("Failed to send email: " + userError.Error())
+	}
+	if int != http.StatusOK {
+		return errors.New("Failed to send email. Unexpected response code: " + strconv.Itoa(int))
 	}
 	return nil
 }

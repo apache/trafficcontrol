@@ -171,7 +171,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	if inf.Config.ConfigSmtp.Enabled && inf.Config.ConfigLetsEncrypt.SendExpEmail {
+	if inf.Config.SMTP.Enabled && inf.Config.ConfigLetsEncrypt.SendExpEmail {
 		err = AlertExpiringCerts(keysFound, *inf.Config)
 		if err != nil {
 			log.Errorf(err.Error())
@@ -184,9 +184,9 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 }
 
 func AlertExpiringCerts(certsFound ExpirationSummary, config config.Config) error {
-	email := strings.Join(config.ConfigSmtp.ToEmail, ",")
+	email := strings.Join([]string{config.ConfigLetsEncrypt.Email}, ",")
 
-	header := "From: " + config.ConfigSmtp.FromEmail + "\n" +
+	header := "From: " + config.ConfigTO.EmailFrom.String() + "\n" +
 		"To: " + email + "\n" +
 		"MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n" +
 		"Subject: Certificate Expiration Summary\n\n"

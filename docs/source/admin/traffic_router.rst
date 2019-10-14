@@ -729,10 +729,6 @@ Let's Encrypt can be set up through :file:`/opt/traffic_ops/app/conf/cdn.conf` b
 	+============+==================+======================================================================+
 	| enabled    | boolean          | Enable sending emails through Simple Mail Transfer Protocol (SMTP)   |
 	+------------+------------------+----------------------------------------------------------------------+
-	| to_email   | Array of strings | List of email addresses to send SMTP emails to                       |
-	+------------+------------------+----------------------------------------------------------------------+
-	| from_email | string           | Email address to send SMTP emails from                               |
-	+------------+------------------+----------------------------------------------------------------------+
 	| user       | string           | User for SMTP server access                                          |
 	+------------+------------------+----------------------------------------------------------------------+
 	| password   | string           | Password for SMTP server access                                      |
