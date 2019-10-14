@@ -16,9 +16,9 @@
   yum:
     state: present
     name:
-      - golang-src-1.11.5
-      - golang-bin-1.11.5
-      - golang-1.11.5
+      - golang-src-1.13
+      - golang-bin-1.13
+      - golang-1.13
     enablerepo: "{{ additional_yum_repos | default([]) }}"
     lock_timeout: 300
   retries: 5
