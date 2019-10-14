@@ -20,7 +20,6 @@ package deliveryservicerequests
  */
 
 import "encoding/json"
-import "errors"
 import "fmt"
 import "net/http"
 import "net/mail"
@@ -67,35 +66,12 @@ func Request(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body = fmt.Sprintf(msg, inf.Config.ConfigTO.EmailFrom, addr, dsr.Details.Customer, body)
-	if ok, err := inf.SendMail(rfc.EmailAddress{*addr}, []byte(body)); !ok {
-		api.HandleErr(w, r, tx, http.StatusServiceUnavailable, err, nil)
-		return
-	} else if err != nil {
-		sysErr = fmt.Errorf("Failed to send email: %v", err)
-		errCode = http.StatusBadGateway
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
-	}
-
-	alert := tc.Alerts{
-		Alerts: []tc.Alert{
-			tc.Alert{
-				Level: tc.SuccessLevel.String(),
-				Text: fmt.Sprintf("Delivery Service request sent to %s", dsr.EmailTo),
-			},
-		},
-	}
-
-	resp, err := json.Marshal(alert)
-	if err != nil {
-		sysErr = fmt.Errorf("Marshaling response: %v", err)
-		userErr = errors.New("Email was sent, but an error occurred afterward")
-		errCode = http.StatusInternalServerError
+	errCode, userErr, sysErr = inf.SendMail(rfc.EmailAddress{*addr}, []byte(body))
+	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.WriteHeader(http.StatusOK)
-	w.Write(append(resp, '\n'))
+	api.WriteRespAlert(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service request sent to %s", dsr.EmailTo))
+	w.Write([]byte{'\n'})
 }
