@@ -45,8 +45,12 @@ func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability) (
 // DeleteServerServerCapability unassigns a Server Capability from a Server
 func (to *Session) DeleteServerServerCapability(serverID int, serverCapability string) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	endpoint := fmt.Sprintf("%v?serverId=%v&serverCapability=%v", API_v14_Server_Server_Capabilities, serverID, serverCapability)
-	reqInf, err := del(to, endpoint, &alerts)
+	v := url.Values{}
+	v.Add("serverId", strconv.Itoa(serverID))
+	v.Add("serverCapability", serverCapability)
+	qStr := v.Encode()
+	queryURL := fmt.Sprintf("%s?%s", API_v14_Server_Server_Capabilities, qStr)
+	reqInf, err := del(to, queryURL, &alerts)
 	return alerts, reqInf, err
 }
 

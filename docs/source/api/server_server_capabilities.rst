@@ -19,6 +19,8 @@
 ``server_server_capabilities``
 ******************************
 
+.. versionadded:: 1.4
+
 ``GET``
 =======
 Gets all associations of :term:`Server Capabilities` to servers
@@ -34,7 +36,7 @@ Request Structure
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| Name             | Required | Description                                                                                                   |
 	+==================+==========+===============================================================================================================+
-	| serverId         | no       | Filter associated :term:`Server Capabilities` by server id                                                    |
+	| serverId         | no       | Filter associated :term:`Server Capabilities` by server ID                                                    |
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| serverHostName   | no       | Filter associated :term:`Server Capabilities` by server host name                                             |
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
@@ -66,7 +68,7 @@ Request Structure
 Response Structure
 ------------------
 :serverHostName:   The server's host name 
-:serverId:         The server's id
+:serverId:         The server's ID
 :lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in an ISO-like format
 :serverCapability: The :term:`Server Capability`'s name
 
@@ -112,7 +114,7 @@ Associates a :term:`Server Capability` to a server.
 
 Request Structure
 -----------------
-:serverId:         The server's id to associate
+:serverId:         The server's ID to associate
 :serverCapability: The :term:`Server Capability`'s name to associate
 
 .. code-block:: http
@@ -133,7 +135,7 @@ Request Structure
 
 Response Structure
 ------------------
-:serverId:         The server's id
+:serverId:         The server's ID
 :lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in an ISO-like format
 :serverCapability: The :term:`Server Capability`'s name
 

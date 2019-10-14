@@ -113,16 +113,16 @@ func GetTestServerServerCapabilities(t *testing.T) {
 		t.Errorf("expect %v server capabilities assigned to servers received %v \n", len(testData.ServerServerCapabilities), len(sscs))
 	}
 
-	for _, ssc := range sscs {
-
-		checkResp := func(t *testing.T, sscs []tc.ServerServerCapability) {
-			if sscs == nil {
-				t.Fatal("returned server capabilities assigned to servers was nil\n")
-			}
-			if len(sscs) != 1 {
-				t.Errorf("expect 1 server capabilities assigned to server received %v \n", len(sscs))
-			}
+	checkResp := func(t *testing.T, sscs []tc.ServerServerCapability) {
+		if sscs == nil {
+			t.Fatal("returned server capabilities assigned to servers was nil\n")
 		}
+		if len(sscs) != 1 {
+			t.Errorf("expect 1 server capabilities assigned to server received %v \n", len(sscs))
+		}
+	}
+
+	for _, ssc := range sscs {
 		// Get assigned Server Capabilities by server id
 		sscs, _, err := TOSession.GetServerServerCapabilities(ssc.ServerID, nil, nil)
 		if err != nil {
