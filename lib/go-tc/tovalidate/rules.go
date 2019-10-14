@@ -17,12 +17,20 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"regexp"
 	"strings"
 )
+
+var rxAlphanumericUnderscoreDash = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
 // NoSpaces returns true if the string has no spaces
 func NoSpaces(str string) bool {
 	return !strings.ContainsAny(str, " ")
+}
+
+// IsAlphanumericUnderscoreDash returns true if the string consists of only alphanumeric, underscore, or dash characters.
+func IsAlphanumericUnderscoreDash(str string) bool {
+	return rxAlphanumericUnderscoreDash.MatchString(str)
 }
 
 // NoPeriods returns true if the string has no periods
