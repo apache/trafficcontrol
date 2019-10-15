@@ -29,7 +29,7 @@ var FormViewServerCapabilityController = function(serverCapability, $scope, $con
 			});
 	};
 
-	$scope.serverCapabilityName = angular.copy(serverCapability.name);
+	$scope.serverCapabilityName = serverCapability.name;
 
 	$scope.settings = {
 		isNew: false
