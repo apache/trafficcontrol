@@ -54,6 +54,7 @@ const (
 	Roles
 	ServerCapabilities
 	ServerChecks
+	ServerServerCapabilities
 	Servers
 	Statuses
 	StaticDNSEntries
@@ -89,6 +90,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	Roles:                          {CreateTestRoles, DeleteTestRoles},
 	ServerCapabilities:             {CreateTestServerCapabilities, DeleteTestServerCapabilities},
 	ServerChecks:                   {CreateTestServerChecks, DeleteTestServerChecks},
+	ServerServerCapabilities:       {CreateTestServerServerCapabilities, DeleteTestServerServerCapabilities},
 	Servers:                        {CreateTestServers, DeleteTestServers},
 	Statuses:                       {CreateTestStatuses, DeleteTestStatuses},
 	StaticDNSEntries:               {CreateTestStaticDNSEntries, DeleteTestStaticDNSEntries},

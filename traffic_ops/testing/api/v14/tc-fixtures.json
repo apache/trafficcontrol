@@ -1704,6 +1704,16 @@
             "name": "bar"
         }
     ],
+    "serverServerCapabilities": [
+        {
+            "serverHostName": "atlanta-org-1",
+            "serverCapability": "foo"
+        },
+        {
+            "serverHostName": "atlanta-org-2",
+            "serverCapability": "bar"
+        }
+    ],
     "staticdnsentries": [
         {
             "address": "192.168.0.1",

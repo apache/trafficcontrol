@@ -673,6 +673,9 @@ insert into api_capability (http_method, route, capability) values ('PUT', 'serv
 insert into api_capability (http_method, route, capability) values ('POST', 'servers/*/update_status', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'servers/checks', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('POST', 'servercheck', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('GET', 'server_server_capabilities', 'servers-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('POST', 'server_server_capabilities', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'server_server_capabilities', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- stats
 insert into api_capability (http_method, route, capability) values ('GET', 'caches/stats', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'stats_summary', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
