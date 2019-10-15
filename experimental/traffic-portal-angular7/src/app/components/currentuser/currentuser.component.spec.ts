@@ -12,8 +12,10 @@
 * limitations under the License.
 */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientModule } from '@angular/common/http';
 
 import { CurrentuserComponent } from './currentuser.component';
+import { TpHeaderComponent } from '../tp-header/tp-header.component';
 
 describe('CurrentuserComponent', () => {
 	let component: CurrentuserComponent;
@@ -21,7 +23,13 @@ describe('CurrentuserComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ CurrentuserComponent ]
+			declarations: [
+				CurrentuserComponent,
+				TpHeaderComponent
+			],
+			imports: [
+				HttpClientModule
+			]
 		})
 		.compileComponents();
 	}));
