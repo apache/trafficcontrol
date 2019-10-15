@@ -23,7 +23,7 @@ module.exports = function(){
 	this.createButton=element(by.buttonText('Create'));
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
-	this.searchFilter=element(by.id('regionsTable_filter')).element(by.css('label')).element(by.css('input'));
+	this.searchFilter=element(by.id('regionsTable_filter')).element(by.css('label input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
 };
