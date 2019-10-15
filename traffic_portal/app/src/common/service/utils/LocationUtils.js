@@ -37,8 +37,6 @@ var LocationUtils = function($location, $uibModal) {
             });
             modalInstance.result.then(function() {
                 $location.url(path);
-            }, function () {
-                // do nothing
             });
         } else {
             $location.url(path);
