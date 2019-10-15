@@ -17,21 +17,27 @@
  * under the License.
  */
 
-var FormServerCapabilityController = function(serverCapability, $scope, $location, formUtils, locationUtils) {
+var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, locationUtils) {
 
 	$scope.serverCapability = serverCapability;
 
-	$scope.viewServers = function() {
-		$location.path($location.path() + '/servers');
+	$scope.servers = servers;
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
-	$scope.hasError = formUtils.hasError;
-
-	$scope.hasPropertyError = formUtils.hasPropertyError;
+	angular.element(document).ready(function () {
+		$('#serverCapabilityServersTable').dataTable({
+			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+			"iDisplayLength": 25,
+			"aaSorting": []
+		});
+	});
 
 };
 
-FormServerCapabilityController.$inject = ['serverCapability', '$scope', '$location', 'formUtils', 'locationUtils'];
-module.exports = FormServerCapabilityController;
+TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', 'locationUtils'];
+module.exports = TableServerCapabilityServersController;

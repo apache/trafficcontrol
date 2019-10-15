@@ -17,21 +17,5 @@
  * under the License.
  */
 
-var FormServerCapabilityController = function(serverCapability, $scope, $location, formUtils, locationUtils) {
-
-	$scope.serverCapability = serverCapability;
-
-	$scope.viewServers = function() {
-		$location.path($location.path() + '/servers');
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
-	$scope.hasError = formUtils.hasError;
-
-	$scope.hasPropertyError = formUtils.hasPropertyError;
-
-};
-
-FormServerCapabilityController.$inject = ['serverCapability', '$scope', '$location', 'formUtils', 'locationUtils'];
-module.exports = FormServerCapabilityController;
+module.exports = angular.module('trafficPortal.table.serverCapability.servers', [])
+	.controller('TableServerCapabilityServersController', require('./TableServerCapabilityServersController'));
