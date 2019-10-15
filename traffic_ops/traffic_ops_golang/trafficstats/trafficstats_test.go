@@ -79,7 +79,7 @@ func TestConfigFromRequest(t *testing.T) {
 	if cfg.ExcludeSummary {
 		t.Errorf("Expected summary to not be excluded, but it was")
 	}
-	if cfg.Interval != tc.OneMinute {
+	if cfg.Interval != "1m" {
 		t.Errorf("Expected interval to be '1m', but it was %s", cfg.Interval)
 	}
 	if cfg.Limit == nil {

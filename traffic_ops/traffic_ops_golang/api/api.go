@@ -311,7 +311,7 @@ type APIInfo struct {
 func DeprecationWarning(alternative string) tc.Alert {
 	return tc.Alert{
 		Level: tc.WarnLevel.String(),
-		Text: fmt.Sprintf("This request method of this endpoint is deprecated. You are advised to switch to '%s' at your earliest convenience", alternative),
+		Text:  fmt.Sprintf("This request method of this endpoint is deprecated. You are advised to switch to '%s' at your earliest convenience", alternative),
 	}
 }
 

@@ -143,7 +143,7 @@ func (m MimeType) Satisfy(o MimeType) bool {
 		return false
 	}
 
-	for k,v := range o.Parameters {
+	for k, v := range o.Parameters {
 		if k == "q" {
 			continue
 		}
@@ -237,23 +237,23 @@ more information on how MimeTypes are compared.
 */
 func SortMimeTypes(m []MimeType) {
 	// using !Less because default sort order is ascending
-	sort.SliceStable(m, func(i, j int) bool {return !m[i].Less(m[j])})
+	sort.SliceStable(m, func(i, j int) bool { return !m[i].Less(m[j]) })
 }
 
 // MIME_JSON is a pre-defined MimeType for JSON data.
-var MIME_JSON = MimeType {
-	Name: "application/json",
+var MIME_JSON = MimeType{
+	Name:       "application/json",
 	Parameters: map[string]string{},
 }
 
 // MIME_PLAINTEXT is a pre-defined MimeType for plain text data.
-var MIME_PLAINTEXT = MimeType {
-	Name: "text/plain",
+var MIME_PLAINTEXT = MimeType{
+	Name:       "text/plain",
 	Parameters: map[string]string{"charset": "utf-8"},
 }
 
 // MIME_HTML is a pre-defined MimeType for HTML data.
-var MIME_HTML = MimeType {
-	Name: "text/html",
+var MIME_HTML = MimeType{
+	Name:       "text/html",
 	Parameters: map[string]string{"charset": "utf-8"},
 }
