@@ -121,7 +121,7 @@ public class CertificateRegistryTest {
 		verify(endpoint).reloadSSLHosts(anyMap());
 
 		assertThat(certificateRegistry.getAliases(),
-			containsInAnyOrder("ds-1.some-cdn.example.com", "ds-2.some-cdn.example.com", "ds-3.some-cdn.example.com"));
+			containsInAnyOrder(CertificateRegistry.DEFAULT_SSL_KEY, "ds-1.some-cdn.example.com", "ds-2.some-cdn.example.com", "ds-3.some-cdn.example.com"));
 
 		// try again
 		// we should see that reloadSSLHosts gets called again even though none of the inputs have changed
@@ -137,6 +137,6 @@ public class CertificateRegistryTest {
 		verify(endpoint, times(2)).reloadSSLHosts(anyMap());
 
 		assertThat(certificateRegistry.getAliases(),
-			containsInAnyOrder("ds-1.some-cdn.example.com", "ds-2.some-cdn.example.com", "ds-3.some-cdn.example.com"));
+			containsInAnyOrder(CertificateRegistry.DEFAULT_SSL_KEY, "ds-1.some-cdn.example.com", "ds-2.some-cdn.example.com", "ds-3.some-cdn.example.com"));
 	}
 }

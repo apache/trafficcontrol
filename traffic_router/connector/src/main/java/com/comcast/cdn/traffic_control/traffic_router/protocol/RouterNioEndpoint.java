@@ -58,7 +58,6 @@ public class RouterNioEndpoint extends NioEndpoint {
 
     synchronized private List<String> replaceSSLHosts(final Map<String, HandshakeData> sslHostsData) {
         final Set<String> aliases = sslHostsData.keySet();
-        boolean defaultHasBeenSet = (sslHostConfigs.get(getDefaultSSLHostConfigName()) != null);
         String lastHostName = "";
         final List<String> failedUpdates = new ArrayList<>();
 
