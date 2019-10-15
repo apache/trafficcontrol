@@ -207,7 +207,7 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 				{ "width": "50%", "targets": 2 }
 			],
 			"language": {
-				"emptyTable": ($scope.showAll) ? "No data available in table" : "No parameter diffs"
+				"emptyTable": ($scope.showAll) ? "No data available in table" : "Profiles are identical"
 			}
 		});
 

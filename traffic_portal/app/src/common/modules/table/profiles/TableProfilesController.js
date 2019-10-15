@@ -161,10 +161,10 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
         });
     };
 
-    $scope.diffProfiles = function() {
+    $scope.compareProfiles = function() {
         var params = {
-            title: 'Diff Profile Parameters',
-            message: 'Please select 2 profiles to diff',
+            title: 'Compare Profiles',
+            message: 'Please select 2 profiles to compare',
             labelFunction: function(item) { return item['name'] + ' (' + item['type'] + ')' }
         };
         var modalInstance = $uibModal.open({

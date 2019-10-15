@@ -23,12 +23,11 @@ under the License.
             <li><a ng-click="navigateToPath('/profiles', dirty)">Profiles</a></li>
             <li><a ng-click="navigateToPath('/profiles/' + profile1.id, dirty)">{{::profile1.name}}</a></li>
             <li><a ng-click="navigateToPath('/profiles/' + profile2.id, dirty)">{{::profile2.name}}</a></li>
-            <li class="active" ng-if="showAll">Parameters</li>
-            <li class="active" ng-if="!showAll">Parameter Diffs</li>
+            <li class="active">Compare</li>
         </ol>
         <div class="pull-right">
-            <button type="button" class="btn btn-link" title="Show All Parameters" ng-if="!showAll" ng-click="navigateToPath('/profiles/' + profile1.id + '/' + profile2.id + '/compare/all', dirty)">Show All Params</button>
-            <button type="button" class="btn btn-link" title="Show Diffs Only" ng-if="showAll" ng-click="navigateToPath('/profiles/' + profile1.id + '/' + profile2.id + '/compare/diff', dirty)">Show Diffs Only</button>
+            <button type="button" class="btn btn-link" title="Show Shared Params" ng-if="!showAll" ng-click="navigateToPath('/profiles/' + profile1.id + '/' + profile2.id + '/compare/all', dirty)">Show Shared Params</button>
+            <button type="button" class="btn btn-link" title="Hide Shared Params" ng-if="showAll" ng-click="navigateToPath('/profiles/' + profile1.id + '/' + profile2.id + '/compare/diff', dirty)">Hide Shared Params</button>
             <button type="button" class="btn btn-default" title="Restore" ng-show="dirty" ng-click="restore()">Restore</button>
             <button type="button" class="btn btn-primary" title="Update" ng-disabled="!dirty" ng-click="confirmUpdateProfiles()">Update</button>
         </div>
