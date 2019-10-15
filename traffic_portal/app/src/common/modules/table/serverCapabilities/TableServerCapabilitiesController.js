@@ -36,8 +36,6 @@ var TableServerCapabilitiesController = function(serverCapabilities, $scope, $st
 		});
 		modalInstance.result.then(function() {
 			deleteServerCapability(serverCapability);
-		}, function () {
-			// do nothing
 		});
 	};
 
