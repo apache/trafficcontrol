@@ -128,7 +128,8 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "user" : "",
         "password" : "",
         "address" : ""
-    }
+    },
+    "influxdb_conf_location": "/opt/traffic_ops/app/conf/production/influx.conf"
 }
 EOF
 
@@ -160,5 +161,13 @@ EOF
 cat <<-EOF >/opt/traffic_ops/app/conf/production/riak.conf
 {     "user": "$TV_RIAK_USER",
   "password": "$TV_RIAK_PASSWORD"
+}
+EOF
+
+cat <<-EOF >/opt/traffic_ops/app/conf/production/influx.conf
+{
+    "user": "$INFLUXDB_ADMIN_USER",
+    "password": "$INFLUXDB_ADMIN_PASSWORD",
+    "secure": false
 }
 EOF

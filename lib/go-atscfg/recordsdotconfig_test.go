@@ -53,7 +53,6 @@ func TestMakeRecordsDotConfig(t *testing.T) {
 	}
 }
 
-
 func TestReplaceLineSuffixes(t *testing.T) {
 	{
 		input := `

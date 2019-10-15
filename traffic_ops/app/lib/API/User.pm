@@ -599,6 +599,123 @@ sub current {
 	}
 }
 
+# Designated handler for the deprecated path to updating current users
+sub user_current_update {
+	my $self = shift;
+
+	my $alternative = "PUT /api/1.4/user/current";
+
+	my $user = $self->req->json->{user};
+	if ( &is_ldap($self) ) {
+		return $self->with_deprecation( "Profile cannot be updated because '" . $user->{username} . "' is logged in as LDAP.", "error", 400, $alternative );
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->{"tenantId"})) {
+		return $self->with_deprecation("Invalid tenant. This tenant is not available to you for assignment.", "error", 400, $alternative);
+	}
+
+	my $db_user;
+
+	# Prevent these from getting updated
+	# Do not modify the localPasswd if it comes across as blank.
+	my $local_passwd = $user->{"localPasswd"};
+	if ( defined($local_passwd) && ( $local_passwd eq '' ) ) {
+		delete( $user->{"localPasswd"} );
+	}
+
+	# Do not modify the confirmLocalPasswd if it comes across as blank.
+	my $confirm_local_passwd = $user->{"confirmLocalPasswd"};
+	if ( defined($confirm_local_passwd) && ( $confirm_local_passwd eq '' ) ) {
+		delete( $user->{"confirmLocalPasswd"} );
+	}
+
+	my $current_user_id = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('id')->single;
+
+	my ( $is_valid, $result ) = $self->is_valid( $user, $current_user_id );
+
+	if ($is_valid) {
+		my $username = $self->current_user()->{username};
+		my $dbh = $self->db->resultset('TmUser')->find( { username => $username } );
+
+		# Updating a user implies it is no longer new
+		$db_user->{"new_user"} = 0;
+
+		# These if "defined" checks allow for partial user updates, otherwise the entire
+		# user would need to be passed through.
+		if ( defined($local_passwd) && $local_passwd ne '' ) {
+			$db_user->{"local_passwd"} = Utils::Helper::hash_pass( $local_passwd );
+		}
+		if ( defined($confirm_local_passwd) && $confirm_local_passwd ne '' ) {
+			$db_user->{"confirm_local_passwd"} = Utils::Helper::hash_pass( $confirm_local_passwd );
+		}
+		if ( defined( $user->{"id"} ) ) {
+			$db_user->{"id"} = $user->{"id"};
+		}
+		if ( defined( $user->{"username"} ) ) {
+			$db_user->{"username"} = $user->{"username"};
+		}
+		if ( defined( $user->{"tenantId"} ) ) {
+			$db_user->{"tenant_id"} = $user->{"tenantId"};
+		}
+		if ( defined( $user->{"public_ssh_key"} ) ) {
+			$db_user->{"public_ssh_key"} = $user->{"public_ssh_key"};
+		}
+		if ( &is_admin($self) && defined( $user->{"role"} ) ) {
+			$db_user->{"role"} = $user->{"role"};
+		}
+		if ( defined( $user->{"uid"} ) ) {
+			$db_user->{"uid"} = $user->{"uid"};
+		}
+		if ( defined( $user->{"gid"} ) ) {
+			$db_user->{"gid"} = $user->{"gid"};
+		}
+		if ( defined( $user->{"company"} ) ) {
+			$db_user->{"company"} = $user->{"company"};
+		}
+		if ( defined( $user->{"email"} ) ) {
+			$db_user->{"email"} = $user->{"email"};
+		}
+		if ( defined( $user->{"fullName"} ) ) {
+			$db_user->{"full_name"} = $user->{"fullName"};
+		}
+		if ( defined( $user->{"newUser"} ) ) {
+			$db_user->{"new_user"} = $user->{"newUser"};
+		}
+		if ( defined( $user->{"addressLine1"} ) ) {
+			$db_user->{"address_line1"} = $user->{"addressLine1"};
+		}
+		if ( defined( $user->{"addressline2"} ) ) {
+			$db_user->{"address_line2"} = $user->{"addressLine2"};
+		}
+		if ( defined( $user->{"city"} ) ) {
+			$db_user->{"city"} = $user->{"city"};
+		}
+		if ( defined( $user->{"stateOrProvince"} ) ) {
+			$db_user->{"state_or_province"} = $user->{"stateOrProvince"};
+		}
+		if ( defined( $user->{"phoneNumber"} ) ) {
+			$db_user->{"phone_number"} = $user->{"phoneNumber"};
+		}
+		if ( defined( $user->{"postalCode"} ) ) {
+			$db_user->{"postal_code"} = $user->{"postalCode"};
+		}
+		if ( defined( $user->{"country"} ) ) {
+			$db_user->{"country"} = $user->{"country"};
+		}
+		# token is intended for new user registrations and on current user update, it should be cleared from the db
+		$db_user->{"token"} = undef;
+		# new_user flag is intended to identify new user registrations and on current user update, registration is complete
+		$db_user->{"new_user"} = 0;
+		$dbh->update($db_user);
+		return $self->with_deprecation("User profile was successfully updated", "success", 200, $alternative);
+	}
+	else {
+		return $self->with_deprecation($result, "error", 400, $alternative);
+	}
+}
+
 # Update
 sub update_current {
 	my $self = shift;

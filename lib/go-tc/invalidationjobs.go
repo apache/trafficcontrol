@@ -314,7 +314,7 @@ func (job *InvalidationJob) Validate() error {
 func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 	errs := []string{}
 	err := validation.ValidateStruct(job,
-		validation.Field(&job.Regex, validation.Required, validation.NewStringRule(func (s string) bool {
+		validation.Field(&job.Regex, validation.Required, validation.NewStringRule(func(s string) bool {
 			return strings.HasPrefix(s, `\/`) || strings.HasPrefix(s, "/")
 		}, `must start with '/' (or '\/')`)),
 		validation.Field(&job.DSID, validation.Required),

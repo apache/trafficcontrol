@@ -70,6 +70,6 @@ Response Structure
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "Removed delivery service [ test ] from federation [ foo.bar. ]"
+			"text": "federation deliveryservice was deleted."
 		}
 	]}

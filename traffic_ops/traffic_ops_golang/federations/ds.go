@@ -27,6 +27,7 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -87,6 +88,12 @@ func deleteDSFeds(tx *sql.Tx, fedID int) error {
 	return err
 }
 
+func deleteFedDS(tx *sql.Tx, fedID, dsID int) error {
+	qry := `DELETE FROM federation_deliveryservice WHERE federation = $1 AND deliveryservice = $2`
+	_, err := tx.Exec(qry, fedID, dsID)
+	return err
+}
+
 func insertDSFeds(tx *sql.Tx, fedID int, dsIDs []int) error {
 	qry := `
 INSERT INTO federation_deliveryservice (federation, deliveryservice)
@@ -108,9 +115,10 @@ func getFedNameByID(tx *sql.Tx, id int) (string, bool, error) {
 	return name, true, nil
 }
 
-// TOFedDSes data structure to use on read of federation deliveryservices
+// TOFedDSes data structure to use on read/delete of federation deliveryservices
 type TOFedDSes struct {
 	api.APIInfoImpl `json:"-"`
+	fedID           *int
 	tc.FederationDeliveryServiceNullable
 }
 
@@ -123,10 +131,92 @@ func (v *TOFedDSes) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	}
 }
 func (v *TOFedDSes) GetType() string {
-	return "federation_deliveryservice"
+	return "federation deliveryservice"
+}
+
+func (v *TOFedDSes) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int)
+	v.fedID = &i
+}
+
+func (v *TOFedDSes) GetKeys() (map[string]interface{}, bool) {
+	if v.fedID == nil {
+		return map[string]interface{}{"id": 0}, false
+	}
+	return map[string]interface{}{"id": *v.fedID}, true
+}
+
+func (v *TOFedDSes) GetAuditName() string {
+	if v.XMLID != nil {
+		return *v.XMLID
+	}
+	return strconv.Itoa(*v.ID)
+}
+
+func (v *TOFedDSes) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{
+		{"id", api.GetIntKey},
+	}
 }
 
 func (v *TOFedDSes) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
+
+func (v *TOFedDSes) Delete() (error, error, int) {
+	dsIDStr, ok := v.APIInfo().Params["dsID"]
+	if !ok {
+		return errors.New("dsID must be specified for deletion"), nil, http.StatusBadRequest
+	}
+	dsID, err := strconv.Atoi(dsIDStr)
+	if err != nil {
+		return errors.New("dsID must be an integer"), nil, http.StatusBadRequest
+	}
+	v.ID = &dsID
+
+	// Check that we can delete it
+	if respCode, usrErr, sysErr := checkFedDSDeletion(v.APIInfo().Tx.Tx, *v.fedID, dsID); usrErr != nil || sysErr != nil {
+		if usrErr != nil {
+			return usrErr, sysErr, respCode
+		}
+		return usrErr, sysErr, respCode
+	}
+
+	// Actually delete the DS from the Federation
+	if err := deleteFedDS(v.APIInfo().Tx.Tx, *v.fedID, dsID); err != nil {
+		return api.ParseDBError(err)
+	}
+
+	return nil, nil, http.StatusOK
+}
+
+func checkFedDSDeletion(tx *sql.Tx, fedID, dsID int) (int, error, error) {
+
+	q := `SELECT ARRAY(SELECT deliveryservice FROM federation_deliveryservice WHERE federation=$1)`
+	dsIDs := []int64{} // pq.Array does not support int slice needs to be int64
+	err := tx.QueryRow(q, fedID).Scan(pq.Array(&dsIDs))
+	if err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("querying federation %v delivery services - %v", fedID, err)
+	}
+
+	if len(dsIDs) == 0 {
+		return http.StatusNotFound, fmt.Errorf("federation %v not found", fedID), nil
+	}
+
+	if len(dsIDs) < 2 {
+		return http.StatusBadRequest, fmt.Errorf("a federation must have at least one delivery service assigned"), nil
+	}
+	found := false
+	dsID64 := int64(dsID) // need in order to compare
+	for _, id := range dsIDs {
+		if id == dsID64 {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return http.StatusBadRequest, fmt.Errorf("delivery service %v is not associated with federation %v", dsID, fedID), nil
+	}
+	return http.StatusOK, nil, nil
+}
 
 func selectQuery() string {
 
