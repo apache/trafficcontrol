@@ -33,15 +33,14 @@ import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie
 import "github.com/jmoiron/sqlx"
 import sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
-var testUser = auth.CurrentUser {
-	UserName: "admin",
-	ID: 1,
-	PrivLevel: 30,
-	TenantID: 1,
-	Role: 1,
+var testUser = auth.CurrentUser{
+	UserName:     "admin",
+	ID:           1,
+	PrivLevel:    30,
+	TenantID:     1,
+	Role:         1,
 	Capabilities: nil,
 }
-
 
 func TestLogout(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
@@ -78,9 +77,9 @@ func TestLogout(t *testing.T) {
 	expiry := time.Now().Add(24 * time.Hour)
 	cookie := tocookie.New(testUser.UserName, expiry, "secret")
 	httpCookie := http.Cookie{
-		Name:  tocookie.Name,
-		Value: cookie,
-		Path: "/",
+		Name:     tocookie.Name,
+		Value:    cookie,
+		Path:     "/",
 		Expires:  expiry,
 		HttpOnly: true,
 	}
@@ -100,7 +99,7 @@ func TestLogout(t *testing.T) {
 	ctx = context.WithValue(ctx, api.APIRespWrittenKey, false)
 	ctx = context.WithValue(ctx, auth.CurrentUserKey, testUser)
 	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{})
-	ctx,_ = context.WithDeadline(ctx, expiry)
+	ctx, _ = context.WithDeadline(ctx, expiry)
 	req = req.WithContext(ctx)
 
 	req.AddCookie(&httpCookie)
@@ -117,7 +116,7 @@ func TestLogout(t *testing.T) {
 	}
 
 	cookieFound := false
-	for _,c := range rr.Result().Cookies() {
+	for _, c := range rr.Result().Cookies() {
 		if c.Name != tocookie.Name {
 			continue
 		}

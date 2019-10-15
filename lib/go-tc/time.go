@@ -78,7 +78,7 @@ func (t *Time) UnmarshalJSON(b []byte) (err error) {
 	i, err = strconv.ParseInt(s, 10, 64)
 	if err == nil {
 		seconds := float64(i) / 1000.0
-		t.Time = time.Unix(int64(seconds), int64(math.Copysign(float64(int64(math.Abs(seconds))) - math.Abs(seconds), seconds) * 1000000))
+		t.Time = time.Unix(int64(seconds), int64(math.Copysign(float64(int64(math.Abs(seconds)))-math.Abs(seconds), seconds)*1000000))
 		return
 	}
 

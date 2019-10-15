@@ -47,23 +47,23 @@ var TrafficStatsDurationPattern = regexp.MustCompile(`^\d+[mhdw]$`)
 // equivalent. For invalid objects, it returns -1 - otherwise it will always, of course be > 0.
 func DurationLiteralToSeconds(d string) (int64, error) {
 	if strings.HasSuffix(d, "m") {
-		v,err := strconv.ParseInt(strings.Split(d, "m")[0], 10, 64)
-		return v*60, err
+		v, err := strconv.ParseInt(strings.Split(d, "m")[0], 10, 64)
+		return v * 60, err
 	}
 
 	if strings.HasSuffix(d, "h") {
-		v,err := strconv.ParseInt(strings.Split(d, "h")[0], 10, 64)
-		return v*3600, err
+		v, err := strconv.ParseInt(strings.Split(d, "h")[0], 10, 64)
+		return v * 3600, err
 	}
 
 	if strings.HasSuffix(d, "d") {
-		v,err := strconv.ParseInt(strings.Split(d, "d")[0], 10, 64)
-		return v*86400, err
+		v, err := strconv.ParseInt(strings.Split(d, "d")[0], 10, 64)
+		return v * 86400, err
 	}
 
 	if strings.HasSuffix(d, "w") {
-		v,err := strconv.ParseInt(strings.Split(d, "w")[0], 10, 64)
-		return v*604800, err
+		v, err := strconv.ParseInt(strings.Split(d, "w")[0], 10, 64)
+		return v * 604800, err
 	}
 
 	return -1, errors.New("Invalid duration literal, no recognized suffix")
@@ -72,9 +72,10 @@ func DurationLiteralToSeconds(d string) (int64, error) {
 // TrafficStatsOrderable encodes what columns by which the data returned from a Traffic Stats query
 // may be ordered.
 type TrafficStatsOrderable string
+
 const (
 	// TimeOrder indicates an ordering by time at which the measurement was taken
-	TimeOrder  TrafficStatsOrderable = "time"
+	TimeOrder TrafficStatsOrderable = "time"
 	// ValueOrder indicates an ordering by the actual value of the measurement
 	ValueOrder TrafficStatsOrderable = "sum_count"
 )
@@ -97,8 +98,9 @@ func OrderableFromString(v string) *TrafficStatsOrderable {
 // TrafficStatsExclude encodes what parts of a response to a request to a "Traffic Stats" endpoint
 // of the TO API may be omitted.
 type TrafficStatsExclude string
+
 const (
-	ExcludeSeries TrafficStatsExclude = "series"
+	ExcludeSeries  TrafficStatsExclude = "series"
 	ExcludeSummary TrafficStatsExclude = "summary"
 	ExcludeInvalid TrafficStatsExclude = "INVALID"
 )
@@ -114,7 +116,6 @@ func ExcludeFromString(v string) TrafficStatsExclude {
 		return ExcludeInvalid
 	}
 }
-
 
 // TrafficStatsConfig represents the configuration of a request made to Traffic Stats. This is
 // typically constructed by parsing a request body submitted to Traffic Ops.
@@ -229,7 +230,7 @@ func (s TrafficStatsSeries) FormatTimestamps() error {
 }
 
 // MessagesToString converts a set of messages from an InfluxDB node into a single, print-able string
-func MessagesToString (msgs []influx.Message) string {
+func MessagesToString(msgs []influx.Message) string {
 	if msgs == nil || len(msgs) == 0 {
 		return ""
 	}

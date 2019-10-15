@@ -58,7 +58,7 @@ func ExampleMimeType_Charset() {
 		fmt.Println(err.Error())
 		return
 	}
-	c,_ := m.Charset() // it's okay to ignore this error, because I was a good boy and used NewMimeType
+	c := m.Charset() // it's okay to ignore this error, because I was a good boy and used NewMimeType
 	fmt.Println(c)
 	// Output: utf-8
 }
@@ -149,7 +149,6 @@ func ExampleMimeType_Less() {
 		return
 	}
 
-
 	fmt.Println(one.Less(two), two.Less(three), one.Less(three))
 	// Output: false false false
 }
@@ -162,7 +161,7 @@ func ExampleMimeTypesFromAccept() {
 		return
 	}
 
-	for _,m := range mimes {
+	for _, m := range mimes {
 		fmt.Printf("%s, ", m)
 	}
 	fmt.Println()
@@ -172,26 +171,26 @@ func ExampleMimeTypesFromAccept() {
 func ExampleSortMimeTypes() {
 	// Normally don't do this, but for the sake of brevity in an example I will
 	mimes := []MimeType{
-		MimeType {
+		MimeType{
 			"text/html",
 			map[string]string{},
 		},
-		MimeType {
+		MimeType{
 			"text/xml",
 			map[string]string{"q": "0.9"},
 		},
-		MimeType {
+		MimeType{
 			"text/*",
 			map[string]string{"q": "0.9"},
 		},
-		MimeType {
+		MimeType{
 			"*/*",
 			map[string]string{},
 		},
 	}
 
 	SortMimeTypes(mimes)
-	for _,m := range mimes {
+	for _, m := range mimes {
 		fmt.Printf("%s, ", m)
 	}
 	fmt.Println()
