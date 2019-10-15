@@ -21,6 +21,8 @@
 
 ``GET``
 =======
+.. versionadded:: 1.4
+
 Retrieves server capabilities.
 
 :Auth. Required: Yes
@@ -49,7 +51,7 @@ Request Structure
 Response Structure
 ------------------
 :name:        The name of this server capability
-:lastUpdated: The date and time at which this server capability was last updated, in ISO format
+:lastUpdated: The date and time at which this server capability was last updated, in ISO-like format
 
 .. code-block:: http
 	:caption: Response Example
@@ -77,6 +79,8 @@ Response Structure
 
 ``POST``
 ========
+.. versionadded:: 1.4
+
 Create a new server capability.
 
 :Auth. Required: Yes
@@ -105,7 +109,7 @@ Request Structure
 Response Structure
 ------------------
 :name:        The name of this server capability
-:lastUpdated: The date and time at which this server capability was last updated, in ISO format
+:lastUpdated: The date and time at which this server capability was last updated, in ISO-like format
 
 .. code-block:: http
 	:caption: Response Example
@@ -137,6 +141,8 @@ Response Structure
 
 ``DELETE``
 ==========
+.. versionadded:: 1.4
+
 Deletes a specific server capability.
 
 :Auth. Required: Yes
