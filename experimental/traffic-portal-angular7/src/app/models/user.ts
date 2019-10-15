@@ -51,3 +51,12 @@ export interface Role {
 	name:         string;
 	privLevel:    number;
 }
+
+/**
+ * Represents a user's ability to perform some action
+*/
+export interface Capability {
+	name:         string;
+	description:  string;
+	lastUpdated?: Date;
+}

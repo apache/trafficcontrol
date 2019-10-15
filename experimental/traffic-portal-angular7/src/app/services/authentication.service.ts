@@ -17,7 +17,7 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { first, map } from 'rxjs/operators';
 
-import { User } from '../models/user';
+import { Role, User } from '../models/user';
 import { APIService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -26,12 +26,16 @@ export class AuthenticationService {
 	public currentUser: Observable<User>;
 	private readonly loggedInSubject: BehaviorSubject<boolean>;
 	public loggedIn: Observable<boolean>;
+	private readonly currentUserCapabilitiesSubject: BehaviorSubject<Array<string>>;
+	public currentUserCapabilities: Observable<Array<string>>;
 
 	constructor (private readonly http: HttpClient, private readonly api: APIService) {
 		this.currentUserSubject = new BehaviorSubject<User>(null);
 		this.loggedInSubject = new BehaviorSubject<boolean>(false);
+		this.currentUserCapabilitiesSubject = new BehaviorSubject<Array<string>>([]);
 		this.currentUser = this.currentUserSubject.asObservable();
 		this.loggedIn = this.loggedInSubject.asObservable();
+		this.currentUserCapabilities = this.currentUserCapabilitiesSubject.asObservable();
 	}
 
 	public get currentUserValue (): User {
@@ -42,14 +46,25 @@ export class AuthenticationService {
 		return this.loggedInSubject.value;
 	}
 
+	public get currentUserCapabilitiesValue (): Array<string> {
+		return this.currentUserCapabilitiesSubject.value;
+	}
+
 	/**
 	 * Updates the current user, and provides a way for callers to check if the update was succesful
 	 * @returns An `Observable` which will emit a boolean value indicating the success of the update
 	*/
 	updateCurrentUser (): Observable<boolean> {
 		return this.api.getCurrentUser().pipe(first()).pipe(map(
-			u => {
+			(u: User) => {
 				this.currentUserSubject.next(u);
+				if (u.role) {
+					this.api.getRoles(u.role).pipe(first()).pipe(map(
+						(r: Role) => {
+							this.currentUserCapabilitiesSubject.next(r.capabilities);
+						}
+					));
+				}
 				return true;
 			},
 			e => {
