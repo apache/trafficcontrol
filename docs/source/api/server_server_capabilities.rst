@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Gets all associations of :term:`Server Capabilities` to servers
+Gets all associations of Server Capabilities to servers
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -36,11 +36,11 @@ Request Structure
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| Name             | Required | Description                                                                                                   |
 	+==================+==========+===============================================================================================================+
-	| serverId         | no       | Filter associated :term:`Server Capabilities` by server ID                                                    |
+	| serverId         | no       | Filter associated Server Capabilities by server ID                                                    |
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| serverHostName   | no       | Filter associated :term:`Server Capabilities` by server host name                                             |
+	| serverHostName   | no       | Filter associated Server Capabilities by server host name                                             |
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| serverCapability | no       | Filter associated :term:`Server Capabilities` by server capability                                            |
+	| serverCapability | no       | Filter associated Server Capabilities by server capability                                            |
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| orderby          | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
 	|                  |          | array                                                                                                         |
@@ -69,8 +69,8 @@ Response Structure
 ------------------
 :serverHostName:   The server's host name 
 :serverId:         The server's ID
-:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in an ISO-like format
-:serverCapability: The :term:`Server Capability`'s name
+:lastUpdated:      The date and time at which this association between the server and the Server Capability was last updated, in an ISO-like format
+:serverCapability: The Server Capability's name
 
 .. code-block:: http
 	:caption: Response Example
@@ -106,7 +106,7 @@ Response Structure
 
 ``POST``
 ========
-Associates a :term:`Server Capability` to a server.
+Associates a Server Capability to a server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -115,7 +115,7 @@ Associates a :term:`Server Capability` to a server.
 Request Structure
 -----------------
 :serverId:         The server's ID to associate
-:serverCapability: The :term:`Server Capability`'s name to associate
+:serverCapability: The Server Capability's name to associate
 
 .. code-block:: http
 	:caption: Request Example
@@ -136,8 +136,8 @@ Request Structure
 Response Structure
 ------------------
 :serverId:         The server's ID
-:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in an ISO-like format
-:serverCapability: The :term:`Server Capability`'s name
+:lastUpdated:      The date and time at which this association between the server and the Server Capability was last updated, in an ISO-like format
+:serverCapability: The Server Capability's name
 
 .. code-block:: http
 	:caption: Response Example
@@ -170,7 +170,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Disassociate a server from a :term:`Server Capability`
+Disassociate a server from a Server Capability
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -185,7 +185,7 @@ Request Structure
 	+==================+==========+==================================================================+
 	| serverId         | yes      | ID of the server to disassociate                                 |
 	+------------------+----------+------------------------------------------------------------------+
-	| serverCapability | yes      | :term:`Server Capability` name to disassociate from given server |
+	| serverCapability | yes      | Server Capability name to disassociate from given server |
 	+------------------+----------+------------------------------------------------------------------+
 
 .. code-block:: http
