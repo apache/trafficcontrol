@@ -17,15 +17,21 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.utils', [])
-    .service('collectionUtils', require('./CollectionUtils'))
-    .service('dateUtils', require('./DateUtils'))
-    .service('deliveryServiceUtils', require('./DeliveryServiceUtils'))
-    .service('fileUtils', require('./FileUtils'))
-    .service('formUtils', require('./FormUtils'))
-    .service('locationUtils', require('./LocationUtils'))
-    .service('numberUtils', require('./NumberUtils'))
-    .service('permissionUtils', require('./PermissionUtils'))
-    .service('serverUtils', require('./ServerUtils'))
-    .service('stringUtils', require('./StringUtils'))
-    .service('tenantUtils', require('./TenantUtils'));
+var CollectionUtils = function() {
+
+	this.uniqArray = function(array1, array2, key) {
+		const keys = new Set();
+		const uniq = new Array();
+		array1.concat(array2).forEach(function(item) {
+			if (!keys.has(item[key])) {
+				uniq.push(item);
+				keys.add(item[key]);
+			}
+		});
+		return uniq;
+	};
+
+};
+
+CollectionUtils.$inject = [];
+module.exports = CollectionUtils;

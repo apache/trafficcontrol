@@ -162,6 +162,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/parameters/profiles').name,
         require('./modules/private/profiles').name,
         require('./modules/private/profiles/compare').name,
+        require('./modules/private/profiles/compare/diff').name,
         require('./modules/private/profiles/deliveryServices').name,
         require('./modules/private/profiles/edit').name,
         require('./modules/private/profiles/list').name,

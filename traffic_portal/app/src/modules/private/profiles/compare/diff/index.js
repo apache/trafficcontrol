@@ -17,11 +17,11 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.private.profiles.compare', [])
+module.exports = angular.module('trafficPortal.private.profiles.diff', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficPortal.private.profiles.compare', {
-				url: '/{profile1Id:[0-9]{1,8}}/{profile2Id:[0-9]{1,8}}/compare/all',
+			.state('trafficPortal.private.profiles.diff', {
+				url: '/{profile1Id:[0-9]{1,8}}/{profile2Id:[0-9]{1,8}}/compare/diff',
 				views: {
 					profilesContent: {
 						templateUrl: 'common/modules/table/profilesParamsCompare/table.profilesParamsCompare.tpl.html',
@@ -37,7 +37,7 @@ module.exports = angular.module('trafficPortal.private.profiles.compare', [])
 								return collectionUtils.uniqArray(profile1.params, profile2.params, 'id');
 							},
 							showAll: function() {
-								return true;
+								return false;
 							}
 						}
 					}

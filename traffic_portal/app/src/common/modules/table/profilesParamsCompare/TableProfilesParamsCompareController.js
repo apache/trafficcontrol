@@ -17,10 +17,7 @@
  * under the License.
  */
 
-var TableProfilesParamsCompareController = function(profile1, profile2, profilesParams, $scope, $state, $q, $uibModal, messageModel, locationUtils, deliveryServiceService, profileParameterService, serverService) {
-
-	this.profile1Usage;
-	this.profile2Usage;
+var TableProfilesParamsCompareController = function(profile1, profile2, profilesParams, showAll, $scope, $state, $q, $uibModal, messageModel, locationUtils, deliveryServiceService, profileParameterService, serverService) {
 
 	let updateProfile1 = false,
 		updateProfile2 = false;
@@ -29,17 +26,22 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 		if (profile.type === 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
 			deliveryServiceService.getDeliveryServices({ profile: profile.id }).
 				then(function(result) {
-					this['profile' + profNum + 'Usage'] = result.length + ' delivery services';
+					$scope['profile' + profNum + 'Usage'] = result.length + ' delivery services';
 				});
 		} else { // otherwise the profile is used by servers so we'll fetch the server count...
 			serverService.getServers({ profileId: profile.id }).
 				then(function(result) {
-					this['profile' + profNum + 'Usage'] = result.length + ' servers';
-				});
+					$scope['profile' + profNum + 'Usage'] = result.length + ' servers';
+			});
 		}
 	};
 
+	$scope.showAll = showAll;
+
 	$scope.dirty = false;
+
+	$scope.profile1Usage;
+	$scope.profile2Usage;
 
 	$scope.profile1 = profile1;
 	$scope.profile2 = profile2;
@@ -52,7 +54,7 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 		// ok, this method is fun :)
 		let params = {
 			title: 'Modify ' + profile1.name + ' parameters',
-			message: 'The ' + profile1.name + ' profile is used by ' + this.profile1Usage + '. Are you sure you want to modify the parameters?'
+			message: 'The ' + profile1.name + ' profile is used by ' + $scope.profile1Usage + '. Are you sure you want to modify the parameters?'
 		};
 		let modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -73,7 +75,7 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 				function() {
 					let params = {
 						title: 'Modify ' + profile2.name + ' parameters',
-						message: 'The ' + profile2.name + ' profile is used by ' + this.profile2Usage + '. Are you sure you want to modify the parameters?'
+						message: 'The ' + profile2.name + ' profile is used by ' + $scope.profile2Usage + '. Are you sure you want to modify the parameters?'
 					};
 					let modalInstance = $uibModal.open({
 						templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -189,6 +191,11 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 		});
 	};
 
+	$scope.filterFn = function(pp) {
+		if ($scope.showAll) return true;
+		return (pp.selected1 !== pp.selected2);
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -198,7 +205,10 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 			"aaSorting": [],
 			"columnDefs": [
 				{ "width": "50%", "targets": 2 }
-			]
+			],
+			"language": {
+				"emptyTable": ($scope.showAll) ? "No data available in table" : "Profiles are identical"
+			}
 		});
 
 		getProfileUsage(profile1, 1);
@@ -210,5 +220,5 @@ var TableProfilesParamsCompareController = function(profile1, profile2, profiles
 
 };
 
-TableProfilesParamsCompareController.$inject = ['profile1', 'profile2', 'profilesParams', '$scope', '$state', '$q', '$uibModal', 'messageModel', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService'];
+TableProfilesParamsCompareController.$inject = ['profile1', 'profile2', 'profilesParams', 'showAll', '$scope', '$state', '$q', '$uibModal', 'messageModel', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService'];
 module.exports = TableProfilesParamsCompareController;

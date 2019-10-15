@@ -20,12 +20,14 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/profiles')">Profiles</a></li>
-            <li><a ng-click="navigateToPath('/profiles/' + profile1.id)">{{::profile1.name}}</a></li>
-            <li><a ng-click="navigateToPath('/profiles/' + profile2.id)">{{::profile2.name}}</a></li>
-            <li class="active">Compare Parameters</li>
+            <li><a ng-click="navigateToPath('/profiles', dirty)">Profiles</a></li>
+            <li><a ng-click="navigateToPath('/profiles/' + profile1.id, dirty)">{{::profile1.name}}</a></li>
+            <li><a ng-click="navigateToPath('/profiles/' + profile2.id, dirty)">{{::profile2.name}}</a></li>
+            <li class="active">Compare</li>
         </ol>
         <div class="pull-right">
+            <button type="button" class="btn btn-link" title="Show Shared Params" ng-if="!showAll" ng-click="navigateToPath('/profiles/' + profile1.id + '/' + profile2.id + '/compare/all', dirty)">Show Shared Params</button>
+            <button type="button" class="btn btn-link" title="Hide Shared Params" ng-if="showAll" ng-click="navigateToPath('/profiles/' + profile1.id + '/' + profile2.id + '/compare/diff', dirty)">Hide Shared Params</button>
             <button type="button" class="btn btn-default" title="Restore" ng-show="dirty" ng-click="restore()">Restore</button>
             <button type="button" class="btn btn-primary" title="Update" ng-disabled="!dirty" ng-click="confirmUpdateProfiles()">Update</button>
         </div>
@@ -39,12 +41,12 @@ under the License.
                 <th>Name</th>
                 <th>Config File</th>
                 <th>Value</th>
-                <th class="center">{{::profile1.name}} ({{selectedProfile1Params.length}})</th>
-                <th class="center">{{::profile2.name}} ({{selectedProfile2Params.length}})</th>
+                <th class="center">{{::profile1.name}} <span ng-if="showAll">({{selectedProfile1Params.length}})</span></th>
+                <th class="center">{{::profile2.name}} <span ng-if="showAll">({{selectedProfile2Params.length}})</span></th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="pp in ::selectedParams">
+            <tr ng-repeat="pp in ::selectedParams | filter:filterFn">
                 <td data-search="^{{::pp.name}}$">{{::pp.name}}</td>
                 <td data-search="^{{::pp.configFile}}$">{{::pp.configFile}}</td>
                 <td data-search="^{{::pp.value}}$">{{::pp.value}}</td>
