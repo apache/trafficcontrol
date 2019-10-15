@@ -31,7 +31,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.getServerCapability = function(name) {
-		return $http.get(ENV.api['root'] + 'server_capabilities?name=' + name).then(
+		return $http.get(ENV.api['root'] + 'server_capabilities', {params: {"name": name}}).then(
 			function(result) {
 				return result.data.response[0];
 			},
@@ -56,7 +56,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.deleteServerCapability = function(name) {
-		return $http.delete(ENV.api['root'] + 'server_capabilities?name=' + name).then(
+		return $http.delete(ENV.api['root'] + 'server_capabilities', {params: {"name": name}}).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, true);
 				return result;
