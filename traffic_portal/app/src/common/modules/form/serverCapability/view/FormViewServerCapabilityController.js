@@ -52,8 +52,6 @@ var FormViewServerCapabilityController = function(serverCapability, $scope, $con
 		});
 		modalInstance.result.then(function() {
 			deleteServerCapability(serverCapability);
-		}, function () {
-			// do nothing
 		});
 	};
 
