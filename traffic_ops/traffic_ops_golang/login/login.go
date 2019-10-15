@@ -33,8 +33,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
@@ -46,11 +46,11 @@ import (
 )
 
 type emailFormatter struct {
-	From rfc.EmailAddress
-	To rfc.EmailAddress
+	From         rfc.EmailAddress
+	To           rfc.EmailAddress
 	InstanceName string
-	ResetURL rfc.URL
-	Token string
+	ResetURL     rfc.URL
+	Token        string
 }
 
 const instanceNameQuery = `
@@ -61,9 +61,10 @@ WHERE name='tm.instance_name' AND
 `
 const userQueryByEmail = `SELECT COUNT(*)::int::bool FROM tm_user WHERE email=$1`
 const setTokenQuery = `UPDATE tm_user SET token=$1 WHERE email=$2`
-var resetPasswordEmailTemplate = template.Must(template.New("Password Reset Email").Parse("From: {{.From}}\r"+`
-To: {{.To}}`+"\r"+`
-Subject: {{.InstanceName}} Password Reset Request`+"\r\n\r"+`
+
+var resetPasswordEmailTemplate = template.Must(template.New("Password Reset Email").Parse("From: {{.From}}\r" + `
+To: {{.To}}` + "\r" + `
+Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -404,7 +405,7 @@ func setToken(addr rfc.EmailAddress, tx *sql.Tx) (string, error) {
 	token[6] = (token[6] & 0x0f) | 0x40
 	token[8] = (token[8] & 0x3f) | 0x80
 
-	if _,err = tx.Exec(setTokenQuery, string(token), addr.Address); err != nil {
+	if _, err = tx.Exec(setTokenQuery, string(token), addr.Address); err != nil {
 		return "", err
 	}
 	return string(token), nil
@@ -416,12 +417,12 @@ func createMsg(addr rfc.EmailAddress, t string, db *sqlx.DB, c config.ConfigPort
 	if err := row.Scan(&instanceName); err != nil {
 		return nil, err
 	}
-	f := emailFormatter {
-		From: c.EmailFrom,
-		To: addr,
-		Token: t,
+	f := emailFormatter{
+		From:         c.EmailFrom,
+		To:           addr,
+		Token:        t,
 		InstanceName: instanceName,
-		ResetURL: c.BaseURL,
+		ResetURL:     c.BaseURL,
 	}
 	f.ResetURL.Path += c.PasswdResetPath
 
@@ -432,77 +433,78 @@ func createMsg(addr rfc.EmailAddress, t string, db *sqlx.DB, c config.ConfigPort
 	return tmpl.Bytes(), nil
 }
 
-func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc { return func(w http.ResponseWriter, r *http.Request) {
-	var userErr, sysErr error
-	var errCode int
-	tx, err := db.Begin()
-	if err != nil {
-		sysErr = fmt.Errorf("Beginning transaction: %v", err)
-		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
+func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var userErr, sysErr error
+		var errCode int
+		tx, err := db.Begin()
+		if err != nil {
+			sysErr = fmt.Errorf("Beginning transaction: %v", err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, tx, errCode, nil, sysErr)
+			return
+		}
+		defer r.Body.Close()
+
+		var req tc.UserPasswordResetRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			userErr = fmt.Errorf("Malformed request: %v", err)
+			errCode = http.StatusBadRequest
+			api.HandleErr(w, r, tx, errCode, userErr, nil)
+			return
+		}
+
+		row := tx.QueryRow(userQueryByEmail, req.Email.Address.String())
+		var userExists bool
+		if err := row.Scan(&userExists); err != nil {
+			sysErr = fmt.Errorf("Checking for existence of user with email '%s': %v", req.Email, err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, tx, errCode, nil, sysErr)
+			return
+		} else if !userExists {
+			// TODO: consider concealing database state from unauthenticated parties;
+			// this should maybe just return a 2XX w/ success message at this point?
+			userErr = fmt.Errorf("No account with the email address '%s' was found!", req.Email)
+			errCode = http.StatusNotFound
+			api.HandleErr(w, r, tx, errCode, userErr, nil)
+			return
+		}
+
+		token, err := setToken(req.Email, tx)
+		if err != nil {
+			sysErr = fmt.Errorf("Failed to generate and insert UUID: %v", err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, tx, errCode, nil, sysErr)
+			return
+		}
+		tx.Commit()
+
+		msg, err := createMsg(req.Email, token, db, cfg.ConfigPortal)
+		if err != nil {
+			sysErr = fmt.Errorf("Failed to create email message: %v", err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, nil, errCode, nil, sysErr)
+			return
+		}
+
+		log.Debugf("Sending password reset email to %s", req.Email)
+
+		if errCode, userErr, sysErr = api.SendMail(req.Email, msg, &cfg); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, nil, errCode, userErr, sysErr)
+			return
+		}
+
+		alerts := tc.CreateAlerts(tc.SuccessLevel, "Password reset email sent")
+		respBts, err := json.Marshal(alerts)
+		if err != nil {
+			userErr = errors.New("Email was sent, but an error occurred afterward")
+			sysErr = fmt.Errorf("Marshaling response: %v", err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, nil, errCode, userErr, sysErr)
+			return
+		}
+
+		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Write(append(respBts, '\n'))
 	}
-	defer r.Body.Close()
-
-	var req tc.UserPasswordResetRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		userErr = fmt.Errorf("Malformed request: %v", err)
-		errCode = http.StatusBadRequest
-		api.HandleErr(w, r, tx, errCode, userErr, nil)
-		return
-	}
-
-	row := tx.QueryRow(userQueryByEmail, req.Email.Address)
-	var userExists bool
-	if err := row.Scan(&userExists); err != nil {
-		sysErr = fmt.Errorf("Checking for existence of user with email '%s': %v", req.Email, err)
-		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
-	} else if !userExists {
-		// TODO: consider concealing database state from unauthenticated parties;
-		// this should maybe just return a 2XX w/ success message at this point?
-		userErr = fmt.Errorf("No account with the email address '%s' was found!", req.Email)
-		errCode = http.StatusNotFound
-		api.HandleErr(w, r, tx, errCode, userErr, nil)
-		return
-	}
-
-	token, err := setToken(req.Email, tx)
-	if err != nil {
-		sysErr = fmt.Errorf("Failed to generate and insert UUID: %v", err)
-		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
-	}
-	tx.Commit()
-
-	msg, err := createMsg(req.Email, token, db, cfg.ConfigPortal)
-	if err != nil {
-		sysErr = fmt.Errorf("Failed to create email message: %v", err)
-		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, nil, errCode, nil, sysErr)
-		return
-	}
-
-	log.Debugf("Sending password reset email to %s", req.Email)
-
-	if errCode, userErr, sysErr = api.SendMail(req.Email, msg, &cfg); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, nil, errCode, userErr, sysErr)
-		return
-	}
-
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "Password reset email sent")
-	respBts, err := json.Marshal(alerts)
-	if err != nil {
-		userErr = errors.New("Email was sent, but an error occurred afterward")
-		sysErr = fmt.Errorf("Marshaling response: %v", err)
-		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, nil, errCode, userErr, sysErr)
-		return
-	}
-
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(append(respBts, '\n'))
-}
 }
