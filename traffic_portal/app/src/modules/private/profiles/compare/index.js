@@ -21,7 +21,7 @@ module.exports = angular.module('trafficPortal.private.profiles.compare', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.profiles.compare', {
-				url: '/compare/{profile1Id}/{profile2Id}',
+				url: '/{profile1Id:[0-9]{1,8}}/{profile2Id:[0-9]{1,8}}/compare/all',
 				views: {
 					profilesContent: {
 						templateUrl: 'common/modules/table/profilesParamsCompare/table.profilesParamsCompare.tpl.html',
@@ -33,9 +33,11 @@ module.exports = angular.module('trafficPortal.private.profiles.compare', [])
 							profile2: function($stateParams, profileService) {
 								return profileService.getProfile($stateParams.profile2Id, { includeParams: true });
 							},
-							profilesParams: function(profile1, profile2) {
-								// funky way to do a unique (by id) union of param objects
-								return _.chain(profile1.params).union(profile2.params).unique('id').value();
+							profilesParams: function(profile1, profile2, collectionUtils) {
+								return collectionUtils.uniqArray(profile1.params, profile2.params, 'id');
+							},
+							showAll: function() {
+								return true;
 							}
 						}
 					}

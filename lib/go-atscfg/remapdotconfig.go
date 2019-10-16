@@ -322,10 +322,6 @@ func MakeEdgeDSDataRemapLines(ds RemapConfigDSData, server *ServerInfo) ([]Remap
 	if ds.RegexType == nil || tc.DSMatchType(*ds.RegexType) != tc.DSMatchTypeHostRegex || ds.OriginFQDN == nil || *ds.OriginFQDN == "" {
 		return nil, nil
 	}
-
-	if ds.OriginFQDN == nil {
-		return nil, errors.New("ds missing origin fqdn")
-	}
 	if ds.Pattern == nil {
 		return nil, errors.New("ds missing regex pattern")
 	}

@@ -74,10 +74,10 @@ func main() {
 	}
 
 	cfg, errsToLog, blockStart := config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName, version)
+	for _, err := range errsToLog {
+		log.Errorln(err)
+	}
 	if blockStart {
-		for _, err := range errsToLog {
-			fmt.Println(err)
-		}
 		os.Exit(1)
 	}
 

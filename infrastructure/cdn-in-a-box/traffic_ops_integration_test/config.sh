@@ -56,7 +56,8 @@ cat <<-EOF >/opt/integration/app/traffic-ops-test.conf
             "admin": "admin",
             "federation": "federation",
             "portal": "portal",
-            "readOnly": "readOnly"
+            "readOnly": "readOnly",
+            "extension": "extension"
         }
     },
     "trafficOpsDB": {

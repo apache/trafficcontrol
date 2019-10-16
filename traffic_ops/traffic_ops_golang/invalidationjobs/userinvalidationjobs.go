@@ -54,7 +54,7 @@ WHERE job.job_user=$1
 `
 
 type response struct {
-	Alerts []tc.Alert `json:"alerts"`
+	Alerts   []tc.Alert  `json:"alerts"`
 	Response interface{} `json:"response"`
 }
 
@@ -118,7 +118,7 @@ func CreateUserJob(w http.ResponseWriter, r *http.Request) {
 		[]tc.Alert{
 			tc.Alert{
 				Level: tc.SuccessLevel.String(),
-				Text: "Invalidation Job creation was successful.",
+				Text:  "Invalidation Job creation was successful.",
 			},
 			api.DeprecationWarning("POST /jobs"),
 		},
@@ -132,7 +132,7 @@ func CreateUserJob(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
 	w.Header().Set(http.CanonicalHeaderKey("location"), inf.Config.URL.Scheme+"://"+r.Host+"/api/1.4/jobs?id="+strconv.FormatUint(uint64(*result.ID), 10))
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	w.Write(append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Created+"content invalidation job: #"+strconv.FormatUint(*result.ID, 10), inf.User, inf.Tx.Tx)
@@ -199,7 +199,7 @@ func GetUserJobs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type userResponse struct {
-		Alerts []tc.Alert `json:"alerts"`
+		Alerts   []tc.Alert               `json:"alerts"`
 		Response []tc.UserInvalidationJob `json:"response"`
 	}
 

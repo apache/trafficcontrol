@@ -20,6 +20,7 @@ package server
  */
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -162,9 +163,9 @@ func TestGetServersByCachegroup(t *testing.T) {
 
 	user := auth.CurrentUser{}
 
-	servers, errs, errType := getServers(v, db.MustBegin(), &user)
-	if len(errs) > 0 {
-		t.Errorf("getServers expected: no errors, actual: %v with error type: %s", errs, errType.String())
+	servers, userErr, sysErr, errCode := getServers(v, db.MustBegin(), &user)
+	if userErr != nil || sysErr != nil {
+		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}
 
 	if len(servers) != 3 {

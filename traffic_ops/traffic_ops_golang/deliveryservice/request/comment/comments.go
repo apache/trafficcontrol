@@ -50,7 +50,7 @@ func (v *TODeliveryServiceRequestComment) ParamColumns() map[string]dbhelpers.Wh
 		"authorId":                 dbhelpers.WhereColumnInfo{"dsrc.author_id", nil},
 		"author":                   dbhelpers.WhereColumnInfo{"a.username", nil},
 		"deliveryServiceRequestId": dbhelpers.WhereColumnInfo{"dsrc.deliveryservice_request_id", nil},
-		"id": dbhelpers.WhereColumnInfo{"dsrc.id", api.IsInt},
+		"id":                       dbhelpers.WhereColumnInfo{"dsrc.id", api.IsInt},
 	}
 }
 func (v *TODeliveryServiceRequestComment) UpdateQuery() string { return updateQuery() }

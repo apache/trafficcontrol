@@ -19,10 +19,14 @@ package tc
  * under the License.
  */
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+)
 
 func ExampleInvalidationJobInput_TTLHours_duration() {
-	j := InvalidationJobInput{nil, nil, nil, "121m"}
+	j := InvalidationJobInput{nil, nil, nil, util.InterfacePtr("121m"), nil, nil}
 	ttl, e := j.TTLHours()
 	if e != nil {
 		fmt.Printf("Error: %v\n", e)
@@ -32,7 +36,7 @@ func ExampleInvalidationJobInput_TTLHours_duration() {
 }
 
 func ExampleInvalidationJobInput_TTLHours_number() {
-	j := InvalidationJobInput{nil, nil, nil, 2.1}
+	j := InvalidationJobInput{nil, nil, nil, util.InterfacePtr(2.1), nil, nil}
 	ttl, e := j.TTLHours()
 	if e != nil {
 		fmt.Printf("Error: %v\n", e)

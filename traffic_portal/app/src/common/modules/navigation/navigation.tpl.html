@@ -42,6 +42,7 @@ under the License.
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Configure</span></a>
                     <ul class="nav child_menu" style="display: none">
                         <li class="side-menu-category-item" ng-if="hasCapability('servers-read')" ng-class="{'current-page': isState('trafficPortal.private.servers')}"><a href="/#!/servers">Servers</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('server-capabilities-read')" ng-class="{'current-page': isState('trafficPortal.private.serverCapabilities')}"><a href="/#!/server-capabilities">Server Capabilities</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('origins-read')" ng-class="{'current-page': isState('trafficPortal.private.origins')}"><a href="/#!/origins">Origins</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('profiles-read')" ng-class="{'current-page': isState('trafficPortal.private.profiles')}"><a href="/#!/profiles">Profiles</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('params-read')" ng-class="{'current-page': isState('trafficPortal.private.parameters')}"><a href="/#!/parameters">Parameters</a></li>

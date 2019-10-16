@@ -1696,6 +1696,24 @@
             "xmppPasswd": ""
         }
     ],
+    "serverCapabilities": [
+        {
+            "name": "foo"
+        },
+        {
+            "name": "bar"
+        }
+    ],
+    "serverServerCapabilities": [
+        {
+            "serverHostName": "atlanta-org-1",
+            "serverCapability": "foo"
+        },
+        {
+            "serverHostName": "atlanta-org-2",
+            "serverCapability": "bar"
+        }
+    ],
     "staticdnsentries": [
         {
             "address": "192.168.0.1",
@@ -2135,7 +2153,7 @@
             "dsName": "ds1",
             "request": {
                 "startTime": "2019-01-01 00:00:00",
-                "ttl": 2160,
+                "ttl": 80,
                 "regex": "/foo"
             }
         },
@@ -2143,7 +2161,7 @@
             "dsName": "ds1",
             "request": {
                 "startTime": "2019-01-01 00:00:00",
-                "ttl": 2160,
+                "ttl": 80,
                 "regex": "/foo"
             }
         }
@@ -2180,7 +2198,7 @@
             "servercheck_short_name": "ORT",
             "host_name": "atlanta-edge-01",
             "value": 13
-        },
+        }
     ],
     "invalidationJobs": [
         {

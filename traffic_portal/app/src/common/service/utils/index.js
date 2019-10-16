@@ -18,6 +18,7 @@
  */
 
 module.exports = angular.module('trafficPortal.utils', [])
+    .service('collectionUtils', require('./CollectionUtils'))
     .service('dateUtils', require('./DateUtils'))
     .service('deliveryServiceUtils', require('./DeliveryServiceUtils'))
     .service('fileUtils', require('./FileUtils'))

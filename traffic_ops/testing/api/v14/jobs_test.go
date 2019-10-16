@@ -144,9 +144,9 @@ func GetTestInvalidationJobs(t *testing.T) {
 		}
 	}
 
-	for _,testJob := range testData.InvalidationJobs {
+	for _, testJob := range testData.InvalidationJobs {
 		found := false
-		for _,toJob := range jobs {
+		for _, toJob := range jobs {
 			if *toJob.DeliveryService != (*testJob.DeliveryService).(string) {
 				continue
 			}

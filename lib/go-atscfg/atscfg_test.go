@@ -22,6 +22,8 @@ package atscfg
 import (
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestGenericHeaderComment(t *testing.T) {
@@ -113,6 +115,113 @@ func TestGetATSMajorVersionFromATSVersion(t *testing.T) {
 	for _, input := range errExpected {
 		if actual, err := GetATSMajorVersionFromATSVersion(input); err == nil {
 			t.Errorf("input %v expected: error, actual: nil error '%v'", input, actual)
+		}
+	}
+}
+
+func TestServerInfoIsTopLevelCache(t *testing.T) {
+	{
+		s := &ServerInfo{
+			ParentCacheGroupID:            1,
+			ParentCacheGroupType:          "cgTypeUnknown",
+			SecondaryParentCacheGroupID:   1,
+			SecondaryParentCacheGroupType: "cgTypeUnknown",
+		}
+		if s.IsTopLevelCache() {
+			t.Errorf("expected server with non-origin parent types, and non-InvalidID parent IDs to not be top level, actual top level")
+		}
+	}
+	{
+		s := &ServerInfo{
+			ParentCacheGroupID:            -1,
+			ParentCacheGroupType:          "cgTypeUnknown",
+			SecondaryParentCacheGroupID:   1,
+			SecondaryParentCacheGroupType: "cgTypeUnknown",
+		}
+		if s.IsTopLevelCache() {
+			t.Errorf("expected server with secondary parent non-origin type and non-InvalidID to not be top level, actual top level")
+		}
+	}
+	{
+		s := &ServerInfo{
+			ParentCacheGroupID:            1,
+			ParentCacheGroupType:          "cgTypeUnknown",
+			SecondaryParentCacheGroupID:   -1,
+			SecondaryParentCacheGroupType: "cgTypeUnknown",
+		}
+		if s.IsTopLevelCache() {
+			t.Errorf("expected server with parent non-origin type and non-InvalidID to not be top level, actual top level")
+		}
+	}
+	{
+		s := &ServerInfo{
+			ParentCacheGroupID:            -1,
+			ParentCacheGroupType:          "cgTypeUnknown",
+			SecondaryParentCacheGroupID:   -1,
+			SecondaryParentCacheGroupType: "cgTypeUnknown",
+		}
+		if !s.IsTopLevelCache() {
+			t.Errorf("expected server with parent and secondary parents with InvalidID IDs to be top level, actual not top level")
+		}
+	}
+
+	{
+		s := &ServerInfo{
+			ParentCacheGroupID:            1,
+			ParentCacheGroupType:          tc.CacheGroupOriginTypeName,
+			SecondaryParentCacheGroupID:   1,
+			SecondaryParentCacheGroupType: tc.CacheGroupOriginTypeName,
+		}
+		if !s.IsTopLevelCache() {
+			t.Errorf("expected server with parent and secondary parents with origin-type to be top level, actual not top level")
+		}
+	}
+
+	{
+		s := &ServerInfo{
+			ParentCacheGroupID:            1,
+			ParentCacheGroupType:          "not origin",
+			SecondaryParentCacheGroupID:   1,
+			SecondaryParentCacheGroupType: tc.CacheGroupOriginTypeName,
+		}
+		if s.IsTopLevelCache() {
+			t.Errorf("expected server with parent valid ID and origin-type to be top level, actual top level")
+		}
+	}
+
+	{
+		s := &ServerInfo{
+			ParentCacheGroupID:            1,
+			ParentCacheGroupType:          tc.CacheGroupOriginTypeName,
+			SecondaryParentCacheGroupID:   1,
+			SecondaryParentCacheGroupType: "not origin",
+		}
+		if s.IsTopLevelCache() {
+			t.Errorf("expected server with secondary parent valid ID and not origin-type to not be top level, actual top level")
+		}
+	}
+
+	{
+		s := &ServerInfo{
+			ParentCacheGroupID:            1,
+			ParentCacheGroupType:          tc.CacheGroupOriginTypeName,
+			SecondaryParentCacheGroupID:   -1,
+			SecondaryParentCacheGroupType: "not origin",
+		}
+		if !s.IsTopLevelCache() {
+			t.Errorf("expected server with secondary parent invalid valid ID and parent origin type to be top level, actual not top level")
+		}
+	}
+
+	{
+		s := &ServerInfo{
+			ParentCacheGroupID:            -1,
+			ParentCacheGroupType:          "not origin",
+			SecondaryParentCacheGroupID:   1,
+			SecondaryParentCacheGroupType: tc.CacheGroupOriginTypeName,
+		}
+		if !s.IsTopLevelCache() {
+			t.Errorf("expected server with parent invalid valid ID and secondary parent origin type to be top level, actual not top level")
 		}
 	}
 }

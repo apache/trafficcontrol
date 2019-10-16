@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Extract information about all :term:`Cache Groups`.
+Extract information about :term:`Cache Groups`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -62,19 +62,25 @@ Request Structure
 
 Response Structure
 ------------------
-:fallbackToClosest:             If ``true``, Traffic Router will direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable.
+:fallbacks: An array of :term:`Cache Group` names that are registered as "fallbacks" for use when this :term:`Cache Group` is unavailable.\ [#fallbacks]_
+
+	.. versionadded:: ATCv4.0
+
+		This field was added to all versions of this endpoint with Apache Traffic Control version 4.0
+
+:fallbackToClosest:             If ``true``, Traffic Router will direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable.\ [#fallbacks]_
 :id:                            A numeric, unique identifier for the :term:`Cache Group`
 :lastUpdated:                   The time and date at which this entry was last updated in ISO format
 :latitude:                      Latitude for the :term:`Cache Group`
 :longitude:                     Longitude for the :term:`Cache Group`
 :name:                          The name of the :term:`Cache Group` entry
-:parentCachegroupId:            ID of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
-:parentCachegroupName:          Name of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
-:secondaryParentCachegroupId:   ID of this :term:`Cache Group`\ 's secondary parent :term:`Cache Group` (if any)
-:secondaryParentCachegroupName: Name of this :term:`Cache Group`\ 's secondary parent :term:`Cache Group` (if any)
+:parentCachegroupId:            ID of this :term:`Cache Group`'s parent :term:`Cache Group` (if any)
+:parentCachegroupName:          Name of this :term:`Cache Group`'s parent :term:`Cache Group` (if any)
+:secondaryParentCachegroupId:   ID of this :term:`Cache Group`'s secondary parent :term:`Cache Group` (if any)
+:secondaryParentCachegroupName: Name of this :term:`Cache Group`'s secondary parent :term:`Cache Group` (if any)
 :shortName:                     Abbreviation of the :term:`Cache Group` name
-:typeId:                        Unique identifier for the 'Type' of :term:`Cache Group` entry
-:typeName:                      The name of the type of :term:`Cache Group` entry
+:typeId:                        Unique identifier for the ':term:`Type`' of :term:`Cache Group` entry
+:typeName:                      The name of the :term:`type` of :term:`Cache Group` entry
 
 .. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
@@ -108,7 +114,8 @@ Response Structure
 			"localizationMethods": [],
 			"typeName": "EDGE_LOC",
 			"typeId": 23,
-			"lastUpdated": "2018-11-07 14:45:43+00"
+			"lastUpdated": "2018-11-07 14:45:43+00",
+			"fallbacks": []
 		}
 	]}
 
@@ -123,19 +130,25 @@ Creates a :term:`Cache Group`
 
 Request Structure
 -----------------
-:fallbackToClosest: If ``true``, the Traffic Router will fall back on the 'closest' :term:`Cache Group` to this one, when this one fails
+:fallbacks: An optional field which, when present, should contain an array of names of other :term:`Cache Groups` on which the Traffic Router will fall back in the event that this :term:`Cache Group` fails/becomes unavailable\ [#fallbacks]_
+
+	.. versionadded:: ATCv4.0
+
+		Support for this field was added to all versions of this endpoint with Apache Traffic Control version 4.0
+
+:fallbackToClosest: If ``true``, the Traffic Router will fall back on the 'closest' :term:`Cache Group` to this one, when this one fails\ [#fallbacks]_
 
 	.. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
-:latitude:                    An optional field which, if present, will define the latitude for the :term:`Cache Group` to ISO-standard double specification\ [1]_
-:longitude:                   An optional field which, if present, will define the longitude for the :term:`Cache Group` to ISO-standard double specification\ [1]_
+:latitude:                    An optional field which, if present, will define the latitude for the :term:`Cache Group` to ISO-standard double specification\ [#optional]_
+:longitude:                   An optional field which, if present, will define the longitude for the :term:`Cache Group` to ISO-standard double specification\ [#optional]_
 :localizationMethods:         Array of enabled localization methods (as strings)
 :fallbacks:                   Array of fallback server hostnames.
 :name:                        The name of the :term:`Cache Group`
-:parentCachegroupId:          An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`\ 's primary parent
-:secondaryParentCachegroupId: An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`\ 's secondary parent
+:parentCachegroupId:          An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`'s primary parent
+:secondaryParentCachegroupId: An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`'s secondary parent
 :shortName:                   An abbreviation of the ``name``
-:typeId:                      An integral, unique identifier for the type of :term:`Cache Group`; one of:
+:typeId:                      An integral, unique identifier for the :term:`type` of :term:`Cache Group`; one of:
 
 	EDGE_LOC
 		Indicates a group of Edge-tier caches
@@ -171,7 +184,13 @@ Request Structure
 
 Response Structure
 ------------------
-:fallbackToClosest:             If ``true``, Traffic Router will direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable.
+:fallbacks: An array of :term:`Cache Group` names that are registered as "fallbacks" for use when this :term:`Cache Group` is unavailable\ [#fallbacks]_
+
+	.. versionadded:: ATCv4.0
+
+		This field was added to all versions of this endpoint with Apache Traffic Control version 4.0
+
+:fallbackToClosest:             If ``true``, Traffic Router will direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable\ [#fallbacks]_
 :id:                            A numeric, unique identifier for the :term:`Cache Group`
 :lastUpdated:                   The time and date at which this entry was last updated in ISO format
 :latitude:                      Latitude for the :term:`Cache Group`
@@ -179,13 +198,13 @@ Response Structure
 :localizationMethods:           Array of enabled localization methods (as strings)
 :fallbacks:                     Array of fallback server hostnames
 :name:                          The name of the :term:`Cache Group` entry
-:parentCachegroupId:            ID of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
-:parentCachegroupName:          Name of this :term:`Cache Group`\ 's parent :term:`Cache Group` (if any)
-:secondaryParentCachegroupId:   ID of this :term:`Cache Group`\ 's secondary parent :term:`Cache Group` (if any)
-:secondaryParentCachegroupName: Name of this :term:`Cache Group`\ 's secondary parent :term:`Cache Group` (if any)
+:parentCachegroupId:            ID of this :term:`Cache Group`'s parent :term:`Cache Group` (if any)
+:parentCachegroupName:          Name of this :term:`Cache Group`'s parent :term:`Cache Group` (if any)
+:secondaryParentCachegroupId:   ID of this :term:`Cache Group`'s secondary parent :term:`Cache Group` (if any)
+:secondaryParentCachegroupName: Name of this :term:`Cache Group`'s secondary parent :term:`Cache Group` (if any)
 :shortName:                     Abbreviation of the :term:`Cache Group` name
-:typeId:                        Unique identifier for the 'Type' of :term:`Cache Group` entry
-:typeName:                      The name of the type of :term:`Cache Group` entry
+:typeId:                        Unique identifier for the ':term:`Type`' of :term:`Cache Group` entry
+:typeName:                      The name of the :term:`type` of :term:`Cache Group` entry
 
 
 .. code-block:: http
@@ -227,7 +246,8 @@ Response Structure
 		"lastUpdated": "2018-11-07 22:11:50+00"
 	}}
 
-.. [1] While these fields are technically optional, note that if they are not specified many things may break. For this reason, Traffic Portal requires them when creating or editing :term:`Cache Group`\ s.
+.. [#fallbacks] Traffic Router will first check for a ``fallbacks`` array and, when that is empty/unset/all the :term:`Cache Groups` in it are also unavailable, will subsequently check for ``fallbackToClosest``. If that is ``true``, then it falls back to the geographically closest :term:`Cache Group` capable of serving the same content or, when it is ``false``/no such :term:`Cache Group` exists/said :term:`Cache Group` is also unavailable, will respond to clients with a failure response indicating the problem.
+.. [#optional] While these fields are technically optional, note that if they are not specified many things may break. For this reason, Traffic Portal requires them when creating or editing :term:`Cache Groups`.
 
 .. This doesn't appear to exist anymore - can't reproduce in CIAB nor production
 .. ``/api/1.1/cachegroups/:parameter_id/parameter/available``

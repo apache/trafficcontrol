@@ -46,7 +46,7 @@ describe('Traffic Portal Profiles Test Suite', function() {
 		commonFunctions.selectDropdownbyNum(pageData.compareDropdown2, 2);
 		expect(pageData.compareSubmit.isEnabled()).toBe(true);
 		pageData.compareSubmit.click();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!\/profiles\/compare\/\\d+\/\\d+");
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!\/profiles\/\\d+\/\\d+\/compare\/diff");
 	});
 
 	it('should open new profile form page', function() {

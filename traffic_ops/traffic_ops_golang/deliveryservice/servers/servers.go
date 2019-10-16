@@ -560,7 +560,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	user := dss.APIInfo().User
 
 	if err := api.IsInt(params["id"]); err != nil {
-		return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
+		return nil, err, nil, http.StatusBadRequest
 	}
 
 	if _, ok := params["orderby"]; !ok {
@@ -597,9 +597,12 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
-	dses, errs, _ := deliveryservice.GetDeliveryServices(query, queryValues, dss.APIInfo().Tx)
-	if len(errs) > 0 {
-		return nil, nil, errors.New("reading server dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
+	dses, userErr, sysErr, _ := deliveryservice.GetDeliveryServices(query, queryValues, dss.APIInfo().Tx)
+	if sysErr != nil {
+		sysErr = fmt.Errorf("reading server dses: %v ", sysErr)
+	}
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, http.StatusInternalServerError
 	}
 
 	for _, ds := range dses {
