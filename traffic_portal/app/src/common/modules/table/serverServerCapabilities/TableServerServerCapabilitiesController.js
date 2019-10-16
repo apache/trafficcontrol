@@ -25,7 +25,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 
 	$scope.contextMenuItems = [
 		{
-			text: 'Remove Capability from Server',
+			text: 'Remove Server Capability',
 			click: function ($itemScope) {
 				$scope.confirmRemoveCapability($itemScope.sc.serverCapability);
 			}
