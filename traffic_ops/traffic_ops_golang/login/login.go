@@ -90,7 +90,7 @@ Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 <body>
   	<main>
   		<p>Someone has requested to change your password for the {{.InstanceName}}. If you requested this change, please click the link below and change your password. Otherwise, you can disregard this email.</p>
-		<p><a class="button_link" target="_blank" href="{{.ResetURL.String}}?token={{.Token}}">Click to Reset Your Password</a></p>
+		<p><a class="button_link" target="_blank" href="{{.ResetURL.String}}login?token={{.Token}}">Click to Reset Your Password</a></p>
 	</main>
 	<footer>
 		<p>Thank you,<br/>
