@@ -18,23 +18,23 @@
  */
 
 module.exports = function(){
-	this.name=element(by.name('name'));
+	this.status=element(by.name('status'));
+	this.hostName=element(by.name('hostName'));
 	this.domainName=element(by.name('domainName'));
-	this.dnssecEnabled=element(by.name('dnssecEnabled'));
+	this.cdn=element(by.name('cdn'));
+	this.cachegroup=element(by.name('cachegroup'));
+	this.type=element(by.name('type'));
+	this.profile=element(by.name('profile'));
+	this.interfaceName=element(by.name('interfaceName'));
+	this.ipAddress=element(by.name('ipAddress'));
+	this.ipNetmask=element(by.name('ipNetmask'));
+	this.ipGateway=element(by.name('ipGateway'));
+	this.interfaceMtu=element(by.name('interfaceMtu'));
+	this.physLocation=element(by.name('physLocation'));
 	this.createButton=element(by.buttonText('Create'));
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
-	this.searchFilter=element(by.id('cdnsTable_filter')).element(by.css('label input'));
+	this.searchFilter=element(by.id('serversTable_filter')).element(by.css('label input'));
+	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
-	this.moreButton=element(by.buttonText('More'));
-	this.manageDnssecKeysButton=element(by.linkText('Manage DNSSEC Keys'));
-	this.generateDnssecKeysButton=element(by.buttonText('Generate DNSSEC Keys'));
-	this.kskExpirationDays=element(by.name('kskExpirationDays'));
-	this.regenerateButton=element(by.buttonText('Regenerate'));
-	this.confirmInput=element(by.name('confirmEnterForm')).element(by.tagName('input'));
-	this.confirmButton=element(by.buttonText('Confirm'));
-	this.expirationDate=element(by.name('expirationDate'));
-	this.regenerateDnssecKeysButton=element(by.buttonText('Regenerate DNSSEC Keys'));
-	this.regenerateKskButton=element(by.buttonText('Regenerate KSK'));
-	this.generateButton=element(by.buttonText('Generate'));
 };

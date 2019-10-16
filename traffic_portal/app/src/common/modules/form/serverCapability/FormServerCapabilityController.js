@@ -17,16 +17,17 @@
  * under the License.
  */
 
-module.exports = function(){
-    this.createParameterButton=element(by.css('[title="Create Parameter"]'));
-	this.name=element(by.name('name'));
-	this.configFile=element(by.name('configFile'));
-	this.secure=element(by.name('secure'));
-	this.value=element(by.name('value'));
-	this.createButton=element(by.buttonText('Create'));
-	this.deleteButton=element(by.buttonText('Delete'));
-	this.updateButton=element(by.buttonText('Update'));
-	this.searchFilter=element(by.id('parametersTable_filter')).element(by.css('label input'));
-	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
-	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+var FormServerCapabilityController = function(serverCapability, $scope, formUtils, locationUtils) {
+
+	$scope.serverCapability = serverCapability;
+
+	$scope.navigateToPath = locationUtils.navigateToPath;
+
+	$scope.hasError = formUtils.hasError;
+
+	$scope.hasPropertyError = formUtils.hasPropertyError;
+
 };
+
+FormServerCapabilityController.$inject = ['serverCapability', '$scope', 'formUtils', 'locationUtils'];
+module.exports = FormServerCapabilityController;

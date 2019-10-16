@@ -18,20 +18,10 @@
  */
 
 module.exports = function(){
-	this.selectFormSubmitButton=element(by.buttonText('Submit'));
-	this.active=element(by.name('active'));
-	this.type=element(by.name('type'));
-	this.xmlId=element(by.name('xmlId'));
-	this.displayName=element(by.name('displayName'));
-	this.tenantId=element(by.name('tenantId'));
-	this.cdn=element(by.name('cdn'));
-	this.orgServerFqdn=element(by.name('orgServerFqdn'));
-	this.protocol=element(by.name('protocol'));
-	this.longDesc=element(by.name('longDesc'));
+	this.name=element(by.name('name'));
 	this.createButton=element(by.buttonText('Create'));
 	this.deleteButton=element(by.buttonText('Delete'));
-	this.updateButton=element(by.buttonText('Update'));
-	this.searchFilter=element(by.id('deliveryServicesTable_filter')).element(by.css('label')).element(by.css('input'));
+	this.searchFilter=element(by.id('serverCapabilitiesTable_filter')).element(by.css('label input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
 };

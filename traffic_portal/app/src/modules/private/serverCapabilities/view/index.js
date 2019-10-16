@@ -17,16 +17,23 @@
  * under the License.
  */
 
-module.exports = function(){
-    this.createParameterButton=element(by.css('[title="Create Parameter"]'));
-	this.name=element(by.name('name'));
-	this.configFile=element(by.name('configFile'));
-	this.secure=element(by.name('secure'));
-	this.value=element(by.name('value'));
-	this.createButton=element(by.buttonText('Create'));
-	this.deleteButton=element(by.buttonText('Delete'));
-	this.updateButton=element(by.buttonText('Update'));
-	this.searchFilter=element(by.id('parametersTable_filter')).element(by.css('label input'));
-	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
-	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
-};
+module.exports = angular.module('trafficPortal.private.serverCapabilities.view', [])
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficPortal.private.serverCapabilities.view', {
+				url: '/{serverCapability}',
+				views: {
+					serverCapabilitiesContent: {
+						templateUrl: 'common/modules/form/serverCapability/form.serverCapability.tpl.html',
+						controller: 'FormViewServerCapabilityController',
+						resolve: {
+							serverCapability: function($stateParams, serverCapabilityService) {
+								return serverCapabilityService.getServerCapability($stateParams.serverCapability);
+							}
+						}
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
+	});

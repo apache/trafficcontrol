@@ -17,16 +17,22 @@
  * under the License.
  */
 
-module.exports = function(){
-    this.createParameterButton=element(by.css('[title="Create Parameter"]'));
-	this.name=element(by.name('name'));
-	this.configFile=element(by.name('configFile'));
-	this.secure=element(by.name('secure'));
-	this.value=element(by.name('value'));
-	this.createButton=element(by.buttonText('Create'));
-	this.deleteButton=element(by.buttonText('Delete'));
-	this.updateButton=element(by.buttonText('Update'));
-	this.searchFilter=element(by.id('parametersTable_filter')).element(by.css('label input'));
-	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
-	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
+var FormNewServerCapabilityController = function(serverCapability, $scope, $controller, serverCapabilityService) {
+
+	// extends the FormServerCapabilityController to inherit common methods
+	angular.extend(this, $controller('FormServerCapabilityController', { serverCapability: serverCapability, $scope: $scope }));
+
+	$scope.serverCapabilityName = 'New';
+
+	$scope.settings = {
+		isNew: true
+	};
+
+	$scope.save = function(serverCapability) {
+		serverCapabilityService.createServerCapability(serverCapability)
+	};
+
 };
+
+FormNewServerCapabilityController.$inject = ['serverCapability', '$scope', '$controller', 'serverCapabilityService'];
+module.exports = FormNewServerCapabilityController;

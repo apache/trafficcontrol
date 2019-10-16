@@ -18,23 +18,20 @@
  */
 
 module.exports = function(){
-	this.status=element(by.name('status'));
-	this.hostName=element(by.name('hostName'));
-	this.domainName=element(by.name('domainName'));
-	this.cdn=element(by.name('cdn'));
-	this.cachegroup=element(by.name('cachegroup'));
+	this.selectFormSubmitButton=element(by.buttonText('Submit'));
+	this.active=element(by.name('active'));
 	this.type=element(by.name('type'));
-	this.profile=element(by.name('profile'));
-	this.interfaceName=element(by.name('interfaceName'));
-	this.ipAddress=element(by.name('ipAddress'));
-	this.ipNetmask=element(by.name('ipNetmask'));
-	this.ipGateway=element(by.name('ipGateway'));
-	this.interfaceMtu=element(by.name('interfaceMtu'));
-	this.physLocation=element(by.name('physLocation'));
+	this.xmlId=element(by.name('xmlId'));
+	this.displayName=element(by.name('displayName'));
+	this.tenantId=element(by.name('tenantId'));
+	this.cdn=element(by.name('cdn'));
+	this.orgServerFqdn=element(by.name('orgServerFqdn'));
+	this.protocol=element(by.name('protocol'));
+	this.longDesc=element(by.name('longDesc'));
 	this.createButton=element(by.buttonText('Create'));
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
-	this.searchFilter=element(by.id('serversTable_filter')).element(by.css('label')).element(by.css('input'));
+	this.searchFilter=element(by.id('deliveryServicesTable_filter')).element(by.css('label input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));
 };
