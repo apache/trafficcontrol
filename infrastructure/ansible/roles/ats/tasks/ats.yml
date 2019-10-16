@@ -56,3 +56,45 @@
     sleep: 5
     delay: 5
     timeout: 300
+
+- name: Reset ATS Cache Data
+  block:
+    - name: Stop ATS gracefully
+      systemd:
+        name: trafficserver
+        state: stopped
+      ignore_errors: yes
+
+    - name: Ask ATS to destroy all its data nicely
+      command: /opt/trafficserver/bin/traffic_server -Cclear
+
+    - name: Get list of targeted ATS cache disks
+      shell: cat /opt/trafficserver/etc/trafficserver/storage.config | grep -v '#' | cut -d' ' -f1
+      register: cachedisk_results
+      changed_when: false
+
+    - name: Remove from fstab
+      lineinfile:
+        path: /etc/fstab
+        state: absent
+        regexp: "{{ item }}.*"
+      with_items: "{{ cachedisk_results.stdout_lines }}"
+
+    - name: Unmount the disk
+      command: "umount -l {{ item }}"
+      with_items: "{{ cachedisk_results.stdout_lines }}"
+      register: umountresults
+      failed_when: false
+      changed_when: "'not mounted' not in umountresults.stderr"
+
+    - name: Nuke the disk partition table
+      command: "dd if=/dev/zero of={{ item }} bs=2048 count=1"
+      with_items: "{{ cachedisk_results.stdout_lines }}"
+      register: ddresults
+      changed_when: "'2048 bytes (2.0 kB) copied' in ddresults.stderr"
+
+    - name: Restart ATS with clean cache disks
+      systemd:
+        name: trafficserver
+        state: started
+  when: ats_clear_data | default(false)

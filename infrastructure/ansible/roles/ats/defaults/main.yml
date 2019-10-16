@@ -35,3 +35,5 @@ ort_crontab:
     schedule: '1-19,21-39,41-59 * * * *'
     user: root
     job:  "traffic_ops_ort.pl revalidate warn {{ ort_traffic_ops_url }} '{{ ort_traffic_ops_username }}:{{ ort_traffic_ops_password }}' --login_dispersion=35 &>/tmp/ort/reval.log"
+
+ats_clear_data: false
