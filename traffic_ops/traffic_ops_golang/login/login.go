@@ -64,6 +64,7 @@ const setTokenQuery = `UPDATE tm_user SET token=$1 WHERE email=$2`
 
 var resetPasswordEmailTemplate = template.Must(template.New("Password Reset Email").Parse("From: {{.From}}\r" + `
 To: {{.To}}` + "\r" + `
+Content-Type: text/html` + "\r" + `
 Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 <!DOCTYPE html>
 <html lang="en">
