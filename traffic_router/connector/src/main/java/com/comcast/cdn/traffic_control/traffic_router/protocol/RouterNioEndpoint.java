@@ -56,10 +56,10 @@ public class RouterNioEndpoint extends NioEndpoint {
 		}
 	}
 
-    synchronized private List<String> replaceSSLHosts(final Map<String, HandshakeData> sslHostsData) {
-        final Set<String> aliases = sslHostsData.keySet();
-        String lastHostName = "";
-        final List<String> failedUpdates = new ArrayList<>();
+	synchronized private List<String> replaceSSLHosts(final Map<String, HandshakeData> sslHostsData) {
+		final Set<String> aliases = sslHostsData.keySet();
+		String lastHostName = "";
+		final List<String> failedUpdates = new ArrayList<>();
 
 		for (final String alias : aliases) {
 			final SSLHostConfig sslHostConfig = new SSLHostConfig();
@@ -73,56 +73,54 @@ public class RouterNioEndpoint extends NioEndpoint {
 			sslHostConfig.setCertificateVerification("none");
 			LOGGER.info("sslHostConfig: "+sslHostConfig.getHostName() + " " + sslHostConfig.getTruststoreAlgorithm());
 
-            if (!sslHostConfig.getHostName().equals(lastHostName)) {
-                try{
-                    addSslHostConfig(sslHostConfig, true);
-                }
-                catch (Exception fubar)
-                {
-                    LOGGER.error("In RouterNioEndpoint.replaceSSLHosts, sslHostConfig and certs did not get replaced " +
-                            "for host: "+sslHostConfig.getHostName()+", because of execption - "+fubar.toString());
-                    failedUpdates.add(alias);
-                }
-                lastHostName = sslHostConfig.getHostName();
-            }
+		if (!sslHostConfig.getHostName().equals(lastHostName)){
+			try{
+				addSslHostConfig(sslHostConfig, true);
+			} catch (Exception fubar){
+				LOGGER.error("In RouterNioEndpoint.replaceSSLHosts, sslHostConfig and certs did not get replaced " +
+				  "for host: " + sslHostConfig.getHostName() + ", because of execption - " + fubar.toString());
+				failedUpdates.add(alias);
+			}
+			lastHostName = sslHostConfig.getHostName();
+		}
 
 			if (CertificateRegistry.DEFAULT_SSL_KEY.equals(alias) && !failedUpdates.contains(alias)){
 				// One of the configs must be set as the default
 				setDefaultSSLHostConfigName(sslHostConfig.getHostName());
 			}
 		}
-        return failedUpdates;
-    }
+		return failedUpdates;
+	}
 
-    synchronized public List<String> reloadSSLHosts(final Map<String, HandshakeData> cr) {
-        final List<String> failedUpdates = replaceSSLHosts(cr);
-        if (!failedUpdates.isEmpty()) {
-            failedUpdates.forEach(alias-> {
-                cr.remove(alias);
-            });
-        }
+	synchronized public List<String> reloadSSLHosts(final Map<String, HandshakeData> cr) {
+		final List<String> failedUpdates = replaceSSLHosts(cr);
+		if (!failedUpdates.isEmpty()) {
+			failedUpdates.forEach(alias-> {
+				cr.remove(alias);
+			});
+		}
 
-        final List<String> failedContextUpdates = new ArrayList<>();
-        for (final String alias : cr.keySet()) {
-            try{
-                final HandshakeData data = cr.get(alias);
-                final SSLHostConfig sslHostConfig = sslHostConfigs.get(data.getHostname());
-                sslHostConfig.setConfigType(getSslConfigType());
-                createSSLContext(sslHostConfig);
-            }
-            catch (Exception rfubar) {
-                LOGGER.error("In RouterNioEndpoint could not create new SSLContext for cert " + alias +
-                        " because of exception: "+rfubar.toString());
-                failedContextUpdates.add(alias);
-            }
-        }
+		final List<String> failedContextUpdates = new ArrayList<>();
+		for (final String alias : cr.keySet()) {
+			try{
+				final HandshakeData data = cr.get(alias);
+				final SSLHostConfig sslHostConfig = sslHostConfigs.get(data.getHostname());
+				sslHostConfig.setConfigType(getSslConfigType());
+				createSSLContext(sslHostConfig);
+			}
+			catch (Exception rfubar) {
+				LOGGER.error("In RouterNioEndpoint could not create new SSLContext for cert " + alias +
+						" because of exception: "+rfubar.toString());
+				failedContextUpdates.add(alias);
+			}
+		}
 
-        if (!failedContextUpdates.isEmpty()) {
-            failedUpdates.addAll(failedContextUpdates);
-        }
+		if (!failedContextUpdates.isEmpty()) {
+			failedUpdates.addAll(failedContextUpdates);
+		}
 
-        return failedUpdates;
-    }
+		return failedUpdates;
+	}
 
 	@Override
 	protected SSLHostConfig getSSLHostConfig(final String sniHostName){
