@@ -46,6 +46,10 @@
   async: 1
   poll: 0
 
+- name: Allow the host to go down
+  pause:
+    seconds: 60
+
 - name: Wait for the reboot to complete
   wait_for_connection:
     connect_timeout: 20
