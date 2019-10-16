@@ -430,7 +430,7 @@ func createMsg(addr rfc.EmailAddress, t string, db *sqlx.DB, c config.ConfigPort
 	f.ResetURL.Path += c.PasswdResetPath
 
 	var tmpl bytes.Buffer
-	if err := resetPasswordEmailTemplate.Execute(&tmpl, f); err != nil {
+	if err := resetPasswordEmailTemplate.Execute(&tmpl, &f); err != nil {
 		return nil, err
 	}
 	return tmpl.Bytes(), nil
