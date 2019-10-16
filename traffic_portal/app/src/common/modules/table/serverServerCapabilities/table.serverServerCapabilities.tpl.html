@@ -40,7 +40,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="viewServerCapability(sc.name)" ng-repeat="sc in ::serverCapabilities" context-menu="contextMenuItems">
+            <tr ng-repeat="sc in ::serverCapabilities" context-menu="contextMenuItems">
                 <td name="name" data-search="^{{::sc.serverCapability}}$">{{::sc.serverCapability}}</td>
                 <td style="text-align: right;"><button type="button" class="btn btn-link" title="Remove Capability from Server" ng-click="confirmRemoveCapability(sc.serverCapability)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
