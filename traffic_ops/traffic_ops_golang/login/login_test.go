@@ -90,13 +90,13 @@ func TestTemplateRender(t *testing.T) {
 	to := rfc.EmailAddress{
 		mail.Address{
 			Address: "ocket8888@gmail.com",
-			Name: "",
+			Name:    "",
 		},
 	}
 	from := rfc.EmailAddress{
 		mail.Address{
 			Address: "no-reply@test.quest",
-			Name: "",
+			Name:    "",
 		},
 	}
 
@@ -107,11 +107,11 @@ func TestTemplateRender(t *testing.T) {
 	u := rfc.URL{*rawURL}
 
 	f := emailFormatter{
-		From: from,
-		To: to,
-		Token: "test",
+		From:         from,
+		To:           to,
+		Token:        "test",
 		InstanceName: "TO API Unit Tests",
-		ResetURL: u,
+		ResetURL:     u,
 	}
 
 	var tmpl bytes.Buffer
