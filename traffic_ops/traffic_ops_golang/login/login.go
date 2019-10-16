@@ -59,7 +59,7 @@ FROM parameter
 WHERE name='tm.instance_name' AND
       config_file='global'
 `
-const userQueryByEmail = `SELECT COUNT(*)::int::bool FROM tm_user WHERE email=$1`
+const userQueryByEmail = `SELECT EXISTS(SELECT * FROM tm_user WHERE email=$1)`
 const setTokenQuery = `UPDATE tm_user SET token=$1 WHERE email=$2`
 
 var resetPasswordEmailTemplate = template.Must(template.New("Password Reset Email").Parse("From: {{.From}}\r" + `
@@ -397,15 +397,17 @@ func VerifyUrlOnWhiteList(urlString string, whiteListedUrls []string) (bool, err
 }
 
 func setToken(addr rfc.EmailAddress, tx *sql.Tx) (string, error) {
-	token := make([]byte, 16)
-	_, err := rand.Read(token)
+	t := make([]byte, 16)
+	_, err := rand.Read(t)
 	if err != nil {
 		return "", err
 	}
-	token[6] = (token[6] & 0x0f) | 0x40
-	token[8] = (token[8] & 0x3f) | 0x80
+	t[6] = (t[6] & 0x0f) | 0x40
+	t[8] = (t[8] & 0x3f) | 0x80
 
-	if _, err = tx.Exec(setTokenQuery, string(token), addr.Address); err != nil {
+	token := fmt.Sprintf("%x-%x-%x-%x-%x", t[0:4], t[4:6], t[6:8], t[8:10], t[10:])
+
+	if _, err = tx.Exec(setTokenQuery, token, addr.Address.Address); err != nil {
 		return "", err
 	}
 	return string(token), nil
@@ -454,17 +456,18 @@ func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		row := tx.QueryRow(userQueryByEmail, req.Email.Address.String())
+		row := tx.QueryRow(userQueryByEmail, req.Email.Address.Address)
 		var userExists bool
 		if err := row.Scan(&userExists); err != nil {
-			sysErr = fmt.Errorf("Checking for existence of user with email '%s': %v", req.Email, err)
+			sysErr = fmt.Errorf("Checking for existence of user with email '%s': %v", req.Email.String(), err)
 			errCode = http.StatusInternalServerError
 			api.HandleErr(w, r, tx, errCode, nil, sysErr)
 			return
-		} else if !userExists {
+		}
+		if !userExists {
 			// TODO: consider concealing database state from unauthenticated parties;
 			// this should maybe just return a 2XX w/ success message at this point?
-			userErr = fmt.Errorf("No account with the email address '%s' was found!", req.Email)
+			userErr = fmt.Errorf("No account with the email address '%s' was found!", req.Email.Address.Address)
 			errCode = http.StatusNotFound
 			api.HandleErr(w, r, tx, errCode, userErr, nil)
 			return
