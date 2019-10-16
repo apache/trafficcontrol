@@ -49,3 +49,21 @@ func (f DummyFilterNever) UseCache(name tc.CacheName) bool {
 func (f DummyFilterNever) WithinStatHistoryMax(i int) bool {
 	return false
 }
+
+func TestComputeStatGbps(t *testing.T) {
+	serverInfo := tc.TrafficServer{}
+	serverProfile := tc.TMProfile{}
+	combinedState := tc.IsAvailable{}
+	computedStats := ComputedStats()
+	got := computedStats["gbps"](ResultInfo{Vitals: Vitals{KbpsOut: 1500000}}, serverInfo, serverProfile, combinedState)
+	want := 1.5
+	if got != want {
+		t.Errorf("ComputedStats[\"gbps\"] return %v instead of %v", got, want)
+	}
+
+	got = computedStats["gbps"](ResultInfo{Vitals: Vitals{KbpsOut: 1400000}}, serverInfo, serverProfile, combinedState)
+	want = 1.4
+	if got != want {
+		t.Errorf("ComputedStats[\"gbps\"] return %v instead of %v", got, want)
+	}
+}
