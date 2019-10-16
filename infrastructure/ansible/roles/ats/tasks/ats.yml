@@ -98,3 +98,17 @@
         name: trafficserver
         state: started
   when: ats_clear_data | default(false)
+
+- name: Ensure ATS is listening - 80
+  wait_for:
+    port: 80
+    delay: 10
+
+- name: Ensure ATS is listening - 443
+  wait_for:
+    port: 443
+
+- name: Ensure Astats responds
+  uri:
+    url: http://localhost/_astats
+    validate_certs: false
