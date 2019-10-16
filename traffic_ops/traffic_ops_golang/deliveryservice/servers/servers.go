@@ -560,7 +560,7 @@ func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
 	user := dss.APIInfo().User
 
 	if err := api.IsInt(params["id"]); err != nil {
-		return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
+		return nil, err, nil, http.StatusBadRequest
 	}
 
 	if _, ok := params["orderby"]; !ok {

@@ -821,11 +821,6 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		for _, err := range errs {
-			if err.Error() == `id cannot parse to integer` { // TODO create const for string
-				return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
-			}
-		}
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 

@@ -264,10 +264,6 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 
 		log.Debugf("getting mids: %v, %v, %s\n", userErr, sysErr, http.StatusText(errCode))
 
-		if userErr != nil && userErr.Error() == `id cannot parse to integer` {
-			return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
-		}
-
 		if userErr != nil || sysErr != nil {
 			return nil, userErr, sysErr, errCode
 		}
