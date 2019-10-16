@@ -380,14 +380,14 @@ func (ds *TODeliveryService) Read() ([]interface{}, error, error, int) {
 	}
 
 	returnable := []interface{}{}
-	dses, errs, _ := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			if err.Error() == `id cannot parse to integer` { // TODO create const for string
-				return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
-			}
-		}
-		return nil, nil, errors.New("reading dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
+	dses, userErr, sysErr, errCode := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
+
+	if sysErr != nil {
+		sysErr = errors.New("reading dses: " + sysErr.Error())
+		errCode = http.StatusInternalServerError
+	}
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, errCode
 	}
 
 	for _, ds := range dses {
@@ -797,7 +797,7 @@ func (v *TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
-func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullable, []error, tc.ApiErrorType) {
+func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullable, error, error, int) {
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]
 	}
@@ -821,14 +821,14 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 
 	if err != nil {
 		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, nil, tc.DBError, http.StatusInternalServerError
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
@@ -957,10 +957,10 @@ func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
 	return tc.DSTypeFromString(name), true, nil
 }
 
-func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceNullable, []error, tc.ApiErrorType) {
+func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *sqlx.Tx) ([]tc.DeliveryServiceNullable, error, error, int) {
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
+		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -1037,7 +1037,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&cdnDomain)
 
 		if err != nil {
-			return nil, []error{fmt.Errorf("getting delivery services: %v", err)}, tc.SystemError
+			return nil, nil, fmt.Errorf("getting delivery services: %v", err), http.StatusInternalServerError
 		}
 
 		ds.ConsistentHashQueryParams = []string{}
@@ -1069,7 +1069,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 
 	matchLists, err := GetDeliveryServicesMatchLists(dsNames, tx.Tx)
 	if err != nil {
-		return nil, []error{errors.New("getting delivery service matchlists: " + err.Error())}, tc.SystemError
+		return nil, nil, errors.New("getting delivery service matchlists: " + err.Error()), http.StatusInternalServerError
 	}
 	for i, ds := range dses {
 		matchList, ok := matchLists[*ds.XMLID]
@@ -1081,7 +1081,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 		dses[i] = ds
 	}
 
-	return dses, nil, tc.NoError
+	return dses, nil, nil, http.StatusOK
 }
 
 func updateSSLKeys(ds *tc.DeliveryServiceNullable, hostName string, tx *sql.Tx, cfg *config.Config) error {

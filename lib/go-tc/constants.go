@@ -49,20 +49,4 @@ func (a AlertLevel) String() string {
 	return alertLevels[a]
 }
 
-type ApiErrorType int
-
-const (
-	NoError ApiErrorType = iota
-	SystemError
-	DataConflictError
-	DataMissingError
-	ForbiddenError
-)
-
-var apiErrorTypes = []string{"noError", "systemError", "dataConflictError", "dataMissingError", "forbiddenError"}
-
-func (a ApiErrorType) String() string {
-	return apiErrorTypes[a]
-}
-
 const CachegroupCoordinateNamePrefix = "from_cachegroup_"

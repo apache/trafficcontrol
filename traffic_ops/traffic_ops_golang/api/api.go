@@ -36,7 +36,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
@@ -577,44 +576,6 @@ func setRespWritten(r *http.Request) {
 // This is used to prevent double-write errors. See setRespWritten.
 func respWritten(r *http.Request) bool {
 	return r.Context().Value(APIRespWrittenKey) != nil
-}
-
-// TypeErrToAPIErr takes a slice of errors and an ApiErrorType, and converts them to the (userErr, sysErr, errCode) idiom used by the api package.
-func TypeErrsToAPIErr(errs []error, errType tc.ApiErrorType) (error, error, int) {
-	if len(errs) == 0 {
-		return nil, nil, http.StatusOK
-	}
-	switch errType {
-	case tc.SystemError:
-		return nil, util.JoinErrs(errs), http.StatusInternalServerError
-	case tc.DataConflictError:
-		return util.JoinErrs(errs), nil, http.StatusBadRequest
-	case tc.DataMissingError:
-		return util.JoinErrs(errs), nil, http.StatusNotFound
-	default:
-		log.Errorln("TypeErrsToAPIErr received unknown ApiErrorType from read: " + errType.String())
-		return nil, util.JoinErrs(errs), http.StatusInternalServerError
-	}
-}
-
-// TypeErrToAPIErr takes an error and an ApiErrorType, and converts them to the (userErr, sysErr, errCode) idiom used by the api package.
-func TypeErrToAPIErr(err error, errType tc.ApiErrorType) (error, error, int) {
-	if err == nil {
-		return nil, nil, http.StatusOK
-	}
-	switch errType {
-	case tc.SystemError:
-		return nil, err, http.StatusInternalServerError
-	case tc.DataConflictError:
-		return err, nil, http.StatusBadRequest
-	case tc.DataMissingError:
-		return err, nil, http.StatusNotFound
-	case tc.ForbiddenError:
-		return err, nil, http.StatusForbidden
-	default:
-		log.Errorln("TypeErrToAPIErr received unknown ApiErrorType from read: " + errType.String())
-		return nil, err, http.StatusInternalServerError
-	}
 }
 
 // small helper function to help with parsing below
