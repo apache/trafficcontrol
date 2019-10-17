@@ -104,7 +104,7 @@ export function orderBy (value: Array<any>, property: string | Array<string>): A
 			try {
 				result = cmpr(aProp, bProp);
 			} catch (e) {
-				console.error(`property ${p} is not the same type on objects ${a} and ${b}! (${e.toString()})`);
+				console.error("property", p, "is not the same type on objects", a, "and", b, `! (${e})`);
 				return 0;
 			}
 
