@@ -24,7 +24,11 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
+	"github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 )
 
 // EmailTemplate is an html/template.Template for formatting DeliveryServiceRequestRequests into
@@ -167,21 +171,21 @@ type DeliveryServiceRequestDetails struct {
 	// Customer is the requesting customer - typically this is a Tenant.
 	Customer string `json:"customer"`
 	// DeepCachingType represents whether or not the Delivery Service should use Deep Caching.
-	DeepCachingType DeepCachingType `json:"deepCachingType"`
+	DeepCachingType *DeepCachingType `json:"deepCachingType"`
 	// Delivery Protocol is the protocol clients should use to connect to the Delivery Service.
-	DeliveryProtocol Protocol `json:"deliveryProtocol"`
+	DeliveryProtocol *Protocol `json:"deliveryProtocol"`
 	// HasNegativeCachingCustomization indicates whether or not the resulting Delivery Service should
 	// customize the use of negative caching. When this is `true`, NegativeCachingCustomizationNote
 	// should be consulted for instructions on the customization.
-	HasNegativeCachingCustomization bool `json:"hasNegativeCachingCustomization"`
+	HasNegativeCachingCustomization *bool `json:"hasNegativeCachingCustomization"`
 	// HasOriginACLWhitelist indicates whether or not the Origin has an ACL whitelist. When this is
 	// `true`, Notes should ideally contain the actual whitelist (or viewing instructions).
-	HasOriginACLWhitelist bool `json:"hasOriginACLWhitelist"`
+	HasOriginACLWhitelist *bool `json:"hasOriginACLWhitelist"`
 	// Has OriginDynamicRemap indicates whether or not the OriginURL can dynamically map to multiple
 	// different actual origin servers.
-	HasOriginDynamicRemap bool `json:"hasOriginDynamicRemap"`
+	HasOriginDynamicRemap *bool `json:"hasOriginDynamicRemap"`
 	// HasSignedURLs indicates whether or not the resulting Delivery Service should sign its URLs.
-	HasSignedURLs bool `json:"hasSignedURLs"`
+	HasSignedURLs *bool `json:"hasSignedURLs"`
 	// HeaderRewriteEdge is an optional HeaderRewrite rule to apply at the Edge tier.
 	HeaderRewriteEdge *string `json:"headerRewriteEdge"`
 	// HeaderRewriteMid is an optional HeaderRewrite rule to apply at the Mid tier.
@@ -190,8 +194,8 @@ type DeliveryServiceRequestDetails struct {
 	// the Traffic Router.
 	HeaderRewriteRedirectRouter *string `json:"headerRewriteRedirectRouter"`
 	// MaxLibrarySizeEstimate is an estimation of the total size of content that will be delivered
-	// through the resulting Delivery Service (in gigabytes).
-	MaxLibrarySizeEstimate uint `json:"maxLibrarySizeEstimate"`
+	// through the resulting Delivery Service.
+	MaxLibrarySizeEstimate string `json:"maxLibrarySizeEstimate"`
 	// NegativeCachingCustomizationNote is an optional note describing the customization to be
 	// applied to Negative Caching. This should never be `nil` (or empty) if
 	// HasNegativeCachingCustomization is `true`, but in that case the recipient ought to contact
@@ -200,7 +204,7 @@ type DeliveryServiceRequestDetails struct {
 	// Notes is an optional set of extra information supplied to describe the requested Delivery
 	// Service.
 	Notes *string `json:"notes"`
-	// OriginHeaders is a list of HTTP headers that must be sent in requests to the Origin. When
+	// OriginHeaders is an optional list of HTTP headers that must be sent in requests to the Origin. When
 	// parsing from JSON, this field can be either an actual array of headers, or a string containing
 	// a comma-delimited list of said headers.
 	OriginHeaders *OriginHeaders `json:"originHeaders"`
@@ -217,9 +221,9 @@ type DeliveryServiceRequestDetails struct {
 	// the requested Delivery Service exceeds its operational capacity.
 	OverflowService *string `json:"overflowService"`
 	// PeakBPSEstimate is an estimate of the bytes per second expected at peak operation.
-	PeakBPSEstimate uint `json:"peakBPSEstimate"`
+	PeakBPSEstimate string `json:"peakBPSEstimate"`
 	// PeakTPSEstimate is an estimate of the transactions per second expected at peak operation.
-	PeakTPSEstimate uint `json:"peakTPSEstimate"`
+	PeakTPSEstimate string `json:"peakTPSEstimate"`
 	// QueryStringHandling describes the manner in which the CDN should handle query strings in client
 	// requests. Generally one of "use", "drop", or "ignore-in-cache-key-and-pass-up".
 	QueryStringHandling string `json:"queryStringHandling"`
@@ -227,16 +231,16 @@ type DeliveryServiceRequestDetails struct {
 	RangeRequestHandling string `json:"rangeRequestHandling"`
 	// RateLimitingGBPS is an optional rate limit for the requested Delivery Service in gigabytes per
 	// second.
-	RateLimitingGBPS *uint `json:"rateLimitingGBPS"`
+	RateLimitingGBPS *string `json:"rateLimitingGBPS"`
 	// RateLimitingTPS is an optional rate limit for the requested Delivery Service in transactions
 	// per second.
-	RateLimitingTPS *uint `json:"rateLimitingTPS"`
+	RateLimitingTPS *string `json:"rateLimitingTPS"`
 	// RoutingName is the top-level DNS label under which the Delivery Service should be requested.
 	RoutingName string `json:"routingName"`
 	// RoutingType is the type of routing Traffic Router should perform for the requested Delivery
 	// Service.
-	RoutingType DSType `json:"routingType"`
-	// ServiceAliases is a list of alternative names for the requested Delivery Service.
+	RoutingType *DSType `json:"routingType"`
+	// ServiceAliases is an optional list of alternative names for the requested Delivery Service.
 	ServiceAliases []string `json:"serviceAliases"`
 	// ServiceDesc is a basic description of the requested Delivery Service.
 	ServiceDesc string `json:"serviceDesc"`
@@ -251,6 +255,98 @@ func (d DeliveryServiceRequestDetails) Format() (string, error) {
 		return "", fmt.Errorf("Failed to apply template: %v", err)
 	}
 	return b.String(), nil
+}
+
+// Validate validates that the delivery service request has all of the required fields. In some cases,
+// e.g. the top-level EmailTo field, the format is also checked for correctness.
+func (d *DeliveryServiceRequestRequest) Validate() error {
+	errs := make([]error, 0, 2)
+
+	err := validation.ValidateStruct(d,
+		validation.Field(&d.EmailTo, validation.Required, is.Email),
+	)
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+	details := d.Details
+	err = validation.ValidateStruct(&details,
+		validation.Field(&details.ContentType, validation.Required),
+		validation.Field(&details.Customer, validation.Required),
+		validation.Field(&details.DeepCachingType, validation.By(
+			func(t interface{}) error {
+				if t == nil {
+					return errors.New("deepCachingType: required")
+				}
+				if *t.(*DeepCachingType) == DeepCachingTypeInvalid {
+					return errors.New("deepCachingType: invalid Deep Caching Type")
+				}
+				return nil
+			})),
+		validation.Field(&details.DeliveryProtocol, validation.By(
+			func(p interface{}) error {
+				if p == nil {
+					return errors.New("deliveryProtocol: required")
+				}
+				if *p.(*Protocol) == ProtocolInvalid {
+					return errors.New("deliveryProtocol: invalid Protocol")
+				}
+				return nil
+			})),
+		validation.Field(&details.HasNegativeCachingCustomization, validation.Required),
+		validation.Field(&details.HasOriginACLWhitelist, validation.Required),
+		validation.Field(&details.HasOriginDynamicRemap, validation.Required),
+		validation.Field(&details.HasSignedURLs, validation.Required),
+		validation.Field(&details.MaxLibrarySizeEstimate, validation.Required),
+		validation.Field(&details.OriginHeaders, validation.Required),
+		validation.Field(&details.OriginTestFile, validation.Required),
+		validation.Field(&details.OriginURL, validation.Required, is.URL),
+		validation.Field(&details.PeakBPSEstimate, validation.Required),
+		validation.Field(&details.PeakTPSEstimate, validation.Required),
+		validation.Field(&details.QueryStringHandling, validation.Required),
+		validation.Field(&details.RangeRequestHandling, validation.Required),
+		validation.Field(&details.RoutingName, validation.Required),
+		validation.Field(&details.RoutingType, validation.By(
+			func (t interface{}) error {
+				if t == nil || *(t.(*DSType)) == "" {
+					return errors.New("routingType: required")
+				}
+				switch *(t.(*DSType)) {
+				case DSTypeHTTPNoCache:
+					fallthrough
+				case DSTypeDNS:
+					fallthrough
+				case DSTypeDNSLive:
+					fallthrough
+				case DSTypeHTTP:
+					fallthrough
+				case DSTypeDNSLiveNational:
+					fallthrough
+				case DSTypeAnyMap:
+					fallthrough
+				case DSTypeHTTPLive:
+					fallthrough
+				case DSTypeSteering:
+					fallthrough
+				case DSTypeHTTPLiveNational:
+					fallthrough
+				case DSTypeClientSteering:
+					return nil
+				default:
+					return errors.New("routingType: invalid Routing Type")
+				}
+			})),
+		validation.Field(&details.ServiceDesc, validation.Required),
+	)
+
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+	if len(errs) > 0 {
+		return util.JoinErrs(errs)
+	}
+	return nil
 }
 
 // OriginHeaders represents a list of the headers that must be sent to the Origin.

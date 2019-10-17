@@ -48,6 +48,12 @@ func Request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := dsr.Validate(); err != nil {
+		errCode = http.StatusBadRequest
+		api.HandleErr(w, r, tx, errCode, err, nil)
+		return
+	}
+
 	addr, err := mail.ParseAddress(dsr.EmailTo)
 	if err != nil {
 		userErr = fmt.Errorf("'%s' is not a valid RFC5322 email address!", dsr.EmailTo)
