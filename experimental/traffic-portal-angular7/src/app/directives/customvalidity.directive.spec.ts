@@ -17,7 +17,7 @@ import { CustomvalidityDirective } from './customvalidity.directive';
 
 describe('CustomvalidityDirective', () => {
 	it('should create an instance', () => {
-		const directive = new CustomvalidityDirective(new ElementRef(new HTMLInputElement()));
+		const directive = new CustomvalidityDirective(new ElementRef(document.createElement('input')));
 		expect(directive).toBeTruthy();
 	});
 });

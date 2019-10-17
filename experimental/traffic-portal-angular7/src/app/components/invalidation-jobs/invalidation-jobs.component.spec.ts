@@ -12,18 +12,69 @@
 * limitations under the License.
 */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientModule } from '@angular/common/http';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 
 import { InvalidationJobsComponent } from './invalidation-jobs.component';
+import { TpHeaderComponent } from '../tp-header/tp-header.component';
+import { OpenableDirective } from '../../directives/openable.directive';
+import { CustomvalidityDirective } from '../../directives/customvalidity.directive';
+
+import { APIService } from '../../services/api.service';
+
+import { DeliveryService, GeoLimit, GeoProvider } from '../../models/deliveryservice';
+import { InvalidationJob } from '../../models/invalidation';
 
 describe('InvalidationJobsComponent', () => {
 	let component: InvalidationJobsComponent;
 	let fixture: ComponentFixture<InvalidationJobsComponent>;
 
 	beforeEach(async(() => {
+		// mock the API
+		const mockAPIService = jasmine.createSpyObj(['getInvalidationJobs', 'getDeliveryServices']);
+		mockAPIService.getInvalidationJobs.and.returnValue(of({
+			startTime: new Date(),
+		} as InvalidationJob));
+		mockAPIService.getDeliveryServices.and.returnValue(of({
+			active: true,
+			anonymousBlockingEnabled: false,
+			cdnId: 0,
+			displayName: 'test DS',
+			dscp: 0,
+			geoLimit: GeoLimit.None,
+			geoProvider: GeoProvider.MaxMind,
+			ipv6RoutingEnabled: true,
+			lastUpdated: new Date(),
+			logsEnabled: true,
+			longDesc: "A test Delivery Service for API mock-ups",
+			missLat: 0,
+			missLong: 0,
+			multiSiteOrigin: false,
+			regionalGeoBlocking: false,
+			routingName: "test-DS",
+			typeId: 0,
+			xmlId: 'test-DS'
+		} as DeliveryService));
+
 		TestBed.configureTestingModule({
-			declarations: [ InvalidationJobsComponent ]
-		})
-		.compileComponents();
+			declarations: [
+				InvalidationJobsComponent,
+				TpHeaderComponent,
+				OpenableDirective,
+				CustomvalidityDirective
+			],
+			imports: [
+				FormsModule,
+				HttpClientModule,
+				ReactiveFormsModule,
+				RouterTestingModule
+			]
+		});
+
+		TestBed.overrideProvider(APIService, { useValue: mockAPIService });
+		TestBed.compileComponents();
 	}));
 
 	beforeEach(() => {
@@ -34,5 +85,9 @@ describe('InvalidationJobsComponent', () => {
 
 	it('should create', () => {
 		expect(component).toBeTruthy();
+	});
+
+	afterAll(() => {
+		TestBed.resetTestingModule();
 	});
 });

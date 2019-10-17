@@ -17,6 +17,8 @@ import { HttpClientModule } from '@angular/common/http';
 import { CurrentuserComponent } from './currentuser.component';
 import { TpHeaderComponent } from '../tp-header/tp-header.component';
 
+import { User } from '../../models/user';
+
 describe('CurrentuserComponent', () => {
 	let component: CurrentuserComponent;
 	let fixture: ComponentFixture<CurrentuserComponent>;
@@ -37,10 +39,24 @@ describe('CurrentuserComponent', () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(CurrentuserComponent);
 		component = fixture.componentInstance;
+		component.currentUser = {
+			id: 1,
+			newUser:false,
+			username: "test"
+		} as User;
 		fixture.detectChanges();
 	});
 
 	it('should create', () => {
+		component.currentUser = {
+			id: 1,
+			newUser:false,
+			username: "test"
+		} as User;
 		expect(component).toBeTruthy();
+	});
+
+	afterAll(() => {
+		TestBed.resetTestingModule();
 	});
 });

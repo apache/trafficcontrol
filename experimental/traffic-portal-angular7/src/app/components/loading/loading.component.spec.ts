@@ -35,4 +35,8 @@ describe('LoadingComponent', () => {
 	it('should exist', () => {
 		expect(component).toBeTruthy();
 	});
+
+	afterAll(() => {
+		TestBed.resetTestingModule();
+	});
 });

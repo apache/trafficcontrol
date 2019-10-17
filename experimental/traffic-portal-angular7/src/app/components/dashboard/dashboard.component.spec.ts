@@ -81,4 +81,8 @@ describe('DashboardComponent', () => {
 	it('sets the "search" query parameter', () => {
 		expect(true).toBeTruthy();
 	});
+
+	afterAll(() => {
+		TestBed.resetTestingModule();
+	});
 });

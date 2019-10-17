@@ -16,7 +16,7 @@ import { OpenableDirective } from './openable.directive';
 
 describe('OpenableDirective', () => {
 	it('should create an instance', () => {
-		const directive = new OpenableDirective(new ElementRef<HTMLDialogElement>(new HTMLDialogElement()));
+		const directive = new OpenableDirective(new ElementRef<HTMLDialogElement>(document.createElement('dialog')));
 		expect(directive).toBeTruthy();
 	});
 });
