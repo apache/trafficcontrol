@@ -17,7 +17,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { CurrentuserComponent } from './currentuser.component';
 import { TpHeaderComponent } from '../tp-header/tp-header.component';
 
-import { User } from '../../models/user';
+import { User } from '../../models';
 
 describe('CurrentuserComponent', () => {
 	let component: CurrentuserComponent;

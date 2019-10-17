@@ -18,7 +18,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { first } from 'rxjs/operators';
 
 import { APIService } from '../../services';
-import { DeliveryService } from '../../models/deliveryservice';
+import { DeliveryService } from '../../models';
 import { orderBy } from '../../utils';
 
 @Component({

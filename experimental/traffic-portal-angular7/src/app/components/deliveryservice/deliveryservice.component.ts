@@ -18,8 +18,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 
 import { AlertService, APIService } from '../../services';
-import { DeliveryService } from '../../models/deliveryservice';
-import { DataPoint, DataSet, TPSData } from '../../models/data';
+import { DataPoint, DataSet, DeliveryService, TPSData } from '../../models';
 
 @Component({
 	selector: 'deliveryservice',

@@ -17,9 +17,8 @@ import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
 
 import { APIService, AuthenticationService } from '../../services';
-import { CDN } from '../../models/cdn';
-import { bypassable, DeliveryService, GeoLimit, GeoProvider, Protocol, QStringHandling, RangeRequestHandling } from '../../models/deliveryservice';
-import { Type } from '../../models/type';
+
+import { bypassable, CDN, DeliveryService, GeoLimit, GeoProvider, Protocol, QStringHandling, RangeRequestHandling, Type } from '../../models';
 
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s

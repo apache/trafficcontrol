@@ -14,7 +14,7 @@
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { AlertService } from '../../services';
-import { Alert } from '../../models/alert';
+import { Alert } from '../../models';
 
 @Component({
 	selector: 'alert',

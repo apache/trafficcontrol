@@ -15,7 +15,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientModule } from '@angular/common/http';
 
 import { UserCardComponent } from './user-card.component';
-import { User } from '../../models/user';
+import { User } from '../../models';
 
 describe('UserCardComponent', () => {
 	let component: UserCardComponent;

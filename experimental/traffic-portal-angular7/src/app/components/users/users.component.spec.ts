@@ -24,7 +24,7 @@ import { UserCardComponent } from '../user-card/user-card.component';
 
 import { APIService } from '../../services/api.service';
 
-import { User } from '../../models/user';
+import { User } from '../../models';
 
 describe('UsersComponent', () => {
 	let component: UsersComponent;

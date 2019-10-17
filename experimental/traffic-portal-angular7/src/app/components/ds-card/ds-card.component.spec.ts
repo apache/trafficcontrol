@@ -18,8 +18,10 @@ import { of } from 'rxjs';
 
 import { DsCardComponent } from './ds-card.component';
 import { LoadingComponent } from '../loading/loading.component';
-import { DeliveryService, GeoLimit, GeoProvider } from '../../models/deliveryservice';
+
 import { LinechartDirective } from '../../directives/linechart.directive';
+
+import { DeliveryService, GeoLimit, GeoProvider } from '../../models';
 
 import { APIService } from '../../services/api.service';
 

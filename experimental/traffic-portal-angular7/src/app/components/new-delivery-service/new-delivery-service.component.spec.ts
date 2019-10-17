@@ -17,10 +17,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { NewDeliveryServiceComponent } from './new-delivery-service.component';
-import { CDN } from '../../models/cdn';
-import { Protocol } from '../../models/deliveryservice';
 import { TpHeaderComponent } from '../tp-header/tp-header.component';
-import { Type } from '../../models/type';
+
+import { CDN, Protocol, Type } from '../../models';
 
 describe('NewDeliveryServiceComponent', () => {
 	let component: NewDeliveryServiceComponent;

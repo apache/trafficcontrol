@@ -17,10 +17,11 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { DashboardComponent } from './dashboard.component';
-import { DeliveryService } from '../../models/deliveryservice';
 import { DsCardComponent } from '../ds-card/ds-card.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { TpHeaderComponent } from '../tp-header/tp-header.component';
+
+import { DeliveryService } from '../../models';
 
 import { LinechartDirective } from '../../directives/linechart.directive';
 

@@ -18,7 +18,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 
 import { APIService, AuthenticationService } from '../../services';
-import { Role, User } from '../../models/user';
+import { Role, User } from '../../models';
 import { orderBy } from '../../utils';
 
 @Component({

@@ -17,8 +17,7 @@ import { Subject } from 'rxjs';
 import { first } from 'rxjs/operators';
 
 import { APIService } from '../../services';
-import { DeliveryService, Protocol } from '../../models/deliveryservice';
-import { DataPoint, DataSet } from '../../models/data';
+import { DataPoint, DataSet, DeliveryService, Protocol } from '../../models';
 
 @Component({
 	selector: 'ds-card',

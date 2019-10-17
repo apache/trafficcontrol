@@ -16,7 +16,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
 
-import { Role, User } from '../../models/user';
+import { Role, User } from '../../models';
 import { APIService, AuthenticationService } from '../../services';
 
 @Component({

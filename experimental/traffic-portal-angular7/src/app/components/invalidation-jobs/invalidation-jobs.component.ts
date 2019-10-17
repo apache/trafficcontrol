@@ -18,8 +18,8 @@ import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 
 import { APIService } from '../../services';
-import { DeliveryService } from '../../models/deliveryservice';
-import { InvalidationJob } from '../../models/invalidation';
+
+import { DeliveryService, InvalidationJob } from '../../models';
 
 @Component({
 	selector: 'invalidation-jobs',

@@ -22,8 +22,7 @@ import { TpHeaderComponent } from '../tp-header/tp-header.component';
 
 import { LinechartDirective } from '../../directives/linechart.directive';
 
-import { DeliveryService, GeoLimit, GeoProvider } from '../../models/deliveryservice';
-import { DataSet, DataSetWithSummary, TPSData } from '../../models/data';
+import { DataSet, DataSetWithSummary, DeliveryService, GeoLimit, GeoProvider, TPSData } from '../../models';
 
 import { APIService } from '../../services/api.service';
 

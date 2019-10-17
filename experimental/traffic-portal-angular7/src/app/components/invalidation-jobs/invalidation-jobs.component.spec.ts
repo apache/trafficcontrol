@@ -19,13 +19,13 @@ import { of } from 'rxjs';
 
 import { InvalidationJobsComponent } from './invalidation-jobs.component';
 import { TpHeaderComponent } from '../tp-header/tp-header.component';
+
 import { OpenableDirective } from '../../directives/openable.directive';
 import { CustomvalidityDirective } from '../../directives/customvalidity.directive';
 
 import { APIService } from '../../services/api.service';
 
-import { DeliveryService, GeoLimit, GeoProvider } from '../../models/deliveryservice';
-import { InvalidationJob } from '../../models/invalidation';
+import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from '../../models';
 
 describe('InvalidationJobsComponent', () => {
 	let component: InvalidationJobsComponent;
