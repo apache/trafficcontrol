@@ -11,9 +11,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<tp-header [title]=currentUser.username></tp-header>
+<tp-header [title]="currentUser ? currentUser.username : ''"></tp-header>
 
-<main>
+<main *ngIf=currentUser>
 <h1><span *ngIf=currentUser.fullName>{{currentUser.fullName}}, </span>{{currentUser.roleName}} user</h1>
 <address>
 	<p *ngIf="currentUser.email || currentUser.phoneNumber"><a *ngIf=currentUser.email href="mailto:{{currentUser.email}}">{{currentUser.email}}</a><span *ngIf="currentUser.email && currentUser.phoneNumber">, </span><a *ngIf="currentUser.phoneNumber" href="tel:{{currentUser.phoneNumber}}">{{currentUser.phoneNumber}}</a></p>
