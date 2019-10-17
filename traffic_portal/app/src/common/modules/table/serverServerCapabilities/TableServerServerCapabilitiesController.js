@@ -64,7 +64,10 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 		});
 	};
 
-	$scope.confirmRemoveCapability = function(serverCapability) {
+	$scope.confirmRemoveCapability = function(serverCapability, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
 		var params = {
 			title: 'Remove Capability from Server?',
 			message: 'Are you sure you want to remove the ' + serverCapability + ' capability from this server?'
@@ -90,6 +93,10 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 		}, function () {
 			// do nothing
 		});
+	};
+
+	$scope.editServerCapability = function(capabilityName) {
+		locationUtils.navigateToPath('/server-capabilities/' + capabilityName);
 	};
 
 	$scope.refresh = function() {
