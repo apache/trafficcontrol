@@ -53,6 +53,11 @@ public class RouterSslImplementationTest {
 		assertThat(new RouterSslImplementation().getSSLUtil(sslHostConfigCertificate), instanceOf(SSLUtil.class));
 	}
 
+	@Test
+	public void itRegistersSSLHostConfigs() throws Exception {
+
+	}
+
 	@Before
 	public void before() {
 	}
