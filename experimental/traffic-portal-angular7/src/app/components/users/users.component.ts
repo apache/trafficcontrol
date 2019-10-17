@@ -37,7 +37,7 @@ export class UsersComponent implements OnInit {
 	public rolesMap: Observable<Map<number, string>>;
 
 	constructor (private readonly api: APIService, private readonly auth: AuthenticationService) {
-		this.rolesMapSubject = new BehaviorSubject<Map<number, string>>(null);
+		this.rolesMapSubject = new BehaviorSubject<Map<number, string>>(new Map<number, string>());
 		this.rolesMap = this.rolesMapSubject.asObservable();
 		this.users = new Array<User>();
 		this.loading = true;
