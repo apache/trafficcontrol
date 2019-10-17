@@ -59,80 +59,26 @@ Built: %(date) by %{getenv: USER}
     # update version referenced in the source
     perl -pi.bak -e 's/__VERSION__/%{version}-%{release}/' app/lib/UI/Utils.pm
 
-    export GOPATH=$(pwd)
-
-    echo "PATH: $PATH"
-    echo "GOPATH: $GOPATH"
-    go version
-    go env
-    
-    # Create build area with proper gopath structure
-    mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
-
-    # build all internal go dependencies (expects package being built as argument)
-    build_dependencies () {
-       IFS=$'\n'
-       array=($(go list -f '{{ join .Deps "\n" }}' | grep trafficcontrol | grep -v $1))
-       prefix=github.com/apache/trafficcontrol
-       for (( i=0; i<${#array[@]}; i++ )); do
-           curPkg=${array[i]};
-           curPkgShort=${curPkg#$prefix};
-           echo "checking $curPkg";
-           godir=$GOPATH/src/$curPkg;
-           if [ ! -d "$godir" ]; then
-             ( echo "building $curPkg" && \
-               mkdir -p "$godir" && \
-               cd "$godir" && \
-               cp -r "$TC_DIR$curPkgShort"/* . && \
-               build_dependencies "$curPkgShort" && \
-               go get -v &&\
-               echo "go building $curPkgShort at $(pwd)" && \
-               go build \
-             ) || { echo "Could not build go $curPkgShort at $(pwd): $!"; exit 1; };
-           fi
-       done
-    }
-    oldpwd=$(pwd)
-    #copy in traffic_ops/vendor
-    vendordir=src/github.com/apache/trafficcontrol/traffic_ops/vendor 
-    ( mkdir -p "$vendordir" && \
-      cd "$vendordir" && \
-      cp -r "$TC_DIR"/traffic_ops/vendor/* . \
-    ) || { echo "could not copy traffic_ops/vendor directory"; exit 1; } 
-
-    # build traffic_ops_golang binary
+    # copy traffic_ops_golang binary
     godir=src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
     ( mkdir -p "$godir" && \
       cd "$godir" && \
-      cp -r "$TC_DIR"/traffic_ops/traffic_ops_golang/* . && \
-      build_dependencies traffic_ops_golang  && \
-      #with proper vendoring (as we have currently) go get is unneeded. leaving for comparison to traffic_monitor_golang
-      #echo "go getting at $(pwd)" && \
-      #go get -d -v && \
-      echo "go building at $(pwd)" && \
-      go get -v &&\
-      go build -ldflags "-X main.version=traffic_ops-%{version}-%{release} -B 0x`git rev-parse HEAD`" \
-    ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+      cp "$TC_DIR"/traffic_ops/traffic_ops_golang/traffic_ops_golang .
+    ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-    # build TO DB admin
+    # copy TO DB admin
     db_admin_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db
     ( mkdir -p "$db_admin_dir" && \
       cd "$db_admin_dir" && \
-      cp -r "$TC_DIR"/traffic_ops/app/db/* . && \
-      echo "go building at $(pwd)" && \
-      go get -v &&\
-      go build -o admin \
-    ) || { echo "Could not build go db admin at $(pwd): $!"; exit 1; };
+      cp "$TC_DIR"/traffic_ops/app/db/admin .
+    ) || { echo "Could not copy go db admin at $(pwd): $!"; exit 1; };
 
-    # build TO profile converter
+    # copy TO profile converter
     convert_dir=src/github.com/apache/trafficcontrol/traffic_ops/install/bin/convert_profile
     ( mkdir -p "$convert_dir" && \
       cd "$convert_dir" && \
-      cp -r "$TC_DIR"/traffic_ops/install/bin/convert_profile/* . && \
-      echo "go building at $(pwd)" && \
-      go get -v &&\
-      go build \
-    ) || { echo "Could not build go profile converter at $(pwd): $!"; exit 1; };
+      cp "$TC_DIR"/traffic_ops/install/bin/convert_profile/convert_profile .
+    ) || { echo "Could not copy go profile converter at $(pwd): $!"; exit 1; };
 
 %install
 
