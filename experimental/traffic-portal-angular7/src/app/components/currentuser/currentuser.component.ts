@@ -30,10 +30,10 @@ export class CurrentuserComponent implements OnInit, OnDestroy {
 	private subscription: Subscription;
 
 	constructor(private readonly auth: AuthenticationService, private readonly api: APIService) {
-		this.currentUser = this.auth.currentUserValue;
 	}
 
 	ngOnInit() {
+		this.currentUser = this.auth.currentUserValue;
 		if (this.currentUser === null) {
 			this.auth.updateCurrentUser().pipe(first()).subscribe(
 				(r: boolean) => {
