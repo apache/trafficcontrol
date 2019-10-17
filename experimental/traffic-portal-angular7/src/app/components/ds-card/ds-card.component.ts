@@ -130,7 +130,7 @@ export class DsCardComponent implements OnInit {
 	}
 
 	private loadChart () {
-		this.api.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '60s', false, true).pipe(first()).subscribe(
+		this.api.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '1m', false, true).pipe(first()).subscribe(
 			(data: Array<DataPoint>) => {
 				for (const d of data) {
 					if (d.y === null) {
@@ -148,7 +148,7 @@ export class DsCardComponent implements OnInit {
 			}
 		);
 
-		this.api.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '60s', true, true).pipe(first()).subscribe(
+		this.api.getDSKBPS(this.deliveryService.xmlId, this.today, this.now, '1m', true, true).pipe(first()).subscribe(
 			(data: Array<DataPoint>) => {
 				for (const d of data) {
 					if (d.y === null) {
