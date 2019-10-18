@@ -11,13 +11,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
+import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
 
-import { APIService } from '../../services';
+import { APIService, AuthenticationService } from '../../services';
 import { DeliveryService } from '../../models';
 import { orderBy } from '../../utils';
 
@@ -29,9 +30,12 @@ import { orderBy } from '../../utils';
 /**
  * Controller for the dashboard. Doesn't do much yet.
 */
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
 	deliveryServices: DeliveryService[];
 	loading = true;
+
+	private capabilitiesSubscription: Subscription;
+	canCreateDeliveryServices = false;
 
 	now: Date;
 	today: Date;
@@ -39,7 +43,7 @@ export class DashboardComponent implements OnInit {
 	// Fuzzy search control
 	fuzzControl = new FormControl('', {updateOn: 'change'});
 
-	constructor (private readonly api: APIService, private readonly route: ActivatedRoute, private readonly router: Router) {
+	constructor (private readonly api: APIService, private readonly route: ActivatedRoute, private readonly router: Router, private readonly auth: AuthenticationService) {
 		this.now = new Date();
 		this.now.setUTCMilliseconds(0);
 		this.today = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate());
@@ -60,6 +64,12 @@ export class DashboardComponent implements OnInit {
 				}
 			}
 		);
+
+		this.capabilitiesSubscription = this.auth.currentUserCapabilities.subscribe(
+			v => {
+				this.canCreateDeliveryServices = v.has("ds-create");
+			}
+		)
 	}
 
 	updateURL (e: Event) {
@@ -94,6 +104,10 @@ export class DashboardComponent implements OnInit {
 
 	tracker (unused_item: number, d: DeliveryService) {
 		return d.id;
+	}
+
+	ngOnDestroy () {
+		this.capabilitiesSubscription.unsubscribe();
 	}
 
 }
