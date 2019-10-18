@@ -155,6 +155,14 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 		});
 	};
 
+	$scope.tabSelected = function() {
+		// issue 3863 - adjust column headers when tab is selected and data table is visible. hacky...sorry...
+		window.setTimeout(function() {
+			$($.fn.dataTable.tables(true)).DataTable()
+				.columns.adjust();
+			},100);
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -166,6 +174,7 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 			"language": {
 				"emptyTable": "No pending changes"
 			},
+			"buttons": [],
 			"columnDefs": [
 				{ 'orderable': false, 'targets': [2, 3] }
 			]
