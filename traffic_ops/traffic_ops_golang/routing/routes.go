@@ -356,6 +356,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodPut, `deliveryservices/{xmlID}/urisignkeys$`, urisigning.SaveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodDelete, `deliveryservices/{xmlID}/urisignkeys$`, urisigning.RemoveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
 
+		//Delivery Service Server Capabilities: CRUD
+		{1.4, http.MethodGet, `deliveryservice_server_capabilities/?$`, api.ReadHandler(&deliveryservice.ServerCapability{}), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodPost, `deliveryservice_server_capabilities/?$`, api.CreateHandler(&deliveryservice.ServerCapability{}), auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodDelete, `deliveryservice_server_capabilities/?$`, api.DeleteHandler(&deliveryservice.ServerCapability{}), auth.PrivLevelOperations, Authenticated, nil},
+
 		// Federations by CDN (the actual table for federation)
 		{1.1, http.MethodGet, `cdns/{name}/federations/?(\.json)?$`, api.ReadHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{name}/federations/{id}$`, api.ReadHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelReadOnly, Authenticated, nil},
