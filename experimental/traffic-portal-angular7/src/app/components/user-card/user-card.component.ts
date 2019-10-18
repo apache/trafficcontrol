@@ -17,7 +17,7 @@ import { Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 
 import { APIService } from '../../services';
-import { Role, User } from '../../models/user';
+import { Role, User } from '../../models';
 
 @Component({
 	selector: 'user-card',

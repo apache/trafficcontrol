@@ -73,7 +73,7 @@ limitations under the License.
 			</fieldset>
 			<label for="disableIPv6">Disable IPv6 Routing</label>
 			<input type="checkbox" id="disableIPv6" name="disableIPv6" [formControl]="disableIPv6"/>
-			<fieldset name="bypass" id="bypass" *ngIf="deliveryService.bypassable()">
+			<fieldset name="bypass" id="bypass" *ngIf="bypassable(deliveryService)">
 				<legend>Bypass Options</legend>
 				<label>When the Delivery Service traffic becomes too heavy, clients can be redirected here:</label>
 				<input type="text" name="bypass-loc" id="bypass-loc" [formControl]="bypassLoc" title="can be either an IP (v4 or v6) address or a Fully Qualified Domain Name" pattern="(^[A-z]([A-z\d\-]*[A-z\d])?(\.[A-z]([A-z\d\-]*[A-z\d])?)*$)|(^(1\d\d|2[0-4]\d|25[0-5]|\d\d?)(\.(1\d\d|2[0-4]\d|25[0-5]|\d\d?)){3}$)|(^[a-fA-F\d]{1,4}(::?([a-fA-F\d]){1,4})*$)" /><!-- Yeah, I know that's pretty gnarly, and it doesn't exactly validate IPv6 addresses but it's a good litmus test -->

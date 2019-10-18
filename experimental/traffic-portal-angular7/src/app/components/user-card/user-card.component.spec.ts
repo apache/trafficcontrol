@@ -15,7 +15,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientModule } from '@angular/common/http';
 
 import { UserCardComponent } from './user-card.component';
-import { User } from '../../models/user';
+import { User } from '../../models';
 
 describe('UserCardComponent', () => {
 	let component: UserCardComponent;
@@ -34,11 +34,15 @@ describe('UserCardComponent', () => {
 	beforeEach(() => {
 		fixture = TestBed.createComponent(UserCardComponent);
 		component = fixture.componentInstance;
-		component.user = {lastUpdated: new Date(), id: 1, name: 'test'} as User;
+		component.user = {lastUpdated: new Date(), id: 1, name: 'test', username: 'test', newUser: false} as User;
 		fixture.detectChanges();
 	});
 
 	it('should exist', () => {
 		expect(component).toBeTruthy();
+	});
+
+	afterAll(() => {
+		TestBed.resetTestingModule();
 	});
 });

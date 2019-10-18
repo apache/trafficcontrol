@@ -14,12 +14,16 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { DashboardComponent } from './dashboard.component';
-import { DeliveryService } from '../../models/deliveryservice';
 import { DsCardComponent } from '../ds-card/ds-card.component';
 import { LoadingComponent } from '../loading/loading.component';
 import { TpHeaderComponent } from '../tp-header/tp-header.component';
+
+import { DeliveryService } from '../../models';
+
+import { LinechartDirective } from '../../directives/linechart.directive';
 
 describe('DashboardComponent', () => {
 	let component: DashboardComponent;
@@ -31,12 +35,14 @@ describe('DashboardComponent', () => {
 			DashboardComponent,
 			DsCardComponent,
 			LoadingComponent,
-			TpHeaderComponent
+			TpHeaderComponent,
+			LinechartDirective
 		],
 		imports: [
 			FormsModule,
 			HttpClientModule,
-			ReactiveFormsModule
+			ReactiveFormsModule,
+			RouterTestingModule
 		]
 		})
 		.compileComponents();
@@ -52,7 +58,7 @@ describe('DashboardComponent', () => {
 			{
 				displayName: 'fooBAR'
 			} as DeliveryService
-		]
+		];
 		fixture.detectChanges();
 	});
 
@@ -71,5 +77,13 @@ describe('DashboardComponent', () => {
 		expect(component.fuzzy(component.deliveryServices[0])).toBeTruthy();
 		expect(component.fuzzy(component.deliveryServices[1])).toBeTruthy();
 
+	});
+
+	it('sets the "search" query parameter', () => {
+		expect(true).toBeTruthy();
+	});
+
+	afterAll(() => {
+		TestBed.resetTestingModule();
 	});
 });

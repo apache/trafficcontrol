@@ -58,7 +58,7 @@ export enum GeoProvider {
 /**
  * Represents a single entry in a Delivery Service's `matchList` field.
 */
-export class DeliveryServiceMatch {
+export interface DeliveryServiceMatch {
 	pattern: string;
 	setNumber: number;
 	type: string;
@@ -154,88 +154,91 @@ export namespace RangeRequestHandling {
 /**
  * Represents a single Delivery Service of arbitrary type
 */
-export class DeliveryService {
-	active:                   boolean;
-	anonymousBlockingEnabled: boolean;
-	cacheurl?:                string;
-	ccrDnsTtl?:               number;
-	cdnId:                    number;
-	cdnName?:                 string;
-	checkPath?:               string;
-	deepCachingType?:         string;
-	displayName:              string;
-	dnsBypassCname?:          string;
-	dnsBypassIp?:             string;
-	dnsBypassIp6?:            string;
-	dnsBypassTtl?:            number;
-	dscp:                     number;
-	edgeHeaderRewrite?:       string;
-	exampleURLs?:             Array<string>;
-	fqPacingRateL?:           number;
-	geoLimit:                 GeoLimit;
-	geoLimitCountries?:       string;
-	geoLimitRedirectURL?:     string;
-	geoProvider:              GeoProvider;
-	globalMaxMbps?:           string;
-	globalMaxTps?:            string;
-	httpBypassFqdn?:          string;
-	id?:                      number;
-	infoUrl?:                 string;
-	initialDispersion?:       number;
-	ipv6RoutingEnabled:       boolean;
-	lastUpdated:              Date;
-	logsEnabled:              boolean;
-	longDesc:                 string;
-	longDesc1?:               string;
-	longDesc2?:               string;
-	matchList?:               DeliveryServiceMatch[];
-	maxDnsAnswers?:           number;
-	midHeaderRewrite?:        string;
-	missLat:                  number;
-	missLong:                 number;
-	multiSiteOrigin:          boolean;
-	orgServerFqdn?:           string;
-	originShield?:            string;
-	profileDescription?:      string;
-	profileId?:               number;
-	profileName?:             string;
-	protocol?:                Protocol;
-	qstringIgnore?:           QStringHandling;
-	rangeRequestHandling?:    RangeRequestHandling;
-	regexRemap?:              string;
-	regionalGeoBlocking:      boolean;
-	remapText?:               string;
-	routingName:              string;
-	signed?:                  boolean;
-	signingAlgorithm?:        string;
-	sslKeyVersion?:           number;
-	tenant?:                  string;
-	tenantId?:                number;
-	trRequestHeaders?:        string;
-	trResponseHeaders?:       string;
-	type?:                    string;
-	typeId:                   number;
-	xmlId:                    string;
+export interface DeliveryService {
+	active:                     boolean;
+	anonymousBlockingEnabled:   boolean;
+	cacheurl?:                  string;
+	ccrDnsTtl?:                 number;
+	cdnId:                      number;
+	cdnName?:                   string;
+	checkPath?:                 string;
+	consistentHashRegex?:       RegExp;
+	consistentHashQueryParams?: Array<string>;
+	deepCachingType?:           string;
+	displayName:                string;
+	dnsBypassCname?:            string;
+	dnsBypassIp?:               string;
+	dnsBypassIp6?:              string;
+	dnsBypassTtl?:              number;
+	dscp:                       number;
+	edgeHeaderRewrite?:         string;
+	exampleURLs?:               Array<string>;
+	fqPacingRateL?:             number;
+	geoLimit:                   GeoLimit;
+	geoLimitCountries?:         string;
+	geoLimitRedirectURL?:       string;
+	geoProvider:                GeoProvider;
+	globalMaxMbps?:             string;
+	globalMaxTps?:              string;
+	httpBypassFqdn?:            string;
+	id?:                        number;
+	infoUrl?:                   string;
+	initialDispersion?:         number;
+	ipv6RoutingEnabled:         boolean;
+	lastUpdated?:               Date;
+	logsEnabled:                boolean;
+	longDesc:                   string;
+	longDesc1?:                 string;
+	longDesc2?:                 string;
+	matchList?:                 DeliveryServiceMatch[];
+	maxDnsAnswers?:             number;
+	maxQriginConnections?:      number;
+	midHeaderRewrite?:          string;
+	missLat:                    number;
+	missLong:                   number;
+	multiSiteOrigin:            boolean;
+	orgServerFqdn?:             string;
+	originShield?:              string;
+	profileDescription?:        string;
+	profileId?:                 number;
+	profileName?:               string;
+	protocol?:                  Protocol;
+	qstringIgnore?:             QStringHandling;
+	rangeRequestHandling?:      RangeRequestHandling;
+	regexRemap?:                string;
+	regionalGeoBlocking:        boolean;
+	remapText?:                 string;
+	routingName:                string;
+	signed?:                    boolean;
+	signingAlgorithm?:          string;
+	sslKeyVersion?:             number;
+	tenant?:                    string;
+	tenantId?:                  number;
+	trRequestHeaders?:          string;
+	trResponseHeaders?:         string;
+	type?:                      string;
+	typeId:                     number;
+	xmlId:                      string;
+}
 
-	/**
-	 * Determines if the Delivery Service is a candidate for bypassing
-	 * @returns `true` if it can have bypass settings, `false` otherwise.
-	*/
-	public bypassable(): boolean {
-		if (!this.type) {
+/**
+ * Determines if the Delivery Service is a candidate for bypassing
+ * @returns `true` if it can have bypass settings, `false` otherwise.
+*/
+export function bypassable (ds: DeliveryService): boolean {
+	if (!ds.type) {
+		return false;
+	}
+
+	switch (ds.type) {
+		case 'HTTP':
+		case 'HTTP_LIVE':
+		case 'HTTP_LIVE_NATNL':
+		case 'DNS':
+		case 'DNS_LIVE':
+		case 'DNS_LIVE_NATNL':
+			return true;
+		default:
 			return false;
-		}
-
-		switch (this.type) {
-			case 'HTTP':
-			case 'HTTP_LIVE':
-			case 'HTTP_LIVE_NATNL':
-			case 'DNS':
-			case 'DNS_LIVE':
-			case 'DNS_LIVE_NATNL':
-				return true;
-			default:
-				return false;
-		}
 	}
 }

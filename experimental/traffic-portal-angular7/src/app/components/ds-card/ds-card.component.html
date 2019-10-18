@@ -20,7 +20,7 @@ limitations under the License.
 	</g>
 </svg>
 </a><span>{{deliveryService.type ? deliveryService.type : ''}}</span></summary>
-	<div class="card-content">
+	<div class="card-content" *ngIf="open">
 		<div>
 			<span>Key:&nbsp;{{deliveryService.xmlId}}&nbsp;({{deliveryService.id}})</span><br/>
 			<span *ngIf="deliveryService.protocol">Protocol:&nbsp;{{Protocol.toString(deliveryService.protocol)}}</span>
@@ -36,13 +36,15 @@ limitations under the License.
 				<li *ngFor="let url of deliveryService.exampleURLs"><a href="{{url}}">{{url}}</a></li>
 			</ul>
 			<span class="warning" *ngIf="!deliveryService.exampleURLs">No URLs configured!</span>
-			<a class="view-details" href="#" title="View Details">
+			<a class="view-details" routerLink="/deliveryservice/{{deliveryService.id}}" title="View Details">
 				<img src="assets/view-details.svg">
 			</a>
 		</div>
 		<div>
 			<div class="canvas-container" [ngClass]="{'graph-loading': !graphDataLoaded}">
-				<canvas id="canvas-{{deliveryService.id}}">{{ chart }}</canvas>
+				<canvas linechart chartTitle="Today's Bandwidth" [chartDataSets]="chartData" chartYAxisLabel="Bandwidth (Kilobytes per second)" [chartDisplayLegend]="true" chartType="time">
+					Your browser does not support canvases or Javascript. Normally, this would be a graph of the bandwidth data so far today.
+				</canvas>
 				<div class="loading" *ngIf="!graphDataLoaded"><loading></loading></div>
 			</div>
 			<fieldset>

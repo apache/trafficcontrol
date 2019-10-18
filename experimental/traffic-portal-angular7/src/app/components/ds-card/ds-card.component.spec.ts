@@ -14,37 +14,62 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 
 import { DsCardComponent } from './ds-card.component';
 import { LoadingComponent } from '../loading/loading.component';
-import { DeliveryService } from '../../models/deliveryservice';
+
+import { LinechartDirective } from '../../directives/linechart.directive';
+
+import { DeliveryService, GeoLimit, GeoProvider } from '../../models';
+
+import { APIService } from '../../services/api.service';
 
 describe('DsCardComponent', () => {
 	let component: DsCardComponent;
 	let fixture: ComponentFixture<DsCardComponent>;
 
 	beforeEach(async(() => {
+		// mock the API
+		const mockAPIService = jasmine.createSpyObj(['getDSKBPS', 'getDSCapacity', 'getDSHealth']);
+		mockAPIService.getDSKBPS.and.returnValue(of([]), of([]));
+		mockAPIService.getDSCapacity.and.returnValue(of({
+			availablePercent: 34,
+			maintenance: 42,
+			utilized: 24
+		}));
+		mockAPIService.getDSHealth.and.returnValue(of({
+			totalOnline: 80,
+			totalOffline: 20
+		}));
+
 		TestBed.configureTestingModule({
 			declarations: [
 				DsCardComponent,
-				LoadingComponent
+				LoadingComponent,
+				LinechartDirective
 			],
 			imports: [
 				HttpClientModule,
 				RouterTestingModule
 			]
-		})
-		.compileComponents();
+		});
+		TestBed.overrideProvider(APIService, { useValue: mockAPIService });
+		TestBed.compileComponents();
 	}));
 
 	beforeEach(() => {
 		fixture = TestBed.createComponent(DsCardComponent);
 		component = fixture.componentInstance;
-		component.deliveryService = new DeliveryService();
+		component.deliveryService = {xmlId: "test-ds"} as DeliveryService;
 		fixture.detectChanges();
 	});
 
 	it('should exist', () => {
 		expect(component).toBeTruthy();
+	});
+
+	afterAll(() => {
+		TestBed.resetTestingModule();
 	});
 });

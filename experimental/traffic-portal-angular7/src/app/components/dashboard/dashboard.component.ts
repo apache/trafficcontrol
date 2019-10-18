@@ -13,11 +13,13 @@
 */
 import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { first } from 'rxjs/operators';
 
 import { APIService } from '../../services';
-import { DeliveryService } from '../../models/deliveryservice';
+import { DeliveryService } from '../../models';
+import { orderBy } from '../../utils';
 
 @Component({
 	selector: 'dash',
@@ -31,18 +33,42 @@ export class DashboardComponent implements OnInit {
 	deliveryServices: DeliveryService[];
 	loading = true;
 
-	// Fuzzy search control
-	fuzzControl = new FormControl('');
+	now: Date;
+	today: Date;
 
-	constructor (private readonly api: APIService) { }
+	// Fuzzy search control
+	fuzzControl = new FormControl('', {updateOn: 'change'});
+
+	constructor (private readonly api: APIService, private readonly route: ActivatedRoute, private readonly router: Router) {
+		this.now = new Date();
+		this.now.setUTCMilliseconds(0);
+		this.today = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate());
+	}
 
 	ngOnInit () {
 		this.api.getDeliveryServices().pipe(first()).subscribe(
-			r => {
-				this.deliveryServices = r;
+			(r: DeliveryService[]) => {
+				this.deliveryServices = orderBy(r, 'displayName') as DeliveryService[];
 				this.loading = false;
 			}
 		);
+
+		this.route.queryParamMap.pipe(first()).subscribe(
+			m => {
+				if (m.has('search')) {
+					this.fuzzControl.setValue(decodeURIComponent(m.get('search')));
+				}
+			}
+		);
+	}
+
+	updateURL (e: Event) {
+		e.preventDefault();
+		if (this.fuzzControl.value === '') {
+			this.router.navigate([], {replaceUrl: true, queryParams: null});
+		} else if (this.fuzzControl.value) {
+			this.router.navigate([], {replaceUrl: true, queryParams: {search: this.fuzzControl.value}});
+		}
 	}
 
 	/**
@@ -64,6 +90,10 @@ export class DashboardComponent implements OnInit {
 			}
 		}
 		return true;
+	}
+
+	tracker (unused_item: number, d: DeliveryService) {
+		return d.id;
 	}
 
 }

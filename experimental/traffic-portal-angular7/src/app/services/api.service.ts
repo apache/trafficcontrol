@@ -14,19 +14,76 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { map, first, catchError } from 'rxjs/operators';
+import { merge } from 'rxjs/index';
+import { map, mergeAll, first, catchError, reduce } from 'rxjs/operators';
 
 import { CDN } from '../models/cdn';
+import { DataPoint, DataSet, DataSetWithSummary, TPSData } from '../models/data';
 import { DeliveryService } from '../models/deliveryservice';
+import { InvalidationJob } from '../models/invalidation';
 import { Type } from '../models/type';
-import { Role, User } from '../models/user';
+import { Role, User, Capability } from '../models/user';
 
-@Injectable({ providedIn: 'root' })
+function constructDataSetFromResponse (r: any): DataSetWithSummary {
+	if (!r.series || !r.series.name) {
+		console.debug(r);
+		throw new Error('No series data for response!');
+	}
+
+	const data = new Array<DataPoint>();
+	if (r.series.values !== null && r.series.values !== undefined) {
+		for (const v of r.series.values) {
+			if (v[1] === null) {
+				continue;
+			}
+			data.push({t: new Date(v[0]), y: v[1].toFixed(3)} as DataPoint);
+		}
+	}
+
+	let min: number;
+	let max: number;
+	let fifth: number;
+	let nfifth: number;
+	let neight: number;
+	let mean: number;
+	if (r.summary) {
+		min = r.summary.min;
+		max = r.summary.max;
+		fifth = r.summary.fifthPercentile;
+		nfifth = r.summary.ninetyFifthPercentile;
+		neight = r.summary.ninetyEightPercentile;
+		mean = r.summary.mean;
+	} else {
+		min = null;
+		max = null;
+		fifth = null;
+		nfifth = null;
+		neight = null;
+		mean = null;
+	}
+
+	return {
+		dataSet: {label: r.series.name.split('.')[0], data: data} as DataSet,
+		min: min,
+		max: max,
+		fifthPercentile: fifth,
+		ninetyFifthPercentile: nfifth,
+		ninetyEighthPercentile: neight,
+		mean: mean
+	} as DataSetWithSummary;
+}
+
 /**
  * The APIService provides access to the Traffic Ops API. Its methods should be kept API-version
  * agnostic (from the caller's perspective), and always return `Observable`s.
 */
+@Injectable({ providedIn: 'root' })
 export class APIService {
+
+	/**
+	 * The current API version to use
+	 * @todo Get this from the environment
+	 */
 	public API_VERSION = '1.4';
 
 	private deliveryServiceTypes: Array<Type>;
@@ -100,10 +157,26 @@ export class APIService {
 
 	/**
 	 * Gets a list of all visible Delivery Services
+	 * @param A unique identifier for a Delivery Service - either a numeric id or an "xml_id"
+	 * @throws TypeError if ``id`` is not a proper type
 	 * @returns An observable that will emit an array of `DeliveryService` objects.
 	*/
-	public getDeliveryServices (): Observable<DeliveryService[]> {
-		const path = '/api/' + this.API_VERSION + '/deliveryservices';
+	public getDeliveryServices (id?: string | number): Observable<DeliveryService[] | DeliveryService> {
+		let path = '/api/' + this.API_VERSION + '/deliveryservices';
+		if (id) {
+			if (typeof(id) === 'string') {
+				path += '?xml_id=' + encodeURIComponent(id);
+			} else if (typeof(id) === 'number') {
+				path += '?id=' + String(id);
+			} else {
+				throw new TypeError("'id' must be a string or a number! (got: '" + typeof(id) + "')");
+			}
+			return this.get(path).pipe(map(
+				r => {
+					return r.body.response[0] as DeliveryService;
+				}
+			));
+		}
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response as DeliveryService[];
@@ -131,11 +204,23 @@ export class APIService {
 	/**
 	 * Retrieves capacity statistics for the Delivery Service identified by a given, unique,
 	 * integral value.
-	 * @param d The integral, unique identifier of a Delivery Service
+	 * @param d Either a {@link DeliveryService} or an integral, unique identifier of a Delivery Service
 	 * @returrns An Observable that emits an object that hopefully has the right keys to represent capacity.
+	 * @throws If `d` is a {@link DeliveryService} that has no (valid) id
 	*/
-	public getDSCapacity (d: number): Observable<any> {
-		const path = '/api/' + this.API_VERSION + '/deliveryservices/' + String(d) + '/capacity';
+	public getDSCapacity (d: number | DeliveryService): Observable<any> {
+		let id: number;
+		if (typeof d === 'number'){
+			id = d;
+		} else {
+			d = d as DeliveryService;
+			if (!d.id || d.id < 0) {
+				throw new Error("Delivery Service id must be defined!");
+			}
+			id = d.id;
+		}
+
+		const path = '/api/' + this.API_VERSION + '/deliveryservices/' + String(id) + '/capacity';
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response;
@@ -166,13 +251,15 @@ export class APIService {
 	 * @param end A date/time at which to end data collection
 	 * @param interval A unit-suffixed interval over which data will be "binned"
 	 * @param useMids Collect data regarding Mid-tier cache servers rather than Edge-tier cache servers
+	 * @param dataOnly Only returns the data series, not any supplementing meta info found in the API response
 	 * @returns An Observable that will emit an Array of datapoint Arrays (length 2 containing a date string and data value)
 	*//* tslint:disable */
 	public getDSKBPS (d: string,
 	                  start: Date,
 	                  end: Date,
 	                  interval: string,
-	                  useMids?: boolean): Observable<Array<Array<any>>> {
+	                  useMids: boolean,
+	                  dataOnly?: boolean): Observable<any | Array<DataPoint>> {
 		/* tslint:enable */
 		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?metricType=kbps';
 		path += '&interval=' + interval;
@@ -182,8 +269,19 @@ export class APIService {
 		path += '&serverType=' + (useMids ? 'mid' : 'edge');
 		return this.get(path).pipe(map(
 			r => {
-				if (r && r.body && r.body.response && r.body.response.series) {
-					return r.body.response.series.values;
+				if (r && r.body && r.body.response) {
+					const resp = r.body.response;
+					if (dataOnly) {
+						if (resp.hasOwnProperty('series') && (resp.series.hasOwnProperty('values'))) {
+							return resp.series.values.filter(d => d[1] !== null).map(
+								d => ({
+									t: new Date(d[0]),
+									y: d[1].toFixed(3)
+								} as DataPoint)) as Array<DataPoint>;
+						}
+						throw new Error("No data series found! Path was '" + path + "'");
+					}
+					return r.body.response;
 				}
 				return null;
 			}
@@ -191,11 +289,138 @@ export class APIService {
 	}
 
 	/**
+	 * Gets total TPS data for a Delivery Service. To get TPS data broken down by HTTP status, use {@link getAllDSTPSData}.
+	 * @param d The name (xmlid) of the Delivery Service for which TPS stats will be fetched
+	 * @param start The desired start date/time of the data range (must not have nonzero milliseconds!)
+	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
+	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
+	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior)
+	 */
+	public getDSTPS (d: string,
+	                 start: Date,
+	                 end: Date,
+	                 interval: string,
+	                 useMids?: boolean): Observable<any> {
+		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?metricType=tps_total';
+		path += '&interval=' + interval;
+		path += '&deliveryServiceName=' + d;
+		path += '&startDate=' + start.toISOString();
+		path += '&endDate=' + end.toISOString();
+		path += '&serverType=' + (useMids ? 'mid' : 'edge');
+		return this.get(path).pipe(map(
+			r => {
+				if (r && r.body && r.body.response) {
+					return r.body.response;
+				}
+				return null;
+			}
+		));
+	}
+
+	/**
+	 * Gets total TPS data for a Delivery Service, as well as TPS data by HTTP response type.
+	 * @param d The name (xmlid) of the Delivery Service for which TPS stats will be fetched
+	 * @param start The desired start date/time of the data range (must not have nonzero milliseconds!)
+	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
+	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
+	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior)
+	 */
+	public getAllDSTPSData (d: string,
+	                        start: Date,
+	                        end: Date,
+	                        interval: string,
+	                        useMids?: boolean): Observable<TPSData> {
+		let path = '/api/' + this.API_VERSION + '/deliveryservice_stats?';
+		path += 'interval=' + interval;
+		path += '&deliveryServiceName=' + d;
+		path += '&startDate=' + start.toISOString();
+		path += '&endDate=' + end.toISOString();
+		path += '&serverType=' + (useMids ? 'mid' : 'edge');
+		path += '&metricType=';
+		const paths = [
+			path + 'tps_total',
+			path + 'tps_2xx',
+			path + 'tps_3xx',
+			path + 'tps_4xx',
+			path + 'tps_5xx',
+		];
+
+		const observables = paths.map(x => this.get(x).pipe(map(r => constructDataSetFromResponse(r.body.response))));
+
+		const tasks = merge(observables).pipe(mergeAll());
+		return tasks.pipe(reduce(
+			(output: TPSData, result: DataSetWithSummary): TPSData => {
+				switch (result.dataSet.label) {
+					case 'tps_total':
+						output.total = result;
+						break;
+					case 'tps_1xx':
+						output.informational = result;
+						break;
+					case 'tps_2xx':
+						output.success = result;
+						break;
+					case 'tps_3xx':
+						output.redirection = result;
+						break;
+					case 'tps_4xx':
+						output.clientError = result;
+						break;
+					case 'tps_5xx':
+						output.serverError = result;
+						break;
+					default:
+						console.debug(result);
+						throw new Error("Unknown data set type: '" + result.dataSet.label + "'");
+				}
+				return output;
+			},
+			{
+				total: null,
+				informational: null,
+				success: null,
+				redirection: null,
+				clientError: null,
+				serverError: null
+			} as TPSData
+		)) as Observable<TPSData>;
+	}
+
+	/**
 	 * Gets an array of all users in Traffic Ops
 	 * @returns An Observable that will emit an Array of User objects.
 	*/
-	public getUsers (): Observable<Array<User>> {
+	public getUsers (nameOrID?: string | number): Observable<Array<User> | User> {
 		const path = '/api/' + this.API_VERSION + '/users';
+		if (nameOrID) {
+			switch (typeof nameOrID) {
+				case 'string':
+					return this.get(path + '?username=' + encodeURIComponent(nameOrID)).pipe(map(
+						r => {
+							for (const u of (r.body.response as Array<User>)) {
+								if (u.username === nameOrID) {
+									return u;
+								}
+							}
+							return null;
+						}
+					));
+				case 'number':
+					return this.get(path + '?id=' + nameOrID.toString()).pipe(map(
+						r => {
+							for (const u of (r.body.response as Array<User>)) {
+								if (u.id === nameOrID) {
+									return u;
+								}
+							}
+							return null;
+						}
+					));
+				default:
+					throw new TypeError("expected a username or ID, got '" + typeof(nameOrID) + "'");
+					return null;
+			}
+		}
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response as Array<User>;
@@ -211,7 +436,7 @@ export class APIService {
 	 * @param name Optionally, the name of a single Role which will be fetched
 	 * @param id Optionally, the integral, unique identifier of a single Role which will be fetched
 	 * @throws {TypeError} When called with an improper argument.
-	 * @returns an Observable that will emit either an Arry of Roles, or a single Role, depending on whether
+	 * @returns an Observable that will emit either an Array of Roles, or a single Role, depending on whether
 	 *	`name`/`id` was passed
 	 * (In the event that `name`/`id` is given but does not match any Role, `null` will be emitted)
 	*/
@@ -243,13 +468,44 @@ export class APIService {
 					));
 					break;
 				default:
-					throw new TypeError("expected a name or ID, got '" + typeof(name) + "'");
+					throw new TypeError("expected a name or ID, got '" + typeof(nameOrID) + "'");
 					break;
 			}
 		}
 		return this.get(path).pipe(map(
 			r => {
 				return r.body.response as Array<Role>;
+			}
+		));
+	}
+
+	public getCapabilities (name: string): Observable<Capability>;
+	public getCapabilities (): Observable<Array<Capability>>;
+	/**
+	 * Fetches one or all Capabilities from Traffic Ops
+	 * @param name Optionally, the name of a single Capability which will be fetched
+	 * @throws {TypeError} When called with an improper argument.
+	 * @returns an Observable that will emit either an Array of Capabilities, or a single Capability,
+	 * depending on whether `name`/`id` was passed
+	 * (In the event that `name`/`id` is given but does not match any Capability, `null` will be emitted)
+	*/
+	public getCapabilities (name?: string) {
+		const path = '/api/' + this.API_VERSION + '/capabilities';
+		if (name) {
+			return this.get(path + '?name=' + encodeURIComponent(name)).pipe(map(
+				r => {
+					for (const cap of (r.body.response as Array<Capability>)) {
+						if (cap.name === name) {
+							return cap;
+						}
+					}
+					return null;
+				}
+			));
+		}
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response as Array<Capability>;
 			}
 		));
 	}
@@ -264,7 +520,7 @@ export class APIService {
 	public getTypes (name?: string): Observable<Map<string, Type> | Type> {
 		const path = '/api/' + this.API_VERSION + '/types';
 		if (name) {
-			return this.get(path + '?name=' + name).pipe(map(
+			return this.get(path + '?name=' + encodeURIComponent(name)).pipe(map(
 				r => {
 					for (const t of (r.body.response as Array<Type>)) {
 						if (t.name === name) {
@@ -293,13 +549,13 @@ export class APIService {
 	 * @returns An Observable that will emit an array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service
 	 * 	types.
 	*/
-	public getDSTypes(): Observable<Array<Type>> {
+	public getDSTypes (): Observable<Array<Type>> {
 		if (this.deliveryServiceTypes) {
 			return new Observable(
 				o => {
 					o.next(this.deliveryServiceTypes);
 					o.complete();
-					return {unsubscribe() {}};
+					return {unsubscribe () {}};
 				}
 			);
 		}
@@ -340,6 +596,41 @@ export class APIService {
 				}
 				return ret;
 			}
+		));
+	}
+
+	public getInvalidationJobs (opts?: {id: number} |
+	                                   {userId: number} |
+	                                   {user: User} |
+	                                   {dsId: number} |
+	                                   {deliveryService: DeliveryService}): Observable<Array<InvalidationJob>> {
+		let path = '/api/' + this.API_VERSION + '/jobs';
+		if (opts) {
+			path += '?';
+			if (opts.hasOwnProperty('id')) {
+				path += 'id=' + String((opts as {id: number}).id);
+			} else if (opts.hasOwnProperty('dsId')) {
+				path += 'dsId=' + String((opts as {dsId: number}).dsId);
+			} else if (opts.hasOwnProperty('userId')) {
+				path += 'userId=' + String((opts as {userId: number}).userId);
+			} else if (opts.hasOwnProperty('deliveryService')) {
+				path += 'dsId=' + String((opts as {deliveryService: DeliveryService}).deliveryService.id);
+			} else {
+				path += 'userId=' + String((opts as {user: User}).user.id);
+			}
+		}
+		return this.get(path).pipe(map(
+			r => {
+				return r.body.response as Array<InvalidationJob>;
+			}
+		));
+	}
+
+	public createInvalidationJob (job: InvalidationJob): Observable<boolean> {
+		const path = '/api/' + this.API_VERSION + '/user/current/jobs';
+		return this.post(path, job).pipe(map(
+			r => true,
+			e => false
 		));
 	}
 }

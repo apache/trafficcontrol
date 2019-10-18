@@ -14,7 +14,8 @@
 
 /**
  * This file contains the definition for the entire app. Its syntax is a bit arcane, but hopefully
- * by copy/pasting any novice can add a new component.
+ * by copy/pasting any novice can add a new component - though honestly you should just use
+ * `ng generate` to create new things (and then fix formatting/missing license)
 */
 
 import { BrowserModule } from '@angular/platform-browser';
@@ -22,6 +23,8 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
+
+import { Chart } from 'chart.js';
 
 // Routing
 import { AppRoutingModule } from './app-routing.module';
@@ -39,6 +42,23 @@ import { NewDeliveryServiceComponent } from './components/new-delivery-service/n
 import { TpHeaderComponent } from './components/tp-header/tp-header.component';
 import { LoadingComponent } from './components/loading/loading.component';
 import { UserCardComponent } from './components/user-card/user-card.component';
+import { DeliveryserviceComponent } from './components/deliveryservice/deliveryservice.component';
+import { InvalidationJobsComponent } from './components/invalidation-jobs/invalidation-jobs.component';
+
+// Directives
+import { LinechartDirective } from './directives/linechart.directive';
+import { OpenableDirective } from './directives/openable.directive';
+import { CustomvalidityDirective } from './directives/customvalidity.directive';
+import { CurrentuserComponent } from './components/currentuser/currentuser.component';
+
+Chart.plugins.register({
+	id: 'whiteBackground',
+	beforeDraw: (chartInstance: any) => {
+		const ctx = chartInstance.chart.ctx;
+		ctx.fillStyle = 'white';
+		ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
+	}
+});
 
 /**
  * This is the list of available, distinct URLs, with the leading path separator omitted. Each
@@ -50,7 +70,10 @@ const appRoutes: Routes = [
 	{ path: '', component: DashboardComponent },
 	{ path: 'login', component: LoginComponent },
 	{ path: 'users', component: UsersComponent},
-	{ path: 'new.Delivery.Service', component: NewDeliveryServiceComponent}
+	{ path: 'me', component: CurrentuserComponent},
+	{ path: 'new.Delivery.Service', component: NewDeliveryServiceComponent},
+	{ path: 'deliveryservice/:id', component: DeliveryserviceComponent},
+	{ path: 'deliveryservice/:id/invalidation-jobs', component: InvalidationJobsComponent}
 ];
 
 @NgModule({
@@ -65,6 +88,12 @@ const appRoutes: Routes = [
 		TpHeaderComponent,
 		LoadingComponent,
 		UserCardComponent,
+		DeliveryserviceComponent,
+		LinechartDirective,
+		InvalidationJobsComponent,
+		OpenableDirective,
+		CustomvalidityDirective,
+		CurrentuserComponent,
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: 'serverApp' }),

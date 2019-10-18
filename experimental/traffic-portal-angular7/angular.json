@@ -11,25 +11,22 @@
 			"schematics": {
 				"@schematics/angular:component": {
 					"styleext": "scss",
-					"lintFix": "true",
+					"lintFix": true,
 					"prefix": ""
 				},
 				"@schematics/angular:directive": {
-					"lintFix": "true",
+					"lintFix": true,
 					"prefix": ""
 				},
 				"@schematics/angular:service": {
-					"lintFix": "true"
+					"lintFix": true
 				},
 				"@schematics/angular:module": {
-					"lintFix": "true"
+					"lintFix": true
 				},
 				"@schematics/angular:class": {
-					"lintFix": "true"
+					"lintFix": true
 				},
-				"@schematics/angular:pipe": {
-					"lintFix": "true"
-				}
 			},
 			"architect": {
 				"build": {

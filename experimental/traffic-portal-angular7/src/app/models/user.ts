@@ -15,18 +15,18 @@
 /**
  * Reprents a Traffic Ops user (`tm_user` in the database)
 */
-export class User {
+export interface User {
 	addressLine1?:    string;
 	addressLine2?:    string;
 	city?:            string;
 	company?:         string;
 	country?:         string;
-	email:            string;
+	email?:           string;
 	fullName?:        string;
 	gid?:             number;
 	id:               number;
 	lastUpdated?:     Date;
-	localUser:        boolean;
+	localUser?:       boolean;
 	newUser:          boolean;
 	phoneNumber?:     string;
 	postalCode?:      string;
@@ -44,10 +44,19 @@ export class User {
 /**
  * Represents a role that a user may have
 */
-export class Role {
+export interface Role {
 	capabilities: Array<string>;
 	description?: string;
 	id:           number;
 	name:         string;
 	privLevel:    number;
+}
+
+/**
+ * Represents a user's ability to perform some action
+*/
+export interface Capability {
+	name:         string;
+	description:  string;
+	lastUpdated?: Date;
 }

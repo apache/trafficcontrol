@@ -21,6 +21,7 @@ header {
 	color: white;
 	position: sticky;
 	top: 0;
+	z-index: 1;
 
 	transition: font-size 0.5s;
 
@@ -54,6 +55,11 @@ nav#expanded > ul {
 	& > li {
 		display: inline;
 		margin: auto 0.5em;
+
+		& svg {
+			width: 1.1em;
+			fill: white;
+		}
 	}
 }
 

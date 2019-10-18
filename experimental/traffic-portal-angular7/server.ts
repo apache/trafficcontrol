@@ -138,7 +138,7 @@ if (to_url.port) {
 const TO_URL = 'http' + (to_use_SSL ? 's' : '') + '://' + to_host + ':' + String(to_port);
 
 if ((args.cert_path && !args.key_path) || (!args.cert_path && args.key_path)) {
-	console.error("Either both `-c`/`--cert-path` and `-K`/`--key-path` must be given, or neither.");
+	console.error('Either both `-c`/`--cert-path` and `-K`/`--key-path` must be given, or neither.');
 	process.exit(1);
 }
 const serveSSL = args.cert_path && args.key_path;
@@ -200,7 +200,7 @@ if (serveSSL) {
 		key = readFileSync(args.key_path, 'utf8');
 		cert = readFileSync(args.cert_path, 'utf8');
 	} catch (e) {
-		console.error("An error occurred reading SSL certificate/key files:", e);
+		console.error('An error occurred reading SSL certificate/key files:', e);
 		process.exit(1);
 	}
 }
@@ -249,23 +249,33 @@ app.use('/api/**', (req, res) => {
 		headers: req.headers
 	};
 
-
-	const proxiedRequest = request(fwdRequest, (r) => {
-		res.writeHead(r.statusCode, r.headers);
-		r.pipe(res);
-	});
-	req.pipe(proxiedRequest);
+	try {
+		const proxiedRequest = request(fwdRequest, (r) => {
+			res.writeHead(r.statusCode, r.headers);
+			r.pipe(res);
+		});
+		req.pipe(proxiedRequest);
+	} catch (e) {
+		console.error(e);
+		res.end();
+		req.end();
+	}
 });
 
 // Default route shows the dash
 app.get('*', (req, res) => {
-	res.render('index', { req });
+	try {
+		res.render('index', { req });
+	} catch (e) {
+		console.error(e);
+		res.end();
+	}
 });
 
 app.enable('trust proxy');
 
 // Start up the Node server
-function logMsg() {
+function logMsg () {
 	if (serveSSL) {
 		console.log(`Node Express server listening on https://localhost:${args.port}`);
 	} else {

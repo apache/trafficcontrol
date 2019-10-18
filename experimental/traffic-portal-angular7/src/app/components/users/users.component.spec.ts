@@ -14,6 +14,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { of } from 'rxjs';
 
 import { UsersComponent } from './users.component';
 
@@ -21,11 +22,25 @@ import { LoadingComponent } from '../loading/loading.component';
 import { TpHeaderComponent } from '../tp-header/tp-header.component';
 import { UserCardComponent } from '../user-card/user-card.component';
 
+import { APIService } from '../../services/api.service';
+
+import { User } from '../../models';
+
 describe('UsersComponent', () => {
 	let component: UsersComponent;
 	let fixture: ComponentFixture<UsersComponent>;
 
 	beforeEach(async(() => {
+		// mock the API
+		const mockAPIService = jasmine.createSpyObj(["getUsers", "getRoles", "getCurrentUser"]);
+		mockAPIService.getUsers.and.returnValue(of([]));
+		mockAPIService.getRoles.and.returnValue(of([]));
+		mockAPIService.getCurrentUser.and.returnValue(of({
+			id: 0,
+			newUser: false,
+			username: "test"
+		} as User));
+
 		TestBed.configureTestingModule({
 			declarations: [
 				UsersComponent,
@@ -38,8 +53,9 @@ describe('UsersComponent', () => {
 				HttpClientModule,
 				ReactiveFormsModule
 			]
-		})
-	.compileComponents();
+		});
+		TestBed.overrideProvider(APIService, { useValue: mockAPIService });
+		TestBed.compileComponents();
 	}));
 
 	beforeEach(() => {
@@ -50,5 +66,9 @@ describe('UsersComponent', () => {
 
 	it('should exist', () => {
 		expect(component).toBeTruthy();
+	});
+
+	afterAll(() => {
+		TestBed.resetTestingModule();
 	});
 });
