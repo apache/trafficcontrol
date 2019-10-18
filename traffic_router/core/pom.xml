@@ -196,7 +196,8 @@
 							<goal>integration-test</goal>
 						</goals>
 						<configuration>
-							<argLine>-Djava.library.path=${java.library.path}</argLine> <!-- This needs to be parameterized -->
+							<argLine>@{argLine}</argLine>
+							<!--<argLine>-Djava.library.path=${java.library.path}</argLine>--> <!-- This needs to be parameterized -->
 							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</groups>
 							<includes>
 								<include>**/*Suite.java</include>
@@ -210,7 +211,8 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
-							<argLine>-Djava.library.path=${java.library.path}</argLine> <!-- This needs to be parameterized -->
+							<argLine>@{argLine}</argLine>
+							<!--<argLine>-Djava.library.path=${java.library.path}</argLine>--> <!-- This needs to be parameterized -->
 							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest</groups>
 							<includes>
 								<include>**/*.java</include>
