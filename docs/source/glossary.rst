@@ -388,6 +388,8 @@ Glossary
 
 	Tenant
 	Tenants
+	Tenancy
+	Tenancies
 		Users are grouped into :dfn:`Tenants` (or :dfn:`Tenancies`) to segregate ownership of and permissions over :term:`Delivery Service`\ s and their resources. To be clear, the notion of :dfn:`Tenancy` **only** applies within the context of :term:`Delivery Service`\ s and does **not** apply permissions restrictions to any other aspect of Traffic Control.
 
 	Type
