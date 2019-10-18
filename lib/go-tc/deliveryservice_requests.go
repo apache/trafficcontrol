@@ -298,7 +298,16 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.HasOriginDynamicRemap, validation.Required),
 		validation.Field(&details.HasSignedURLs, validation.Required),
 		validation.Field(&details.MaxLibrarySizeEstimate, validation.Required),
-		validation.Field(&details.OriginHeaders, validation.Required),
+		validation.Field(&details.OriginHeaders, validation.By(
+			func (h interface{}) error {
+				if h == nil {
+					return nil
+				}
+				if len(*h.(*OriginHeaders)) < 1 {
+					return errors.New("originHeaders: cannot be an empty list (use 'null' if none)")
+				}
+				return nil
+			})),
 		validation.Field(&details.OriginTestFile, validation.Required),
 		validation.Field(&details.OriginURL, validation.Required, is.URL),
 		validation.Field(&details.PeakBPSEstimate, validation.Required),
