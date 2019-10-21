@@ -86,7 +86,7 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(bts)
+	w.Write(append(bts, '\n'))
 }
 
 // WriteRespVals is like WriteResp, but also takes a map of root-level values to write. The API most commonly needs these for meta-parameters, like size, limit, and orderby.
