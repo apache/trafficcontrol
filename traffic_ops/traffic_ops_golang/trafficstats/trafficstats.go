@@ -34,7 +34,7 @@ import "github.com/apache/trafficcontrol/lib/go-log"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
-import influx "github.com/influxdata/influxdb1-client/v2"
+import influx "github.com/influxdata/influxdb/client/v2"
 
 var (
 	metricTypes = map[string]interface{}{
@@ -351,7 +351,6 @@ func getSummary(client *influx.Client, conf *tc.TrafficStatsConfig, db string) (
 			"end":      conf.End,
 			"interval": string(conf.Interval),
 		})
-	q.RetentionPolicy = "monthly"
 
 	log.Debugf("InfluxDB SummaryQuery: %+v", q)
 
@@ -550,7 +549,6 @@ func getSeries(client *influx.Client, conf *tc.TrafficStatsConfig, db string) (t
 			"start": conf.Start,
 			"end":   conf.End,
 		})
-	q.RetentionPolicy = "monthly"
 
 	log.Debugf("InfluxDB series query: %+v", q)
 

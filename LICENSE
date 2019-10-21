@@ -328,9 +328,9 @@ For the pq component:
 ./vendor/github.com/lib/pq/LICENSE.md
 
 For the influxdb component:
-@traffic_stats/vendor/github.com/influxdata/influxdb/*
-./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE
-./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
+@vendor/github.com/influxdata/influxdb/*
+./vendor/github.com/influxdata/influxdb/LICENSE
+./vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
 
 For the errors component:
 @traffic_stats/vendor/github.com/pkg/errors/*

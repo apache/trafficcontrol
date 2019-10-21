@@ -37,12 +37,24 @@ function initBuildArea() {
 	local tm_dest=$(createSourceDir traffic_monitor)
 	cd "$TM_DIR" || \
 		 { echo "Could not cd to $TM_DIR: $?"; exit 1; }
+
+	echo "PATH: $PATH"
+	echo "GOPATH: $GOPATH"
+	go version
+	go env
+
+	# get x/* packages (everything else should be properly vendored)
+	go get -v golang.org/x/net/publicsuffix golang.org/x/sys/unix || \
+		{ echo "Could not get go package dependencies"; exit 1; }
+
+	# compile traffic_monitor
+	go build -v -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=${TC_VERSION}" || \
+		{ echo "Could not build traffic_monitor binary"; exit 1; }
+
 	rsync -av ./ "$tm_dest"/ || \
 		 { echo "Could not copy to $tm_dest: $?"; exit 1; }
 	cp "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; exit 1; }
-
-	cp -r "$TM_DIR"/ "$tm_dest" || { echo "Could not copy $TM_DIR to $tm_dest: $?"; exit 1; }
 
 	tar -czvf "$tm_dest".tgz -C "$RPMBUILD"/SOURCES $(basename $tm_dest) || { echo "Could not create tar archive $tm_dest.tgz: $?"; exit 1; }
 	cp "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; exit 1; }

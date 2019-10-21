@@ -35,55 +35,12 @@ Installs traffic_monitor
 %setup
 
 %build
-export GOPATH=$(pwd)
-# Create build area with proper gopath structure
-mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
-
-go_get_version() {
-  local src=$1
-  local version=$2
-  (
-   cd $src && \
-   git checkout $version && \
-   go get -v \
-  )
-}
-
-# build all internal go dependencies (expects package being built as argument)
-build_dependencies () {
-    IFS=$'\n'
-    array=($(go list -f '{{ join .Deps "\n" }}' | grep trafficcontrol | grep -v $1))
-    prefix=github.com/apache/trafficcontrol
-    for (( i=0; i<${#array[@]}; i++ )); do
-        curPkg=${array[i]};
-        curPkgShort=${curPkg#$prefix};
-        echo "checking $curPkg";
-        godir=$GOPATH/src/$curPkg;
-        if [ ! -d "$godir" ]; then
-          ( echo "building $curPkg" && \
-            mkdir -p "$godir" && \
-            cd "$godir" && \
-            cp -r "$TC_DIR$curPkgShort"/* . && \
-            build_dependencies "$curPkgShort" && \
-            go get -v && \
-            echo "go building $curPkgShort at $(pwd)" && \
-            go build \
-          ) || { echo "Could not build go $curPkgShort at $(pwd): $!"; exit 1; };
-        fi
-     done
-}
-
-#build traffic_monitor binary
+# copy traffic_monitor binary
 godir=src/github.com/apache/trafficcontrol/traffic_monitor
-oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
-  cp -r "$TC_DIR"/traffic_monitor/* . && \
-  build_dependencies traffic_monitor  && \
-  #with proper vendoring go get would be  unneeded.
-  go get -d -v && \
-  go build -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=%{traffic_control_version}" \
-) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+  cp -r "$TC_DIR"/traffic_monitor/* .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 %install
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor

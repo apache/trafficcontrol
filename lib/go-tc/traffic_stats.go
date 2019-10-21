@@ -29,7 +29,7 @@ import "time"
 
 import "github.com/apache/trafficcontrol/lib/go-log"
 
-import influx "github.com/influxdata/influxdb1-client/v2"
+import influx "github.com/influxdata/influxdb/client/v2"
 
 // TRAFFIC_STATS_VERSION was supposed to be the "API version", but actually the plugin (this route
 // used to be a plugin in Perl) always returned this static value
