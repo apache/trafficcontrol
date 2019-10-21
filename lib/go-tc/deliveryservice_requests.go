@@ -345,30 +345,10 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 					return errors.New("routingType: required")
 				}
 				*t.(*DSType) = DSTypeFromString(string(*t.(*DSType)))
-				switch *(t.(*DSType)) {
-				case DSTypeHTTPNoCache:
-					fallthrough
-				case DSTypeDNS:
-					fallthrough
-				case DSTypeDNSLive:
-					fallthrough
-				case DSTypeHTTP:
-					fallthrough
-				case DSTypeDNSLiveNational:
-					fallthrough
-				case DSTypeAnyMap:
-					fallthrough
-				case DSTypeHTTPLive:
-					fallthrough
-				case DSTypeSteering:
-					fallthrough
-				case DSTypeHTTPLiveNational:
-					fallthrough
-				case DSTypeClientSteering:
-					return nil
-				default:
+				if *t.(*DSType) == DSTypeInvalid {
 					return errors.New("routingType: invalid Routing Type")
 				}
+				return nil
 			})),
 		validation.Field(&details.ServiceDesc, validation.Required),
 	)
