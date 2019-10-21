@@ -231,10 +231,10 @@ type DeliveryServiceRequestDetails struct {
 	RangeRequestHandling string `json:"rangeRequestHandling"`
 	// RateLimitingGBPS is an optional rate limit for the requested Delivery Service in gigabytes per
 	// second.
-	RateLimitingGBPS *string `json:"rateLimitingGBPS"`
+	RateLimitingGBPS *uint `json:"rateLimitingGBPS"`
 	// RateLimitingTPS is an optional rate limit for the requested Delivery Service in transactions
 	// per second.
-	RateLimitingTPS *string `json:"rateLimitingTPS"`
+	RateLimitingTPS *uint `json:"rateLimitingTPS"`
 	// RoutingName is the top-level DNS label under which the Delivery Service should be requested.
 	RoutingName string `json:"routingName"`
 	// RoutingType is the type of routing Traffic Router should perform for the requested Delivery
@@ -293,10 +293,34 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 				}
 				return nil
 			})),
-		validation.Field(&details.HasNegativeCachingCustomization, validation.Required),
-		validation.Field(&details.HasOriginACLWhitelist, validation.Required),
-		validation.Field(&details.HasOriginDynamicRemap, validation.Required),
-		validation.Field(&details.HasSignedURLs, validation.Required),
+		validation.Field(&details.HasNegativeCachingCustomization, validation.By(
+			func (h interface{}) error {
+				if h == nil {
+					return errors.New("hasNegativeCachingCustomization: required")
+				}
+				return nil
+			})),
+		validation.Field(&details.HasOriginACLWhitelist, validation.By(
+			func (h interface{}) error {
+				if h == nil {
+					return errors.New("hasNegativeCachingCustomization: required")
+				}
+				return nil
+			})),
+		validation.Field(&details.HasOriginDynamicRemap, validation.By(
+			func (h interface{}) error {
+				if h == nil {
+					return errors.New("hasNegativeCachingCustomization: required")
+				}
+				return nil
+			})),
+		validation.Field(&details.HasSignedURLs, validation.By(
+			func (h interface{}) error {
+				if h == nil {
+					return errors.New("hasNegativeCachingCustomization: required")
+				}
+				return nil
+			})),
 		validation.Field(&details.MaxLibrarySizeEstimate, validation.Required),
 		validation.Field(&details.OriginHeaders, validation.By(
 			func (h interface{}) error {
@@ -320,6 +344,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 				if t == nil || *(t.(*DSType)) == "" {
 					return errors.New("routingType: required")
 				}
+				*t.(*DSType) = DSTypeFromString(string(*t.(*DSType)))
 				switch *(t.(*DSType)) {
 				case DSTypeHTTPNoCache:
 					fallthrough
