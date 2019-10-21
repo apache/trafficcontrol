@@ -1,0 +1,107 @@
+<!--
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Certificate Autorenewal Summary</title>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+</style>
+</head>
+	<body>
+		<h1>Let's Encrypt Certificates Summary</h1>
+		<table>
+		<thead>
+		    <tr>
+        	    <th>XmlId</th>
+        	    <th>Version</th>
+        	    <th>Expiration</th>
+        	    <th>AuthType</th>
+        	    <th>Error</th>
+       	    </tr>
+       	</thead>
+       	<tbody>
+		    {{range .LetsEncryptExpirations}}
+		    <tr>
+        	    <td>{{.XmlId}}</td>
+        	    <td>{{.Version}}</td>
+        	    <td>{{.Expiration}}</td>
+        	    <td>{{.AuthType}}</td>
+        	    <td>{{.Error}}</td>
+       	    </tr>
+		    {{end}}
+       	</tbody>
+		</table>
+
+		<h3>Self Signed Certificates Summary</h3>
+		<table>
+		<thead>
+		    <tr>
+        	    <th>XmlId</th>
+        	    <th>Version</th>
+        	    <th>Expiration</th>
+        	    <th>AuthType</th>
+        	    <th>Error</th>
+       	    </tr>
+       	</thead>
+       	<tbody>
+		    {{range .SelfSignedExpirations}}
+		    <tr>
+        	    <td>{{.XmlId}}</td>
+        	    <td>{{.Version}}</td>
+        	    <td>{{.Expiration}}</td>
+        	    <td>{{.AuthType}}</td>
+        	    <td>{{.Error}}</td>
+       	    </tr>
+            {{end}}
+        </tbody>
+        </table>
+
+		<h3>Other Certificates Summary</h3>
+		<table>
+		<thead>
+		    <tr>
+        	    <th>XmlId</th>
+        	    <th>Version</th>
+        	    <th>Expiration</th>
+        	    <th>AuthType</th>
+        	    <th>Error</th>
+       	    </tr>
+       	</thead>
+       	<tbody>
+            {{range .OtherExpirations}}
+		    <tr>
+        	    <td>{{.XmlId}}</td>
+        	    <td>{{.Version}}</td>
+        	    <td>{{.Expiration}}</td>
+        	    <td>{{.AuthType}}</td>
+        	    <td>{{.Error}}</td>
+       	    </tr>
+            {{end}}
+        </tbody>
+        </table>
+	</body>
+</html>

@@ -72,6 +72,10 @@ Response Structure
 :state:           An optional field which, if present, contains the state entered by the user when generating certificate\ [#optional]_
 :version:         The version of the certificate record in Traffic Vault
 
+	.. versionadded:: 1.4
+
+:expiration:      The expiration date of the certificate for the :term:`Delivery Service`
+
 .. code- block:: http
 	:caption: Response Example
 
@@ -97,7 +101,8 @@ Response Structure
 			"crt": "...",
 			"key": "...",
 			"csr": "..."
-		}
+		},
+		"expiration": "2020-08-18T13:53:06Z"
 	}}
 
 .. note:: The response example uses abbreviated values for the ``crt``, ``key``, and ``csr``, as these will generally be very large, base64-encoded SSL keys and certificates. Note that in general the output of this request should **not** be made available, as the ``key`` field contains the *private* SSL key corresponding to the certificate.

@@ -967,6 +967,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/{id}/servers/eligible/?(\.json)?$`, deliveryservice.GetServersEligible, auth.PrivLevelReadOnly, Authenticated, nil, 474761584, noPerlBypass},
 
+		{api.Version{1, 4}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys$`, deliveryservice.GetSSLKeysByXMLIDV14, auth.PrivLevelAdmin, Authenticated, nil, 1135772906, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys$`, deliveryservice.GetSSLKeysByXMLID, auth.PrivLevelAdmin, Authenticated, nil, 1135772907, noPerlBypass},
 		{api.Version{1, 1}, http.MethodGet, `deliveryservices/hostname/{hostname}/sslkeys$`, deliveryservice.GetSSLKeysByHostName, auth.PrivLevelAdmin, Authenticated, nil, 2105792225, noPerlBypass},
 		{api.Version{1, 1}, http.MethodPost, `deliveryservices/sslkeys/add$`, deliveryservice.AddSSLKeys, auth.PrivLevelAdmin, Authenticated, nil, 1872878583, noPerlBypass},

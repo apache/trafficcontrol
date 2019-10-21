@@ -49,7 +49,6 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
     }
 
     @Override
-    @SuppressWarnings("PMD.CyclomaticComplexity")
     public boolean useData(final String data) {
         try {
             final ObjectMapper mapper = new ObjectMapper(new JsonFactory());
@@ -84,30 +83,9 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
                     }
                 }
 
-                ArrayNode staticDnsEntriesNode;
+                final String name = nameSb.toString();
 
-                if (deliveryServiceConfig.findValue("staticDnsEntries") != null) {
-                    staticDnsEntriesNode = (ArrayNode) deliveryServiceConfig.findValue("staticDnsEntries");
-                } else {
-                    staticDnsEntriesNode = mapper.createArrayNode();
-                }
-
-                if (challenge.getRecord().isEmpty()) {
-                    for (int i = 0; i < staticDnsEntriesNode.size(); i++) {
-                        if (staticDnsEntriesNode.get(i).get("name").equals("_acme-challenge")) {
-                            staticDnsEntriesNode.remove(i);
-                        }
-                    }
-                } else {
-
-                    final ObjectNode newChildNode = mapper.createObjectNode();
-                    newChildNode.put("type", "TXT");
-                    newChildNode.put("name", nameSb.toString());
-                    newChildNode.put("value", challenge.getRecord());
-                    newChildNode.put("ttl", 10);
-
-                    staticDnsEntriesNode.add(newChildNode);
-                }
+                final ArrayNode staticDnsEntriesNode = updateStaticEntries(challenge, name, mapper, deliveryServiceConfig);
 
                 deliveryServiceConfig.set("staticDnsEntries", staticDnsEntriesNode);
                 deliveryServicesNode.set(dsLabel, deliveryServiceConfig);
@@ -153,7 +131,6 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
         return "dnschallengemapping";
     }
 
-    @SuppressWarnings("PMD.AppendCharacterWithChar")
     private String readConfigFile() {
         try {
             final InputStream is = new FileInputStream(configFile);
@@ -161,7 +138,7 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
             String line = buf.readLine();
             final StringBuilder sb = new StringBuilder();
             while (line != null) {
-                sb.append(line).append("\n");
+                sb.append(line).append('\n');
                 line = buf.readLine();
             }
             return sb.toString();
@@ -170,4 +147,34 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
             return null;
         }
     }
+
+    private ArrayNode updateStaticEntries(final LetsEncryptDnsChallenge challenge, final String name, final ObjectMapper mapper, final ObjectNode deliveryServiceConfig) {
+        ArrayNode staticDnsEntriesNode = mapper.createArrayNode();
+        ArrayNode newStaticDnsEntriesNode = mapper.createArrayNode();
+
+        if (deliveryServiceConfig.findValue("staticDnsEntries") != null) {
+            staticDnsEntriesNode = (ArrayNode) deliveryServiceConfig.findValue("staticDnsEntries");
+        }
+
+        if (challenge.getRecord().isEmpty()) {
+            for (int i = 0; i < staticDnsEntriesNode.size(); i++) {
+                if (!staticDnsEntriesNode.get(i).get("name").equals(name)) {
+                    newStaticDnsEntriesNode.add(i);
+                }
+            }
+        } else {
+            newStaticDnsEntriesNode = staticDnsEntriesNode;
+
+            final ObjectNode newChildNode = mapper.createObjectNode();
+            newChildNode.put("type", "TXT");
+            newChildNode.put("name", name);
+            newChildNode.put("value", challenge.getRecord());
+            newChildNode.put("ttl", 10);
+
+            newStaticDnsEntriesNode.add(newChildNode);
+        }
+
+        return newStaticDnsEntriesNode;
+    }
+
 }

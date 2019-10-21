@@ -28,7 +28,11 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -42,10 +46,6 @@ import (
 	"github.com/go-acme/lego/lego"
 	"github.com/go-acme/lego/registration"
 	"github.com/jmoiron/sqlx"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type MyUser struct {
@@ -54,9 +54,7 @@ type MyUser struct {
 	key          crypto.PrivateKey
 }
 
-func GetLetsEncryptTimeout() time.Duration {
-	return time.Minute * 10
-}
+const LetsEncryptTimeout = time.Minute * 10
 
 func (u *MyUser) GetEmail() string {
 	return u.Email
@@ -74,12 +72,12 @@ type DNSProviderTrafficRouter struct {
 	db *sqlx.DB
 }
 
-func NewDNSProviderTrafficRouter() (*DNSProviderTrafficRouter, error) {
-	return &DNSProviderTrafficRouter{}, nil
+func NewDNSProviderTrafficRouter() *DNSProviderTrafficRouter {
+	return &DNSProviderTrafficRouter{}
 }
 
 func (d *DNSProviderTrafficRouter) Timeout() (timeout, interval time.Duration) {
-	return GetLetsEncryptTimeout(), time.Second * 30
+	return LetsEncryptTimeout, time.Second * 30
 }
 
 func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error {
@@ -140,13 +138,15 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	ctx, _ := context.WithTimeout(r.Context(), GetLetsEncryptTimeout())
+	ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout)
 
 	req := tc.DeliveryServiceLetsEncryptSSLKeysReq{}
 	if err := api.Parse(r.Body, nil, &req); err != nil {
-		log.Errorf("Error parsing request: %s", err.Error())
 		api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
 		return
+	}
+	if *req.DeliveryService == "" {
+		req.DeliveryService = req.Key
 	}
 
 	go GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User)
@@ -220,7 +220,7 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 
 	client.Challenge.Remove(challenge.HTTP01)
 	client.Challenge.Remove(challenge.TLSALPN01)
-	trafficRouterDns, err := NewDNSProviderTrafficRouter()
+	trafficRouterDns := NewDNSProviderTrafficRouter()
 	trafficRouterDns.db = db
 	if err != nil {
 		log.Errorf(deliveryService+": Error creating Traffic Router DNS provider: %s", err.Error())
@@ -256,23 +256,14 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 		return err
 	}
 
-	fmt.Printf("%#v\n", certificates)
-
-	expiration, err := parseExpirationFromCert(certificates.Certificate)
-	if err != nil {
-		log.Errorf(deliveryService+": %s", err.Error())
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
-		return err
-	}
-
 	// Save certs into Riak
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
 		AuthType:        tc.LetsEncryptAuthType,
 		CDN:             *req.CDN,
 		DeliveryService: *req.DeliveryService,
+		Key:             *req.DeliveryService,
 		Hostname:        *req.HostName,
 		Version:         *req.Version,
-		Expiration:      expiration,
 	}
 
 	keyDer := x509.MarshalPKCS1PrivateKey(priv)

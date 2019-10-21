@@ -69,6 +69,31 @@ func GetDeliveryServiceSSLKeysObj(xmlID string, version string, tx *sql.Tx, auth
 	return key, found, nil
 }
 
+func GetDeliveryServiceSSLKeysObjV14(xmlID string, version string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.DeliveryServiceSSLKeysV14, bool, error) {
+	key := tc.DeliveryServiceSSLKeysV14{}
+	found := false
+	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+		// get the deliveryservice ssl keys by xmlID and version
+		ro, err := FetchObjectValues(MakeDSSSLKeyKey(xmlID, version), DeliveryServiceSSLKeysBucket, cluster)
+		if err != nil {
+			return err
+		}
+		if len(ro) == 0 {
+			return nil // not found
+		}
+		if err := json.Unmarshal(ro[0].Value, &key); err != nil {
+			log.Errorf("failed at unmarshaling sslkey response: %s\n", err)
+			return errors.New("unmarshalling Riak result: " + err.Error())
+		}
+		found = true
+		return nil
+	})
+	if err != nil {
+		return key, false, err
+	}
+	return key, found, nil
+}
+
 func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) error {
 	keyJSON, err := json.Marshal(&key)
 	if err != nil {

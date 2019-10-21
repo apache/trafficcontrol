@@ -19,6 +19,8 @@
 ``letsencrypt/autorenew``
 *************************
 
+.. versionadded:: 1.4
+
 ``POST``
 ========
 Generates an SSL certificate and private key using Let's Encrypt for a :term:`Delivery Service`
@@ -34,6 +36,17 @@ No parameters available
 
 Response Structure
 ------------------
+:LetsEncryptExpirations: A list of objects with information regarding certificate expiration for all Let's Encrypt certificates
+
+	:XmlId:       The :term:`Delivery Service`'s uniquely identifying 'xml_id'
+	:Version:     The version of the certificate record in Traffic Vault
+	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service`
+	:AuthType:    The authority type of the certificate for the :term:`Delivery Service`
+	:Error:       Any errors received in the renewal process
+
+:SelfSignedExpirations:  A list of objects with information regarding certificate expiration for all self signed certificates
+:OtherExpirations:       A list of objects with information regarding certificate expiration for all other certificates
+
 .. code-block:: http
 	:caption: Response Example
 

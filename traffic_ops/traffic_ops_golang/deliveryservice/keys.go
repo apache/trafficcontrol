@@ -29,7 +29,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -107,27 +106,6 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		Version:         *req.Version,
 		Certificate:     *req.Certificate,
 		AuthType:        authType,
-	}
-
-	expiration := *new(time.Time)
-	for _, pemCert := range strings.SplitAfter(certChain, PemCertEndMarker) {
-		if len(strings.TrimSpace(pemCert)) == 0 {
-			continue
-		}
-
-		pBlock, _ := pem.Decode([]byte(pemCert))
-		x509cert, err := x509.ParseCertificate(pBlock.Bytes)
-
-		if err != nil {
-			log.Errorf("Could not parse expiration. %s", err.Error())
-		}
-		if expiration.IsZero() || x509cert.NotAfter.Before(expiration) {
-			expiration = x509cert.NotAfter
-		}
-	}
-
-	if !expiration.IsZero() {
-		dsSSLKeys.Expiration = expiration
 	}
 
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
@@ -241,10 +219,54 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 		}
 	}
 
-	if keyObj.Expiration.IsZero() {
+	api.WriteResp(w, r, keyObj)
+}
+
+// GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID.
+func GetSSLKeysByXMLIDV14(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
+		return
+	}
+	xmlID := inf.Params["xmlid"]
+	getSSLKeysByXMLIDHelperV14(xmlID, inf, w, r)
+}
+
+func getSSLKeysByXMLIDHelperV14(xmlID string, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
+	version := inf.Params["version"]
+	decode := inf.Params["decode"]
+	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV14(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.WriteRespAlertObj(w, r, tc.InfoLevel, "no object found for the specified key", struct{}{}) // empty response object because Perl
+		return
+	}
+	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
+		err = base64DecodeCertificate(&keyObj.Certificate)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
+			return
+		}
+	}
+
+	if keyObj.Certificate.Crt != "" && keyObj.Expiration.IsZero() {
 		exp, err := parseExpirationFromCert([]byte(keyObj.Certificate.Crt))
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(xmlID+": "+err.Error()))
+			return
 		}
 		keyObj.Expiration = exp
 	}

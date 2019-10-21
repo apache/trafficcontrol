@@ -43,17 +43,19 @@ public class LetsEncryptDnsChallenge {
     }
 
     @Override
-    @SuppressWarnings("PMD")
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        LetsEncryptDnsChallenge that = (LetsEncryptDnsChallenge) o;
-        return Objects.equals(fqdn, that.fqdn) &&
-                Objects.equals(record, that.record);
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final LetsEncryptDnsChallenge that = (LetsEncryptDnsChallenge) o;
+        return fqdn.equals(that.fqdn) &&
+                record.equals(that.record);
     }
 
     @Override
-    @SuppressWarnings("PMD")
     public int hashCode() {
         return Objects.hash(fqdn, record);
     }

@@ -19,6 +19,8 @@
 ``deliveryservices/sslkeys/generate/letsencrypt``
 *************************************************
 
+.. versionadded:: 1.4
+
 ``POST``
 ========
 Generates an SSL certificate and private key using Let's Encrypt for a :term:`Delivery Service`
@@ -29,14 +31,13 @@ Generates an SSL certificate and private key using Let's Encrypt for a :term:`De
 
 Request Structure
 -----------------
-:key:             The 'xml_id' of the :term:`Delivery Service` for which keys will be generated
-:version:         The version of the keys being generated
+:key:             The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated
+:version:         An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
 :hostname:        The desired hostname of the :term:`Delivery Service`
 
-	.. note:: In most cases, this must be the same as the :term:`Delivery Service` URL'
+	.. note:: In most cases, this must be the same as the :ref:`ds-example-urls`
 
-:cdn:             The CDN of the :term:`Delivery Service` for which the certs will be generated
-:deliveryservice: The :term:`Delivery Service` for which keys will be generated
+:cdn:             The name of the CDN of the :term:`Delivery Service` for which the certs will be generated
 
 .. code-block:: http
 	:caption: Request Example
@@ -48,17 +49,16 @@ Request Structure
 		"key": "ds-01",
 		"version": "3",
 		"hostname": "tr.ds-01.ott.kabletown.com",
-		"cdn":"test-cdn",
-		"deliveryservice":"ds-01"
+		"cdn":"test-cdn"
 	}
 
 
 Response Structure
 ------------------
-.. code-block:: http
+.. code-block:: json
 	:caption: Response Example
 
-	HTTP/1.1 200 OK
-	Content-Type: application/json
-
-	{ "response": "Successfully created ssl keys for ds-01" }
+	{ "alerts": [{
+		"level": "success",
+		"text": "Beginning async call to Let's Encrypt for ds-01.  This may take a few minutes."
+	}]}

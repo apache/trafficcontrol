@@ -55,7 +55,11 @@ type DeliveryServiceSSLKeys struct {
 	Key             string                            `json:"key"`
 	Version         util.JSONIntStr                   `json:"version"`
 	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
-	Expiration      time.Time                         `json:"expiration,omitempty"`
+}
+
+type DeliveryServiceSSLKeysV14 struct {
+	DeliveryServiceSSLKeys
+	Expiration time.Time `json:"expiration,omitempty"`
 }
 
 type DeliveryServiceSSLKeysReq struct {

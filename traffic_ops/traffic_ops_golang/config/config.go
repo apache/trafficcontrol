@@ -143,6 +143,7 @@ type ConfigSMTP struct {
 	User     string `json:"user"`
 }
 
+// ConfigLetsEncrypt contains configuration information for integration with the Let's Encrypt certificate authority.
 type ConfigLetsEncrypt struct {
 	Email                     string `json:"user_email,omitempty"`
 	SendExpEmail              bool   `json:"send_expiration_email"`

@@ -315,8 +315,6 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
                 function() {
                     locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys');
                 });
-        }, function () {
-            // do nothing
         });
     };
 
@@ -340,8 +338,6 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
                 function() {
                     locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys');
                 });
-        }, function () {
-            // do nothing
         });
     };
 

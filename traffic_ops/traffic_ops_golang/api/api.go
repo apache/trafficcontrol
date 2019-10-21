@@ -854,28 +854,19 @@ func AddUserToReq(r *http.Request, u auth.CurrentUser) {
 	*r = *r.WithContext(ctx)
 }
 
-func SendEmail(config config.Config, header string, data interface{}, templateFile string, toEmail string) error {
+func SendEmailFromTemplate(config config.Config, header string, data interface{}, templateFile string, toEmail string) (int, error, error) {
 	email := rfc.EmailAddress{
 		Address: mail.Address{Name: "", Address: toEmail},
 	}
 
 	msgBodyBuffer, err := parseTemplate(templateFile, data)
 	if err != nil {
-		return err
+		return http.StatusInternalServerError, err, nil
 	}
 	msg := append([]byte(header), msgBodyBuffer.Bytes()...)
 
-	int, userError, systemError := SendMail(email, msg, &config)
-	if userError != nil {
-		return errors.New("Failed to send email: " + userError.Error())
-	}
-	if systemError != nil {
-		return errors.New("Failed to send email: " + userError.Error())
-	}
-	if int != http.StatusOK {
-		return errors.New("Failed to send email. Unexpected response code: " + strconv.Itoa(int))
-	}
-	return nil
+	return SendMail(email, msg, &config)
+
 }
 
 func parseTemplate(templateFileName string, data interface{}) (*bytes.Buffer, error) {
@@ -884,10 +875,9 @@ func parseTemplate(templateFileName string, data interface{}) (*bytes.Buffer, er
 		return nil, err
 	}
 	buf := new(bytes.Buffer)
-	if err = t.Execute(buf, data); err != nil {
-		return nil, err
-	}
-	return buf, nil
+	err = t.Execute(buf, data)
+
+	return buf, err
 }
 
 type loginAuth struct {

@@ -693,34 +693,34 @@ To see the ordering of certificates you may have to manually split up your certi
 
 Let's Encrypt
 -------------
-Let’s Encrypt is a free, automated :abbr:`CA (Certificate Authority)` using :abbr:`ACME (Automated Certificate Management Environment)` protocol. Let's Encrypt performs a domain validation before issuing or renewing a certificate. There are several options for domain validation but for this application the DNS challenge is used in order to receive wildcard certificates. Let's Encrypt sends a token to be used as a TXT record at `_acme-challenge.domain.example.com` and after verifying that the token is accessible there, will return the newly generated and signed certificate and key. The basic workflow implemented is:
+Let’s Encrypt is a free, automated :abbr:`CA (Certificate Authority)` using :abbr:`ACME (Automated Certificate Management Environment)` protocol. Let's Encrypt performs a domain validation before issuing or renewing a certificate. There are several options for domain validation but for this application the DNS challenge is used in order to receive wildcard certificates. Let's Encrypt sends a token to be used as a TXT record at ``_acme-challenge.domain.example.com`` and after verifying that the token is accessible there, will return the newly generated and signed certificate and key. The basic workflow implemented is:
 
 #. ``POST`` to Let's Encrypt and receive the DNS challenge token.
 #. Traffic Ops stores the DNS challenge in the Traffic Ops database using the fqdn of the certificate request as the key.
 #. Traffic Router has a watcher set up to watch for changes in the Traffic Ops database table.
-#. When a new record appears, Traffic Router reads it and puts the token from Let's Encrypt as a TXT record at `_acme-challenge.domain.example.com` for the specified :term:`Delivery Service`.
+#. When a new record appears, Traffic Router reads it and puts the token from Let's Encrypt as a TXT record at ``_acme-challenge.domain.example.com`` for the specified :term:`Delivery Service`.
 #. Let's Encrypt verifies that the correct record is accessible to verify ownership of the domain.
 #. Let's Encrypt returns the signed certificate and key to Traffic Ops.
-#. Traffic Ops stores the certificate and key in Riak and removes the DNS challenge record from the Traffic Ops database.
+#. Traffic Ops stores the certificate and key in Traffic Vault and removes the DNS challenge record from the Traffic Ops database.
 #. The Traffic Router watcher removes the TXT record when the Traffic Ops database table has the record removed.
 
 Let's Encrypt can be set up through :file:`/opt/traffic_ops/app/conf/cdn.conf` by updating the following fields:
 
 .. table:: Fields to update for Let's Encrypt under `lets_encrypt`
 
-	+------------------------------+---------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| Name                         | Type    | Description                                                                                                                                                                                                                                                                |
-	+==============================+=========+============================================================================================================================================================================================================================================================================+
-	| user_email                   | string  | Optional. Email to create account with Let's Encrypt or to receive expiration updates                                                                                                                                                                                      |
-	+------------------------------+---------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| send_expiration_email        | boolean | Toggle for option to send email summarizing certificate expiration status                                                                                                                                                                                                  |
-	+------------------------------+---------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| convert_self_signed          | boolean | Toggle for option to convert self signed certificates to Let's Encrypt certificates as they expire. This only works for self signed certificates generated after this code has been implemented or that have been labeled as Self Signed in the Certificate Source field.  |
-	+------------------------------+---------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| renew_days_before_expiration | int     | Number of days before expiration date to renew certificates                                                                                                                                                                                                                |
-	+------------------------------+---------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| environment                  | string  | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'                                                                                                                                                                         |
-	+------------------------------+---------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name                         | Type    | Description                                                                                                                                                      |
+	+==============================+=========+==================================================================================================================================================================+
+	| user_email                   | string  | Optional. Email to create account with Let's Encrypt or to receive expiration updates                                                                            |
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| send_expiration_email        | boolean | Option to send email summarizing certificate expiration status                                                                                                   |
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| convert_self_signed          | boolean | Option to convert self signed to Let's Encrypt certificates as they expire. Only works for certificates labeled as Self Signed in the Certificate Source field.  |
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| renew_days_before_expiration | int     | Number of days before expiration date to renew certificates                                                                                                      |
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| environment                  | string  | Let's Encrypt environment to use.  Options are 'staging' or 'production'. Defaults to 'production'                                                               |
+	+------------------------------+---------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. table:: Fields to update for sending emails under `smtp`
 

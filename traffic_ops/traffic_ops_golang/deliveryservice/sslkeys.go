@@ -20,10 +20,7 @@ package deliveryservice
  */
 
 import (
-	"crypto/x509"
 	"database/sql"
-	"encoding/base64"
-	"encoding/pem"
 	"errors"
 	"net/http"
 	"strconv"
@@ -92,21 +89,6 @@ func generatePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, cfg *c
 		return errors.New("generating certificate: " + err.Error())
 	}
 	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{Crt: string(crt), Key: string(key), CSR: string(csr)}
-
-	crtDec, err := base64.StdEncoding.DecodeString(string(crt))
-
-	block, _ := pem.Decode([]byte(crtDec))
-	if block == nil {
-		return errors.New("parsing cert")
-	}
-
-	x509cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return errors.New("parsing cert to get expiry - " + err.Error())
-	}
-
-	expiration := x509cert.NotAfter
-	dsSSLKeys.Expiration = expiration
 
 	dsSSLKeys.AuthType = tc.SelfSignedCertAuthType
 

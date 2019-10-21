@@ -23,16 +23,17 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type DsKey struct {
@@ -54,6 +55,8 @@ type ExpirationSummary struct {
 	OtherExpirations       []DsExpirationInfo
 }
 
+const emailTemplateFile = "/opt/traffic_ops/app/templates/send_mail/autorenewcerts_mail.html"
+
 func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -63,18 +66,18 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
 		return
 	}
 
 	rows, err := inf.Tx.Tx.Query(`SELECT xml_id, ssl_key_version FROM deliveryservice`)
 	if err != nil {
-		log.Errorf("querying: %v", err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	defer rows.Close()
 
-	dses := []DsKey{}
+	keysFound := ExpirationSummary{}
 	for rows.Next() {
 		ds := DsKey{}
 		err := rows.Scan(&ds.XmlId, &ds.Version)
@@ -83,12 +86,9 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		if ds.Version.Valid && int(ds.Version.Int64) != 0 {
-			dses = append(dses, ds)
+			continue
 		}
-	}
 
-	keysFound := ExpirationSummary{}
-	for _, ds := range dses {
 		dsExpInfo := DsExpirationInfo{}
 		keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 		if err != nil {
@@ -111,17 +111,15 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+ds.XmlId+"': "+err.Error()))
 			return
 		}
-		if keyObj.Expiration.IsZero() {
-			expiration, err := parseExpirationFromCert([]byte(keyObj.Certificate.Crt))
-			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(ds.XmlId+": "+err.Error()))
-				return
-			}
-			keyObj.Expiration = expiration
+
+		expiration, err := parseExpirationFromCert([]byte(keyObj.Certificate.Crt))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(ds.XmlId+": "+err.Error()))
+			return
 		}
 
 		// Renew only certificates within configured limit plus 3 days
-		if keyObj.Expiration.After(time.Now().Add(time.Hour * 24 * time.Duration(inf.Config.ConfigLetsEncrypt.RenewDaysBeforeExpiration)).Add(time.Hour * 24 * 3)) {
+		if expiration.After(time.Now().Add(time.Hour * 24 * time.Duration(inf.Config.ConfigLetsEncrypt.RenewDaysBeforeExpiration)).Add(time.Hour * 24 * 3)) {
 			continue
 		}
 
@@ -129,10 +127,10 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 
 		dsExpInfo.XmlId = keyObj.DeliveryService
 		dsExpInfo.Version = keyObj.Version
-		dsExpInfo.Expiration = keyObj.Expiration
+		dsExpInfo.Expiration = expiration
 		dsExpInfo.AuthType = keyObj.AuthType
 
-		if keyObj.AuthType == tc.LetsEncryptAuthType {
+		if keyObj.AuthType == tc.LetsEncryptAuthType || (keyObj.AuthType == tc.SelfSignedCertAuthType && inf.Config.ConfigLetsEncrypt.ConvertSelfSigned) {
 			req := tc.DeliveryServiceLetsEncryptSSLKeysReq{
 				DeliveryServiceSSLKeysReq: tc.DeliveryServiceSSLKeysReq{
 					HostName:        &keyObj.Hostname,
@@ -141,7 +139,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 					Version:         &newVersion,
 				},
 			}
-			ctx, _ := context.WithTimeout(r.Context(), GetLetsEncryptTimeout())
+			ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout)
 
 			if error := GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User); error != nil {
 				dsExpInfo.Error = error
@@ -149,21 +147,6 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 			keysFound.LetsEncryptExpirations = append(keysFound.LetsEncryptExpirations, dsExpInfo)
 
 		} else if keyObj.AuthType == tc.SelfSignedCertAuthType {
-			if inf.Config.ConfigLetsEncrypt.ConvertSelfSigned {
-				req := tc.DeliveryServiceLetsEncryptSSLKeysReq{
-					DeliveryServiceSSLKeysReq: tc.DeliveryServiceSSLKeysReq{
-						HostName:        &keyObj.Hostname,
-						DeliveryService: &keyObj.DeliveryService,
-						CDN:             &keyObj.CDN,
-						Version:         &newVersion,
-					},
-				}
-				ctx, _ := context.WithTimeout(r.Context(), GetLetsEncryptTimeout())
-
-				if error := GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User); error != nil {
-					dsExpInfo.Error = error
-				}
-			}
 			keysFound.SelfSignedExpirations = append(keysFound.SelfSignedExpirations, dsExpInfo)
 		} else {
 			keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
@@ -175,7 +158,8 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 		err = AlertExpiringCerts(keysFound, *inf.Config)
 		if err != nil {
 			log.Errorf(err.Error())
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, err, nil)
+			api.WriteRespAlertObj(w, r, tc.WarnLevel, "Failed to send autorenewal email with error: "+err.Error(), keysFound)
+			return
 		}
 	}
 
@@ -189,11 +173,17 @@ func AlertExpiringCerts(certsFound ExpirationSummary, config config.Config) erro
 	header := "From: " + config.ConfigTO.EmailFrom.String() + "\n" +
 		"To: " + email + "\n" +
 		"MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n" +
-		"Subject: Certificate Expiration Summary\n\n"
+		"Subject: Certificate Expiration Summary\r\n"
 
-	error := api.SendEmail(config, header, certsFound, "/opt/traffic_ops/app/templates/send_mail/autorenewcerts_mail.ep", config.ConfigLetsEncrypt.Email)
-	if error != nil {
-		return error
+	status, userErr, systemErr := api.SendEmailFromTemplate(config, header, certsFound, emailTemplateFile, config.ConfigLetsEncrypt.Email)
+	if userErr != nil {
+		return errors.New("Failed to send email: " + userErr.Error())
+	}
+	if systemErr != nil {
+		return errors.New("Failed to send email: " + systemErr.Error())
+	}
+	if status != http.StatusOK {
+		return errors.New("Failed to send email. Unexpected response code: " + strconv.Itoa(status))
 	}
 
 	return nil

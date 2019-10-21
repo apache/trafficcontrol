@@ -36,7 +36,8 @@ public class SteeringRegistry {
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals"})
 	public void update(final String json) {
 		Map<String, List<Steering>> m;
-		try { m = objectMapper.readValue(json, new TypeReference<HashMap<String, List<Steering>>>() { });
+		try {
+			m = objectMapper.readValue(json, new TypeReference<HashMap<String, List<Steering>>>() { });
 		} catch (IOException e) {
 			LOGGER.error("Failed consuming Json data to populate steering registry, keeping current data:" + e.getMessage());
 			return;

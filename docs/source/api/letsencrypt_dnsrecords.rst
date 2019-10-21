@@ -19,6 +19,8 @@
 ``letsencrypt/dnsrecords``
 **************************
 
+.. versionadded:: 1.4
+
 ``GET``
 ========
 Gets all DNS challenge records for Let's Encrypt DNS challenges.
@@ -34,6 +36,9 @@ No parameters available
 
 Response Structure
 ------------------
+:fqdn:      The Fully Qualified Domain Name (FQDN) for the TXT record location to complete the DNS challenge
+:record:    The record provided by Let's Encrypt to complete the DNS challenge
+
 .. code-block:: http
 	:caption: Response Example
 
