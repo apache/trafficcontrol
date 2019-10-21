@@ -62,8 +62,8 @@ WHERE name='tm.instance_name' AND
 const userQueryByEmail = `SELECT EXISTS(SELECT * FROM tm_user WHERE email=$1)`
 const setTokenQuery = `UPDATE tm_user SET token=$1 WHERE email=$2`
 
-var resetPasswordEmailTemplate = template.Must(template.New("Password Reset Email").Parse("From: {{.From.String}}\r" + `
-To: {{.To.String}}` + "\r" + `
+var resetPasswordEmailTemplate = template.Must(template.New("Password Reset Email").Parse("From: {{.From.Address.Address}}\r" + `
+To: {{.To.Address.Address}}` + "\r" + `
 Content-Type: text/html` + "\r" + `
 Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 <!DOCTYPE html>

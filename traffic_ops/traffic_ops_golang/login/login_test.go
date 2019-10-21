@@ -89,7 +89,7 @@ func TestVerifyUrlOnWhiteList(t *testing.T) {
 func TestTemplateRender(t *testing.T) {
 	to := rfc.EmailAddress{
 		mail.Address{
-			Address: "ocket8888@gmail.com",
+			Address: "em@i.l",
 			Name:    "",
 		},
 	}
@@ -121,4 +121,5 @@ func TestTemplateRender(t *testing.T) {
 	if tmpl.Len() <= 0 {
 		t.Fatalf("Template buffer empty after execution")
 	}
+	t.Logf("%s", tmpl.String())
 }
