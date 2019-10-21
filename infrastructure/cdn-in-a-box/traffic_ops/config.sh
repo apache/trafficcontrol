@@ -129,7 +129,8 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "password" : "",
         "address" : ""
     },
-    "influxdb_conf_location": "/opt/traffic_ops/app/conf/production/influx.conf"
+    "InfluxEnabled": true,
+    "influxdb_conf_path": "/opt/traffic_ops/app/conf/production/influx.conf"
 }
 EOF
 

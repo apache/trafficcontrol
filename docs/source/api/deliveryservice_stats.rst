@@ -26,7 +26,11 @@
 Retrieves time-aggregated statistics on a specific :term:`Delivery Service`.
 
 :Auth. Required: Yes
-:Roles Required: None
+:Roles Required: None\ [#tenancy]_
+
+	.. versionchanged:: ATCv4
+		Prior to :abbr:`ATC (Apache Traffic Control)` version 4, this endpoint had more convoluted access requirements. The required :term:`Roles` for access were "operations" or "admin" - *unless* the :term:`Delivery Service` requested was "assigned" to the requesting user. In these older versions, Traffic Ops never checked the access to the :term:`Delivery Service`'s stats from a :term:`Tenant`-based perspective (which it now does) but instead used the legacy concept of "assigning" a :term:`Delivery Service` to a user. It no longer considers such assignments whatsoever.
+
 :Response Type:  Object
 
 Request Structure
@@ -83,6 +87,9 @@ Request Structure
 	| startDate           | yes               | The date and time from which statistics shall be aggregated in :rfc:`3339` format (with or without sub-second precision), the number of nanoseconds since the Unix                        |
 	|                     |                   | Epoch, or in the same, proprietary format as the ``lastUpdated`` fields prevalent throughout the Traffic Ops API                                                                          |
 	+---------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+.. versionadded:: ATCv4
+	The ``deliveryService`` query parameter was added to this endpoint in all API versions in version 4 of :abbr:`ATC (Apache Traffic Control)`.
 
 .. _deliveryservice_stats-get-request-example:
 .. code-block:: http
@@ -197,4 +204,5 @@ Response Structure
 		"version": "1.2"
 	}}
 
+.. [#tenancy] This endpoint respects :term:`Tenancy`, and users whose :term:`Tenant` does not have access to a :term:`Delivery Service` will be unable to view the statistics of said :term:`Delivery Service`.
 .. [#ds-param] Either ``deliveryServiceName`` or ``deliveryService`` *must* be present, but if both are ``deliveryServiceName`` will be used and ``deliveryService`` will be ignored.
