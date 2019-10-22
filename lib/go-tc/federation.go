@@ -103,3 +103,21 @@ type FederationDSPost struct {
 func (f *FederationDSPost) Validate(tx *sql.Tx) error {
 	return nil
 }
+
+type FederationUser struct {
+	Company  *string `json:"dsIds" db:"company"`
+	Email    *string `json:"email" db:"email"`
+	FullName *string `json:"fullName" db:"full_name"`
+	ID       *int    `json:"id" db:"id"`
+	Role     *string `json:"role" db:"role_name"`
+	Username *string `json:"username" db:"username"`
+}
+
+type FederationUserPost struct {
+	IDs     []int `json:"userIds"`
+	Replace *bool `json:"replace"`
+}
+
+func (f *FederationUserPost) Validate(tx *sql.Tx) error {
+	return nil
+}

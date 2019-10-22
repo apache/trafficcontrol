@@ -45,6 +45,7 @@ const (
 	DeliveryServiceRequests
 	DeliveryServiceRequestComments
 	Divisions
+	FederationUsers
 	Origins
 	Parameters
 	PhysLocations
@@ -81,6 +82,7 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	DeliveryServiceRequests:        {CreateTestDeliveryServiceRequests, DeleteTestDeliveryServiceRequests},
 	DeliveryServiceRequestComments: {CreateTestDeliveryServiceRequestComments, DeleteTestDeliveryServiceRequestComments},
 	Divisions:                      {CreateTestDivisions, DeleteTestDivisions},
+	FederationUsers:                {CreateTestFederationUsers, DeleteTestFederationUsers},
 	Origins:                        {CreateTestOrigins, DeleteTestOrigins},
 	Parameters:                     {CreateTestParameters, DeleteTestParameters},
 	PhysLocations:                  {CreateTestPhysLocations, DeleteTestPhysLocations},
