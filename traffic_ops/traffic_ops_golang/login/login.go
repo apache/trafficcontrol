@@ -49,7 +49,7 @@ type emailFormatter struct {
 	From         rfc.EmailAddress
 	To           rfc.EmailAddress
 	InstanceName string
-	ResetURL     rfc.URL
+	ResetURL     string
 	Token        string
 }
 
@@ -90,7 +90,7 @@ Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 <body>
   	<main>
   		<p>Someone has requested to change your password for the {{.InstanceName}}. If you requested this change, please click the link below and change your password. Otherwise, you can disregard this email.</p>
-		<p><a class="button_link" target="_blank" href="{{.ResetURL.String}}login?token={{.Token}}">Click to Reset Your Password</a></p>
+		<p><a class="button_link" target="_blank" href="{{.ResetURL}}?token={{.Token}}">Click to Reset Your Password</a></p>
 	</main>
 	<footer>
 		<p>Thank you,<br/>
@@ -425,9 +425,8 @@ func createMsg(addr rfc.EmailAddress, t string, db *sqlx.DB, c config.ConfigPort
 		To:           addr,
 		Token:        t,
 		InstanceName: instanceName,
-		ResetURL:     c.BaseURL,
+		ResetURL:     c.BaseURL.String() + c.PasswdResetPath,
 	}
-	f.ResetURL.Path += c.PasswdResetPath
 
 	var tmpl bytes.Buffer
 	if err := resetPasswordEmailTemplate.Execute(&tmpl, &f); err != nil {

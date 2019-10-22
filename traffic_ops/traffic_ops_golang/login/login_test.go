@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/mail"
-	"net/url"
 	"strings"
 	"testing"
 
@@ -100,22 +99,16 @@ func TestTemplateRender(t *testing.T) {
 		},
 	}
 
-	rawURL, err := url.Parse("https://example.test/#!/")
-	if err != nil {
-		t.Fatalf("Failed to parse simple URL: %v", err)
-	}
-	u := rfc.URL{*rawURL}
-
 	f := emailFormatter{
 		From:         from,
 		To:           to,
 		Token:        "test",
 		InstanceName: "TO API Unit Tests",
-		ResetURL:     u,
+		ResetURL:     "https://example.test/#!/user",
 	}
 
 	var tmpl bytes.Buffer
-	if err = resetPasswordEmailTemplate.Execute(&tmpl, &f); err != nil {
+	if err := resetPasswordEmailTemplate.Execute(&tmpl, &f); err != nil {
 		t.Fatalf("Failed to render email template: %v", err)
 	}
 	if tmpl.Len() <= 0 {
