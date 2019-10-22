@@ -159,16 +159,32 @@ func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error,
 }
 
 func (role *TORole) Read() ([]interface{}, error, error, int) {
+	version := role.APIInfo().Version
+	if version == nil {
+		return nil, nil, errors.New("TORole.Read called with nil API version"), http.StatusInternalServerError
+	}
+	if version.Major != 1 || version.Minor < 1 {
+		return nil, nil, fmt.Errorf("TORole.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+	}
 	vals, userErr, sysErr, errCode := api.GenericRead(role)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}
+	returnable := []interface{}{}
 	for _, val := range vals {
 		rl := val.(*TORole)
-		caps := ([]string)(*rl.PQCapabilities)
-		rl.Capabilities = &caps
+		switch {
+		case version.Minor >= 3:
+			caps := ([]string)(*rl.PQCapabilities)
+			rl.Capabilities = &caps
+			returnable = append(returnable, rl)
+		case version.Minor >= 1:
+			returnable = append(returnable, rl.RoleV11)
+		default:
+			return nil, nil, fmt.Errorf("TORole.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+		}
 	}
-	return vals, nil, nil, http.StatusOK
+	return returnable, nil, nil, http.StatusOK
 }
 
 func (role *TORole) Update() (error, error, int) {
