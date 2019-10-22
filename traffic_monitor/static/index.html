@@ -253,15 +253,17 @@ under the License.
 						row.id = "cache-states-" + server
 						row.insertCell(0).id = row.id + "-server";
 						row.insertCell(1).id = row.id + "-type";
-						row.insertCell(2).id = row.id + "-status";
-						row.insertCell(3).id = row.id + "-load-average";
-						row.insertCell(4).id = row.id + "-query-time";
-						row.insertCell(5).id = row.id + "-health-time";
-						row.insertCell(6).id = row.id + "-stat-time";
-						row.insertCell(7).id = row.id + "-health-span";
-						row.insertCell(8).id = row.id + "-stat-span";
-						row.insertCell(9).id = row.id + "-bandwidth";
-						row.insertCell(10).id = row.id + "-connection-count";
+                        row.insertCell(2).id = row.id + "-ipv4";
+                        row.insertCell(3).id = row.id + "-ipv6";
+						row.insertCell(4).id = row.id + "-status";
+						row.insertCell(5).id = row.id + "-load-average";
+						row.insertCell(6).id = row.id + "-query-time";
+						row.insertCell(7).id = row.id + "-health-time";
+						row.insertCell(8).id = row.id + "-stat-time";
+						row.insertCell(9).id = row.id + "-health-span";
+						row.insertCell(10).id = row.id + "-stat-span";
+						row.insertCell(11).id = row.id + "-bandwidth";
+						row.insertCell(12).id = row.id + "-connection-count";
 						document.getElementById(row.id + "-server").textContent = server;
 						document.getElementById(row.id + "-server").style.whiteSpace = "nowrap";
 						document.getElementById(row.id + "-load-average").style.textAlign = "right";
@@ -285,7 +287,7 @@ under the License.
 							row.classList.add("warning");
 							row.classList.remove("error");
 							row.classList.remove("stripes");
-						} else if (jdata[server].status.indexOf(" available") == -1 && jdata[server].status.indexOf("ONLINE") != 0) {
+						} else if (!jdata[server].combined_available && jdata[server].status.indexOf("ONLINE") != 0) {
 							row.classList.add("error");
 							row.classList.remove("warning");
 							row.classList.remove("stripes");
@@ -295,6 +297,20 @@ under the License.
 							row.classList.remove("error");
 						}
 					}
+                    if (jdata[server].hasOwnProperty("ipv4_available")) {
+                        if (jdata[server].status.indexOf("ONLINE") != 0) {
+                            document.getElementById("cache-states-" + server + "-ipv4").textContent = jdata[server].ipv4_available;
+                        } else {
+                            document.getElementById("cache-states-" + server + "-ipv4").textContent = 'N/A'
+                        }
+                    }
+                    if (jdata[server].hasOwnProperty("ipv6_available")) {
+                        if (jdata[server].status.indexOf("ONLINE") != 0) {
+                            document.getElementById("cache-states-" + server + "-ipv6").textContent = jdata[server].ipv6_available;
+                        } else {
+                            document.getElementById("cache-states-" + server + "-ipv6").textContent = 'N/A'
+                        }
+                    }
 					if (jdata[server].hasOwnProperty("load_average")) {
 						document.getElementById("cache-states-" + server + "-load-average").textContent = jdata[server].load_average;
 					}
@@ -513,6 +529,8 @@ under the License.
 						<tr>
 							<th>Server</th>
 							<th>Type</th>
+							<th>IPv4</th>
+							<th>IPv6</th>
 							<th>Status</th>
 							<th align="right">Load Average</th>
 							<th align="right">Query Time (ms)</th>

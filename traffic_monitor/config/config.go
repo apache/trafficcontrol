@@ -20,7 +20,10 @@ package config
  */
 
 import (
+	"encoding/json"
+	"errors"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -46,35 +49,77 @@ const (
 	TMConfigBackupFile = "/opt/traffic_monitor/tmconfig.backup"
 )
 
+type PollingProtocol string
+
+const (
+	IPv4Only               = PollingProtocol("ipv4only")
+	IPv6Only               = PollingProtocol("ipv6only")
+	Both                   = PollingProtocol("both")
+	InvalidPollingProtocol = PollingProtocol("invalid_polling_protocol")
+)
+
+func (t PollingProtocol) String() string {
+	return string(t)
+}
+
+func PollingProtocolFromString(s string) PollingProtocol {
+	s = strings.ToLower(s)
+	switch s {
+	case IPv4Only.String():
+		return IPv4Only
+	case IPv6Only.String():
+		return IPv6Only
+	case Both.String():
+		return Both
+	default:
+		return InvalidPollingProtocol
+	}
+}
+
+func (t *PollingProtocol) UnmarshalJSON(b []byte) error {
+	var s string
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+	*t = PollingProtocolFromString(s)
+	if *t == InvalidPollingProtocol {
+		return errors.New("parsed invalid PollingProtocol: " + s)
+	}
+	return nil
+}
+
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
 type Config struct {
-	CacheHealthPollingInterval   time.Duration `json:"-"`
-	CacheStatPollingInterval     time.Duration `json:"-"`
-	MonitorConfigPollingInterval time.Duration `json:"-"`
-	HTTPTimeout                  time.Duration `json:"-"`
-	PeerPollingInterval          time.Duration `json:"-"`
-	PeerOptimistic               bool          `json:"peer_optimistic"`
-	MaxEvents                    uint64        `json:"max_events"`
-	MaxStatHistory               uint64        `json:"max_stat_history"`
-	MaxHealthHistory             uint64        `json:"max_health_history"`
-	HealthFlushInterval          time.Duration `json:"-"`
-	StatFlushInterval            time.Duration `json:"-"`
-	StatBufferInterval           time.Duration `json:"-"`
-	LogLocationError             string        `json:"log_location_error"`
-	LogLocationWarning           string        `json:"log_location_warning"`
-	LogLocationInfo              string        `json:"log_location_info"`
-	LogLocationDebug             string        `json:"log_location_debug"`
-	LogLocationEvent             string        `json:"log_location_event"`
-	ServeReadTimeout             time.Duration `json:"-"`
-	ServeWriteTimeout            time.Duration `json:"-"`
-	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
-	StaticFileDir                string        `json:"static_file_dir"`
-	CRConfigHistoryCount         uint64        `json:"crconfig_history_count"`
-	TrafficOpsMinRetryInterval   time.Duration `json:"-"`
-	TrafficOpsMaxRetryInterval   time.Duration `json:"-"`
-	CRConfigBackupFile           string        `json:"crconfig_backup_file"`
-	TMConfigBackupFile           string        `json:"tmconfig_backup_file"`
-	TrafficOpsDiskRetryMax       uint64        `json:"-"`
+	CacheHealthPollingInterval   time.Duration   `json:"-"`
+	CacheStatPollingInterval     time.Duration   `json:"-"`
+	MonitorConfigPollingInterval time.Duration   `json:"-"`
+	HTTPTimeout                  time.Duration   `json:"-"`
+	PeerPollingInterval          time.Duration   `json:"-"`
+	PeerOptimistic               bool            `json:"peer_optimistic"`
+	MaxEvents                    uint64          `json:"max_events"`
+	MaxStatHistory               uint64          `json:"max_stat_history"`
+	MaxHealthHistory             uint64          `json:"max_health_history"`
+	HealthFlushInterval          time.Duration   `json:"-"`
+	StatFlushInterval            time.Duration   `json:"-"`
+	StatBufferInterval           time.Duration   `json:"-"`
+	LogLocationError             string          `json:"log_location_error"`
+	LogLocationWarning           string          `json:"log_location_warning"`
+	LogLocationInfo              string          `json:"log_location_info"`
+	LogLocationDebug             string          `json:"log_location_debug"`
+	LogLocationEvent             string          `json:"log_location_event"`
+	ServeReadTimeout             time.Duration   `json:"-"`
+	ServeWriteTimeout            time.Duration   `json:"-"`
+	HealthToStatRatio            uint64          `json:"health_to_stat_ratio"`
+	StaticFileDir                string          `json:"static_file_dir"`
+	CRConfigHistoryCount         uint64          `json:"crconfig_history_count"`
+	TrafficOpsMinRetryInterval   time.Duration   `json:"-"`
+	TrafficOpsMaxRetryInterval   time.Duration   `json:"-"`
+	CRConfigBackupFile           string          `json:"crconfig_backup_file"`
+	TMConfigBackupFile           string          `json:"tmconfig_backup_file"`
+	TrafficOpsDiskRetryMax       uint64          `json:"-"`
+	CachePollingProtocol         PollingProtocol `json:"cache_polling_protocol"`
+	PeerPollingProtocol          PollingProtocol `json:"peer_polling_protocol"`
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
@@ -112,6 +157,8 @@ var DefaultConfig = Config{
 	CRConfigBackupFile:           CRConfigBackupFile,
 	TMConfigBackupFile:           TMConfigBackupFile,
 	TrafficOpsDiskRetryMax:       2,
+	CachePollingProtocol:         IPv4Only,
+	PeerPollingProtocol:          IPv4Only,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
