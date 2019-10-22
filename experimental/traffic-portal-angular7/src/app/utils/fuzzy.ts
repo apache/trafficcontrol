@@ -22,9 +22,9 @@
  * @param threshold An optional threshold which, if given causes @param{text} which scores above it to not be returned.
  * @returns The score of the passed @param{text}. If not all of the @param{pattern}'s characters could be found within it (or if it exceeds the optional @param{threshold}), this will be Infinity.
 */
-export function fuzzyScore(text: string, pattern: string, threshold:? number = 0): number {
-	if (text.length < 1) {
-		return text;
+export function fuzzyScore(text: string, pattern: string, threshold: number = 0): number {
+	if (pattern.length < 1) {
+		return 0;
 	}
 
 	const p = Array.from(pattern);
@@ -37,11 +37,11 @@ export function fuzzyScore(text: string, pattern: string, threshold:? number = 0
 				break;
 			}
 		} else {
-			score += 1;
+			++score;
 		}
 	}
 
-	if (p.length > 0) {
+	if (p.length > 0 || char !== undefined) {
 		return Infinity;
 	}
 
