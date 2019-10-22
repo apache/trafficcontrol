@@ -17,17 +17,34 @@
  * under the License.
  */
 
-var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, locationUtils) {
+var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $controller, $window, locationUtils) {
+
+	// extends the TableServersController to inherit common methods
+	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
 
 	$scope.serverCapability = serverCapability;
 
-	$scope.servers = servers;
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.contextMenuItems = [
+		{
+			text: 'Open Server in New Tab',
+			click: function ($itemScope) {
+				$window.open('/#!/servers/' + $itemScope.s.serverId, '_blank');
+			}
+		},
+		null, // Divider
+		{
+			text: 'Edit Server',
+			click: function ($itemScope) {
+				$scope.editServer($itemScope.s.serverId);
+			}
+		},
+		{
+			text: 'Manage Server Capabilities',
+			click: function ($itemScope) {
+				locationUtils.navigateToPath('/servers/' + $itemScope.s.serverId + '/capabilities');
+			}
+		}
+	];
 
 	angular.element(document).ready(function () {
 		$('#serverCapabilityServersTable').dataTable({
@@ -39,5 +56,5 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 
 };
 
-TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', 'locationUtils'];
+TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$controller', '$window', 'locationUtils'];
 module.exports = TableServerCapabilityServersController;
