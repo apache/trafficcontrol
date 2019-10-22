@@ -33,12 +33,12 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 	];
 
 	$scope.addServerCapability = function() {
-		var params = {
+		const params = {
 			title: 'Add Server Capability',
 			message: "Please select a capability to add to this server",
 			key: "name"
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
 			controller: 'DialogSelectController',
 			size: 'md',
@@ -59,8 +59,6 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 						$scope.refresh(); // refresh the profile parameters table
 					}
 				);
-		}, function () {
-			// do nothing
 		});
 	};
 
@@ -68,11 +66,11 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 		if ($event) {
 			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		}
-		var params = {
+		const params = {
 			title: 'Remove Capability from Server?',
 			message: 'Are you sure you want to remove the ' + serverCapability + ' capability from this server?'
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
 			controller: 'DialogConfirmController',
 			size: 'md',
@@ -90,8 +88,6 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 						$scope.refresh(); // refresh the profile parameters table
 					}
 				);
-		}, function () {
-			// do nothing
 		});
 	};
 
