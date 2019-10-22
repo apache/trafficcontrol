@@ -55,6 +55,9 @@ type CacheStatus struct {
 	BandwidthKbps          *float64 `json:"bandwidth_kbps,omitempty"`
 	BandwidthCapacityKbps  *float64 `json:"bandwidth_capacity_kbps,omitempty"`
 	ConnectionCount        *int64   `json:"connection_count,omitempty"`
+	IPv4Available          *bool    `json:"ipv4_available,omitempty"`
+	IPv6Available          *bool    `json:"ipv6_available,omitempty"`
+	CombinedAvailable      *bool    `json:"combined_available,omitempty"`
 }
 
 func srvAPICacheStates(
@@ -92,7 +95,7 @@ func createCacheStatuses(
 
 	for cacheNameStr, serverInfo := range servers {
 		cacheName := tc.CacheName(cacheNameStr)
-		status, statusPoller := cacheStatusAndPoller(cacheName, serverInfo, localCacheStatus)
+		status, statusPoller, ipv4, ipv6, combinedStatus := cacheStatusAndPoller(cacheName, serverInfo, localCacheStatus)
 
 		cacheTypeStr := ""
 		if cacheType, ok := cacheTypes[cacheName]; !ok {
@@ -172,34 +175,39 @@ func createCacheStatuses(
 			ConnectionCount:        connections,
 			Status:                 &status,
 			StatusPoller:           &statusPoller,
+			IPv4Available:          &ipv4,
+			IPv6Available:          &ipv6,
+			CombinedAvailable:      &combinedStatus,
 		}
 	}
 	return statii
 }
 
-func cacheStatusAndPoller(server tc.CacheName, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string) {
+//cacheStatusAndPoller returns the the reason why a cache is unavailable (or that is available), the poller, and 3 booleans in order:
+// IPv4 availability, IPv6 availability and Processed availability which is what the monitor reports based on the PollingProtocol chosen (ipv4only,ipv6only or both)
+func cacheStatusAndPoller(server tc.CacheName, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string, bool, bool, bool) {
 	switch status := tc.CacheStatusFromString(serverInfo.ServerStatus); status {
 	case tc.CacheStatusAdminDown:
 		fallthrough
 	case tc.CacheStatusOnline:
 		fallthrough
 	case tc.CacheStatusOffline:
-		return status.String(), ""
+		return status.String(), "", false, false, false
 	}
 
 	statusVal, ok := localCacheStatus[server]
 	if !ok {
 		log.Infof("cache not in statuses %s\n", server)
-		return "ERROR - not in statuses", ""
+		return "ERROR - not in statuses", "", false, false, false
 	}
 
 	if statusVal.Why != "" {
-		return statusVal.Why, statusVal.Poller
+		return statusVal.Why, statusVal.Poller, statusVal.Available.IPv4, statusVal.Available.IPv6, statusVal.ProcessedAvailable
 	}
-	if statusVal.Available {
-		return fmt.Sprintf("%s - available", statusVal.Status), statusVal.Poller
+	if statusVal.ProcessedAvailable {
+		return fmt.Sprintf("%s - available", statusVal.Status), statusVal.Poller, statusVal.Available.IPv4, statusVal.Available.IPv6, statusVal.ProcessedAvailable
 	}
-	return fmt.Sprintf("%s - unavailable", statusVal.Status), statusVal.Poller
+	return fmt.Sprintf("%s - unavailable", statusVal.Status), statusVal.Poller, statusVal.Available.IPv4, statusVal.Available.IPv6, statusVal.ProcessedAvailable
 }
 
 func createCacheConnections(statResultHistory threadsafe.ResultStatHistory) map[tc.CacheName]int64 {

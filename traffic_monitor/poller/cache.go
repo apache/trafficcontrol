@@ -42,6 +42,7 @@ type CachePoller struct {
 
 type PollConfig struct {
 	URL      string
+	URLv6    string
 	Host     string
 	Timeout  time.Duration
 	Format   string
@@ -49,9 +50,10 @@ type PollConfig struct {
 }
 
 type CachePollerConfig struct {
-	Urls        map[string]PollConfig
-	Interval    time.Duration
-	NoKeepAlive bool
+	Urls            map[string]PollConfig
+	Interval        time.Duration
+	NoKeepAlive     bool
+	PollingProtocol config.PollingProtocol
 }
 
 // NewHTTP creates and returns a new CachePoller.
@@ -63,6 +65,7 @@ func NewCache(
 	handler handler.Handler,
 	cfg config.Config,
 	appData config.StaticAppData,
+	pollingProtocol config.PollingProtocol,
 ) CachePoller {
 	var tickChan chan uint64
 	if tick {
@@ -72,7 +75,8 @@ func NewCache(
 		TickChan:      tickChan,
 		ConfigChannel: make(chan CachePollerConfig),
 		Config: CachePollerConfig{
-			Interval: interval,
+			Interval:        interval,
+			PollingProtocol: pollingProtocol,
 		},
 		GlobalContexts: GetGlobalContexts(cfg, appData),
 		Handler:        handler,
@@ -82,9 +86,10 @@ func NewCache(
 var pollNum uint64
 
 type CachePollInfo struct {
-	NoKeepAlive bool
-	Interval    time.Duration
-	ID          string
+	NoKeepAlive     bool
+	Interval        time.Duration
+	ID              string
+	PollingProtocol config.PollingProtocol
 	PollConfig
 }
 
@@ -108,8 +113,10 @@ func (p CachePoller) Poll() {
 				info.PollType = DefaultPollerType
 			}
 			pollerObj := pollers[info.PollType]
+
 			pollerCfg := PollerConfig{
 				URL:         info.URL,
+				URLv6:       info.URLv6,
 				Host:        info.Host,
 				Timeout:     info.Timeout,
 				NoKeepAlive: info.NoKeepAlive,
@@ -119,7 +126,7 @@ func (p CachePoller) Poll() {
 			if pollerObj.Init != nil {
 				pollerCtx = pollerObj.Init(pollerCfg, p.GlobalContexts[info.PollType])
 			}
-			go poller(info.Interval, info.ID, info.URL, info.Host, info.Format, p.Handler, pollerObj.Poll, pollerCtx, kill)
+			go poller(info.Interval, info.ID, info.PollingProtocol, info.URL, info.URLv6, info.Host, info.Format, p.Handler, pollerObj.Poll, pollerCtx, kill)
 		}
 		p.Config = newConfig
 	}
@@ -138,7 +145,9 @@ func mustDie(die <-chan struct{}) bool {
 func poller(
 	interval time.Duration,
 	id string,
+	pollingProtocol config.PollingProtocol,
 	url string,
+	url6 string,
 	host string,
 	format string,
 	handler handler.Handler,
@@ -150,9 +159,18 @@ func poller(
 	time.Sleep(pollSpread)
 	tick := time.NewTicker(interval)
 	lastTime := time.Now()
+	oscillateProtocols := false
+	if pollingProtocol == config.Both {
+		oscillateProtocols = true
+	}
+	usingIPv4 := pollingProtocol != config.IPv6Only
 	for {
 		select {
 		case <-tick.C:
+			if (usingIPv4 && url == "") || (!usingIPv4 && url6 == "") {
+				continue
+			}
+
 			realInterval := time.Now().Sub(lastTime)
 			if realInterval > interval+(time.Millisecond*100) {
 				log.Debugf("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
@@ -162,14 +180,30 @@ func poller(
 			pollID := atomic.AddUint64(&pollNum, 1)
 			pollFinishedChan := make(chan uint64)
 			log.Debugf("poll %v %v start\n", pollID, time.Now())
-			bts, reqEnd, reqTime, err := pollFunc(pollCtx, url, host, pollID)
-			rdr := io.Reader(nil)
-			if bts != nil {
-				rdr = bytes.NewReader(bts) // TODO change handler to take bytes? Benchmark?
+			if usingIPv4 {
+				bts, reqEnd, reqTime, err := pollFunc(pollCtx, url, host, pollID)
+				rdr := io.Reader(nil)
+				if bts != nil {
+					rdr = bytes.NewReader(bts) // TODO change handler to take bytes? Benchmark?
+				} else {
+				}
+				log.Debugf("poll %v %v poller end\n", pollID, time.Now())
+				go handler.Handle(id, rdr, format, reqTime, reqEnd, err, pollID, usingIPv4, pollFinishedChan)
 			} else {
+				bts, reqEnd, reqTime, err := pollFunc(pollCtx, url6, host, pollID)
+				rdr := io.Reader(nil)
+				if bts != nil {
+					rdr = bytes.NewReader(bts) // TODO change handler to take bytes? Benchmark?
+				} else {
+				}
+				log.Debugf("poll %v %v poller end\n", pollID, time.Now())
+				go handler.Handle(id, rdr, format, reqTime, reqEnd, err, pollID, usingIPv4, pollFinishedChan)
 			}
-			log.Debugf("poll %v %v poller end\n", pollID, time.Now())
-			go handler.Handle(id, rdr, format, reqTime, reqEnd, err, pollID, pollFinishedChan)
+
+			if oscillateProtocols {
+				usingIPv4 = !usingIPv4
+			}
+
 			<-pollFinishedChan
 		case <-die:
 			tick.Stop()
@@ -189,10 +223,11 @@ func diffConfigs(old CachePollerConfig, new CachePollerConfig) ([]string, []Cach
 		}
 		for id, pollCfg := range new.Urls {
 			additions = append(additions, CachePollInfo{
-				Interval:    new.Interval,
-				NoKeepAlive: new.NoKeepAlive,
-				ID:          id,
-				PollConfig:  pollCfg,
+				Interval:        new.Interval,
+				NoKeepAlive:     new.NoKeepAlive,
+				ID:              id,
+				PollingProtocol: new.PollingProtocol,
+				PollConfig:      pollCfg,
 			})
 		}
 		return deletions, additions
@@ -205,10 +240,11 @@ func diffConfigs(old CachePollerConfig, new CachePollerConfig) ([]string, []Cach
 		} else if newPollCfg != oldPollCfg {
 			deletions = append(deletions, id)
 			additions = append(additions, CachePollInfo{
-				Interval:    new.Interval,
-				NoKeepAlive: new.NoKeepAlive,
-				ID:          id,
-				PollConfig:  newPollCfg,
+				Interval:        new.Interval,
+				NoKeepAlive:     new.NoKeepAlive,
+				ID:              id,
+				PollingProtocol: new.PollingProtocol,
+				PollConfig:      newPollCfg,
 			})
 		}
 	}
@@ -217,10 +253,11 @@ func diffConfigs(old CachePollerConfig, new CachePollerConfig) ([]string, []Cach
 		_, oldIdExists := old.Urls[id]
 		if !oldIdExists {
 			additions = append(additions, CachePollInfo{
-				Interval:    new.Interval,
-				NoKeepAlive: new.NoKeepAlive,
-				ID:          id,
-				PollConfig:  newPollCfg,
+				Interval:        new.Interval,
+				NoKeepAlive:     new.NoKeepAlive,
+				ID:              id,
+				PollingProtocol: new.PollingProtocol,
+				PollConfig:      newPollCfg,
 			})
 		}
 	}

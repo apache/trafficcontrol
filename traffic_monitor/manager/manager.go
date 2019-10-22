@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"regexp"
 
 	"golang.org/x/sys/unix"
 
@@ -45,6 +46,8 @@ import (
 func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData, trafficMonitorConfigFileName string) error {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil, cfg.CRConfigHistoryCount, cfg))
 
+	url6Regex := regexp.MustCompile(`/\d+`)
+
 	localStates := peer.NewCRStatesThreadsafe() // this is the local state as discoverer by this traffic_monitor
 	fetchCount := threadsafe.NewUint()          // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
 	healthIteration := threadsafe.NewUint()
@@ -53,12 +56,12 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewCache(cfg.CacheHealthPollingInterval, true, cacheHealthHandler, cfg, appData)
+	cacheHealthPoller := poller.NewCache(cfg.CacheHealthPollingInterval, true, cacheHealthHandler, cfg, appData, cfg.CachePollingProtocol)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewCache(cfg.CacheStatPollingInterval, false, cacheStatHandler, cfg, appData)
+	cacheStatPoller := poller.NewCache(cfg.CacheStatPollingInterval, false, cacheStatHandler, cfg, appData, cfg.CachePollingProtocol)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewCache(cfg.PeerPollingInterval, false, peerHandler, cfg, appData)
+	peerPoller := poller.NewCache(cfg.PeerPollingInterval, false, peerHandler, cfg, appData, cfg.CachePollingProtocol)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
@@ -83,6 +86,7 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		appData,
 		toSession,
 		toData,
+		url6Regex,
 	)
 
 	combinedStates, combineStateFunc := StartStateCombiner(events, peerStates, localStates, toData)
