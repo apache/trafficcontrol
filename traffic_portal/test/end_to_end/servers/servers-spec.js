@@ -98,14 +98,28 @@ describe('Traffic Portal Servers Test Suite', function() {
 		pageData.domainName.clear();
 		pageData.domainName.sendKeys('testupdated.com');
 		pageData.type.click();
-		pageData.type.sendKeys('MID');
 		pageData.updateButton.click();
 		expect(pageData.domainName.getText() === 'testupdated.com');
-		expect(pageData.type.getText() === 'MID');
 	});
 
-	it('should delete the new Server', function() {
+	it('should add a server capability to the server', function() {
+		console.log('Adding new server capability to ' + mockVals.hostName);
+		pageData.moreBtn.click();
+		pageData.viewCapabilitiesMenuItem.click();
+		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toMatch(commonFunctions.urlPath(browser.baseUrl)+"#!/servers/[0-9]+/capabilities");
+		pageData.addCapabilityBtn.click();
+		expect(pageData.submitButton.isEnabled()).toBe(false);
+		commonFunctions.selectDropdownbyNum(pageData.selectFormDropdown, 1);
+		expect(pageData.submitButton.isEnabled()).toBe(true);
+		pageData.submitButton.click();
+		element.all(by.css('tbody tr')).then(function(totalRows) {
+			expect(totalRows.length).toBe(1);
+		});
+	});
+
+	it('should navigate back to the new server and delete it', function() {
 		console.log('Deleting the server ' + mockVals.hostName);
+		browser.navigate().back();
 		pageData.deleteButton.click();
 		pageData.confirmWithNameInput.sendKeys(mockVals.hostName);
 		pageData.deletePermanentlyButton.click();
