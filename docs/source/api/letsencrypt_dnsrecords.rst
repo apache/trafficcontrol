@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-letsencrypt-dnsrecords:
+.. _to-letsencrypt-dnsrecord:
 
 **************************
 ``letsencrypt/dnsrecords``
@@ -23,7 +23,7 @@
 
 ``GET``
 ========
-Gets all DNS challenge records for Let's Encrypt DNS challenges.
+Gets DNS challenge records for Let's Encrypt DNS challenge for a specified :abbr:`FQDN (Fully Qualified Domain Name)`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,12 +31,27 @@ Gets all DNS challenge records for Let's Encrypt DNS challenges.
 
 Request Structure
 -----------------
-No parameters available
+.. table:: Request Query Parameters
+
+	+------+----------+--------------------------------------------------------------------------------------------------+
+	| Name | Required | Description                                                                                      |
+	+======+==========+==================================================================================================+
+	| fqdn | no       | Return only DNS challenge records for the specified :abbr:`FQDN (Fully Qualified Domain Name)`   |
+	+------+----------+--------------------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/1.4/letsencrypt/dnsrecord?fqdn=_acme-challenge.demo1.example.com. HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
 
 
 Response Structure
 ------------------
-:fqdn:      The Fully Qualified Domain Name (FQDN) for the TXT record location to complete the DNS challenge
+:fqdn:      The :abbr:`FQDN (Fully Qualified Domain Name)` for the TXT record location to complete the DNS challenge
 :record:    The record provided by Let's Encrypt to complete the DNS challenge
 
 .. code-block:: http

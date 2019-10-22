@@ -38,14 +38,27 @@ Response Structure
 ------------------
 :LetsEncryptExpirations: A list of objects with information regarding certificate expiration for all Let's Encrypt certificates
 
-	:XmlId:       The :term:`Delivery Service`'s uniquely identifying 'xml_id'
-	:Version:     The version of the certificate record in Traffic Vault
+	:XmlId:       The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
+	:Version:     An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
 	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service`
 	:AuthType:    The authority type of the certificate for the :term:`Delivery Service`
 	:Error:       Any errors received in the renewal process
 
 :SelfSignedExpirations:  A list of objects with information regarding certificate expiration for all self signed certificates
+
+	:XmlId:       The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
+	:Version:     An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
+	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service`
+	:AuthType:    The authority type of the certificate for the :term:`Delivery Service`
+	:Error:       Any errors received in the renewal process
+
 :OtherExpirations:       A list of objects with information regarding certificate expiration for all other certificates
+
+	:XmlId:       The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
+	:Version:     An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
+	:Expiration:  The expiration date of the certificate for the :term:`Delivery Service`
+	:AuthType:    The authority type of the certificate for the :term:`Delivery Service`
+	:Error:       Any errors received in the renewal process
 
 .. code-block:: http
 	:caption: Response Example

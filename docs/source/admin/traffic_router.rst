@@ -696,7 +696,7 @@ Let's Encrypt
 Let’s Encrypt is a free, automated :abbr:`CA (Certificate Authority)` using :abbr:`ACME (Automated Certificate Management Environment)` protocol. Let's Encrypt performs a domain validation before issuing or renewing a certificate. There are several options for domain validation but for this application the DNS challenge is used in order to receive wildcard certificates. Let's Encrypt sends a token to be used as a TXT record at ``_acme-challenge.domain.example.com`` and after verifying that the token is accessible there, will return the newly generated and signed certificate and key. The basic workflow implemented is:
 
 #. ``POST`` to Let's Encrypt and receive the DNS challenge token.
-#. Traffic Ops stores the DNS challenge in the Traffic Ops database using the fqdn of the certificate request as the key.
+#. Traffic Ops stores the DNS challenge in the Traffic Ops database.
 #. Traffic Router has a watcher set up to watch for changes in the Traffic Ops database table.
 #. When a new record appears, Traffic Router reads it and puts the token from Let's Encrypt as a TXT record at ``_acme-challenge.domain.example.com`` for the specified :term:`Delivery Service`.
 #. Let's Encrypt verifies that the correct record is accessible to verify ownership of the domain.
