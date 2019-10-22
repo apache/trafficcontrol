@@ -20,7 +20,7 @@ import { first } from 'rxjs/operators';
 
 import { APIService, AuthenticationService } from '../../services';
 import { DeliveryService } from '../../models';
-import { orderBy } from '../../utils';
+import { orderBy, fuzzyScore } from '../../utils';
 
 @Component({
 	selector: 'dash',
@@ -32,6 +32,7 @@ import { orderBy } from '../../utils';
 */
 export class DashboardComponent implements OnInit, OnDestroy {
 	deliveryServices: DeliveryService[];
+	filteredDSes: DeliveryService[];
 	loading = true;
 
 	private capabilitiesSubscription: Subscription;
@@ -53,6 +54,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 		this.api.getDeliveryServices().pipe(first()).subscribe(
 			(r: DeliveryService[]) => {
 				this.deliveryServices = orderBy(r, 'displayName') as DeliveryService[];
+				this.filteredDSes = Array.from(this.deliveryServices);
 				this.loading = false;
 			}
 		);
@@ -74,11 +76,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
 	updateURL (e: Event) {
 		e.preventDefault();
+		this.sort();
 		if (this.fuzzControl.value === '') {
 			this.router.navigate([], {replaceUrl: true, queryParams: null});
 		} else if (this.fuzzControl.value) {
 			this.router.navigate([], {replaceUrl: true, queryParams: {search: this.fuzzControl.value}});
 		}
+	}
+
+	sort () {
+		this.filteredDSes = this.deliveryServices.map(x=>[x.id, fuzzyScore(x.displayName, this.fuzzControl.value)]).filter(x=>x[1] !== Infinity).sort(
+			(a, b) => {
+				if (a[1] > b[1]) {
+					return 1;
+				}
+				if (a[1] < b[1]) {
+					return -1;
+				}
+				return 0;
+			}
+		).map(x=>x[0]);
 	}
 
 	/**
