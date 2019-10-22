@@ -35,11 +35,15 @@ under the License.
             <thead>
                 <tr>
                     <th>Host</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 <tr ng-click="editServer(s.serverId)" ng-repeat="s in ::servers" context-menu="contextMenuItems">
                     <td data-search="^{{::s.serverHostName}}$">{{::s.serverHostName}}</td>
+                    <td style="text-align: right;">
+                        <a class="link action-link" title="Remove Capability from Server" ng-click="confirmRemoveCapability(s.serverId, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
+                    </td>
                 </tr>
             </tbody>
         </table>

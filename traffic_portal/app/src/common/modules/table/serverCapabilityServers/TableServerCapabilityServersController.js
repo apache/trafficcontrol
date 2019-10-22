@@ -17,10 +17,19 @@
  * under the License.
  */
 
-var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $controller, $window, locationUtils) {
+var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $controller, $uibModal, $window, locationUtils, serverService) {
 
 	// extends the TableServersController to inherit common methods
 	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
+
+	var removeCapability = function(serverId) {
+		serverService.removeServerCapability(serverId, serverCapability.name)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
+	};
 
 	$scope.serverCapability = serverCapability;
 
@@ -29,6 +38,13 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 			text: 'Open Server in New Tab',
 			click: function ($itemScope) {
 				$window.open('/#!/servers/' + $itemScope.s.serverId, '_blank');
+			}
+		},
+		null, // Divider
+		{
+			text: 'Remove Capability from Server',
+			click: function ($itemScope) {
+				$scope.confirmRemoveCapability($itemScope.s.serverId);
 			}
 		},
 		null, // Divider
@@ -46,6 +62,30 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 		}
 	];
 
+	$scope.confirmRemoveCapability = function(serverId, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
+
+		const params = {
+			title: 'Remove Capability from Server?',
+			message: 'Are you sure you want to remove the ' + serverCapability.name + ' capability from this server?'
+		};
+		const modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			removeCapability(serverId);
+		});
+	};
+
 	angular.element(document).ready(function () {
 		$('#serverCapabilityServersTable').dataTable({
 			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -56,5 +96,5 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 
 };
 
-TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$controller', '$window', 'locationUtils'];
+TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$controller', '$uibModal', '$window', 'locationUtils', 'serverService'];
 module.exports = TableServerCapabilityServersController;
