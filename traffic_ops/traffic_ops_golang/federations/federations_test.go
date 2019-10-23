@@ -40,17 +40,17 @@ func TestAddFederationResolverMappingsForCurrentUser(t *testing.T) {
 
 func positiveTestAddFederationResolverMappingsForCurrentUser(t *testing.T) {
 	u := auth.CurrentUser{
-		UserName: "test",
-		ID: 1,
+		UserName:  "test",
+		ID:        1,
 		PrivLevel: 100,
-		TenantID: 1,
-		Role: 1,
+		TenantID:  1,
+		Role:      1,
 	}
 
 	mappings := []tc.DeliveryServiceFederationResolverMapping{
 		tc.DeliveryServiceFederationResolverMapping{
 			DeliveryService: "test",
-			Mappings: tc.ResolverMapping {
+			Mappings: tc.ResolverMapping{
 				Resolve4: []string{"0.0.0.0", "127.0.0.1/12"},
 				Resolve6: []string{"abcd:ef01:2345:6789::", "f1d0::f00d/127"},
 			},
@@ -111,17 +111,17 @@ func positiveTestAddFederationResolverMappingsForCurrentUser(t *testing.T) {
 
 func testAddFederationResolverMappingsForCurrentUserWithoutFederations(t *testing.T) {
 	u := auth.CurrentUser{
-		UserName: "test",
-		ID: 1,
+		UserName:  "test",
+		ID:        1,
 		PrivLevel: 100,
-		TenantID: 1,
-		Role: 1,
+		TenantID:  1,
+		Role:      1,
 	}
 
 	mappings := []tc.DeliveryServiceFederationResolverMapping{
 		tc.DeliveryServiceFederationResolverMapping{
 			DeliveryService: "test",
-			Mappings: tc.ResolverMapping {
+			Mappings: tc.ResolverMapping{
 				Resolve4: []string{"0.0.0.0"},
 				Resolve6: []string{},
 			},
@@ -165,18 +165,18 @@ func testAddFederationResolverMappingsForCurrentUserWithoutFederations(t *testin
 }
 
 func testUnauthorizedDSOnResolverAdd(t *testing.T) {
-	u := auth.CurrentUser {
-		UserName: "test",
-		ID: 1,
+	u := auth.CurrentUser{
+		UserName:  "test",
+		ID:        1,
 		PrivLevel: 100,
-		TenantID: 1,
-		Role: 1,
+		TenantID:  1,
+		Role:      1,
 	}
 
 	mappings := []tc.DeliveryServiceFederationResolverMapping{
 		tc.DeliveryServiceFederationResolverMapping{
 			DeliveryService: "test",
-			Mappings: tc.ResolverMapping {
+			Mappings: tc.ResolverMapping{
 				Resolve4: []string{},
 				Resolve6: []string{},
 			},
@@ -224,12 +224,12 @@ func TestGetMappingsFromRequestBody(t *testing.T) {
 	data := `{"federations":[{"deliveryService":"test","mappings":{"resolve4":[], "resolve6":[]}}]}`
 	buf := strings.NewReader(data)
 
-	legacyVersion := api.Version {
+	legacyVersion := api.Version{
 		Major: 1,
 		Minor: 3,
 	}
 
-	version := api.Version {
+	version := api.Version{
 		Major: 1,
 		Minor: 4,
 	}
@@ -278,11 +278,11 @@ func TestGetMappingsFromRequestBody(t *testing.T) {
 
 func TestRemoveFederationResolverMappingsForCurrentUser(t *testing.T) {
 	u := auth.CurrentUser{
-		UserName: "test",
-		ID: 1,
+		UserName:  "test",
+		ID:        1,
 		PrivLevel: 100,
-		TenantID: 1,
-		Role: 1,
+		TenantID:  1,
+		Role:      1,
 	}
 
 	mockDB, mock, err := sqlmock.New()

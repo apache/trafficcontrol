@@ -294,28 +294,28 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 				return nil
 			})),
 		validation.Field(&details.HasNegativeCachingCustomization, validation.By(
-			func (h interface{}) error {
+			func(h interface{}) error {
 				if h == nil {
 					return errors.New("hasNegativeCachingCustomization: required")
 				}
 				return nil
 			})),
 		validation.Field(&details.HasOriginACLWhitelist, validation.By(
-			func (h interface{}) error {
+			func(h interface{}) error {
 				if h == nil {
 					return errors.New("hasNegativeCachingCustomization: required")
 				}
 				return nil
 			})),
 		validation.Field(&details.HasOriginDynamicRemap, validation.By(
-			func (h interface{}) error {
+			func(h interface{}) error {
 				if h == nil {
 					return errors.New("hasNegativeCachingCustomization: required")
 				}
 				return nil
 			})),
 		validation.Field(&details.HasSignedURLs, validation.By(
-			func (h interface{}) error {
+			func(h interface{}) error {
 				if h == nil {
 					return errors.New("hasNegativeCachingCustomization: required")
 				}
@@ -323,7 +323,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 			})),
 		validation.Field(&details.MaxLibrarySizeEstimate, validation.Required),
 		validation.Field(&details.OriginHeaders, validation.By(
-			func (h interface{}) error {
+			func(h interface{}) error {
 				if h == nil {
 					return nil
 				}
@@ -340,7 +340,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 		validation.Field(&details.RangeRequestHandling, validation.Required),
 		validation.Field(&details.RoutingName, validation.Required),
 		validation.Field(&details.RoutingType, validation.By(
-			func (t interface{}) error {
+			func(t interface{}) error {
 				if t == nil || *(t.(*DSType)) == "" {
 					return errors.New("routingType: required")
 				}

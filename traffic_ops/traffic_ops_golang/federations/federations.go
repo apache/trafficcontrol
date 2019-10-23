@@ -438,17 +438,17 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 		[]tc.Alert{
 			tc.Alert{
 				Level: tc.SuccessLevel.String(),
-				Text: deletedMsg,
+				Text:  deletedMsg,
 			},
 			tc.Alert{
 				Level: tc.SuccessLevel.String(),
-				Text: createdMsg,
+				Text:  createdMsg,
 			},
 		},
 	}
-	resp := struct{
-		Alerts tc.Alerts `json:"alerts"`
-		Response string `json:"response"`
+	resp := struct {
+		Alerts   tc.Alerts `json:"alerts"`
+		Response string    `json:"response"`
 	}{
 		alerts,
 		createdMsg,
@@ -467,7 +467,7 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 }
 
 // retrieves mappings from the given request body using the rules of the given api Version
-func getMappingsFromRequestBody(v api.Version, body io.ReadCloser) (tc.DeliveryServiceFederationResolverMappingRequest, error, error){
+func getMappingsFromRequestBody(v api.Version, body io.ReadCloser) (tc.DeliveryServiceFederationResolverMappingRequest, error, error) {
 	defer body.Close()
 	var mappings tc.DeliveryServiceFederationResolverMappingRequest
 
@@ -475,7 +475,6 @@ func getMappingsFromRequestBody(v api.Version, body io.ReadCloser) (tc.DeliveryS
 	if err != nil {
 		return mappings, errors.New("Couldn't read request"), fmt.Errorf("Reading request body: %v", err)
 	}
-
 
 	if v.Minor <= 3 {
 		var req tc.LegacyDeliveryServiceFederationResolverMappingRequest

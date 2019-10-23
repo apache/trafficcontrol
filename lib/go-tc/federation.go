@@ -115,7 +115,7 @@ func (r *ResolverMapping) Validate(tx *sql.Tx) error {
 			continue
 		}
 
-		if ip,_,err := net.ParseCIDR(res); err != nil || ip.To4() == nil {
+		if ip, _, err := net.ParseCIDR(res); err != nil || ip.To4() == nil {
 			errs = append(errs, fmt.Errorf("[ %s ] is not a valid ip address.", res))
 		}
 	}
@@ -129,7 +129,7 @@ func (r *ResolverMapping) Validate(tx *sql.Tx) error {
 			continue
 		}
 
-		if ip,_,err := net.ParseCIDR(res); err != nil || ip.To16() == nil {
+		if ip, _, err := net.ParseCIDR(res); err != nil || ip.To16() == nil {
 			errs = append(errs, fmt.Errorf("[ %s ] is not a valid ip address.", res))
 		}
 	}
@@ -143,8 +143,8 @@ func (r *ResolverMapping) Validate(tx *sql.Tx) error {
 // Federation.
 type FederationResolverMapping struct {
 	// TTL is the Time-to-Live of a DNS response to a request to resolve this Federation's CNAME
-	TTL      *int     `json:"ttl"`
-	CName    *string  `json:"cname"`
+	TTL   *int    `json:"ttl"`
+	CName *string `json:"cname"`
 	ResolverMapping
 }
 
@@ -156,7 +156,7 @@ type IAllFederation interface {
 
 // FederationDSPost is the format of a request to associate a Federation with any number of Delivery Services.
 type FederationDSPost struct {
-	DSIDs   []int `json:"dsIds"`
+	DSIDs []int `json:"dsIds"`
 	// Replace indicates whether existing Federation-to-Delivery Service associations should be
 	// replaced by the ones defined by this request, or otherwise merely augmented with them.
 	Replace *bool `json:"replace"`
@@ -187,8 +187,8 @@ func (f *FederationUserPost) Validate(tx *sql.Tx) error {
 }
 
 type DeliveryServiceFederationResolverMapping struct {
-	DeliveryService string `json:"deliveryService"`
-	Mappings ResolverMapping `json:"mappings"`
+	DeliveryService string          `json:"deliveryService"`
+	Mappings        ResolverMapping `json:"mappings"`
 }
 
 func (d *DeliveryServiceFederationResolverMapping) Validate(tx *sql.Tx) error {
