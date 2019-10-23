@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated numerous, miscellaneous tools to use TO API version 2.0
 - Updated TP to use TO API v2
 - Updated TP application build dependencies
+- Modified Traffic Monitor to poll over IPv6 as well as IPv4.
 
 ### Deprecated/Removed
 - Traffic Ops Python client no longer supports Python 2.
