@@ -56,6 +56,20 @@ VALUES ($1, $2)
 ON CONFLICT DO NOTHING
 `
 
+const deleteCurrentUserFederationResolversQuery = `
+DELETE FROM federation_resolver
+WHERE federation_resolver.id IN (
+	SELECT federation_federation_resolver.federation_resolver
+	FROM federation_federation_resolver
+	WHERE federation_federation_resolver.federation IN (
+		SELECT federation_tmuser.federation
+		FROM federation_tmuser
+		WHERE federation_tmuser.tm_user = $1
+	)
+)
+RETURNING federation_resolver.ip_address
+`
+
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -341,4 +355,54 @@ func addFederationResolver(res []string, t tc.FederationResolverType, fedID uint
 	}
 
 	return inserted, nil
+}
+
+// RemoveFederationResolverMappingsForCurrentUser is the handler for a DELETE request to /federations
+// Confusingly, it does not delete a federation, but is instead used to remove an association
+// between all federation resolvers and all federations assigned to the authenticated user.
+func RemoveFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	rows, err := tx.Query(deleteCurrentUserFederationResolversQuery, inf.User.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			userErr = fmt.Errorf("No federation resolvers to delete for user %s", inf.User.UserName)
+			errCode = http.StatusBadRequest
+		} else {
+			sysErr = fmt.Errorf("Deleting federation resolvers for user %s: %v", inf.User.UserName, err)
+			errCode = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer rows.Close()
+
+	ips := []string{}
+	for rows.Next() {
+		var ip string
+		if err := rows.Scan(&ip); err != nil {
+			sysErr = fmt.Errorf("Error scanning deleted resolver IP: %v", err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, tx, errCode, nil, sysErr)
+			return
+		}
+		ips = append(ips, ip)
+	}
+
+	ipList := fmt.Sprintf("[ %s ]", strings.Join(ips, ", "))
+	msg := fmt.Sprintf("%s successfully deleted all federation resolvers: %s", inf.User.UserName, ipList)
+	changelogMsg := fmt.Sprintf("USER: %S, ID: %d, ACTION: %s", inf.User.UserName, inf.User.ID, msg)
+	api.CreateChangeLogRawTx(api.ApiChange, changelogMsg, inf.User, tx)
+
+	if inf.Version.Minor <= 3 {
+		api.WriteResp(w, r, msg)
+	} else {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, msg, msg)
+	}
 }
