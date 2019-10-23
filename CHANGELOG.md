@@ -102,6 +102,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Issue #3871 - provides users with a specified role the ability to mark any delivery service request as complete.
 - Fixed Traffic Ops Golang POST servers/id/deliveryservice continuing erroneously after a database error.
 - Fixed Traffic Ops Golang POST servers/id/deliveryservice double-logging errors.
+- Modified Traffic Monitor to poll over IPv6 as well as IPv4.
 
 ### Deprecated/Removed
 - The TO API `cachegroup_fallbacks` endpoint is now deprecated
