@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/profiles/:name/configfiles/ats/* `GET`
   - /api/1.1/servers/:name/configfiles/ats/* `GET`
   - /api/1.1/cdns/:name/configfiles/ats/* `GET`
+  - /api/1.1/servers/:id/status `PUT`
   - /api/1.1/dbdump `GET`
   - /api/1.1/servers/:name/configfiles/ats/parent.config
   - /api/1.1/servers/:name/configfiles/ats/remap.config

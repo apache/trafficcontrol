@@ -23,6 +23,7 @@ import (
 	"crypto/sha512"
 
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"sort"
 	"strconv"
@@ -90,6 +91,50 @@ func (i JSONIntStr) ToInt64() int64 {
 
 func (i JSONIntStr) String() string {
 	return strconv.FormatInt(int64(i), 10)
+}
+
+// JSONNameOrIDStr is designed to handle backwards-compatibility for old Perl endpoints which accept both. Please do not use this for new endpoints or new APIs, APIs should be well-typed.
+// NOTE: this differs from JSONIntStr in that this field could be 1 of 3 options:
+//     1. string representing an integer
+//     2. string representing a unique name
+//     3. integer
+type JSONNameOrIDStr struct {
+	Name *string
+	ID   *int
+}
+
+func (i JSONNameOrIDStr) MarshalJSON() ([]byte, error) {
+	if i.ID != nil {
+		return json.Marshal(*i.ID)
+	}
+	if i.Name != nil {
+		return json.Marshal(*i.Name)
+	}
+	return nil, errors.New("either Name or ID must be non-nil")
+}
+
+func (i *JSONNameOrIDStr) UnmarshalJSON(d []byte) error {
+	if len(d) == 0 {
+		return errors.New("empty object")
+	}
+	quoted := false
+	if d[0] == '"' {
+		quoted = true
+		d = d[1 : len(d)-1] // strip JSON quotes
+	}
+	di, err := strconv.ParseInt(string(d), 10, strconv.IntSize)
+	if err != nil {
+		if quoted {
+			// if quoted, assume it is a name
+			name := string(d)
+			i.Name = &name
+			return nil
+		}
+		return errors.New("expected an integer value: " + err.Error())
+	}
+	conv := int(di)
+	i.ID = &conv
+	return nil
 }
 
 // BytesLenSplit splits the given byte array into an n-length arrays. If n > len(s), returns a slice with a single []byte containing all of s. If n <= 0, returns an empty slice.
