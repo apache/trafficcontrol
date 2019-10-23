@@ -46,6 +46,7 @@ func OpenConnection() (*sql.DB, error) {
 }
 
 // SetupTestData ...
+// TODO error does not need returned as this function can never return a non-nil error
 func SetupTestData(*sql.DB) error {
 	var err error
 
@@ -100,12 +101,6 @@ func SetupTestData(*sql.DB) error {
 	err = SetupToExtensions(db)
 	if err != nil {
 		fmt.Printf("\nError setting up to_extensions %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
-	}
-
-	err = SetupServerCapabilities(db)
-	if err != nil {
-		fmt.Printf("\nError setting up server capabilities %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 		os.Exit(1)
 	}
 
@@ -275,20 +270,6 @@ INSERT INTO to_extension (name, version, info_url, isactive, script_file, server
 INSERT INTO to_extension (name, version, info_url, isactive, script_file, servercheck_column_name, type) VALUES ('OPEN', '1.0.0', '-', false, '', 'ab', 3);
 	`
 	err := execSQL(db, sqlStmt, "to_extension")
-	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
-	}
-	return nil
-}
-
-// SetupServerCapabilities sets up seed server capabilities
-func SetupServerCapabilities(db *sql.DB) error {
-
-	sqlStmt := `
-INSERT INTO server_capability (name) VALUES ('mem');
-INSERT INTO server_capability (name) VALUES ('disk');
-`
-	err := execSQL(db, sqlStmt, "server_capability")
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}

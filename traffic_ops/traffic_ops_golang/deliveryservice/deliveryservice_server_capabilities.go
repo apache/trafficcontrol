@@ -37,14 +37,14 @@ const (
 	xmlIDQueryParam            = "xmlID"
 )
 
-// ServerCapability is a type alias to define functions on
+// ServerCapability provides a type to define methods on.
 type ServerCapability struct {
 	api.APIInfoImpl `json:"-"`
 	tc.DeliveryServiceServerCapability
 }
 
 // SetLastUpdated implements the api.GenericCreator interfaces and
-// sets the timestamp on insert
+// sets the timestamp on insert.
 func (sc *ServerCapability) SetLastUpdated(t tc.TimeNoMod) { sc.LastUpdated = &t }
 
 // NewReadObj implements the api.GenericReader interfaces.
@@ -52,7 +52,7 @@ func (sc *ServerCapability) NewReadObj() interface{} {
 	return &tc.DeliveryServiceServerCapability{}
 }
 
-// SelectQuery implements the api.GenericReader interface
+// SelectQuery implements the api.GenericReader interface.
 func (sc *ServerCapability) SelectQuery() string {
 	return `SELECT
 	sc.server_capability,
@@ -63,7 +63,7 @@ func (sc *ServerCapability) SelectQuery() string {
 	JOIN deliveryservice ds ON ds.id = sc.deliveryservice_id`
 }
 
-// ParamColumns implements the api.GenericReader interface
+// ParamColumns implements the api.GenericReader interface.
 func (sc *ServerCapability) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		deliveryServiceQueryParam: dbhelpers.WhereColumnInfo{
@@ -81,13 +81,13 @@ func (sc *ServerCapability) ParamColumns() map[string]dbhelpers.WhereColumnInfo 
 	}
 }
 
-// DeleteQuery implements the api.GenericDeleter interface
+// DeleteQuery implements the api.GenericDeleter interface.
 func (sc *ServerCapability) DeleteQuery() string {
 	return `DELETE FROM deliveryservice_server_capability
 	WHERE deliveryservice_id = :deliveryservice_id AND server_capability = :server_capability`
 }
 
-// GetKeyFieldsInfo implements the api.Identifier interface
+// GetKeyFieldsInfo implements the api.Identifier interface.
 func (sc ServerCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{
 		{
@@ -106,7 +106,7 @@ func (sc ServerCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 }
 
 // GetKeys implements the api.Identifier interface and is not needed
-// because Update is not available
+// because Update is not available.
 func (sc ServerCapability) GetKeys() (map[string]interface{}, bool) {
 	return nil, false
 }
@@ -115,7 +115,7 @@ func (sc ServerCapability) GetKeys() (map[string]interface{}, bool) {
 // create handler to assign deliveryServiceID and serverCapability.
 func (sc *ServerCapability) SetKeys(keys map[string]interface{}) {
 	// this utilizes the non panicking type assertion, if the thrown
-	// away ok variable is false it will be the zero of the type
+	// away ok variable is false it will be the zero of the type.
 	id, _ := keys[deliveryServiceQueryParam].(int)
 	sc.DeliveryServiceID = &id
 
@@ -133,12 +133,12 @@ func (sc *ServerCapability) GetAuditName() string {
 }
 
 // GetType implements the api.Identifier interface and
-// returns the name of the struct
+// returns the name of the struct.
 func (sc *ServerCapability) GetType() string {
 	return "deliveryservice.ServerCapability"
 }
 
-// Validate implements the api.Validator interface
+// Validate implements the api.Validator interface.
 func (sc ServerCapability) Validate() error {
 	errs := validation.Errors{
 		deliveryServiceQueryParam:  validation.Validate(sc.DeliveryServiceID, validation.Required),
@@ -148,22 +148,22 @@ func (sc ServerCapability) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-// Update implements the api.CRUDer interface
+// Update implements the api.CRUDer interface.
 func (sc *ServerCapability) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 
-// Read implements the api.CRUDer interface
+// Read implements the api.CRUDer interface.
 func (sc *ServerCapability) Read() ([]interface{}, error, error, int) {
 	return api.GenericRead(sc)
 }
 
-// Delete implements the api.CRUDer interface
+// Delete implements the api.CRUDer interface.
 func (sc *ServerCapability) Delete() (error, error, int) {
 	return api.GenericDelete(sc)
 }
 
-// Create implements the api.CRUDer interface
+// Create implements the api.CRUDer interface.
 func (sc *ServerCapability) Create() (error, error, int) {
 	resultRows, err := sc.APIInfo().Tx.NamedQuery(scInsertQuery(), sc)
 	if err != nil {

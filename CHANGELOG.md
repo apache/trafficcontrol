@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/deliveryservices/hostname/:hostname/sslkeys `GET`
   - /api/1.1/deliveryservices/sslkeys/add `POST`
   - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys/delete `GET`
-  - /api/1.4/deliveryservice_server_capability `(GET,POST,DELETE)`
+  - /api/1.4/deliveryservice_server_capabilities `(GET,POST,DELETE)`
   - /api/1.4/cdns/dnsseckeys/refresh `GET`
   - /api/1.1/cdns/name/:name/dnsseckeys `GET`
   - /api/1.4/cdns/name/:name/dnsseckeys `GET`
