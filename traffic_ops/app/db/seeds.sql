@@ -544,7 +544,7 @@ insert into api_capability (http_method, route, capability) values ('DELETE', 'd
 -- delivery service server capabilities
 insert into api_capability (http_method, route, capability) values ('GET', 'deliveryservice_server_capabilities', 'delivery-services-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('POST', 'deliveryservice_server_capabilities', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservice_server_capabilities', 'delivery-service-server-capabilities-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
+insert into api_capability (http_method, route, capability) values ('DELETE', 'deliveryservice_server_capabilities', 'delivery-services-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- divisions
 insert into api_capability (http_method, route, capability) values ('GET', 'divisions', 'divisions-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'divisions/*', 'divisions-read') ON CONFLICT (http_method, route, capability) DO NOTHING;

@@ -45,33 +45,37 @@ func (to *Session) CreateDeliveryServiceServerCapability(capability tc.DeliveryS
 // DeleteDeliveryServiceServerCapability unassigns a Server Capability from a Delivery Service
 func (to *Session) DeleteDeliveryServiceServerCapability(deliveryserviceID int, serverCapability string) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
-	endpoint := fmt.Sprintf("%v?deliveryServiceID=%v&serverCapability=%v", v14DeliveryServiceServerCapabilities, deliveryserviceID, serverCapability)
-	reqInf, err := del(to, endpoint, &alerts)
+	param := url.Values{}
+	param.Add("deliveryServiceID", strconv.Itoa(deliveryserviceID))
+	param.Add("serverCapability", serverCapability)
+	url := fmt.Sprintf("%s?%s", v14DeliveryServiceServerCapabilities, param.Encode())
+	reqInf, err := del(to, url, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetDeliveryServiceServerCapabilities retrieves a list of Server Capabilities that are assigned to a Delivery Service
 // Callers can filter the results by delivery service id, xml id and/or server capability via the optional parameters
 func (to *Session) GetDeliveryServiceServerCapabilities(deliveryServiceID *int, xmlID, serverCapability *string) ([]tc.DeliveryServiceServerCapability, ReqInf, error) {
-	v := url.Values{}
+	param := url.Values{}
 	if deliveryServiceID != nil {
-		v.Add("deliveryServiceID", strconv.Itoa(*deliveryServiceID))
+		param.Add("deliveryServiceID", strconv.Itoa(*deliveryServiceID))
 	}
 	if xmlID != nil {
-		v.Add("xmlID", *xmlID)
+		param.Add("xmlID", *xmlID)
 	}
 	if serverCapability != nil {
-		v.Add("serverCapability", *serverCapability)
+		param.Add("serverCapability", *serverCapability)
 	}
-	queryURL := v14DeliveryServiceServerCapabilities
-	if qStr := v.Encode(); len(qStr) > 0 {
-		queryURL = fmt.Sprintf("%s?%s", queryURL, qStr)
+
+	url := v14DeliveryServiceServerCapabilities
+	if len(param) > 0 {
+		url = fmt.Sprintf("%s?%s", url, param.Encode())
 	}
 
 	resp := struct {
 		Response []tc.DeliveryServiceServerCapability `json:"response"`
 	}{}
-	reqInf, err := get(to, queryURL, &resp)
+	reqInf, err := get(to, url, &resp)
 	if err != nil {
 		return nil, reqInf, err
 	}
