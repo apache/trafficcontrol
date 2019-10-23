@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Gets all associations of Server Capabilities to Delivery Services
+Gets all associations of Server Capabilities to :term:`Delivery Services`
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -36,9 +36,9 @@ Request Structure
 	+-------------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| Name              | Required | Description                                                                                                   |
 	+===================+==========+===============================================================================================================+
-	| deliveryServiceID | no       | Filter associated Server Capabilities by Delivery Service ID                                                  |
+	| deliveryServiceID | no       | Filter associated Server Capabilities by :term:`Delivery Service` ID                                          |
 	+-------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| xmlID             | no       | Filter associated Server Capabilities by Delivery Service xml ID                                              |
+	| xmlID             | no       | Filter associated Server Capabilities by :term:`Delivery Service` :ref:`ds-xmlid`                             |
 	+-------------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| serverCapability  | no       | Filter associated Server Capabilities by Server Capability                                                    |
 	+-------------------+----------+---------------------------------------------------------------------------------------------------------------+
@@ -67,9 +67,9 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryServiceID: The Delivery Service's ID
-:xmlID:             The Delivery Service's text-based unique identifier
-:lastUpdated:       The date and time at which this association between the Delivery Service and the Server Capability was last updated, in an ISO-like format
+:deliveryServiceID: The :term:`Delivery Service`'s ID
+:xmlID:             The :term:`Delivery Service`'s :ref:`ds-xmlid`
+:lastUpdated:       The date and time at which this association between the :term:`Delivery Service` and the Server Capability was last updated, in an ISO-like format
 :serverCapability:  The Server Capability's name
 
 .. code-block:: http
@@ -106,7 +106,7 @@ Response Structure
 
 ``POST``
 ========
-Associates a Server Capability to a Delivery Service.
+Associates a Server Capability to a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -114,7 +114,7 @@ Associates a Server Capability to a Delivery Service.
 
 Request Structure
 -----------------
-:deliveryServiceID: The Delivery Service's ID to associate
+:deliveryServiceID: The :term:`Delivery Service`'s ID to associate
 :serverCapability:  The Server Capability's name to associate
 
 .. code-block:: http
@@ -135,8 +135,8 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryServiceID: The Delivery Service's ID
-:lastUpdated:       The date and time at which this association between the Delivery Service and the Server Capability was last updated, in an ISO-like format
+:deliveryServiceID: The :term:`Delivery Service`'s ID
+:lastUpdated:       The date and time at which this association between the :term:`Delivery Service` and the Server Capability was last updated, in an ISO-like format
 :serverCapability:  The Server Capability's name
 
 .. code-block:: http
@@ -170,7 +170,7 @@ Response Structure
 
 ``DELETE``
 ==========
-De-associate a Server Capability from a Delivery Service.
+Dissociate a Server Capability from a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -178,8 +178,8 @@ De-associate a Server Capability from a Delivery Service.
 
 Request Structure
 -----------------
-:deliveryServiceID: The Delivery Service's ID to de-associate
-:serverCapability:  The Server Capability's name to de-associate
+:deliveryServiceID: The :term:`Delivery Service`'s ID to dissociate
+:serverCapability:  The Server Capability's name to dissociate
 
 .. code-block:: http
 	:caption: Request Example
