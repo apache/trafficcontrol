@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -218,40 +219,10 @@ func AddFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.
 	}
 	defer inf.Close()
 
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		userErr = errors.New("Couldn't read request")
-		sysErr = fmt.Errorf("Reading request body: %v", err)
-		errCode = http.StatusBadRequest
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	mappings, userErr, sysErr := getMappingsFromRequestBody(*inf.Version, r.Body)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
 		return
-	}
-
-	var mappings tc.DeliveryServiceFederationResolverMappingRequest
-	if inf.Version.Minor <= 3 {
-		var req tc.LegacyDeliveryServiceFederationResolverMappingRequest
-		if err := json.Unmarshal(b, &req); err != nil {
-			errCode = http.StatusBadRequest
-			userErr = fmt.Errorf("parsing request: %v", err)
-			api.HandleErr(w, r, tx, errCode, userErr, nil)
-			return
-		}
-		mappings = req.Federations
-	} else {
-		var req tc.DeliveryServiceFederationResolverMappingRequest
-
-		// fall back on legacy behavior
-		if err := json.Unmarshal(b, &req); err != nil {
-			var request tc.LegacyDeliveryServiceFederationResolverMappingRequest
-			if err = json.Unmarshal(b, &request); err != nil {
-				errCode = http.StatusBadRequest
-				userErr = fmt.Errorf("parsing request: %v", err)
-				api.HandleErr(w, r, tx, errCode, userErr, nil)
-				return
-			}
-			req = request.Federations
-		}
-		mappings = req
 	}
 
 	if err := mappings.Validate(tx); err != nil {
@@ -282,7 +253,7 @@ func addFederationResolverMappingsForCurrentUser(u *auth.CurrentUser, tx *sql.Tx
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
 		} else if !ok {
-			return fmt.Errorf("'%s' - no such Delivery Service", fed.DeliveryService), nil, http.StatusBadRequest
+			return fmt.Errorf("'%s' - no such Delivery Service", fed.DeliveryService), nil, http.StatusConflict
 		}
 
 		if ok, err = tenant.IsResourceAuthorizedToUserTx(dsTenant, u, tx); err != nil {
@@ -369,35 +340,23 @@ func RemoveFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *ht
 	}
 	defer inf.Close()
 
-	rows, err := tx.Query(deleteCurrentUserFederationResolversQuery, inf.User.ID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			userErr = fmt.Errorf("No federation resolvers to delete for user %s", inf.User.UserName)
-			errCode = http.StatusBadRequest
-		} else {
-			sysErr = fmt.Errorf("Deleting federation resolvers for user %s: %v", inf.User.UserName, err)
-			errCode = http.StatusInternalServerError
-		}
+	ips, userErr, sysErr, errCode := removeFederationResolverMappingsForCurrentUser(tx, inf.User)
+	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	defer rows.Close()
 
-	ips := []string{}
-	for rows.Next() {
-		var ip string
-		if err := rows.Scan(&ip); err != nil {
-			sysErr = fmt.Errorf("Error scanning deleted resolver IP: %v", err)
-			errCode = http.StatusInternalServerError
-			api.HandleErr(w, r, tx, errCode, nil, sysErr)
-			return
-		}
-		ips = append(ips, ip)
+	// I'm not sure if I necessarily agree with treating this as a client error, but it's what Perl did.
+	if len(ips) < 1 {
+		errCode = http.StatusConflict
+		userErr = fmt.Errorf("No federation resolvers to delete for user %s", inf.User.UserName)
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
+		return
 	}
 
 	ipList := fmt.Sprintf("[ %s ]", strings.Join(ips, ", "))
 	msg := fmt.Sprintf("%s successfully deleted all federation resolvers: %s", inf.User.UserName, ipList)
-	changelogMsg := fmt.Sprintf("USER: %S, ID: %d, ACTION: %s", inf.User.UserName, inf.User.ID, msg)
+	changelogMsg := fmt.Sprintf("USER: %s, ID: %d, ACTION: %s", inf.User.UserName, inf.User.ID, msg)
 	api.CreateChangeLogRawTx(api.ApiChange, changelogMsg, inf.User, tx)
 
 	if inf.Version.Minor <= 3 {
@@ -405,4 +364,139 @@ func RemoveFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *ht
 	} else {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, msg, msg)
 	}
+}
+
+// handles the main logic of the DELETE handler, separated out for convenience
+func removeFederationResolverMappingsForCurrentUser(tx *sql.Tx, u *auth.CurrentUser) ([]string, error, error, int) {
+	rows, err := tx.Query(deleteCurrentUserFederationResolversQuery, u.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("No federation resolvers to delete for user %s", u.UserName), nil, http.StatusConflict
+		} else {
+			return nil, nil, fmt.Errorf("Deleting federation resolvers for user %s: %v", u.UserName, err), http.StatusInternalServerError
+		}
+	}
+	defer rows.Close()
+
+	ips := []string{}
+	for rows.Next() {
+		var ip string
+		if err := rows.Scan(&ip); err != nil {
+			return nil, nil, fmt.Errorf("Error scanning deleted resolver IP: %v", err), http.StatusInternalServerError
+		}
+		ips = append(ips, ip)
+	}
+	return ips, nil, nil, http.StatusOK
+}
+
+func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	ips, userErr, sysErr, errCode := removeFederationResolverMappingsForCurrentUser(tx, inf.User)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	ipList := fmt.Sprintf("[ %s ]", strings.Join(ips, ", "))
+	deletedMsg := fmt.Sprintf("%s successfully deleted all federation resolvers: %s", inf.User.UserName, ipList)
+	changelogMsg := fmt.Sprintf("USER: %s, ID: %d, ACTION: %s", inf.User.UserName, inf.User.ID, deletedMsg)
+	api.CreateChangeLogRawTx(api.ApiChange, changelogMsg, inf.User, tx)
+
+	mappings, userErr, sysErr := getMappingsFromRequestBody(*inf.Version, r.Body)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
+		return
+	}
+
+	if err := mappings.Validate(tx); err != nil {
+		errCode = http.StatusBadRequest
+		userErr = fmt.Errorf("validating request: %v", err)
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
+		return
+	}
+
+	userErr, sysErr, errCode = addFederationResolverMappingsForCurrentUser(inf.User, tx, mappings)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	createdMsg := fmt.Sprintf("%s successfully created federation resolvers.", inf.User.UserName)
+	if inf.Version.Minor <= 3 {
+		api.WriteResp(w, r, createdMsg)
+		return
+	}
+
+	alerts := tc.Alerts{
+		[]tc.Alert{
+			tc.Alert{
+				Level: tc.SuccessLevel.String(),
+				Text: deletedMsg,
+			},
+			tc.Alert{
+				Level: tc.SuccessLevel.String(),
+				Text: createdMsg,
+			},
+		},
+	}
+	resp := struct{
+		Alerts tc.Alerts `json:"alerts"`
+		Response string `json:"response"`
+	}{
+		alerts,
+		createdMsg,
+	}
+
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		sysErr = fmt.Errorf("Marshalling response: %v", err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		return
+	}
+
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Write(append(respBts, '\n'))
+}
+
+// retrieves mappings from the given request body using the rules of the given api Version
+func getMappingsFromRequestBody(v api.Version, body io.ReadCloser) (tc.DeliveryServiceFederationResolverMappingRequest, error, error){
+	defer body.Close()
+	var mappings tc.DeliveryServiceFederationResolverMappingRequest
+
+	b, err := ioutil.ReadAll(body)
+	if err != nil {
+		return mappings, errors.New("Couldn't read request"), fmt.Errorf("Reading request body: %v", err)
+	}
+
+
+	if v.Minor <= 3 {
+		var req tc.LegacyDeliveryServiceFederationResolverMappingRequest
+		if err := json.Unmarshal(b, &req); err != nil {
+			return mappings, fmt.Errorf("parsing request: %v", err), nil
+		}
+		mappings = req.Federations
+	} else {
+		var req tc.DeliveryServiceFederationResolverMappingRequest
+
+		// fall back on legacy behavior
+		if err := json.Unmarshal(b, &req); err != nil {
+			var request tc.LegacyDeliveryServiceFederationResolverMappingRequest
+			if err = json.Unmarshal(b, &request); err != nil {
+				return mappings, fmt.Errorf("parsing request: %v", err), nil
+			}
+			req = request.Federations
+		}
+		mappings = req
+	}
+
+	return mappings, nil, nil
+
 }
