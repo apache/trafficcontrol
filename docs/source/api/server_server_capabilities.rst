@@ -36,11 +36,11 @@ Request Structure
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| Name             | Required | Description                                                                                                   |
 	+==================+==========+===============================================================================================================+
-	| serverId         | no       | Filter associated Server Capabilities by server ID                                                    |
+	| serverId         | no       | Filter associated Server Capabilities by server ID                                                            |
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| serverHostName   | no       | Filter associated Server Capabilities by server host name                                             |
+	| serverHostName   | no       | Filter associated Server Capabilities by server host name                                                     |
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| serverCapability | no       | Filter associated Server Capabilities by server capability                                            |
+	| serverCapability | no       | Filter associated Server Capabilities by server capability                                                    |
 	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| orderby          | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
 	|                  |          | array                                                                                                         |
@@ -67,7 +67,7 @@ Request Structure
 
 Response Structure
 ------------------
-:serverHostName:   The server's host name 
+:serverHostName:   The server's host name
 :serverId:         The server's ID
 :lastUpdated:      The date and time at which this association between the server and the Server Capability was last updated, in an ISO-like format
 :serverCapability: The Server Capability's name
@@ -185,7 +185,7 @@ Request Structure
 	+==================+==========+==================================================================+
 	| serverId         | yes      | ID of the server to disassociate                                 |
 	+------------------+----------+------------------------------------------------------------------+
-	| serverCapability | yes      | Server Capability name to disassociate from given server |
+	| serverCapability | yes      | Server Capability name to disassociate from given server         |
 	+------------------+----------+------------------------------------------------------------------+
 
 .. code-block:: http
