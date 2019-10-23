@@ -22,7 +22,7 @@ var ChangeLogService = function($http, $rootScope, ENV) {
 	this.getNewLogCount = function() {
 		return $http.get(ENV.api['root'] + 'logs/newcount', { ignoreLoadingBar: true }).then(
 			function(result) {
-				return result;
+				return result.data.response;
 			},
 			function(err) {
 				throw err;
@@ -34,7 +34,7 @@ var ChangeLogService = function($http, $rootScope, ENV) {
 		$rootScope.$broadcast('changeLogService::getChangeLogs');
 		return $http.get(ENV.api['root'] + 'logs', {params: queryParams}).then(
 			function(result) {
-				return result;
+				return result.data.response;
 			},
 			function(err) {
 				throw err;
