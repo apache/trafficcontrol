@@ -55,7 +55,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 			serverService.addServerCapability(server.id, serverCapability.name)
 				.then(
 					function(result) {
-						messageModel.setMessages(result.data.alerts, false);
+						messageModel.setMessages(result.alerts, false);
 						$scope.refresh(); // refresh the profile parameters table
 					}
 				);
@@ -84,7 +84,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 			serverService.removeServerCapability(server.id, serverCapability)
 				.then(
 					function(result) {
-						messageModel.setMessages(result.data.alerts, false);
+						messageModel.setMessages(result.alerts, false);
 						$scope.refresh(); // refresh the profile parameters table
 					}
 				);

@@ -94,7 +94,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     this.addServerCapability = function(serverId, capabilityName) {
         return $http.post(ENV.api['root'] + 'server_server_capabilities', { serverId: serverId, serverCapability: capabilityName}).then(
             function(result) {
-                return result;
+                return result.data;
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);
@@ -106,7 +106,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     this.removeServerCapability = function(serverId, capabilityName) {
         return $http.delete(ENV.api['root'] + 'server_server_capabilities', { params: { serverId: serverId, serverCapability: capabilityName} }).then(
             function(result) {
-                return result;
+                return result.data;
             },
             function(err) {
                 messageModel.setMessages(err.data.alerts, false);

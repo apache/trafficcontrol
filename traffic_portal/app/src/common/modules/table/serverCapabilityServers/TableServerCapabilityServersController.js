@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $controller, $uibModal, $window, locationUtils, serverService) {
+var TableServerCapabilityServersController = function(serverCapability, servers, $scope, $state, $controller, $uibModal, $window, locationUtils, serverService, messageModel) {
 
 	// extends the TableServersController to inherit common methods
 	angular.extend(this, $controller('TableServersController', { servers: servers, $scope: $scope }));
@@ -25,7 +25,8 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 	var removeCapability = function(serverId) {
 		serverService.removeServerCapability(serverId, serverCapability.name)
 			.then(
-				function() {
+				function(result) {
+					messageModel.setMessages(result.alerts, false);
 					$scope.refresh();
 				}
 			);
@@ -96,5 +97,5 @@ var TableServerCapabilityServersController = function(serverCapability, servers,
 
 };
 
-TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$controller', '$uibModal', '$window', 'locationUtils', 'serverService'];
+TableServerCapabilityServersController.$inject = ['serverCapability', 'servers', '$scope', '$state', '$controller', '$uibModal', '$window', 'locationUtils', 'serverService', 'messageModel'];
 module.exports = TableServerCapabilityServersController;
