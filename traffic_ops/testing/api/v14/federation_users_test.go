@@ -46,7 +46,7 @@ func CreateTestFederationUsers(t *testing.T) {
 	u3 := users[2].ID
 
 	// Associate one user to federation
-	_, err = TOSession.CreateFederationUsers(fedID, []int{*u1}, false)
+	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*u1}, false)
 	if err != nil {
 		t.Fatalf("assigning users %v to federation %v: %v", []int{*u1}, fedID, err.Error())
 	}
@@ -60,7 +60,7 @@ func CreateTestFederationUsers(t *testing.T) {
 	}
 
 	// Associate two users to federation and replace first one
-	_, err = TOSession.CreateFederationUsers(fedID, []int{*u2, *u3}, true)
+	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*u2, *u3}, true)
 	if err != nil {
 		t.Fatalf("assigning users %v to federation %v: %v", []int{*u2, *u3}, fedID, err.Error())
 	}
@@ -74,7 +74,7 @@ func CreateTestFederationUsers(t *testing.T) {
 	}
 
 	// Associate one more user to federation
-	_, err = TOSession.CreateFederationUsers(fedID, []int{*u1}, false)
+	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*u1}, false)
 	if err != nil {
 		t.Fatalf("assigning users %v to federation %v: %v", []int{*u1}, fedID, err.Error())
 	}
@@ -105,13 +105,13 @@ func CreateTestInvalidFederationUsers(t *testing.T) {
 	}
 
 	// Associate with invalid federdation id
-	_, err = TOSession.CreateFederationUsers(-1, []int{*users[0].ID}, false)
+	_, _, err = TOSession.CreateFederationUsers(-1, []int{*users[0].ID}, false)
 	if err == nil {
 		t.Errorf("expected to get error back from associating non existent federation id")
 	}
 
 	// Associate with invalid user id
-	_, err = TOSession.CreateFederationUsers(fedID, []int{-1}, false)
+	_, _, err = TOSession.CreateFederationUsers(fedID, []int{-1}, false)
 	if err == nil {
 		t.Errorf("expected to get error back from associating non existent user id")
 	}

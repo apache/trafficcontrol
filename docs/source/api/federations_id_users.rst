@@ -42,9 +42,9 @@ Request Structure
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 	| Name      | Required | Description                                                                                                                          |
 	+===========+==========+======================================================================================================================================+
-	| userID    | no       | Show only the users that has this integral, unique identifier                                                                        |
+	| userID    | no       | Show only the user that has this integral, unique identifier                                                                         |
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| role      | no       | Show only the users that has this role                                                                                               |
+	| role      | no       | Show only the users that have this role                                                                                              |
 	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
 	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                        |
 	|           |          | array                                                                                                                                |

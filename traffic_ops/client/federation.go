@@ -107,15 +107,15 @@ func (to *Session) DeleteFederationDeliveryService(federationID, deliveryService
 }
 
 // GetFederationUsers Associates the given Users' IDs to a Federation
-func (to *Session) CreateFederationUsers(federationID int, userIDs []int, replace bool) (ReqInf, error) {
+func (to *Session) CreateFederationUsers(federationID int, userIDs []int, replace bool) (tc.Alerts, ReqInf, error) {
 	req := tc.FederationUserPost{IDs: userIDs, Replace: &replace}
 	jsonReq, err := json.Marshal(req)
 	if err != nil {
-		return ReqInf{CacheHitStatus: CacheHitStatusMiss}, err
+		return tc.Alerts{}, ReqInf{CacheHitStatus: CacheHitStatusMiss}, err
 	}
-	resp := map[string]interface{}{}
-	inf, err := makeReq(to, http.MethodPost, fmt.Sprintf("%s/federations/%v/users", apiBase, federationID), jsonReq, &resp)
-	return inf, err
+	var alerts tc.Alerts
+	inf, err := makeReq(to, http.MethodPost, fmt.Sprintf("%s/federations/%v/users", apiBase, federationID), jsonReq, &alerts)
+	return alerts, inf, err
 }
 
 // GetFederationUsers Returns a given Federation's Users
