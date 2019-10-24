@@ -1,10 +1,4 @@
-package ats
-
-import (
-	"database/sql"
-	"errors"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-)
+package main
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -25,18 +19,29 @@ import (
  * under the License.
  */
 
-func GetNameVersionString(tx *sql.Tx) (string, error) {
-	toolName, url, err := GetToolNameAndURL(tx)
-	if err != nil {
-		return "", errors.New("getting toolname and url parameters: " + err.Error())
-	}
-	return atscfg.GetNameVersionStringFromToolNameAndURL(toolName, url), nil
-}
+import (
+	"errors"
+	"strings"
 
-func HeaderComment(tx *sql.Tx, name string) (string, error) {
-	nameVersionStr, err := GetNameVersionString(tx)
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+)
+
+func GetConfigFileCDNSetDSCP(cfg TCCfg, cdnNameOrID string, fileName string) (string, error) {
+	cdnName, err := GetCDNNameFromCDNNameOrID(cfg, cdnNameOrID)
 	if err != nil {
-		return "", errors.New("getting name version string: " + err.Error())
+		return "", errors.New("getting CDN name from '" + cdnNameOrID + "': " + err.Error())
 	}
-	return atscfg.HeaderCommentWithTOVersionStr(name, nameVersionStr), nil
+
+	toToolName, toURL, err := GetTOToolNameAndURLFromTO(cfg)
+	if err != nil {
+		return "", errors.New("getting global parameters: " + err.Error())
+	}
+
+	// TODO verify prefix, suffix, and that it's a number? Perl doesn't.
+	dscpNumStr := fileName
+	dscpNumStr = strings.TrimPrefix(dscpNumStr, "set_dscp_")
+	dscpNumStr = strings.TrimSuffix(dscpNumStr, ".config")
+
+	txt := atscfg.MakeSetDSCPDotConfig(cdnName, toToolName, toURL, dscpNumStr)
+	return txt, nil
 }

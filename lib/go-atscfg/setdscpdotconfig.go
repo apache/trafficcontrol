@@ -1,10 +1,4 @@
-package ats
-
-import (
-	"database/sql"
-	"errors"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-)
+package atscfg
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -25,18 +19,26 @@ import (
  * under the License.
  */
 
-func GetNameVersionString(tx *sql.Tx) (string, error) {
-	toolName, url, err := GetToolNameAndURL(tx)
-	if err != nil {
-		return "", errors.New("getting toolname and url parameters: " + err.Error())
-	}
-	return atscfg.GetNameVersionStringFromToolNameAndURL(toolName, url), nil
-}
+import (
+	"strconv"
 
-func HeaderComment(tx *sql.Tx, name string) (string, error) {
-	nameVersionStr, err := GetNameVersionString(tx)
-	if err != nil {
-		return "", errors.New("getting name version string: " + err.Error())
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
+func MakeSetDSCPDotConfig(
+	cdnName tc.CDNName,
+	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
+	toURL string, // tm.url global parameter (TODO: cache itself?)
+	dscpNumStr string,
+) string {
+	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
+
+	if _, err := strconv.Atoi(dscpNumStr); err != nil {
+		// TODO warn? We don't generally warn for client errors, because it can be an attack vector. Provide a more informative error return? Return a 404?
+		text = "An error occured generating the DSCP header rewrite file."
+		dscpNumStr = "" // emulates Perl
 	}
-	return atscfg.HeaderCommentWithTOVersionStr(name, nameVersionStr), nil
+
+	text += `cond %{REMAP_PSEUDO_HOOK}` + "\n" + `set-conn-dscp ` + dscpNumStr + ` [L]` + "\n"
+	return text
 }

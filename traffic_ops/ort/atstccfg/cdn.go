@@ -1,10 +1,4 @@
-package ats
-
-import (
-	"database/sql"
-	"errors"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-)
+package main
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -25,18 +19,24 @@ import (
  * under the License.
  */
 
-func GetNameVersionString(tx *sql.Tx) (string, error) {
-	toolName, url, err := GetToolNameAndURL(tx)
-	if err != nil {
-		return "", errors.New("getting toolname and url parameters: " + err.Error())
-	}
-	return atscfg.GetNameVersionStringFromToolNameAndURL(toolName, url), nil
-}
+import (
+	"errors"
+	"strconv"
 
-func HeaderComment(tx *sql.Tx, name string) (string, error) {
-	nameVersionStr, err := GetNameVersionString(tx)
-	if err != nil {
-		return "", errors.New("getting name version string: " + err.Error())
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
+func GetCDNNameFromCDNNameOrID(cfg TCCfg, cdnNameOrID string) (tc.CDNName, error) {
+	cdnName := cdnNameOrID
+	if cdnID, err := strconv.Atoi(cdnNameOrID); err == nil {
+		cdn, err := GetCDNByID(cfg, cdnID)
+		if err != nil {
+			return "", errors.New("getting cdn '" + cdnNameOrID + "': " + err.Error())
+		}
+		if cdn.Name == "" {
+			return "", errors.New("getting cdn '" + cdnNameOrID + "': got cdn with empty name")
+		}
+		cdnName = cdn.Name
 	}
-	return atscfg.HeaderCommentWithTOVersionStr(name, nameVersionStr), nil
+	return tc.CDNName(cdnName), nil
 }

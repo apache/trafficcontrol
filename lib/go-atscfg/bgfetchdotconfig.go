@@ -1,10 +1,4 @@
-package ats
-
-import (
-	"database/sql"
-	"errors"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-)
+package atscfg
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -25,18 +19,16 @@ import (
  * under the License.
  */
 
-func GetNameVersionString(tx *sql.Tx) (string, error) {
-	toolName, url, err := GetToolNameAndURL(tx)
-	if err != nil {
-		return "", errors.New("getting toolname and url parameters: " + err.Error())
-	}
-	return atscfg.GetNameVersionStringFromToolNameAndURL(toolName, url), nil
-}
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
 
-func HeaderComment(tx *sql.Tx, name string) (string, error) {
-	nameVersionStr, err := GetNameVersionString(tx)
-	if err != nil {
-		return "", errors.New("getting name version string: " + err.Error())
-	}
-	return atscfg.HeaderCommentWithTOVersionStr(name, nameVersionStr), nil
+func MakeBGFetchDotConfig(
+	cdnName tc.CDNName,
+	toToolName string, // tm.toolname global parameter (TODO: cache itself?)
+	toURL string, // tm.url global parameter (TODO: cache itself?)
+) string {
+	text := GenericHeaderComment(string(cdnName), toToolName, toURL)
+	text += "include User-Agent *\n"
+	return text
 }
