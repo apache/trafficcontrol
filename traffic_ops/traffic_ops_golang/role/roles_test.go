@@ -38,24 +38,6 @@ func intAddr(i int) *int {
 	return &i
 }
 
-func getTestRoles() []tc.Role {
-	roles := []tc.Role{
-		{
-			ID:          intAddr(1),
-			Name:        stringAddr("role1"),
-			Description: stringAddr("the first role"),
-			PrivLevel:   intAddr(30),
-		},
-		{
-			ID:          intAddr(2),
-			Name:        stringAddr("role2"),
-			Description: stringAddr("the second role"),
-			PrivLevel:   intAddr(10),
-		},
-	}
-	return roles
-}
-
 //removed sqlmock based ReadRoles test due to sqlmock / pq.Array() type incompatibility issue.
 
 func TestFuncs(t *testing.T) {
@@ -98,9 +80,11 @@ func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	n := "not_a_valid_role"
 	reqInfo := api.APIInfo{}
+	role := tc.Role{}
+	role.Name = &n
 	r := TORole{
 		APIInfoImpl: api.APIInfoImpl{&reqInfo},
-		Role:        tc.Role{Name: &n},
+		Role:        role,
 	}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(r.Validate())))
 
@@ -114,13 +98,13 @@ func TestValidate(t *testing.T) {
 	}
 
 	//  name,  domainname both valid
+	role = tc.Role{}
+	role.Name = stringAddr("this is a valid name")
+	role.Description = stringAddr("this is a description")
+	role.PrivLevel = intAddr(30)
 	r = TORole{
 		APIInfoImpl: api.APIInfoImpl{&reqInfo},
-		Role: tc.Role{
-			Name:        stringAddr("this is a valid name"),
-			Description: stringAddr("this is a description"),
-			PrivLevel:   intAddr(30),
-		},
+		Role:        role,
 	}
 	err := r.Validate()
 	if err != nil {

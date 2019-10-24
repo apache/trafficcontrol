@@ -231,6 +231,12 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
             }
         },
         {
+            text: 'Manage Capabilities',
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/capabilities');
+            }
+        },
+        {
             text: 'Manage Delivery Services',
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/delivery-services');

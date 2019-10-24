@@ -37,6 +37,16 @@ type RoleResponse struct {
 
 // Role ...
 type Role struct {
+	RoleV11
+
+	// Capabilities associated with the Role
+	//
+	// required: true
+	Capabilities *[]string `json:"capabilities" db:"-"`
+}
+
+// RoleV11 ...
+type RoleV11 struct {
 	// ID of the Role
 	//
 	// required: true
@@ -56,9 +66,4 @@ type Role struct {
 	//
 	// required: true
 	PrivLevel *int `json:"privLevel" db:"priv_level"`
-
-	// Capabilities associated with the Role
-	//
-	// required: true
-	Capabilities *[]string `json:"capabilities" db:"-"`
 }

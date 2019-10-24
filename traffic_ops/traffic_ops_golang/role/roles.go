@@ -159,16 +159,24 @@ func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error,
 }
 
 func (role *TORole) Read() ([]interface{}, error, error, int) {
+	version := role.APIInfo().Version
 	vals, userErr, sysErr, errCode := api.GenericRead(role)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}
+	returnable := []interface{}{}
 	for _, val := range vals {
 		rl := val.(*TORole)
-		caps := ([]string)(*rl.PQCapabilities)
-		rl.Capabilities = &caps
+		switch {
+		case version.Minor >= 3:
+			caps := ([]string)(*rl.PQCapabilities)
+			rl.Capabilities = &caps
+			returnable = append(returnable, rl)
+		case version.Minor >= 1:
+			returnable = append(returnable, rl.RoleV11)
+		}
 	}
-	return vals, nil, nil, http.StatusOK
+	return returnable, nil, nil, http.StatusOK
 }
 
 func (role *TORole) Update() (error, error, int) {

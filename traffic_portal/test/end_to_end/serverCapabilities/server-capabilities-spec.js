@@ -64,12 +64,4 @@ describe('Traffic Portal Server Capabilities Test Suite', function() {
 		expect(pageData.name.getText() === myNewServerCap.name);
 	});
 
-	it('should delete the new server capability', function() {
-		console.log('Deleting the new server capability');
-		pageData.deleteButton.click();
-		pageData.confirmWithNameInput.sendKeys(myNewServerCap.name);
-		pageData.deletePermanentlyButton.click();
-		expect(browser.getCurrentUrl().then(commonFunctions.urlPath)).toEqual(commonFunctions.urlPath(browser.baseUrl)+"#!/server-capabilities");
-	});
-
 });

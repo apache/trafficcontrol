@@ -20,6 +20,9 @@
 var CollectionUtils = function() {
 
 	this.uniqArray = function(array1, array2, key) {
+		array1 = array1 || [];
+		array2 = array2 || [];
+
 		const keys = new Set();
 		const uniq = new Array();
 		array1.concat(array2).forEach(function(item) {
