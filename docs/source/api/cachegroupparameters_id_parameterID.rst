@@ -21,7 +21,7 @@
 
 ``DELETE``
 ==========
-De-associate a :term:`Parameter` with a :term:`Cache Group`
+Dissociate a :term:`Parameter` with a :term:`Cache Group`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
