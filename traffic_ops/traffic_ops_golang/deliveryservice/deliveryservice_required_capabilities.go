@@ -47,29 +47,29 @@ type RequiredCapability struct {
 
 // SetLastUpdated implements the api.GenericCreator interfaces and
 // sets the timestamp on insert.
-func (sc *RequiredCapability) SetLastUpdated(t tc.TimeNoMod) { sc.LastUpdated = &t }
+func (rc *RequiredCapability) SetLastUpdated(t tc.TimeNoMod) { rc.LastUpdated = &t }
 
 // NewReadObj implements the api.GenericReader interfaces.
-func (sc *RequiredCapability) NewReadObj() interface{} {
+func (rc *RequiredCapability) NewReadObj() interface{} {
 	return &tc.DeliveryServiceRequiredCapability{}
 }
 
 // SelectQuery implements the api.GenericReader interface.
-func (sc *RequiredCapability) SelectQuery() string {
+func (rc *RequiredCapability) SelectQuery() string {
 	return `SELECT
-	sc.required_capability,
-	sc.deliveryservice_id,
+	rc.required_capability,
+	rc.deliveryservice_id,
 	ds.xml_id,
-	sc.last_updated
-	FROM deliveryservice_required_capability sc
-	JOIN deliveryservice ds ON ds.id = sc.deliveryservice_id`
+	rc.last_updated
+	FROM deliveryservice_required_capability rc
+	JOIN deliveryservice ds ON ds.id = rc.deliveryservice_id`
 }
 
 // ParamColumns implements the api.GenericReader interface.
-func (sc *RequiredCapability) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+func (rc *RequiredCapability) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		deliveryServiceQueryParam: dbhelpers.WhereColumnInfo{
-			Column:  "sc.deliveryservice_id",
+			Column:  "rc.deliveryservice_id",
 			Checker: api.IsInt,
 		},
 		xmlIDQueryParam: dbhelpers.WhereColumnInfo{
@@ -77,20 +77,20 @@ func (sc *RequiredCapability) ParamColumns() map[string]dbhelpers.WhereColumnInf
 			Checker: nil,
 		},
 		requiredCapabilityQueryParam: dbhelpers.WhereColumnInfo{
-			Column:  "sc.required_capability",
+			Column:  "rc.required_capability",
 			Checker: nil,
 		},
 	}
 }
 
 // DeleteQuery implements the api.GenericDeleter interface.
-func (sc *RequiredCapability) DeleteQuery() string {
+func (rc *RequiredCapability) DeleteQuery() string {
 	return `DELETE FROM deliveryservice_required_capability
 	WHERE deliveryservice_id = :deliveryservice_id AND required_capability = :required_capability`
 }
 
 // GetKeyFieldsInfo implements the api.Identifier interface.
-func (sc RequiredCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
+func (rc RequiredCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{
 		{
 			Field: deliveryServiceQueryParam,
@@ -105,27 +105,36 @@ func (sc RequiredCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 
 // GetKeys implements the api.Identifier interface and is not needed
 // because Update is not available.
-func (sc RequiredCapability) GetKeys() (map[string]interface{}, bool) {
-	return nil, false
+func (rc RequiredCapability) GetKeys() (map[string]interface{}, bool) {
+	if rc.DeliveryServiceID == nil {
+		return map[string]interface{}{deliveryServiceQueryParam: 0}, false
+	}
+	if rc.RequiredCapability == nil {
+		return map[string]interface{}{requiredCapabilityQueryParam: 0}, false
+	}
+	return map[string]interface{}{
+		deliveryServiceQueryParam:    *rc.DeliveryServiceID,
+		requiredCapabilityQueryParam: *rc.RequiredCapability,
+	}, true
 }
 
 // SetKeys implements the api.Identifier interface and allows the
 // create handler to assign deliveryServiceID and requiredCapability.
-func (sc *RequiredCapability) SetKeys(keys map[string]interface{}) {
+func (rc *RequiredCapability) SetKeys(keys map[string]interface{}) {
 	// this utilizes the non panicking type assertion, if the thrown
 	// away ok variable is false it will be the zero of the type.
 	id, _ := keys[deliveryServiceQueryParam].(int)
-	sc.DeliveryServiceID = &id
+	rc.DeliveryServiceID = &id
 
 	capability, _ := keys[requiredCapabilityQueryParam].(string)
-	sc.RequiredCapability = &capability
+	rc.RequiredCapability = &capability
 }
 
 // GetAuditName implements the api.Identifier interface and
 // returns the name of the object.
-func (sc *RequiredCapability) GetAuditName() string {
-	if sc.RequiredCapability != nil {
-		return *sc.RequiredCapability
+func (rc *RequiredCapability) GetAuditName() string {
+	if rc.RequiredCapability != nil {
+		return *rc.RequiredCapability
 	}
 
 	return "unknown"
@@ -133,33 +142,33 @@ func (sc *RequiredCapability) GetAuditName() string {
 
 // GetType implements the api.Identifier interface and
 // returns the name of the struct.
-func (sc *RequiredCapability) GetType() string {
+func (rc *RequiredCapability) GetType() string {
 	return "deliveryservice.RequiredCapability"
 }
 
 // Validate implements the api.Validator interface.
-func (sc RequiredCapability) Validate() error {
+func (rc RequiredCapability) Validate() error {
 	errs := validation.Errors{
-		deliveryServiceQueryParam:    validation.Validate(sc.DeliveryServiceID, validation.Required),
-		requiredCapabilityQueryParam: validation.Validate(sc.RequiredCapability, validation.Required),
+		deliveryServiceQueryParam:    validation.Validate(rc.DeliveryServiceID, validation.Required),
+		requiredCapabilityQueryParam: validation.Validate(rc.RequiredCapability, validation.Required),
 	}
 
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 // Update implements the api.CRUDer interface.
-func (sc *RequiredCapability) Update() (error, error, int) {
+func (rc *RequiredCapability) Update() (error, error, int) {
 	return nil, nil, http.StatusNotImplemented
 }
 
 // Read implements the api.CRUDer interface.
-func (sc *RequiredCapability) Read() ([]interface{}, error, error, int) {
-	tenantIDs, err := sc.getTenantIDs()
+func (rc *RequiredCapability) Read() ([]interface{}, error, error, int) {
+	tenantIDs, err := rc.getTenantIDs()
 	if err != nil {
 		return nil, nil, err, http.StatusInternalServerError
 	}
 
-	capabilities, userErr, sysErr, errCode := sc.getCapabilities(tenantIDs)
+	capabilities, userErr, sysErr, errCode := rc.getCapabilities(tenantIDs)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}
@@ -172,24 +181,24 @@ func (sc *RequiredCapability) Read() ([]interface{}, error, error, int) {
 	return results, nil, nil, http.StatusOK
 }
 
-func (sc *RequiredCapability) getTenantIDs() ([]int, error) {
-	tenantIDs, err := tenant.GetUserTenantIDListTx(sc.APIInfo().Tx.Tx, sc.APIInfo().User.TenantID)
+func (rc *RequiredCapability) getTenantIDs() ([]int, error) {
+	tenantIDs, err := tenant.GetUserTenantIDListTx(rc.APIInfo().Tx.Tx, rc.APIInfo().User.TenantID)
 	if err != nil {
 		return nil, err
 	}
 	return tenantIDs, nil
 }
 
-func (sc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliveryServiceRequiredCapability, error, error, int) {
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(sc.APIInfo().Params, sc.ParamColumns())
+func (rc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliveryServiceRequiredCapability, error, error, int) {
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
-	query := sc.SelectQuery() + where + orderBy + pagination
+	query := rc.SelectQuery() + where + orderBy + pagination
 
-	rows, err := sc.APIInfo().Tx.NamedQuery(query, queryValues)
+	rows, err := rc.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, err, http.StatusInternalServerError
 	}
@@ -199,7 +208,7 @@ func (sc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliverySer
 	for rows.Next() {
 		var result tc.DeliveryServiceRequiredCapability
 		if err := rows.StructScan(&result); err != nil {
-			return nil, nil, errors.New(sc.GetType() + " get scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, nil, errors.New(rc.GetType() + " get scanning: " + err.Error()), http.StatusInternalServerError
 		}
 		results = append(results, result)
 	}
@@ -208,27 +217,27 @@ func (sc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliverySer
 }
 
 // Delete implements the api.CRUDer interface.
-func (sc *RequiredCapability) Delete() (error, error, int) {
-	authorized, err := sc.isTenantAuthorized()
+func (rc *RequiredCapability) Delete() (error, error, int) {
+	authorized, err := rc.isTenantAuthorized()
 	if err != nil {
 		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
 	} else if !authorized {
 		return errors.New("not authorized on this tenant"), nil, http.StatusForbidden
 	}
 
-	return api.GenericDelete(sc)
+	return api.GenericDelete(rc)
 }
 
 // Create implements the api.CRUDer interface.
-func (sc *RequiredCapability) Create() (error, error, int) {
-	authorized, err := sc.isTenantAuthorized()
+func (rc *RequiredCapability) Create() (error, error, int) {
+	authorized, err := rc.isTenantAuthorized()
 	if err != nil {
 		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
 	} else if !authorized {
 		return errors.New("not authorized on this tenant"), nil, http.StatusForbidden
 	}
 
-	rows, err := sc.APIInfo().Tx.NamedQuery(scInsertQuery(), sc)
+	rows, err := rc.APIInfo().Tx.NamedQuery(rcInsertQuery(), rc)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
@@ -237,21 +246,21 @@ func (sc *RequiredCapability) Create() (error, error, int) {
 	rowsAffected := 0
 	for rows.Next() {
 		rowsAffected++
-		if err := rows.StructScan(&sc); err != nil {
-			return nil, errors.New(sc.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
+		if err := rows.StructScan(&rc); err != nil {
+			return nil, errors.New(rc.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
 		}
 	}
 	if rowsAffected == 0 {
-		return nil, errors.New(sc.GetType() + " create: no " + sc.GetType() + " was inserted, no rows was returned"), http.StatusInternalServerError
+		return nil, errors.New(rc.GetType() + " create: no " + rc.GetType() + " was inserted, no rows was returned"), http.StatusInternalServerError
 	} else if rowsAffected > 1 {
-		return nil, errors.New("too many rows returned from " + sc.GetType() + " insert"), http.StatusInternalServerError
+		return nil, errors.New("too many rows returned from " + rc.GetType() + " insert"), http.StatusInternalServerError
 	}
 
 	return nil, nil, http.StatusOK
 }
 
-func (sc *RequiredCapability) isTenantAuthorized() (bool, error) {
-	if sc.DeliveryServiceID == nil && sc.XMLID == nil {
+func (rc *RequiredCapability) isTenantAuthorized() (bool, error) {
+	if rc.DeliveryServiceID == nil && rc.XMLID == nil {
 		return false, errors.New("delivery service has no ID or XMLID")
 	}
 
@@ -259,20 +268,20 @@ func (sc *RequiredCapability) isTenantAuthorized() (bool, error) {
 	var err error
 
 	switch {
-	case sc.DeliveryServiceID != nil:
-		existingID, _, err = getDSTenantIDByID(sc.APIInfo().Tx.Tx, *sc.DeliveryServiceID)
+	case rc.DeliveryServiceID != nil:
+		existingID, _, err = getDSTenantIDByID(rc.APIInfo().Tx.Tx, *rc.DeliveryServiceID)
 		if err != nil {
 			return false, err
 		}
-	case sc.XMLID != nil:
-		existingID, _, err = getDSTenantIDByName(sc.APIInfo().Tx.Tx, tc.DeliveryServiceName(*sc.XMLID))
+	case rc.XMLID != nil:
+		existingID, _, err = getDSTenantIDByName(rc.APIInfo().Tx.Tx, tc.DeliveryServiceName(*rc.XMLID))
 		if err != nil {
 			return false, err
 		}
 	}
 
 	if existingID != nil {
-		authorized, err := tenant.IsResourceAuthorizedToUserTx(*existingID, sc.APIInfo().User, sc.APIInfo().Tx.Tx)
+		authorized, err := tenant.IsResourceAuthorizedToUserTx(*existingID, rc.APIInfo().User, rc.APIInfo().Tx.Tx)
 		if err != nil {
 			return false, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error())
 		}
@@ -284,7 +293,7 @@ func (sc *RequiredCapability) isTenantAuthorized() (bool, error) {
 	return true, err
 }
 
-func scInsertQuery() string {
+func rcInsertQuery() string {
 	return `INSERT INTO deliveryservice_required_capability (
 required_capability,
 deliveryservice_id) VALUES (

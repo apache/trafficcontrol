@@ -62,7 +62,7 @@ func TestCreateDeliveryServiceRequiredCapability(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectBegin()
-	sc := RequiredCapability{
+	rc := RequiredCapability{
 		api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Tx:   db.MustBegin(),
@@ -84,7 +84,7 @@ func TestCreateDeliveryServiceRequiredCapability(t *testing.T) {
 	)
 	mock.ExpectQuery("INSERT INTO deliveryservice_required_capability").WillReturnRows(rows)
 
-	userErr, sysErr, errCode := sc.Create()
+	userErr, sysErr, errCode := rc.Create()
 	if userErr != nil {
 		t.Fatalf(userErr.Error())
 	}
@@ -111,7 +111,7 @@ func TestUnauthorizedCreateDeliveryServiceRequiredCapability(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectBegin()
-	sc := RequiredCapability{
+	rc := RequiredCapability{
 		api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Tx:   db.MustBegin(),
@@ -126,7 +126,7 @@ func TestUnauthorizedCreateDeliveryServiceRequiredCapability(t *testing.T) {
 
 	mockTenantID(t, mock, 0)
 
-	userErr, sysErr, errCode := sc.Create()
+	userErr, sysErr, errCode := rc.Create()
 	if userErr != nil {
 		t.Fatalf(userErr.Error())
 	}
@@ -162,7 +162,7 @@ func TestReadDeliveryServiceRequiredCapability(t *testing.T) {
 	}
 
 	mock.ExpectBegin()
-	sc := RequiredCapability{
+	rc := RequiredCapability{
 		api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Tx:   db.MustBegin(),
@@ -183,7 +183,7 @@ func TestReadDeliveryServiceRequiredCapability(t *testing.T) {
 	)
 	mock.ExpectQuery("SELECT .* FROM deliveryservice_required_capability").WillReturnRows(rows)
 
-	results, userErr, sysErr, errCode := sc.Read()
+	results, userErr, sysErr, errCode := rc.Read()
 	if userErr != nil {
 		t.Fatalf(userErr.Error())
 	}
@@ -233,7 +233,7 @@ func TestDeleteDeliveryServiceRequiredCapability(t *testing.T) {
 
 	mock.ExpectExec("DELETE").WillReturnResult(sqlmock.NewResult(1, 1))
 
-	sc := RequiredCapability{
+	rc := RequiredCapability{
 		api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Tx:   db.MustBegin(),
@@ -247,7 +247,7 @@ func TestDeleteDeliveryServiceRequiredCapability(t *testing.T) {
 		},
 	}
 
-	userErr, sysErr, errCode := sc.Delete()
+	userErr, sysErr, errCode := rc.Delete()
 	if userErr != nil {
 		t.Fatalf(userErr.Error())
 	}
@@ -274,7 +274,7 @@ func TestUnauthorizedDeleteDeliveryServiceRequiredCapability(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectBegin()
-	sc := RequiredCapability{
+	rc := RequiredCapability{
 		api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Tx:   db.MustBegin(),
@@ -289,7 +289,7 @@ func TestUnauthorizedDeleteDeliveryServiceRequiredCapability(t *testing.T) {
 
 	mockTenantID(t, mock, 0)
 
-	userErr, sysErr, errCode := sc.Delete()
+	userErr, sysErr, errCode := rc.Delete()
 	if userErr != nil {
 		t.Fatalf(userErr.Error())
 	}
