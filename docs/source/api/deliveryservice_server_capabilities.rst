@@ -99,7 +99,7 @@ Response Structure
 				"deliveryServiceID": 2,
 				"lastUpdated": "2019-10-07 22:05:31+00",
 				"serverCapability": "disk",
-				"xmlId": "example_ds-2
+				"xmlId": "example_ds-2"
 			}
 		]
 	}
