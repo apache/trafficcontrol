@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -63,17 +64,25 @@ func TestCreateDeliveryServiceServerCapability(t *testing.T) {
 	mock.ExpectBegin()
 	sc := ServerCapability{
 		api.APIInfoImpl{
-			ReqInfo: &api.APIInfo{Tx: db.MustBegin()},
+			ReqInfo: &api.APIInfo{
+				Tx:   db.MustBegin(),
+				User: &auth.CurrentUser{PrivLevel: 30},
+			},
 		},
-		tc.DeliveryServiceServerCapability{},
+		tc.DeliveryServiceServerCapability{
+			DeliveryServiceID: util.IntPtr(1),
+			XMLID:             util.StrPtr("ds1"),
+		},
 	}
+
+	mockTenantID(t, mock, 1)
 
 	rows := sqlmock.NewRows([]string{"server_capability", "deliveryservice_id", "last_updated"}).AddRow(
 		util.StrPtr("mem"),
 		util.IntPtr(1),
 		time.Now(),
 	)
-	mock.ExpectQuery("INSERT*").WillReturnRows(rows)
+	mock.ExpectQuery("INSERT INTO deliveryservice_server_capability").WillReturnRows(rows)
 
 	userErr, sysErr, errCode := sc.Create()
 	if userErr != nil {
@@ -83,6 +92,51 @@ func TestCreateDeliveryServiceServerCapability(t *testing.T) {
 		t.Fatalf(sysErr.Error())
 	}
 	if got, want := errCode, http.StatusOK; got != want {
+		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err.Error())
+	}
+}
+
+func TestUnauthorizedCreateDeliveryServiceServerCapability(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	mock.ExpectBegin()
+	sc := ServerCapability{
+		api.APIInfoImpl{
+			ReqInfo: &api.APIInfo{
+				Tx:   db.MustBegin(),
+				User: &auth.CurrentUser{PrivLevel: 1},
+			},
+		},
+		tc.DeliveryServiceServerCapability{
+			DeliveryServiceID: util.IntPtr(1),
+			XMLID:             util.StrPtr("ds1"),
+		},
+	}
+
+	mockTenantID(t, mock, 0)
+
+	userErr, sysErr, errCode := sc.Create()
+	if userErr != nil {
+		t.Fatalf(userErr.Error())
+	}
+
+	expErr := "checking tenant: not authorized on this tenant"
+	if sysErr.Error() != expErr {
+		t.Fatalf("got %s; expected %s", sysErr, expErr)
+	}
+
+	if got, want := errCode, http.StatusInternalServerError; got != want {
 		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
 	}
 
@@ -110,10 +164,16 @@ func TestReadDeliveryServiceServerCapability(t *testing.T) {
 	mock.ExpectBegin()
 	sc := ServerCapability{
 		api.APIInfoImpl{
-			ReqInfo: &api.APIInfo{Tx: db.MustBegin()},
+			ReqInfo: &api.APIInfo{
+				Tx:   db.MustBegin(),
+				User: &auth.CurrentUser{PrivLevel: 30},
+			},
 		},
 		capability,
 	}
+
+	tenantRows := sqlmock.NewRows([]string{"id"}).AddRow(1)
+	mock.ExpectQuery("SELECT id FROM user_tenant_children;").WillReturnRows(tenantRows)
 
 	rows := sqlmock.NewRows([]string{"server_capability", "deliveryservice_id", "xml_id", "last_updated"}).AddRow(
 		capability.ServerCapability,
@@ -121,7 +181,7 @@ func TestReadDeliveryServiceServerCapability(t *testing.T) {
 		capability.XMLID,
 		time.Now(),
 	)
-	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT .* FROM deliveryservice_server_capability").WillReturnRows(rows)
 
 	results, userErr, sysErr, errCode := sc.Read()
 	if userErr != nil {
@@ -151,6 +211,10 @@ func TestReadDeliveryServiceServerCapability(t *testing.T) {
 			}
 		}
 	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err.Error())
+	}
 }
 
 func TestDeleteDeliveryServiceServerCapability(t *testing.T) {
@@ -164,14 +228,23 @@ func TestDeleteDeliveryServiceServerCapability(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectBegin()
+
+	mockTenantID(t, mock, 1)
+
 	mock.ExpectExec("DELETE").WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectCommit()
 
 	sc := ServerCapability{
 		api.APIInfoImpl{
-			ReqInfo: &api.APIInfo{Tx: db.MustBegin()},
+			ReqInfo: &api.APIInfo{
+				Tx:   db.MustBegin(),
+				User: &auth.CurrentUser{PrivLevel: 30},
+			},
 		},
-		tc.DeliveryServiceServerCapability{},
+		tc.DeliveryServiceServerCapability{
+			ServerCapability:  util.StrPtr("mem"),
+			DeliveryServiceID: util.IntPtr(1),
+			XMLID:             util.StrPtr("ds1"),
+		},
 	}
 
 	userErr, sysErr, errCode := sc.Delete()
@@ -184,4 +257,68 @@ func TestDeleteDeliveryServiceServerCapability(t *testing.T) {
 	if got, want := errCode, http.StatusOK; got != want {
 		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
 	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err.Error())
+	}
+}
+
+func TestUnauthorizedDeleteDeliveryServiceServerCapability(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	mock.ExpectBegin()
+	sc := ServerCapability{
+		api.APIInfoImpl{
+			ReqInfo: &api.APIInfo{
+				Tx:   db.MustBegin(),
+				User: &auth.CurrentUser{PrivLevel: 1},
+			},
+		},
+		tc.DeliveryServiceServerCapability{
+			DeliveryServiceID: util.IntPtr(1),
+			XMLID:             util.StrPtr("ds1"),
+		},
+	}
+
+	mockTenantID(t, mock, 0)
+
+	userErr, sysErr, errCode := sc.Delete()
+	if userErr != nil {
+		t.Fatalf(userErr.Error())
+	}
+
+	expErr := "checking tenant: not authorized on this tenant"
+	if sysErr.Error() != expErr {
+		t.Fatalf("got %s; expected %s", sysErr, expErr)
+	}
+
+	if got, want := errCode, http.StatusInternalServerError; got != want {
+		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err.Error())
+	}
+}
+
+func mockTenantID(t *testing.T, mock sqlmock.Sqlmock, x int) {
+	t.Helper()
+
+	tenantRows := sqlmock.NewRows([]string{"id"}).AddRow(
+		x,
+	)
+	mock.ExpectQuery("SELECT tenant_id FROM deliveryservice").WillReturnRows(tenantRows)
+
+	rows := sqlmock.NewRows([]string{"id", "active"}).AddRow(
+		1,
+		true,
+	)
+	mock.ExpectQuery("WITH RECURSIVE user_tenant_id as").WillReturnRows(rows)
 }

@@ -21,6 +21,7 @@ package deliveryservice
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -28,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
@@ -95,10 +97,6 @@ func (sc ServerCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 			Func:  api.GetIntKey,
 		},
 		{
-			Field: xmlIDQueryParam,
-			Func:  api.GetStringKey,
-		},
-		{
 			Field: serverCapabilityQueryParam,
 			Func:  api.GetStringKey,
 		},
@@ -129,6 +127,7 @@ func (sc *ServerCapability) GetAuditName() string {
 	if sc.ServerCapability != nil {
 		return *sc.ServerCapability
 	}
+
 	return "unknown"
 }
 
@@ -155,26 +154,90 @@ func (sc *ServerCapability) Update() (error, error, int) {
 
 // Read implements the api.CRUDer interface.
 func (sc *ServerCapability) Read() ([]interface{}, error, error, int) {
-	return api.GenericRead(sc)
+	tenantIDs, err := sc.getTenantIDs()
+	if err != nil {
+		return nil, nil, err, http.StatusInternalServerError
+	}
+
+	capabilities, userErr, sysErr, errCode := sc.getCapabilities(tenantIDs)
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, errCode
+	}
+
+	results := []interface{}{}
+	for _, capability := range capabilities {
+		results = append(results, capability)
+	}
+
+	return results, nil, nil, http.StatusOK
+}
+
+func (sc *ServerCapability) getTenantIDs() ([]int, error) {
+	tenantIDs, err := tenant.GetUserTenantIDListTx(sc.APIInfo().Tx.Tx, sc.APIInfo().User.TenantID)
+	if err != nil {
+		return nil, err
+	}
+	return tenantIDs, nil
+}
+
+func (sc *ServerCapability) getCapabilities(tenantIDs []int) ([]tc.DeliveryServiceServerCapability, error, error, int) {
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(sc.APIInfo().Params, sc.ParamColumns())
+	if len(errs) > 0 {
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+
+	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
+	query := sc.SelectQuery() + where + orderBy + pagination
+
+	rows, err := sc.APIInfo().Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, nil, err, http.StatusInternalServerError
+	}
+	defer rows.Close()
+
+	var results []tc.DeliveryServiceServerCapability
+	for rows.Next() {
+		var result tc.DeliveryServiceServerCapability
+		if err := rows.StructScan(&result); err != nil {
+			return nil, nil, errors.New(sc.GetType() + " get scanning: " + err.Error()), http.StatusInternalServerError
+		}
+		results = append(results, result)
+	}
+
+	return results, nil, nil, 0
 }
 
 // Delete implements the api.CRUDer interface.
 func (sc *ServerCapability) Delete() (error, error, int) {
+	authorized, err := sc.isTenantAuthorized()
+	if err != nil {
+		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
+	} else if !authorized {
+		return errors.New("not authorized on this tenant"), nil, http.StatusForbidden
+	}
+
 	return api.GenericDelete(sc)
 }
 
 // Create implements the api.CRUDer interface.
 func (sc *ServerCapability) Create() (error, error, int) {
-	resultRows, err := sc.APIInfo().Tx.NamedQuery(scInsertQuery(), sc)
+	authorized, err := sc.isTenantAuthorized()
+	if err != nil {
+		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
+	} else if !authorized {
+		return errors.New("not authorized on this tenant"), nil, http.StatusForbidden
+	}
+
+	rows, err := sc.APIInfo().Tx.NamedQuery(scInsertQuery(), sc)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
-	defer resultRows.Close()
+	defer rows.Close()
 
 	rowsAffected := 0
-	for resultRows.Next() {
+	for rows.Next() {
 		rowsAffected++
-		if err := resultRows.StructScan(&sc); err != nil {
+		if err := rows.StructScan(&sc); err != nil {
 			return nil, errors.New(sc.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
 		}
 	}
@@ -185,6 +248,40 @@ func (sc *ServerCapability) Create() (error, error, int) {
 	}
 
 	return nil, nil, http.StatusOK
+}
+
+func (sc *ServerCapability) isTenantAuthorized() (bool, error) {
+	if sc.DeliveryServiceID == nil && sc.XMLID == nil {
+		return false, errors.New("delivery service has no ID or XMLID")
+	}
+
+	var existingID *int
+	var err error
+
+	switch {
+	case sc.DeliveryServiceID != nil:
+		existingID, _, err = getDSTenantIDByID(sc.APIInfo().Tx.Tx, *sc.DeliveryServiceID)
+		if err != nil {
+			return false, err
+		}
+	case sc.XMLID != nil:
+		existingID, _, err = getDSTenantIDByName(sc.APIInfo().Tx.Tx, tc.DeliveryServiceName(*sc.XMLID))
+		if err != nil {
+			return false, err
+		}
+	}
+
+	if existingID != nil {
+		authorized, err := tenant.IsResourceAuthorizedToUserTx(*existingID, sc.APIInfo().User, sc.APIInfo().Tx.Tx)
+		if err != nil {
+			return false, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error())
+		}
+		if !authorized {
+			return false, errors.New("not authorized on this tenant")
+		}
+	}
+
+	return true, err
 }
 
 func scInsertQuery() string {

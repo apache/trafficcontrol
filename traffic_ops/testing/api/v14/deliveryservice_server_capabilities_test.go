@@ -17,6 +17,7 @@ package v14
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -69,7 +70,7 @@ func GetTestDeliveryServiceServerCapabilities(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			capabilities, _, err := TOSession.GetDeliveryServiceServerCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.ServerCapability)
 			if err != nil {
-				t.Fatalf("%s; got err= %v; expected err nil", tc.description, err)
+				t.Fatalf("%s; got err= %v; expected err= nil", tc.description, err)
 			}
 			if len(capabilities) != tc.expected {
 				t.Errorf("got %d; expected %d server capabilities assigned to deliveryservices", len(capabilities), tc.expected)
@@ -150,7 +151,7 @@ func CreateTestDeliveryServiceServerCapabilities(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			_, _, err := TOSession.CreateDeliveryServiceServerCapability(tc.capability)
 			if err == nil {
-				t.Fatalf("%s; expected error", tc.description)
+				t.Fatalf("%s; expected err", tc.description)
 			}
 		})
 	}
@@ -167,6 +168,7 @@ func DeleteTestDeliveryServiceServerCapabilities(t *testing.T) {
 	type testCase struct {
 		description string
 		capability  tc.DeliveryServiceServerCapability
+		err         string
 	}
 
 	testCases := []testCase{
@@ -176,6 +178,7 @@ func DeleteTestDeliveryServiceServerCapabilities(t *testing.T) {
 				DeliveryServiceID: util.IntPtr(-1),
 				ServerCapability:  capabilities[0].ServerCapability,
 			},
+			err: "no deliveryservice.ServerCapability with that key found",
 		},
 		testCase{
 			description: fmt.Sprintf("delete a deliveryservice server capability with an invalid server capability; deliveryServiceID: %d, serverCapability: bogus", *capabilities[0].DeliveryServiceID),
@@ -183,6 +186,7 @@ func DeleteTestDeliveryServiceServerCapabilities(t *testing.T) {
 				DeliveryServiceID: capabilities[0].DeliveryServiceID,
 				ServerCapability:  util.StrPtr("bogus"),
 			},
+			err: "no deliveryservice.ServerCapability with that key found",
 		},
 	}
 
@@ -197,8 +201,8 @@ func DeleteTestDeliveryServiceServerCapabilities(t *testing.T) {
 	for _, c := range testCases {
 		t.Run(c.description, func(t *testing.T) {
 			_, _, err := TOSession.DeleteDeliveryServiceServerCapability(*c.capability.DeliveryServiceID, *c.capability.ServerCapability)
-			if err == nil {
-				t.Fatalf("%s; expected err", c.description)
+			if err != nil && !strings.Contains(err.Error(), c.err) {
+				t.Fatalf("%s; got err= %s; expected err= %s", c.description, err, c.err)
 			}
 		})
 	}
