@@ -16,13 +16,18 @@ package v14
 */
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestFederations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, UsersDeliveryServices, CDNFederations}, func() {
 		PostDeleteTestFederationsDeliveryServices(t)
 		GetTestFederations(t)
+		AddFederationResolversForCurrentUserTest(t)
+		RemoveFederationResolversForCurrentUserTest(t)
 	})
 }
 
@@ -76,24 +81,35 @@ func GetTestFederations(t *testing.T) {
 	}
 }
 
-func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
+func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryService, tc.DeliveryService, error) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v\n", err, dses)
+		return -1, tc.DeliveryService{}, tc.DeliveryService{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 	if len(dses) == 0 {
-		t.Fatalf("no delivery services, must have at least 1 ds to test federations deliveryservices\n")
+		return -1, tc.DeliveryService{}, tc.DeliveryService{}, fmt.Errorf("no delivery services, must have at least 1 ds to test federations deliveryservices")
 	}
 	ds := dses[0]
 	ds1 := dses[1]
 
 	if len(fedIDs) == 0 {
-		t.Fatalf("no federations, must have at least 1 federation to test federations deliveryservices\n")
+		return -1, ds, ds1, fmt.Errorf("no federations, must have at least 1 federation to test federations deliveryservices")
 	}
 	fedID := fedIDs[0]
 
-	if _, err = TOSession.CreateFederationDeliveryServices(fedID, []int{ds.ID, ds1.ID}, true); err != nil {
-		t.Fatalf("creating federations delivery services: %v\n", err)
+	_, err = TOSession.CreateFederationDeliveryServices(fedID, []int{ds.ID, ds1.ID}, true)
+	if err != nil {
+		err = fmt.Errorf("creating federations delivery services: %v", err)
+	}
+
+	return fedID, ds, ds1, err
+
+}
+
+func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
+	fedID, ds, ds1, err := createFederationToDeliveryServiceAssociation()
+	if err != nil {
+		t.Fatalf("%v", err)
 	}
 
 	// Test get created Federation Delivery Services
@@ -102,7 +118,7 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET Federation DeliveryServices: %v\n", err)
 	}
 	if len(fedDSes) != 2 {
-		t.Fatalf("two Federation DeliveryService exepected for Federation %v, %v was returned\n", fedID, len(fedDSes))
+		t.Fatalf("two Federation DeliveryService expected for Federation %v, %v was returned\n", fedID, len(fedDSes))
 	}
 
 	// Delete one of the Delivery Services from the Federation
@@ -119,12 +135,110 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET Federation DeliveryServices: %v\n", err)
 	}
 	if len(fedDSes) != 1 {
-		t.Fatalf("one Federation DeliveryService exepected for Federation %v, %v was returned\n", fedID, len(fedDSes))
+		t.Fatalf("one Federation DeliveryService expected for Federation %v, %v was returned\n", fedID, len(fedDSes))
 	}
 
 	// Attempt to delete the last one which should fail as you cannot remove the last
 	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, ds1.ID)
 	if err == nil {
 		t.Fatalf("expected to receive error from attempting to delete last Delivery Service from a Federation\n")
+	}
+}
+
+func RemoveFederationResolversForCurrentUserTest(t *testing.T) {
+	if len(testData.Federations) < 1 {
+		t.Fatalf("No test Federations, deleting resolvers cannot be tested!")
+	}
+
+	alerts, _, err := TOSession.DeleteFederationResolverMappingsForCurrentUser()
+	if err != nil {
+		t.Fatalf("Unexpected error deleting Federation Resolvers for current user: %v", err)
+	}
+	for _, a := range alerts.Alerts {
+		if a.Level == tc.SuccessLevel.String() {
+			t.Logf("Success message from current user Federation Resolver deletion: %s", a.Text)
+		} else {
+			t.Errorf("Unexpected %s from deleting Federation Resolvers for current user: %s", a.Level, a.Text)
+		}
+	}
+
+	// Now try deleting Federation Resolvers when there are none.
+	_, _, err = TOSession.DeleteFederationResolverMappingsForCurrentUser()
+	if err != nil {
+		t.Logf("Received expected error deleting Federation Resolvers for current user: %v", err)
+	} else {
+		t.Errorf("Expected an error deleting zero Federation Resolvers, but didn't get one.")
+	}
+}
+
+func AddFederationResolversForCurrentUserTest(t *testing.T) {
+	fedID, ds, ds1, err := createFederationToDeliveryServiceAssociation()
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	// need to assign myself the federation to set its mappings
+	me, _, err := TOSession.GetUserCurrent()
+	if err != nil {
+		t.Fatalf("Couldn't figure out who I am: %v", err)
+	}
+	if me.ID == nil {
+		t.Fatalf("Current user has no ID, cannot continue.")
+	}
+
+	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*me.ID}, false)
+	if err != nil {
+		t.Fatalf("Failed to assign federation to current user: %v", err)
+	}
+
+	mappings := tc.DeliveryServiceFederationResolverMappingRequest{
+		tc.DeliveryServiceFederationResolverMapping{
+			DeliveryService: ds.XMLID,
+			Mappings: tc.ResolverMapping{
+				Resolve4: []string{"0.0.0.0"},
+				Resolve6: []string{"::1"},
+			},
+		},
+		tc.DeliveryServiceFederationResolverMapping{
+			DeliveryService: ds1.XMLID,
+			Mappings: tc.ResolverMapping{
+				Resolve4: []string{"1.2.3.4/28"},
+				Resolve6: []string{"1234::/110"},
+			},
+		},
+	}
+
+	alerts, _, err := TOSession.AddFederationResolverMappingsForCurrentUser(mappings)
+	if err != nil {
+		t.Fatalf("Unexpected error adding Federation Resolver mappings for the current user: %v", err)
+	}
+	for _, a := range alerts.Alerts {
+		if a.Level == tc.SuccessLevel.String() {
+			t.Logf("Received expected success alert from adding Federation Resolver mappings for the current user: %s", a.Text)
+		} else {
+			t.Errorf("Unexpected %s from adding Federation Resolver mappings for the current user: %s", a.Level, a.Text)
+		}
+	}
+
+	mappings = tc.DeliveryServiceFederationResolverMappingRequest{
+		tc.DeliveryServiceFederationResolverMapping{
+			DeliveryService: "aoeuhtns",
+			Mappings: tc.ResolverMapping{
+				Resolve4: []string{},
+				Resolve6: []string{"dead::beef", "f1d0::f00d/82"},
+			},
+		},
+	}
+
+	alerts, _, err = TOSession.AddFederationResolverMappingsForCurrentUser(mappings)
+	if err == nil {
+		t.Fatalf("Expected error adding Federation Resolver mappings for the current user, but didn't get one")
+	}
+	for _, a := range alerts.Alerts {
+		if a.Level != tc.SuccessLevel.String() {
+			t.Logf("Received expected %s from adding Federation Resolver mappings for the current user: %s", a.Level, a.Text)
+		} else {
+			t.Errorf("Unexpected success from adding Federation Resolver mappings for the current user: %s", a.Text)
+		}
 	}
 }
