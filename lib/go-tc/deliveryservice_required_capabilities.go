@@ -19,10 +19,10 @@ package tc
  * under the License.
  */
 
-// DeliveryServiceServerCapability represents an association between a server capability and a delivery service.
-type DeliveryServiceServerCapability struct {
-	LastUpdated       *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	DeliveryServiceID *int       `json:"deliveryServiceID" db:"deliveryservice_id"`
-	ServerCapability  *string    `json:"serverCapability" db:"server_capability"`
-	XMLID             *string    `json:"xmlID" db:"xml_id"`
+// DeliveryServiceRequiredCapability represents an association between a required capability and a delivery service.
+type DeliveryServiceRequiredCapability struct {
+	LastUpdated        *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	DeliveryServiceID  *int       `json:"deliveryServiceID" db:"deliveryservice_id"`
+	RequiredCapability *string    `json:"requiredCapability" db:"required_capability"`
+	XMLID              *string    `json:"xmlID" db:"xml_id"`
 }

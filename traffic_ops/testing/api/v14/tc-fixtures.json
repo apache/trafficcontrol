@@ -549,14 +549,14 @@
             "anonymousBlockingEnabled": true
         }
     ],
-    "deliveryserviceServerCapabilities": [
+    "deliveryserviceRequiredCapabilities": [
         {
             "xmlID": "ds1",
-            "serverCapability": "foo"
+            "RequiredCapability": "foo"
         },
         {
             "xmlID": "ds2",
-            "serverCapability": "bar"
+            "RequiredCapability": "bar"
         }
     ],
     "divisions": [
