@@ -143,3 +143,69 @@ func (to *Session) DeleteFederationUser(federationID, userID int) (tc.Alerts, Re
 	}
 	return alerts, reqInf, nil
 }
+
+// AddFederationResolverMappingsForCurrentUser adds Federation Resolver mappings to one or more
+// Delivery Services for the current user.
+func (to *Session) AddFederationResolverMappingsForCurrentUser(mappings tc.DeliveryServiceFederationResolverMappingRequest) (tc.Alerts, ReqInf, error) {
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
+	var alerts tc.Alerts
+
+	bts, err := json.Marshal(mappings)
+	if err != nil {
+		return alerts, reqInf, err
+	}
+
+	resp, remoteAddr, err := to.request(http.MethodPost, apiBase + "/federations", bts)
+	reqInf.RemoteAddr = remoteAddr
+	if err != nil {
+		return alerts, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, err
+}
+
+// DeleteFederationResolverMappingsForCurrentUser removes ALL Federation Resolver mappings for ALL
+// Federations assigned to the currently authenticated user, as well as deleting ALL of the
+// Federation Resolvers themselves.
+func (to *Session) DeleteFederationResolverMappingsForCurrentUser() (tc.Alerts, ReqInf, error) {
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
+	var alerts tc.Alerts
+
+	resp, remoteAddr, err := to.request(http.MethodDelete, apiBase + "/federations", nil)
+	reqInf.RemoteAddr = remoteAddr
+	if err != nil {
+		return alerts, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, err
+}
+
+// ReplaceFederationResolverMappingsForCurrentUser replaces any and all Federation Resolver mappings
+// on all Federations assigned to the currently authenticated user. This will first remove ALL
+// Federation Resolver mappings for ALL Federations assigned to the currently authenticated user, as
+// well as deleting ALL of the Federation Resolvers themselves. In other words, calling this is
+// equivalent to a call to DeleteFederationResolverMappingsForCurrentUser followed by a call to
+// AddFederationResolverMappingsForCurrentUser .
+func (to *Session) ReplaceFederationResolverMappingsForCurrentUser(mappings tc.DeliveryServiceFederationResolverMappingRequest) (tc.Alerts, ReqInf, error) {
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
+	var alerts tc.Alerts
+
+	bts, err := json.Marshal(mappings)
+	if err != nil {
+		return alerts, reqInf, err
+	}
+
+	resp, remoteAddr, err := to.request(http.MethodPut, apiBase + "/federations", bts)
+	reqInf.RemoteAddr = remoteAddr
+	if err != nil {
+		return alerts, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, err
+}
