@@ -16,16 +16,16 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 
-CREATE TABLE IF NOT EXISTS deliveryservice_server_capability (
-    server_capability TEXT NOT NULL,
+CREATE TABLE IF NOT EXISTS deliveryservice_required_capability (
+    required_capability TEXT NOT NULL,
     deliveryservice_id bigint NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
 
-    PRIMARY KEY (deliveryservice_id, server_capability),
+    PRIMARY KEY (deliveryservice_id, required_capability),
     CONSTRAINT fk_deliveryservice_id FOREIGN KEY (deliveryservice_id) REFERENCES deliveryservice(id) ON DELETE CASCADE,
-    CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON DELETE RESTRICT
+    CONSTRAINT fk_required_capability FOREIGN KEY (required_capability) REFERENCES required_capability(name) ON DELETE RESTRICT
 );
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-DROP TABLE IF EXISTS deliveryservice_server_capability;
+DROP TABLE IF EXISTS deliveryservice_required_capability;
