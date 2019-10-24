@@ -92,14 +92,14 @@ Response Structure
 			{
 				"deliveryServiceID": 1,
 				"lastUpdated": "2019-10-07 22:05:31+00",
-				"serverCapability": "ram"
-				"xmlId": "example_ds-1",
+				"serverCapability": "ram",
+				"xmlId": "example_ds-1"
 			},
 			{
 				"deliveryServiceID": 2,
 				"lastUpdated": "2019-10-07 22:05:31+00",
-				"serverCapability": "disk"
-				"xmlId": "example_ds-2,
+				"serverCapability": "disk",
+				"xmlId": "example_ds-2
 			}
 		]
 	}
@@ -157,8 +157,8 @@ Response Structure
 	{
 		"alerts": [
 			{
-				"level": "success"
-				"text": "deliveryservice server_capability was updated.",
+				"level": "success",
+				"text": "deliveryservice server_capability was updated."
 			}
 		],
 		"response": {
