@@ -33,25 +33,25 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func TestDeliveryServiceServerCapabilityInterfaces(t *testing.T) {
+func TestDeliveryServiceRequiredCapabilityInterfaces(t *testing.T) {
 	var i interface{}
-	i = &ServerCapability{}
+	i = &RequiredCapability{}
 
 	if _, ok := i.(api.Creator); !ok {
-		t.Errorf("DeliveryServiceServerCapability must be Creator")
+		t.Errorf("DeliveryServiceRequiredCapability must be Creator")
 	}
 	if _, ok := i.(api.Reader); !ok {
-		t.Errorf("DeliveryServiceServerCapability must be Reader")
+		t.Errorf("DeliveryServiceRequiredCapability must be Reader")
 	}
 	if _, ok := i.(api.Deleter); !ok {
-		t.Errorf("DeliveryServiceServerCapability must be Deleter")
+		t.Errorf("DeliveryServiceRequiredCapability must be Deleter")
 	}
 	if _, ok := i.(api.Identifier); !ok {
-		t.Errorf("DeliveryServiceServerCapability must be Identifier")
+		t.Errorf("DeliveryServiceRequiredCapability must be Identifier")
 	}
 }
 
-func TestCreateDeliveryServiceServerCapability(t *testing.T) {
+func TestCreateDeliveryServiceRequiredCapability(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -62,14 +62,14 @@ func TestCreateDeliveryServiceServerCapability(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectBegin()
-	sc := ServerCapability{
+	sc := RequiredCapability{
 		api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Tx:   db.MustBegin(),
 				User: &auth.CurrentUser{PrivLevel: 30},
 			},
 		},
-		tc.DeliveryServiceServerCapability{
+		tc.DeliveryServiceRequiredCapability{
 			DeliveryServiceID: util.IntPtr(1),
 			XMLID:             util.StrPtr("ds1"),
 		},
@@ -77,12 +77,12 @@ func TestCreateDeliveryServiceServerCapability(t *testing.T) {
 
 	mockTenantID(t, mock, 1)
 
-	rows := sqlmock.NewRows([]string{"server_capability", "deliveryservice_id", "last_updated"}).AddRow(
+	rows := sqlmock.NewRows([]string{"required_capability", "deliveryservice_id", "last_updated"}).AddRow(
 		util.StrPtr("mem"),
 		util.IntPtr(1),
 		time.Now(),
 	)
-	mock.ExpectQuery("INSERT INTO deliveryservice_server_capability").WillReturnRows(rows)
+	mock.ExpectQuery("INSERT INTO deliveryservice_required_capability").WillReturnRows(rows)
 
 	userErr, sysErr, errCode := sc.Create()
 	if userErr != nil {
@@ -100,7 +100,7 @@ func TestCreateDeliveryServiceServerCapability(t *testing.T) {
 	}
 }
 
-func TestUnauthorizedCreateDeliveryServiceServerCapability(t *testing.T) {
+func TestUnauthorizedCreateDeliveryServiceRequiredCapability(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -111,14 +111,14 @@ func TestUnauthorizedCreateDeliveryServiceServerCapability(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectBegin()
-	sc := ServerCapability{
+	sc := RequiredCapability{
 		api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Tx:   db.MustBegin(),
 				User: &auth.CurrentUser{PrivLevel: 1},
 			},
 		},
-		tc.DeliveryServiceServerCapability{
+		tc.DeliveryServiceRequiredCapability{
 			DeliveryServiceID: util.IntPtr(1),
 			XMLID:             util.StrPtr("ds1"),
 		},
@@ -145,7 +145,7 @@ func TestUnauthorizedCreateDeliveryServiceServerCapability(t *testing.T) {
 	}
 }
 
-func TestReadDeliveryServiceServerCapability(t *testing.T) {
+func TestReadDeliveryServiceRequiredCapability(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -155,14 +155,14 @@ func TestReadDeliveryServiceServerCapability(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	capability := tc.DeliveryServiceServerCapability{
-		ServerCapability:  util.StrPtr("mem"),
-		DeliveryServiceID: util.IntPtr(1),
-		XMLID:             util.StrPtr("ds1"),
+	capability := tc.DeliveryServiceRequiredCapability{
+		RequiredCapability: util.StrPtr("mem"),
+		DeliveryServiceID:  util.IntPtr(1),
+		XMLID:              util.StrPtr("ds1"),
 	}
 
 	mock.ExpectBegin()
-	sc := ServerCapability{
+	sc := RequiredCapability{
 		api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Tx:   db.MustBegin(),
@@ -175,13 +175,13 @@ func TestReadDeliveryServiceServerCapability(t *testing.T) {
 	tenantRows := sqlmock.NewRows([]string{"id"}).AddRow(1)
 	mock.ExpectQuery("SELECT id FROM user_tenant_children;").WillReturnRows(tenantRows)
 
-	rows := sqlmock.NewRows([]string{"server_capability", "deliveryservice_id", "xml_id", "last_updated"}).AddRow(
-		capability.ServerCapability,
+	rows := sqlmock.NewRows([]string{"required_capability", "deliveryservice_id", "xml_id", "last_updated"}).AddRow(
+		capability.RequiredCapability,
 		capability.DeliveryServiceID,
 		capability.XMLID,
 		time.Now(),
 	)
-	mock.ExpectQuery("SELECT .* FROM deliveryservice_server_capability").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT .* FROM deliveryservice_required_capability").WillReturnRows(rows)
 
 	results, userErr, sysErr, errCode := sc.Read()
 	if userErr != nil {
@@ -194,11 +194,11 @@ func TestReadDeliveryServiceServerCapability(t *testing.T) {
 		t.Fatalf(fmt.Sprintf("got %d; expected http status code %d", got, want))
 	}
 	if got, want := len(results), 1; got != want {
-		t.Errorf("got %d; expected %d server capabilities assigned to deliveryservices", got, want)
+		t.Errorf("got %d; expected %d required capabilities assigned to deliveryservices", got, want)
 	}
 
 	for _, result := range results {
-		cap, ok := result.(tc.DeliveryServiceServerCapability)
+		cap, ok := result.(tc.DeliveryServiceRequiredCapability)
 		if ok {
 			if got, want := *cap.DeliveryServiceID, 1; got != want {
 				t.Errorf("got %d; expected %d ", got, want)
@@ -206,7 +206,7 @@ func TestReadDeliveryServiceServerCapability(t *testing.T) {
 			if got, want := *cap.XMLID, "ds1"; got != want {
 				t.Errorf("got %s; expected %s ", got, want)
 			}
-			if got, want := *cap.ServerCapability, "mem"; got != want {
+			if got, want := *cap.RequiredCapability, "mem"; got != want {
 				t.Errorf("got %s; expected %s ", got, want)
 			}
 		}
@@ -217,7 +217,7 @@ func TestReadDeliveryServiceServerCapability(t *testing.T) {
 	}
 }
 
-func TestDeleteDeliveryServiceServerCapability(t *testing.T) {
+func TestDeleteDeliveryServiceRequiredCapability(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -233,17 +233,17 @@ func TestDeleteDeliveryServiceServerCapability(t *testing.T) {
 
 	mock.ExpectExec("DELETE").WillReturnResult(sqlmock.NewResult(1, 1))
 
-	sc := ServerCapability{
+	sc := RequiredCapability{
 		api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Tx:   db.MustBegin(),
 				User: &auth.CurrentUser{PrivLevel: 30},
 			},
 		},
-		tc.DeliveryServiceServerCapability{
-			ServerCapability:  util.StrPtr("mem"),
-			DeliveryServiceID: util.IntPtr(1),
-			XMLID:             util.StrPtr("ds1"),
+		tc.DeliveryServiceRequiredCapability{
+			RequiredCapability: util.StrPtr("mem"),
+			DeliveryServiceID:  util.IntPtr(1),
+			XMLID:              util.StrPtr("ds1"),
 		},
 	}
 
@@ -263,7 +263,7 @@ func TestDeleteDeliveryServiceServerCapability(t *testing.T) {
 	}
 }
 
-func TestUnauthorizedDeleteDeliveryServiceServerCapability(t *testing.T) {
+func TestUnauthorizedDeleteDeliveryServiceRequiredCapability(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -274,14 +274,14 @@ func TestUnauthorizedDeleteDeliveryServiceServerCapability(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectBegin()
-	sc := ServerCapability{
+	sc := RequiredCapability{
 		api.APIInfoImpl{
 			ReqInfo: &api.APIInfo{
 				Tx:   db.MustBegin(),
 				User: &auth.CurrentUser{PrivLevel: 1},
 			},
 		},
-		tc.DeliveryServiceServerCapability{
+		tc.DeliveryServiceRequiredCapability{
 			DeliveryServiceID: util.IntPtr(1),
 			XMLID:             util.StrPtr("ds1"),
 		},
