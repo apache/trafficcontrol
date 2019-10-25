@@ -13,11 +13,11 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservice-server-capabilities:
+.. _to-api-deliveryservices-required-capabilities:
 
-***************************************
-``deliveryservice_server_capabilities``
-***************************************
+******************************************
+``deliveryservices_required_capabilities``
+******************************************
 
 .. versionadded:: 1.4
 
@@ -59,7 +59,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/deliveryservice_server_capabilities HTTP/1.1
+	GET /api/1.4/deliveryservices_required_capabilities HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -120,7 +120,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/deliveryservice_server_capabilities HTTP/1.1
+	POST /api/1.4/deliveryservices_required_capabilities HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -158,7 +158,7 @@ Response Structure
 		"alerts": [
 			{
 				"level": "success",
-				"text": "deliveryservice server_capability was updated."
+				"text": "deliveryservice.RequiredCapability was created."
 			}
 		],
 		"response": {
@@ -184,7 +184,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.4/deliveryservice_server_capabilities HTTP/1.1
+	POST /api/1.4/deliveryservices_required_capabilities HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -214,9 +214,11 @@ Response Structure
 	Date: Mon, 07 Oct 2019 22:15:11 GMT
 	Content-Length: 127
 
-	{ "alerts": [
-		{
-			"level": "success",
-			"text": "Delivery service capability association was deleted."
-		}
-	]}
+	{
+		"alerts": [
+			{
+				"level": "success",
+				"text": "deliveryservice.RequiredCapability was deleted."
+			}
+		]
+	}
