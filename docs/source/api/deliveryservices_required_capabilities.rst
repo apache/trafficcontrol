@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservice-required-capabilities:
+.. _to-api-deliveryservices-required-capabilities:
 
 ******************************************
 ``deliveryservices_required_capabilities``
