@@ -44,15 +44,21 @@ func GetServersStatusCountsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getServersStatusCounts(tx *sql.Tx, typeName string) (map[string]int, error) {
+	where := ""
+	args := make([]interface{}, 0, 1)
+	if typeName != "" {
+		where = "WHERE type.name = $1"
+		args = append(args, typeName)
+	}
 	q := `
 SELECT status.name, count(server.id)
 FROM server
 JOIN status ON server.status = status.id
 JOIN type ON server.type = type.id
-WHERE type.name ~ $1
+` + where + `
 GROUP BY status.id
 `
-	rows, err := tx.Query(q, typeName)
+	rows, err := tx.Query(q, args...)
 	if err != nil {
 		return nil, errors.New("querying server status counts: " + err.Error())
 	}
