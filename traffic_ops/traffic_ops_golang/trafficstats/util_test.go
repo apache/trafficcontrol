@@ -26,7 +26,7 @@ import "time"
 import "github.com/apache/trafficcontrol/lib/go-tc"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
-func TestConfigFromRequest(t *testing.T) {
+func TestTSConfigFromRequest(t *testing.T) {
 	start := "2019-09-30T00:00:00Z"
 	startTime, err := time.Parse(time.RFC3339, start)
 	if err != nil {
@@ -40,14 +40,13 @@ func TestConfigFromRequest(t *testing.T) {
 
 	inf := api.APIInfo{
 		Params: map[string]string{
-			"limit":           "10",
-			"offset":          "0",
-			"orderby":         "time",
-			"startDate":       start,
-			"endDate":         end,
-			"interval":        "1m",
-			"metricType":      "tps_total",
-			"deliveryService": "test",
+			"limit":      "10",
+			"offset":     "0",
+			"orderby":    "time",
+			"startDate":  start,
+			"endDate":    end,
+			"interval":   "1m",
+			"metricType": "tps_total",
 		},
 	}
 
@@ -57,15 +56,12 @@ func TestConfigFromRequest(t *testing.T) {
 	}
 	r.Header.Add(tc.ContentType, tc.ApplicationJson)
 
-	cfg, err, code := ConfigFromRequest(r, &inf)
+	cfg, code, err := tsConfigFromRequest(r, &inf)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
 	if code != http.StatusOK {
 		t.Errorf("Expected OK status, but was %d", code)
-	}
-	if cfg.DeliveryService != "test" {
-		t.Errorf("Expected config to have DS 'test', but was '%s'", cfg.DeliveryService)
 	}
 	if !cfg.End.Equal(endTime) {
 		t.Errorf("Expected end time to be %v, but was %v", endTime, cfg.End)
@@ -86,9 +82,6 @@ func TestConfigFromRequest(t *testing.T) {
 		t.Errorf("Expected limit to not be nil, but it was")
 	} else if *cfg.Limit != 10 {
 		t.Errorf("Expected limit to be 10, but it was %d", *cfg.Limit)
-	}
-	if cfg.MetricType != "tps_total" {
-		t.Errorf("Expected metric type to be tps_total, but it was %s", cfg.MetricType)
 	}
 	if cfg.Offset == nil {
 		t.Errorf("Expected offset to not be nil, but it was")

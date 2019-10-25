@@ -432,10 +432,11 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 	var tcpPort uint
 	var httpsPort sql.NullInt64 // this is the only one that's optional
 
-	row := inf.Tx.Tx.QueryRow(influxServersQuery)
-	if e := row.Scan(&fqdn, &tcpPort, &httpsPort); e != nil {
-		return nil, fmt.Errorf("Failed to create influx client: %v", e)
-	}
+	// row := inf.Tx.Tx.QueryRow(influxServersQuery)
+	// if e := row.Scan(&fqdn, &tcpPort, &httpsPort); e != nil {
+	// 	return nil, fmt.Errorf("Failed to create influx client: %v", e)
+	// }
+	fqdn = "127.0.0.1"
 
 	host := "http%s://%s:%d"
 	if inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure {
