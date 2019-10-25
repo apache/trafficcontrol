@@ -275,6 +275,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         $location.path($location.path() + '/targets');
     };
 
+    $scope.viewCapabilities = function() {
+        $location.path($location.path() + '/required-server-capabilities');
+    };
+
     $scope.viewOrigins = function() {
         $location.path($location.path() + '/origins');
     };
