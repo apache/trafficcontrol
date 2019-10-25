@@ -158,7 +158,7 @@ Response Structure
 		"alerts": [
 			{
 				"level": "success",
-				"text": "deliveryservice server_capability was updated."
+				"text": "deliveryservice.RequiredCapability was created."
 			}
 		],
 		"response": {
@@ -214,9 +214,11 @@ Response Structure
 	Date: Mon, 07 Oct 2019 22:15:11 GMT
 	Content-Length: 127
 
-	{ "alerts": [
-		{
-			"level": "success",
-			"text": "Delivery service capability association was deleted."
-		}
-	]}
+	{
+		"alerts": [
+			{
+				"level": "success",
+				"text": "deliveryservice.RequiredCapability was deleted."
+			}
+		]
+	}
