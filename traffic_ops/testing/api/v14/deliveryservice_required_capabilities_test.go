@@ -24,7 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-func TestGetDeliveryServiceRequiredCapabilities(t *testing.T) {
+func TestDeliveryServiceRequiredCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, DeliveryServices, DeliveryServiceRequiredCapabilities}, func() {
 		GetTestDeliveryServiceRequiredCapabilities(t)
 	})

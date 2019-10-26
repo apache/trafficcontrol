@@ -24,5 +24,5 @@ type DeliveryServiceRequiredCapability struct {
 	LastUpdated        *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	DeliveryServiceID  *int       `json:"deliveryServiceID" db:"deliveryservice_id"`
 	RequiredCapability *string    `json:"requiredCapability" db:"required_capability"`
-	XMLID              *string    `json:"xmlID" db:"xml_id"`
+	XMLID              *string    `json:"xmlID,omitempty" db:"xml_id"`
 }
