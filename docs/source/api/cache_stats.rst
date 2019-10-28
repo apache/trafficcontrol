@@ -70,7 +70,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/1.4/cache_stats?cdnName=CDN&endDate=2019-10-25T14:10:00-06:00&metricType=bandwidth&startDate=2019-10-25T14:00:00-06:00
+	GET /api/1.4/cache_stats?cdnName=CDN&endDate=2019-10-28T20:49:00Z&metricType=bandwidth&startDate=2019-10-28T20:45:00Z HTTP/1.1
 	User-Agent: python-requests/2.20.1
 	Accept-Encoding: gzip, deflate
 	Accept: application/json;timestamp=unix, application/json;timestamp=rfc;q=0.9, application/json;q=0.8, */*;q=0.7
@@ -115,7 +115,7 @@ Response Structure
 	:ninetyFifthPercentile:  Data points with values greater than or equal to this number constitute the "top" 5% of the data set
 
 
-.. code-block:: json
+.. code-block:: http
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
@@ -128,72 +128,45 @@ Response Structure
 	Set-Cookie: mojolicious=; Path=/; HttpOnly
 	Whole-Content-Sha512: p4asf1n7fXGtgpW/dWgolJWdXjwDcCjyvjOPFqkckbgoXGUHEj5/wlz7brlQ48t3ZnOWCqOlbsu2eSiBssBtUQ==
 	X-Server-Name: traffic_ops_golang/
-	Date: Fri, 25 Oct 2019 21:04:36 GMT
-	Transfer-Encoding: chunked
+	Date: Mon, 28 Oct 2019 20:49:51 GMT
 
-	{
-		"response": {
-			"series": {
-				"columns": [
-					"time",
-					"sum_count"
-				],
-				"count": 10,
-				"name": "bandwidth.cdn.1min",
-				"tags": {
-					"cdn": "CDN"
-				},
-				"values": [
-					[
-						1572033600000000000,
-						null
-					],
-					[
-						1572033660000000000,
-						104
-					],
-					[
-						1572033720000000000,
-						104.2
-					],
-					[
-						1572033780000000000,
-						111.85714285714286
-					],
-					[
-						1572033840000000000,
-						104.16666666666666
-					],
-					[
-						1572033900000000000,
-						107.4
-					],
-					[
-						1572033960000000000,
-						111.28571428571428
-					],
-					[
-						1572034020000000000,
-						104
-					],
-					[
-						1572034080000000000,
-						104.33333333333333
-					],
-					[
-						1572034140000000000,
-						111
-					]
-				]
+	{ "response": {
+		"series": {
+			"columns": [
+				"time",
+				"sum_count"
+			],
+			"count": 4,
+			"name": "bandwidth.cdn.1min",
+			"tags": {
+				"cdn": "CDN-in-a-Box"
 			},
-			"summary": {
-				"average": 106.91587301587302,
-				"count": 9,
-				"fifthPercentile": 0,
-				"max": 111.85714285714286,
-				"min": 104,
-				"ninetyEighthPercentile": 111.85714285714286,
-				"ninetyFifthPercentile": 111.85714285714286
-			}
+			"values": [
+				[
+					1572295500000000000,
+					null
+				],
+				[
+					1572295560000000000,
+					113.66666666666666
+				],
+				[
+					1572295620000000000,
+					108.83333333333334
+				],
+				[
+					1572295680000000000,
+					113
+				]
+			]
+		},
+		"summary": {
+			"average": 111.83333333333333,
+			"count": 3,
+			"fifthPercentile": 0,
+			"max": 113.66666666666666,
+			"min": 108.83333333333334,
+			"ninetyEighthPercentile": 113.66666666666666,
+			"ninetyFifthPercentile": 113.66666666666666
 		}
-	}
+	}}
