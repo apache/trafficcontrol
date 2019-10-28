@@ -264,8 +264,6 @@ To install the Traffic Ops Developer environment:
 
 #. Change the login credentials.
 
-	.. seealso:: :ref:`to-using`
-
 Test Cases
 ==========
 Use `prove <http://perldoc.perl.org/prove.html>`_ (should be installed with Perl) to execute test cases. Execute after a ``carton install`` of all required dependencies:

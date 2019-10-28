@@ -225,3 +225,11 @@ func TestServerInfoIsTopLevelCache(t *testing.T) {
 		}
 	}
 }
+
+func TestGetConfigFile(t *testing.T) {
+	expected := "hdr_rw_my-xml-id.config"
+	cfgFile := GetConfigFile(HeaderRewritePrefix, "my-xml-id")
+	if cfgFile != expected {
+		t.Errorf("Expected %s.   Got %s", expected, cfgFile)
+	}
+}

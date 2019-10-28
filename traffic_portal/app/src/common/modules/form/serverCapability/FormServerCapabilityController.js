@@ -17,9 +17,13 @@
  * under the License.
  */
 
-var FormServerCapabilityController = function(serverCapability, $scope, formUtils, locationUtils) {
+var FormServerCapabilityController = function(serverCapability, $scope, $location, formUtils, locationUtils) {
 
 	$scope.serverCapability = serverCapability;
+
+	$scope.viewServers = function() {
+		$location.path($location.path() + '/servers');
+	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -29,5 +33,5 @@ var FormServerCapabilityController = function(serverCapability, $scope, formUtil
 
 };
 
-FormServerCapabilityController.$inject = ['serverCapability', '$scope', 'formUtils', 'locationUtils'];
+FormServerCapabilityController.$inject = ['serverCapability', '$scope', '$location', 'formUtils', 'locationUtils'];
 module.exports = FormServerCapabilityController;

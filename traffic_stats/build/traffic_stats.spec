@@ -37,63 +37,19 @@ Installs traffic_stats which performs the follwing functions:
 %setup
 
 %build
-export GOPATH=$(pwd)
-# Create build area with proper gopath structure
-mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
-
-go_get_version() {
-  local src=$1
-  local version=$2
-  (
-   cd $src && \
-   git checkout $version && \
-   go get -v \
-  )
-}
-
-# build all internal go dependencies (expects package being built as argument)
-build_dependencies () {
-    IFS=$'\n'
-    array=($(go list -f '{{ join .Deps "\n" }}' | grep trafficcontrol | grep -v $1))
-    prefix=github.com/apache/trafficcontrol
-    for (( i=0; i<${#array[@]}; i++ )); do
-        curPkg=${array[i]};
-        curPkgShort=${curPkg#$prefix};
-        echo "checking $curPkg";
-        godir=$GOPATH/src/$curPkg;
-        if [ ! -d "$godir" ]; then
-          ( echo "building $curPkg" && \
-            mkdir -p "$godir" && \
-            cd "$godir" && \
-            cp -r "$TC_DIR$curPkgShort"/* . && \
-            build_dependencies "$curPkgShort" && \
-            go get -v && \
-            echo "go building $curPkgShort at $(pwd)" && \
-            go build \
-          ) || { echo "Could not build go $curPkgShort at $(pwd): $!"; exit 1; };
-        fi
-    done
-}
-
-#get traffic_stats client
+# copy traffic_stats client
 godir=src/github.com/apache/trafficcontrol/traffic_stats
-oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
-  cp -L -r "$TC_DIR"/traffic_stats/* . && \
-  build_dependencies traffic_stats  && \
-  go get -v && \
-  go install -v \
-) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+  cp -L -r "$TC_DIR"/traffic_stats/* .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-#build influxdb_tools
+# copy influxdb_tools
 godir=src/github.com/apache/trafficcontrol/traffic_stats/influxdb_tools
 ( mkdir -p "$godir" && \
   cd "$godir" && \
-  cp -r "$TC_DIR"/traffic_stats/influxdb_tools/* . && \
-  go build sync/sync_ts_databases.go
-  go build create/create_ts_databases.go
-) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+  cp -r "$TC_DIR"/traffic_stats/influxdb_tools/* .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 %install
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats
@@ -108,7 +64,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 mkdir -p "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
 
 src=src/github.com/apache/trafficcontrol/traffic_stats
-cp -p bin/traffic_stats     "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin/traffic_stats
+cp -p "$src"/traffic_stats         "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin/traffic_stats
 cp "$src"/traffic_stats.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats.cfg
 cp "$src"/traffic_stats_seelog.xml "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats_seelog.xml
 cp "$src"/traffic_stats.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffic_stats

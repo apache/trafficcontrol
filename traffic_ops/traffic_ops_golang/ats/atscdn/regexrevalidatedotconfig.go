@@ -1,4 +1,4 @@
-package ats
+package atscdn
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -23,16 +23,16 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"sort"
 	"strconv"
-	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 )
 
-const DefaultMaxRevalDurationDays = 90
 const JobKeywordPurge = "PURGE"
 
 func GetRegexRevalidateDotConfig(w http.ResponseWriter, r *http.Request) {
@@ -43,63 +43,44 @@ func GetRegexRevalidateDotConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	cdnName, userErr, sysErr, errCode := getCDNNameFromNameOrID(inf.Tx.Tx, inf.Params["cdn-name-or-id"])
+	cdnName, userErr, sysErr, errCode := ats.GetCDNNameFromNameOrID(inf.Tx.Tx, inf.Params["cdn-name-or-id"])
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
-	regexRevalTxt, err := getRegexRevalidate(inf.Tx.Tx, cdnName)
+	toToolName, toURL, err := ats.GetToolNameAndURL(inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting regex_revalidate.config text: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting tool name and url: "+err.Error()))
 		return
 	}
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(regexRevalTxt))
-}
 
-func getRegexRevalidate(tx *sql.Tx, cdnName string) (string, error) {
-	maxDays, ok, err := getMaxDays(tx)
+	params, err := ats.GetProfileParamsByName(inf.Tx.Tx, tc.GlobalProfileName, atscfg.RegexRevalidateFileName)
 	if err != nil {
-		return "", errors.New("getting max reval duration days from Parameter: " + err.Error())
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting profile params by name: "+err.Error()))
+		return
+	}
+
+	maxDays, ok, err := getMaxDays(inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting profile params by name: "+err.Error()))
+		return
 	}
 	if !ok {
-		maxDays = DefaultMaxRevalDurationDays
+		maxDays = atscfg.DefaultMaxRevalDurationDays
 		log.Warnf("No maxRevalDurationDays regex_revalidate.config Parameter found, using default %v.\n", maxDays)
 	}
 	maxReval := time.Duration(maxDays) * time.Hour * 24
-	minTTL := time.Hour * 1
 
-	jobs, err := getJobs(tx, cdnName, maxReval, minTTL)
+	jobs, err := getJobs(inf.Tx.Tx, cdnName, maxReval, atscfg.RegexRevalidateMinTTL)
 	if err != nil {
-		return "", errors.New("getting jobs: " + err.Error())
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting jobs: "+err.Error()))
+		return
 	}
 
-	text, err := HeaderComment(tx, "CDN "+cdnName)
-	if err != nil {
-		return "", errors.New("getting header comment: " + err.Error())
-	}
-	for _, job := range jobs {
-		text += job.AssetURL + " " + strconv.FormatInt(job.PurgeEnd.Unix(), 10) + "\n"
-	}
-
-	return text, nil
-}
-
-type Job struct {
-	AssetURL string
-	PurgeEnd time.Time
-}
-
-type Jobs []Job
-
-func (jb Jobs) Len() int      { return len(jb) }
-func (jb Jobs) Swap(i, j int) { jb[i], jb[j] = jb[j], jb[i] }
-func (jb Jobs) Less(i, j int) bool {
-	if jb[i].AssetURL == jb[j].AssetURL {
-		return jb[i].PurgeEnd.Before(jb[j].PurgeEnd)
-	}
-	return strings.Compare(jb[i].AssetURL, jb[j].AssetURL) < 0
+	txt := atscfg.MakeRegexRevalidateDotConfig(tc.CDNName(cdnName), params, toToolName, toURL, jobs)
+	w.Header().Set(tc.ContentType, tc.ContentTypeTextPlain)
+	w.Write([]byte(txt))
 }
 
 // getJobs returns jobs which
@@ -109,26 +90,32 @@ func (jb Jobs) Less(i, j int) bool {
 //   - are "purge" jobs
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
 // The maxReval is used for both the max days, for which jobs older than that aren't selected, and for the maximum TTL.
-func getJobs(tx *sql.Tx, cdnName string, maxReval time.Duration, minTTL time.Duration) ([]Job, error) {
+func getJobs(tx *sql.Tx, cdnName string, maxReval time.Duration, minTTL time.Duration) ([]tc.Job, error) {
 	qry := `
 WITH
   cdn_name AS (select $1::text as v),
   max_days AS (select $2::integer as v)
 SELECT
+  j.parameters,
+  j.keyword,
   j.asset_url,
-  CAST((SELECT REGEXP_MATCHES(j.parameters, 'TTL:(\d+)h') FETCH FIRST 1 ROWS ONLY)[1] AS INTEGER) as ttl,
-  j.start_time
+  u.username,
+  j.start_time,
+  j.id,
+  ds.xml_id
 FROM
   job j
   JOIN deliveryservice ds ON j.job_deliveryservice = ds.id
+  JOIN tm_user u ON j.job_user = u.id
 WHERE
   j.parameters ~ 'TTL:(\d+)h'
   AND j.start_time > (NOW() - ((select v from max_days) * INTERVAL '1 day'))
   AND ds.cdn_id = (select id from cdn where name = (select v from cdn_name))
   AND j.job_deliveryservice IS NOT NULL
-  AND j.keyword = '` + JobKeywordPurge + `'
+  AND j.keyword = '` + atscfg.JobKeywordPurge + `'
   AND (j.start_time + (CAST( (SELECT REGEXP_MATCHES(j.parameters, 'TTL:(\d+)h') FETCH FIRST 1 ROWS ONLY)[1] AS INTEGER) * INTERVAL '1 HOUR')) > NOW()
 `
+
 	maxRevalDays := maxReval / time.Hour / 24
 	rows, err := tx.Query(qry, cdnName, maxRevalDays)
 	if err != nil {
@@ -136,34 +123,16 @@ WHERE
 	}
 	defer rows.Close()
 
-	jobMap := map[string]time.Time{}
+	jobs := []tc.Job{}
 	for rows.Next() {
-		assetURL := ""
-		ttlHours := 0
+		j := tc.Job{}
 		startTime := time.Time{}
-		if err := rows.Scan(&assetURL, &ttlHours, &startTime); err != nil {
+		if err := rows.Scan(&j.Parameters, &j.Keyword, &j.AssetURL, &j.CreatedBy, &startTime, &j.ID, &j.DeliveryService); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
-
-		ttl := time.Duration(ttlHours) * time.Hour
-		if ttl > maxReval {
-			ttl = maxReval
-		} else if ttl < minTTL {
-			ttl = minTTL
-		}
-
-		purgeEnd := startTime.Add(ttl)
-
-		if existingPurgeEnd, ok := jobMap[assetURL]; !ok || purgeEnd.After(existingPurgeEnd) {
-			jobMap[assetURL] = purgeEnd
-		}
+		j.StartTime = startTime.Format(tc.JobTimeFormat)
+		jobs = append(jobs, j)
 	}
-
-	jobs := []Job{}
-	for assetURL, purgeEnd := range jobMap {
-		jobs = append(jobs, Job{AssetURL: assetURL, PurgeEnd: purgeEnd})
-	}
-	sort.Sort(Jobs(jobs))
 	return jobs, nil
 }
 

@@ -18,6 +18,10 @@
  */
 
 module.exports = function(){
+	this.moreBtn=element(by.name('moreBtn'));
+	this.viewCapabilitiesMenuItem=element(by.css('a[ng-click*=viewCapabilities]'));
+	this.addCapabilityBtn=element(by.name('addCapabilityBtn'));
+	this.selectFormDropdown=element(by.name('selectFormDropdown'));
 	this.status=element(by.name('status'));
 	this.hostName=element(by.name('hostName'));
 	this.domainName=element(by.name('domainName'));
@@ -34,6 +38,7 @@ module.exports = function(){
 	this.createButton=element(by.buttonText('Create'));
 	this.deleteButton=element(by.buttonText('Delete'));
 	this.updateButton=element(by.buttonText('Update'));
+	this.submitButton=element(by.buttonText('Submit'));
 	this.searchFilter=element(by.id('serversTable_filter')).element(by.css('label input'));
 	this.confirmWithNameInput=element(by.name('confirmWithNameInput'));
 	this.deletePermanentlyButton=element(by.buttonText('Delete Permanently'));

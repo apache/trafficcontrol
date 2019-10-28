@@ -24,7 +24,7 @@ under the License.
 <div class="modal-body">
     <p ng-bind-html="params.message"></p>
     <form name="selectForm" novalidate>
-        <select class="form-control" name="selectFormDropdown" ng-model="selectedItemId" ng-options="item.id as label(item) for item in collection" required>
+        <select class="form-control" name="selectFormDropdown" ng-model="selectedItemKeyValue" ng-options="item[key] as label(item) for item in collection" required>
             <option value="">Select...</option>
         </select>
     </form>
