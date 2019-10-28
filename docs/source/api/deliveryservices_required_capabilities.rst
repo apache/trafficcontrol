@@ -67,10 +67,10 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryServiceID: The :term:`Delivery Service`'s ID
-:xmlID:             The :term:`Delivery Service`'s :ref:`ds-xmlid`
-:lastUpdated:       The date and time at which this association between the :term:`Delivery Service` and the Server Capability was last updated, in an ISO-like format
-:serverCapability:  The Server Capability's name
+:deliveryServiceID:   The :term:`Delivery Service`'s ID
+:xmlID:               The :term:`Delivery Service`'s :ref:`ds-xmlid`
+:lastUpdated:         The date and time at which this association between the :term:`Delivery Service` and the Server Capability was last updated, in an ISO-like format
+:requiredCapability:  The Server Capability's name
 
 .. code-block:: http
 	:caption: Response Example
@@ -92,13 +92,13 @@ Response Structure
 			{
 				"deliveryServiceID": 1,
 				"lastUpdated": "2019-10-07 22:05:31+00",
-				"serverCapability": "ram",
+				"requiredCapability": "ram",
 				"xmlId": "example_ds-1"
 			},
 			{
 				"deliveryServiceID": 2,
 				"lastUpdated": "2019-10-07 22:05:31+00",
-				"serverCapability": "disk",
+				"requiredCapability": "disk",
 				"xmlId": "example_ds-2"
 			}
 		]
@@ -115,7 +115,7 @@ Associates a Server Capability to a :term:`Delivery Service`.
 Request Structure
 -----------------
 :deliveryServiceID: The :term:`Delivery Service`'s ID to associate
-:serverCapability:  The Server Capability's name to associate
+:requiredCapability:  The Server Capability's name to associate
 
 .. code-block:: http
 	:caption: Request Example
@@ -130,14 +130,14 @@ Request Structure
 
 	{
 		"deliveryServiceID": 1,
-		"serverCapability": "disk"
+		"requiredCapability": "disk"
 	}
 
 Response Structure
 ------------------
-:deliveryServiceID: The :term:`Delivery Service`'s ID
-:lastUpdated:       The date and time at which this association between the :term:`Delivery Service` and the Server Capability was last updated, in an ISO-like format
-:serverCapability:  The Server Capability's name
+:deliveryServiceID:   The :term:`Delivery Service`'s ID
+:lastUpdated:         The date and time at which this association between the :term:`Delivery Service` and the Server Capability was last updated, in an ISO-like format
+:requiredCapability:  The Server Capability's name
 
 .. code-block:: http
 	:caption: Response Example
@@ -164,7 +164,7 @@ Response Structure
 		"response": {
 			"deliveryServiceID": 1,
 			"lastUpdated": "2019-10-07 22:15:11+00",
-			"serverCapability": "disk"
+			"requiredCapability": "disk"
 		}
 	}
 
@@ -178,8 +178,8 @@ Dissociate a Server Capability from a :term:`Delivery Service`.
 
 Request Structure
 -----------------
-:deliveryServiceID: The :term:`Delivery Service`'s ID to dissociate
-:serverCapability:  The Server Capability's name to dissociate
+:deliveryServiceID:   The :term:`Delivery Service`'s ID to dissociate
+:requiredCapability:  The Server Capability's name to dissociate
 
 .. code-block:: http
 	:caption: Request Example
@@ -194,7 +194,7 @@ Request Structure
 
 	{
 		"deliveryServiceID": 1,
-		"serverCapability": "disk"
+		"requiredCapability": "disk"
 	}
 
 Response Structure
