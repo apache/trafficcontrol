@@ -59,8 +59,11 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	statusExists := false
 	if reqObj.Status.Name != nil {
 		status, statusExists, err = dbhelpers.GetStatusByName(*reqObj.Status.Name, inf.Tx.Tx)
-	} else {
+	} else if reqObj.Status.ID != nil {
 		status, statusExists, err = dbhelpers.GetStatusByID(*reqObj.Status.ID, inf.Tx.Tx)
+	} else {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("status is required"), nil)
+		return
 	}
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
