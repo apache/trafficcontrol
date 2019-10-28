@@ -442,9 +442,12 @@ func main() {
 			s := NewServer(server.ID, server.HostName, server.Status, -1)
 			doV4 := false //default
 			doV6 := false //default
-			var statusData tc.ServercheckPostNullable
-			statusData.ID = s.id
-			statusData.Name = *confName
+            defaulStatusValue := -1
+			var statusData tc.ServercheckRequestNullable
+			statusData.ID = &s.id
+			statusData.Name = confName
+            statusData.HostName = &s.name
+            statusData.Value = &defaulStatusValue
 			s.fqdn = s.name + "." + server.DomainName
 			rlog.Infof("Next server=%s status=%s", s.fqdn, s.status)
 			if *confSyslog {
@@ -654,18 +657,18 @@ func main() {
 			// send status update to TO
 			if s.failcount == -1 {
 				// server not checked
-				statusData.Value = -1
+				*statusData.Value = -1
 			} else if s.failcount > 0 {
 				// server had failures
-				statusData.Value = 0
+				*statusData.Value = 0
 			} else {
 				// server looks OK
-				statusData.Value = 1
+				*statusData.Value = 1
 			}
 			serverElapsed := time.Since(serverStart)
-			rlog.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, statusData.Value, s.cdn, serverElapsed)
+			rlog.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
 			if *confSyslog {
-				log.Printf("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, statusData.Value, s.cdn, serverElapsed)
+				log.Printf("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
 			}
 			if *confQuiet == false {
 				rlog.Debug("Sending update to TO")

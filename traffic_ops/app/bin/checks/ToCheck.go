@@ -40,7 +40,7 @@ const UseClientCache = false
 const TrafficOpsRequestTimeout = time.Second * time.Duration(10)
 
 var cpath_new string
-var statusData tc.ServercheckPostNullable
+var statusData tc.ServercheckRequestNullable
 
 type Config struct {
 	URL    string `json:"to_url"`
@@ -113,9 +113,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	statusData.ID = server[0].ID
-	statusData.Name = *confName
-	statusData.Value = *confValue
+	statusData.ID = &server[0].ID
+	statusData.Name = confName
+	statusData.Value = confValue
 	_, _, err = session.InsertServerCheckStatus(statusData)
 	if err != nil {
 		rlog.Error("Error updating server check status with TO:", err)

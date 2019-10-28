@@ -371,9 +371,12 @@ func main() {
 				}
 			}
 			s := NewServer(server.ID, server.HostName, server.Status)
-			var statusData tc.ServercheckPostNullable
-			statusData.ID = s.id
-			statusData.Name = *confName
+            defaulStatusValue := -1
+			var statusData tc.ServercheckRequestNullable
+			statusData.ID = &s.id
+			statusData.Name = confName
+            statusData.HostName = &s.name
+            statusData.Value = &defaulStatusValue
 			s.fqdn = s.name + "." + server.DomainName
 			s.iface = server.InterfaceName
 			s.ip4 = strings.Split(server.IPAddress, "/")[0]
@@ -406,7 +409,7 @@ func main() {
 						preStats, err = readFile(s.file)
 						rlog.Debugf("previous: %v", preStats)
 						rlog.Debugf("current: %v", curStats)
-						statusData.Value, seconds = getRatio(curStats, preStats)
+						*statusData.Value, seconds = getRatio(curStats, preStats)
 						err = writeFile(s.file, curStats)
 					} else {
 						err = writeFile(s.file, curStats)
@@ -424,20 +427,20 @@ func main() {
 						rlog.Errorf("Error: %s", err)
 						continue
 					}
-		                        statusData.Value = getCDU(curStats)
+		                        *statusData.Value = getCDU(curStats)
 				}
 			}
 
 			serverElapsed := time.Since(serverStart)
 			if *confName == "CHR" {
-				rlog.Infof("Finished checking server=%s check=%s result=%d cdn=%s seconds=%d elapsed=%s", s.fqdn, *confName, statusData.Value, s.cdn, seconds, serverElapsed)
+				rlog.Infof("Finished checking server=%s check=%s result=%d cdn=%s seconds=%d elapsed=%s", s.fqdn, *confName, *statusData.Value, s.cdn, seconds, serverElapsed)
 				if *confSyslog {
-					log.Printf("Finished checking server=%s check=%s result=%d cdn=%s seconds=%d elapsed=%s", s.fqdn, *confName, statusData.Value, s.cdn, seconds, serverElapsed)
+					log.Printf("Finished checking server=%s check=%s result=%d cdn=%s seconds=%d elapsed=%s", s.fqdn, *confName, *statusData.Value, s.cdn, seconds, serverElapsed)
 				}
 			} else if *confName == "CDU" {
-				rlog.Infof("Finished checking server=%s check=%s result=%d cdn=%s elapsed=%s", s.fqdn, *confName, statusData.Value, s.cdn, serverElapsed)
+				rlog.Infof("Finished checking server=%s check=%s result=%d cdn=%s elapsed=%s", s.fqdn, *confName, *statusData.Value, s.cdn, serverElapsed)
 				if *confSyslog {
-					log.Printf("Finished checking check=%s server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *confName, statusData.Value, s.cdn, serverElapsed)
+					log.Printf("Finished checking check=%s server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *confName, *statusData.Value, s.cdn, serverElapsed)
 				}
 			}
 

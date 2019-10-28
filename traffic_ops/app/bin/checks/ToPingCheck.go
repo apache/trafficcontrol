@@ -14,7 +14,6 @@
    Used for checking ILO ping,  MTU test, 10G (IPv4), and 10G6 (IPv6) pings.
 */
 
-
 package main
 
 import (
@@ -261,17 +260,17 @@ func main() {
 		}
 		if re.Match([]byte(server.Type)) {
 			serverStart := time.Now()
-            if *confInclude != "undef" {
-                re_inc, err := regexp.Compile(*confInclude)
-                if err != nil {
-                    rlog.Error("supplied exclusion regex does not compile:", err)
-                    os.Exit(1)
-                }
-                if ! re_inc.MatchString(server.HostName) {
-                    rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
-                    continue
-                }
-            }
+			if *confInclude != "undef" {
+				re_inc, err := regexp.Compile(*confInclude)
+				if err != nil {
+					rlog.Error("supplied exclusion regex does not compile:", err)
+					os.Exit(1)
+				}
+				if !re_inc.MatchString(server.HostName) {
+					rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
+					continue
+				}
+			}
 			if *confCdn != "all" && *confCdn != server.CDNName {
 				rlog.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
 				continue
@@ -288,9 +287,12 @@ func main() {
 				}
 			}
 			s := NewServer(server.ID, server.HostName, server.Status, -1)
-			var statusData tc.ServercheckPostNullable
-			statusData.ID = s.id
-			statusData.Name = *confName
+			defaulStatusValue := -1
+			var statusData tc.ServercheckRequestNullable
+			statusData.ID = &s.id
+			statusData.Name = confName
+			statusData.HostName = &s.name
+			statusData.Value = &defaulStatusValue
 			s.fqdn = s.name + "." + server.DomainName
 			s.ip4 = strings.Split(server.IPAddress, "/")[0]
 			s.ip6 = strings.Split(server.IP6Address, "/")[0]
@@ -312,26 +314,26 @@ func main() {
 			// send status update to TO
 			if s.failcount == -1 {
 				// server not checked
-				statusData.Value = -1
+				*statusData.Value = -1
 			} else if s.failcount > 0 {
 				// server had failures
 				rlog.Infof("result=failure server=%s status=%s check=%s addr=%s", s.fqdn, s.status, *confName, s.failaddr)
 				if *confSyslog {
 					log.Printf("result=failure server=%s status=%s check=%s addr=%s", s.fqdn, s.status, *confName, s.failaddr)
 				}
-				statusData.Value = 0
+				*statusData.Value = 0
 			} else {
 				// server looks OK
 				rlog.Infof("result=success server=%s status=%s", s.fqdn, s.status)
 				if *confSyslog {
 					log.Printf("result=success server=%s status=%s", s.fqdn, s.status)
 				}
-				statusData.Value = 1
+				*statusData.Value = 1
 			}
 			serverElapsed := time.Since(serverStart)
-			rlog.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, statusData.Value, s.cdn, serverElapsed)
+			rlog.Infof("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
 			if *confSyslog {
-				log.Printf("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, statusData.Value, s.cdn, serverElapsed)
+				log.Printf("Finished checking server=%s result=%d cdn=%s elapsed=%s", s.fqdn, *statusData.Value, s.cdn, serverElapsed)
 			}
 			if *confQuiet == false {
 				rlog.Debug("Sending update to TO")
