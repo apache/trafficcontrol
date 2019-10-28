@@ -255,17 +255,17 @@ func main() {
 		}
 		if re.Match([]byte(server.Type)) {
 			serverStart := time.Now()
-            if *confInclude != "undef" {
-                re_inc, err := regexp.Compile(*confInclude)
-                if err != nil {
-                    rlog.Error("supplied exclusion regex does not compile:", err)
-                    os.Exit(1)
-                }
-                if ! re_inc.MatchString(server.HostName) {
-                    rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
-                    continue
-                }
-            }
+			if *confInclude != "undef" {
+				re_inc, err := regexp.Compile(*confInclude)
+				if err != nil {
+					rlog.Error("supplied exclusion regex does not compile:", err)
+					os.Exit(1)
+				}
+				if !re_inc.MatchString(server.HostName) {
+					rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
+					continue
+				}
+			}
 			if *confCdn != "all" && *confCdn != server.CDNName {
 				rlog.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
 				continue
@@ -282,13 +282,13 @@ func main() {
 				}
 			}
 			s := NewServer(server.ID, server.HostName, server.Status, -1)
-            defaulStatusValue := -1
+			defaulStatusValue := -1
 			var statusData tc.ServercheckRequestNullable
 			var msg string
 			statusData.ID = &s.id
 			statusData.Name = confName
-            statusData.HostName = &s.name
-            statusData.Value = &defaulStatusValue
+			statusData.HostName = &s.name
+			statusData.Value = &defaulStatusValue
 			s.fqdn = s.name + "." + server.DomainName
 			rlog.Infof("Next server=%s status=%s", s.fqdn, s.status)
 			if *confSyslog {

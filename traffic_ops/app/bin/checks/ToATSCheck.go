@@ -228,14 +228,14 @@ func fileExists(filename string) bool {
 }
 
 func getCDU(d DiskStats) (usage int) {
-    // TO-DO: get per-volume stats? For now, total usage
-    rlog.Infof("disk_total=%d disk_used=%d", d.ATS.BytesUsed, d.ATS.BytesTotal)
-    b := float64(d.ATS.BytesUsed)
-    t := float64(d.ATS.BytesTotal)
-    u := b / t * 100
-    rlog.Infof("usage_perc=%f", u)
-    usage = int(u)
-    return
+	// TO-DO: get per-volume stats? For now, total usage
+	rlog.Infof("disk_total=%d disk_used=%d", d.ATS.BytesUsed, d.ATS.BytesTotal)
+	b := float64(d.ATS.BytesUsed)
+	t := float64(d.ATS.BytesTotal)
+	u := b / t * 100
+	rlog.Infof("usage_perc=%f", u)
+	usage = int(u)
+	return
 }
 
 func getRatio(c HttpStats, p HttpStats) (ratio int, seconds int) {
@@ -275,7 +275,7 @@ func main() {
 		rlog.Error("Config error:", err)
 		os.Exit(1)
 	}
-    cpath_new = strings.Replace(cpath, "/bin/checks", "/conf/check-config.json", 1)
+	cpath_new = strings.Replace(cpath, "/bin/checks", "/conf/check-config.json", 1)
 
 	// command-line flags
 	confPtr := flag.String("conf", cpath_new, "Config file path")
@@ -344,17 +344,17 @@ func main() {
 		}
 		if re.Match([]byte(server.Type)) {
 			serverStart := time.Now()
-            if *confInclude != "undef" {
-                re_inc, err := regexp.Compile(*confInclude)
-                if err != nil {
-                    rlog.Error("supplied exclusion regex does not compile:", err)
-                    os.Exit(1)
-                }
-                if ! re_inc.MatchString(server.HostName) {
-                    rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
-                    continue
-                }
-            }
+			if *confInclude != "undef" {
+				re_inc, err := regexp.Compile(*confInclude)
+				if err != nil {
+					rlog.Error("supplied exclusion regex does not compile:", err)
+					os.Exit(1)
+				}
+				if !re_inc.MatchString(server.HostName) {
+					rlog.Debugf("%s does not match the provided include regex, skipping", server.HostName)
+					continue
+				}
+			}
 			if *confCdn != "all" && *confCdn != server.CDNName {
 				rlog.Debugf("%s is not assinged to the specified CDN '%s', skipping", server.HostName, *confCdn)
 				continue
@@ -371,12 +371,12 @@ func main() {
 				}
 			}
 			s := NewServer(server.ID, server.HostName, server.Status)
-            defaulStatusValue := -1
+			defaulStatusValue := -1
 			var statusData tc.ServercheckRequestNullable
 			statusData.ID = &s.id
 			statusData.Name = confName
-            statusData.HostName = &s.name
-            statusData.Value = &defaulStatusValue
+			statusData.HostName = &s.name
+			statusData.Value = &defaulStatusValue
 			s.fqdn = s.name + "." + server.DomainName
 			s.iface = server.InterfaceName
 			s.ip4 = strings.Split(server.IPAddress, "/")[0]
@@ -390,7 +390,7 @@ func main() {
 			}
 			if s.status == "REPORTED" && *confReset != true {
 				if *confName == "CHR" {
-	                var check_against_prev bool
+					var check_against_prev bool
 					var preStats HttpStats
 					var curStats HttpStats
 					if fileExists(s.file) {
@@ -427,7 +427,7 @@ func main() {
 						rlog.Errorf("Error: %s", err)
 						continue
 					}
-		                        *statusData.Value = getCDU(curStats)
+					*statusData.Value = getCDU(curStats)
 				}
 			}
 

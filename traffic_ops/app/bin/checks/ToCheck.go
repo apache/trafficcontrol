@@ -119,7 +119,7 @@ func main() {
 	_, _, err = session.InsertServerCheckStatus(statusData)
 	if err != nil {
 		rlog.Error("Error updating server check status with TO:", err)
-                os.Exit(1)
+		os.Exit(1)
 	}
 	fmt.Printf("ID:%d name:%s value:%v\n", server[0].ID, *confName, *confValue)
 	os.Exit(0)
