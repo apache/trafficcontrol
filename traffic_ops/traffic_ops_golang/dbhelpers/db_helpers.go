@@ -42,55 +42,6 @@ const BaseOrderBy = "\nORDER BY"
 const BaseLimit = "\nLIMIT"
 const BaseOffset = "\nOFFSET"
 
-const UserIDHasAccessToDeliveryServiceXMLIDQuery = `
-WITH RECURSIVE
-	user_tenant_id AS (
-		SELECT tm_user.tenant_id AS v
-		FROM tm_user
-		WHERE tm_user.id = $1
-	),
-	resource_tenant_id AS (
-		SELECT deliveryservice.tenant_id AS v
-		FROM deliveryservice
-		WHERE deliveryservice.xml_id = $2
-	),
-	user_tenant_parents AS (
-			SELECT active, parent_id
-			FROM tenant
-			WHERE id = (
-				SELECT v
-				FROM user_tenant_id
-			)
-		UNION
-			SELECT t.active, t.parent_id
-			FROM tenant t
-			JOIN user_tenant_parents ON user_tenant_parents.parent_id = t.id
-	),
-	q AS (
-			SELECT id, active
-			FROM tenant
-			WHERE id = (
-				SELECT v
-				FROM user_tenant_id
-			)
-		UNION
-			SELECT t.id, t.active
-			FROM tenant t
-			JOIN q ON q.id = t.parent_id
-	)
-SELECT id, (
-	SELECT bool_and(active)
-	FROM user_tenant_parents
-) AS active
-FROM q
-WHERE id = (
-	SELECT v
-	FROM resource_tenant_id
-)
-UNION ALL SELECT -1, false
-FETCH FIRST 1 ROW ONLY;
-`
-
 const getDSTenantIDFromXMLIDQuery = `
 SELECT deliveryservice.tenant_id
 FROM deliveryservice
