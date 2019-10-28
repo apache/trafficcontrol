@@ -116,7 +116,7 @@ func main() {
 	statusData.ID = server[0].ID
 	statusData.Name = *confName
 	statusData.Value = *confValue
-	_, _, err = session.UpdateCheckStatus(statusData)
+	_, _, err = session.InsertServerCheckStatus(statusData)
 	if err != nil {
 		rlog.Error("Error updating server check status with TO:", err)
                 os.Exit(1)

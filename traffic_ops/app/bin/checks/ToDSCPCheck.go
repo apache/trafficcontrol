@@ -669,7 +669,7 @@ func main() {
 			}
 			if *confQuiet == false {
 				rlog.Debug("Sending update to TO")
-				_, _, err := session.UpdateCheckStatus(statusData)
+				_, _, err := session.InsertServerCheckStatus(statusData)
 				if err != nil {
 					rlog.Error("Error updating server check status with TO:", err)
 				}
