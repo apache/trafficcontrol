@@ -67,10 +67,11 @@ var (
 	httpsClient6 *http.Client
 	http_port    string
 	https_port   string
-	eth          layers.Ethernet
-	ip4          layers.IPv4
-	ip6          layers.IPv6
-	tcp          layers.TCP
+	eth_layer    layers.Ethernet
+	ip4_layer    layers.IPv4
+	ip6_layer    layers.IPv6
+	tcp_layer    layers.TCP
+	tls_layer    layers.TLS
 	payload      gopacket.Payload
 )
 
@@ -78,7 +79,7 @@ var connect_timeout = 2000 * time.Millisecond
 var http_timeout = 1500 * time.Millisecond
 var pcap_timeout = 250 * time.Millisecond
 
-var parser *gopacket.DecodingLayerParser = gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &eth, &tcp, &ip4, &ip6, &payload)
+var parser *gopacket.DecodingLayerParser = gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &eth_layer, &tcp_layer, &tls_layer, &ip4_layer, &ip6_layer, &payload)
 
 type Config struct {
 	URL    string `json:"to_url"`
@@ -175,10 +176,10 @@ func capture(ctx context.Context, s Server, iface *string, ch_dscp chan uint8, c
 				for _, typ := range decodedLayers {
 					switch typ {
 					case layers.LayerTypeIPv4:
-						ch_dscp <- ip4.TOS
+						ch_dscp <- ip4_layer.TOS
 						return
 					case layers.LayerTypeIPv6:
-						ch_dscp <- ip6.TrafficClass
+						ch_dscp <- ip6_layer.TrafficClass
 						return
 					}
 				}
