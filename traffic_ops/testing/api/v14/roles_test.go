@@ -16,6 +16,7 @@ package v14
 */
 
 import (
+	"net/http"
 	"reflect"
 	"testing"
 
@@ -31,9 +32,10 @@ const (
 )
 
 func TestRoles(t *testing.T) {
-	WithObjs(t, []TCObj{Parameters, Roles}, func() {
+	WithObjs(t, []TCObj{Roles}, func() {
 		UpdateTestRoles(t)
 		GetTestRoles(t)
+		GetTestRolesV11(t)
 		VerifyGetRolesOrder(t)
 	})
 }
@@ -104,6 +106,18 @@ func GetTestRoles(t *testing.T) {
 		t.Errorf("cannot GET Role by role: %v - %v\n", err, resp)
 	}
 
+}
+
+func GetTestRolesV11(t *testing.T) {
+	data := tc.RolesResponse{}
+	if err := makeV11Request(http.MethodGet, "/roles", nil, &data); err != nil {
+		t.Errorf("cannot GET 1.1 roles: %s", err.Error())
+	}
+	for _, role := range data.Response {
+		if role.Capabilities != nil {
+			t.Errorf("expected GET 1.1 roles to have nil Capabilities, actual: %v", *role.Capabilities)
+		}
+	}
 }
 
 func VerifyGetRolesOrder(t *testing.T) {

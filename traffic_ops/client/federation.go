@@ -105,3 +105,41 @@ func (to *Session) DeleteFederationDeliveryService(federationID, deliveryService
 	}
 	return alerts, reqInf, nil
 }
+
+// GetFederationUsers Associates the given Users' IDs to a Federation
+func (to *Session) CreateFederationUsers(federationID int, userIDs []int, replace bool) (tc.Alerts, ReqInf, error) {
+	req := tc.FederationUserPost{IDs: userIDs, Replace: &replace}
+	jsonReq, err := json.Marshal(req)
+	if err != nil {
+		return tc.Alerts{}, ReqInf{CacheHitStatus: CacheHitStatusMiss}, err
+	}
+	var alerts tc.Alerts
+	inf, err := makeReq(to, http.MethodPost, fmt.Sprintf("%s/federations/%v/users", apiBase, federationID), jsonReq, &alerts)
+	return alerts, inf, err
+}
+
+// GetFederationUsers Returns a given Federation's Users
+func (to *Session) GetFederationUsers(federationID int) ([]tc.FederationUser, ReqInf, error) {
+	type FederationUsersResponse struct {
+		Response []tc.FederationUser `json:"response"`
+	}
+	data := FederationUsersResponse{}
+	inf, err := get(to, fmt.Sprintf("%s/federations/%v/users", apiBase, federationID), &data)
+	return data.Response, inf, err
+}
+
+// DeleteFederationUser Deletes a given User from a Federation
+func (to *Session) DeleteFederationUser(federationID, userID int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/federations/%v/users/%v", apiBase, federationID, userID)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	if err = json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	return alerts, reqInf, nil
+}

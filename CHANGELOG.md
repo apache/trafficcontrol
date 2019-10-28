@@ -16,18 +16,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/deliveryservices/hostname/:hostname/sslkeys `GET`
   - /api/1.1/deliveryservices/sslkeys/add `POST`
   - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys/delete `GET`
+  - /api/1.4/deliveryservices_required_capabilities `(GET,POST,DELETE)`
+  - /api/1.1/servers/status `GET`
   - /api/1.4/cdns/dnsseckeys/refresh `GET`
   - /api/1.1/cdns/name/:name/dnsseckeys `GET`
+  - /api/1.1/roles `GET`
   - /api/1.4/cdns/name/:name/dnsseckeys `GET`
   - /api/1.4/user/login/oauth `POST`
   - /api/1.1/profiles/:name/configfiles/ats/* `GET`
   - /api/1.1/servers/:name/configfiles/ats/* `GET`
+  - /api/1.1/cdns/:name/configfiles/ats/* `GET`
   - /api/1.1/dbdump `GET`
   - /api/1.1/servers/:name/configfiles/ats/parent.config
   - /api/1.1/servers/:name/configfiles/ats/remap.config
   - /api/1.1/user/login/token `POST`
   - /api/1.4/deliveryservice_stats `GET`
   - /api/1.1/deliveryservices/request
+  - /api/1.1/federations/:id/users
+  - /api/1.1/federations/:id/users/:userID
 
 - To support reusing a single riak cluster connection, an optional parameter is added to riak.conf: "HealthCheckInterval". This options takes a 'Duration' value (ie: 10s, 5m) which affects how often the riak cluster is health checked.  Default is currently set to: "HealthCheckInterval": "5s".
 - Added a new Go db/admin binary to replace the Perl db/admin.pl script which is now deprecated and will be removed in a future release. The new db/admin binary is essentially a drop-in replacement for db/admin.pl since it supports all of the same commands and options; therefore, it should be used in place of db/admin.pl for all the same tasks.
@@ -53,8 +59,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - In Traffic Portal, all tables now include a 'CSV' link to enable the export of table data in CSV format.
 - Pylint configuration now enforced (present in [a file in the Python client directory](./traffic_control/clients/python/pylint.rc))
 - Added an optional SMTP server configuration to the TO configuration file, api now has unused abilitiy to send emails
-- In Traffic Portal, added the ability to create, view and delete server capabilities.
+- In Traffic Portal, added the ability to create, view and delete server capabilities as associate those server capabilities with servers.
 - Traffic Monitor now has "gbps" calculated stat, allowing operators to monitor bandwidth in Gbps.
+- Added an API 1.4 endpoint, /api/1.4/deliveryservices_required_capabilities, to create, read, and delete associations between a delivery service and a required capability.
 
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)

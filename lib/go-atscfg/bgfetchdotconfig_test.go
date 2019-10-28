@@ -1,4 +1,4 @@
-package ats
+package atscfg
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,12 +19,30 @@ package ats
  * under the License.
  */
 
-import "testing"
+import (
+	"strings"
+	"testing"
 
-func TestGetConfigFile(t *testing.T) {
-	expected := "hdr_rw_my-xml-id.config"
-	cfgFile := GetConfigFile(HeaderRewritePrefix, "my-xml-id")
-	if cfgFile != expected {
-		t.Errorf("Expected %s.   Got %s", expected, cfgFile)
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
+func TestMakeBGFetchDotConfig(t *testing.T) {
+	cdnName := tc.CDNName("mycdn")
+	toToolName := "my-to"
+	toURL := "my-to.example.net"
+
+	txt := MakeBGFetchDotConfig(cdnName, toToolName, toURL)
+	if !strings.Contains(txt, string(cdnName)) {
+		t.Errorf("expected: cdnName '" + string(cdnName) + "', actual: missing")
+	}
+	if !strings.Contains(txt, toToolName) {
+		t.Errorf("expected: toToolName '" + toToolName + "', actual: missing")
+	}
+	if !strings.Contains(txt, toURL) {
+		t.Errorf("expected: toURL '" + toURL + "', actual: missing")
+	}
+
+	if !strings.HasPrefix(strings.TrimSpace(txt), "#") {
+		t.Errorf("expected: header comment, actual: missing")
 	}
 }

@@ -46,6 +46,7 @@ func OpenConnection() (*sql.DB, error) {
 }
 
 // SetupTestData ...
+// TODO error does not need returned as this function can never return a non-nil error
 func SetupTestData(*sql.DB) error {
 	var err error
 
@@ -250,9 +251,9 @@ INSERT INTO job (id, agent, object_type, object_name, keyword, parameters, asset
 func SetupTypes(db *sql.DB) error {
 
 	sqlStmt := `
-INSERT INTO type (id, name, description, use_in_table) VALUES (1, 'CHECK_EXTENSION_BOOL', 'Extension for checkmark in Server Check', 'to_extension');
-INSERT INTO type (id, name, description, use_in_table) VALUES (2, 'CHECK_EXTENSION_NUM', 'Extension for int value in Server Check', 'to_extension');
-INSERT INTO type (id, name, description, use_in_table) VALUES (3, 'CHECK_EXTENSION_OPEN_SLOT', 'Open slot for check in Server Status', 'to_extension');
+INSERT INTO type (name, description, use_in_table) VALUES ('CHECK_EXTENSION_BOOL', 'Extension for checkmark in Server Check', 'to_extension');
+INSERT INTO type (name, description, use_in_table) VALUES ('CHECK_EXTENSION_NUM', 'Extension for int value in Server Check', 'to_extension');
+INSERT INTO type (name, description, use_in_table) VALUES ('CHECK_EXTENSION_OPEN_SLOT', 'Open slot for check in Server Status', 'to_extension');
 `
 	err := execSQL(db, sqlStmt, "type")
 	if err != nil {
@@ -265,8 +266,8 @@ INSERT INTO type (id, name, description, use_in_table) VALUES (3, 'CHECK_EXTENSI
 func SetupToExtensions(db *sql.DB) error {
 
 	sqlStmt := `
-INSERT INTO to_extension (name, version, info_url, isactive, script_file, servercheck_column_name, type) VALUES ('OPEN', '1.0.0', '-', false, '', 'aa', 3);
-INSERT INTO to_extension (name, version, info_url, isactive, script_file, servercheck_column_name, type) VALUES ('OPEN', '1.0.0', '-', false, '', 'ab', 3);
+INSERT INTO to_extension (name, version, info_url, isactive, script_file, servercheck_column_name, type) VALUES ('OPEN', '1.0.0', '-', false, '', 'aa', (SELECT id FROM type WHERE name = 'CHECK_EXTENSION_OPEN_SLOT'));
+INSERT INTO to_extension (name, version, info_url, isactive, script_file, servercheck_column_name, type) VALUES ('OPEN', '1.0.0', '-', false, '', 'ab', (SELECT id FROM type WHERE name = 'CHECK_EXTENSION_OPEN_SLOT'));
 	`
 	err := execSQL(db, sqlStmt, "to_extension")
 	if err != nil {
