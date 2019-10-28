@@ -42,7 +42,7 @@ const (
 // RequiredCapability provides a type to define methods on.
 type RequiredCapability struct {
 	api.APIInfoImpl `json:"-"`
-	tc.DeliveryServiceRequiredCapability
+	tc.DeliveryServicesRequiredCapability
 }
 
 // SetLastUpdated implements the api.GenericCreator interfaces and
@@ -51,7 +51,7 @@ func (rc *RequiredCapability) SetLastUpdated(t tc.TimeNoMod) { rc.LastUpdated = 
 
 // NewReadObj implements the api.GenericReader interfaces.
 func (rc *RequiredCapability) NewReadObj() interface{} {
-	return &tc.DeliveryServiceRequiredCapability{}
+	return &tc.DeliveryServicesRequiredCapability{}
 }
 
 // SelectQuery implements the api.GenericReader interface.
@@ -61,7 +61,7 @@ func (rc *RequiredCapability) SelectQuery() string {
 	rc.deliveryservice_id,
 	ds.xml_id,
 	rc.last_updated
-	FROM deliveryservice_required_capability rc
+	FROM deliveryservices_required_capability rc
 	JOIN deliveryservice ds ON ds.id = rc.deliveryservice_id`
 }
 
@@ -85,7 +85,7 @@ func (rc *RequiredCapability) ParamColumns() map[string]dbhelpers.WhereColumnInf
 
 // DeleteQuery implements the api.GenericDeleter interface.
 func (rc *RequiredCapability) DeleteQuery() string {
-	return `DELETE FROM deliveryservice_required_capability
+	return `DELETE FROM deliveryservices_required_capability
 	WHERE deliveryservice_id = :deliveryservice_id AND required_capability = :required_capability`
 }
 
@@ -189,7 +189,7 @@ func (rc *RequiredCapability) getTenantIDs() ([]int, error) {
 	return tenantIDs, nil
 }
 
-func (rc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliveryServiceRequiredCapability, error, error, int) {
+func (rc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliveryServicesRequiredCapability, error, error, int) {
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns())
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
@@ -204,9 +204,9 @@ func (rc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliverySer
 	}
 	defer rows.Close()
 
-	var results []tc.DeliveryServiceRequiredCapability
+	var results []tc.DeliveryServicesRequiredCapability
 	for rows.Next() {
-		var result tc.DeliveryServiceRequiredCapability
+		var result tc.DeliveryServicesRequiredCapability
 		if err := rows.StructScan(&result); err != nil {
 			return nil, nil, errors.New(rc.GetType() + " get scanning: " + err.Error()), http.StatusInternalServerError
 		}
@@ -294,7 +294,7 @@ func (rc *RequiredCapability) isTenantAuthorized() (bool, error) {
 }
 
 func rcInsertQuery() string {
-	return `INSERT INTO deliveryservice_required_capability (
+	return `INSERT INTO deliveryservices_required_capability (
 required_capability,
 deliveryservice_id) VALUES (
 :required_capability,

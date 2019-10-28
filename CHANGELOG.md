@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/deliveryservices/hostname/:hostname/sslkeys `GET`
   - /api/1.1/deliveryservices/sslkeys/add `POST`
   - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys/delete `GET`
-  - /api/1.4/deliveryservice_required_capabilities `(GET,POST,DELETE)`
+  - /api/1.4/deliveryservices_required_capabilities `(GET,POST,DELETE)`
   - /api/1.4/cdns/dnsseckeys/refresh `GET`
   - /api/1.1/cdns/name/:name/dnsseckeys `GET`
   - /api/1.4/cdns/name/:name/dnsseckeys `GET`
@@ -55,7 +55,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added an optional SMTP server configuration to the TO configuration file, api now has unused abilitiy to send emails
 - In Traffic Portal, added the ability to create, view and delete server capabilities.
 - Traffic Monitor now has "gbps" calculated stat, allowing operators to monitor bandwidth in Gbps.
-- Added an API 1.4 endpoint, /api/1.4/deliveryservice_required_capabilities, to create, read, and delete associations between a delivery service and a required capability.
+- Added an API 1.4 endpoint, /api/1.4/deliveryservices_required_capabilities, to create, read, and delete associations between a delivery service and a required capability.
 
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)

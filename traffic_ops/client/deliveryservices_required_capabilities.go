@@ -26,11 +26,11 @@ import (
 )
 
 const (
-	v14DeliveryServiceRequiredCapabilities = apiBase + "/deliveryservice_required_capabilities"
+	v14DeliveryServicesRequiredCapabilities = apiBase + "/deliveryservices_required_capabilities"
 )
 
-// CreateDeliveryServiceRequiredCapability assigns a Required Capability to a Delivery Service
-func (to *Session) CreateDeliveryServiceRequiredCapability(capability tc.DeliveryServiceRequiredCapability) (tc.Alerts, ReqInf, error) {
+// CreateDeliveryServicesRequiredCapability assigns a Required Capability to a Delivery Service
+func (to *Session) CreateDeliveryServicesRequiredCapability(capability tc.DeliveryServicesRequiredCapability) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -38,24 +38,24 @@ func (to *Session) CreateDeliveryServiceRequiredCapability(capability tc.Deliver
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	reqInf, err = post(to, v14DeliveryServiceRequiredCapabilities, reqBody, &alerts)
+	reqInf, err = post(to, v14DeliveryServicesRequiredCapabilities, reqBody, &alerts)
 	return alerts, reqInf, err
 }
 
-// DeleteDeliveryServiceRequiredCapability unassigns a Required Capability from a Delivery Service
-func (to *Session) DeleteDeliveryServiceRequiredCapability(deliveryserviceID int, capability string) (tc.Alerts, ReqInf, error) {
+// DeleteDeliveryServicesRequiredCapability unassigns a Required Capability from a Delivery Service
+func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID int, capability string) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	param := url.Values{}
 	param.Add("deliveryServiceID", strconv.Itoa(deliveryserviceID))
 	param.Add("requiredCapability", capability)
-	url := fmt.Sprintf("%s?%s", v14DeliveryServiceRequiredCapabilities, param.Encode())
+	url := fmt.Sprintf("%s?%s", v14DeliveryServicesRequiredCapabilities, param.Encode())
 	reqInf, err := del(to, url, &alerts)
 	return alerts, reqInf, err
 }
 
-// GetDeliveryServiceRequiredCapabilities retrieves a list of Required Capabilities that are assigned to a Delivery Service
+// GetDeliveryServicesRequiredCapabilities retrieves a list of Required Capabilities that are assigned to a Delivery Service
 // Callers can filter the results by delivery service id, xml id and/or required capability via the optional parameters
-func (to *Session) GetDeliveryServiceRequiredCapabilities(deliveryServiceID *int, xmlID, capability *string) ([]tc.DeliveryServiceRequiredCapability, ReqInf, error) {
+func (to *Session) GetDeliveryServicesRequiredCapabilities(deliveryServiceID *int, xmlID, capability *string) ([]tc.DeliveryServicesRequiredCapability, ReqInf, error) {
 	param := url.Values{}
 	if deliveryServiceID != nil {
 		param.Add("deliveryServiceID", strconv.Itoa(*deliveryServiceID))
@@ -67,13 +67,13 @@ func (to *Session) GetDeliveryServiceRequiredCapabilities(deliveryServiceID *int
 		param.Add("requiredCapability", *capability)
 	}
 
-	url := v14DeliveryServiceRequiredCapabilities
+	url := v14DeliveryServicesRequiredCapabilities
 	if len(param) > 0 {
 		url = fmt.Sprintf("%s?%s", url, param.Encode())
 	}
 
 	resp := struct {
-		Response []tc.DeliveryServiceRequiredCapability `json:"response"`
+		Response []tc.DeliveryServicesRequiredCapability `json:"response"`
 	}{}
 	reqInf, err := get(to, url, &resp)
 	if err != nil {

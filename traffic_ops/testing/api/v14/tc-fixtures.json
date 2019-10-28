@@ -549,7 +549,7 @@
             "anonymousBlockingEnabled": true
         }
     ],
-    "deliveryserviceRequiredCapabilities": [
+    "deliveryservicesRequiredCapabilities": [
         {
             "xmlID": "ds1",
             "RequiredCapability": "foo"

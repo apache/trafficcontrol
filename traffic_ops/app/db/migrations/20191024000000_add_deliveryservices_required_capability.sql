@@ -16,7 +16,7 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 
-CREATE TABLE IF NOT EXISTS deliveryservice_required_capability (
+CREATE TABLE IF NOT EXISTS deliveryservices_required_capability (
     required_capability TEXT NOT NULL,
     deliveryservice_id bigint NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
@@ -28,4 +28,4 @@ CREATE TABLE IF NOT EXISTS deliveryservice_required_capability (
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-DROP TABLE IF EXISTS deliveryservice_required_capability;
+DROP TABLE IF EXISTS deliveryservices_required_capability;

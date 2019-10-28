@@ -19,8 +19,8 @@ package tc
  * under the License.
  */
 
-// DeliveryServiceRequiredCapability represents an association between a required capability and a delivery service.
-type DeliveryServiceRequiredCapability struct {
+// DeliveryServicesRequiredCapability represents an association between a required capability and a delivery service.
+type DeliveryServicesRequiredCapability struct {
 	LastUpdated        *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	DeliveryServiceID  *int       `json:"deliveryServiceID" db:"deliveryservice_id"`
 	RequiredCapability *string    `json:"requiredCapability" db:"required_capability"`
