@@ -114,7 +114,7 @@ Associates a Server Capability to a :term:`Delivery Service`.
 
 Request Structure
 -----------------
-:deliveryServiceID: The :term:`Delivery Service`'s ID to associate
+:deliveryServiceID:   The :term:`Delivery Service`'s ID to associate
 :requiredCapability:  The Server Capability's name to associate
 
 .. code-block:: http
