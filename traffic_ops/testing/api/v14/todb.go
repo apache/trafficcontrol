@@ -46,6 +46,7 @@ func OpenConnection() (*sql.DB, error) {
 }
 
 // SetupTestData ...
+// TODO error does not need returned as this function can never return a non-nil error
 func SetupTestData(*sql.DB) error {
 	var err error
 
