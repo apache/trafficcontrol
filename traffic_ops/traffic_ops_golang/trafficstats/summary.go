@@ -18,7 +18,7 @@ package trafficstats
  * specific language governing permissions and limitations
  * under the License.
  */
- 
+
 import (
 	"errors"
 	"fmt"
