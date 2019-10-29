@@ -120,12 +120,10 @@ func (ssc *TOServerServerCapability) Read() ([]interface{}, error, error, int) {
 }
 
 func (ssc *TOServerServerCapability) Delete() (error, error, int) {
-	tx := ssc.APIInfo().Tx
-
 	// Ensure that the user is not removing a server capability from the server
 	// that is required by the delivery services the server is assigned to (if applicable)
 	dsIDs := []int64{}
-	if err := tx.QueryRow(checkDSReqCapQuery(), ssc.ServerID, ssc.ServerCapability).Scan(pq.Array(&dsIDs)); err != nil {
+	if err := ssc.APIInfo().Tx.QueryRow(checkDSReqCapQuery(), ssc.ServerID, ssc.ServerCapability).Scan(pq.Array(&dsIDs)); err != nil {
 		return nil, fmt.Errorf("checking removing server server capability would still suffice delivery service requried capabilites: %v", err), http.StatusInternalServerError
 	}
 
@@ -138,19 +136,7 @@ func (ssc *TOServerServerCapability) Delete() (error, error, int) {
 	}
 
 	// Delete association
-	result, err := tx.NamedExec(ssc.DeleteQuery(), ssc)
-	if err != nil {
-		return api.ParseDBError(err)
-	}
-
-	if rowsAffected, err := result.RowsAffected(); err != nil {
-		return nil, errors.New("deleting " + ssc.GetType() + ": getting rows affected: " + err.Error()), http.StatusInternalServerError
-	} else if rowsAffected < 1 {
-		return errors.New("no " + ssc.GetType() + " with that key found"), nil, http.StatusNotFound
-	} else if rowsAffected > 1 {
-		return nil, fmt.Errorf(ssc.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
-	}
-	return nil, nil, http.StatusOK
+	return api.GenericDelete(ssc)
 }
 
 func (ssc *TOServerServerCapability) Create() (error, error, int) {
