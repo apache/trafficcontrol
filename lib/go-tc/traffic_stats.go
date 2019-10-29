@@ -120,17 +120,28 @@ func ExcludeFromString(v string) TrafficStatsExclude {
 // TrafficStatsConfig represents the configuration of a request made to Traffic Stats. This is
 // typically constructed by parsing a request body submitted to Traffic Ops.
 type TrafficStatsConfig struct {
+	End            time.Time
+	ExcludeSeries  bool
+	ExcludeSummary bool
+	Interval       string
+	Limit          *uint64
+	MetricType     string
+	Offset         *uint64
+	OrderBy        *TrafficStatsOrderable
+	Start          time.Time
+	Unix           bool
+}
+
+// TrafficDSStatsConfig represents the configuration of a request made to Traffic Stats for delivery services
+type TrafficDSStatsConfig struct {
 	DeliveryService string
-	End             time.Time
-	ExcludeSeries   bool
-	ExcludeSummary  bool
-	Interval        string
-	Limit           *uint64
-	MetricType      string
-	Offset          *uint64
-	OrderBy         *TrafficStatsOrderable
-	Start           time.Time
-	Unix            bool
+	TrafficStatsConfig
+}
+
+// TrafficCacheStatsConfig represents the configuration of a request made to Traffic Stats for caches
+type TrafficCacheStatsConfig struct {
+	CDN string
+	TrafficStatsConfig
 }
 
 // This is a stupid, dirty hack to try to convince Influx to not give back data that's outside of the
@@ -145,21 +156,29 @@ func (c *TrafficStatsConfig) OffsetString() string {
 	return fmt.Sprintf("%ds", int64(c.Start.Sub(time.Unix(0, 0))/time.Second)%iSecs)
 }
 
-// TrafficStatsResponse represents a response from one of the "Traffic Stats endpoints" of the
-// Traffic Ops API, e.g. `/deliveryservice_stats`.
-type TrafficStatsResponse struct {
+// TrafficStatsResponse represents a response from the `/deliveryservice_stats` "Traffic Stats endpoints"
+type TrafficDSStatsResponse struct {
 	// Series holds the actual data - it is NOT in general the same as a github.com/influxdata/influxdb1-client/models.Row
 	Series *TrafficStatsSeries `json:"series,omitempty"`
+	// Summary contains summary statistics of the data in Series
+	Summary *TrafficDSStatsSummary `json:"summary,omitempty"`
 	// Source has an unknown purpose. I believe this is supposed to name the "plugin" that provided
 	// the data - kept for compatibility with the Perl version(s) of the "Traffic Stats endpoints".
 	// Deprecated: this'll be removed or reworked to make more sense in the future
 	Source string `json:"source"`
-	// Summary contains summary statistics of the data in Series
-	Summary *TrafficStatsSummary `json:"summary,omitempty"`
 	// Version is supposed to represent the API version - but actually the API just reports a static
 	// number (TRAFFIC_STATS_VERSION).
 	// Deprecated: this'll be removed or reworked to make more sense in the future
 	Version string `json:"version"`
+}
+
+// TrafficStatsResponse represents the generic response from one of the "Traffic Stats endpoints" of the
+// Traffic Ops API, e.g. `/cache_stats`.
+type TrafficStatsResponse struct {
+	// Series holds the actual data - it is NOT in general the same as a github.com/influxdata/influxdb1-client/models.Row
+	Series *TrafficStatsSeries `json:"series,omitempty"`
+	// Summary contains summary statistics of the data in Series
+	Summary *TrafficStatsSummary `json:"summary,omitempty"`
 }
 
 // TrafficStatsSummary contains summary statistics for a data series.
@@ -174,6 +193,11 @@ type TrafficStatsSummary struct {
 	Min                    float64 `json:"min"`
 	NinetyEighthPercentile float64 `json:"ninetyEighthPercentile"`
 	NinetyFifthPercentile  float64 `json:"ninetyFifthPercentile"`
+}
+
+// TrafficStatsSummary contains summary statistics for a data series for deliveryservice stats.
+type TrafficDSStatsSummary struct {
+	TrafficStatsSummary
 	// TotalBytes is the total number of bytes served when the "metric type" requested is "kbps"
 	// (or actually just contains "kbps"). If this is not nil, TotalTransactions *should* always be
 	// nil.
