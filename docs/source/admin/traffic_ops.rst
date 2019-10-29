@@ -62,7 +62,7 @@ Guide
 		systemctl status postgresql-9.6 # Prints the status of the PostgreSQL service, to prove it's running
 
 
-#. Build a :file:`traffic_ops-{version string}.rpm` file using the instructions under the :ref:`dev-building` page - or simply download a pre-built `release <https://github.com/apache/trafficcontrol/releases>`_.
+#. Build a :file:`traffic_ops-{version string}.rpm` file using the instructions under the :ref:`dev-building` page - or download a pre-built release from `the Apache Continuous Integration server <https://builds.apache.org/view/S-Z/view/TrafficControl/>`_.
 
 #. Install a PostgreSQL client on the Traffic Ops host
 
@@ -343,6 +343,8 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :secrets: This is an array of strings, which cannot be empty. The first secret in the array is used to encrypt Traffic Ops authentication cookies - multiple Traffic Ops instances serving the same CDN need to share secrets in order for users logged into one to be able to use their cookie as authentication with other instances.
 :smtp:    This optional section contains options for connecting to and authenticating with an :abbr:`SMTP (Simple Mail Transfer Protocol)` server for sending emails. If this section is undefined (or if ``enabled`` is explicitly ``false``), Traffic Ops will not be able to send emails and certain :ref:`to-api` endpoints that depend on that functionality will fail to operate.
+
+	.. versionadded:: 4.0
 
 	:address:  This is the address of the :abbr:`SMTP (Simple Mail Transfer Protocol)` which will be used to send emails. Should include the port number, e.g. ``"localhost:25"`` for :manpage:`sendmail(8)` on the Traffic Ops server.
 	:enabled:  A boolean flag that determines whether or not connection to an :abbr:`SMTP (Simple Mail Transfer Protocol)` ought to be allowed. Whatever the settings of the other fields in the ``smtp`` object, email cannot and will not be sent if this is ``false``.
