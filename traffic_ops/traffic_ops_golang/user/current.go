@@ -35,7 +35,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
-const replaceCurrentQuery = `
+const replaceCurrentWithPasswordQuery = `
 UPDATE tm_user
 SET address_line1=$1,
     address_line2=$2,
@@ -57,6 +57,57 @@ SET address_line1=$1,
     uid=$16,
     username=$17
 WHERE id=$18
+RETURNING address_line1,
+          address_line2,
+          city,
+          company,
+          country,
+          email,
+          full_name,
+          gid,
+          id,
+          last_updated,
+          new_user,
+          phone_number,
+          postal_code,
+          public_ssh_key,
+          role,
+          (
+          	SELECT role.name
+          	FROM role
+          	WHERE role.id=tm_user.role
+          ) AS role_name,
+          state_or_province,
+          (
+          	SELECT tenant.name
+          	FROM tenant
+          	WHERE tenant.id=tm_user.tenant_id
+          ) AS tenant,
+          tenant_id,
+          uid,
+          username
+`
+
+const replaceCurrentQuery = `
+UPDATE tm_user
+SET address_line1=$1,
+    address_line2=$2,
+    city=$3,
+    company=$4,
+    country=$5,
+    email=$6,
+    full_name=$7,
+    gid=$8,
+    new_user=FALSE,
+    phone_number=$9,
+    postal_code=$10,
+    public_ssh_key=$11,
+    state_or_province=$12,
+    tenant_id=$13,
+    token=NULL,
+    uid=$14,
+    username=$15
+WHERE id=$16
 RETURNING address_line1,
           address_line2,
           city,
@@ -157,13 +208,27 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := userRequest.User.ValidateAndUnmarshal()
+	user, exists, err := dbhelpers.GetUserByID(inf.User.ID, tx)
 	if err != nil {
+		sysErr = fmt.Errorf("Getting user by ID %d: %v", inf.User.ID, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		return
+	} else if !exists {
+		sysErr = fmt.Errorf("Current user (#%d) doesn't exist... ??", inf.User.ID)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		return
+	}
+
+	if err := userRequest.User.ValidateAndUnmarshal(&user); err != nil {
 		errCode = http.StatusBadRequest
 		userErr = fmt.Errorf("Couldn't parse request: %v", err)
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
+
+	changePasswd := false
 
 	// obfuscate passwords (ValidateAndUnmarshal checks for equality with ConfirmLocalPassword)
 	// TODO: check for valid password via bad password list like Perl did? User creation doesn't...
@@ -175,29 +240,37 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, errCode, nil, sysErr)
 			return
 		}
-
+		changePasswd = true
 		user.LocalPassword = util.StrPtr(hashPass)
 		user.ConfirmLocalPassword = util.StrPtr(hashPass)
 	}
 
-	if *user.ID != inf.User.ID {
-		userErr = errors.New("You cannot change your user ID!")
-		errCode = http.StatusBadRequest
-		api.HandleErr(w, r, tx, errCode, userErr, nil)
-		return
-	}
-
 	if *user.Role != inf.User.Role {
-		userErr = errors.New("You cannot change your permissions role!")
-		errCode = http.StatusBadRequest
-		api.HandleErr(w, r, tx, errCode, userErr, nil)
-		return
+		privLevel, exists, err := dbhelpers.GetPrivLevelFromRoleID(tx, *user.Role)
+		if err != nil {
+			sysErr = fmt.Errorf("Getting privLevel for Role #%d: %v", *user.Role, err)
+			errCode = http.StatusInternalServerError
+			api.HandleErr(w, r, tx, errCode, nil, sysErr)
+			return
+		}
+		if !exists {
+			userErr = fmt.Errorf("role: no such role: %d", *user.Role)
+			errCode = http.StatusNotFound
+			api.HandleErr(w, r, tx, errCode, userErr, nil)
+			return
+		}
+		if privLevel > inf.User.PrivLevel {
+			userErr = errors.New("role: cannot have greater permissions than user's current role")
+			errCode = http.StatusForbidden
+			api.HandleErr(w, r, tx, errCode, userErr, nil)
+			return
+		}
 	}
 
 	if ok, err := tenant.IsResourceAuthorizedToUserTx(*user.TenantID, inf.User, tx); err != nil {
 		if err == sql.ErrNoRows {
 			userErr = errors.New("No such tenant!")
-			errCode = http.StatusConflict
+			errCode = http.StatusNotFound
 		} else {
 			sysErr = fmt.Errorf("Checking user %s permissions on tenant #%d: %v", inf.User.UserName, *user.TenantID, err)
 			errCode = http.StatusInternalServerError
@@ -208,7 +281,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		// unlike Perl, this endpoint will not disclose the existence of tenants over which the current
 		// user has no permission - in keeping with the behavior of the '/tenants' endpoint.
 		userErr = errors.New("No such tenant!")
-		errCode = http.StatusConflict
+		errCode = http.StatusNotFound
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
@@ -230,59 +303,12 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	row := tx.QueryRow(replaceCurrentQuery,
-		user.AddressLine1,
-		user.AddressLine2,
-		user.City,
-		user.Company,
-		user.ConfirmLocalPassword,
-		user.Country,
-		user.Email,
-		user.FullName,
-		user.GID,
-		user.LocalPassword,
-		user.PhoneNumber,
-		user.PostalCode,
-		user.PublicSSHKey,
-		user.StateOrProvince,
-		user.TenantID,
-		user.UID,
-		user.Username,
-		inf.User.ID,
-	)
-
-	err = row.Scan(&user.AddressLine1,
-		&user.AddressLine2,
-		&user.City,
-		&user.Company,
-		&user.Country,
-		&user.Email,
-		&user.FullName,
-		&user.GID,
-		&user.ID,
-		&user.LastUpdated,
-		&user.NewUser,
-		&user.PhoneNumber,
-		&user.PostalCode,
-		&user.PublicSSHKey,
-		&user.Role,
-		&user.RoleName,
-		&user.StateOrProvince,
-		&user.Tenant,
-		&user.TenantID,
-		&user.UID,
-		&user.Username,
-	)
-	if err != nil {
+	if err = updateUser(&user, tx, changePasswd); err != nil {
 		errCode = http.StatusInternalServerError
 		sysErr = fmt.Errorf("Updating user: %v", err)
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
-
-	// Hide the password fields
-	user.LocalPassword = nil
-	user.ConfirmLocalPassword = nil
 
 	resp := struct {
 		tc.Alerts
@@ -301,4 +327,76 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
 	w.Write(append(respBts, '\n'))
+}
+
+func updateUser(u *tc.User, tx *sql.Tx, cp bool) error {
+	var row *sql.Row
+	if cp {
+		row = tx.QueryRow(replaceCurrentWithPasswordQuery,
+			u.AddressLine1,
+			u.AddressLine2,
+			u.City,
+			u.Company,
+			u.ConfirmLocalPassword,
+			u.Country,
+			u.Email,
+			u.FullName,
+			u.GID,
+			u.LocalPassword,
+			u.PhoneNumber,
+			u.PostalCode,
+			u.PublicSSHKey,
+			u.StateOrProvince,
+			u.TenantID,
+			u.UID,
+			u.Username,
+			u.ID,
+		)
+	} else {
+		row = tx.QueryRow(replaceCurrentQuery,
+			u.AddressLine1,
+			u.AddressLine2,
+			u.City,
+			u.Company,
+			u.Country,
+			u.Email,
+			u.FullName,
+			u.GID,
+			u.PhoneNumber,
+			u.PostalCode,
+			u.PublicSSHKey,
+			u.StateOrProvince,
+			u.TenantID,
+			u.UID,
+			u.Username,
+			u.ID,
+		)
+	}
+
+	err := row.Scan(&u.AddressLine1,
+		&u.AddressLine2,
+		&u.City,
+		&u.Company,
+		&u.Country,
+		&u.Email,
+		&u.FullName,
+		&u.GID,
+		&u.ID,
+		&u.LastUpdated,
+		&u.NewUser,
+		&u.PhoneNumber,
+		&u.PostalCode,
+		&u.PublicSSHKey,
+		&u.Role,
+		&u.RoleName,
+		&u.StateOrProvince,
+		&u.Tenant,
+		&u.TenantID,
+		&u.UID,
+		&u.Username,
+	)
+
+	u.LocalPassword = nil
+	u.ConfirmLocalPassword = nil
+	return err
 }

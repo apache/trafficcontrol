@@ -130,50 +130,46 @@ type CurrentUserUpdateRequestUser struct {
 	Email              json.RawMessage `json:"email"`
 	FullName           json.RawMessage `json:"fullName"`
 	GID                json.RawMessage `json:"gid"`
-	ID                 *uint64         `json:"id"`
+	ID                 json.RawMessage `json:"id"`
 	LocalPasswd        *string         `json:"localPasswd"`
 	PhoneNumber        json.RawMessage `json:"phoneNumber"`
 	PostalCode         json.RawMessage `json:"postalCode"`
 	PublicSSHKey       json.RawMessage `json:"publicSshKey"`
-	Role               *uint64         `json:"role"`
+	Role               json.RawMessage `json:"role"`
 	StateOrProvince    json.RawMessage `json:"stateOrProvince"`
-	TenantID           *uint64         `json:"tenantId"`
+	TenantID           json.RawMessage `json:"tenantId"`
 	UID                json.RawMessage `json:"uid"`
-	Username           *string         `json:"username"`
+	Username           json.RawMessage         `json:"username"`
 }
 
 // ValidateAndUnmarshal validates the request and returns a User into which the request's information
 // has been unmarshalled. This allows many fields to be "null", but explicitly checks that they are
 // present in the JSON payload.
-func (u *CurrentUserUpdateRequestUser) ValidateAndUnmarshal() (User, error) {
-	var user User
+func (u *CurrentUserUpdateRequestUser) ValidateAndUnmarshal(user *User) error {
 	errs := []error{}
-	if u.AddressLine1 == nil {
-		errs = append(errs, errors.New("addressLine1: required"))
-	} else if err := json.Unmarshal(u.AddressLine1, &user.AddressLine1); err != nil {
-		errs = append(errs, fmt.Errorf("addressLine1: %v", err))
+	if u.AddressLine1 != nil {
+		if err := json.Unmarshal(u.AddressLine1, &user.AddressLine1); err != nil {
+			errs = append(errs, fmt.Errorf("addressLine1: %v", err))
+		}
 	}
 
-	if u.AddressLine2 == nil {
-		errs = append(errs, errors.New("addressLine2: required"))
-	} else if err := json.Unmarshal(u.AddressLine2, &user.AddressLine2); err != nil {
-		errs = append(errs, fmt.Errorf("addressLine2: %v", err))
+	if u.AddressLine2 != nil {
+		if err := json.Unmarshal(u.AddressLine2, &user.AddressLine2); err != nil {
+			errs = append(errs, fmt.Errorf("addressLine2: %v", err))
+		}
 	}
 
-	if u.City == nil {
-		errs = append(errs, errors.New("city: required"))
-	} else if err := json.Unmarshal(u.City, &user.City); err != nil {
-		errs = append(errs, fmt.Errorf("city: %v", err))
+	if u.City != nil {
+		if err := json.Unmarshal(u.City, &user.City); err != nil {
+			errs = append(errs, fmt.Errorf("city: %v", err))
+		}
 	}
 
-	if u.Company == nil {
-		errs = append(errs, errors.New("company: required"))
-	} else if err := json.Unmarshal(u.Company, &user.Company); err != nil {
-		errs = append(errs, fmt.Errorf("company: %v", err))
+	if u.Company != nil {
+		if err := json.Unmarshal(u.Company, &user.Company); err != nil {
+			errs = append(errs, fmt.Errorf("company: %v", err))
+		}
 	}
-
-	user.ConfirmLocalPassword = u.ConfirmLocalPasswd
-	user.LocalPassword = u.LocalPasswd
 
 	if u.LocalPasswd != nil && *u.LocalPasswd != "" {
 		if u.ConfirmLocalPasswd == nil || *u.ConfirmLocalPasswd == "" {
@@ -181,100 +177,111 @@ func (u *CurrentUserUpdateRequestUser) ValidateAndUnmarshal() (User, error) {
 		} else if *u.LocalPasswd != *u.ConfirmLocalPasswd {
 			errs = append(errs, errors.New("localPasswd and confirmLocalPasswd do not match"))
 		}
+	} else if u.ConfirmLocalPasswd != nil && *u.ConfirmLocalPasswd != "" {
+		errs = append(errs, errors.New("localPasswd: required when changing password"))
+	}
+	user.ConfirmLocalPassword = u.ConfirmLocalPasswd
+	user.LocalPassword = u.LocalPasswd
+
+	if u.Country != nil {
+		if err := json.Unmarshal(u.Country, &user.Country); err != nil {
+			errs = append(errs, fmt.Errorf("country: %v", err))
+		}
 	}
 
-	if u.Country == nil {
-		errs = append(errs, errors.New("country: required"))
-	} else if err := json.Unmarshal(u.Country, &user.Country); err != nil {
-		errs = append(errs, fmt.Errorf("country: %v", err))
-	}
-
-	if u.Email == nil {
-		errs = append(errs, errors.New("email: required"))
-	} else if err := json.Unmarshal(u.Email, &user.Email); err != nil {
-		errs = append(errs, fmt.Errorf("email: %v", err))
-	}
-	if user.Email != nil {
-		if err := validation.Validate(*user.Email, is.Email); err != nil {
+	if u.Email != nil {
+		if err := json.Unmarshal(u.Email, &user.Email); err != nil {
+			errs = append(errs, fmt.Errorf("email: %v", err))
+		} else if err = validation.Validate(*user.Email, is.Email); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	if u.FullName == nil {
-		errs = append(errs, errors.New("fullName: required"))
-	} else if err := json.Unmarshal(u.FullName, &user.FullName); err != nil {
-		errs = append(errs, fmt.Errorf("fullName: %v", err))
+	if u.FullName != nil {
+		if err := json.Unmarshal(u.FullName, &user.FullName); err != nil {
+			errs = append(errs, fmt.Errorf("fullName: %v", err))
+		} else if user.FullName == nil || *user.FullName == "" {
+			// Perl enforced this
+			errs = append(errs, fmt.Errorf("fullName: cannot be set to 'null' or empty string"))
+		}
 	}
 
-	if u.GID == nil {
-		errs = append(errs, errors.New("gid: required"))
-	} else if err := json.Unmarshal(u.GID, &user.GID); err != nil {
-		errs = append(errs, fmt.Errorf("gid: %v", err))
+	if u.GID != nil {
+		if err := json.Unmarshal(u.GID, &user.GID); err != nil {
+			errs = append(errs, fmt.Errorf("gid: %v", err))
+		}
 	}
 
-	if u.ID == nil {
-		errs = append(errs, errors.New("id: required (and can't be null)"))
-	} else {
-		id := int(*u.ID)
-		user.ID = &id
+	if u.ID != nil {
+		var uid int
+		if err := json.Unmarshal(u.ID, &uid); err != nil {
+			errs = append(errs, fmt.Errorf("id: %v", err))
+		} else if user.ID != nil && *user.ID != uid {
+			errs = append(errs, errors.New("id: cannot change user id"))
+		} else {
+			user.ID = &uid
+		}
 	}
 
-	if u.PhoneNumber == nil {
-		errs = append(errs, errors.New("phoneNumber: required"))
-	} else if err := json.Unmarshal(u.PhoneNumber, &user.PhoneNumber); err != nil {
-		errs = append(errs, fmt.Errorf("phoneNumber: %v", err))
+	if u.PhoneNumber != nil {
+		if err := json.Unmarshal(u.PhoneNumber, &user.PhoneNumber); err != nil {
+			errs = append(errs, fmt.Errorf("phoneNumber: %v", err))
+		}
 	}
 
-	if u.PostalCode == nil {
-		errs = append(errs, errors.New("postalCode: required"))
-	} else if err := json.Unmarshal(u.PostalCode, &user.PostalCode); err != nil {
-		errs = append(errs, fmt.Errorf("postalCode: %v", err))
+	if u.PostalCode != nil {
+		if err := json.Unmarshal(u.PostalCode, &user.PostalCode); err != nil {
+			errs = append(errs, fmt.Errorf("postalCode: %v", err))
+		}
 	}
 
-	if u.PublicSSHKey == nil {
-		errs = append(errs, errors.New("publicSshKey: required"))
-	} else if err := json.Unmarshal(u.PublicSSHKey, &user.PublicSSHKey); err != nil {
-		errs = append(errs, fmt.Errorf("publicSshKey: %v", err))
+	if u.PublicSSHKey != nil {
+		if err := json.Unmarshal(u.PublicSSHKey, &user.PublicSSHKey); err != nil {
+			errs = append(errs, fmt.Errorf("publicSshKey: %v", err))
+		}
 	}
 
-	if u.Role == nil {
-		errs = append(errs, errors.New("role: required (and can't be null)"))
-	} else {
-		role := int(*u.Role)
-		user.Role = &role
+	if u.Role != nil {
+		if err := json.Unmarshal(u.Role, &user.Role); err != nil {
+			errs = append(errs, fmt.Errorf("role: %v", err))
+		} else if user.Role == nil {
+			errs = append(errs, errors.New("role: cannot be null"))
+		}
 	}
 
-	if u.StateOrProvince == nil {
-		errs = append(errs, errors.New("stateOrProvince: required"))
-	} else if err := json.Unmarshal(u.StateOrProvince, &user.StateOrProvince); err != nil {
-		errs = append(errs, fmt.Errorf("stateOrProvince: %v", err))
+	if u.StateOrProvince != nil {
+		if err := json.Unmarshal(u.StateOrProvince, &user.StateOrProvince); err != nil {
+			errs = append(errs, fmt.Errorf("stateOrProvince: %v", err))
+		}
 	}
 
-	if u.TenantID == nil {
-		errs = append(errs, errors.New("tenantId: required"))
-	} else {
-		tenantID := int(*u.TenantID)
-		user.TenantID = &tenantID
+	if u.TenantID != nil {
+		if err := json.Unmarshal(u.TenantID, &user.TenantID); err != nil {
+			errs = append(errs, fmt.Errorf("tenantID: %v", err))
+		} else if user.TenantID == nil {
+			errs = append(errs, errors.New("tenantID: cannot be null"))
+		}
 	}
 
-	if u.UID == nil {
-		errs = append(errs, errors.New("uid: required"))
-	} else if err := json.Unmarshal(u.UID, &user.UID); err != nil {
-		errs = append(errs, fmt.Errorf("uid: %v", err))
+	if u.UID != nil {
+		if err := json.Unmarshal(u.UID, &user.UID); err != nil {
+			errs = append(errs, fmt.Errorf("uid: %v", err))
+		}
 	}
 
-	if u.Username == nil || *u.Username == "" {
-		errs = append(errs, errors.New("username: required (and cannot be null or blank)"))
-	} else {
-		uname := *u.Username
-		user.Username = &uname
+	if u.Username != nil {
+		if err := json.Unmarshal(u.Username, &user.Username); err != nil {
+			errs = append(errs, fmt.Errorf("username: %v"))
+		} else if user.Username == nil || *user.Username == "" {
+			errs = append(errs, errors.New("username: cannot be null of empty string"))
+		}
 	}
 
 	var err error
 	if len(errs) > 0 {
 		err = util.JoinErrs(errs)
 	}
-	return user, err
+	return err
 }
 
 // ------------------- Response structs -------------------- //

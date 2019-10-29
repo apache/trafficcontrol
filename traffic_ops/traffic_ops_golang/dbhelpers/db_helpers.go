@@ -89,6 +89,34 @@ LEFT JOIN tenant t ON u.tenant_id = t.id
 LEFT JOIN role r ON u.role = r.id
 WHERE u.email=$1
 `
+const getUserByIDQuery = `
+SELECT tm_user.address_line1,
+       tm_user.address_line2,
+       tm_user.city,
+       tm_user.company,
+       tm_user.country,
+       tm_user.email,
+       tm_user.full_name,
+       tm_user.gid,
+       tm_user.id,
+       tm_user.new_user,
+       tm_user.phone_number,
+       tm_user.postal_code,
+       tm_user.public_ssh_key,
+       tm_user.registration_sent,
+       tm_user.role,
+       role.name AS role_name,
+       tm_user.state_or_province,
+       tenant.name AS tenant,
+       tm_user.tenant_id,
+       tm_user.token,
+       tm_user.uid,
+       tm_user.username
+FROM tm_user
+LEFT OUTER JOIN role ON role.id = tm_user.role
+LEFT OUTER JOIN tenant ON tenant.id = tm_user.tenant_id
+WHERE tm_user.id = $1
+`
 
 func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
@@ -578,6 +606,40 @@ func GetGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
 func UsernameExists(uname string, tx *sql.Tx) (bool, error) {
 	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM tm_user WHERE tm_user.username=$1)`, uname)
 	var exists bool
-	err := row.Scan(&exists);
+	err := row.Scan(&exists)
 	return exists, err
+}
+
+// GetUserByID returns the user with the requested ID if one exists. The second return value is a
+// boolean indicating whether said user actually did exist, and the third contains any error
+// encountered along the way.
+func GetUserByID(id int, tx *sql.Tx) (tc.User, bool, error) {
+	row := tx.QueryRow(getUserByIDQuery, id)
+	var u tc.User
+	err := row.Scan(&u.AddressLine1,
+		&u.AddressLine2,
+		&u.City,
+		&u.Company,
+		&u.Country,
+		&u.Email,
+		&u.FullName,
+		&u.GID,
+		&u.ID,
+		&u.NewUser,
+		&u.PhoneNumber,
+		&u.PostalCode,
+		&u.PublicSSHKey,
+		&u.RegistrationSent,
+		&u.Role,
+		&u.RoleName,
+		&u.StateOrProvince,
+		&u.Tenant,
+		&u.TenantID,
+		&u.Token,
+		&u.UID,
+		&u.Username)
+	if err == sql.ErrNoRows {
+		return u, false, nil
+	}
+	return u, true, err
 }
