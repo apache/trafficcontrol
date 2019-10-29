@@ -118,6 +118,8 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 WHERE s.cdn_id = (SELECT cdn_id from deliveryservice where id = (select v from ds_id))
 AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
+AND (ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) =
+ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability))
 `
 	rows, err := tx.Query(q, dsID)
 	if err != nil {
