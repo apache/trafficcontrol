@@ -20,7 +20,9 @@ package server
  */
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -29,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/lib/pq"
 )
 
 const (
@@ -117,7 +120,37 @@ func (ssc *TOServerServerCapability) Read() ([]interface{}, error, error, int) {
 }
 
 func (ssc *TOServerServerCapability) Delete() (error, error, int) {
-	return api.GenericDelete(ssc)
+	tx := ssc.APIInfo().Tx
+
+	// Ensure that the user is not removing a server capability from the server
+	// that is required by the delivery services the server is assigned to (if applicable)
+	dsIDs := []int64{}
+	if err := tx.QueryRow(checkDSReqCapQuery(), ssc.ServerID, ssc.ServerCapability).Scan(pq.Array(&dsIDs)); err != nil {
+		return nil, fmt.Errorf("checking removing server server capability would still suffice delivery service requried capabilites: %v", err), http.StatusInternalServerError
+	}
+
+	if len(dsIDs) > 0 {
+		dsIdsStr, err := json.Marshal(dsIDs)
+		if err != nil {
+			return nil, fmt.Errorf("formatting response message on bad request to disassociate server capability from server: %v", err), http.StatusInternalServerError
+		}
+		return fmt.Errorf("cannot remove the capability %v from the server %v as the server is assigned to the delivery services %v that require it", *ssc.ServerCapability, *ssc.ServerID, string(dsIdsStr)), nil, http.StatusBadRequest
+	}
+
+	// Delete association
+	result, err := tx.NamedExec(ssc.DeleteQuery(), ssc)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+
+	if rowsAffected, err := result.RowsAffected(); err != nil {
+		return nil, errors.New("deleting " + ssc.GetType() + ": getting rows affected: " + err.Error()), http.StatusInternalServerError
+	} else if rowsAffected < 1 {
+		return errors.New("no " + ssc.GetType() + " with that key found"), nil, http.StatusNotFound
+	} else if rowsAffected > 1 {
+		return nil, fmt.Errorf(ssc.GetType()+" delete affected too many rows: %d", rowsAffected), http.StatusInternalServerError
+	}
+	return nil, nil, http.StatusOK
 }
 
 func (ssc *TOServerServerCapability) Create() (error, error, int) {
@@ -164,4 +197,16 @@ server_capability,
 server) VALUES (
 :server_capability,
 :server) RETURNING server, server_capability, last_updated`
+}
+
+func checkDSReqCapQuery() string {
+	return `
+SELECT ARRAY(
+	SELECT dsrc.deliveryservice_id
+	FROM deliveryservices_required_capability as dsrc
+	WHERE deliveryservice_id IN (
+		SELECT deliveryservice 
+		FROM deliveryservice_server
+		WHERE server = $1)
+	AND dsrc.required_capability = $2)`
 }
