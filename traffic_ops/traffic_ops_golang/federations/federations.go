@@ -447,7 +447,7 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 		},
 	}
 	resp := struct {
-		Alerts   tc.Alerts `json:"alerts"`
+		tc.Alerts
 		Response string    `json:"response"`
 	}{
 		alerts,

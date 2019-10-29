@@ -278,17 +278,15 @@ Response Structure
 	Content-Length: 258
 	Content-Type: application/json
 
-	{ "alerts": {
-		"alerts": [
-			{
-				"text": "admin successfully deleted all federation resolvers: [ 8.8.8.8 ]",
-				"level": "success"
-			},
-			{
-				"text": "admin successfully created federation resolvers.",
-				"level": "success"
-			}
-		]
-	},
+	{ "alerts": [
+		{
+			"text": "admin successfully deleted all federation resolvers: [ 8.8.8.8 ]",
+			"level": "success"
+		},
+		{
+			"text": "admin successfully created federation resolvers.",
+			"level": "success"
+		}
+	],
 	"response": "admin successfully created federation resolvers."
 	}
