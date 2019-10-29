@@ -26,12 +26,49 @@ Traffic Ops supports two types of extensions. `Check Extensions`_ are analytics 
 
 .. _to-check-ext:
 
-Check Extensions
+Check Extensions (go version)
+================
+The following applies to the these checks, which have been ported from perl to go:
+:abbr:`CDU (Cache Disk Usage)`
+:abbr:`CHR (Cache Hit Ratio)`
+:abbr:`DSCP (Differential Services CodePoint)`
+:abbr:`MTU (Maximum Transmission Unit)`
+:abbr:`10G (IPv4 ping check)`
+:abbr:`10G6 (IPv6 ping check)`
+:abbr:`ILO (Integrated Lights-Out)`
+:abbr:`FQDN (Fully Qualified Domain Name)`
+
+Check Extensions are scripts that, after registering with Traffic Ops, have a column reserved in the :menuselection:`Monitor --> Cache Checks` view and usually run periodically using :manpage:`cron(8)`. Each extension is a separate go program location in :file:`{$TO_HOME}/bin/checks/` on the Traffic Ops server. The currently registered extensions can be listed by running ``/opt/traffic_ops/app/bin/extensions -a``. Some extensions automatically registered with the Traffic Ops database (``to_extension`` table) at install time (see :atc-file:`traffic_ops/app/db/seeds.sql`). However, :manpage:`cron(8)` must still be configured to run these checks periodically. The extensions are called like so:
+
+.. code-block:: shell
+	:caption: Example Check Extension Call (go version)
+
+  RLOG_LOG_LEVEL=<log level> $TO_HOME/bin/checks/<name> -conf <conf_path> -name <check_name> -syslog
+	$TO_HOME/bin/checks/<name>  -c "{\"base_url\": \",https://\"<traffic_ops_ip>\", \"check_name\": \"<check_name>\"}" -l <log level>
+
+:log_level: A whole number between 1 and 4 (inclusive), with 4 being the most verbose. Implementation of this field is optional
+:name: The basename of the extension executable
+:conf_path: The path to check-config.json e.g. '/opt/traffic_ops/conf/check-conf.json'
+:check_name: The name of the check e.g. ``CDU``, ``CHR``, ``DSCP``, ``MTU``, etc...
+
+Note that the DSCP check requires the '-iface <interface_name>' argument in order to tell the program which interface to use to capture response packets on for analysis.
+
+Note also the following optional arguments:
+'-syslog' boolean flag; result data is sent to STDOUT, but can optionally be sent to syslog using this option.
+'-host <regex>' regex filter for narrowing down the set of hosts to check
+'-exclude <regex>' regex filter for specifying host patters to exclude (can be combined with -host filter)
+'-f' force fail boolean flag; mainly useful for testing purposes
+'-reset' boolean flag; reset check status to "blank" state in Traffic Ops DB
+
+
+TOAPI authentication information is set in the config file. Currently, is is mandatory to use the username "extension", which should be granted the read-only role in Traffic Ops. This user is special, however, in that it is granted special privileges for updating the extension check tables ONLY in the Traffic Ops DB. Each program receives a list of servers from Traffic Ops API, subject to the optional filters noted above, and loops through the list performing the specified check for each server. The results are then compiled into a numeric or boolean result and the script submits a ``POST`` request containing the result back to Traffic Ops using :ref:`to-api-servercheck`. A check extension can have a column of |checkmark|'s and |X|'s (CHECK_EXTENSION_BOOL) or a column that shows a number (CHECK_EXTENSION_NUM).
+
+Check Extensions (legacy perl version)
 ================
 Check Extensions are scripts that, after registering with Traffic Ops, have a column reserved in the :menuselection:`Monitor --> Cache Checks` view and usually run periodically using :manpage:`cron(8)`. Each extension is a separate executable located in :file:`{$TO_HOME}/bin/checks/` on the Traffic Ops server (though all of the default extensions are written in Perl, this is in *no way* a requirement; they can be any valid executable). The currently registered extensions can be listed by running ``/opt/traffic_ops/app/bin/extensions -a``. Some extensions automatically registered with the Traffic Ops database (``to_extension`` table) at install time (see :atc-file:`traffic_ops/app/db/seeds.sql`). However, :manpage:`cron(8)` must still be configured to run these checks periodically. The extensions are called like so:
 
 .. code-block:: shell
-	:caption: Example Check Extension Call
+	:caption: Example Check Extension Call (legacy perl version)
 
 	$TO_HOME/bin/checks/<name>  -c "{\"base_url\": \",https://\"<traffic_ops_ip>\", \"check_name\": \"<check_name>\"}" -l <log level>
 
@@ -77,12 +114,44 @@ Data Source Extensions
 ======================
 Data Source Extensions work in much the same way as `Check Extensions`_, but are implemented differently. Rather than being a totally external executable, a Data Source Extension *must* be written in Perl 5, as they are injected via manipulation of the ``$PERL5LIB`` environment variable. These extensions are not very well-documented (as you may be able to tell), and support for extending them may be phased out in future releases.
 
-Example Cron File
-=================
+Example Cron File (go version)
+=======================================
 The :manpage:`cron(8)` file should be edited by running  :manpage:`crontab(1)` as the ``traffops`` user, or with :manpage:`sudo(8)`. You may need to adjust the path to your ``$TO_HOME`` to match your system.
 
 .. code-block:: shell
-	:caption: Example Cron File
+	:caption: Example Cron File (go version)
+
+  # ILO Ping
+  30 */6 * * * root RLOG_LOG_LEVEL=INFO /opt/to_checks/bin/ToPingCheck -name ILO -syslog >/var/log/traffic_ops/check_ext_ilo.log 2>&1
+
+  # IPv4 Ping
+  0 */6 * * * root RLOG_LOG_LEVEL=INFO /opt/to_checks/bin/ToPingCheck -name 10G -syslog >/var/log/traffic_ops/check_ext_10g.log 2>&1
+
+  # IPv6 Ping
+  20 */6 * * * root RLOG_LOG_LEVEL=INFO /opt/to_checks/bin/ToPingCheck -name 10G6 -syslog >/var/log/traffic_ops/check_ext_10g6.log 2>&1
+
+  # DSCP check (with exclude filter)
+  0 3 * * * root RLOG_LOG_LEVEL=INFO /opt/to_checks/bin/ToDSCPCheck -name DSCP -exclude '^(devcache-|qacache-).*' -iface ens3 -syslog >/var/log/traffic_ops/check_ext_dscp.log 2>&1
+
+  # FQDN check (with optional PTR validation and exclude filter)
+  33 * * * * root RLOG_LOG_LEVEL=INFO /opt/to_checks/bin/ToFQDNCheck -name FQDN -ptr -exclude '^(devcache-|qacache-).*' -syslog >/var/log/traffic_ops/check_ext_fqdn.log 2>&1
+
+  # Cache Disk Usage (CDU) check (with host filter)
+  */20 * * * * root RLOG_LOG_LEVEL=INFO /opt/to_checks/bin/ToATSCheck -name CDU -host '^prodcache-.*' -syslog >/var/log/traffic_ops/check_ext_cdu.log 2>&1
+
+  # Cache Hit Ration (CHR) check (with host filter)
+  */15 * * * * root RLOG_LOG_LEVEL=INFO /opt/to_checks/bin/ToATSCheck -name CHR -host '^prodcache-.*' -syslog >/var/log/traffic_ops/check_ext_chr.log 2>&1
+
+  # MTU Ping
+  50 */6 * * * root RLOG_LOG_LEVEL=INFO /opt/to_checks/bin/ToPingCheck -name MTU -syslog >/var/log/traffic_ops/check_ext_mtu.log 2>&1
+
+
+Example Cron File (legacy perl version)
+=======================================
+The :manpage:`cron(8)` file should be edited by running  :manpage:`crontab(1)` as the ``traffops`` user, or with :manpage:`sudo(8)`. You may need to adjust the path to your ``$TO_HOME`` to match your system.
+
+.. code-block:: shell
+	:caption: Example Cron File (legacy perl version)
 
 	PERL5LIB=/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib
 

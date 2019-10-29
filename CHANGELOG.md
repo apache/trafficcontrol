@@ -62,6 +62,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - In Traffic Portal, added the ability to create, view and delete server capabilities as associate those server capabilities with servers.
 - Traffic Monitor now has "gbps" calculated stat, allowing operators to monitor bandwidth in Gbps.
 - Added an API 1.4 endpoint, /api/1.4/deliveryservices_required_capabilities, to create, read, and delete associations between a delivery service and a required capability.
+- Port Traffic Ops Extensions checks for ILO, 10G, 10G6, MTU, DSCP, CHR, CDU from perl to go (legacy versions retained)
 
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)
