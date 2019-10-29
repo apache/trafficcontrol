@@ -29,4 +29,5 @@ Introduces the Traffic Control architecture, components, and their integration.
 	traffic_portal
 	traffic_vault
 	delivery_services
+	cache_groups
 	profiles_and_parameters

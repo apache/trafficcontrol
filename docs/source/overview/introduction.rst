@@ -23,15 +23,12 @@ Traffic Control was first developed at Comcast for internal use and released to 
 Traffic Control implements the elements illustrated in green in the diagram below.
 
 
-.. image:: traffic_control_overview_3.png
+.. image:: images/traffic_control_overview_3.png
 	:align: center
 
 
 :ref:`to-overview`
-	:dfn:`Traffic Ops` stores the configuration of :term:`cache server`\ s and CDN :term:`Delivery Service`\ s. It also serves the :ref:`to-api` which can be used by tools, scripts, and programs to access and manipulate CDN data. Traffic Ops used to provide a UI for interacting with the CDN(s) that it manages.
-
-	.. deprecated:: 3.0
-		Traffic Control 2.2 introduced the :ref:`tp-overview` UI which is the recommended, official method of manipulating CDN data. As of Traffic Control 3.0 the Traffic Ops UI is deprecated and disabled by default, and will be removed by the release of 4.0.
+	:dfn:`Traffic Ops` stores the configuration of :term:`cache servers` and CDN :term:`Delivery Services`. It also serves the :ref:`to-api` which can be used by tools, scripts, and programs to access and manipulate CDN data.
 
 :ref:`tr-overview`
 	:dfn:`Traffic Router` is used to route client requests to the closest healthy :term:`cache server` by analyzing the health, capacity, and state of the :term:`cache server`\ s according to the :ref:`health-proto` and relative geographic distance between each :term:`Cache Group` and the client.
