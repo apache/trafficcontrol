@@ -233,7 +233,6 @@
             "cdnName": "cdn1",
             "cacheurl": "cacheUrl1",
             "ccrDnsTtl": 3600,
-            "cdnName": "cdn1",
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -301,7 +300,6 @@
             "cdnName": "cdn1",
             "cacheurl": "cacheUrl2",
             "ccrDnsTtl": 3600,
-            "cdnName": "cdn1",
             "checkPath": "",
             "consistentHashQueryParams": ["fmt", "limit", "somethingelse"],
             "deepCachingType": "NEVER",
@@ -370,7 +368,6 @@
             "cdnName": "cdn1",
             "cacheurl": "cacheUrl3",
             "ccrDnsTtl": 3600,
-            "cdnName": "cdn1",
             "checkPath": "",
             "consistentHashQueryParams": null,
             "deepCachingType": "NEVER",
@@ -497,7 +494,6 @@
             "cdnName": "cdn1",
             "cacheurl": "cacheUrl1",
             "ccrDnsTtl": 3600,
-            "cdnName": "cdn1",
             "checkPath": "",
             "consistentHashQueryParams": ["a", "b", "c"],
             "consistentHashRegex": "foo",
@@ -551,6 +547,16 @@
             "type": "HTTP_LIVE",
             "xmlId": "ds-test-minor-versions",
             "anonymousBlockingEnabled": true
+        }
+    ],
+    "deliveryservicesRequiredCapabilities": [
+        {
+            "xmlID": "ds1",
+            "RequiredCapability": "foo"
+        },
+        {
+            "xmlID": "ds2",
+            "RequiredCapability": "bar"
         }
     ],
     "divisions": [

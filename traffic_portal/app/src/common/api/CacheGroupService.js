@@ -17,104 +17,108 @@
  * under the License.
  */
 
-var CacheGroupService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
+var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
 
     this.getCacheGroups = function(queryParams) {
-        return Restangular.all('cachegroups').getList(queryParams);
+        return $http.get(ENV.api['root'] + 'cachegroups', {params: queryParams}).then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
     this.getCacheGroup = function(id) {
-        return Restangular.one("cachegroups", id).get();
+        return $http.get(ENV.api['root'] + 'cachegroups', {params: {'id': id}}).then(
+            function (result) {
+                return result.data.response[0];
+            },
+            function (err) {
+                throw err;
+            }
+        );
     };
 
     this.createCacheGroup = function(cacheGroup) {
-        return Restangular.service('cachegroups').post(cacheGroup)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'CacheGroup created' } ], true);
-                    locationUtils.navigateToPath('/cache-groups');
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'cachegroups', cacheGroup).then(
+            function (result) {
+                messageModel.setMessages(result.data.alerts, true);
+                locationUtils.navigateToPath('/cache-groups');
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.updateCacheGroup = function(cacheGroup) {
-        return cacheGroup.put()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Cache group updated' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.put(ENV.api['root'] + 'cachegroups/' + cacheGroup.id, cacheGroup).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.deleteCacheGroup = function(id) {
-        var request = $q.defer();
-
-        $http.delete(ENV.api['root'] + "cachegroups/" + id)
-            .then(
-                function(result) {
-                    request.resolve(result.data);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                    request.reject(fault);
-                }
-            );
-
-        return request.promise;
+        return $http.delete(ENV.api['root'] + "cachegroups/" + id).then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.queueServerUpdates = function(cgId, cdnId) {
-        return Restangular.one("cachegroups", cgId).customPOST( { action: "queue", cdnId: cdnId }, "queue_update" )
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Queued cache group server updates' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
+        return $http.post(ENV.api['root'] + 'cachegroups/' + cgId + '/queue_update', {action: "queue", cdnId: cdnId}).then(
+            function(result) {
+                messageModel.setMessages([{level: 'success', text: 'Queued Cache Group server updates'}], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.clearServerUpdates = function(cgId, cdnId) {
-        return Restangular.one("cachegroups", cgId).customPOST( { action: "dequeue", cdnId: cdnId}, "queue_update" )
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Cleared cache group server updates' } ], false);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
-    };
-
-    this.getParameterCacheGroups = function(paramId) {
-        // todo: this needs an api: /parameters/:id/cachegroups
-        return Restangular.one('parameters', paramId).getList('cachegroups');
+        return $http.post(ENV.api['root'] + 'cachegroups/' + cgId + '/queue_update', {action: "dequeue", cdnId: cdnId}).then(
+            function(result) {
+                messageModel.setMessages([{level: 'success', text: 'Cleared Cache Group server updates'}], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
     };
 
     this.getCacheGroupHealth = function() {
-        var deferred = $q.defer();
-
-        $http.get(ENV.api['root'] + "cdns/health")
-            .then(
-                function(result) {
-                    deferred.resolve(result.data.response);
-                },
-                function(fault) {
-                    deferred.reject(fault);
-                }
-            );
-
-        return deferred.promise;
+        return $http.get(ENV.api['root'] + "cdns/health").then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
     };
 
 };
 
-CacheGroupService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
+CacheGroupService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = CacheGroupService;

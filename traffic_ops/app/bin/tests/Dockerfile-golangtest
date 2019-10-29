@@ -17,6 +17,7 @@ ARG DIR=github.com/apache/trafficcontrol
 
 ADD traffic_ops /go/src/$DIR/traffic_ops
 ADD lib /go/src/$DIR/lib
+ADD vendor /go/src/$DIR/vendor
 
 WORKDIR /go/src/$DIR/traffic_ops/traffic_ops_golang
 

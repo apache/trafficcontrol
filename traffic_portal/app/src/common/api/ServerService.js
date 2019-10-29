@@ -80,6 +80,41 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    this.getServerCapabilities = function(id) {
+        return $http.get(ENV.api['root'] + 'server_server_capabilities', { params: { serverId: id } }).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        )
+    };
+
+    this.addServerCapability = function(serverId, capabilityName) {
+        return $http.post(ENV.api['root'] + 'server_server_capabilities', { serverId: serverId, serverCapability: capabilityName}).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
+    };
+
+    this.removeServerCapability = function(serverId, capabilityName) {
+        return $http.delete(ENV.api['root'] + 'server_server_capabilities', { params: { serverId: serverId, serverCapability: capabilityName} }).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
+    };
+
     this.getServerConfigFiles = function(id) {
         return $http.get(ENV.api['root'] + 'servers/' + id + '/configfiles/ats').then(
             function (result) {

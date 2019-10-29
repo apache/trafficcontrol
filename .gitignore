@@ -11,6 +11,7 @@ traffic_ops/app/public/CRConfig-Snapshots/*
 traffic_ops/app/public/Trafficserver-Snapshots/*
 docs/.todo_cache
 docs/_build/
+docs/source/_build/
 traffic_ops/app/conf/ldap.conf
 traffic_ops/app/db/admin
 traffic_ops/**/*.log

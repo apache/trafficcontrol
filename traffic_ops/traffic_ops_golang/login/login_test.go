@@ -20,10 +20,14 @@ package login
  */
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
+	"net/mail"
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
@@ -79,4 +83,36 @@ func TestVerifyUrlOnWhiteList(t *testing.T) {
 			t.Errorf("for whitelist: %v, expected: %v, actual: %v", result.Whitelist, result.ExpectedResult, matched)
 		}
 	}
+}
+
+func TestTemplateRender(t *testing.T) {
+	to := rfc.EmailAddress{
+		mail.Address{
+			Address: "em@i.l",
+			Name:    "",
+		},
+	}
+	from := rfc.EmailAddress{
+		mail.Address{
+			Address: "no-reply@test.quest",
+			Name:    "",
+		},
+	}
+
+	f := emailFormatter{
+		From:         from,
+		To:           to,
+		Token:        "test",
+		InstanceName: "TO API Unit Tests",
+		ResetURL:     "https://example.test/#!/user",
+	}
+
+	var tmpl bytes.Buffer
+	if err := resetPasswordEmailTemplate.Execute(&tmpl, &f); err != nil {
+		t.Fatalf("Failed to render email template: %v", err)
+	}
+	if tmpl.Len() <= 0 {
+		t.Fatalf("Template buffer empty after execution")
+	}
+	t.Logf("%s", tmpl.String())
 }

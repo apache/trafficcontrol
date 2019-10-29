@@ -19,6 +19,8 @@ package tc
  * under the License.
  */
 
+import "github.com/apache/trafficcontrol/lib/go-rfc"
+
 // UserCredentials contains Traffic Ops login credentials
 type UserCredentials struct {
 	Username string `json:"u"`
@@ -132,4 +134,8 @@ type UserCurrentResponse struct {
 
 type UserDeliveryServiceDeleteResponse struct {
 	Alerts
+}
+
+type UserPasswordResetRequest struct {
+	Email rfc.EmailAddress `json:"email"`
 }

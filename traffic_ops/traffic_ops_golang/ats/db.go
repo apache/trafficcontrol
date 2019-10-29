@@ -858,3 +858,90 @@ WHERE
 	}
 	return domain, true, nil
 }
+
+func GetToolNameAndURL(tx *sql.Tx) (string, string, error) {
+	qry := `
+SELECT
+  p.name,
+  p.value
+FROM
+  parameter p
+WHERE
+  (p.name = 'tm.toolname' OR p.name = 'tm.url') AND p.config_file = 'global'
+`
+	rows, err := tx.Query(qry)
+	if err != nil {
+		return "", "", errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	toolName := ""
+	url := ""
+	for rows.Next() {
+		name := ""
+		val := ""
+		if err := rows.Scan(&name, &val); err != nil {
+			return "", "", errors.New("scanning: " + err.Error())
+		}
+		if name == "tm.toolname" {
+			toolName = val
+		} else if name == "tm.url" {
+			url = val
+		}
+	}
+	return toolName, url, nil
+}
+
+func GetProfileParamsByName(tx *sql.Tx, profileName string, configFile string) (map[string][]string, error) {
+	qry := `
+SELECT
+  p.name,
+  p.value
+FROM
+  parameter p
+  join profile_parameter pp on p.id = pp.parameter
+  JOIN profile pr on pr.id = pp.profile
+WHERE
+  pr.name = $1
+  AND p.config_file = $2
+`
+	rows, err := tx.Query(qry, profileName, configFile)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	params := map[string][]string{}
+	for rows.Next() {
+		name := ""
+		val := ""
+		if err := rows.Scan(&name, &val); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		params[name] = append(params[name], val)
+	}
+	return params, nil
+}
+
+// getCDNNameFromNameOrID returns the CDN name from a parameter which may be the name or ID.
+// This also checks and verifies the existence of the given CDN, and returns an appropriate user error if it doesn't exist.
+// Returns the name, any user error, any system error, and any error code.
+func GetCDNNameFromNameOrID(tx *sql.Tx, cdnNameOrID string) (string, error, error, int) {
+	if cdnID, err := strconv.Atoi(cdnNameOrID); err == nil {
+		cdnName, ok, err := dbhelpers.GetCDNNameFromID(tx, int64(cdnID))
+		if err != nil {
+			return "", nil, fmt.Errorf("getting CDN name from id %v: %v", cdnID, err), http.StatusInternalServerError
+		} else if !ok {
+			return "", errors.New("cdn not found"), nil, http.StatusNotFound
+		}
+		return string(cdnName), nil, nil, http.StatusOK
+	}
+
+	cdnName := cdnNameOrID
+	if ok, err := dbhelpers.CDNExists(cdnName, tx); err != nil {
+		return "", nil, fmt.Errorf("checking CDN name '%v' existence: %v", cdnName, err), http.StatusInternalServerError
+	} else if !ok {
+		return "", errors.New("cdn not found"), nil, http.StatusNotFound
+	}
+	return cdnName, nil, nil, http.StatusOK
+}

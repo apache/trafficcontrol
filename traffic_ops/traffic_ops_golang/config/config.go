@@ -43,8 +43,9 @@ type Config struct {
 	KeyPath                string   `json:"-"`
 	ConfigHypnotoad        `json:"hypnotoad"`
 	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
-	ConfigTO               *ConfigTO      `json:"to"`
-	SMTP                   *ConfigSMTP    `json:"smtp"`
+	ConfigTO               *ConfigTO   `json:"to"`
+	SMTP                   *ConfigSMTP `json:"smtp"`
+	ConfigPortal           `json:"portal"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
@@ -112,6 +113,15 @@ type ConfigTO struct {
 	BaseURL               *rfc.URL          `json:"base_url"`
 	EmailFrom             *rfc.EmailAddress `json:"email_from"`
 	NoAccountFoundMessage *string           `json:"no_account_found_msg"`
+}
+
+// ConfigPortal contains information that can direct users to a friendly UI
+type ConfigPortal struct {
+	BaseURL          rfc.URL          `json:"base_url"`
+	DocsURL          rfc.URL          `json:"docs_url"`
+	EmailFrom        rfc.EmailAddress `json:"email_from"`
+	PasswdResetPath  string           `json:"pass_reset_path"`
+	UserRegisterPath string           `json:"user_register_path"`
 }
 
 // ConfigSMTP contains configuration information for connecting to and authenticating with an SMTP
