@@ -239,7 +239,7 @@ func AddFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.
 	}
 
 	msg := fmt.Sprintf("%s successfully created federation resolvers.", inf.User.UserName)
-	if inf.Version.Major <= 1 || inf.Version.Minor <= 3 {
+	if inf.Version.Major <= 1 && inf.Version.Minor <= 3 {
 		api.WriteResp(w, r, msg)
 	} else {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, msg, msg)
@@ -359,7 +359,7 @@ func RemoveFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *ht
 	changelogMsg := fmt.Sprintf("USER: %s, ID: %d, ACTION: %s", inf.User.UserName, inf.User.ID, msg)
 	api.CreateChangeLogRawTx(api.ApiChange, changelogMsg, inf.User, tx)
 
-	if inf.Version.Major <= 1 || inf.Version.Minor <= 3 {
+	if inf.Version.Major <= 1 && inf.Version.Minor <= 3 {
 		api.WriteResp(w, r, msg)
 	} else {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, msg, msg)
