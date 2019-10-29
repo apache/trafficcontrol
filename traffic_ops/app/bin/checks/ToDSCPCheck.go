@@ -162,7 +162,7 @@ func capture(ctx context.Context, s Server, iface *string, ch_dscp chan uint8, c
 					rlog.Error("capture() Error:", err)
 					continue
 				}
-				if sslflag == true && pktCount < 4 {
+				if sslflag == true && pktCount < 6 {
 					// skip the TLS handshake packets - they may not provide real DSCP value
 					rlog.Tracef(1, "Packet #%d: %s", pktCount, packet)
 					continue
