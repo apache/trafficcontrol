@@ -142,7 +142,12 @@ func GetCacheStats(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resp.Response.Summary = &summary
+		// match Perl implementation and set summary to zero values if no data
+		if summary != nil {
+			resp.Response.Summary = summary
+		} else {
+			resp.Response.Summary = &tc.TrafficStatsSummary{}
+		}
 	}
 
 	if !c.ExcludeSeries {
@@ -154,11 +159,14 @@ func GetCacheStats(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !c.Unix {
-			series.FormatTimestamps()
-		}
+		// match Perl implementation and omit series if no data
+		if series != nil {
+			if !c.Unix {
+				series.FormatTimestamps()
+			}
 
-		resp.Response.Series = &series
+			resp.Response.Series = series
+		}
 	}
 
 	respBts, err := json.Marshal(resp)
@@ -178,7 +186,7 @@ func GetCacheStats(w http.ResponseWriter, r *http.Request) {
 	w.Write(append(respBts, '\n'))
 }
 
-func getCacheSummary(client *influx.Client, conf *tc.TrafficCacheStatsConfig, db string) (tc.TrafficStatsSummary, error) {
+func getCacheSummary(client *influx.Client, conf *tc.TrafficCacheStatsConfig, db string) (*tc.TrafficStatsSummary, error) {
 	qStr := fmt.Sprintf(cSummaryQuery, db, conf.MetricType)
 	q := influx.NewQueryWithParameters(qStr,
 		db,
@@ -191,7 +199,7 @@ func getCacheSummary(client *influx.Client, conf *tc.TrafficCacheStatsConfig, db
 	return getSummary(db, q, client)
 }
 
-func getCacheSeries(client *influx.Client, conf *tc.TrafficCacheStatsConfig, db string) (tc.TrafficStatsSeries, error) {
+func getCacheSeries(client *influx.Client, conf *tc.TrafficCacheStatsConfig, db string) (*tc.TrafficStatsSeries, error) {
 	extraClauses := buildExtraClauses(&conf.TrafficStatsConfig)
 	qStr := fmt.Sprintf(cSeriesQuery, db, conf.MetricType, conf.Interval, conf.TrafficStatsConfig.OffsetString(), extraClauses)
 	q := influx.NewQueryWithParameters(qStr,

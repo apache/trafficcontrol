@@ -28,7 +28,7 @@ import (
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
-func getSeries(db string, q influx.Query, client *influx.Client) (tc.TrafficStatsSeries, error) {
+func getSeries(db string, q influx.Query, client *influx.Client) (*tc.TrafficStatsSeries, error) {
 	msgs := []influx.Message{}
 	s := tc.TrafficStatsSeries{}
 
@@ -37,7 +37,7 @@ func getSeries(db string, q influx.Query, client *influx.Client) (tc.TrafficStat
 
 	resp, err := (*client).Query(q)
 	if err != nil {
-		return s, err
+		return nil, err
 	}
 
 	if resp.Results != nil && len(resp.Results) == 1 {
@@ -50,8 +50,14 @@ func getSeries(db string, q influx.Query, client *influx.Client) (tc.TrafficStat
 			}
 		}
 
+		// Perl API handled no series as a non error
+		// Matching implementation
+		if len(r.Series) == 0 {
+			return nil, nil
+		}
+
 		if len(r.Series) != 1 {
-			return s, fmt.Errorf("Improper number of series: %d", len(r.Series))
+			return nil, fmt.Errorf("Improper number of series: %d", len(r.Series))
 		}
 
 		series := r.Series[0]
@@ -66,13 +72,13 @@ func getSeries(db string, q influx.Query, client *influx.Client) (tc.TrafficStat
 
 	} else {
 		log.Debugf("InfluxDB series response: %+v", resp)
-		return s, errors.New("'results' missing or improper!")
+		return nil, errors.New("'results' missing or improper!")
 	}
 
 	if resp.Error() != nil {
 		log.Debugf("response error, series object was %+v", s)
-		return s, resp.Error()
+		return nil, resp.Error()
 	}
 
-	return s, nil
+	return &s, nil
 }
