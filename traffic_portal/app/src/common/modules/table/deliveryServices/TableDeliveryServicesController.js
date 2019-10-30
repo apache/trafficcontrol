@@ -359,15 +359,15 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
             }
         },
         {
-            text: 'Manage Servers',
+            text: 'Manage Required Server Capabilities',
             click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/servers?type=' + $itemScope.ds.type);
+                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/required-server-capabilities?type=' + $itemScope.ds.type);
             }
         },
         {
-            text: 'Manage Server Capabilities',
+            text: 'Manage Servers',
             click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/required-server-capabilities?type=' + $itemScope.ds.type);
+                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/servers?type=' + $itemScope.ds.type);
             }
         },
         {

@@ -48,7 +48,7 @@ var TableServerCapabilityDeliveryServicesController = function(serverCapability,
 			}
 		},
 		{
-			text: 'Manage Server Capabilities',
+			text: 'Manage Required Server Capabilities',
 			click: function ($itemScope) {
 				locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.deliveryServiceID + '/required-server-capabilities');
 			}
