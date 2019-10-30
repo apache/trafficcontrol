@@ -132,5 +132,5 @@ Response Structure
 				]
 		}
 
-.. [1] Users with the roles "admin" and/or "operations" will be able to see servers not assigned to *any* given :term:`Delivery Service`, whereas any other user will only be able to see the servers not assigned to :term:`Delivery Service`\ s their Tenant is allowed to see.
+.. [1] Users with the roles "admin" and/or "operations" will be able to see servers not assigned to *any* given :term:`Delivery Service`, whereas any other user will only be able to see the servers not assigned to :term:`Delivery Services` their Tenant is allowed to see.
 

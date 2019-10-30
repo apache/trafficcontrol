@@ -106,7 +106,7 @@ variables.env
 
 X.509 SSL/TLS Certificates
 ==========================
-All components in Apache Traffic Control utilize SSL/TLS secure communications by default. For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Root :abbr:`CA (Certificate Authority)` is generated at the first initial startup. An X.509 Intermediate :abbr:`CA (Certificate Authority)` is also generated and signed by the Root :abbr:`CA (Certificate Authority)`. Additional "wildcard" certificates are generated/signed by the Intermediate :abbr:`CA (Certificate Authority)` for each container service and demo1, demo2, and demo3 :term:`Delivery Service`\ s. All certificates and keys are stored in the ``ca`` host volume which is located at :file:`infrastruture/cdn-in-a-box/traffic_ops/ca`\ [4]_.
+All components in Apache Traffic Control utilize SSL/TLS secure communications by default. For SSL/TLS connections to properly validate within the "CDN in a Box" container network a shared self-signed X.509 Root :abbr:`CA (Certificate Authority)` is generated at the first initial startup. An X.509 Intermediate :abbr:`CA (Certificate Authority)` is also generated and signed by the Root :abbr:`CA (Certificate Authority)`. Additional "wildcard" certificates are generated/signed by the Intermediate :abbr:`CA (Certificate Authority)` for each container service and demo1, demo2, and demo3 :term:`Delivery Services`. All certificates and keys are stored in the ``ca`` host volume which is located at :file:`infrastruture/cdn-in-a-box/traffic_ops/ca`\ [4]_.
 
 .. _ciab-x509-certificate-list:
 .. table:: Self-Signed X.509 Certificate List
@@ -237,7 +237,7 @@ Multiple optional containers may be combined by using a shell alias:
 
 VNC Server
 ----------
-The TightVNC optional container provides a basic lightweight window manager (fluxbox), Firefox browser, xterm, and a few other utilities within the CDN-In-A-Box "tcnet" bridge network. This can be very helpful for quick demonstrations of CDN-in-a-Box that require the use of real container network :abbr:`FQDN (Fully Qualified Domain Name)`\ s and full X.509 validation.
+The TightVNC optional container provides a basic lightweight window manager (fluxbox), Firefox browser, xterm, and a few other utilities within the CDN-In-A-Box "tcnet" bridge network. This can be very helpful for quick demonstrations of CDN-in-a-Box that require the use of real container network :abbr:`FQDN (Fully Qualified Domain Name)s` and full X.509 validation.
 
 #. Download and install a VNC client. TightVNC client is preferred as it supports window resizing, host-to-vnc copy/pasting, and optimized frame buffer compression.
 #. Set your VNC console password by adding the ``VNC_PASSWD`` environment variable to :file:`infrastructure/cdn-in-a-box/varibles.env`. The password needs to be at least six characters long. The default password is randomized for security.

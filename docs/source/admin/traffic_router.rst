@@ -52,7 +52,7 @@ Installing Traffic Router
 	:file:`traffic_monitor.properties.reload.period`
 		Period to wait (in milliseconds) between reloading this file, e.g. ``traffic_monitor.properties.reload.period=60000``
 
-#. Start Traffic Router. This is normally done by starting its :manpage:`systemd(1)` service. ``systemctl start traffic_router`` , and test DNS lookups against that server to be sure it's resolving properly. with e.g. ``dig`` or ``curl``. Also, because previously taken CDN :term:`Snapshot`\ s will be cached, they need to be removed manually to actually be reloaded. This file should be located at :file:`/opt/traffic_router/db/cr-config.json`. This should be done before starting or restarting Traffic Router.
+#. Start Traffic Router. This is normally done by starting its :manpage:`systemd(1)` service. ``systemctl start traffic_router`` , and test DNS lookups against that server to be sure it's resolving properly. with e.g. ``dig`` or ``curl``. Also, because previously taken CDN :term:`Snapshots` will be cached, they need to be removed manually to actually be reloaded. This file should be located at :file:`/opt/traffic_router/db/cr-config.json`. This should be done before starting or restarting Traffic Router.
 
 	.. code-block:: console
 		:caption: Starting and Testing Traffic Router
@@ -443,7 +443,7 @@ DS_REDIRECT
 ERROR
 	An internal error occurred within Traffic Router, more details may be found in the ``rerr`` field
 FED
-	_*DNS Only*_ The result was obtained through federated coverage zone data outside of any :term:`Delivery Service`\ s
+	_*DNS Only*_ The result was obtained through federated coverage zone data outside of any :term:`Delivery Services`
 GEO
 	The result was derived from geolocation service based on the address in the ``chi`` field
 GEO_REDIRECT
@@ -577,11 +577,11 @@ What You Need
 
 	.. seealso:: See :ref:`tr-profile` for details.
 
-#. Deep Caching enabled on one or more HTTP :term:`Delivery Service`\ s (i.e. 'Deep Caching' field on the :term:`Delivery Service` details page (under :guilabel:`Advanced Options`) set to ``ALWAYS``)
+#. Deep Caching enabled on one or more HTTP :term:`Delivery Services` (i.e. 'Deep Caching' field on the :term:`Delivery Service` details page (under :guilabel:`Advanced Options`) set to ``ALWAYS``)
 
 How it Works
 ------------
-Deep Coverage Zone routing is very similar to that of regular Coverage Zone routing, except that the :abbr:`DCZF (Deep Coverage Zone File)` is preferred over the regular :abbr:`CZF (Coverage Zone File)` for :term:`Delivery Service`\ s with Deep Caching enabled. If the client requests a Deep Caching-enabled :term:`Delivery Service` and their IP address gets a "hit" in the :abbr:`DCZF (Deep Coverage Zone File)`, Traffic Router will attempt to route that client to one of the available "deep" :term:`cache server` s in the client's corresponding zone. If there are no "deep" :term:`cache server` s available for a client's request, Traffic Router will fall back to the regular :abbr:`CZF (Coverage Zone File)` and continue regular :abbr:`CZF (Coverage Zone File)` routing from there.
+Deep Coverage Zone routing is very similar to that of regular Coverage Zone routing, except that the :abbr:`DCZF (Deep Coverage Zone File)` is preferred over the regular :abbr:`CZF (Coverage Zone File)` for :term:`Delivery Services` with Deep Caching enabled. If the client requests a Deep Caching-enabled :term:`Delivery Service` and their IP address gets a "hit" in the :abbr:`DCZF (Deep Coverage Zone File)`, Traffic Router will attempt to route that client to one of the available "deep" :term:`cache server` s in the client's corresponding zone. If there are no "deep" :term:`cache server` s available for a client's request, Traffic Router will fall back to the regular :abbr:`CZF (Coverage Zone File)` and continue regular :abbr:`CZF (Coverage Zone File)` routing from there.
 
 .. _tr-steering:
 
@@ -590,7 +590,7 @@ Steering Feature
 
 Overview
 --------
-A Steering :term:`Delivery Service` is a :term:`Delivery Service` that is used to route a client to another :term:`Delivery Service`. The :ref:`Type <ds-types>` of a Steering :term:`Delivery Service` is either STEERING or CLIENT_STEERING. A Steering :term:`Delivery Service` will have target :term:`Delivery Service`\ s configured for it with weights assigned to them. Traffic Router uses the weights to make a consistent hash ring which it then uses to make sure that requests are routed to a target based on the configured weights. This consistent hash ring is separate from the consistent hash ring used in cache selection.
+A Steering :term:`Delivery Service` is a :term:`Delivery Service` that is used to route a client to another :term:`Delivery Service`. The :ref:`Type <ds-types>` of a Steering :term:`Delivery Service` is either STEERING or CLIENT_STEERING. A Steering :term:`Delivery Service` will have target :term:`Delivery Services` configured for it with weights assigned to them. Traffic Router uses the weights to make a consistent hash ring which it then uses to make sure that requests are routed to a target based on the configured weights. This consistent hash ring is separate from the consistent hash ring used in cache selection.
 
 Special regular expressions - referred to as 'filters' - can also be configured for target :term:`Delivery Services` to pin traffic to a specific :term:`Delivery Service`. For example, if the filter :regexp:`.*/news/.*` for a target called ``target-ds-1`` is created, any requests to Traffic Router with "news" in them will be routed to ``target-ds-1``. This will happen regardless of the configured weights.
 
@@ -608,7 +608,7 @@ A couple simple use-cases for Steering are:
 
 The Difference Between STEERING and CLIENT_STEERING
 ---------------------------------------------------
-The only difference between the STEERING and CLIENT_STEERING :term:`Delivery Service` :term:`Type`\ s is that CLIENT_STEERING explicitly allows a client to bypass Steering by choosing a destination :term:`Delivery Service`. A client can accomplish this by providing the ``X-TC-Steering-Option`` HTTP header with a value of the ``xml_id`` of the target :term:`Delivery Service` to which they desire to be routed. When Traffic Router receives this header it will route to the requested target :term:`Delivery Service` regardless of weight configuration. This header is ignored by STEERING :term:`Delivery Services`.
+The only difference between the STEERING and CLIENT_STEERING :term:`Delivery Service` :term:`Types` is that CLIENT_STEERING explicitly allows a client to bypass Steering by choosing a destination :term:`Delivery Service`. A client can accomplish this by providing the ``X-TC-Steering-Option`` HTTP header with a value of the ``xml_id`` of the target :term:`Delivery Service` to which they desire to be routed. When Traffic Router receives this header it will route to the requested target :term:`Delivery Service` regardless of weight configuration. This header is ignored by STEERING :term:`Delivery Services`.
 
 Configuration
 -------------
@@ -637,7 +637,7 @@ The HTTPS set up process is:
 #. Obtain and import signed certificate chain
 #. Perform a CDN :term:`Snapshot`
 
-Clients may make HTTPS requests to :term:`Delivery Service`\ s only after the CDN :term:`Snapshot` propagates to Traffic Router and it receives the certificate chain from Traffic Ops.
+Clients may make HTTPS requests to :term:`Delivery Services` only after the CDN :term:`Snapshot` propagates to Traffic Router and it receives the certificate chain from Traffic Ops.
 
 Protocol Options
 ----------------
@@ -652,7 +652,7 @@ HTTP TO HTTPS
 
 Certificate Retrieval
 ---------------------
-.. Warning:: If you have HTTPS :term:`Delivery Service`\ s in your CDN, Traffic Router will not accept **any** connections until it is able to fetch certificates from Traffic Ops and load them into memory. Traffic Router does not persist certificates to the Java Keystore or anywhere else.
+.. Warning:: If you have HTTPS :term:`Delivery Services` in your CDN, Traffic Router will not accept **any** connections until it is able to fetch certificates from Traffic Ops and load them into memory. Traffic Router does not persist certificates to the Java Keystore or anywhere else.
 
 Traffic Router fetches certificates into memory:
 
@@ -704,7 +704,7 @@ Once this is done you should be able to verify that you are being correctly redi
 
 Router Load Testing
 ===================
-The Traffic Router load testing tool is located in the `Traffic Control repository under test/router <https://github.com/apache/trafficcontrol/tree/master/test/router>`_. It can be used to simulate a mix of HTTP and HTTPS traffic for a CDN by choosing the number of HTTP :term:`Delivery Service`\ s and the number HTTPS :term:`Delivery Service` the test will exercise.
+The Traffic Router load testing tool is located in the `Traffic Control repository under test/router <https://github.com/apache/trafficcontrol/tree/master/test/router>`_. It can be used to simulate a mix of HTTP and HTTPS traffic for a CDN by choosing the number of HTTP :term:`Delivery Services` and the number HTTPS :term:`Delivery Service` the test will exercise.
 
 There are 2 parts to the load test:
 
@@ -722,9 +722,9 @@ Running the Load Tests
 #. Authenticate against a Traffic Ops host - this should be a nearly instantaneous operation - you can watch the output from ``server.go`` for feedback
 #. Enter the Traffic Ops host in the second form and click the button to get a list of CDN's
 #. Wait for the web page to show a list of CDN's under the above form, this may take several seconds
-#. The List of CDN's will display the number of HTTP- and HTTPS-capable :term:`Delivery Service`\ s that may be exercised
+#. The List of CDN's will display the number of HTTP- and HTTPS-capable :term:`Delivery Services` that may be exercised
 #. Choose the CDN you want to exercise from the drop-down menu
-#. Fill out the rest of the form, enter appropriate numbers for each HTTP and HTTPS :term:`Delivery Service`\ s
+#. Fill out the rest of the form, enter appropriate numbers for each HTTP and HTTPS :term:`Delivery Services`
 #. Click :guilabel:`Run Test`
 #. As the test runs the web page will occasionally report results including running time, latency, and throughput
 

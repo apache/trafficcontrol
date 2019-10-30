@@ -105,7 +105,7 @@ Response Structure
 	:zonemanager.cache.maintenance.interval: A configuration option for the ZoneManager Java class of Traffic Router
 	:zonemanager.threadpool.scale:           A configuration option for the ZoneManager Java class of Traffic Router
 
-:contentRouters: An object containing keys which are the (short) hostnames of the Traffic Routers that serve requests for :term:`Delivery Service`\ s in this CDN
+:contentRouters: An object containing keys which are the (short) hostnames of the Traffic Routers that serve requests for :term:`Delivery Services` in this CDN
 
 	:api.port:        A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTP
 	:secure.api.port: A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTPS (optional)
@@ -155,7 +155,7 @@ Response Structure
 		MID
 			This is a Mid-tier :term:`cache server`
 
-:deliveryServices: An object containing keys which are the 'xml_id's of all of the :term:`Delivery Service`\ s within the CDN
+:deliveryServices: An object containing keys which are the 'xml_id's of all of the :term:`Delivery Services` within the CDN
 
 	:anonymousBlockingEnabled: A string containing a boolean that tells whether or not Anonymized IP Addresses are blocked by this :term:`Delivery Service`; one of:
 

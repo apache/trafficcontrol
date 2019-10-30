@@ -117,7 +117,7 @@ Installing the ORT Script
 
 	.. Note:: In "SYNCDS" mode, the :term:`ORT` script updates only configurations that might be changed as part of normal operations, such as:
 
-		* :term:`Delivery Service`\ s
+		* :term:`Delivery Services`
 		* SSL certificates
 		* Traffic Monitor IP addresses
 		* Logging configuration

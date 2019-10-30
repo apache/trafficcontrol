@@ -164,7 +164,7 @@ Response Structure
 
 ``PUT``
 =======
-Updates an existing fallback configuration for one or more :term:`Cache Group`\ s.
+Updates an existing fallback configuration for one or more :term:`Cache Groups`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -287,4 +287,4 @@ Response Structure
 	}
 
 
-.. [2] At least one of "cacheGroupId" or "fallbackId" must be sent with the request. If both are sent, a single fallback relationship is deleted, whereas using only "cacheGroupId" will result in all fallbacks being removed from the :term:`Cache Group` identified by that integral, unique identifier, and using only "fallbackId" will remove the :term:`Cache Group` identified by *that* integral, unique identifier from all other :term:`Cache Group`\ s' fallback lists.
+.. [2] At least one of "cacheGroupId" or "fallbackId" must be sent with the request. If both are sent, a single fallback relationship is deleted, whereas using only "cacheGroupId" will result in all fallbacks being removed from the :term:`Cache Group` identified by that integral, unique identifier, and using only "fallbackId" will remove the :term:`Cache Group` identified by *that* integral, unique identifier from all other :term:`Cache Groups`' fallback lists.

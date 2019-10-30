@@ -18,7 +18,7 @@ Traffic Monitor
 ***************
 Introduction
 ============
-Traffic Monitor is an HTTP service application that monitors :term:`cache server`\ s, provides health state information to Traffic Router, and collects statistics for use in tools such as Traffic Portal and Traffic Stats. The health state provided by Traffic Monitor is used by Traffic Router to control which :term:`cache server`\ s are available on the CDN.
+Traffic Monitor is an HTTP service application that monitors :term:`cache servers`, provides health state information to Traffic Router, and collects statistics for use in tools such as Traffic Portal and Traffic Stats. The health state provided by Traffic Monitor is used by Traffic Router to control which :term:`cache servers` are available on the CDN.
 
 Software Requirements
 =====================
@@ -147,7 +147,7 @@ Monitor Config Pipeline
 poller
 	``common/poller/poller.go:MonitorConfigPoller.Poll()``. The Monitor Configuration poller, on its interval, polls Traffic Ops for the Monitor configuration, and writes the polled value to its result channel, which is read by the Manager.
 manager
-	``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for results from the poller, and processes them. Cache changes are written to channels read by the Health, Stat, and Peer pollers. In the Shared Data objects, this also sets the list of new :term:`Delivery Service`\ s and removes ones which no longer exist, and sets the list of peer Traffic Monitors.
+	``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for results from the poller, and processes them. Cache changes are written to channels read by the Health, Stat, and Peer pollers. In the Shared Data objects, this also sets the list of new :term:`Delivery Services` and removes ones which no longer exist, and sets the list of peer Traffic Monitors.
 
 
 Ops Config Pipeline
@@ -175,7 +175,7 @@ The State Combiner is a microthread started in ``traffic_monitor/manager/manager
 
 Aggregated Stat Data
 --------------------
-The Stat pipeline Manager is responsible for aggregating stats from all :term:`cache server` s, into :term:`Delivery Service`\ s statistics. This is done via a call to ``traffic_monitor/deliveryservice/stat.go:CreateStats()``.
+The Stat pipeline Manager is responsible for aggregating stats from all :term:`cache server` s, into :term:`Delivery Services` statistics. This is done via a call to ``traffic_monitor/deliveryservice/stat.go:CreateStats()``.
 
 Aggregated Availability Data
 ----------------------------

@@ -83,4 +83,4 @@ Response Structure
 
 
 
-.. [1] If a user does not have either the "admin" nor "operations" role, then only :term:`Delivery Service`\ s assigned to the user's Tenant will be able to be queried with this endpoint
+.. [1] If a user does not have either the "admin" nor "operations" role, then only :term:`Delivery Services` assigned to the user's Tenant will be able to be queried with this endpoint

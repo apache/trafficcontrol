@@ -18,7 +18,7 @@
 ***********************
 ``cachegroups/trimmed``
 ***********************
-Extract just the names of all :term:`Cache Group`\ s.
+Extract just the names of all :term:`Cache Groups`.
 
 ``GET``
 =======

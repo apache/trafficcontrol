@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Returns SSL certificates for all :term:`Delivery Service`\ s that are a part of the CDN.
+Returns SSL certificates for all :term:`Delivery Services` that are a part of the CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin"

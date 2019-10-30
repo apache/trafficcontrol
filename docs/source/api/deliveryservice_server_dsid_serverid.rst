@@ -65,4 +65,4 @@ Response Structure
 		}
 	]}
 
-.. [1] Users with the "admin" or "operations" roles will be able to delete *any*:term:`Delivery Service`, whereas other users will only be able to delete :term:`Delivery Service`\ s that their tenant has permissions to delete.
+.. [1] Users with the "admin" or "operations" roles will be able to delete *any*:term:`Delivery Service`, whereas other users will only be able to delete :term:`Delivery Services` that their tenant has permissions to delete.

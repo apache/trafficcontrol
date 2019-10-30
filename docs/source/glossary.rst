@@ -38,7 +38,7 @@ Glossary
 
 	Cache Group
 	Cache Groups
-		A group of caching HTTP proxy servers that together create a combined larger cache using consistent hashing. Traffic Router treats all servers in a :dfn:`Cache Group` as though they are in the  same :term:`Physical Location`, though they are in fact only in the same general area. A :dfn:`Cache Group` has one single set of geographical coordinates even if the :term:`cache server`\ s that make up the :dfn:`Cache Group` are actually in :term:`Physical Location`\ s. The :term:`cache server`\ s in a :dfn:`Cache Group` are not aware of the other :term:`cache server`\ s in the group - there is no clustering software or communications between :term:`cache server`\ s in a :dfn:`Cache Group`.
+		A group of caching HTTP proxy servers that together create a combined larger cache using consistent hashing. Traffic Router treats all servers in a :dfn:`Cache Group` as though they are in the  same :term:`Physical Location`, though they are in fact only in the same general area. A :dfn:`Cache Group` has one single set of geographical coordinates even if the :term:`cache servers` that make up the :dfn:`Cache Group` are actually in :term:`Physical Locations`. The :term:`cache servers` in a :dfn:`Cache Group` are not aware of the other :term:`cache servers` in the group - there is no clustering software or communications between :term:`cache servers` in a :dfn:`Cache Group`.
 
   		There are two basic types of :dfn:`Cache Groups`: EDGE_LOC and MID_LOC ("LOC" being short for "location" - a holdover from when :dfn:`Cache Groups` were called "Cache Locations). Traffic Control is a two-tiered system, where the clients get directed to the Edge-tier (EDGE_LOC) :dfn:`Cache Group`. On cache miss, the :term:`cache server` in the Edge-tier :dfn:`Cache Group` obtains content from a Mid-tier (MID_LOC) :dfn:`Cache Group`, rather than the origin, which is shared with multiple Edge-tier :dfn:`Cache Groups`. Edge-tier :dfn:`Cache Groups` are configured to have a single "parent" :dfn:`Cache Group`, but in general Mid-tier :dfn:`Cache Groups` have many "children".
 
@@ -141,7 +141,7 @@ Glossary
 
 	forward proxy
 	forward proxies
-		A forward proxy acts on behalf of the client such that the :term:`origin server` is (potentially) unaware of the proxy's existence. All Mid-tier :term:`cache server`\ s in a Traffic Control based CDN are :dfn:`forward proxies`. In a :dfn:`forward proxy` scenario, the client is explicitly configured to use the the proxy's IP address and port as a :dfn:`forward proxy`. The client always connects to the :dfn:`forward proxy` for content. The content provider does not have to change the URL the client obtains, and is (potentially) unaware of the proxy in the middle.
+		A forward proxy acts on behalf of the client such that the :term:`origin server` is (potentially) unaware of the proxy's existence. All Mid-tier :term:`cache servers` in a Traffic Control based CDN are :dfn:`forward proxies`. In a :dfn:`forward proxy` scenario, the client is explicitly configured to use the the proxy's IP address and port as a :dfn:`forward proxy`. The client always connects to the :dfn:`forward proxy` for content. The content provider does not have to change the URL the client obtains, and is (potentially) unaware of the proxy in the middle.
 
 		..  seealso:: `ATS documentation on forward proxy <https://docs.trafficserver.apache.org/en/latest/admin/forward-proxy.en.html>`_.
 
@@ -261,7 +261,7 @@ Glossary
 
 	Physical Location
 	Physical Locations
-		A pair of geographic coordinates (latitude and longitude) that is used by :term:`Cache Group`\ s to define their location. This information is used by Traffic Router to route client traffic to the geographically nearest :term:`Cache Group`.
+		A pair of geographic coordinates (latitude and longitude) that is used by :term:`Cache Groups` to define their location. This information is used by Traffic Router to route client traffic to the geographically nearest :term:`Cache Group`.
 
 	Profile
 	Profiles
@@ -286,15 +286,15 @@ Glossary
 
 	Region
 	Regions
-		A group of :term:`Physical Location`\ s.
+		A group of :term:`Physical Locations`.
 
 	reverse proxy
 	reverse proxies
-		A :dfn:`reverse proxy` acts on behalf of the :term:`origin server` such that the client is (potentially) unaware it is not communicating directly with the :term:`origin`. All Edge-tier :term:`cache server`\ s in a Traffic Control CDN are :dfn:`reverse proxies`. To the end user a Traffic Control-based CDN appears as a :dfn:`reverse proxy` since it retrieves content from the :term:`origin server`, acting on behalf of that :term:`origin server`. The client requests a URL that has a hostname which resolves to the :dfn:`reverse proxy`'s IP address and, in compliance with the HTTP 1.1 specification (:rfc:`2616`), the client sends a ``Host:`` header to the :dfn:`reverse proxy` that matches the hostname in the URL. The proxy looks up this hostname in a list of mappings to find the :term:`origin` hostname; if the hostname of the ``Host:`` header is not found in the list, the proxy will send an error (usually either ``404 Not Found`` or ``503 Service Unavailable`` as appropriate) to the client. If the supplied hostname is found in this list of mappings, the proxy checks its cache, and when the content is not already present, connects to the :term:`origin` to which the requested ``Host:`` maps requests the path of the original URL, providing the :term:`origin` hostname in the ``Host`` header. The proxy then stores the URL in its cache and serves the contents to the client. When there are subsequent requests for the same URL, a caching proxy serves the content out of its cache - provided :ref:`cache-revalidation` are satisfied - thereby reducing latency and network traffic.
+		A :dfn:`reverse proxy` acts on behalf of the :term:`origin server` such that the client is (potentially) unaware it is not communicating directly with the :term:`origin`. All Edge-tier :term:`cache servers` in a Traffic Control CDN are :dfn:`reverse proxies`. To the end user a Traffic Control-based CDN appears as a :dfn:`reverse proxy` since it retrieves content from the :term:`origin server`, acting on behalf of that :term:`origin server`. The client requests a URL that has a hostname which resolves to the :dfn:`reverse proxy`'s IP address and, in compliance with the HTTP 1.1 specification (:rfc:`2616`), the client sends a ``Host:`` header to the :dfn:`reverse proxy` that matches the hostname in the URL. The proxy looks up this hostname in a list of mappings to find the :term:`origin` hostname; if the hostname of the ``Host:`` header is not found in the list, the proxy will send an error (usually either ``404 Not Found`` or ``503 Service Unavailable`` as appropriate) to the client. If the supplied hostname is found in this list of mappings, the proxy checks its cache, and when the content is not already present, connects to the :term:`origin` to which the requested ``Host:`` maps requests the path of the original URL, providing the :term:`origin` hostname in the ``Host`` header. The proxy then stores the URL in its cache and serves the contents to the client. When there are subsequent requests for the same URL, a caching proxy serves the content out of its cache - provided :ref:`cache-revalidation` are satisfied - thereby reducing latency and network traffic.
 
 		.. seealso:: `The Apache Traffic Server documentation on reverse proxy <https://docs.trafficserver.apache.org/en/latest/admin/reverse-proxy-http-redirects.en.html#http-reverse-proxy>`_.
 
-		To insert a :dfn:`reverse proxy` into a typical HTTP 1.1 request and response flow, the :dfn:`reverse proxy` needs to be told where the :term:`origin server` can be reached (and which :term:`origin` to use for a given request when it's configured to proxy requests for multiple :term:`origin`\ s). In :abbr:`ATS (Apache Traffic Server)` this is handled by adding rules to `the remap.config configuration file <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/remap.config.en.html>`_. The content owner must inform the clients, by updating the URL, to receive the content from the cache and not from the :term:`origin server` directly. For example, clients might be instructed to request content from ``http://www-origin-cache.cdn.com`` which points to a :dfn:`reverse proxy` for the actual :term:`origin` located at ``http://www.origin.com``.
+		To insert a :dfn:`reverse proxy` into a typical HTTP 1.1 request and response flow, the :dfn:`reverse proxy` needs to be told where the :term:`origin server` can be reached (and which :term:`origin` to use for a given request when it's configured to proxy requests for multiple :term:`origins`). In :abbr:`ATS (Apache Traffic Server)` this is handled by adding rules to `the remap.config configuration file <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/remap.config.en.html>`_. The content owner must inform the clients, by updating the URL, to receive the content from the cache and not from the :term:`origin server` directly. For example, clients might be instructed to request content from ``http://www-origin-cache.cdn.com`` which points to a :dfn:`reverse proxy` for the actual :term:`origin` located at ``http://www.origin.com``.
 
 		Now, if the client requests ``/foo/bar/fun.html`` from the :dfn:`reverse proxy` the sequence of events is as follows. is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` (note the different hostname) and when attempting to obtain that URL, the following occurs:
 
@@ -390,7 +390,7 @@ Glossary
 	Tenants
 	Tenancy
 	Tenancies
-		Users are grouped into :dfn:`Tenants` (or :dfn:`Tenancies`) to segregate ownership of and permissions over :term:`Delivery Service`\ s and their resources. To be clear, the notion of :dfn:`Tenancy` **only** applies within the context of :term:`Delivery Service`\ s and does **not** apply permissions restrictions to any other aspect of Traffic Control.
+		Users are grouped into :dfn:`Tenants` (or :dfn:`Tenancies`) to segregate ownership of and permissions over :term:`Delivery Services` and their resources. To be clear, the notion of :dfn:`Tenancy` **only** applies within the context of :term:`Delivery Services` and does **not** apply permissions restrictions to any other aspect of Traffic Control.
 
 	Type
 	Types

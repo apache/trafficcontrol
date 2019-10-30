@@ -18,9 +18,9 @@
 *************************************
 Configure Regional Geo-blocking (RGB)
 *************************************
-.. Note:: :abbr:`RGB (Regional Geographic-based Blocking)` is only supported for HTTP :term:`Delivery Service`\ s.
+.. Note:: :abbr:`RGB (Regional Geographic-based Blocking)` is only supported for HTTP :term:`Delivery Services`.
 
-#. Prepare an :abbr:`RGB (Regional Geographic-based Blocking)` configuration file. :abbr:`RGB (Regional Geographic-based Blocking)` uses a configuration file in JSON format to define regional geographic blocking rules for :term:`Delivery Service`\ s. The file needs to be put on an HTTP server accessible to Traffic Router.
+#. Prepare an :abbr:`RGB (Regional Geographic-based Blocking)` configuration file. :abbr:`RGB (Regional Geographic-based Blocking)` uses a configuration file in JSON format to define regional geographic blocking rules for :term:`Delivery Services`. The file needs to be put on an HTTP server accessible to Traffic Router.
 
 	.. code-block:: json
 		:caption: Example Configuration File

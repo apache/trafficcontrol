@@ -22,7 +22,7 @@
 
 ``GET``
 =======
-Retrieves routing regular expressions for all :term:`Delivery Service`\ s.
+Retrieves routing regular expressions for all :term:`Delivery Services`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
@@ -69,4 +69,4 @@ Response Structure
 		}
 	]}
 
-.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by :term:`Delivery Service`\ s their tenant has permissions to see.
+.. [1] If tenancy is used, then users (regardless of role) will only be able to see the routing regular expressions used by :term:`Delivery Services` their tenant has permissions to see.

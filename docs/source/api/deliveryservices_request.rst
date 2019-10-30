@@ -72,11 +72,11 @@ Request Structure
 	:routingType:                      The :term:`Delivery Service`'s routing type, should be one of:
 
 		HTTP
-			The Traffic Router re-directs clients to :term:`cache server`\ s using the HTTP ``302 REDIRECT`` response code
+			The Traffic Router re-directs clients to :term:`cache servers` using the HTTP ``302 REDIRECT`` response code
 		DNS
-			The Traffic Router responds to requests for name resolution of the :term:`Delivery Service`'s routing name with IP addresses of :term:`cache server`\ s
+			The Traffic Router responds to requests for name resolution of the :term:`Delivery Service`'s routing name with IP addresses of :term:`cache servers`
 		STEERING
-			This :term:`Delivery Service` routes clients to other :term:`Delivery Service`\ s - which will in turn (generally) route them to clients
+			This :term:`Delivery Service` routes clients to other :term:`Delivery Services` - which will in turn (generally) route them to clients
 		ANY_MAP
 			Some kind of undocumented black magic is used to get clients to... content, probably?
 

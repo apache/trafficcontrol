@@ -191,7 +191,7 @@ A table showing the results of the periodic :ref:`to-check-ext` that are run. Th
 
 Services
 ========
-:guilabel:`Services` groups the functionality to modify :term:`Delivery Service`\ s - for those users with the necessary permissions - or make Delivery Service Requests for such changes - for users without necessary permissions.
+:guilabel:`Services` groups the functionality to modify :term:`Delivery Services` - for those users with the necessary permissions - or make Delivery Service Requests for such changes - for users without necessary permissions.
 
 
 .. figure:: ./images/tp_menu_services.png
@@ -490,7 +490,7 @@ This page displays a table of :term:`Parameters` from all :term:`Profiles` with 
 
 Types
 -----
-:term:`Type`\ s group :term:`Delivery Service`\ s, servers and :term:`Cache Group`\ s for various purposes. Each entry in the table shown on this page has the following fields:
+:term:`Types` group :term:`Delivery Services`, servers and :term:`Cache Groups` for various purposes. Each entry in the table shown on this page has the following fields:
 
 :Name:         The name of the :term:`Type`
 :Use In Table: States the use of this :term:`Type`, e.g. ``server`` indicates this is a :term:`Type` assigned to servers
@@ -501,9 +501,9 @@ Types
 - create a new :term:`Type`
 - update an existing :term:`Type`
 - delete an existing :term:`Type`
-- view :term:`Delivery Service`\ s assigned to a :term:`Type`
+- view :term:`Delivery Services` assigned to a :term:`Type`
 - view servers assigned to a :term:`Type`
-- view :term:`Cache Group`\ s assigned to a :term:`Type`
+- view :term:`Cache Groups` assigned to a :term:`Type`
 
 Statuses
 --------
@@ -569,7 +569,7 @@ Coordination management includes the ability to (where applicable):
 
 Phys Locations
 --------------
-A table of :term:`Physical Location`\ s which may be assigned to servers and :term:`Cache Group`\ s, typically for the purpose of optimizing client routing. Each entry has the following columns:
+A table of :term:`Physical Locations` which may be assigned to servers and :term:`Cache Groups`, typically for the purpose of optimizing client routing. Each entry has the following columns:
 
 :Name:       The full name of the :term:`Physical Location`
 :Short Name: A shorter, more human-friendly name for this :term:`Physical Location`
@@ -587,7 +587,7 @@ A table of :term:`Physical Location`\ s which may be assigned to servers and :te
 
 Divisions
 ---------
-Each entry in the table of :term:`Division`\ s on this page has the following fields:
+Each entry in the table of :term:`Divisions` on this page has the following fields:
 
 :Name: The name of the :term:`Division`
 
@@ -596,11 +596,11 @@ Each entry in the table of :term:`Division`\ s on this page has the following fi
 - create a new :term:`Division`
 - delete an existing :term:`Division`
 - modify an existing :term:`Division`
-- view :term:`Region`\ s within a :term:`Division`
+- view :term:`Regions` within a :term:`Division`
 
 Regions
 -------
-Each entry in the table of :term:`Region`\ s on this page has the following fields:
+Each entry in the table of :term:`Regions` on this page has the following fields:
 
 :Name:     The name of this :term:`Region`
 :Division: The :term:`Division` to which this :term:`Region` is assigned
@@ -610,7 +610,7 @@ Each entry in the table of :term:`Region`\ s on this page has the following fiel
 - create a new :term:`Region`
 - update an existing :term:`Region`
 - delete an existing :term:`Region`
-- view :term:`Physical Location`\ s within a :term:`Region`
+- view :term:`Physical Locations` within a :term:`Region`
 
 ASNs
 ----
@@ -735,16 +735,16 @@ User management includes the ability to (where applicable):
 - register a new user
 - create a new user
 - update an existing user
-- view :term:`Delivery Service`\ s visible to a user
+- view :term:`Delivery Services` visible to a user
 
 .. Note:: If OAuth is enabled, the username must exist both here as well as with the OAuth provider. A user's rights are defined by the :term:`role` assigned to the user in Traffic Ops. Creating/deleting a user here will update the user's :term:`role` but the user needs to be created/deleted with the OAuth provider as well.
 
 Tenants
 -------
-Each entry in the table of :term:`Tenant`\ s on this page has the following entries:
+Each entry in the table of :term:`Tenants` on this page has the following entries:
 
 :Name:   The name of the :term:`Tenant`
-:Active: If 'true' users of this :term:`Tenant` group are allowed to login and have active :term:`Delivery Service`\ s
+:Active: If 'true' users of this :term:`Tenant` group are allowed to login and have active :term:`Delivery Services`
 :Parent: The parent of this :term:`Tenant`. The default is the 'root' :term:`Tenant`, which has no users.
 
 :term:`Tenant` management includes the ability to (where applicable):
@@ -753,11 +753,11 @@ Each entry in the table of :term:`Tenant`\ s on this page has the following entr
 - update an existing :term:`Tenant`
 - delete an existing :term:`Tenant`
 - view users assigned to a :term:`Tenant`
-- view :term:`Delivery Service`\ s assigned to a :term:`Tenant`
+- view :term:`Delivery Services` assigned to a :term:`Tenant`
 
 Roles
 -----
-Each entry in the table of :term:`Role`\ s on this page has the following fields:
+Each entry in the table of :term:`Roles` on this page has the following fields:
 
 :Name:            The name of the :term:`Role`
 :Privilege Level: The privilege level of this :term:`Role`. This is a whole number that actually controls what a user is allowed to do. Higher numbers correspond to higher permission levels
@@ -765,10 +765,10 @@ Each entry in the table of :term:`Role`\ s on this page has the following fields
 
 Role management includes the ability to (where applicable):
 
-- view all :term:`Role`\ s
+- view all :term:`Roles`
 - create new :term:`Role`
 
-.. note:: :term:`Role`\ s cannot be deleted through the Traffic Portal UI
+.. note:: :term:`Roles` cannot be deleted through the Traffic Portal UI
 
 Other
 =====
