@@ -24,7 +24,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 type DnsRecord struct {
@@ -43,7 +45,16 @@ func GetDnsChallengeRecords(w http.ResponseWriter, r *http.Request) {
 	getQuery := `SELECT fqdn, record FROM dnschallenges`
 
 	if inf.Params["fqdn"] != "" {
-		getQuery += ` where fqdn = '` + inf.Params["fqdn"] + `'`
+		queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+			"fqdn": dbhelpers.WhereColumnInfo{"fqdn", nil},
+		}
+
+		where, _, _, _, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+		if len(errs) > 0 {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, util.JoinErrs(errs))
+			return
+		}
+		getQuery += where
 	}
 
 	dnsRecord, err := getDnsRecords(inf.Tx.Tx, getQuery)

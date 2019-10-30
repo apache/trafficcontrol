@@ -46,7 +46,9 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
                 return result.data.response;
             },
             function(err) {
-            	messageModel.setMessages(err.data.alerts, false);
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
                 throw err;
             }
         );
@@ -70,7 +72,9 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
                 return result.data.response;
             },
             function(err) {
-            	messageModel.setMessages(err.data.alerts, false);
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
                 throw err;
             }
         );
@@ -82,7 +86,9 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
                 return result.data.response;
             },
             function(err) {
-            	messageModel.setMessages(err.data.alerts, true);
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
                 throw err;
             }
         );

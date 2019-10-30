@@ -696,13 +696,16 @@ Let's Encrypt
 Let’s Encrypt is a free, automated :abbr:`CA (Certificate Authority)` using :abbr:`ACME (Automated Certificate Management Environment)` protocol. Let's Encrypt performs a domain validation before issuing or renewing a certificate. There are several options for domain validation but for this application the DNS challenge is used in order to receive wildcard certificates. Let's Encrypt sends a token to be used as a TXT record at ``_acme-challenge.domain.example.com`` and after verifying that the token is accessible there, will return the newly generated and signed certificate and key. The basic workflow implemented is:
 
 #. ``POST`` to Let's Encrypt and receive the DNS challenge token.
-#. Traffic Ops stores the DNS challenge in the Traffic Ops database.
-#. Traffic Router has a watcher set up to watch for changes in the Traffic Ops database table.
-#. When a new record appears, Traffic Router reads it and puts the token from Let's Encrypt as a TXT record at ``_acme-challenge.domain.example.com`` for the specified :term:`Delivery Service`.
-#. Let's Encrypt verifies that the correct record is accessible to verify ownership of the domain.
+#. Traffic Ops stores the DNS challenge.
+#. Traffic Router has a watcher which checks with Traffic Ops for any new challenges or deleted challenges.
+#. When a new record appears, Traffic Router temporarily adds a static route for the specified :term:`Delivery Service` with the token from Let's Encrypt at ``_acme-challenge.domain.example.com``.
+#. Let's Encrypt continuously attempts to resolve it as a TXT record to verify ownership of the domain.
+
+.. Note:: DNSSec should be turned on for any CDN using Let's Encrypt to guard against a 'Man in the Middle' interference with this transaction.
+
 #. Let's Encrypt returns the signed certificate and key to Traffic Ops.
-#. Traffic Ops stores the certificate and key in Traffic Vault and removes the DNS challenge record from the Traffic Ops database.
-#. The Traffic Router watcher removes the TXT record when the Traffic Ops database table has the record removed.
+#. Traffic Ops stores the certificate and key in Traffic Vault and removes the DNS challenge record.
+#. The Traffic Router watcher removes the TXT record.
 
 Let's Encrypt can be set up through :file:`/opt/traffic_ops/app/conf/cdn.conf` by updating the following fields:
 

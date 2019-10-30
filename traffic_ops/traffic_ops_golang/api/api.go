@@ -854,6 +854,10 @@ func AddUserToReq(r *http.Request, u auth.CurrentUser) {
 	*r = *r.WithContext(ctx)
 }
 
+// SendEmailFromTemplate allows a user to input an html template to format an email.  It parses the template and creates a message before calling the SendMail method.
+// SendEmailFromTemplate returns (in order) an HTTP status code, a user-friendly error, and an error fit for
+// logging to system error logs. If either the user or system error is non-nil, the operation failed,
+// and the HTTP status code indicates the type of failure.
 func SendEmailFromTemplate(config config.Config, header string, data interface{}, templateFile string, toEmail string) (int, error, error) {
 	email := rfc.EmailAddress{
 		Address: mail.Address{Name: "", Address: toEmail},

@@ -34,6 +34,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -143,6 +144,48 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hostName := inf.Params["hostname"]
+	xmlID, ok, err := getXmlIdFromHostname(inf, hostName)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !ok {
+		api.WriteRespAlert(w, r, tc.InfoLevel, "- error getting cdn or delivery service for hostname "+hostName)
+		return
+	}
+
+	getSSLKeysByXMLIDHelper(xmlID, inf, w, r)
+}
+
+// GetSSLKeysByHostName fetches the ssl keys for a deliveryservice specified by the fully qualified hostname. V14 includes expiration date.
+func GetSSLKeysByHostNameV14(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"hostname"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
+		return
+	}
+
+	hostName := inf.Params["hostname"]
+	xmlID, ok, err := getXmlIdFromHostname(inf, hostName)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !ok {
+		api.WriteRespAlert(w, r, tc.InfoLevel, "- error getting cdn or delivery service for hostname "+hostName)
+		return
+	}
+
+	getSSLKeysByXMLIDHelperV14(xmlID, inf, w, r)
+}
+
+func getXmlIdFromHostname(inf *api.APIInfo, hostName string) (string, bool, error) {
 	domainName := ""
 	hostRegex := ""
 	strArr := strings.Split(hostName, ".")
@@ -158,25 +201,23 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	// lookup the cdnID
 	cdnID, ok, err := getCDNIDByDomainname(domainName, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id by domain name: "+err.Error()))
-		return
+		return "", false, errors.New("getting cdn id by domain name: " + err.Error())
 	}
 	if !ok {
-		api.WriteRespAlert(w, r, tc.InfoLevel, " - a cdn does not exist for the domain: "+domainName+" parsed from hostname: "+hostName)
-		return
+		log.Warnf(" - a cdn does not exist for the domain: " + domainName + " parsed from hostname: " + hostName)
+		return "", false, nil
 	}
 	// now lookup the deliveryservice xmlID
 	xmlID, ok, err := getXMLID(cdnID, hostRegex, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting xml id: "+err.Error()))
-		return
+		return "", false, errors.New("getting xml id: " + err.Error())
 	}
 	if !ok {
-		api.WriteRespAlert(w, r, tc.InfoLevel, "  - a delivery service does not exist for a host with hostname of "+hostName)
-		return
+		log.Warnf("  - a delivery service does not exist for a host with hostname of " + hostName)
+		return "", false, nil
 	}
 
-	getSSLKeysByXMLIDHelper(xmlID, inf, w, r)
+	return xmlID, true, nil
 }
 
 // GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID.
@@ -222,7 +263,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 	api.WriteResp(w, r, keyObj)
 }
 
-// GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID.
+// GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID. V14 includes expiration date.
 func GetSSLKeysByXMLIDV14(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -251,7 +292,7 @@ func getSSLKeysByXMLIDHelperV14(xmlID string, inf *api.APIInfo, w http.ResponseW
 		return
 	}
 	if !ok {
-		api.WriteRespAlertObj(w, r, tc.InfoLevel, "no object found for the specified key", struct{}{}) // empty response object because Perl
+		api.WriteRespAlert(w, r, tc.InfoLevel, "no object found for the specified key")
 		return
 	}
 	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )

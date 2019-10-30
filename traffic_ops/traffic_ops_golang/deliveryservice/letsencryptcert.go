@@ -54,7 +54,7 @@ type MyUser struct {
 	key          crypto.PrivateKey
 }
 
-const LetsEncryptTimeout = time.Minute * 10
+const LetsEncryptTimeout = time.Minute * 20
 
 func (u *MyUser) GetEmail() string {
 	return u.Email
@@ -151,7 +151,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	go GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User)
 
-	api.WriteRespAlert(w, r, tc.WarnLevel, "Beginning async call to Let's Encrypt for "+*req.DeliveryService+".  This may take a few minutes.")
+	api.WriteRespAlert(w, r, tc.InfoLevel, "Beginning async call to Let's Encrypt for "+*req.DeliveryService+".  This may take a few minutes.")
 
 }
 

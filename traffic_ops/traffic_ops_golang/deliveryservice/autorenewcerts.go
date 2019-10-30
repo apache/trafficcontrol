@@ -25,7 +25,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -85,7 +84,7 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 			log.Errorf("getting delivery services: %v", err)
 			continue
 		}
-		if ds.Version.Valid && int(ds.Version.Int64) != 0 {
+		if ds.Version.Valid && ds.Version.Int64 != 0 {
 			continue
 		}
 
@@ -155,36 +154,24 @@ func RenewCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inf.Config.SMTP.Enabled && inf.Config.ConfigLetsEncrypt.SendExpEmail {
-		err = AlertExpiringCerts(keysFound, *inf.Config)
-		if err != nil {
-			log.Errorf(err.Error())
-			api.WriteRespAlertObj(w, r, tc.WarnLevel, "Failed to send autorenewal email with error: "+err.Error(), keysFound)
+		errCode, userErr, sysErr := AlertExpiringCerts(keysFound, *inf.Config)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
+
 	}
 
 	api.WriteResp(w, r, keysFound)
 
 }
 
-func AlertExpiringCerts(certsFound ExpirationSummary, config config.Config) error {
-	email := strings.Join([]string{config.ConfigLetsEncrypt.Email}, ",")
+func AlertExpiringCerts(certsFound ExpirationSummary, config config.Config) (int, error, error) {
+	header := "From: " + config.ConfigTO.EmailFrom.String() + "\r\n" +
+		"To: " + config.ConfigLetsEncrypt.Email + "\r\n" +
+		"MIME-version: 1.0;\r\n" +
+		"Content-Type: text/html; charset=\"UTF-8\";\r\n" +
+		"Subject: Certificate Expiration Summary\r\n\r\n"
 
-	header := "From: " + config.ConfigTO.EmailFrom.String() + "\n" +
-		"To: " + email + "\n" +
-		"MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n" +
-		"Subject: Certificate Expiration Summary\r\n"
-
-	status, userErr, systemErr := api.SendEmailFromTemplate(config, header, certsFound, emailTemplateFile, config.ConfigLetsEncrypt.Email)
-	if userErr != nil {
-		return errors.New("Failed to send email: " + userErr.Error())
-	}
-	if systemErr != nil {
-		return errors.New("Failed to send email: " + systemErr.Error())
-	}
-	if status != http.StatusOK {
-		return errors.New("Failed to send email. Unexpected response code: " + strconv.Itoa(status))
-	}
-
-	return nil
+	return api.SendEmailFromTemplate(config, header, certsFound, emailTemplateFile, config.ConfigLetsEncrypt.Email)
 }

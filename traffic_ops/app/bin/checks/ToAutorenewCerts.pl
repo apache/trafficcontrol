@@ -101,3 +101,22 @@ if ( $response->is_success ) {
 else {
  ERROR "Error trying to update keys, response was " . $response->status_line;
 }
+
+sub help() {
+	print
+		"ToAutorenewCerts.pl -c \"{\\\"base_url\\\": \\\"https://localhost\\\", \\\"user\\\": \\\"user\\\", \\\"pass\\\": \\\"password\\\"}\"\n";
+	print "\n";
+	print "-c   json formatted list of variables\n";
+	print "     base_url: required\n";
+	print "        URL of the Traffic Ops server.\n";
+	print "     user: required\n";
+	print "        The Traffic Ops user.\n";
+	print "     pass: required\n";
+	print "        The password for the user.\n";
+	print "-l   Logging level. 1 - 6. 1 being least (FATAL). 6 being most (TRACE). Default\n";
+    print "     is 1.\n";
+	print "================================================================================\n";
+
+	# the above line of equal signs is 80 columns
+	print "\n";
+}
