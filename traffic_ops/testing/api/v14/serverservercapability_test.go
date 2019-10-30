@@ -61,7 +61,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 		t.Error("expected to receive error when assigning a already assigned server capability\n")
 	}
 
-	// Attempt to assign an server capability with no ID
+	// Attempt to assign a server capability with no ID
 	sscNilID := tc.ServerServerCapability{
 		ServerCapability: ssc.ServerCapability,
 	}
@@ -70,7 +70,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 		t.Error("expected to receive error when assigning a server capability without a server ID\n")
 	}
 
-	// Attempt to assign an server capability with no server capability
+	// Attempt to assign a server capability with no server capability
 	sscNilCapability := tc.ServerServerCapability{
 		ServerID: ssc.ServerID,
 	}
@@ -79,7 +79,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 		t.Error("expected to receive error when assigning a server capability to a server without a server capability\n")
 	}
 
-	// Attempt to assign an server capability with invalid server capability
+	// Attempt to assign a server capability with invalid server capability
 	sscInvalidCapability := tc.ServerServerCapability{
 		ServerID:         ssc.ServerID,
 		ServerCapability: util.StrPtr("bogus"),
@@ -89,7 +89,7 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 		t.Error("expected to receive error when assigning a non existent server capability to a server\n")
 	}
 
-	// Attempt to assign an server capability with invalid server capability
+	// Attempt to assign a server capability with invalid server capability
 	sscInvalidID := tc.ServerServerCapability{
 		ServerID:         util.IntPtr(-1),
 		ServerCapability: ssc.ServerCapability,
@@ -97,6 +97,24 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	_, _, err = TOSession.CreateServerServerCapability(sscInvalidID)
 	if err == nil {
 		t.Error("expected to receive error when assigning a server capability to a non existent server ID\n")
+	}
+
+	// Attempt to assign a server capability to a non MID/EDGE server
+	servers, _, err := TOSession.GetServerByHostName("riak")
+	if err != nil {
+		t.Fatalf("cannot GET Server by hostname: %v - %v\n", *ssc.Server, err)
+	}
+	if len(servers) < 1 {
+		t.Fatal("need at least one server to test invalid server type assignment")
+	}
+
+	sscInvalidType := tc.ServerServerCapability{
+		ServerID:         &servers[0].ID,
+		ServerCapability: ssc.ServerCapability,
+	}
+	_, _, err = TOSession.CreateServerServerCapability(sscInvalidType)
+	if err == nil {
+		t.Error("expected to receive error when assigning a server capability to a server with incorrect type\n")
 	}
 }
 
