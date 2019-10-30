@@ -28,7 +28,7 @@ import (
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
-func getSummary(db string, q influx.Query, client *influx.Client) (tc.TrafficStatsSummary, error) {
+func getSummary(db string, q influx.Query, client *influx.Client) (*tc.TrafficStatsSummary, error) {
 	s := tc.TrafficStatsSummary{}
 	msgs := []influx.Message{}
 	log.Debugf("InfluxDB SummaryQuery: %+v", q)
@@ -37,7 +37,7 @@ func getSummary(db string, q influx.Query, client *influx.Client) (tc.TrafficSta
 
 	resp, err := (*client).Query(q)
 	if err != nil {
-		return s, err
+		return nil, err
 	}
 
 	if resp.Results != nil && len(resp.Results) == 1 {
@@ -50,19 +50,25 @@ func getSummary(db string, q influx.Query, client *influx.Client) (tc.TrafficSta
 			}
 		}
 
+		// Perl API handled no series as a non error
+		// Matching implementation
+		if len(r.Series) == 0 {
+			return nil, nil
+		}
+
 		if len(r.Series) != 1 {
-			return s, fmt.Errorf("Improper number of series: %d", len(r.Series))
+			return nil, fmt.Errorf("Improper number of series: %d", len(r.Series))
 		}
 
 		series := r.Series[0]
 
 		if len(series.Values) != 1 {
-			return s, fmt.Errorf("Improper number of returned rows: %d", len(r.Series[0].Values))
+			return nil, fmt.Errorf("Improper number of returned rows: %d", len(r.Series[0].Values))
 		}
 
 		vals := series.Values[0]
 		if len(vals) != 8 || len(series.Columns) != 8 {
-			return s, fmt.Errorf("Improper number of returned values in row: %d (%d cols)", len(vals), len(series.Columns))
+			return nil, fmt.Errorf("Improper number of returned values in row: %d (%d cols)", len(vals), len(series.Columns))
 		}
 
 		mappedValues := map[string]interface{}{}
@@ -72,46 +78,46 @@ func getSummary(db string, q influx.Query, client *influx.Client) (tc.TrafficSta
 
 		var err error
 		if s.Average, err = extractFloat64("average", mappedValues); err != nil {
-			return s, err
+			return nil, err
 		}
 
 		if s.Count, err = extractUInt("count", mappedValues); err != nil {
-			return s, err
+			return nil, err
 		}
 
 		if s.FifthPercentile, err = extractFloat64("fifthPercentile", mappedValues); err != nil {
-			return s, err
+			return nil, err
 		}
 
 		if s.Max, err = extractFloat64("max", mappedValues); err != nil {
-			return s, err
+			return nil, err
 		}
 
 		if s.Min, err = extractFloat64("min", mappedValues); err != nil {
-			return s, err
+			return nil, err
 		}
 
 		if s.Max, err = extractFloat64("max", mappedValues); err != nil {
-			return s, err
+			return nil, err
 		}
 
 		if s.NinetyEighthPercentile, err = extractFloat64("ninetyEighthPercentile", mappedValues); err != nil {
-			return s, err
+			return nil, err
 		}
 
 		if s.NinetyFifthPercentile, err = extractFloat64("ninetyFifthPercentile", mappedValues); err != nil {
-			return s, err
+			return nil, err
 		}
 
 	} else {
 		log.Debugf("InfluxDB summary response: %+v", resp)
-		return s, errors.New("'results' missing or improper")
+		return nil, errors.New("'results' missing or improper")
 	}
 
 	if resp.Error() != nil {
 		log.Debugf("response error, summary object was: %+v", s)
-		return s, resp.Error()
+		return nil, resp.Error()
 	}
 
-	return s, nil
+	return &s, nil
 }

@@ -207,7 +207,13 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resp.Response.Summary = &summary
+		// match Perl implementation and set summary to zero values if no data
+		if summary != nil {
+			resp.Response.Summary = summary
+		} else {
+			resp.Response.Summary = &tc.TrafficDSStatsSummary{}
+		}
+
 	}
 
 	if !c.ExcludeSeries {
@@ -219,11 +225,14 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !c.Unix {
-			series.FormatTimestamps()
-		}
+		// match Perl implementation and omit series if no data
+		if series != nil {
+			if !c.Unix {
+				series.FormatTimestamps()
+			}
 
-		resp.Response.Series = &series
+			resp.Response.Series = series
+		}
 	}
 
 	respBts, err := json.Marshal(resp)
@@ -243,7 +252,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 	w.Write(append(respBts, '\n'))
 }
 
-func getDSSummary(client *influx.Client, conf *tc.TrafficDSStatsConfig, db string) (tc.TrafficDSStatsSummary, error) {
+func getDSSummary(client *influx.Client, conf *tc.TrafficDSStatsConfig, db string) (*tc.TrafficDSStatsSummary, error) {
 	s := tc.TrafficDSStatsSummary{}
 	qStr := fmt.Sprintf(dsSummaryQuery, db, conf.MetricType)
 	q := influx.NewQueryWithParameters(qStr,
@@ -256,10 +265,11 @@ func getDSSummary(client *influx.Client, conf *tc.TrafficDSStatsConfig, db strin
 			"interval": string(conf.Interval),
 		})
 	ts, err := getSummary(db, q, client)
-	if err != nil {
-		return s, err
+	if err != nil || ts == nil {
+		return nil, err
 	}
-	s.TrafficStatsSummary = ts
+
+	s.TrafficStatsSummary = *ts
 
 	value := float64(s.Count*60) * s.Average
 	if conf.MetricType == "kbps" {
@@ -269,7 +279,7 @@ func getDSSummary(client *influx.Client, conf *tc.TrafficDSStatsConfig, db strin
 		s.TotalTransactions = &value
 	}
 
-	return s, nil
+	return &s, nil
 }
 
 func dsTenantIDFromXMLID(xmlid string, tx *sql.Tx) (bool, uint, error) {
@@ -292,7 +302,7 @@ func getXMLIDFromID(id uint64, tx *sql.Tx) (bool, string, error) {
 	return true, xmlid, err
 }
 
-func getDSSeries(client *influx.Client, conf *tc.TrafficDSStatsConfig, db string) (tc.TrafficStatsSeries, error) {
+func getDSSeries(client *influx.Client, conf *tc.TrafficDSStatsConfig, db string) (*tc.TrafficStatsSeries, error) {
 	extraClauses := buildExtraClauses(&conf.TrafficStatsConfig)
 	qStr := fmt.Sprintf(dsSeriesQuery, db, conf.MetricType, conf.Interval, conf.TrafficStatsConfig.OffsetString(), extraClauses)
 	q := influx.NewQueryWithParameters(qStr,
