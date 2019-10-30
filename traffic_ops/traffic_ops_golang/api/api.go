@@ -647,7 +647,7 @@ func parseUniqueConstraint(err *pq.Error) (error, error, int) {
 // and user_role for examples.
 //
 func parseRestrictFKConstraint(err *pq.Error) (error, error, int) {
-	pattern := regexp.MustCompile(`update or delete on table "([a-z]+)" violates foreign key constraint ".+" on table "([a-z]+)"`)
+	pattern := regexp.MustCompile(`update or delete on table "([a-z_]+)" violates foreign key constraint ".+" on table "([a-z_]+)"`)
 	match := pattern.FindStringSubmatch(err.Message)
 	if match == nil {
 		return nil, nil, http.StatusOK
