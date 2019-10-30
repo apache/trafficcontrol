@@ -57,10 +57,10 @@ Traffic Router uses an HTTP ``302 Found`` response to redirect the client to the
 	Content-Length: 0
 	Date: Tue, 13 Jan 2015 20:01:41 GMT
 
-The information Traffic Router can consider when selecting a :term:`cache server` in this case is much better:
+In this case Traffic Router has access to more information when selecting a :term:`cache server` because it has a full HTTP request instead of just a hostname. Traffic Router can be configured to select a :term:`cache server` based on any of the following parts of the HTTP request:
 
 * The client's IP address.
-* The URL path the client is requesting, excluding query string.
+* The URL the client is requesting.
 * All HTTP/1.1 headers.
 
 The client follows the redirect and performs a DNS request for the IP address for ``edge.demo1.mycdn.ciab.test``, and normal HTTP steps follow, except the sending of the Host: header when connected to the cache is ``Host: edge.demo1.mycdn.ciab.test``, and the configuration of the :term:`cache server` includes the "remap rule" (e.g.``http://edge.demo1.mycdn.ciab.test http://origin.infra.ciab.test``). Traffic Router sends all requests for the same path in a :term:`Delivery Service` to the same :term:`cache server` in a :term:`Cache Group` using consistent hashing, in this case all :term:`cache server`\ s in a :term:`Cache Group` are not carrying the same content, and there is a much larger combined cache in the :term:`Cache Group`. In many cases DNS content routing is the best possible option, especially in cases where the client is receiving small objects from the CDN like images and web pages. Traffic Router is redundant and horizontally scalable by adding more instances into the DNS hierarchy using NS records.
