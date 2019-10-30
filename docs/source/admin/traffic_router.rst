@@ -437,7 +437,7 @@ CZ
 DEEP_CZ
 	The result was derived from Deep Coverage Zone data based on the address in the ``chi`` field
 DS_MISS
-	_*HTTP Only*_ No HTTP :term:`Delivery Service`\ supports either this request's URL path or headers
+	_*HTTP Only*_ No HTTP :term:`Delivery Service` supports either this request's URL path or headers
 DS_REDIRECT
 	The result is using the Bypass Destination configured for the matched :term:`Delivery Service` when that :term:`Delivery Service` is unavailable or does not have the requested resource
 ERROR
@@ -455,7 +455,7 @@ RGALT
 RGDENY
 	_*DNS Only*_ The result was obtained through federated coverage zone data outside of any :term:`Delivery Service` - the request was regionally blocked because there was no rule for the request made
 STATIC_ROUTE
-	_*DNS Only*_ No DNS :term:`Delivery Service`\ supports the hostname portion of the requested URL
+	_*DNS Only*_ No DNS :term:`Delivery Service` supports the hostname portion of the requested URL
 
 
 ``rdtl`` Meanings

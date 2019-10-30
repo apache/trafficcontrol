@@ -51,6 +51,6 @@ Configure Delivery Service Steering
 
 	.. note:: This is only available via the :ref:`to-api`; no functionality for manipulating steering targets is offered by Traffic Portal. This feature has been requested and is tracked by `GitHub Issue #2811 <https://github.com/apache/trafficcontrol/issues/2811>`_
 
-#. Any requests to Traffic Router for the steering :term:`Delivery Service`\ should now be routed to target :term:`Delivery Service`\ s based on configured weight or order.
+#. Any requests to Traffic Router for the steering :term:`Delivery Service` should now be routed to target :term:`Delivery Service`\ s based on configured weight or order.
 
 .. note:: This example assumes that the Traffic Ops instance is running at ``to.cdn.local`` and the administrative username and password are ``admin`` and ``twelve``, respectively. This is *not* recommended in production, but merely meant to replicate the default :ref:`ciab` environment!

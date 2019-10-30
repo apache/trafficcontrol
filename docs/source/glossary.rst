@@ -106,7 +106,7 @@ Glossary
 
 	Delivery Service
 	Delivery Services
-		:dfn:`Delivery Services` are often referred to as a :term:`reverse proxy` "remap rule" that exists on Edge-tier :term:`cache servers`. In most cases, a :dfn:`Delivery Service` is a one-to-one mapping to an :abbr:`FQDN (Fully Qualified Domain Name)` that is used as a hostname to deliver the content. Many options and settings regarding how to optimize the content delivery exist, which are configurable on a :dfn:`Delivery Service` basis. Some examples of these :dfn:`Delivery Service`\ settings are:
+		:dfn:`Delivery Services` are often referred to as a :term:`reverse proxy` "remap rule" that exists on Edge-tier :term:`cache servers`. In most cases, a :dfn:`Delivery Service` is a one-to-one mapping to an :abbr:`FQDN (Fully Qualified Domain Name)` that is used as a hostname to deliver the content. Many options and settings regarding how to optimize the content delivery exist, which are configurable on a :dfn:`Delivery Service` basis. Some examples of these :dfn:`Delivery Service` settings are:
 
 		* Cache in RAM, cache on disk, or do not cache at all.
 		* Use DNS or HTTP Content routing.

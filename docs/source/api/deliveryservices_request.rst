@@ -64,8 +64,8 @@ Request Structure
 	:overflowService:                  An optional string containing the IP address or URL of an overflow point (used if rate limits are met or exceeded
 	:peakBPSEstimate:                  A special string describing the estimated peak data transfer rate of the :term:`Delivery Service` in Bytes Per Second (BPS)
 	:peakTPSEstimate:                  A special string describing the estimated peak transaction rate of the :term:`Delivery Service` in Transactions Per Second (TPS)
-	:queryStringHandling:              A special string describing how the :term:`Delivery Service`\ should treat URLs containing query parameters
-	:rangeRequestHandling:             A special string describing how the :term:`Delivery Service`\ should handle range requests
+	:queryStringHandling:              A special string describing how the :term:`Delivery Service` should treat URLs containing query parameters
+	:rangeRequestHandling:             A special string describing how the :term:`Delivery Service` should handle range requests
 	:rateLimitingGBPS:                 An optional field which, if defined, should contain the maximum allowed data transfer rate for the :term:`Delivery Service` in GigaBytes Per Second (GBPS)
 	:rateLimitingTPS:                  An optional field which, if defined, should contain the maximum allowed transaction rate for the :term:`Delivery Service` in Transactions Per Second (TPS)
 	:routingName:                      The routing name for the :term:`Delivery Service`, e.g. ``SomeRoutingName.DeliveryService_xml_id.CDNName.com``
