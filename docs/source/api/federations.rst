@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves a list of federation mappings (aka federation resolvers) for the current user.
+Retrieves a list of :term:`Federation` mappings (i.e. :term:`Federation` Resolvers) for the current user.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
@@ -34,12 +34,12 @@ No parameters available.
 Response Structure
 ------------------
 :deliveryService: The ``xml_id`` that uniquely identifies the :term:`Delivery Service` that uses the federation mappings in ``mappings``
-:mappings:        An array of objects that represent the mapping of a federation's Canonical Name (CNAME) to one or more resolvers
+:mappings:        An array of objects that represent the mapping of a :term:`Federation`'s :abbr:`CNAME (Canonical Name)` to one or more Resolvers
 
-	:cname:    The actual CNAME used by the federation
-	:resolve4: An array of IPv4 addresses capable of resolving the federation's CNAME
-	:resolve6: An array of IPv6 addresses capable of resolving the federation's CNAME
-	:ttl:      The Time To Live (TTL) of the CNAME in hours
+	:cname:    The actual CNAME used by the :term:`Federation`
+	:resolve4: An array of IPv4 addresses (or subnets in :abbr:`CIDR (Classless Inter-Domain Routing)` notation) capable of resolving the :term:`Federation`'s CNAME
+	:resolve6: An array of IPv6 addresses (or subnets in :abbr:`CIDR (Classless Inter-Domain Routing)` notation) capable of resolving the :term:`Federation`'s CNAME
+	:ttl:      The :abbr:`TTL (Time To Live)` of the CNAME in hours
 
 .. code-block:: http
 	:caption: Response Example
@@ -77,9 +77,9 @@ Response Structure
 
 ``POST``
 ========
-Allows a user to create federation resolvers for :term:`Delivery Service`\ s, providing the :term:`Delivery Service` is within a CDN that has some associated federation.
+Allows a user to create :term:`Federation` Resolvers for :term:`Delivery Services`, providing the :term:`Delivery Service` is within a CDN that has some associated :term:`Federation`.
 
-.. warning:: Confusingly, this endpoint does **not** create a new federation; to do that, the :ref:`to-api-cdns-name-federations` endpoint must be used. Furthermore, the federation must properly be assigned to a :term:`Delivery Service` using the :ref:`to-api-federations-id-deliveryservices` and assigned to the user creating resolvers using :ref:`to-api-federations-id-users`.
+.. warning:: Confusingly, this method of this endpoint does **not** create a new :term:`Federation`; to do that, the :ref:`to-api-cdns-name-federations` endpoint must be used. Furthermore, the :term:`Federation` must properly be assigned to a :term:`Delivery Service` using the :ref:`to-api-federations-id-deliveryservices` and assigned to the user creating Resolvers using :ref:`to-api-federations-id-users`.
 
 .. seealso:: The :ref:`to-api-federations-id-federation_resolvers` endpoint duplicates this functionality.
 
@@ -89,32 +89,50 @@ Allows a user to create federation resolvers for :term:`Delivery Service`\ s, pr
 
 Request Structure
 -----------------
-:federations: The top-level key that must exist - an array of objects that each describe a set of resolvers for a :term:`Delivery Service`'s federation
+.. versionchanged:: 1.4
+	Prior to API version 1.4, the request body had to be wrapped in a top-level ``federations`` key, as can be seen in the :ref:`Legacy Request <legacy-post-request>` example. That behavior is still supported but no longer necessary.
 
-	:deliveryService: The 'xml_id' of the :term:`Delivery Service` which will use the federation resolvers specified in ``mappings``
-	:mappings:        An object containing two arrays of IP addresses to use as federation resolvers
+.. _legacy-post-request:
+.. code-block:: json
+	:caption: Legacy Request
 
-		:resolve4: An array of IPv4 addresses that can resolve the :term:`Delivery Service`'s federation
-		:resolve6: An array of IPv6 addresses that can resolve the :term:`Delivery Service`'s federation
+	{
+		"federations": [{
+			"deliveryService": "demo1",
+			"mappings": {
+				"resolve4": ["0.0.0.0"],
+				"resolve6": ["::1"]
+			}
+		}]
+	}
+
+The request payload is an array of objects that describe Delivery Service :term:`Federation` Resolver mappings. Each object in the array must be in the following format.
+
+:deliveryService: The :ref:`ds-xmlid` of the :term:`Delivery Service` which will use the :term:`Federation` Resolvers specified in ``mappings``
+:mappings:        An object containing two arrays of IP addresses (or subnets in :abbr:`CIDR (Classless Inter-Domain Routing)` notation) to use as :term:`Federation` Resolvers
+
+	:resolve4: An array of IPv4 addresses (or subnets in :abbr:`CIDR (Classless Inter-Domain Routing)` notation) that can resolve the :term:`Delivery Service`'s :term:`Federation`
+	:resolve6: An array of IPv6 addresses (or subnets in :abbr:`CIDR (Classless Inter-Domain Routing)` notation) that can resolve the :term:`Delivery Service`'s :term:`Federation`
 
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/1.1/federations HTTP/1.1
+	POST /api/1.4/federations HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
-	Content-Length: 119
+	Content-Length: 118
 	Content-Type: application/json
 
-	{ "federations": [{
-		"deliveryService": "demo1",
-		"mappings": {
-			"resolve4": ["0.0.0.0"],
-			"resolve6": ["::"]
+
+	[{
+		"deliveryService":"demo1",
+		"mappings":{
+			"resolve4":["127.0.0.1", "0.0.0.0/32"],
+			"resolve6":["::1", "5efa::ff00/128"]
 		}
-	}]}
+	}]
 
 Response Structure
 ------------------
@@ -123,24 +141,29 @@ Response Structure
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
-	Date: Mon, 03 Dec 2018 17:00:29 GMT
-	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Mon, 03 Dec 2018 21:00:29 GMT; path=/; HttpOnly
-	Vary: Accept-Encoding
-	Whole-Content-Sha512: dXg86uD2Un1AeBCeeBLSo2rsYgl6NOHHQEc5oMlpw1THOh2HwGdjwB3rPd/qoYIhOxcnnHoEstrEiHmucFev4A==
-	Content-Length: 63
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: B7TSUOYZPRPyi3mVy+CuxiXR5k/d0s07w4i6kYzpWS+YL79juEfkuSqfedaYG/kMA8O9XbjkWRjcBAdxOVrdTQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 23 Oct 2019 22:28:02 GMT
+	Content-Length: 152
 
-	{ "response": "admin successfully created federation resolvers." }
+	{ "alerts": [
+		{
+			"text": "admin successfully created federation resolvers.",
+			"level": "success"
+		}
+	],
+	"response": "admin successfully created federation resolvers."
+	}
 
 
 ``DELETE``
 ==========
-Deletes **all** federation resolvers associated with the logged-in user's federations.
+Deletes **all** :term:`Federation` Resolvers associated with the logged-in user's :term:`Federations`.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
@@ -150,6 +173,15 @@ Request Structure
 -----------------
 No parameters available
 
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/1.4/federations HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
 .. code-block:: http
@@ -157,24 +189,28 @@ Response Structure
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
-	Date: Mon, 03 Dec 2018 17:55:10 GMT
-	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Mon, 03 Dec 2018 21:55:10 GMT; path=/; HttpOnly
-	Vary: Accept-Encoding
-	Whole-Content-Sha512: b84HraJH6Kiqrz7i1L1juDBJWdkdYbbClnWM0lZDljvpSkVT9adFTTrHiv7Mjtt2RKquGdzFZ6tqt9s+ODxqsw==
-	Content-Length: 93
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: fd7P45mIiHuYqZZW6+8K+YjY1Pe504Aaw4J4Zp9AhrqLX72ERytTqWtAp1msutzNSRUdUSC72+odNPtpv3O8uw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 23 Oct 2019 23:34:53 GMT
+	Content-Length: 184
 
-	{ "response": "admin successfully deleted all federation resolvers: [ 0.0.0.0/32, ::/128 ]." }
-
+	{ "alerts": [
+		{
+			"text": "admin successfully deleted all federation resolvers: [ 8.8.8.8 ]",
+			"level": "success"
+		}
+	],
+	"response": "admin successfully deleted all federation resolvers: [ 8.8.8.8 ]"
+	}
 
 ``PUT``
 =======
-Replaces **all** federations associated with a user's :term:`Delivery Service`\ (s) with those defined inside the request payload.
+Replaces **all** :term:`Federations` associated with a user's :term:`Delivery Service`\ (s) with those defined inside the request payload.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
@@ -182,32 +218,48 @@ Replaces **all** federations associated with a user's :term:`Delivery Service`\ 
 
 Request Structure
 -----------------
-:federations: The top-level key that must exist - an array of objects that each describe a set of resolvers for a :term:`Delivery Service`'s federation
+.. versionchanged:: 1.4
+	Prior to API version 1.4, the request body had to be wrapped in a top-level ``federations`` key, as can be seen in the :ref:`legacy-put-request` example. That behavior is still supported but no longer necessary.
 
-	:deliveryService: The 'xml_id' of the :term:`Delivery Service` which will use the federation resolvers specified in ``mappings``
-	:mappings:        An object containing two arrays of IP addresses to use as federation resolvers
+.. _legacy-put-request:
+.. code-block:: json
+	:caption: Legacy Request
 
-		:resolve4: An array of IPv4 addresses that can resolve the :term:`Delivery Service`'s federation
-		:resolve6: An array of IPv6 addresses that can resolve the :term:`Delivery Service`'s federation
+	{
+		"federations": [{
+			"deliveryService": "demo1",
+			"mappings": {
+				"resolve4": ["0.0.0.0"],
+				"resolve6": ["::1"]
+			}
+		}]
+	}
+
+The request payload is an array of objects that describe Delivery Service :term:`Federation` Resolver mappings. Each object in the array must be in the following format.
+
+:deliveryService: The :ref:`ds-xmlid` of the :term:`Delivery Service` which will use the :term:`Federation` Resolvers specified in ``mappings``
+:mappings:        An object containing two arrays of IP addresses (or subnets in :abbr:`CIDR (Classless Inter-Domain Routing)` notation) to use as :term:`Federation` Resolvers
+
+	:resolve4: An array of IPv4 addresses (or subnets in :abbr:`CIDR (Classless Inter-Domain Routing)` notation) that can resolve the :term:`Delivery Service`'s :term:`Federation`
+	:resolve6: An array of IPv6 addresses (or subnets in :abbr:`CIDR (Classless Inter-Domain Routing)` notation) that can resolve the :term:`Delivery Service`'s :term:`Federation`
 
 .. code-block:: http
 	:caption: Request Example
 
 	PUT /api/1.4/federations HTTP/1.1
 	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.62.0
+	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
-	Content-Length: 113
+	Content-Length: 95
 	Content-Type: application/json
 
-	{ "federations": [{
-		"deliveryService": "demo1",
-		"mappings": {
-			"resolve4": ["0.0.0.1"],
-			"resolve6": ["::1"]
-		}
-	}]}
+	[{ "mappings": {
+		"resolve4": ["8.8.8.8"],
+		"resolve6": []
+	},
+	"deliveryService":"demo1"
+	}]
 
 Response Structure
 ------------------
@@ -215,17 +267,26 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
-	access-control-allow-credentials: true
-	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept
-	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
-	access-control-allow-origin: *
-	cache-control: no-cache, no-store, max-age=0, must-revalidate
-	content-type: application/json
-	date: Wed, 05 Dec 2018 00:52:31 GMT
-	server: Mojolicious (Perl)
-	set-cookie: mojolicious=...; expires=Wed, 05 Dec 2018 04:52:30 GMT; path=/; HttpOnly
-	vary: Accept-Encoding, Accept-Encoding
-	whole-content-sha512: dXg86uD2Un1AeBCeeBLSo2rsYgl6NOHHQEc5oMlpw1THOh2HwGdjwB3rPd/qoYIhOxcnnHoEstrEiHmucFev4A==
-	content-length: 63
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Whole-Content-Sha512: dQ5AvQULhc254zQwgUpBl1/CHbLr/clKtkbs0Ju9f1BM4xIfbbO3puFNN9zaEaZ1iz0lBvHFp/PgfUqisD3QHA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 23 Oct 2019 23:22:03 GMT
+	Content-Length: 258
+	Content-Type: application/json
 
-	{"response": "admin successfully created federation resolvers."}
+	{ "alerts": [
+		{
+			"text": "admin successfully deleted all federation resolvers: [ 8.8.8.8 ]",
+			"level": "success"
+		},
+		{
+			"text": "admin successfully created federation resolvers.",
+			"level": "success"
+		}
+	],
+	"response": "admin successfully created federation resolvers."
+	}

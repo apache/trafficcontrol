@@ -79,7 +79,9 @@ func Check(user *auth.CurrentUser, XMLID string, tx *sql.Tx) (error, error, int)
 	return nil, nil, http.StatusOK
 }
 
-// CheckID checks that the given user has access to the given delivery service. Returns a user error, a system error, and an HTTP error code. If both the user and system error are nil, the error code should be ignored.
+// CheckID checks that the given user has access to the given delivery service. Returns a user error,
+// a system error, and an HTTP error code. If both the user and system error are nil, the error
+// code should be ignored.
 func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 	dsTenantID, ok, err := getDSTenantIDByIDTx(tx, dsID)
 	if err != nil {

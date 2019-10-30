@@ -42,6 +42,26 @@ const BaseOrderBy = "\nORDER BY"
 const BaseLimit = "\nLIMIT"
 const BaseOffset = "\nOFFSET"
 
+const getDSTenantIDFromXMLIDQuery = `
+SELECT deliveryservice.tenant_id
+FROM deliveryservice
+WHERE deliveryservice.xml_id = $1
+`
+
+const getFederationIDForUserIDByXMLIDQuery = `
+SELECT federation_deliveryservice.federation
+FROM federation_deliveryservice
+WHERE federation_deliveryservice.deliveryservice IN (
+	SELECT deliveryservice.id
+	FROM deliveryservice
+	WHERE deliveryservice.xml_id = $1
+) AND federation_deliveryservice.federation IN (
+	SELECT federation_tmuser.federation
+	FROM federation_tmuser
+	WHERE federation_tmuser.tm_user = $2
+)
+`
+
 func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
 	orderBy := BaseOrderBy
@@ -215,6 +235,21 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	return name, true, nil
 }
 
+// GetDSTenantIDFromXMLID fetches the ID of the Tenant to whom the Delivery Service identified by the
+// the provided XMLID belongs. It returns, in order, the requested ID (if one could be found), a
+// boolean indicating whether or not a Delivery Service with the provided xmlid could be found, and
+// an error for logging in case something unexpected goes wrong.
+func GetDSTenantIDFromXMLID(tx *sql.Tx, xmlid string) (int, bool, error) {
+	var id int
+	if err := tx.QueryRow(getDSTenantIDFromXMLIDQuery, xmlid).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return -1, false, nil
+		}
+		return -1, false, fmt.Errorf("Fetching Tenant ID for DS %s: %v", xmlid, err)
+	}
+	return id, true, nil
+}
+
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
 func GetProfileNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	name := ""
@@ -345,4 +380,18 @@ func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, err
 		return "", false, errors.New("querying cachegroup ID: " + err.Error())
 	}
 	return tc.CacheGroupName(name), true, nil
+}
+
+// GetFederationIDForUserIDByXMLID retrieves the ID of the Federation assigned to the user defined by
+// userID on the Delivery Service identified by xmlid. If no such federation exists, the boolean
+// returned will be 'false', while the error indicates unexpected errors that occurred when querying.
+func GetFederationIDForUserIDByXMLID(tx *sql.Tx, userID int, xmlid string) (uint, bool, error) {
+	var id uint
+	if err := tx.QueryRow(getFederationIDForUserIDByXMLIDQuery, xmlid, userID).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, false, nil
+		}
+		return 0, false, fmt.Errorf("Getting Federation ID for user #%d by DS XMLID '%s': %v", userID, xmlid, err)
+	}
+	return id, true, nil
 }

@@ -182,7 +182,7 @@ func TestReadHandler(t *testing.T) {
 	readFunc(w, r)
 
 	//verifies the body is in the expected format
-	body := `{"response":[{"ID":1}]}`
+	body := "{\"response\":[{\"ID\":1}]}\n"
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
