@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/lib/pq"
 )
 
 func GetServersEligible(w http.ResponseWriter, r *http.Request) {
@@ -109,8 +108,7 @@ s.status as status_id,
 s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
-s.upd_pending as upd_pending,
-ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities
+s.upd_pending as upd_pending
 FROM server s
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
@@ -173,7 +171,6 @@ ARRAY(select drc.required_capability from deliveryservices_required_capability d
 			&s.Type,
 			&s.TypeID,
 			&s.UpdPending,
-			pq.Array(&s.ServerCapabilities),
 		)
 		if err != nil {
 			return nil, errors.New("scanning delivery service eligible servers: " + err.Error())
