@@ -23,6 +23,7 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
     method: GET
   register: get_all_profiles
+  no_log: true
 
 - name: Get All Parameters per Profile
   uri:
@@ -31,6 +32,7 @@
   vars:
     profile_query: "response.id"
   with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
+  no_log: true
 
 - name: Create Delivery Services
   uri:
@@ -40,6 +42,7 @@
   with_indexed_items: "{{ dl_ds_merged_ds_template }}"
   register: create_ds_out
   failed_when: (create_ds_out.status == 400 and create_ds_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_out.status > 400 and create_ds_out.status < 600)
+  no_log: true
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     profile_query: "[?type == `DS_PROFILE` && cdn == `{{ Target_cdn_id }}` && {% if (item.1.profileName | default(dl_ds_default_ds.profileName) | default(omit) ) != omit %}{{ profile_name_subquery }}{% else %}{{ profile_suffix_subquery }}{% endif %}].id | [0]"
@@ -114,11 +117,13 @@
     body:
       cdn: Target_cdn_id
   register: get_all_ds_cdn
+  no_log: true
 
 - name: you have to call get once for Riak/TO to work right before you can add certs
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/name/{{ Target_cdn_name }}/sslkeys.json"
     method: GET
+  no_log: true
 
 - name: Assign Servers to Delivery Services - Grove
   uri:
@@ -130,6 +135,7 @@
   when: serveFromGrove
   register: create_ds_assignment_out
   failed_when: (create_ds_assignment_out.status == 400 and create_ds_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_assignment_out.status > 400 and create_ds_assignment_out.status < 600)
+  no_log: true
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     server_query: "[?type == `EDGE` && ({{ profile_filter }})].hostName"
@@ -149,6 +155,7 @@
   when: serveFromATS
   register: create_ds_assignment_out
   failed_when: (create_ds_assignment_out.status == 400 and create_ds_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_assignment_out.status > 400 and create_ds_assignment_out.status < 600)
+  no_log: true
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     server_query: "[?type == `EDGE` && ({{ profile_filter }})].hostName"

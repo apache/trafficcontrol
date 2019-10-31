@@ -134,6 +134,7 @@
         headers:
           Content-Type: application/xml
         status_code: 200,204
+      no_log: true
 
     - name: Add search index
       uri:
@@ -146,6 +147,7 @@
         body:
           schema: sslkeys
         status_code: 200,204
+      no_log: true
 
     - name: Associate search index to bucket
       uri:
@@ -159,4 +161,5 @@
           props:
             search_index: sslkeys
         status_code: 200,204
+      no_log: true
   run_once: true

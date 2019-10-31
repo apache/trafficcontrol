@@ -42,6 +42,7 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns"
     method: GET
   register: get_all_cdns
+  no_log: true
 
 - name: Update the Primary CDN
   uri:
@@ -56,6 +57,7 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: update_cdn_out
   failed_when: (update_cdn_out.status == 400 and update_cdn_out.json | to_json | from_json | json_query(error_query) | length != 0) or (update_cdn_out.status > 400 and update_cdn_out.status < 600)
+  no_log: true
 
 - name: Create additional CDNs having delegations
   uri:
@@ -70,12 +72,14 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_cdns_out
   failed_when: (create_cdns_out.status == 400 and create_cdns_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cdns_out.status > 400 and create_cdns_out.status < 600)
+  no_log: true
 
 - name: Get All CDNs
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns"
     method: GET
   register: get_all_cdns
+  no_log: true
 
 - name: Assign fqdn to cdn
   set_fact:
@@ -87,12 +91,14 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/tenants"
     method: GET
   register: get_all_tenants
+  no_log: true
 
 - name: Get All Roles
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/roles"
     method: GET
   register: get_all_roles
+  no_log: true
 
 - name: Create Types
   uri:
@@ -107,12 +113,14 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_types_out
   failed_when: (create_types_out.status == 400 and create_types_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_types_out.status > 400 and create_types_out.status < 600)
+  no_log: true
 
 - name: Get All Types
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/types"
     method: GET
   register: get_all_types
+  no_log: true
 
 - name: Create Users
   uri:
@@ -142,7 +150,7 @@
     tenantId: "{{ get_all_tenants.json | json_query(tenant_query) | default(omit) }}"
     username: "{{ item.username }}"
   register: create_user_out
-  #no_log: true
+  no_log: true
   failed_when: (create_user_out.status == 400 and create_user_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_user_out.status > 400 and create_user_out.status < 600)
 
 - name: Create Cachegroups - Traffic Router
@@ -157,6 +165,7 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
+  no_log: true
 
 - name: Create Cachegroups - Infrastructure Tier
   uri:
@@ -170,6 +179,7 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
+  no_log: true
 
 - name: Create Cachegroups - Origin Tier
   uri:
@@ -183,12 +193,14 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
+  no_log: true
 
 - name: Get All Cachegroups - Origin Tier
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
     method: GET
   register: get_all_cachegroups
+  no_log: true
 
 - name: Create Cachegroups - Mid Tier
   uri:
@@ -206,12 +218,14 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
+  no_log: true
 
 - name: Get All Cachegroups - Mid Tier
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
     method: GET
   register: get_all_cachegroups
+  no_log: true
 
 - name: Create Cachegroups - Edge Tier
   uri:
@@ -229,12 +243,14 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
+  no_log: true
 
 - name: Get All Cachegroups
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
     method: GET
   register: get_all_cachegroups
+  no_log: true
 
 # Map of hosts to cachegroups
 - name: Associate origins, caches, and routers to cachegroups
@@ -277,12 +293,14 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_divisions_out
   failed_when: (create_divisions_out.status == 400 and create_divisions_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_divisions_out.status > 400 and create_divisions_out.status < 600)
+  no_log: true
 
 - name: Get All Divisions
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/divisions"
     method: GET
   register: get_all_divisions
+  no_log: true
 
 - name: Assemble assignments of region to division
   set_fact:
@@ -307,12 +325,14 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_regions_out
   failed_when: (create_regions_out.status == 400 and create_regions_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_regions_out.status > 400 and create_regions_out.status < 600)
+  no_log: true
 
 - name: Get All Regions
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/regions"
     method: GET
   register: get_all_regions
+  no_log: true
 
 - name: Constuct physLocation payload
   set_fact:
@@ -362,12 +382,14 @@
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_physlocation_out
   failed_when: (create_physlocation_out.status == 400 and create_physlocation_out.json | to_json | from_json | json_query(error_query) | length != 0) or ( create_physlocation_out.status > 400 and create_physlocation_out.status < 600)
+  no_log: true
 
 - name: Get All Physical Locations
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/phys_locations"
     method: GET
   register: get_all_physlocations
+  no_log: true
 
 - name: Assign types to servers
   set_fact:
@@ -394,6 +416,7 @@
           delegate_to: "{{ item }}"
           delegate_facts: True
           when: hostvars[item]['ansible_default_ipv4'] is not defined
+          no_log: true
 
         - name: Fetch information about block without partitions and whitelisted prefixes
           set_fact:
@@ -458,12 +481,14 @@
         url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
         method: GET
       register: get_all_profiles
+      no_log: true
 
     - name: Get All Parameters from GLOBAL profile
       uri:
         url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/GLOBAL/parameters"
         method: GET
       register: get_global_parameters
+      no_log: true
 
     - name: Unlink all Global Profile parameters to be recreated
       uri:
@@ -475,6 +500,7 @@
         error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
       register: unassociate_global_params
       failed_when: (unassociate_global_params.status == 400 and unassociate_global_params.json | to_json | from_json | json_query(error_query) | length != 0) or ( unassociate_global_params.status > 400 and unassociate_global_params.status < 600)
+      no_log: true
 
     - name: Create Profiles - Global
       uri:
@@ -492,6 +518,7 @@
         error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
       register: create_profiles_out
       failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+      no_log: true
 
     - name: Create and Associate Parameters - Global
       uri:
@@ -506,6 +533,7 @@
         error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
       register: create_profiles_out
       failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+      no_log: true
 
     - name: Handle Profile & Parameter CDN Templates
       include_tasks: parameter_loader.yml
@@ -524,6 +552,7 @@
         url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
         method: GET
       register: get_all_profiles
+      no_log: true
 
     - name: Get All Parameters per Profile
       uri:
@@ -533,6 +562,7 @@
         profile_query: "response.id"
       with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
       register: get_all_parameters_by_profile
+      no_log: true
 
     - name: Associate eligible profiles to hosts
       set_fact:
@@ -545,6 +575,7 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/statuses"
     method: GET
   register: get_all_statuses
+  no_log: true
 
 - name: Get the CDN Assignments into a more queryable form
   set_fact:
@@ -650,6 +681,7 @@
     routerPortName: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).routerPortName | default(omit) }}"
   register: create_server_out
   failed_when: (create_server_out.status == 400 and create_server_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_server_out.status > 400 and create_server_out.status < 600)
+  no_log: true
 
 ###
 # MSO servers are not guarenteed to be idempotent
@@ -720,12 +752,14 @@
     routerPortName: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).routerPortName | default(omit) }}"
   register: create_server_out
   failed_when: (create_server_out.status == 400 and create_server_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_server_out.status > 400 and create_server_out.status < 600)
+  no_log: true
 
 - name: Get All Servers
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/servers"
     method: GET
   register: get_all_servers
+  no_log: true
 
 - name: Collect All CDN delegations assigned to Fake Origins
   set_fact:
@@ -768,6 +802,7 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryservices"
     method: GET
   register: get_all_ds
+  no_log: true
 
 - name: Ensure SSL info directory exists
   file:
@@ -794,6 +829,7 @@
     path: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.key.pem"
     force: yes
   with_items: "{{ scrubbed_https_ds }}"
+  no_log: true
 
 - name: Generate DS CSRs
   openssl_csr:
@@ -835,6 +871,7 @@
     ownca_path: "{{ lookup('env', 'PWD') }}/out/ssl/lab.intermediateca.crt"
     ownca_privatekey_path: "{{ lookup('env', 'PWD') }}/out/ssl/lab.intermediateca.key.pem"
   with_items: "{{ scrubbed_https_ds }}"
+  no_log: true
 
 - name: Generate TO Self-signed certs
   uri:
@@ -852,6 +889,7 @@
       deliveryservice: "{{ item.xmlId }}"
       version: 1
   with_items: "{{ scrubbed_https_ds }}"
+  no_log: true
 
 - name: Upload DS SSL Data to Traffic Ops
   uri:
@@ -871,6 +909,7 @@
   with_items: "{{ scrubbed_https_ds }}"
   register: create_ds_sslkeys_out
   failed_when: (create_ds_sslkeys_out.status == 400 and create_ds_sslkeys_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_sslkeys_out.status > 400 and create_ds_sslkeys_out.status < 600)
+  no_log: true
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
     keypath: "{{ lookup('env', 'PWD') }}/out/ssl/{{ item.xmlId }}.key.pem"
@@ -885,5 +924,6 @@
   with_items: "{{ get_all_cdns.json.response[1:] }}"
   register: snapshot_out
   failed_when: (snapshot_out.status == 400 and snapshot_out.json | to_json | from_json | json_query(error_query) | length != 0) or (snapshot_out.status > 400 and snapshot_out.status < 600)
+  no_log: true
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"

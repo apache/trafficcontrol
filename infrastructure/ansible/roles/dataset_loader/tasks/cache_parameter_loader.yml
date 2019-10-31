@@ -34,6 +34,7 @@
     eligible_hardware_component_names_query: "[?value.hardware_profile==`{{ Target_hardware_profile.key }}`].value.component"
   register: create_profiles_out
   failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+  no_log: true
 
 - name: Create and Associate Parameters to Cache Profiles - Per CDN and Hardware Profile
   uri:
@@ -61,3 +62,4 @@
     Target_hardware_profile_ram_disk_prefix: "{{ Target_hardware_profile.value.ram_disks | map('regex_replace',ram_drive_letter_prefix_regex,'\\1') | list | first | default('INVALID_RAM_DRIVE_PREFIX') }}"
   register: create_profiles_out
   failed_when: (create_profiles_out.status == 400 and create_profiles_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_profiles_out.status > 400 and create_profiles_out.status < 600)
+  no_log: true
