@@ -139,7 +139,7 @@ type CurrentUserUpdateRequestUser struct {
 	StateOrProvince    json.RawMessage `json:"stateOrProvince"`
 	TenantID           json.RawMessage `json:"tenantId"`
 	UID                json.RawMessage `json:"uid"`
-	Username           json.RawMessage         `json:"username"`
+	Username           json.RawMessage `json:"username"`
 }
 
 // ValidateAndUnmarshal validates the request and returns a User into which the request's information
