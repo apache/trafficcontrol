@@ -91,8 +91,8 @@
             "latitude": 24.1234,
             "longitude": -121.1234,
             "name": "cachegroup2",
-            "parentCachegroupName": "parentCachegroup",
-            "secondaryParentCachegroupName": "secondaryCachegroup",
+            "parentCachegroupName": "secondaryCachegroup",
+            "secondaryParentCachegroupName": "parentCachegroup",
             "shortName": "cg2",
             "typeName": "EDGE_LOC",
             "fallbacks": [
@@ -1184,6 +1184,13 @@
             "type": "ATS_PROFILE"
         },
         {
+            "cdnName": "cdn2",
+            "description": "cdn2 edge description",
+            "name": "CDN2_EDGE",
+            "routing_disabled": false,
+            "type": "ATS_PROFILE"
+        },
+        {
             "cdnName": "cdn1",
             "description": "mid description",
             "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
@@ -1290,7 +1297,7 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "atlanta-edge-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
@@ -1327,7 +1334,7 @@
             "status": "REPORTED",
             "tcpPort": 8086,
             "type": "EDGE",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "",
             "xmppPasswd": ""
         },
@@ -1364,12 +1371,12 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "atlanta-router-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
         {
-            "cachegroup": "cachegroup1",
+            "cachegroup": "cachegroup2",
             "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
@@ -1401,7 +1408,7 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "atlanta-edge-03\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
@@ -1438,7 +1445,7 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "atlanta-edge-14\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
@@ -1475,12 +1482,12 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "atlanta-edge-15\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
         {
-            "cachegroup": "cachegroup1",
+            "cachegroup": "parentCachegroup",
             "cdnName": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
@@ -1512,7 +1519,7 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "MID",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "atlanta-mid-16\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
@@ -1549,7 +1556,7 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "atlanta-org-1\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
@@ -1586,7 +1593,7 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "EDGE",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "atlanta-org-1\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
@@ -1623,7 +1630,7 @@
             "status": "REPORTED",
             "tcpPort": 80,
             "type": "MID",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "atlanta-mid-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
@@ -1660,7 +1667,43 @@
             "status": "REPORTED",
             "tcpPort": 81,
             "type": "TRAFFIC_MONITOR",
-            "updPending": true,
+            "updPending": false,
+            "xmppId": "",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup2",
+            "cdnName": "cdn2",
+            "domainName": "kabletown2.net",
+            "guid": null,
+            "hostName": "edge1-cdn2",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaceMtu": 9000,
+            "interfaceName": "bond0",
+            "ip6Address": "2345:1234:12:b::13/64",
+            "ip6Gateway": "2345:1234:12:b::13",
+            "ipAddress": "127.0.0.31",
+            "ipGateway": "127.0.0.4",
+            "ipNetmask": "255.255.255.0",
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "CDN2_EDGE",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "routerHostName": "",
+            "routerPortName": "",
+            "status": "REPORTED",
+            "tcpPort": 81,
+            "type": "EDGE",
+            "updPending": false,
             "xmppId": "",
             "xmppPasswd": "X"
         },
@@ -1697,7 +1740,7 @@
             "status": "REPORTED",
             "tcpPort": 8088,
             "type": "RIAK",
-            "updPending": true,
+            "updPending": false,
             "xmppId": "",
             "xmppPasswd": ""
         }
