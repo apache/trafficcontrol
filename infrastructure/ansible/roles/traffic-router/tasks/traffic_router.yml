@@ -18,7 +18,9 @@
 
 - name: Remove Tomcat 6
   import_tasks: purge.tomcat.6.yml
-  when: tr_old_version.stdout is version('2.3', "<")
+  when:
+    - tr_old_version.stdout | length > 0
+    - tr_old_version.stdout is version('2.3', "<")
 
 - name: Protect against expired yum repo metadata
   shell: yum clean expire-cache
