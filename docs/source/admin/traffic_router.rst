@@ -564,7 +564,7 @@ Deep Caching
 
 Overview
 --------
-Deep Caching is a feature that enables clients to be routed to the closest possible "deep" Edge-tier :term:`cache server` s on a per-:term:`Delivery Service` basis. The term "deep" is used in the networking sense, meaning that the Edge-tier :term:`cache server` s are located deep in the network where the number of network hops to a client is as minimal. This deep caching topology is desirable because storing content closer to the client gives better bandwidth savings, and sometimes the cost of bandwidth usage in the network outweighs the cost of adding storage. While it may not be feasible to cache an entire copy of the CDN's contents in every deep location (for the best possible bandwidth savings), storing just a relatively small amount of the CDN's most requested content can lead to very high bandwidth savings.
+Deep Caching is a feature that enables clients to be routed to the closest possible "deep" Edge-tier :term:`cache servers` on a per-:term:`Delivery Service` basis. The term "deep" is used in the networking sense, meaning that the Edge-tier :term:`cache servers` are located deep in the network where the number of network hops to a client is as minimal. This deep caching topology is desirable because storing content closer to the client gives better bandwidth savings, and sometimes the cost of bandwidth usage in the network outweighs the cost of adding storage. While it may not be feasible to cache an entire copy of the CDN's contents in every deep location (for the best possible bandwidth savings), storing just a relatively small amount of the CDN's most requested content can lead to very high bandwidth savings.
 
 What You Need
 -------------
@@ -581,7 +581,7 @@ What You Need
 
 How it Works
 ------------
-Deep Coverage Zone routing is very similar to that of regular Coverage Zone routing, except that the :abbr:`DCZF (Deep Coverage Zone File)` is preferred over the regular :abbr:`CZF (Coverage Zone File)` for :term:`Delivery Services` with Deep Caching enabled. If the client requests a Deep Caching-enabled :term:`Delivery Service` and their IP address gets a "hit" in the :abbr:`DCZF (Deep Coverage Zone File)`, Traffic Router will attempt to route that client to one of the available "deep" :term:`cache server` s in the client's corresponding zone. If there are no "deep" :term:`cache server` s available for a client's request, Traffic Router will fall back to the regular :abbr:`CZF (Coverage Zone File)` and continue regular :abbr:`CZF (Coverage Zone File)` routing from there.
+Deep Coverage Zone routing is very similar to that of regular Coverage Zone routing, except that the :abbr:`DCZF (Deep Coverage Zone File)` is preferred over the regular :abbr:`CZF (Coverage Zone File)` for :term:`Delivery Services` with Deep Caching enabled. If the client requests a Deep Caching-enabled :term:`Delivery Service` and their IP address gets a "hit" in the :abbr:`DCZF (Deep Coverage Zone File)`, Traffic Router will attempt to route that client to one of the available "deep" :term:`cache servers` in the client's corresponding zone. If there are no "deep" :term:`cache servers` available for a client's request, Traffic Router will fall back to the regular :abbr:`CZF (Coverage Zone File)` and continue regular :abbr:`CZF (Coverage Zone File)` routing from there.
 
 .. _tr-steering:
 

@@ -121,12 +121,12 @@ Response Structure
 
 		.. seealso:: :ref:`health-proto`
 
-:contentServers: An object containing keys which are the (short) hostnames of the Edge-Tier :term:`cache server` s in the CDN; the values corresponding to those keys are routing information for said servers
+:contentServers: An object containing keys which are the (short) hostnames of the Edge-Tier :term:`cache servers` in the CDN; the values corresponding to those keys are routing information for said servers
 
 	:cacheGroup:       The name of the Cache Group to which the server belongs
 	:deliveryServices: An object containing keys which are the names of :term:`Delivery Services` to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of FQDNs that resolve to this :term:`cache server`
 
-		.. note:: Only Edge-tier :term:`cache server` s can be assigned to a Delivery SErvice, and therefore this field will only be present when ``type`` is ``"EDGE"``.
+		.. note:: Only Edge-tier :term:`cache servers` can be assigned to a Delivery SErvice, and therefore this field will only be present when ``type`` is ``"EDGE"``.
 
 	:fqdn:            The server's Fully Qualified Domain Name (FQDN)
 	:hashCount:       The number of servers to be placed into a single "hash ring" in Traffic Router
