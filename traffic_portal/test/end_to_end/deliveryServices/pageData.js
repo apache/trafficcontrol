@@ -18,6 +18,11 @@
  */
 
 module.exports = function(){
+	this.moreBtn=element(by.name('moreBtn'));
+	this.viewCapabilitiesMenuItem=element(by.css('a[ng-click*=viewCapabilities]'));
+	this.addCapabilityBtn=element(by.name('addCapabilityBtn'));
+	this.dsLink=element(by.name('dsLink'));
+	this.selectFormDropdown=element(by.name('selectFormDropdown'));
 	this.selectFormSubmitButton=element(by.buttonText('Submit'));
 	this.active=element(by.name('active'));
 	this.type=element(by.name('type'));

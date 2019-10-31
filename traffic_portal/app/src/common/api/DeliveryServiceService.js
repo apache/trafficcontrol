@@ -81,6 +81,45 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
         return deferred.promise;
     };
 
+    this.getServerCapabilities = function(id) {
+        return $http.get(ENV.api['root'] + 'deliveryservices_required_capabilities', { params: { deliveryServiceID: id } }).then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        )
+    };
+
+    this.addServerCapability = function(deliveryServiceId, capabilityName) {
+        return $http.post(ENV.api['root'] + 'deliveryservices_required_capabilities', { deliveryServiceID: deliveryServiceId, requiredCapability: capabilityName}).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
+                throw err;
+            }
+        );
+    };
+
+    this.removeServerCapability = function(deliveryServiceId, capabilityName) {
+        return $http.delete(ENV.api['root'] + 'deliveryservices_required_capabilities', { params: { deliveryServiceID: deliveryServiceId, requiredCapability: capabilityName} }).then(
+            function(result) {
+                return result.data;
+            },
+            function(err) {
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
+                throw err;
+            }
+        );
+    };
+
     this.getServerDeliveryServices = function(serverId) {
         return Restangular.one('servers', serverId).getList('deliveryservices');
     };

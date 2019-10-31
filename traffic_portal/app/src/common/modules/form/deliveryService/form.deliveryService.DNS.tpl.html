@@ -42,7 +42,7 @@ under the License.
             <button class="btn btn-success" ng-if="!settings.isRequest" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
             <button type="button" class="btn btn-primary" ng-if="!settings.isRequest && !settings.isNew" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>
             <div class="btn-group" ng-if="!settings.isRequest && !settings.isNew" role="group" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
                     <span class="caret"></span>
                 </button>
@@ -55,10 +55,11 @@ under the License.
                     <li role="menuitem"><a ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
                     <li role="menuitem"><a ng-click="manageUriSigningKeys()">Manage URI Signing Keys</a></li>
                     <hr class="divider"/>
-                    <li role="menuitem"><a ng-click="viewOrigins()">Manage Origins</a></li>
-                    <li role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
-                    <li role="menuitem"><a ng-click="viewRegexes()">Manage Regexes</a></li>
                     <li role="menuitem"><a ng-click="viewJobs()">Manage Invalidation Requests</a></li>
+                    <li role="menuitem"><a ng-click="viewOrigins()">Manage Origins</a></li>
+                    <li role="menuitem"><a ng-click="viewRegexes()">Manage Regexes</a></li>
+                    <li role="menuitem"><a ng-click="viewCapabilities()">Manage Required Server Capabilities</a></li>
+                    <li role="menuitem"><a ng-click="viewServers()">Manage Servers</a></li>
                     <li role="menuitem"><a ng-click="viewStaticDnsEntries()">Manage Static DNS Entries</a></li>
                 </ul>
             </div>
