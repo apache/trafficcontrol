@@ -98,7 +98,9 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
                 return result.data;
             },
             function(err) {
-                messageModel.setMessages(err.data.alerts, false);
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
                 throw err;
             }
         );
@@ -110,7 +112,9 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
                 return result.data;
             },
             function(err) {
-                messageModel.setMessages(err.data.alerts, false);
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
                 throw err;
             }
         );
