@@ -23,7 +23,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -71,6 +73,12 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	err = ValidateDSCapabilities(dsList, serverName, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
 	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
@@ -79,6 +87,28 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 
 	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
+}
+
+// ValidateDSCapabilities checks that the server meets the requirements of each delivery service to be assigned.
+func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) error {
+	var dsCaps []string
+	sCaps, err := dbhelpers.GetServerCapabilitiesFromName(serverName, tx)
+
+	if err != nil {
+		return err
+	}
+
+	for _, id := range dsIDs {
+		dsCaps, err = dbhelpers.GetDSRequiredCapabilitiesFromID(id, tx)
+		if err != nil {
+			return err
+		}
+		if ok := reflect.DeepEqual(sCaps, dsCaps); !ok {
+			return errors.New(fmt.Sprintf("delivery service [%d] requirements not met by server [%s]", id, serverName))
+		}
+	}
+
+	return nil
 }
 
 func assignDeliveryServicesToServer(server int, dses []int, replace bool, tx *sql.Tx) ([]int, error) {

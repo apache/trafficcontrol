@@ -401,13 +401,9 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	payload.XmlId = dsName
 	serverNames := payload.ServerNames
 
-	ok, err = ValidateCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	err = ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("error checking required capabilities for delivery service: "+err.Error()), nil)
-		return
-	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("server does not meet required capabilities for delivery service"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 
@@ -436,23 +432,26 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
 }
 
-func ValidateCapabilities(dsID int, serverNames []string, tx *sql.Tx) (bool, error) {
-	var caps, dsrc []string
-	dsrc, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
+// ValidateServerCapabilities checks that the delivery service's requirements are met by each server to be assigned.
+func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (bool, error) {
+	var sCaps []string
+	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
 
 	if err != nil {
 		return false, err
 	}
 
-	for _, n := range serverNames {
-		caps, err = dbhelpers.GetServerCapabilitiesFromName(n, tx)
+	for _, name := range serverNames {
+		sCaps, err = dbhelpers.GetServerCapabilitiesFromName(name, tx)
+		if err != nil {
+			return false, err
+		}
+		if ok := reflect.DeepEqual(sCaps, dsCaps); !ok {
+			return errors.New(fmt.Sprintf("delivery service [%d] requirements not met by server [%s]", dsID, name))
+		}
 	}
 
-	if err != nil {
-		return false, err
-	}
-
-	return reflect.DeepEqual(dsrc, caps), nil
+	return true, nil
 }
 
 func insertIdsQuery() string {
