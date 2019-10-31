@@ -172,7 +172,7 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		// Assign server to ds
 		_, err = TOSession.CreateDeliveryServiceServers(*dsReqCap.DeliveryServiceID, []int{*ssc.ServerID}, false)
 		if err != nil {
-			t.Fatalf("cannot CREATE server delivery service assignement: %v\n", err)
+			t.Fatalf("cannot CREATE server delivery service assignment: %v\n", err)
 		}
 		dsServers = append(dsServers, tc.DeliveryServiceServer{
 			Server:          ssc.ServerID,

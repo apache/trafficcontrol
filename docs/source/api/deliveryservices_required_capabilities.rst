@@ -112,7 +112,7 @@ Associates a Server Capability to a :term:`Delivery Service`.
 :Roles Required: "admin" or "operations"
 :Response Type:  Object
 
-.. note:: A capability can only be made required on a :term:`Delivery Service` if its associates Servers already have that capability assigned.
+.. note:: A capability can only be made required on a :term:`Delivery Service` if its associated Servers already have that capability assigned.
 
 Request Structure
 -----------------

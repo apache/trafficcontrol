@@ -203,16 +203,16 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 
 	// Create new bogus server capability
 	_, _, err = TOSession.CreateServerCapability(tc.ServerCapability{
-		Name: "bogus",
+		Name: "newcap",
 	})
 	if err != nil {
-		t.Fatalf("cannot CREATE bogus server capability: %v\n", err)
+		t.Fatalf("cannot CREATE newcap server capability: %v\n", err)
 	}
 
 	// Attempt to assign to DS should fail
 	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(tc.DeliveryServicesRequiredCapability{
 		DeliveryServiceID:  dsID,
-		RequiredCapability: util.StrPtr("bogus"),
+		RequiredCapability: util.StrPtr("newcap"),
 	})
 	if err == nil {
 		t.Fatalf("expected error requiring a capability that is not associated on the delivery service's servers")
@@ -224,12 +224,20 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 		t.Fatalf("could not DELETE the server %v from ds %v: %v\n", sID, *dsID, err)
 	}
 
+	// Remove server capabilities from server
 	for _, ssc := range serverCaps {
 		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
 		if err != nil {
 			t.Errorf("could not DELETE the server capability %v from server %v: %v\n", *ssc.ServerCapability, *ssc.Server, err)
 		}
 	}
+
+	// Delete server capability
+	_, _, err = TOSession.DeleteServerCapability("newcap")
+	if err != nil {
+		t.Fatalf("cannot DELETE newcap server capability: %v\n", err)
+	}
+
 }
 
 func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
