@@ -37,6 +37,11 @@
     dest: /etc/cron.d/grove
   no_log: True
 
+- name: Create ORT placeholder folder
+  file:
+    path: /opt/ort
+    state: directory
+
 - name: Create an empty ORT file
   copy:
     dest: "/opt/ort/traffic_ops_ort.pl"
