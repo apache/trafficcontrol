@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -400,6 +401,16 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	payload.XmlId = dsName
 	serverNames := payload.ServerNames
 
+	ok, err = ValidateCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("error checking required capabilities for delivery service: "+err.Error()), nil)
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("server does not meet required capabilities for delivery service"), nil)
+		return
+	}
+
 	res, err := inf.Tx.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, ds.ID, pq.Array(serverNames))
 	if err != nil {
 
@@ -423,6 +434,25 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(ds.ID)+", ACTION: Assigned servers "+strings.Join(serverNames, ", ")+" to delivery service", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
+}
+
+func ValidateCapabilities(dsID int, serverNames []string, tx *sql.Tx) (bool, error) {
+	var caps, dsrc []string
+	dsrc, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
+
+	if err != nil {
+		return false, err
+	}
+
+	for _, n := range serverNames {
+		caps, err = dbhelpers.GetServerCapabilitiesFromName(n, tx)
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	return reflect.DeepEqual(dsrc, caps), nil
 }
 
 func insertIdsQuery() string {
@@ -616,8 +646,8 @@ func updateQuery() string {
 	profile_parameter SET
 	profile=:profile_id,
 	parameter=:parameter_id
-	WHERE profile=:profile_id AND 
-      parameter = :parameter_id 
+	WHERE profile=:profile_id AND
+      parameter = :parameter_id
       RETURNING last_updated`
 	return query
 }
