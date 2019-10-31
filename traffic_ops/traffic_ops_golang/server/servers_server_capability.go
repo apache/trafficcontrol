@@ -195,6 +195,6 @@ SELECT EXISTS (
 	JOIN type t ON s.type = t.id
 	WHERE s.id = $1
 	AND t.use_in_table = 'server'
-	AND (t.name LIKE '%MID%' OR t.name LIKE '%EDGE%')
+	AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%')
 )`
 }

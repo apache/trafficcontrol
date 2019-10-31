@@ -232,6 +232,9 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
         },
         {
             text: 'Manage Capabilities',
+            displayed: function ($itemScope) {
+                return serverUtils.isCache($itemScope.s);
+            },
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/capabilities');
             }
