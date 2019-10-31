@@ -79,6 +79,17 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 		)
 	};
 
+	this.getServerCapabilityDeliveryServices = function(capabilityName) {
+		return $http.get(ENV.api['root'] + 'deliveryservices_required_capabilities', { params: { requiredCapability: capabilityName } }).then(
+			function (result) {
+				return result.data.response;
+			},
+			function (err) {
+				throw err;
+			}
+		)
+	};
+
 };
 
 ServerCapabilityService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];

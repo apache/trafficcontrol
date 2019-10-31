@@ -174,6 +174,8 @@ Response Structure
 ==========
 Disassociate a server from a Server Capability
 
+	.. note:: If the ``serverCapability`` is a required capability on a :term:`Delivery Service` that the server is assigned to the DELETE will be blocked until either the server is unassigned from the :term:`Delivery Service` or the server capability is removed as a required capability from the :term:`Delivery Service`.
+
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
 :Response Type:  Object

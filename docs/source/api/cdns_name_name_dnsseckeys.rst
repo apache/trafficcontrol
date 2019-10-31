@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Gets a list of DNSSEC keys for CDN and all associated :term:`Delivery Service`\ s. Before returning response to user, this will make sure DNSSEC keys for all delivery services exist and are not expired. If they don't exist or are expired, they will be (re-)generated.
+Gets a list of DNSSEC keys for CDN and all associated :term:`Delivery Services`. Before returning response to user, this will make sure DNSSEC keys for all delivery services exist and are not expired. If they don't exist or are expired, they will be (re-)generated.
 
 :Auth. Required: Yes
 :Roles Required: "admin"

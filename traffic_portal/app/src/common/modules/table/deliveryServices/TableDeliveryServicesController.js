@@ -337,13 +337,9 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
         },
         null, // Divider
         {
-            text: 'Manage Targets',
-            displayed: function ($itemScope) {
-                // only show for steering* delivery services
-                return $itemScope.ds.type.indexOf('STEERING') != -1;
-            },
+            text: 'Manage Invalidation Requests',
             click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/targets?type=' + $itemScope.ds.type);
+                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/jobs?type=' + $itemScope.ds.type);
             }
         },
         {
@@ -357,21 +353,31 @@ var TableDeliveryServicesController = function(deliveryServices, $anchorScroll, 
             }
         },
         {
-            text: 'Manage Servers',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/servers?type=' + $itemScope.ds.type);
-            }
-        },
-        {
             text: 'Manage Regexes',
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/regexes?type=' + $itemScope.ds.type);
             }
         },
         {
-            text: 'Manage Invalidation Requests',
+            text: 'Manage Required Server Capabilities',
             click: function ($itemScope) {
-                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/jobs?type=' + $itemScope.ds.type);
+                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/required-server-capabilities?type=' + $itemScope.ds.type);
+            }
+        },
+        {
+            text: 'Manage Servers',
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/servers?type=' + $itemScope.ds.type);
+            }
+        },
+        {
+            text: 'Manage Targets',
+            displayed: function ($itemScope) {
+                // only show for steering* delivery services
+                return $itemScope.ds.type.indexOf('STEERING') != -1;
+            },
+            click: function ($itemScope) {
+                locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.id + '/targets?type=' + $itemScope.ds.type);
             }
         },
         {

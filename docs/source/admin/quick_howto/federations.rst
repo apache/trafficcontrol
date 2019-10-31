@@ -29,7 +29,7 @@ Configure Federations
 		:scale: 100%
 		:align: center
 
-#. As a user with administrative privileges, create a Federation Mapping by going to :menuselection:`Services --> :term:`Delivery Service`\ s --> More --> Federations` and then clicking :guilabel:`Add Federation Mapping`.
+#. As a user with administrative privileges, create a Federation Mapping by going to :menuselection:`Services --> :term:`Delivery Services` --> More --> Federations` and then clicking :guilabel:`Add Federation Mapping`.
 
 #. Choose the :term:`Delivery Service` to which the federation will be mapped and assign it to the Federation-role user; click :guilabel:`Add`.
 

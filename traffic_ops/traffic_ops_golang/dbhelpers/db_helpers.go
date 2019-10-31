@@ -309,6 +309,92 @@ func GetCDNDomainFromName(tx *sql.Tx, cdnName tc.CDNName) (string, bool, error) 
 	return domain, true, nil
 }
 
+// GetServerInfo returns a ServerInfo struct, whether the server exists, and an error (if one occurs).
+func GetServerInfo(serverID int, tx *sql.Tx) (tc.ServerInfo, bool, error) {
+	q := `
+SELECT
+  s.cachegroup as cachegroup_id,
+  s.cdn_id as cdn_id,
+  s.domain_name as domain_name,
+  s.host_name as host_name,
+  t.name as server_type
+FROM
+  server s
+JOIN type t ON s.type = t.id
+WHERE s.id = $1
+`
+	row := tc.ServerInfo{}
+	if err := tx.QueryRow(q, serverID).Scan(
+		&row.CachegroupID,
+		&row.CDNID,
+		&row.DomainName,
+		&row.HostName,
+		&row.Type,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return row, false, nil
+		}
+		return row, false, fmt.Errorf("querying server id %d: %v", serverID, err.Error())
+	}
+	return row, true, nil
+}
+
+// GetStatusByID returns a Status struct, a bool for whether or not a status of the given ID exists, and an error (if one occurs).
+func GetStatusByID(id int, tx *sql.Tx) (tc.StatusNullable, bool, error) {
+	q := `
+SELECT
+  description,
+  id,
+  last_updated,
+  name
+FROM
+  status s
+WHERE
+  id = $1
+`
+	row := tc.StatusNullable{}
+	if err := tx.QueryRow(q, id).Scan(
+		&row.Description,
+		&row.ID,
+		&row.LastUpdated,
+		&row.Name,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return row, false, nil
+		}
+		return row, false, fmt.Errorf("querying status id %d: %v", id, err.Error())
+	}
+	return row, true, nil
+}
+
+// GetStatusByName returns a Status struct, a bool for whether or not a status of the given name exists, and an error (if one occurs).
+func GetStatusByName(name string, tx *sql.Tx) (tc.StatusNullable, bool, error) {
+	q := `
+SELECT
+  description,
+  id,
+  last_updated,
+  name
+FROM
+  status s
+WHERE
+  name = $1
+`
+	row := tc.StatusNullable{}
+	if err := tx.QueryRow(q, name).Scan(
+		&row.Description,
+		&row.ID,
+		&row.LastUpdated,
+		&row.Name,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return row, false, nil
+		}
+		return row, false, fmt.Errorf("querying status name %s: %v", name, err.Error())
+	}
+	return row, true, nil
+}
+
 // GetServerIDFromName gets server id from a given name
 func GetServerIDFromName(serverName string, tx *sql.Tx) (int, bool, error) {
 	id := 0

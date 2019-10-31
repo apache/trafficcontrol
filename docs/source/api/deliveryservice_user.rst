@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Assigns one or more :term:`Delivery Service`\ s to a user.
+Assigns one or more :term:`Delivery Services` to a user.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -49,7 +49,7 @@ Request Structure
 Response Structure
 ------------------
 :userId:           The integral, unique identifier of the user to whom the :term:`Delivery Service`\ (s) identified in ``deliveryServices`` are assigned
-:deliveryServices: An array of integral, unique identifiers of :term:`Delivery Service`\ s assigned to the user identified by ``userId``
+:deliveryServices: An array of integral, unique identifiers of :term:`Delivery Services` assigned to the user identified by ``userId``
 :replace:          If ``true``, any and all existing, conflicting :term:`Delivery Service` assignments were overwritten by this assignment operation
 
 .. code-block:: http

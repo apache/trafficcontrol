@@ -24,7 +24,7 @@ import (
 )
 
 func TestServerServerCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, CacheGroupsDeliveryServices, ServerCapabilities, ServerServerCapabilities}, func() {
 		GetTestServerServerCapabilities(t)
 	})
 }
@@ -173,11 +173,51 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		t.Fatal("returned server capabilities assigned to servers was nil\n")
 	}
 
-	// Delete them
+	// Make the server capabilities required on the servers' delivery services
+	// Used to make sure we block server server_capability DELETE in that case
+	dsReqCaps := []tc.DeliveryServicesRequiredCapability{}
+
+	for _, ssc := range sscs {
+		dsServers, _, err := TOSession.GetDeliveryServiceServersWithLimits(1, []int{}, []int{*ssc.ServerID})
+		if err != nil {
+			t.Fatalf("cannot GET server delivery services assigned to servers: %v\n", err)
+		}
+		if len(dsServers.Response) == 0 {
+			t.Fatal("servers must be assigned to delivery service")
+		}
+		dsReqCap := tc.DeliveryServicesRequiredCapability{
+			DeliveryServiceID:  dsServers.Response[0].DeliveryService,
+			RequiredCapability: ssc.ServerCapability,
+		}
+		_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(dsReqCap)
+		if err != nil {
+			t.Fatalf("could not POST the server capability %v to ds %v: %v\n", *dsReqCap.RequiredCapability, *dsReqCap.DeliveryServiceID, err)
+		}
+		dsReqCaps = append(dsReqCaps, dsReqCap)
+	}
+
+	// Delete should fail as their delivery services now require the capabilities
+	for _, ssc := range sscs {
+		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
+		if err == nil {
+			t.Fatalf("should have gotten error when using DELETE on the server capability %v from server %v as it is required by associated dses\n", *ssc.ServerCapability, *ssc.Server)
+		}
+	}
+
+	for _, dsReqCap := range dsReqCaps {
+		_, _, err := TOSession.DeleteDeliveryServicesRequiredCapability(*dsReqCap.DeliveryServiceID, *dsReqCap.RequiredCapability)
+		if err != nil {
+			t.Fatalf("could not DELETE the server capability %v from ds %v: %v\n", *dsReqCap.RequiredCapability, *dsReqCap.DeliveryServiceID, err)
+		}
+	}
+
+	// Remove the requirement so we can actually delete them
+
 	for _, ssc := range sscs {
 		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
 		if err != nil {
 			t.Errorf("could not DELETE the server capability %v from server %v: %v\n", *ssc.ServerCapability, *ssc.Server, err)
 		}
 	}
+
 }

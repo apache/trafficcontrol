@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Generates Zone-Signing Key (ZSK) and Key-Signing Key (KSK) keypairs for a CDN and all associated :term:`Delivery Service`\ s.
+Generates Zone-Signing Key (ZSK) and Key-Signing Key (KSK) keypairs for a CDN and all associated :term:`Delivery Services`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"

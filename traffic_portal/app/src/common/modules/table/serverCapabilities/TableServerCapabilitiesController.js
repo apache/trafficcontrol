@@ -68,6 +68,19 @@ var TableServerCapabilitiesController = function(serverCapabilities, $scope, $st
 			click: function ($itemScope) {
 				confirmDelete($itemScope.sc);
 			}
+		},
+		null, // Dividier
+		{
+			text: 'View Delivery Services',
+			click: function ($itemScope) {
+				locationUtils.navigateToPath('/server-capabilities/' + $itemScope.sc.name + '/delivery-services');
+			}
+		},
+		{
+			text: 'View Servers',
+			click: function ($itemScope) {
+				locationUtils.navigateToPath('/server-capabilities/' + $itemScope.sc.name + '/servers');
+			}
 		}
 	];
 

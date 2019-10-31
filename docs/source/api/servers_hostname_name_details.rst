@@ -43,7 +43,7 @@ Response Structure
 ------------------
 :cachegroup:       The name of the Cache Group to which this server belongs
 :cdnName:          Name of the CDN to which the server belongs
-:deliveryservices: An array of integral, unique identifiers for :term:`Delivery Service`\ s to which this server belongs
+:deliveryservices: An array of integral, unique identifiers for :term:`Delivery Services` to which this server belongs
 :domainName:       The domain part of the server's Fully Qualified Domain Name (FQDN)
 :guid:             An identifier used to uniquely identify the server
 

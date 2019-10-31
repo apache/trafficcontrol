@@ -105,7 +105,7 @@ traffic_ops/ - The root of the Traffic Ops project
 
 	- experimental/ - includes all kinds of prototype and/or abandoned tools and extensions
 
-		- ats_config/ - an attempt to provide an easier method of obtaining and/or writing configuration files for :abbr:`ATS (Apache Traffic Server)` :term:`cache server`\ s
+		- ats_config/ - an attempt to provide an easier method of obtaining and/or writing configuration files for :abbr:`ATS (Apache Traffic Server)` :term:`cache servers`
 		- auth/ - a simple authentication server that mimics the authentication process of Traffic Ops, and provides a detailed view of a logged-in user's permissions and capabilities
 		- goto/ - an Angular (1.x) web page backed by a Go server that provides a ReST API interface for mySQL servers
 		- postgrest/ - originally probably going to be a web server that provides a ReST API for postgreSQL servers, this only contains a simple - albeit unfinished - Docker container specification for running postgreSQL client tools and/or server(s)

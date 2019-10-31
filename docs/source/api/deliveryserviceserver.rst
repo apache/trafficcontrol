@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieve information about the assignment of servers to :term:`Delivery Service`\ s
+Retrieve information about the assignment of servers to :term:`Delivery Services`
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
@@ -158,4 +158,4 @@ Response Structure
 	}}
 
 
-.. [2] Users with the "admin" or "operations" roles will be able to modify ALL server-to-Delivery-Service assignments, whereas all other users can only assign servers to the :term:`Delivery Service`\ s their Tenant has permissions to edit.
+.. [2] Users with the "admin" or "operations" roles will be able to modify ALL server-to-Delivery-Service assignments, whereas all other users can only assign servers to the :term:`Delivery Services` their Tenant has permissions to edit.

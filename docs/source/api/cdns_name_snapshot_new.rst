@@ -105,7 +105,7 @@ Response Structure
 	:zonemanager.cache.maintenance.interval: A configuration option for the ZoneManager Java class of Traffic Router
 	:zonemanager.threadpool.scale:           A configuration option for the ZoneManager Java class of Traffic Router
 
-:contentRouters: An object containing keys which are the (short) hostnames of the Traffic Routers that serve requests for :term:`Delivery Service`\ s in this CDN
+:contentRouters: An object containing keys which are the (short) hostnames of the Traffic Routers that serve requests for :term:`Delivery Services` in this CDN
 
 	:api.port:        A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTP
 	:secure.api.port: A string containing the port number on which the :ref:`tr-api` is served by this Traffic Router via HTTPS (optional)
@@ -125,7 +125,7 @@ Response Structure
 	:cacheGroup:       The name of the :term:`Cache Group` to which the server belongs
 	:deliveryServices: An object containing keys which are the names of :term:`Delivery Services` to which this :term:`cache server` is assigned; the values corresponding to those keys are arrays of FQDNs that resolve to this :term:`cache server`
 
-		.. note:: Only Edge-tier :term:`cache server` s can be assigned to a Delivery SErvice, and therefore this field will only be present when ``type`` is ``"EDGE"``.
+		.. note:: Only Edge-tier :term:`cache servers` can be assigned to a Delivery SErvice, and therefore this field will only be present when ``type`` is ``"EDGE"``.
 
 	:fqdn:            The server's Fully Qualified Domain Name (FQDN)
 	:hashCount:       The number of servers to be placed into a single "hash ring" in Traffic Router
@@ -155,7 +155,7 @@ Response Structure
 		MID
 			This is a Mid-tier :term:`cache server`
 
-:deliveryServices: An object containing keys which are the 'xml_id's of all of the :term:`Delivery Service`\ s within the CDN
+:deliveryServices: An object containing keys which are the 'xml_id's of all of the :term:`Delivery Services` within the CDN
 
 	:anonymousBlockingEnabled: A string containing a boolean that tells whether or not Anonymized IP Addresses are blocked by this :term:`Delivery Service`; one of:
 

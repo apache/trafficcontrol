@@ -23,6 +23,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -30,6 +35,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/lib/pq"
 )
 
 const (
@@ -38,11 +44,17 @@ const (
 	ServerHostNameQueryParam   = "serverHostName"
 )
 
-// we need a type alias to define functions on
-type TOServerServerCapability struct {
-	api.APIInfoImpl `json:"-"`
-	tc.ServerServerCapability
-}
+type (
+	TOServerServerCapability struct {
+		api.APIInfoImpl `json:"-"`
+		tc.ServerServerCapability
+	}
+
+	DSTenant struct {
+		TenantID int64 `db:"tenant_id"`
+		ID       int64 `db:"id"`
+	}
+)
 
 func (ssc *TOServerServerCapability) SetLastUpdated(t tc.TimeNoMod) { ssc.LastUpdated = &t }
 func (ssc *TOServerServerCapability) NewReadObj() interface{} {
@@ -118,7 +130,53 @@ func (ssc *TOServerServerCapability) Read() ([]interface{}, error, error, int) {
 }
 
 func (ssc *TOServerServerCapability) Delete() (error, error, int) {
+	// Ensure that the user is not removing a server capability from the server
+	// that is required by the delivery services the server is assigned to (if applicable)
+	dsIDs := []int64{}
+	if err := ssc.APIInfo().Tx.QueryRow(checkDSReqCapQuery(), ssc.ServerID, ssc.ServerCapability).Scan(pq.Array(&dsIDs)); err != nil {
+		return nil, fmt.Errorf("checking removing server server capability would still suffice delivery service requried capabilites: %v", err), http.StatusInternalServerError
+	}
+
+	if len(dsIDs) > 0 {
+		return ssc.buildDSReqCapError(dsIDs)
+	}
+
+	// Delete association
 	return api.GenericDelete(ssc)
+}
+
+func (ssc *TOServerServerCapability) buildDSReqCapError(dsIDs []int64) (error, error, int) {
+
+	dsTenantIDs, err := getDSTenantIDsByIDs(ssc.APIInfo().Tx, dsIDs)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	authDSIDs := []string{}
+	checkedTenants := map[int64]bool{}
+
+	for _, dsTenantID := range dsTenantIDs {
+		if auth, ok := checkedTenants[dsTenantID.TenantID]; ok { // No need to check tenant again
+			if auth {
+				authDSIDs = append(authDSIDs, strconv.FormatInt(dsTenantID.ID, 10))
+			}
+			continue
+		}
+		authorized, err := tenant.IsResourceAuthorizedToUserTx(int(dsTenantID.TenantID), ssc.APIInfo().User, ssc.APIInfo().Tx.Tx)
+		if err != nil {
+			return nil, fmt.Errorf("checking tenancy on delivery service: %v", err), http.StatusInternalServerError
+		}
+		if authorized {
+			authDSIDs = append(authDSIDs, strconv.FormatInt(dsTenantID.ID, 10))
+		}
+		checkedTenants[dsTenantID.TenantID] = authorized
+	}
+
+	dsStr := "delivery services"
+	if len(authDSIDs) > 0 {
+		dsStr = fmt.Sprintf("the delivery services %v", strings.Join(authDSIDs, ","))
+	}
+	return fmt.Errorf("cannot remove the capability %v from the server %v as the server is assigned to %v that require it", *ssc.ServerCapability, *ssc.ServerID, dsStr), nil, http.StatusBadRequest
 }
 
 func (ssc *TOServerServerCapability) Create() (error, error, int) {
@@ -195,6 +253,41 @@ SELECT EXISTS (
 	JOIN type t ON s.type = t.id
 	WHERE s.id = $1
 	AND t.use_in_table = 'server'
-	AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%')
-)`
+	AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%'))`
+}
+
+func checkDSReqCapQuery() string {
+	return `
+SELECT ARRAY(
+	SELECT dsrc.deliveryservice_id
+	FROM deliveryservices_required_capability as dsrc
+	WHERE deliveryservice_id IN (
+		SELECT deliveryservice 
+		FROM deliveryservice_server
+		WHERE server = $1)
+	AND dsrc.required_capability = $2)`
+}
+
+func getDSTenantIDsByIDs(tx *sqlx.Tx, dsIDs []int64) ([]DSTenant, error) {
+	dsTenantIDs := []DSTenant{}
+
+	query, args, err := sqlx.In("SELECT id, tenant_id FROM deliveryservice where id IN (?);", dsIDs)
+	if err != nil {
+		return nil, fmt.Errorf("building query for getting delivery services' tenants: %v", err)
+	}
+	query = tx.Rebind(query)
+	resultRows, err := tx.Queryx(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("querying tenant IDs for delivery service IDs: %v", err)
+	}
+
+	for resultRows.Next() {
+		dsTenantID := DSTenant{}
+		if err := resultRows.StructScan(&dsTenantID); err != nil {
+			return nil, errors.New("scanning delivery service tenant ID: " + err.Error())
+		}
+		dsTenantIDs = append(dsTenantIDs, dsTenantID)
+	}
+
+	return dsTenantIDs, nil
 }

@@ -67,7 +67,7 @@ Creating Keys
 
 #. Input the required information (reasonable defaults should be generated for you). When done, click on the green :guilabel:`Generate` button.
 
-	.. note:: Depending upon the number of :term:`Delivery Service`\ s in the CDN, generating DNSSEC keys may take several seconds.
+	.. note:: Depending upon the number of :term:`Delivery Services` in the CDN, generating DNSSEC keys may take several seconds.
 
 	.. figure:: dnssec/04.png
 		:width: 50%

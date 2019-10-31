@@ -33,7 +33,7 @@ Traffic Stats Project Tree Overview
 =====================================
 * :file:`traffic_stats/` - contains Go source files and files used to create the Traffic Stats RPM.
 
-	* :file:`grafana/` - contains a javascript file which is installed on the Grafana server. This allows Traffic Ops to create custom dashboards for :term:`Delivery Service`\ s, :term:cache server`\ s, etc.
+	* :file:`grafana/` - contains a javascript file which is installed on the Grafana server. This allows Traffic Ops to create custom dashboards for :term:`Delivery Services`, :term:cache server`\ s, etc.
 	* :file:`influxdb_tools/` - contains :ref:`sync_ts_databases` and :ref:`create_ts_databases` which are helpful if you have multiple instances and they get out of sync with data.
 
 

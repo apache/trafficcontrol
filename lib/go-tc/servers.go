@@ -1,6 +1,10 @@
 package tc
 
-import "time"
+import (
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+)
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -137,6 +141,19 @@ type ServerUpdateStatus struct {
 	Status             string `json:"status"`
 	ParentPending      bool   `json:"parent_pending"`
 	ParentRevalPending bool   `json:"parent_reval_pending"`
+}
+
+type ServerPutStatus struct {
+	Status        util.JSONNameOrIDStr `json:"status"`
+	OfflineReason *string              `json:"offlineReason"`
+}
+
+type ServerInfo struct {
+	CachegroupID int    `json:"cachegroupId" db:"cachegroup_id"`
+	CDNID        int    `json:"cdnId" db:"cdn_id"`
+	DomainName   string `json:"domainName" db:"domain_name"`
+	HostName     string `json:"hostName" db:"host_name"`
+	Type         string `json:"type" db:"server_type"`
 }
 
 type ServerDetail struct {
