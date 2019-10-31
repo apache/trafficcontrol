@@ -36,7 +36,7 @@ Request Structure
 	+------+------------------------------------------------------------------------------------------------------------+
 	| Name | Description                                                                                                |
 	+======+============================================================================================================+
-	| ID   | The integral, unique identifier of the Delivery service for which :term:`Cache Group`\ s will be displayed |
+	| ID   | The integral, unique identifier of the Delivery service for which :term:`Cache Groups` will be displayed   |
 	+------+------------------------------------------------------------------------------------------------------------+
 
 

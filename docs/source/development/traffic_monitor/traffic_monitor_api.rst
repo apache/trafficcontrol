@@ -84,7 +84,7 @@ Response Structure
 """"""""""""""""""
 :pp: Stores any provided request parameters provided as a string
 :date: A ``ctime``-like string representation of the time at which the response was served
-:caches: An object with keys that are the names of monitored :term:`cache server`\ s
+:caches: An object with keys that are the names of monitored :term:`cache servers`
 
 	:<server name>: Each server's object is a collection of keys that are the names of statistics
 
@@ -134,7 +134,7 @@ Response Structure
 """"""""""""""""""
 :pp: Stores any provided request parameters provided as a string
 :date: A ``ctime``-like string representation of the time at which the response was served
-:caches: An object with keys that are the names of monitored :term:`cache server`\ s - only the cache named by the ``cache`` request path parameter will be shown
+:caches: An object with keys that are the names of monitored :term:`cache servers` - only the cache named by the ``cache`` request path parameter will be shown
 
 	:<server name>: The requested server's object is a collection of keys that are the names of statistics
 
@@ -151,7 +151,7 @@ Response Structure
 
 ``/publish/DsStats``
 ====================
-Statistics gathered for :term:`Delivery Service`\ s
+Statistics gathered for :term:`Delivery Services`
 
 ``GET``
 -------

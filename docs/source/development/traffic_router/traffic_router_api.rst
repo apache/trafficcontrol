@@ -151,7 +151,7 @@ Response Structure
 
 ``/crs/locations``
 ==================
-A list of configured :term:`Cache Group`\ s to which the Traffic Router is capable of routing client traffic.
+A list of configured :term:`Cache Groups` to which the Traffic Router is capable of routing client traffic.
 
 Request Structure
 -----------------
@@ -165,7 +165,7 @@ Request Structure
 
 Response Structure
 ------------------
-:locations: An array of the names of :term:`Cache Group`\ s to which this Traffic Router is capable of routing client traffic
+:locations: An array of the names of :term:`Cache Groups` to which this Traffic Router is capable of routing client traffic
 
 .. code-block:: http
 	:caption: Response Example
@@ -226,7 +226,7 @@ Response Structure
 
 ``/crs/locations/{{cachegroup}}/caches``
 ========================================
-A list of :term:`cache server`\ s for this :term:`Cache Group` only.
+A list of :term:`cache servers` for this :term:`Cache Group` only.
 
 Request Structure
 -----------------
@@ -235,7 +235,7 @@ Request Structure
 	+------------+------------------------------------------------------------------------------------------------------------+
 	| Name       | Description                                                                                                |
 	+============+============================================================================================================+
-	| cachegroup | The name of a :term:`Cache Group` of which a list of constituent :term:`cache server`\ s will be retrieved |
+	| cachegroup | The name of a :term:`Cache Group` of which a list of constituent :term:`cache servers` will be retrieved   |
 	+------------+------------------------------------------------------------------------------------------------------------+
 
 
@@ -345,7 +345,7 @@ TBD
 
 ``/crs/consistenthash/deliveryservice/``
 ========================================
-The resulting :term:`Delivery Service` of the consistent hash for a given :term:`Delivery Service` and request path -- used to test STEERING :term:`Delivery Service`\ s.
+The resulting :term:`Delivery Service` of the consistent hash for a given :term:`Delivery Service` and request path -- used to test STEERING :term:`Delivery Services`.
 
 Request Structure
 -----------------

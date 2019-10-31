@@ -21,7 +21,7 @@ Configure Anonymous Blocking
 
 .. Note:: Anonymous Blocking is only supported for HTTP delivery services. You will need access to a database that provides anonymous IP statistics (`Maxmind's database <https://www.maxmind.com/en/solutions/geoip2-enterprise-product-suite/anonymous-ip-database>`_ is recommended, as this functionality was built specifically to work with it.)
 
-#. Prepare the Anonymous Blocking configuration file. Anonymous Blocking uses a configuration file in JSON format to define blocking rules for :term:`Delivery Service`\ s. The file needs to be put on an HTTP server accessible to Traffic Router.
+#. Prepare the Anonymous Blocking configuration file. Anonymous Blocking uses a configuration file in JSON format to define blocking rules for :term:`Delivery Services`. The file needs to be put on an HTTP server accessible to Traffic Router.
 
 	.. code-block:: json
 		:caption: Example Configuration JSON

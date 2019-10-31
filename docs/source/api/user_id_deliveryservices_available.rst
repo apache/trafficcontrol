@@ -32,7 +32,7 @@ Request Structure
 	+------+---------------------------------------------------------------------------------------------------+
 	| Name | Description                                                                                       |
 	+======+===================================================================================================+
-	|  ID  | The integral, unique identifier of the users whose :term:`Delivery Service`\ s shall be retrieved |
+	|  ID  | The integral, unique identifier of the users whose :term:`Delivery Services` shall be retrieved   |
 	+------+---------------------------------------------------------------------------------------------------+
 
 .. code-block:: http

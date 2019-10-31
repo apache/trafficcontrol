@@ -21,7 +21,7 @@
 
 ``POST``
 ========
-Assigns a :term:`Cache Group` to one or more :term:`Delivery Service`\ s
+Assigns a :term:`Cache Group` to one or more :term:`Delivery Services`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -37,7 +37,7 @@ Request Structure
 	|  ID  | The integral, unique identifier of the :term:`Cache Group` being assigned |
 	+------+---------------------------------------------------------------------------+
 
-:deliveryServices:  The integral, unique identifiers of the :term:`Delivery Service`\ s to which the :term:`Cache Group` is being assigned
+:deliveryServices:  The integral, unique identifiers of the :term:`Delivery Services` to which the :term:`Cache Group` is being assigned
 
 .. code-block:: http
 	:caption: Request Example
@@ -54,7 +54,7 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryServices: An array of *all* :term:`Delivery Service`\ s to which the :term:`Cache Group` is assigned (**not** just the one(s) to which it was assigned via the request)
+:deliveryServices: An array of *all* :term:`Delivery Services` to which the :term:`Cache Group` is assigned (**not** just the one(s) to which it was assigned via the request)
 :id:               The :term:`Cache Group`\ 's ID
 :serverNames:      An array of the (short) hostnames of all servers in the :term:`Cache Group`
 
