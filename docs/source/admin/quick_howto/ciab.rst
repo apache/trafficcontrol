@@ -237,7 +237,7 @@ Multiple optional containers may be combined by using a shell alias:
 
 VNC Server
 ----------
-The TightVNC optional container provides a basic lightweight window manager (fluxbox), Firefox browser, xterm, and a few other utilities within the CDN-In-A-Box "tcnet" bridge network. This can be very helpful for quick demonstrations of CDN-in-a-Box that require the use of real container network :abbr:`FQDN (Fully Qualified Domain Name)s` and full X.509 validation.
+The TightVNC optional container provides a basic lightweight window manager (fluxbox), Firefox browser, xterm, and a few other utilities within the CDN-In-A-Box "tcnet" bridge network. This can be very helpful for quick demonstrations of CDN-in-a-Box that require the use of real container network :abbr:`FQDN (Fully Qualified Domain Name)`\ s and full X.509 validation.
 
 #. Download and install a VNC client. TightVNC client is preferred as it supports window resizing, host-to-vnc copy/pasting, and optimized frame buffer compression.
 #. Set your VNC console password by adding the ``VNC_PASSWD`` environment variable to :file:`infrastructure/cdn-in-a-box/varibles.env`. The password needs to be at least six characters long. The default password is randomized for security.
