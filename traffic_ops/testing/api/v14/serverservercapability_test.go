@@ -24,7 +24,7 @@ import (
 )
 
 func TestServerServerCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, CacheGroupsDeliveryServices, ServerCapabilities, ServerServerCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices, ServerCapabilities, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
 		GetTestServerServerCapabilities(t)
 	})
 }
@@ -155,27 +155,29 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		t.Fatal("returned server capabilities assigned to servers was nil\n")
 	}
 
-	// Make the server capabilities required on the servers' delivery services
+	// Assign servers to DSes that have the capability required
 	// Used to make sure we block server server_capability DELETE in that case
-	dsReqCaps := []tc.DeliveryServicesRequiredCapability{}
-
+	dsServers := []tc.DeliveryServiceServer{}
 	for _, ssc := range sscs {
-		dsServers, _, err := TOSession.GetDeliveryServiceServersWithLimits(1, []int{}, []int{*ssc.ServerID})
+
+		dsReqCapResp, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, ssc.ServerCapability)
 		if err != nil {
-			t.Fatalf("cannot GET server delivery services assigned to servers: %v\n", err)
+			t.Fatalf("cannot GET delivery service required capabilities: %v\n", err)
 		}
-		if len(dsServers.Response) == 0 {
-			t.Fatal("servers must be assigned to delivery service")
+		if len(dsReqCapResp) == 0 {
+			t.Fatalf("at least one delivery service needs the capability %v required", *ssc.ServerCapability)
 		}
-		dsReqCap := tc.DeliveryServicesRequiredCapability{
-			DeliveryServiceID:  dsServers.Response[0].DeliveryService,
-			RequiredCapability: ssc.ServerCapability,
-		}
-		_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(dsReqCap)
+		dsReqCap := dsReqCapResp[0]
+
+		// Assign server to ds
+		_, err = TOSession.CreateDeliveryServiceServers(*dsReqCap.DeliveryServiceID, []int{*ssc.ServerID}, false)
 		if err != nil {
-			t.Fatalf("could not POST the server capability %v to ds %v: %v\n", *dsReqCap.RequiredCapability, *dsReqCap.DeliveryServiceID, err)
+			t.Fatalf("cannot CREATE server delivery service assignement: %v\n", err)
 		}
-		dsReqCaps = append(dsReqCaps, dsReqCap)
+		dsServers = append(dsServers, tc.DeliveryServiceServer{
+			Server:          ssc.ServerID,
+			DeliveryService: dsReqCap.DeliveryServiceID,
+		})
 	}
 
 	// Delete should fail as their delivery services now require the capabilities
@@ -186,10 +188,10 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		}
 	}
 
-	for _, dsReqCap := range dsReqCaps {
-		_, _, err := TOSession.DeleteDeliveryServicesRequiredCapability(*dsReqCap.DeliveryServiceID, *dsReqCap.RequiredCapability)
+	for _, dsServer := range dsServers {
+		_, _, err := TOSession.DeleteDeliveryServiceServer(*dsServer.DeliveryService, *dsServer.Server)
 		if err != nil {
-			t.Fatalf("could not DELETE the server capability %v from ds %v: %v\n", *dsReqCap.RequiredCapability, *dsReqCap.DeliveryServiceID, err)
+			t.Fatalf("could not DELETE the server %v from ds %v: %v\n", *dsServer.Server, *dsServer.DeliveryService, err)
 		}
 	}
 

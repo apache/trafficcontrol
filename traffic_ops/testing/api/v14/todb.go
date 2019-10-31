@@ -280,6 +280,8 @@ INSERT INTO to_extension (name, version, info_url, isactive, script_file, server
 func Teardown(db *sql.DB) error {
 
 	sqlStmt := `
+	DELETE FROM deliveryservices_required_capability;
+	DELETE FROM server_server_capability;
 	DELETE FROM server_server_capability;
 	DELETE FROM server_capability;
 	DELETE FROM to_extension;
