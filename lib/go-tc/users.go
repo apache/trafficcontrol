@@ -142,10 +142,10 @@ type CurrentUserUpdateRequestUser struct {
 	Username           json.RawMessage `json:"username"`
 }
 
-// ValidateAndUnmarshal validates the request and returns a User into which the request's information
+// UnmarshalAndValidate validates the request and returns a User into which the request's information
 // has been unmarshalled. This allows many fields to be "null", but explicitly checks that they are
 // present in the JSON payload.
-func (u *CurrentUserUpdateRequestUser) ValidateAndUnmarshal(user *User) error {
+func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 	errs := []error{}
 	if u.AddressLine1 != nil {
 		if err := json.Unmarshal(u.AddressLine1, &user.AddressLine1); err != nil {

@@ -222,7 +222,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := userRequest.User.ValidateAndUnmarshal(&user); err != nil {
+	if err := userRequest.User.UnmarshalAndValidate(&user); err != nil {
 		errCode = http.StatusBadRequest
 		userErr = fmt.Errorf("Couldn't parse request: %v", err)
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
@@ -231,7 +231,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 
 	changePasswd := false
 
-	// obfuscate passwords (ValidateAndUnmarshal checks for equality with ConfirmLocalPassword)
+	// obfuscate passwords (UnmarshalAndValidate checks for equality with ConfirmLocalPassword)
 	// TODO: check for valid password via bad password list like Perl did? User creation doesn't...
 	if user.LocalPassword != nil && *user.LocalPassword != "" {
 		hashPass, err := auth.DerivePassword(*user.LocalPassword)
