@@ -110,7 +110,8 @@ s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
 s.upd_pending as upd_pending,
-ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities
+ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) as server_capabilities,
+ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability) as deliveryservice_capabilities
 FROM server s
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
@@ -120,8 +121,6 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 WHERE s.cdn_id = (SELECT cdn_id from deliveryservice where id = (select v from ds_id))
 AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
-AND (ARRAY(select ssc.server_capability from server_server_capability ssc where ssc.server = s.id order by ssc.server_capability) =
-ARRAY(select drc.required_capability from deliveryservices_required_capability drc where drc.deliveryservice_id = (select v from ds_id) order by drc.required_capability))
 `
 	rows, err := tx.Query(q, dsID)
 	if err != nil {
@@ -174,11 +173,29 @@ ARRAY(select drc.required_capability from deliveryservices_required_capability d
 			&s.TypeID,
 			&s.UpdPending,
 			pq.Array(&s.ServerCapabilities),
+			pq.Array(&s.DeliveryServiceCapabilities),
 		)
 		if err != nil {
 			return nil, errors.New("scanning delivery service eligible servers: " + err.Error())
 		}
-		servers = append(servers, s)
+		eligible := true
+		for _, dsc := range s.DeliveryServiceCapabilities {
+			if !contains(s.ServerCapabilities, dsc) {
+				eligible = false
+			}
+		}
+		if eligible {
+			servers = append(servers, s)
+		}
 	}
 	return servers, nil
+}
+
+func contains(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
 }

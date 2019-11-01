@@ -75,7 +75,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 
 	err = ValidateDSCapabilities(dsList, serverName, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err.Error(), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
 		return
 	}
 
@@ -104,7 +104,7 @@ func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) error {
 			return err
 		}
 		if ok := reflect.DeepEqual(sCaps, dsCaps); !ok {
-			return errors.New(fmt.Sprintf("delivery service [%d] requirements not met by server [%s]", id, serverName))
+			return errors.New(fmt.Sprintf("Caching server cannot assign this delivery service without having the required delivery service capabilities: [%v]", dsCaps))
 		}
 	}
 
