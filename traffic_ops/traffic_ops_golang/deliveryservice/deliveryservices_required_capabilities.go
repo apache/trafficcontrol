@@ -208,7 +208,7 @@ func (rc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliverySer
 	for rows.Next() {
 		var result tc.DeliveryServicesRequiredCapability
 		if err := rows.StructScan(&result); err != nil {
-			return nil, nil, errors.New(rc.GetType() + " get scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, nil, fmt.Errorf("%s get scanning: %s", rc.GetType(), err.Error()), http.StatusInternalServerError
 		}
 		results = append(results, result)
 	}
@@ -219,10 +219,10 @@ func (rc *RequiredCapability) getCapabilities(tenantIDs []int) ([]tc.DeliverySer
 // Delete implements the api.CRUDer interface.
 func (rc *RequiredCapability) Delete() (error, error, int) {
 	authorized, err := rc.isTenantAuthorized()
-	if err != nil {
-		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
-	} else if !authorized {
+	if !authorized {
 		return errors.New("not authorized on this tenant"), nil, http.StatusForbidden
+	} else if err != nil {
+		return nil, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error()), http.StatusInternalServerError
 	}
 
 	return api.GenericDelete(rc)
@@ -231,10 +231,10 @@ func (rc *RequiredCapability) Delete() (error, error, int) {
 // Create implements the api.CRUDer interface.
 func (rc *RequiredCapability) Create() (error, error, int) {
 	authorized, err := rc.isTenantAuthorized()
-	if err != nil {
-		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
-	} else if !authorized {
+	if !authorized {
 		return errors.New("not authorized on this tenant"), nil, http.StatusForbidden
+	} else if err != nil {
+		return nil, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error()), http.StatusInternalServerError
 	}
 
 	rows, err := rc.APIInfo().Tx.NamedQuery(rcInsertQuery(), rc)
@@ -247,13 +247,13 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 	for rows.Next() {
 		rowsAffected++
 		if err := rows.StructScan(&rc); err != nil {
-			return nil, errors.New(rc.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
+			return nil, fmt.Errorf("%s create scanning: %s", rc.GetType(), err.Error()), http.StatusInternalServerError
 		}
 	}
 	if rowsAffected == 0 {
-		return nil, errors.New(rc.GetType() + " create: no " + rc.GetType() + " was inserted, no rows was returned"), http.StatusInternalServerError
+		return nil, fmt.Errorf("%s create: no %s was inserted, no rows was returned", rc.GetType(), rc.GetType()), http.StatusInternalServerError
 	} else if rowsAffected > 1 {
-		return nil, errors.New("too many rows returned from " + rc.GetType() + " insert"), http.StatusInternalServerError
+		return nil, fmt.Errorf("too many rows returned from %s insert", rc.GetType()), http.StatusInternalServerError
 	}
 
 	return nil, nil, http.StatusOK
@@ -282,11 +282,10 @@ func (rc *RequiredCapability) isTenantAuthorized() (bool, error) {
 
 	if existingID != nil {
 		authorized, err := tenant.IsResourceAuthorizedToUserTx(*existingID, rc.APIInfo().User, rc.APIInfo().Tx.Tx)
-		if err != nil {
-			return false, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error())
-		}
 		if !authorized {
 			return false, errors.New("not authorized on this tenant")
+		} else if err != nil {
+			return false, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error())
 		}
 	}
 
