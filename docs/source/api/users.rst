@@ -38,9 +38,6 @@ Request Structure
 	+-----------+----------+------------------------------------------------------------------------------------------+
 	| tenant    | no       | Return only users belonging to the :term:`Tenant` identified by tenant name              |
 	+-----------+----------+------------------------------------------------------------------------------------------+
-	| tenantId  | no       | Return only users belonging to the :term:`Tenant` identified by this integral, unique    |
-	|           |          | identifier                                                                               |
-	+-----------+----------+------------------------------------------------------------------------------------------+
 	| username  | no       | Return only the user with this username                                                  |
 	+-----------+----------+------------------------------------------------------------------------------------------+
 	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the        |
