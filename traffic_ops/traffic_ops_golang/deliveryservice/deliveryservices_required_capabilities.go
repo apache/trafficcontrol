@@ -20,9 +20,12 @@ package deliveryservice
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -31,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/lib/pq"
 )
 
 const (
@@ -237,6 +241,11 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 		return nil, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error()), http.StatusInternalServerError
 	}
 
+	usrErr, sysErr, rCode := rc.ensureDSServerCap()
+	if usrErr != nil || sysErr != nil {
+		return usrErr, sysErr, rCode
+	}
+
 	rows, err := rc.APIInfo().Tx.NamedQuery(rcInsertQuery(), rc)
 	if err != nil {
 		return api.ParseDBError(err)
@@ -257,6 +266,62 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 	}
 
 	return nil, nil, http.StatusOK
+}
+
+func (rc *RequiredCapability) ensureDSServerCap() (error, error, int) {
+	tx := rc.APIInfo().Tx
+
+	// Get assigned DS server IDs
+	dsServerIDs := []int64{}
+	if err := tx.Tx.QueryRow(`
+	SELECT ARRAY(
+		SELECT server 
+		FROM deliveryservice_server 
+		WHERE deliveryservice=$1
+	)`, rc.DeliveryServiceID).Scan(pq.Array(&dsServerIDs)); err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("reading delivery service %v servers: %v", *rc.DeliveryServiceID, err), http.StatusInternalServerError
+	}
+
+	if len(dsServerIDs) == 0 { // no attached servers can return success right away
+		return nil, nil, http.StatusOK
+	}
+
+	// Get servers IDs that have the new capability
+	capServerIDs := []int64{}
+	if err := tx.QueryRow(`
+	SELECT ARRAY(
+		SELECT server
+		FROM server_server_capability 
+		WHERE server IN (
+			SELECT server 
+			FROM deliveryservice_server 
+			WHERE deliveryservice=$1
+		)
+		AND server_capability=$2
+	)`, rc.DeliveryServiceID, rc.RequiredCapability).Scan(pq.Array(&capServerIDs)); err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("reading servers that have server capability %v attached: %v", *rc.RequiredCapability, err), http.StatusInternalServerError
+	}
+
+	vIDs := getViolatingServerIDs(dsServerIDs, capServerIDs)
+	if len(vIDs) > 0 {
+		return fmt.Errorf("capability %v cannot be made required on the delivery service %v as it has the associated servers %v that do not have the capability assigned", *rc.RequiredCapability, *rc.DeliveryServiceID, strings.Join(vIDs, ",")), nil, http.StatusBadRequest
+	}
+
+	return nil, nil, http.StatusOK
+}
+
+func getViolatingServerIDs(dsServerIDs, capServerIDs []int64) []string {
+	capServerIDsMap := map[int64]struct{}{}
+	for _, id := range capServerIDs {
+		capServerIDsMap[id] = struct{}{}
+	}
+	vIDs := []string{}
+	for _, id := range dsServerIDs {
+		if _, found := capServerIDsMap[id]; !found {
+			vIDs = append(vIDs, strconv.FormatInt(id, 10))
+		}
+	}
+	return vIDs
 }
 
 func (rc *RequiredCapability) isTenantAuthorized() (bool, error) {
