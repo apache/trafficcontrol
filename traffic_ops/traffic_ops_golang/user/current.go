@@ -214,7 +214,8 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
-	} else if !exists {
+	}
+	if !exists {
 		sysErr = fmt.Errorf("Current user (#%d) doesn't exist... ??", inf.User.ID)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
