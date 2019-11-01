@@ -27,6 +27,7 @@ import (
 func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
 		InvalidDeliveryServicesRequiredCapabilityAddition(t)
+		//WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilities, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
 		GetTestDeliveryServicesRequiredCapabilities(t)
 	})
 }
