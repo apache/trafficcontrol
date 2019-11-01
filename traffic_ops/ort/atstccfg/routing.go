@@ -39,7 +39,22 @@ var ErrBadRequest = errors.New("bad request")
 func GetConfigFile(cfg TCCfg) (string, int, error) {
 	pathParts := strings.Split(cfg.TOURL.Path, "/")
 
-	log.Infof("GetConfigFile pathParts %++v\n", pathParts)
+	if len(pathParts) == 7 && pathParts[1] == `api` && pathParts[3] == `servers` && pathParts[5] == `configfiles` && pathParts[6] == `ats` {
+		// "/api/1.x/servers/name/configfiles/ats" is the "meta" config route, which lists all the other configs for this server.
+		server := pathParts[4]
+		log.Infoln("GetConfigFile is meta config request for server '" + server + "'; generating")
+		txt, err := GetConfigFileMeta(cfg, server)
+		if err != nil {
+			if err == ErrNotFound {
+				return "", ExitCodeNotFound, err
+			} else if err == ErrBadRequest {
+				return "", ExitCodeBadRequest, err
+			} else {
+				return "", ExitCodeErrGeneric, err
+			}
+		}
+		return txt, ExitCodeSuccess, nil
+	}
 
 	if len(pathParts) < 8 {
 		log.Infoln("GetConfigFile pathParts < 7, calling TO")

@@ -678,7 +678,7 @@ func GetTMParams(tx *sql.Tx) (TMParams, error) {
 }
 
 // GetLocationParams returns a map[configFile]locationParams, and any error. If either param doesn't exist, an empty string is returned without error.
-func GetLocationParams(tx *sql.Tx, profileID int) (map[string]ConfigProfileParams, error) {
+func GetLocationParams(tx *sql.Tx, profileID int) (map[string]atscfg.ConfigProfileParams, error) {
 	qry := `
 SELECT
   p.name,
@@ -696,7 +696,7 @@ WHERE
 	}
 	defer rows.Close()
 
-	params := map[string]ConfigProfileParams{}
+	params := map[string]atscfg.ConfigProfileParams{}
 	for rows.Next() {
 		name := ""
 		file := ""
@@ -754,23 +754,24 @@ type TMParams struct {
 	ReverseProxyURL string
 }
 
-type ConfigProfileParams struct {
-	FileNameOnDisk string
-	Location       string
-	URL            string
-	APIURI         string
-}
-
-// GetFirstScopeParameter returns the value of the arbitrarily-first parameter with the name 'scope' and the given config file, whether a parameter was found, and any error.
-func GetFirstScopeParameter(tx *sql.Tx, cfgFile string) (string, bool, error) {
-	v := ""
-	if err := tx.QueryRow(`SELECT p.value FROM parameter p WHERE p.config_file = $1 AND p.name = 'scope'`, cfgFile).Scan(&v); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("querying first scope parameter: " + err.Error())
+// GetScopeParameters returns a map[cfgFile]scope, from all Parameters with the name 'scope' (irrespective of Profile).
+func GetScopeParameters(tx *sql.Tx) (map[string]string, error) {
+	rows, err := tx.Query(`SELECT config_file, value FROM parameter p WHERE name = 'scope'`)
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
 	}
-	return v, true, nil
+	defer rows.Close()
+
+	scopes := map[string]string{}
+	for rows.Next() {
+		cfgFile := ""
+		val := ""
+		if err := rows.Scan(&cfgFile, &val); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		scopes[cfgFile] = val
+	}
+	return scopes, nil
 }
 
 // GetServerNameAndTypeFromID returns the server's name, type, whether it exists, and any error.
