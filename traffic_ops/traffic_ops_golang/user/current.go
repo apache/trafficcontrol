@@ -310,23 +310,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := struct {
-		tc.Alerts
-		Response tc.User `json:"response"`
-	}{
-		tc.CreateAlerts(tc.SuccessLevel, "User profile was successfully updated"),
-		user,
-	}
-
-	respBts, err := json.Marshal(resp)
-	if err != nil {
-		errCode = http.StatusInternalServerError
-		sysErr = fmt.Errorf("Marshalling response: %v", err)
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
-		return
-	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(append(respBts, '\n'))
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", user)
 }
 
 func updateUser(u *tc.User, tx *sql.Tx, cp bool) error {
