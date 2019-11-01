@@ -117,6 +117,8 @@ Request Structure
 :serverId:         The server's ID to associate
 :serverCapability: The Server Capability's name to associate
 
+.. note:: The server referenced must have a server type of either EDGE or MID.
+
 .. code-block:: http
 	:caption: Request Example
 

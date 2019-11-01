@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServerServerCapabilitiesController = function(server, serverCapabilities, $scope, $state, $uibModal, locationUtils, serverService, messageModel) {
+var TableServerServerCapabilitiesController = function(server, serverCapabilities, $scope, $state, $uibModal, locationUtils, serverUtils, serverService, messageModel) {
 
 	$scope.server = server;
 
@@ -113,7 +113,8 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 		});
 	});
 
+	$scope.isCache = serverUtils.isCache;
 };
 
-TableServerServerCapabilitiesController.$inject = ['server', 'serverCapabilities', '$scope', '$state', '$uibModal', 'locationUtils', 'serverService', 'messageModel'];
+TableServerServerCapabilitiesController.$inject = ['server', 'serverCapabilities', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'serverService', 'messageModel'];
 module.exports = TableServerServerCapabilitiesController;

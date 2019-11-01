@@ -217,7 +217,6 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
                 clearServerUpdates($itemScope.s);
             }
         },
-        null, // Divider
         {
             text: 'Show Charts',
             displayed: function () {
@@ -226,18 +225,30 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
             hasBottomDivider: function () {
                 return true;
             },
+            hasTopDivider: function () {
+                return true;
+            },
             click: function ($itemScope) {
                 $window.open(propertiesModel.properties.servers.charts.baseUrl + $itemScope.s.hostName, '_blank');
             }
         },
         {
             text: 'Manage Capabilities',
+            displayed: function ($itemScope) {
+                return serverUtils.isCache($itemScope.s);
+            },
+            hasTopDivider: function () {
+                return true;
+            },
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/capabilities');
             }
         },
         {
             text: 'Manage Delivery Services',
+            displayed: function ($itemScope) {
+                return serverUtils.isEdge($itemScope.s);
+            },
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/delivery-services');
             }

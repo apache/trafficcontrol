@@ -180,7 +180,27 @@ func (ssc *TOServerServerCapability) buildDSReqCapError(dsIDs []int64) (error, e
 }
 
 func (ssc *TOServerServerCapability) Create() (error, error, int) {
-	resultRows, err := ssc.APIInfo().Tx.NamedQuery(scInsertQuery(), ssc)
+	tx := ssc.APIInfo().Tx
+
+	// Check existence prior to checking type
+	_, exists, err := dbhelpers.GetServerNameFromID(tx.Tx, *ssc.ServerID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	if !exists {
+		return fmt.Errorf("server %v does not exist", *ssc.ServerID), nil, http.StatusNotFound
+	}
+
+	// Ensure type is correct
+	correctType := true
+	if err := tx.Tx.QueryRow(scCheckServerTypeQuery(), ssc.ServerID).Scan(&correctType); err != nil {
+		return nil, fmt.Errorf("checking server type: %v", err), http.StatusInternalServerError
+	}
+	if !correctType {
+		return fmt.Errorf("server %v has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", *ssc.ServerID), nil, http.StatusBadRequest
+	}
+
+	resultRows, err := tx.NamedQuery(scInsertQuery(), ssc)
 	if err != nil {
 		return api.ParseDBError(err)
 	}
@@ -223,6 +243,17 @@ server_capability,
 server) VALUES (
 :server_capability,
 :server) RETURNING server, server_capability, last_updated`
+}
+
+func scCheckServerTypeQuery() string {
+	return `
+SELECT EXISTS (
+	SELECT s.id
+	FROM server s
+	JOIN type t ON s.type = t.id
+	WHERE s.id = $1
+	AND t.use_in_table = 'server'
+	AND (t.name LIKE 'MID%' OR t.name LIKE 'EDGE%'))`
 }
 
 func checkDSReqCapQuery() string {

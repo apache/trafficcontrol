@@ -34,9 +34,9 @@ under the License.
                     <li><a ng-click="confirmStatusUpdate()">Update Status</a></li>
                     <li ng-show="isCache(server) && !server.updPending"><a ng-click="queueServerUpdates(server)">Queue Server Updates</a></li>
                     <li ng-show="isCache(server) && server.updPending"><a ng-click="clearServerUpdates(server)">Clear Server Updates</a></li>
-                    <li ng-show="isEdge(server) || isCache(server)" class="divider"></li>
-                    <li name="viewCapabilitiesMenuItem"><a ng-click="viewCapabilities()">Manage Capabilities</a></li>
-                    <li><a ng-click="viewDeliveryServices()">Manage Delivery Services</a></li>
+                    <li ng-show="isCache(server)" class="divider"></li>
+                    <li ng-show="isCache(server)" name="viewCapabilitiesMenuItem"><a ng-click="viewCapabilities()">Manage Capabilities</a></li>
+                    <li ng-show="isEdge(server)"><a ng-click="viewDeliveryServices()">Manage Delivery Services</a></li>
                     <li ng-show="isCache(server)"><a ng-click="viewConfigFiles()">View Config Files</a></li>
                 </ul>
             </div>
