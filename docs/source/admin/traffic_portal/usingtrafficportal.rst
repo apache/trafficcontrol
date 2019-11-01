@@ -268,20 +268,22 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 
 :term:`Delivery Service` management includes the ability to (where applicable):
 
-- create a new :term:`Delivery Service`
-- clone an existing :term:`Delivery Service`
-- update an existing :term:`Delivery Service`
-- delete an existing :term:`Delivery Service`
-- compare :term:`Delivery Services`
-- manage :term:`Delivery Service` SSL keys
-- manage :term:`Delivery Service` URL signature keys
-- manage :term:`Delivery Service` URI signing keys
-- view and assign :term:`Delivery Service` servers
-- create, update and delete :term:`Delivery Service` regular expressions
-- view and create :term:`Delivery Service` invalidate content jobs
-- manage steering targets
-- test :ref:`pattern-based-consistenthash`
-- view and manage static DNS records within a :term:`Delivery Service` subdomain
+- Create a new :term:`Delivery Service`
+- Clone an existing :term:`Delivery Service`
+- Update an existing :term:`Delivery Service`
+- Delete an existing :term:`Delivery Service`
+- Compare :term:`Delivery Services`
+- Manage :term:`Delivery Service` SSL keys
+- Manage :term:`Delivery Service` URL signature keys
+- Manage :term:`Delivery Service` URI signing keys
+- Manage :term:`Delivery Service` invalidation requests
+- Manage :term:`Delivery Service` origins
+- Manage :term:`Delivery Service` regular expressions
+- :ref:`delivery_service_required_server_capabilities`
+- Manage :term:`Delivery Service` server assignments
+- Manage :term:`Delivery Service` steering targets
+- Manage :term:`Delivery Service` static DNS records within a :term:`Delivery Service` subdomain
+- Test :ref:`pattern-based-consistenthash`
 
 	.. seealso:: :ref:`static-dns-qht`
 
