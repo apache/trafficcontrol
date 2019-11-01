@@ -231,9 +231,6 @@ func TestDeleteDeliveryServicesRequiredCapability(t *testing.T) {
 	mock.ExpectBegin()
 	mockTenantID(t, mock, 1)
 
-	countRows := sqlmock.NewRows([]string{"count"}).AddRow(1)
-	mock.ExpectQuery("SELECT count").WithArgs(1).WillReturnRows(countRows)
-
 	mock.ExpectExec("DELETE").WillReturnResult(sqlmock.NewResult(1, 1))
 
 	rc := RequiredCapability{

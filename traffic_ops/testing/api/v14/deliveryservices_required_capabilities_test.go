@@ -178,7 +178,7 @@ func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 				DeliveryServiceID:  util.IntPtr(-1),
 				RequiredCapability: capabilities[0].RequiredCapability,
 			},
-			err: "deliveryServiceID '-1' is not associated with requiredCapability 'foo'",
+			err: "no deliveryservice.RequiredCapability with that key found",
 		},
 		testCase{
 			description: fmt.Sprintf("delete a deliveryservices required capability with an invalid required capability; deliveryServiceID: %d, requiredCapability: bogus", *capabilities[0].DeliveryServiceID),
@@ -186,7 +186,7 @@ func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 				DeliveryServiceID:  capabilities[0].DeliveryServiceID,
 				RequiredCapability: util.StrPtr("bogus"),
 			},
-			err: fmt.Sprintf("deliveryServiceID '%d' is not associated with requiredCapability 'bogus'", *capabilities[0].DeliveryServiceID),
+			err: "no deliveryservice.RequiredCapability with that key found",
 		},
 	}
 

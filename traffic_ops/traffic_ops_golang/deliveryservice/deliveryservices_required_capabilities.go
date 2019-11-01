@@ -225,36 +225,7 @@ func (rc *RequiredCapability) Delete() (error, error, int) {
 		return nil, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error()), http.StatusInternalServerError
 	}
 
-	// Check if the Delivery Service is associated with the Required Capability
-	statusCode, err := rc.exists()
-	if err != nil {
-		return err, nil, statusCode
-	}
-
 	return api.GenericDelete(rc)
-}
-
-// exists checks to see if a required capability is assigned to a delivery service
-func (rc *RequiredCapability) exists() (int, error) {
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns())
-	if len(errs) > 0 {
-		return http.StatusBadRequest, util.JoinErrs(errs)
-	}
-	fmt.Printf("\n\nwhere: %+v\norderby: %+v\npag: %+v\nqueryvalues: %+v\n\n", where, orderBy, pagination, queryValues)
-
-	var count int
-	query := `SELECT count(deliveryservice_id) FROM deliveryservices_required_capability where deliveryservice_id = $1 and required_capability = $2`
-	err := rc.ReqInfo.Tx.Tx.QueryRow(query, rc.DeliveryServiceID, rc.RequiredCapability).Scan(&count)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	// no records found
-	if count == 0 {
-		return http.StatusNotFound, fmt.Errorf("deliveryServiceID '%d' is not associated with requiredCapability '%s'", *rc.DeliveryServiceID, *rc.RequiredCapability)
-	}
-
-	return http.StatusOK, nil
 }
 
 // Create implements the api.CRUDer interface.
