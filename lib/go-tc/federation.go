@@ -168,7 +168,7 @@ func (f *FederationDSPost) Validate(tx *sql.Tx) error {
 
 // FederationUser represents Federation Users
 type FederationUser struct {
-	Company  *string `json:"dsIds" db:"company"`
+	Company  *string `json:"company" db:"company"`
 	Email    *string `json:"email" db:"email"`
 	FullName *string `json:"fullName" db:"full_name"`
 	ID       *int    `json:"id" db:"id"`
@@ -181,6 +181,7 @@ type FederationUserPost struct {
 	IDs     []int `json:"userIds"`
 	Replace *bool `json:"replace"`
 }
+
 // Validate validates FederationUserPost
 func (f *FederationUserPost) Validate(tx *sql.Tx) error {
 	return nil
