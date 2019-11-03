@@ -22,16 +22,19 @@ package deliveryservice
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/lib/pq"
 )
 
 func GetServersEligible(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("*** GetServersEligible ***")
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -179,8 +182,9 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 			return nil, errors.New("scanning delivery service eligible servers: " + err.Error())
 		}
 		eligible := true
+
 		for _, dsc := range s.DeliveryServiceCapabilities {
-			if !contains(s.ServerCapabilities, dsc) {
+			if !util.ContainsStr(s.ServerCapabilities, dsc) {
 				eligible = false
 			}
 		}
@@ -189,13 +193,4 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 		}
 	}
 	return servers, nil
-}
-
-func contains(a []string, x string) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
-	}
-	return false
 }

@@ -25,7 +25,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -331,6 +330,21 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	serverNames := []string{}
+	for _, s := range servers {
+		name, _, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, s)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+			return
+		}
+		serverNames = append(serverNames, name)
+	}
+
+	err = ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		return
+	}
 
 	if *payload.Replace {
 		// delete existing
@@ -446,8 +460,10 @@ func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) erro
 		if err != nil {
 			return err
 		}
-		if ok := reflect.DeepEqual(sCaps, dsCaps); !ok {
-			return errors.New(fmt.Sprintf("Caching server cannot be assigned to this delivery service without having the required delivery service capabilities: [%v]", dsCaps))
+		for _, dsc := range dsCaps {
+			if !util.ContainsStr(sCaps, dsc) {
+				return errors.New(fmt.Sprintf("Caching server cannot be assigned to this delivery service without having the required delivery service capabilities: [%v]", dsCaps))
+			}
 		}
 	}
 

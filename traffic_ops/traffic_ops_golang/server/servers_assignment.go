@@ -25,13 +25,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/lib/pq"
@@ -91,6 +91,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 
 // ValidateDSCapabilities checks that the server meets the requirements of each delivery service to be assigned.
 func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) error {
+	fmt.Println("))) Validate was hit")
 	var dsCaps []string
 	sCaps, err := dbhelpers.GetServerCapabilitiesFromName(serverName, tx)
 
@@ -103,8 +104,10 @@ func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) error {
 		if err != nil {
 			return err
 		}
-		if ok := reflect.DeepEqual(sCaps, dsCaps); !ok {
-			return errors.New(fmt.Sprintf("Caching server cannot assign this delivery service without having the required delivery service capabilities: [%v]", dsCaps))
+		for _, dsc := range dsCaps {
+			if !util.ContainsStr(sCaps, dsc) {
+				return errors.New(fmt.Sprintf("Caching server cannot assign this delivery service without having the required delivery service capabilities: [%v]", dsCaps))
+			}
 		}
 	}
 

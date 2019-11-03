@@ -43,3 +43,12 @@ func StrInArray(strs []string, s string) bool {
 	}
 	return false
 }
+
+func ContainsStr(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}

@@ -16,6 +16,7 @@ package v14
 */
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -31,6 +32,7 @@ func TestServerServerCapabilities(t *testing.T) {
 
 func CreateTestServerServerCapabilities(t *testing.T) {
 
+	fmt.Println("***mirker")
 	// Valid POSTs
 
 	// loop through server ServerCapabilities, assign FKs and create
