@@ -27,15 +27,11 @@ import (
 func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
 		InvalidDeliveryServicesRequiredCapabilityAddition(t)
-		//WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilities, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
 		GetTestDeliveryServicesRequiredCapabilities(t)
-		//CreateTestDeliveryServicesRequiredCapabilities(t)
-		//DeleteTestDeliveryServicesRequiredCapabilities(t)
 	})
 }
 
 func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	fmt.Println("----marker")
 	data := testData.DeliveryServicesRequiredCapabilities
 	ds1 := helperGetDeliveryServiceID(t, data[0])
 
@@ -85,7 +81,6 @@ func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 }
 
 func CreateTestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	fmt.Println("---murker")
 	data := testData.DeliveryServicesRequiredCapabilities
 	ds1 := helperGetDeliveryServiceID(t, data[0])
 

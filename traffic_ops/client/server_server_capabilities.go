@@ -38,7 +38,6 @@ func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability) (
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	fmt.Println("request body (ssc): ", string(reqBody))
 	reqInf, err = post(to, API_v14_Server_Server_Capabilities, reqBody, &alerts)
 	return alerts, reqInf, err
 }

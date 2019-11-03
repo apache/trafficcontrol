@@ -22,7 +22,6 @@ package deliveryservice
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -34,7 +33,6 @@ import (
 )
 
 func GetServersEligible(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("*** GetServersEligible ***")
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
