@@ -16,6 +16,7 @@ package v14
 */
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -50,7 +51,7 @@ func GetTestATSConfigMeta(t *testing.T) {
 	expected := tc.ATSConfigMetaDataConfigFile{
 		FileNameOnDisk: "hdr_rw_mid_anymap-ds.config",
 		Location:       "/remap/config/location/parameter",
-		APIURI:         "/api/1.2/cdns/cdn1/configfiles/ats/hdr_rw_mid_anymap-ds.config",
+		APIURI:         "cdns/cdn1/configfiles/ats/hdr_rw_mid_anymap-ds.config", // expected suffix; config gen doesn't care about API version
 		URL:            "",
 		Scope:          "cdns",
 	}
@@ -66,7 +67,16 @@ func GetTestATSConfigMeta(t *testing.T) {
 		t.Fatalf("Getting server '"+server.HostName+"' config list: expected: %+v actual: not found\n", expected.FileNameOnDisk)
 	}
 
-	if expected != *actual {
-		t.Fatalf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
+	if expected.FileNameOnDisk != actual.FileNameOnDisk {
+		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
+	}
+	if expected.Location != actual.Location {
+		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
+	}
+	if !strings.HasSuffix(actual.APIURI, expected.APIURI) {
+		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
+	}
+	if actual.Scope != expected.Scope {
+		t.Errorf("Getting server '"+server.HostName+"' config list: expected: %+v actual: %+v\n", expected, *actual)
 	}
 }

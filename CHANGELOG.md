@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/roles `GET`
   - /api/1.4/cdns/name/:name/dnsseckeys `GET`
   - /api/1.4/user/login/oauth `POST`
+  - /api/1.1/servers/:name/configfiles/ats `GET`
   - /api/1.1/profiles/:name/configfiles/ats/* `GET`
   - /api/1.1/servers/:name/configfiles/ats/* `GET`
   - /api/1.1/cdns/:name/configfiles/ats/* `GET`
@@ -56,7 +57,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added pagination support to some Traffic Ops endpoints via three new query parameters, limit and offset/page
 - Traffic Ops now supports a "sortOrder" query parameter on some endpoints to return API responses in descending order
 - Traffic Ops now uses a consistent format for audit logs across all Go endpoints
-- Added cache-side config generator, atstccfg, installed with ORT. Currently includes parent.config and all profile configs, proxies others to Traffic Ops.
+- Added cache-side config generator, atstccfg, installed with ORT. Includes all configs.
 - In Traffic Portal, all tables now include a 'CSV' link to enable the export of table data in CSV format.
 - Pylint configuration now enforced (present in [a file in the Python client directory](./traffic_control/clients/python/pylint.rc))
 - Added an optional SMTP server configuration to the TO configuration file, api now has unused abilitiy to send emails
