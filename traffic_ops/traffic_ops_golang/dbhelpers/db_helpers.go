@@ -274,6 +274,42 @@ func GetProfileIDFromName(name string, tx *sql.Tx) (int, bool, error) {
 	return id, true, nil
 }
 
+// GetServerCapabilitiesFromName returns the server's capabilities.
+func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
+	var caps []string
+	q := `SELECT ARRAY(SELECT ssc.server_capability FROM server s JOIN server_server_capability ssc ON s.id = ssc.server WHERE s.host_name = $1 ORDER BY ssc.server_capability);`
+	rows, err := tx.Query(q, name)
+	if err != nil {
+		return nil, errors.New("querying server capabilities from name: " + err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(pq.Array(&caps)); err != nil {
+			return nil, errors.New("scanning capability: " + err.Error())
+		}
+	}
+	return caps, nil
+}
+
+// GetDSRequiredCapabilitiesFromID returns the server's capabilities.
+func GetDSRequiredCapabilitiesFromID(id int, tx *sql.Tx) ([]string, error) {
+	var caps []string
+	q := `SELECT ARRAY(SELECT drc.required_capability FROM deliveryservices_required_capability drc WHERE drc.deliveryservice_id = $1 ORDER BY drc.required_capability);`
+	rows, err := tx.Query(q, id)
+	if err != nil {
+		return nil, errors.New("querying deliveryservice required capabilities from id: " + err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(pq.Array(&caps)); err != nil {
+			return nil, errors.New("scanning capability: " + err.Error())
+		}
+	}
+	return caps, nil
+}
+
 // Returns true if the cdn exists
 func CDNExists(cdnName string, tx *sql.Tx) (bool, error) {
 	var id int

@@ -16,7 +16,11 @@ package v14
 */
 
 import (
+	"errors"
+	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestDeliveryServiceServers(t *testing.T) {
@@ -25,26 +29,86 @@ func TestDeliveryServiceServers(t *testing.T) {
 	})
 }
 
+func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, DeliveryServices, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
+		CreateTestDeliveryServiceServersWithRequiredCapabilities(t)
+	})
+}
+
+func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
+	dses, _ := getServersAndDSes(t)
+	sscs := testData.ServerServerCapabilities
+
+	testCases := []struct {
+		ds          tc.DeliveryService
+		serverName  string
+		ssc         tc.ServerServerCapability
+		description string
+		err         error
+		capability  tc.DeliveryServicesRequiredCapability
+	}{
+		{
+			ds:          dses[1],
+			serverName:  "atlanta-edge-01",
+			description: "missing requirements for server -> DS assignment",
+			err:         errors.New(`Caching server cannot be assigned to this delivery service without having the required delivery service capabilities`),
+			ssc:         sscs[0],
+			capability: tc.DeliveryServicesRequiredCapability{
+				DeliveryServiceID:  &dses[1].ID,
+				RequiredCapability: sscs[1].ServerCapability,
+			},
+		},
+		{
+			ds:          dses[0],
+			serverName:  "atlanta-mid-01",
+			description: "successful server -> DS assignment",
+			err:         nil,
+			ssc:         sscs[1],
+			capability: tc.DeliveryServicesRequiredCapability{
+				DeliveryServiceID:  &dses[0].ID,
+				RequiredCapability: sscs[1].ServerCapability,
+			},
+		},
+	}
+
+	for _, ctc := range testCases {
+		t.Run(ctc.description, func(t *testing.T) {
+
+			servers, _, err := TOSession.GetServerByHostName(ctc.serverName)
+			if err != nil {
+				t.Fatalf("cannot GET Server by hostname: %v\n", err)
+			}
+			server := servers[0]
+
+			_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(ctc.capability)
+			if err != nil {
+				t.Fatalf("*POST delivery service required capability: %v\n", err)
+			}
+
+			ctc.ssc.ServerID = &server.ID
+			_, _, err = TOSession.CreateServerServerCapability(ctc.ssc)
+			if err != nil {
+				t.Fatalf("could not POST the server capability %v to server %v: %v\n", *ctc.ssc.ServerCapability, *ctc.ssc.Server, err)
+			}
+
+			_, got := TOSession.CreateDeliveryServiceServers(ctc.ds.ID, []int{server.ID}, true)
+			if (ctc.err == nil && got != nil) || (ctc.err != nil && !strings.Contains(got.Error(), ctc.err.Error())) {
+				t.Fatalf("expected ctc.err to contain %v, got %v\n", ctc.err, got)
+			}
+
+			_, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ctc.capability.DeliveryServiceID, *ctc.capability.RequiredCapability)
+			if err != nil {
+				t.Fatalf("*DELETE delivery service required capability: %v\n", err)
+			}
+		})
+	}
+}
+
 func DeleteTestDeliveryServiceServers(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices()
-	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v\n", err)
-	}
-	if len(dses) < 1 {
-		t.Errorf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
-	}
-	ds := dses[0]
+	dses, servers := getServersAndDSes(t)
+	ds, server := dses[0], servers[0]
 
-	servers, _, err := TOSession.GetServers()
-	if err != nil {
-		t.Errorf("cannot GET Servers: %v\n", err)
-	}
-	if len(servers) < 1 {
-		t.Errorf("GET Servers returned no dses, must have at least 1 to test ds-servers")
-	}
-	server := servers[0]
-
-	_, err = TOSession.CreateDeliveryServiceServers(ds.ID, []int{server.ID}, true)
+	_, err := TOSession.CreateDeliveryServiceServers(ds.ID, []int{server.ID}, true)
 	if err != nil {
 		t.Errorf("POST delivery service servers: %v\n", err)
 	}
@@ -84,4 +148,24 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	if found {
 		t.Errorf("DELETE delivery service servers returned success, but still in GET")
 	}
+}
+
+func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.Server) {
+	dses, _, err := TOSession.GetDeliveryServices()
+	if err != nil {
+		t.Fatalf("cannot GET DeliveryServices: %v\n", err)
+	}
+	if len(dses) < 1 {
+		t.Fatalf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
+	}
+
+	servers, _, err := TOSession.GetServers()
+	if err != nil {
+		t.Fatalf("cannot GET Servers: %v\n", err)
+	}
+	if len(servers) < 1 {
+		t.Fatalf("GET Servers returned no dses, must have at least 1 to test ds-servers")
+	}
+
+	return dses, servers
 }

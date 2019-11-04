@@ -330,6 +330,21 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	serverNames := []string{}
+	for _, s := range servers {
+		name, _, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, s)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+			return
+		}
+		serverNames = append(serverNames, name)
+	}
+
+	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	if usrErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
+		return
+	}
 
 	if *payload.Replace {
 		// delete existing
@@ -400,6 +415,12 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	payload.XmlId = dsName
 	serverNames := payload.ServerNames
 
+	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
+		return
+	}
+
 	res, err := inf.Tx.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, ds.ID, pq.Array(serverNames))
 	if err != nil {
 
@@ -423,6 +444,30 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(ds.ID)+", ACTION: Assigned servers "+strings.Join(serverNames, ", ")+" to delivery service", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
+}
+
+// ValidateServerCapabilities checks that the delivery service's requirements are met by each server to be assigned.
+func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (error, error, int) {
+	var sCaps []string
+	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
+
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	for _, name := range serverNames {
+		sCaps, err = dbhelpers.GetServerCapabilitiesFromName(name, tx)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		for _, dsc := range dsCaps {
+			if !util.ContainsStr(sCaps, dsc) {
+				return errors.New(fmt.Sprintf("Caching server cannot be assigned to this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, name)), nil, http.StatusBadRequest
+			}
+		}
+	}
+
+	return nil, nil, 0
 }
 
 func insertIdsQuery() string {
@@ -616,8 +661,8 @@ func updateQuery() string {
 	profile_parameter SET
 	profile=:profile_id,
 	parameter=:parameter_id
-	WHERE profile=:profile_id AND 
-      parameter = :parameter_id 
+	WHERE profile=:profile_id AND
+      parameter = :parameter_id
       RETURNING last_updated`
 	return query
 }

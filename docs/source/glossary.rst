@@ -119,6 +119,9 @@ Glossary
 
 		.. seealso:: See :ref:`delivery-services` for a more in-depth explanation of :dfn:`Delivery Services`.
 
+	Delivery Service required capabilities
+		:dfn:`Delivery Services required capabilities` are capabilities, which correlate to server capabilities, that are required in order to assign a server to a delivery service.`
+
 	Division
 	Divisions
 		A group of :term:`Regions`.

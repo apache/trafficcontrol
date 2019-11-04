@@ -23,7 +23,11 @@
 
 ``GET``
 =======
-Retrieves properties of Edge-Tier servers eligible for assignment to a particular :term:`Delivery Service`.
+Retrieves properties of Edge-Tier servers eligible for assignment to a particular :term:`Delivery Service`. Eligibility is determined based on the following properties:
+
+1. Server Type: Edge, Origin
+2. CDN: Server, :term:`Delivery Service` must belong to the same CDN
+3. Server Capabilities: If the :term:`Delivery Service` has  :term:`Delivery Service required capabilities`, a server must have all defined capabilities
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_

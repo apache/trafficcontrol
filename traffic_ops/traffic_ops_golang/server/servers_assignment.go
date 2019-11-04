@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -30,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/lib/pq"
@@ -71,6 +73,12 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	usrErr, sysErr, status := ValidateDSCapabilities(dsList, serverName, inf.Tx.Tx)
+	if usrErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
+		return
+	}
+
 	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
@@ -79,6 +87,30 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 
 	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
+}
+
+// ValidateDSCapabilities checks that the server meets the requirements of each delivery service to be assigned.
+func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) (error, error, int) {
+	var dsCaps []string
+	sCaps, err := dbhelpers.GetServerCapabilitiesFromName(serverName, tx)
+
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	for _, id := range dsIDs {
+		dsCaps, err = dbhelpers.GetDSRequiredCapabilitiesFromID(id, tx)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		for _, dsc := range dsCaps {
+			if !util.ContainsStr(sCaps, dsc) {
+				return errors.New(fmt.Sprintf("Caching server cannot assign this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, serverName)), nil, http.StatusBadRequest
+			}
+		}
+	}
+
+	return nil, nil, 0
 }
 
 func assignDeliveryServicesToServer(server int, dses []int, replace bool, tx *sql.Tx) ([]int, error) {

@@ -30,7 +30,6 @@ func TestServerServerCapabilities(t *testing.T) {
 }
 
 func CreateTestServerServerCapabilities(t *testing.T) {
-
 	// Valid POSTs
 
 	// loop through server ServerCapabilities, assign FKs and create
