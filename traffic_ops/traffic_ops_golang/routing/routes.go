@@ -57,6 +57,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservicesregexes"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federations"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federation_resolvers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/invalidationjobs"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/login"
@@ -484,6 +485,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPost, `federations/{id}/deliveryservices?(\.json)?$`, federations.PostDSes, auth.PrivLevelAdmin, Authenticated, nil},
 		{1.1, http.MethodGet, `federations/{id}/deliveryservices?(\.json)?$`, api.ReadHandler(&federations.TOFedDSes{}), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodDelete, `federations/{id}/deliveryservices/{dsID}/?(\.json)?$`, api.DeleteHandler(&federations.TOFedDSes{}), auth.PrivLevelAdmin, Authenticated, nil},
+
+		// Federation Resolvers
+		{1.1, http.MethodPost, `federations(/|\.json)?$`, federation_resolvers.Create, auth.PrivLevelAdmin, Authenticated, nil},
 
 		// Federations Users
 		{1.1, http.MethodPost, `federations/{id}/users?(\.json)?$`, federations.PostUsers, auth.PrivLevelAdmin, Authenticated, nil},
