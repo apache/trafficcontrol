@@ -351,6 +351,8 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:password: The password to be used when authenticating with the :abbr:`SMTP (Simple Mail Transfer Protocol)` server.
 	:user:     The name of the user to be used when authenticating with the :abbr:`SMTP (Simple Mail Transfer Protocol)` server.
 
+	.. Note:: The SMTP integration currently only supports Login Auth.
+
 :to: Contains information to identify Traffic Ops in a network sense.
 
 	:base_url:             This field is used to identify the location for the now-removed Traffic Ops UI. It no longer serves any purpose.
