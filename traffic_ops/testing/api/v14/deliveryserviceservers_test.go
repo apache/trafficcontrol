@@ -153,18 +153,18 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.Server) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v\n", err)
+		t.Fatalf("cannot GET DeliveryServices: %v\n", err)
 	}
 	if len(dses) < 1 {
-		t.Errorf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
+		t.Fatalf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 
 	servers, _, err := TOSession.GetServers()
 	if err != nil {
-		t.Errorf("cannot GET Servers: %v\n", err)
+		t.Fatalf("cannot GET Servers: %v\n", err)
 	}
 	if len(servers) < 1 {
-		t.Errorf("GET Servers returned no dses, must have at least 1 to test ds-servers")
+		t.Fatalf("GET Servers returned no dses, must have at least 1 to test ds-servers")
 	}
 
 	return dses, servers

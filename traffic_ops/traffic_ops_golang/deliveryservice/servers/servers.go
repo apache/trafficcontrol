@@ -340,9 +340,9 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		serverNames = append(serverNames, name)
 	}
 
-	err, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, status, err, nil)
+	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	if usrErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
 		return
 	}
 
@@ -415,9 +415,9 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	payload.XmlId = dsName
 	serverNames := payload.ServerNames
 
-	err, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, status, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
 		return
 	}
 
@@ -447,27 +447,27 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ValidateServerCapabilities checks that the delivery service's requirements are met by each server to be assigned.
-func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (error, int) {
+func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (error, error, int) {
 	var sCaps []string
 	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
 
 	if err != nil {
-		return err, http.StatusInternalServerError
+		return nil, err, http.StatusInternalServerError
 	}
 
 	for _, name := range serverNames {
 		sCaps, err = dbhelpers.GetServerCapabilitiesFromName(name, tx)
 		if err != nil {
-			return err, http.StatusInternalServerError
+			return nil, err, http.StatusInternalServerError
 		}
 		for _, dsc := range dsCaps {
 			if !util.ContainsStr(sCaps, dsc) {
-				return errors.New(fmt.Sprintf("Caching server cannot be assigned to this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, name)), http.StatusBadRequest
+				return errors.New(fmt.Sprintf("Caching server cannot be assigned to this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, name)), nil, http.StatusBadRequest
 			}
 		}
 	}
 
-	return nil, 0
+	return nil, nil, 0
 }
 
 func insertIdsQuery() string {
