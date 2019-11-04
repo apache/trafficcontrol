@@ -110,6 +110,6 @@ type DSServer struct {
 	Type                        string               `json:"type" db:"server_type"`
 	TypeID                      *int                 `json:"typeId" db:"server_type_id"`
 	UpdPending                  *bool                `json:"updPending" db:"upd_pending"`
-	ServerCapabilities          []string             `json:"serverCapabilities" db:"server_capabilities"`
-	DeliveryServiceCapabilities []string             `json:"deliveryserviceCapabilities" db:"deliveryservice_capabilities"`
+	ServerCapabilities          []string             `json:"-" db:"server_capabilities"`
+	DeliveryServiceCapabilities []string             `json:"-" db:"deliveryservice_capabilities"`
 }

@@ -92,9 +92,8 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 			}
 
 			_, got := TOSession.CreateDeliveryServiceServers(ctc.ds.ID, []int{server.ID}, true)
-			if (ctc.err == nil && got != nil) || (ctc.err != nil && (strings.Contains(got.Error(), ctc.err.Error()))) {
-				//fmt.Printf("\n**** got %s, \n, ctc %s", got.Error(), ctc.err.Error())
-				t.Fatalf("expected ctc.err to be %v, got %v\n", ctc.err, got)
+			if (ctc.err == nil && got != nil) || (ctc.err != nil && !strings.Contains(got.Error(), ctc.err.Error())) {
+				t.Fatalf("expected ctc.err to contain %v, got %v\n", ctc.err, got)
 			}
 
 			_, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ctc.capability.DeliveryServiceID, *ctc.capability.RequiredCapability)

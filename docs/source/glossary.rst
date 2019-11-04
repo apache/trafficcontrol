@@ -118,6 +118,8 @@ Glossary
 		Since Traffic Control version 2.1, :dfn:`Delivery Services` can optionally be linked to a :term:`Profile`, and have :term:`Parameters` associated with them. One example of a feature that uses :dfn:`Delivery Service` :term:`Parameters` is the :ref:`ds-multi-site-origin` configuration. :dfn:`Delivery Services` are also for use in allowing multiple :term:`Tenants` to coexist in a Traffic Control CDN without interfering with each other, and to keep information about their content separated.
 
 		.. seealso:: See :ref:`delivery-services` for a more in-depth explanation of :dfn:`Delivery Services`.
+	Delivery Service required capabilities
+		:dfn:`Delivery Services required capabilities` are capabilities, which correlate to server capabilities, that are required in order to assign a server to a delivery service.`
 
 	Division
 	Divisions
