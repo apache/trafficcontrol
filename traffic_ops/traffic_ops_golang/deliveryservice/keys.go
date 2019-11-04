@@ -292,7 +292,7 @@ func getSSLKeysByXMLIDHelperV14(xmlID string, inf *api.APIInfo, w http.ResponseW
 		return
 	}
 	if !ok {
-		api.WriteRespAlert(w, r, tc.InfoLevel, "no object found for the specified key")
+		api.WriteRespAlertObj(w, r, tc.InfoLevel, "no object found for the specified key", struct{}{})
 		return
 	}
 	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
