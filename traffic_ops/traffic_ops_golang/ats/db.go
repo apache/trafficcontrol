@@ -946,3 +946,67 @@ func GetCDNNameFromNameOrID(tx *sql.Tx, cdnNameOrID string) (string, error, erro
 	}
 	return cdnName, nil, nil, http.StatusOK
 }
+
+// GetServerCapabilities returns the list of capabilities assigned to the given servers.
+func GetServerCapabilitiesByID(tx *sql.Tx, serverIDs []int) (map[int]map[atscfg.ServerCapability]struct{}, error) {
+	qry := `
+SELECT
+  sc.server,
+  sc.server_capability
+FROM
+  server_server_capability sc
+WHERE
+  sc.server = ANY($1)
+`
+	rows, err := tx.Query(qry, pq.Array(serverIDs))
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	serverCaps := map[int]map[atscfg.ServerCapability]struct{}{}
+	for rows.Next() {
+		id := 0
+		cap := atscfg.ServerCapability("")
+		if err := rows.Scan(&id, &cap); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		if _, ok := serverCaps[id]; !ok {
+			serverCaps[id] = map[atscfg.ServerCapability]struct{}{}
+		}
+		serverCaps[id][cap] = struct{}{}
+	}
+	return serverCaps, nil
+}
+
+// GetDeliveryServiceRequiredCapabilities returns the list of required capabilities assigned to the given delivery services.
+func GetDeliveryServiceRequiredCapabilities(tx *sql.Tx, dses []int) (map[int]map[atscfg.ServerCapability]struct{}, error) {
+	qry := `
+SELECT
+  dsc.deliveryservice_id,
+  dsc.required_capability
+FROM
+  deliveryservices_required_capability dsc
+WHERE
+  dsc.deliveryservice_id = ANY($1)
+`
+	rows, err := tx.Query(qry, pq.Array(dses))
+	if err != nil {
+		return nil, errors.New("querying: " + err.Error())
+	}
+	defer rows.Close()
+
+	dsCaps := map[int]map[atscfg.ServerCapability]struct{}{}
+	for rows.Next() {
+		id := 0
+		cap := atscfg.ServerCapability("")
+		if err := rows.Scan(&id, &cap); err != nil {
+			return nil, errors.New("scanning: " + err.Error())
+		}
+		if _, ok := dsCaps[id]; !ok {
+			dsCaps[id] = map[atscfg.ServerCapability]struct{}{}
+		}
+		dsCaps[id][cap] = struct{}{}
+	}
+	return dsCaps, nil
+}

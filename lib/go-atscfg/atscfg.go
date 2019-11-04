@@ -34,6 +34,8 @@ const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer 
 
 const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
 
+type ServerCapability string
+
 type ServerInfo struct {
 	CacheGroupID                  int
 	CDN                           tc.CDNName
