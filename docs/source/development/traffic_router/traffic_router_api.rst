@@ -76,7 +76,7 @@ Request Structure
 Response Structure
 ------------------
 .. code-block:: http
-	:caption: Response Example (JSON expanded)
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Content-Type: application/json;charset=UTF-8
@@ -159,7 +159,7 @@ Request Structure
 Response Structure
 ------------------
 .. code-block:: http
-	:caption: Response Example (JSON expanded)
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Content-Disposition: inline;filename=f.txt
@@ -202,7 +202,7 @@ Response Structure
 :locations: An array of strings that are the :ref:`Names of Cache Groups <cache-group-name>` to which this Traffic Router is capable of routing client traffic
 
 .. code-block:: http
-	:caption: Response Example (JSON expanded)
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Content-Type: application/json;charset=UTF-8
@@ -232,7 +232,7 @@ Request Structure
 Response Structure
 ------------------
 .. code-block:: http
-	:caption: Response Example (JSON expanded)
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Content-Type: application/json;charset=UTF-8
@@ -288,7 +288,7 @@ Request Structure
 Response Structure
 ------------------
 .. code-block:: http
-	:caption: Response Example (JSON expanded)
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Content-Type: application/json;charset=UTF-8
@@ -415,7 +415,7 @@ Request Structure
 Response Structure
 ------------------
 .. code-block:: http
-	:caption: Response Example (JSON expanded)
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Content-Type: application/json;charset=UTF-8
@@ -565,7 +565,7 @@ Request Structure
 Response Structure
 ------------------
 .. code-block:: http
-	:caption: Response Example (JSON expanded)
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Content-Type: application/json;charset=UTF-8
@@ -606,7 +606,7 @@ Request Structure
 Response Structure
 ------------------
 .. code-block:: http
-	:caption: Response Example (JSON expanded)
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Content-Type: application/json;charset=UTF-8
