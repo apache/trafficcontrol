@@ -277,11 +277,7 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 		}
 	}
 
-	var err error
-	if len(errs) > 0 {
-		err = util.JoinErrs(errs)
-	}
-	return err
+	return util.JoinErrs(errs)
 }
 
 // ------------------- Response structs -------------------- //
