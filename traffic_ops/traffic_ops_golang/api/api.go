@@ -20,13 +20,16 @@ package api
  */
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
+	"net/mail"
 	"net/smtp"
 	"regexp"
 	"strconv"
@@ -410,7 +413,10 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 	if !cfg.SMTP.Enabled {
 		return http.StatusInternalServerError, nil, errors.New("SMTP is not enabled; mail cannot be sent")
 	}
-	auth := smtp.PlainAuth("", cfg.SMTP.User, cfg.SMTP.Password, strings.Split(cfg.SMTP.Address, ":")[0])
+	var auth smtp.Auth
+	if cfg.SMTP.User != "" {
+		auth = LoginAuth("", cfg.SMTP.User, cfg.SMTP.Password, strings.Split(cfg.SMTP.Address, ":")[0])
+	}
 	err := smtp.SendMail(cfg.SMTP.Address, auth, cfg.ConfigTO.EmailFrom.String(), []string{to.String()}, msg)
 	if err != nil {
 		return http.StatusInternalServerError, nil, fmt.Errorf("Failed to send email: %v", err)
@@ -746,4 +752,75 @@ func AddUserToReq(r *http.Request, u auth.CurrentUser) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey, u)
 	*r = *r.WithContext(ctx)
+}
+
+// SendEmailFromTemplate allows a user to input an html template to format an email.  It parses the template and creates a message before calling the SendMail method.
+// SendEmailFromTemplate returns (in order) an HTTP status code, a user-friendly error, and an error fit for
+// logging to system error logs. If either the user or system error is non-nil, the operation failed,
+// and the HTTP status code indicates the type of failure.
+func SendEmailFromTemplate(config config.Config, header string, data interface{}, templateFile string, toEmail string) (int, error, error) {
+	email := rfc.EmailAddress{
+		Address: mail.Address{Name: "", Address: toEmail},
+	}
+
+	msgBodyBuffer, err := parseTemplate(templateFile, data)
+	if err != nil {
+		return http.StatusInternalServerError, err, nil
+	}
+	msg := append([]byte(header), msgBodyBuffer.Bytes()...)
+
+	return SendMail(email, msg, &config)
+
+}
+
+func parseTemplate(templateFileName string, data interface{}) (*bytes.Buffer, error) {
+	t, err := template.ParseFiles(templateFileName)
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	err = t.Execute(buf, data)
+
+	return buf, err
+}
+
+type loginAuth struct {
+	identity, username, password, host string
+}
+
+func LoginAuth(identity, username, password, host string) smtp.Auth {
+	return &loginAuth{identity, username, password, host}
+}
+
+func isLocalhost(name string) bool {
+	return name == "localhost" || name == "127.0.0.1" || name == "::1"
+}
+
+func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	if !server.TLS && !isLocalhost(server.Name) {
+		return "", nil, errors.New("unencrypted connection")
+	}
+	if server.Name != a.host {
+		return "", nil, errors.New("wrong host name")
+	}
+	resp := []byte(a.identity + "\x00" + a.username + "\x00" + a.password)
+	return "LOGIN", resp, nil
+}
+
+func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	command := string(fromServer)
+	command = strings.TrimSpace(command)
+	command = strings.TrimSuffix(command, ":")
+	command = strings.ToLower(command)
+
+	if more {
+		if command == "username" {
+			return []byte(fmt.Sprintf("%s", a.username)), nil
+		} else if command == "password" {
+			return []byte(fmt.Sprintf("%s", a.password)), nil
+		} else {
+			return nil, fmt.Errorf("unexpected server challenge: %s", command)
+		}
+	}
+	return nil, nil
 }
