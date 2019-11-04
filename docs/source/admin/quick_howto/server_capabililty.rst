@@ -28,9 +28,11 @@ A list of the server capabilities can be found under :menuselection:`Configure -
 
 	Example Server Capabilities Listing
 
-Assigning a Server Capability to a Server
-=========================================
-Users with the Operations or Admin :term:`Role` can associate one or more server capabilities with a server by navigating to a server via :menuselection:`Configure --> Servers` and using the context menu for the server table and selecting :menuselection:`Manage Capabilities` or by navigating to :menuselection:`Configure --> Servers --> Server --> More --> Manage Capabilities`.
+.. _server_server_capabilities:
+
+Manage server capabilities assigned to a server
+===============================================
+Users with the Operations or Admin :term:`Role` can associate one or more server capabilities with a :term:`cache servers` (:term:`Edge` or :term:`Mid`) by navigating to a server via :menuselection:`Configure --> Servers` and using the context menu for the server table and selecting :menuselection:`Manage Capabilities` or by navigating to :menuselection:`Configure --> Servers --> Server --> More --> Manage Capabilities`.
 
 .. figure:: server_capability/server_server_caps_table.png
 	:align: center
@@ -38,8 +40,10 @@ Users with the Operations or Admin :term:`Role` can associate one or more server
 
 	Example Server Capabilities for a Server Listing
 
-Assigning a Required Server Capability to a Delivery Service
-============================================================
+.. _delivery_service_required_server_capabilities:
+
+Manage delivery service required server capabilities
+====================================================
 Users with the Operations or Admin :term:`Role` can associate one or more required server capabilities with a :term:`delivery service` by navigating to a :term:`delivery service` via :menuselection:`Services --> Delivery Services` and using the context menu for the :term:`delivery services` table and selecting :menuselection:`Manage Required Server Capabilities` or by navigating to :menuselection:`Services --> Delivery Services --> Delivery Service --> More --> Manage Required Server Capabilities`.
 
 Adding a required server capability to a :term:`delivery service` will ensure two things:
