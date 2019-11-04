@@ -35,57 +35,11 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
-const replaceCurrentWithPasswordQuery = `
+const replacePasswordQuery = `
 UPDATE tm_user
-SET address_line1=$1,
-    address_line2=$2,
-    city=$3,
-    company=$4,
-    confirm_local_passwd=$5,
-    country=$6,
-    email=$7,
-    full_name=$8,
-    gid=$9,
-    local_passwd=$10,
-    new_user=FALSE,
-    phone_number=$11,
-    postal_code=$12,
-    public_ssh_key=$13,
-    state_or_province=$14,
-    tenant_id=$15,
-    token=NULL,
-    uid=$16,
-    username=$17
-WHERE id=$18
-RETURNING address_line1,
-          address_line2,
-          city,
-          company,
-          country,
-          email,
-          full_name,
-          gid,
-          id,
-          last_updated,
-          new_user,
-          phone_number,
-          postal_code,
-          public_ssh_key,
-          role,
-          (
-          	SELECT role.name
-          	FROM role
-          	WHERE role.id=tm_user.role
-          ) AS role_name,
-          state_or_province,
-          (
-          	SELECT tenant.name
-          	FROM tenant
-          	WHERE tenant.id=tm_user.tenant_id
-          ) AS tenant,
-          tenant_id,
-          uid,
-          username
+SET confirm_local_passwd=$1,
+    local_passwd=$2,
+WHERE id=$3
 `
 
 const replaceCurrentQuery = `
@@ -315,48 +269,24 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateUser(u *tc.User, tx *sql.Tx, cp bool) error {
-	var row *sql.Row
-	if cp {
-		row = tx.QueryRow(replaceCurrentWithPasswordQuery,
-			u.AddressLine1,
-			u.AddressLine2,
-			u.City,
-			u.Company,
-			u.ConfirmLocalPassword,
-			u.Country,
-			u.Email,
-			u.FullName,
-			u.GID,
-			u.LocalPassword,
-			u.PhoneNumber,
-			u.PostalCode,
-			u.PublicSSHKey,
-			u.StateOrProvince,
-			u.TenantID,
-			u.UID,
-			u.Username,
-			u.ID,
-		)
-	} else {
-		row = tx.QueryRow(replaceCurrentQuery,
-			u.AddressLine1,
-			u.AddressLine2,
-			u.City,
-			u.Company,
-			u.Country,
-			u.Email,
-			u.FullName,
-			u.GID,
-			u.PhoneNumber,
-			u.PostalCode,
-			u.PublicSSHKey,
-			u.StateOrProvince,
-			u.TenantID,
-			u.UID,
-			u.Username,
-			u.ID,
-		)
-	}
+	row := tx.QueryRow(replaceCurrentQuery,
+		u.AddressLine1,
+		u.AddressLine2,
+		u.City,
+		u.Company,
+		u.Country,
+		u.Email,
+		u.FullName,
+		u.GID,
+		u.PhoneNumber,
+		u.PostalCode,
+		u.PublicSSHKey,
+		u.StateOrProvince,
+		u.TenantID,
+		u.UID,
+		u.Username,
+		u.ID,
+	)
 
 	err := row.Scan(&u.AddressLine1,
 		&u.AddressLine2,
@@ -380,8 +310,18 @@ func updateUser(u *tc.User, tx *sql.Tx, cp bool) error {
 		&u.UID,
 		&u.Username,
 	)
+	if err != nil {
+		return err
+	}
+
+	if cp {
+		_, err = tx.Exec(replacePasswordQuery, u.ConfirmLocalPassword, u.LocalPassword, u.ID)
+		if err != nil {
+			return fmt.Errorf("resetting password: %v", err)
+		}
+	}
 
 	u.LocalPassword = nil
 	u.ConfirmLocalPassword = nil
-	return err
+	return nil
 }
