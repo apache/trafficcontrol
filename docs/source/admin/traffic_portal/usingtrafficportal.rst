@@ -403,15 +403,16 @@ Use the `Select Columns` menu to select the server columns to view and search. C
 
 Server management includes the ability to (where applicable):
 
-- create a new server
-- update an existing server
-- delete an existing server
+- Create a new server
+- Update an existing server
+- Delete an existing server
 - :term:`Queue Updates` on a server, or clear such updates
-- update server status
-- view server :term:`Delivery Services`
-- view server configuration files
-- clone :term:`Delivery Service` assignments
-- assign :term:`Delivery Services` to server(s)
+- Update server status
+- View server :term:`Delivery Services`
+- View server configuration files
+- Clone :term:`Delivery Service` assignments
+- Assign :term:`Delivery Services` to server(s)
+- :ref:`server_server_capabilities`
 
 .. _tp-configure-origins:
 
