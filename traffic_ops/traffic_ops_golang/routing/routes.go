@@ -61,6 +61,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federation_resolvers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federations"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federation_resolvers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/invalidationjobs"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/iso"

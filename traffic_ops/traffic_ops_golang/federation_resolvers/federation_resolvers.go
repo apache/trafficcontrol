@@ -47,6 +47,15 @@ SELECT federation_resolver.id,
        type.name AS type
 FROM federation_resolver
 LEFT OUTER JOIN type ON type.id = federation_resolver.type
+RETURNING (
+	federation_resolver.id,
+	federation_resolver.ip_address,
+	(
+		SELECT type.name
+		FROM type
+		WHERE type.id = federation_resolver.type
+	) AS type
+)
 `
 
 func Create(w http.ResponseWriter, r *http.Request) {
