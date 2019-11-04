@@ -73,9 +73,9 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = ValidateDSCapabilities(dsList, serverName, inf.Tx.Tx)
+	err, status = ValidateDSCapabilities(dsList, serverName, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, status, err, nil)
 		return
 	}
 
@@ -90,23 +90,22 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 }
 
 // ValidateDSCapabilities checks that the server meets the requirements of each delivery service to be assigned.
-func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) error {
-	fmt.Println("))) Validate was hit")
+func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) (error, error) {
 	var dsCaps []string
 	sCaps, err := dbhelpers.GetServerCapabilitiesFromName(serverName, tx)
 
 	if err != nil {
-		return err
+		return err, http.StatusInternalServerError
 	}
 
 	for _, id := range dsIDs {
 		dsCaps, err = dbhelpers.GetDSRequiredCapabilitiesFromID(id, tx)
 		if err != nil {
-			return err
+			return err, http.StatusInternalServerError
 		}
 		for _, dsc := range dsCaps {
 			if !util.ContainsStr(sCaps, dsc) {
-				return errors.New(fmt.Sprintf("Caching server cannot assign this delivery service without having the required delivery service capabilities: [%v]", dsCaps))
+				return errors.New(fmt.Sprintf("Caching server cannot assign this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, serverName)), http.StatusBadRequest
 			}
 		}
 	}

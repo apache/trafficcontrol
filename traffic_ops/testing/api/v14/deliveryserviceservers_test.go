@@ -81,13 +81,13 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 
 			_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(ctc.capability)
 			if err != nil {
-				t.Errorf("*POST delivery service required capability: %v\n", err)
+				t.Fatalf("*POST delivery service required capability: %v\n", err)
 			}
 
 			ctc.ssc.ServerID = &server.ID
 			_, _, err = TOSession.CreateServerServerCapability(ctc.ssc)
 			if err != nil {
-				t.Errorf("could not POST the server capability %v to server %v: %v\n", *ctc.ssc.ServerCapability, *ctc.ssc.Server, err)
+				t.Fatalf("could not POST the server capability %v to server %v: %v\n", *ctc.ssc.ServerCapability, *ctc.ssc.Server, err)
 			}
 
 			_, got := TOSession.CreateDeliveryServiceServers(ctc.ds.ID, []int{server.ID}, true)
@@ -97,7 +97,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 
 			_, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ctc.capability.DeliveryServiceID, *ctc.capability.RequiredCapability)
 			if err != nil {
-				t.Errorf("*DELETE delivery service required capability: %v\n", err)
+				t.Fatalf("*DELETE delivery service required capability: %v\n", err)
 			}
 		})
 	}
