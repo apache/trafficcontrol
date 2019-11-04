@@ -17,6 +17,7 @@ package v14
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -50,7 +51,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 			ds:          dses[1],
 			serverName:  "atlanta-edge-01",
 			description: "missing requirements for server -> DS assignment",
-			err:         errors.New(`500 Internal Server Error[500] - Error requesting Traffic Ops https://localhost:8443/api/1.4/deliveryserviceserver {"alerts":[{"text":"Caching server cannot be assigned to this delivery service without having the required delivery service capabilities: [[bar]]","level":"error"}]}`),
+			err:         errors.New(`Caching server cannot be assigned to this delivery service without having the required delivery service capabilities`),
 			ssc:         sscs[0],
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID:  &dses[1].ID,
@@ -91,7 +92,8 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 			}
 
 			_, got := TOSession.CreateDeliveryServiceServers(ctc.ds.ID, []int{server.ID}, true)
-			if (ctc.err == nil && got != nil) || (ctc.err != nil && (ctc.err.Error() != got.Error())) {
+			if (ctc.err == nil && got != nil) || (ctc.err != nil && (strings.Contains(got.Error(), ctc.err.Error()))) {
+				//fmt.Printf("\n**** got %s, \n, ctc %s", got.Error(), ctc.err.Error())
 				t.Fatalf("expected ctc.err to be %v, got %v\n", ctc.err, got)
 			}
 

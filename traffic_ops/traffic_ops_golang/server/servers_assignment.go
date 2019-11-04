@@ -73,7 +73,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err, status = ValidateDSCapabilities(dsList, serverName, inf.Tx.Tx)
+	err, status := ValidateDSCapabilities(dsList, serverName, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, err, nil)
 		return
@@ -90,7 +90,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 }
 
 // ValidateDSCapabilities checks that the server meets the requirements of each delivery service to be assigned.
-func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) (error, error) {
+func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) (error, int) {
 	var dsCaps []string
 	sCaps, err := dbhelpers.GetServerCapabilitiesFromName(serverName, tx)
 
@@ -110,7 +110,7 @@ func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) (error, 
 		}
 	}
 
-	return nil
+	return nil, 0
 }
 
 func assignDeliveryServicesToServer(server int, dses []int, replace bool, tx *sql.Tx) ([]int, error) {

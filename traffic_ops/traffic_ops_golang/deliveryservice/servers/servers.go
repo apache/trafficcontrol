@@ -340,9 +340,9 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		serverNames = append(serverNames, name)
 	}
 
-	err = ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	err, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, status, err, nil)
 		return
 	}
 
@@ -415,7 +415,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	payload.XmlId = dsName
 	serverNames := payload.ServerNames
 
-	err, status = ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
+	err, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, err, nil)
 		return
@@ -447,7 +447,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ValidateServerCapabilities checks that the delivery service's requirements are met by each server to be assigned.
-func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (error, error) {
+func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (error, int) {
 	var sCaps []string
 	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
 
@@ -467,7 +467,7 @@ func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (err
 		}
 	}
 
-	return nil
+	return nil, 0
 }
 
 func insertIdsQuery() string {

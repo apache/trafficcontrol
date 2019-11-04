@@ -276,8 +276,8 @@ func GetProfileIDFromName(name string, tx *sql.Tx) (int, bool, error) {
 
 // GetServerCapabilitiesFromName returns the server's capabilities.
 func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
-	caps := []string{}
-	q := `SELECT ARRAY(ssc.server_capability) FROM server s JOIN server_server_capability ssc ON s.id = ssc.server WHERE s.host_name = $1 ORDER BY ssc.server_capability;`
+	var caps []string
+	q := `SELECT ARRAY(SELECT ssc.server_capability FROM server s JOIN server_server_capability ssc ON s.id = ssc.server WHERE s.host_name = $1 ORDER BY ssc.server_capability);`
 	rows, err := tx.Query(q, name)
 	if err != nil {
 		return nil, errors.New("querying server capabilities from name: " + err.Error())
@@ -285,8 +285,7 @@ func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var cap []string
-		if err := rows.Scan(&pq.Array(cap)); err != nil {
+		if err := rows.Scan(pq.Array(caps)); err != nil {
 			return nil, errors.New("scanning capability: " + err.Error())
 		}
 	}
