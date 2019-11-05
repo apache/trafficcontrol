@@ -42,27 +42,10 @@ RETURNING federation_resolver.id,
 
 const readQuery = `
 SELECT federation_resolver.id,
-       federation_resolver.ip_address,
-       federation_resolver.last_updated,
-       type.name AS type
-FROM federation_resolver
-LEFT OUTER JOIN type ON type.id = federation_resolver.type
-RETURNING (
-	federation_resolver.id,
-	federation_resolver.ip_address,
-	(
-		SELECT type.name
-		FROM type
-		WHERE type.id = federation_resolver.type
-	) AS type
-)
-`
-
-const readQuery = `
-SELECT federation_resolver.id,
        federation_resolver.ipAddress,
        federation_resolver.last_updated,
        type.name AS type
+FROM federation_resolver
 LEFT OUTER JOIN type ON type.id = federation_resolver.type
 `
 
