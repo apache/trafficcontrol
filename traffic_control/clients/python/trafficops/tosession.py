@@ -1482,7 +1482,7 @@ class TOSession(RestApiSession):
 	#
 	# Federation Resolver
 	#
-	@api_request(u'get', u'federation_resolvers', (u'1.2', u'1.3'))
+	@api_request(u'get', u'federation_resolvers', (u'1.2', u'1.3', u'1.4'))
 	def get_federation_resolvers(self, query_params=None):
 		"""
 		Get federation resolvers.
@@ -1492,7 +1492,7 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request(u'post', u'federation_resolvers', (u'1.2', u'1.3'))
+	@api_request(u'post', u'federation_resolvers', (u'1.2', u'1.3', u'1.4'))
 	def create_federation_resolver(self, data=None):
 		"""
 		Create a federation resolver.
