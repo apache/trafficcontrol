@@ -19,11 +19,14 @@ package federation_resolvers
  * under the License.
  */
 
+import "fmt"
 import "net/http"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/lib/go-util"
 
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 const insertFederationResolverQuery = `
 INSERT INTO federation_resolver (ip_address, type)
@@ -39,6 +42,14 @@ RETURNING (
 )
 `
 
+const readQuery = `
+SELECT federation_resolver.id,
+       federation_resolver.ipAddress,
+       federation_resolver.last_updated,
+       type.name AS type
+LEFT OUTER JOIN type ON type.id = federation_resolver.type
+`
+
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -46,6 +57,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
+	defer inf.Close()
 
 	var fr tc.FederationResolver
 	if userErr = api.Parse(r.Body, tx, &fr); userErr != nil {
@@ -54,7 +66,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := tx.QueryRow(insertFederationResolverQuery, fr.IPAddress, fr.TypeID).Scan(&fr); err != nil {
-		userErr, sysErr errCode = api.ParseDBError(err)
+		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
@@ -69,4 +81,58 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	alertMsg := fmt.Sprintf("Federation Resolver created [ IP = %s ] with id: %d", fr.IPAddress, fr.ID)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, fr)
+}
+
+func Read(w http.ResponseWriter, r *http.Request) {
+	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if sysErr != nil || userErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":        dbhelpers.WhereColumnInfo{"federation_resolver.id", api.IsInt},
+		"ipAddress": dbhelpers.WhereColumnInfo{"federation_resolver.ip_address", nil},
+		"type":      dbhelpers.WhereColumnInfo{"type.name", nil},
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		sysErr = util.JoinErrs(errs)
+		errCode = http.StatusBadRequest
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		return
+	}
+
+	query := readQuery + where + orderBy + pagination
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		if sysErr != nil {
+			sysErr = fmt.Errorf("federation_resolver read query: %v", sysErr)
+		}
+
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer rows.Close()
+
+	var resolvers = []tc.FederationResolver{}
+	for rows.Next() {
+		var resolver tc.FederationResolver
+		if err := rows.Scan(&resolver.ID, &resolver.IPAddress, &resolver.LastUpdated, &resolver.Type); err != nil {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+			if sysErr != nil {
+				sysErr = fmt.Errorf("federation_resolver scanning: %v", sysErr)
+			}
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+
+		resolvers = append(resolvers, resolver)
+	}
+
+	api.WriteResp(w, r, resolvers)
 }
