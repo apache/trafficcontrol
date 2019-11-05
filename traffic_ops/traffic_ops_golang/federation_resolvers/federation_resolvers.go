@@ -64,7 +64,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tx.QueryRow(insertFederationResolverQuery, fr.IPAddress, fr.TypeID).Scan(&fr); err != nil {
+	err := tx.QueryRow(insertFederationResolverQuery, fr.IPAddress, fr.TypeID).Scan(&fr.ID, &fr.IPAddress, &fr.Type)
+	if err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
