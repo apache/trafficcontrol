@@ -42,7 +42,7 @@ RETURNING federation_resolver.id,
 
 const readQuery = `
 SELECT federation_resolver.id,
-       federation_resolver.ipAddress,
+       federation_resolver.ip_address,
        federation_resolver.last_updated,
        type.name AS type
 FROM federation_resolver
