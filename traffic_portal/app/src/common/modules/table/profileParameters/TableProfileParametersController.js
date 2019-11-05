@@ -54,7 +54,10 @@ var TableProfileParametersController = function(profile, parameters, $controller
 			);
 	};
 
-	$scope.confirmRemoveParam = function(parameter) {
+	$scope.confirmRemoveParam = function(parameter, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
 		if (profile.type == 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
 			deliveryServiceService.getDeliveryServices({ profile: profile.id }).
 				then(function(result) {
