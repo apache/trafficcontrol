@@ -58,6 +58,14 @@ RETURNING (
 )
 `
 
+const readQuery = `
+SELECT federation_resolver.id,
+       federation_resolver.ipAddress,
+       federation_resolver.last_updated,
+       type.name AS type
+LEFT OUTER JOIN type ON type.id = federation_resolver.type
+`
+
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
