@@ -41,3 +41,6 @@ local.tar.gz
 .projectile
 *.bak
 *.iml
+# Traffic Ops binary
+./traffic_ops_golang
+
