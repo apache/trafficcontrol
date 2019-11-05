@@ -76,10 +76,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		fr.LastUpdated = nil
 	}
 
-	changeLogMsg := fmt.Sprintf("FEDERATION_RESOLVER: %s, ID: %d, ACTION: Created", fr.IPAddress, fr.ID)
+	changeLogMsg := fmt.Sprintf("FEDERATION_RESOLVER: %s, ID: %d, ACTION: Created", *fr.IPAddress, *fr.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 
-	alertMsg := fmt.Sprintf("Federation Resolver created [ IP = %s ] with id: %d", fr.IPAddress, fr.ID)
+	alertMsg := fmt.Sprintf("Federation Resolver created [ IP = %s ] with id: %d", *fr.IPAddress, *fr.ID)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, fr)
 }
 
