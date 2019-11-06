@@ -414,7 +414,7 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 	if cfg.SMTP.User != "" {
 		auth = LoginAuth("", cfg.SMTP.User, cfg.SMTP.Password, strings.Split(cfg.SMTP.Address, ":")[0])
 	}
-	err := smtp.SendMail(cfg.SMTP.Address, auth, cfg.ConfigTO.EmailFrom.String(), []string{to.String()}, msg)
+	err := smtp.SendMail(cfg.SMTP.Address, auth, cfg.ConfigTO.EmailFrom.Address.Address, []string{to.Address.Address}, msg)
 	if err != nil {
 		return http.StatusInternalServerError, nil, fmt.Errorf("Failed to send email: %v", err)
 	}
