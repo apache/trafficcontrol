@@ -47,7 +47,7 @@ func (fr *FederationResolver) Validate(tx *sql.Tx) error {
 				return nil
 			}
 
-			if _,_, err := net.ParseCIDR(*v.(*string)); err != nil {
+			if _, _, err := net.ParseCIDR(*v.(*string)); err != nil {
 				return errors.New("invalid network IP or CIDR-notation subnet")
 			}
 			return nil

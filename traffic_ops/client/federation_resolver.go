@@ -87,7 +87,7 @@ func (to *Session) CreateFederationResolver(fr tc.FederationResolver) (tc.Alerts
 	}
 
 	var resp *http.Response
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPost, apiBase + "/federation_resolvers", req)
+	resp, reqInf.RemoteAddr, err = to.request(http.MethodPost, apiBase+"/federation_resolvers", req)
 	if err != nil {
 		return alerts, reqInf, err
 	}

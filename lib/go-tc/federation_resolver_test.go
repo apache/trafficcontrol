@@ -25,7 +25,7 @@ func ExampleFederationResolver_Validate() {
 	var typeID uint = 1
 	var IPAddress string = "0.0.0.0"
 	fr := FederationResolver{
-		TypeID: &typeID,
+		TypeID:    &typeID,
 		IPAddress: &IPAddress,
 	}
 
