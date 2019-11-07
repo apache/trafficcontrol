@@ -68,7 +68,7 @@ Response Structure
 	:dnssec.dynamic.response.expiration: A string containing a number and unit suffix that specifies the length of time for which dynamic responses to DNSSEC lookup queries should remain valid
 	:dnssec.dynamic.concurrencylevel:    An integer that defines the size of the concurrency level (threads) of the Guava cache used by ZoneManager to store zone material
 	:dnssec.dynamic.initialcapacity:     An integer that defines the initial size of the Guava cache, default is 10000. Too low of a value can lead to expensive resizing
-	:dnssec.init.timeout:                An integer that defines the number of seconds to allow for zone generation, this bounds the zone priming activity
+	:dnssec.init.timeout:                An integer that defines the number of minutes to allow for zone generation, this bounds the zone priming activity
 	:dnssec.enabled:                     A string that tells whether or not the CDN uses DNSSEC; one of:
 
 		"false"
