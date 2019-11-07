@@ -1,0 +1,145 @@
+#! /usr/bin/python
+
+import json
+import logging
+import optparse
+import os
+import sys
+import inspect
+
+import adaptor.fs
+
+if __name__ == '__main__':
+    progPath = inspect.stack()[-1][1]
+    progAbsPath = os.path.abspath( progPath )
+    progAbsPath = os.path.dirname(os.path.normpath(progAbsPath))
+
+    confDir = os.path.join(progAbsPath, "conf")
+    confFile = os.path.join(confDir, "cfg.json")
+    with open(confFile) as fd:
+        cfg = json.load(fd)
+
+    logDir = os.path.join(progAbsPath, "var/log")
+    debugLogFile = os.path.join(logDir, "traffic-ops-vault-debug.log")
+    mainLogFile = os.path.join(logDir, "traffic-ops-vault.log")
+    if not os.path.exists(logDir):
+        os.makedirs(logDir)
+
+    global logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    # create file handler which logs even debug messages
+    fhd = logging.FileHandler(debugLogFile)
+    fhd.setLevel(logging.DEBUG)
+    fhm = logging.FileHandler(mainLogFile)
+    fhm.setLevel(logging.INFO)
+    #TODO Set based on command line
+    verbose = logging.StreamHandler(sys.stdout)
+    verbose.setLevel(logging.INFO)   
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fhm.setFormatter(formatter)
+    fhd.setFormatter(formatter)
+    verbose.setFormatter(formatter)
+    # add the handlers to the logger
+    logger.addHandler(fhm)
+    logger.addHandler(fhd)
+    logger.addHandler(verbose)
+    
+    parser = optparse.OptionParser()
+    operationModeGroup = optparse.OptionGroup(parser, "Operation mode options",
+                                              "The vault script may work in one of the following modes.")
+    parser.add_option_group(operationModeGroup)
+
+    operationModeGroup.add_option("--ping",
+                                  action="store_true", dest="ping", default=False, help="Ping")
+
+    operationModeGroup.add_option("--get-parameter",
+                                  action="store_true", dest="getParameter", default=False, 
+                                  help="Get parameter. Parameter relative path should be provided.")
+
+    operationModeGroup.add_option("--set-parameter",
+                                  action="store_true", dest="setParameter", default=False, 
+                                  help="Set parameter. Parameter relative path should be provided.")
+
+    operationModeGroup.add_option("--delete-parameter",
+                                  action="store_true", dest="deleteParameter", default=False, 
+                                  help="Delete parameter. Parameter relative path should be provided.")
+
+    operationModeGroup.add_option("--search-parameters",
+                                  action="store_true", dest="searchParameters", default=False, 
+                                  help="Search parameter. Parameter relative path should be provided.")
+
+    standardOptions = optparse.OptionGroup(parser, "Standard operation options",
+                                           "Standard operation options.")
+
+    parser.add_option_group(standardOptions)
+
+    standardOptions.add_option("--parameter-path", type="string",
+                               action="store", dest="parameterPath", help="Parameter path")
+
+    (options, args) = parser.parse_args()
+
+
+    basePath = cfg["data"]["db-path"]
+    pingRelPath = cfg["data"]["ping-rel-path"]
+    adaptorType = cfg["data"]["adaptor-type"]
+
+    if adaptorType == "fs":
+            adaptor = adaptor.fs.Fs(logger=logger, basePath=basePath, pingRelPath=pingRelPath)
+    else:
+        logger.error("Invalid adaptor type '%s'", adaptorType)
+        sys.exit(1)
+
+    if options.ping:
+        success, value = adaptor.ping()
+        if not success:
+            sys.exit(1)
+        print value
+        sys.exit(0)
+
+    if options.getParameter:
+        if not options.parameterPath:
+            parser.error("Missing parameter-path.")
+        success, value = adaptor.getParameter(options.parameterPath)
+        if not success:
+            sys.exit(1)
+        if value is None:
+            sys.exit(1)
+        print value
+        sys.exit(0)
+
+    if options.searchParameters:
+        if not options.parameterPath:
+            parser.error("Missing parameter-path.")
+        success, value = adaptor.searchParameters(options.parameterPath)
+        if not success:
+            sys.exit(1)
+        print json.dumps(value)
+        sys.exit(0)
+
+    if options.setParameter:
+        if not options.parameterPath:
+            parser.error("Missing parameter-path.")
+        if len(args) != 1:
+            parser.error("Command should get a single arg - the to be set value.")
+        success = adaptor.setParameter(options.parameterPath, args[0])
+        if not success:
+            sys.exit(1)
+        sys.exit(0)
+
+    if options.deleteParameter:
+        if not options.parameterPath:
+            parser.error("Missing parameter-path.")
+        success = adaptor.deleteParameter(options.parameterPath)
+        if not success:
+            sys.exit(1)
+        sys.exit(0)
+
+    logger.error("Operation is not set")
+    parser.print_help()
+    parser.error("No operation mode specified")
+    sys.exit(1)
+
+
+

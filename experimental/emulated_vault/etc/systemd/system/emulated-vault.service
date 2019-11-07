@@ -1,0 +1,13 @@
+[Unit]
+Description=Emulated Vault Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/opt/emulated-vault/vault-server
+Restart=on-failure
+
+
+[Install]
+WantedBy=multi-user.target

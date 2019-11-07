@@ -1,0 +1,23 @@
+The emulated_vault module supplies a HTTP server mimicking RIAK behavior for the usage as traffic-control vault.
+The server may use different type of persistent storage (e.g. file-system), using the proper adaptor.
+Basic requirements: Centos ver >= 7; Python
+
+In order to deploy the code on a server please:
+1. Copy the module files to the server's root
+2. Add the certificate and key to you favorite path
+3. Adjust opt/emulated_vault/conf/cfg.json - pointing at your certificate and key
+4. chkconfig the service
+
+Logs may be found under /opt/emulated_vault/var/log
+
+Developers notes:
+------------------------
+If you just want to play around with the module, you may of course run the server script on its own.
+Before doing that, you would probably need to adjust the opt/emulated_vault/conf/cfg.json:
+1. Changing the db-path to one you have access to
+2. Disable ssl (just to make it easier)
+
+Additionally, the vault-cmd script is also available to work against the DB with command line. 
+It is mostly useful when developing a new adaptor.
+
+For any question, please approach Nir B. Sopher (nir@apache.org)
