@@ -37,6 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
@@ -174,10 +175,9 @@ public class ZoneManager extends Resolver {
 			final ExecutorService ze = Executors.newFixedThreadPool(poolSize);
 			final ScheduledExecutorService me = Executors.newScheduledThreadPool(2); // 2 threads, one for static, one for dynamic, threads to refresh zones
 			final int maintenanceInterval = JsonUtils.optInt(config, "zonemanager.cache.maintenance.interval", 300); // default 5 minutes
-			final String dspec = "expireAfterAccess=" + (JsonUtils.optString(config, "zonemanager.dynamic.response.expiration", "300s")); // default to 5 minutes
+			final int initTimeout = JsonUtils.optInt(config, "zonemanager.init.timeout", 10);
 
-
-			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, CacheBuilderSpec.parse(dspec));
+			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, getDynamicZoneCacheSpec(config, poolSize));
 			final LoadingCache<ZoneKey, Zone> zc = createZoneCache(ZoneCacheType.STATIC);
 
 			initZoneDirectory();
@@ -186,43 +186,52 @@ public class ZoneManager extends Resolver {
 				LOGGER.info("Generating zone data");
 				generateZones(tr, zc, dzc, initExecutor);
 				initExecutor.shutdown();
-				initExecutor.awaitTermination(5, TimeUnit.MINUTES);
+				initExecutor.awaitTermination(initTimeout, TimeUnit.MINUTES);
 				LOGGER.info("Zone generation complete");
+
+				me.scheduleWithFixedDelay(getMaintenanceRunnable(dzc, ZoneCacheType.DYNAMIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
+				me.scheduleWithFixedDelay(getMaintenanceRunnable(zc, ZoneCacheType.STATIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
+
+				final ExecutorService tze = ZoneManager.zoneExecutor;
+				final ScheduledExecutorService tme = ZoneManager.zoneMaintenanceExecutor;
+				final LoadingCache<ZoneKey, Zone> tzc = ZoneManager.zoneCache;
+				final LoadingCache<ZoneKey, Zone> tdzc = ZoneManager.dynamicZoneCache;
+
+				ZoneManager.zoneExecutor = ze;
+				ZoneManager.zoneMaintenanceExecutor = me;
+				ZoneManager.dynamicZoneCache = dzc;
+				ZoneManager.zoneCache = zc;
+
+				if (tze != null) {
+					tze.shutdownNow();
+				}
+
+				if (tme != null) {
+					tme.shutdownNow();
+				}
+
+				if (tzc != null) {
+					tzc.invalidateAll();
+				}
+
+				if (tdzc != null) {
+					tdzc.invalidateAll();
+				}
 			} catch (final InterruptedException ex) {
-				LOGGER.warn("Initialization of zone data exceeded time limit of 5 minutes; continuing", ex);
+				LOGGER.warn(String.format("Initialization of zone data exceeded time limit of %d minute(s); continuing", initTimeout), ex);
 			} catch (IOException ex) {
 				LOGGER.fatal("Caught fatal exception while generating zone data!", ex);
 			}
-
-			me.scheduleWithFixedDelay(getMaintenanceRunnable(dzc, ZoneCacheType.DYNAMIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
-			me.scheduleWithFixedDelay(getMaintenanceRunnable(zc, ZoneCacheType.STATIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
-
-			final ExecutorService tze = ZoneManager.zoneExecutor;
-			final ScheduledExecutorService tme = ZoneManager.zoneMaintenanceExecutor;
-			final LoadingCache<ZoneKey, Zone> tzc = ZoneManager.zoneCache;
-			final LoadingCache<ZoneKey, Zone> tdzc = ZoneManager.dynamicZoneCache;
-
-			ZoneManager.zoneExecutor = ze;
-			ZoneManager.zoneMaintenanceExecutor = me;
-			ZoneManager.dynamicZoneCache = dzc;
-			ZoneManager.zoneCache = zc;
-
-			if (tze != null) {
-				tze.shutdownNow();
-			}
-
-			if (tme != null) {
-				tme.shutdownNow();
-			}
-
-			if (tzc != null) {
-				tzc.invalidateAll();
-			}
-
-			if (tdzc != null) {
-				tdzc.invalidateAll();
-			}
 		}
+	}
+
+	private static CacheBuilderSpec getDynamicZoneCacheSpec(final JsonNode config, final int poolSize) {
+		final List<String> cacheSpec = new ArrayList<>();
+		cacheSpec.add("expireAfterAccess=" + JsonUtils.optString(config, "zonemanager.dynamic.response.expiration", "3600s")); // default to one hour
+		cacheSpec.add("concurrencyLevel=" + JsonUtils.optString(config, "zonemanager.dynamic.concurrencylevel", String.valueOf(poolSize))); // default to pool size, 4 is the actual default
+		cacheSpec.add("initialCapacity=" + JsonUtils.optInt(config, "zonemanager.dynamic.initialcapacity", 10000)); // set the initial capacity to avoid expensive resizing
+
+		return CacheBuilderSpec.parse(cacheSpec.stream().collect(Collectors.joining(",")));
 	}
 
 	private static Runnable getMaintenanceRunnable(final LoadingCache<ZoneKey, Zone> cache, final ZoneCacheType type, final int refreshInterval) {
