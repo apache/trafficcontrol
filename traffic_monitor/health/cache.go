@@ -236,6 +236,14 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 			availableTuple.SetAvailability(usingIPv4, isAvailable)
 		}
 
+		// update availableTuple so TM UI is updated if one IP is removed
+		if availableTuple.IPv4 && serverInfo.IP == "" {
+			availableTuple.IPv4 = false
+		}
+		if availableTuple.IPv6 && serverInfo.IP6 == "" {
+			availableTuple.IPv6 = false
+		}
+
 		newAvailableState := processAvailableTuple(availableTuple, serverInfo)
 
 		localCacheStatuses[result.ID] = cache.AvailableStatus{

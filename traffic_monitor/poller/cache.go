@@ -168,6 +168,7 @@ func poller(
 		select {
 		case <-tick.C:
 			if (usingIPv4 && url == "") || (!usingIPv4 && url6 == "") {
+				usingIPv4 = !usingIPv4
 				continue
 			}
 
