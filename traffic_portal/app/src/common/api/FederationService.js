@@ -17,136 +17,178 @@
  * under the License.
  */
 
-var FederationService = function(Restangular, $http, $q, ENV, locationUtils, messageModel, httpService) {
+var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 
-	var service = this;
+	const service = this;
 
 	this.getCDNFederations = function(cdnName) {
-		return Restangular.one('cdns', cdnName).getList('federations');
+		return $http.get(ENV.api['root'] + 'cdns/' + cdnName + '/federations').then(
+			function (result) {
+				return result.data.response;
+			},
+			function (err) {
+				throw err;
+			}
+		);
 	};
 
 	this.getCDNFederation = function(cdnName, fedId) {
-		return Restangular.one('cdns', cdnName).one('federations', fedId).get();
+		return $http.get(ENV.api['root'] + 'cdns/' + cdnName + '/federations', {params: {id: fedId}}).then(
+			function (result) {
+				return result.data.response[0];
+			},
+			function (err) {
+				throw err;
+			}
+		);
 	};
 
 	this.createFederation = function(cdn, fed) {
-		return $http.post(ENV.api['root'] + 'cdns/' + cdn.name + '/federations', fed)
-			.then(
-				function(result) {
-					var newFedId = result.data.response.id,
-						alerts = result.data.alerts,
-						promises = [];
-					// after creating the federation, assign the selected user and ds to the federation
-					promises.push(service.assignFederationUsers(newFedId, [ fed.userId ], false));
-					promises.push(service.assignFederationDeliveryServices(newFedId, [ fed.dsId ], false));
+		return $http.post(ENV.api['root'] + 'cdns/' + cdn.name + '/federations', fed).then(
+			function(result) {
+				const newFedId = result.data.response.id;
+				const alerts = result.data.alerts;
+				const promises = [];
 
-					$q.all(promises)
-						.then(
-							function() {
-								messageModel.setMessages(alerts, true);
-								locationUtils.navigateToPath('/cdns/' + cdn.id + '/federations/' + newFedId);
-							},
-							function(fault) {
-								// do nothing
-							});
+				// after creating the federation, assign the selected user and ds to the federation
+				promises.push(service.assignFederationUsers(newFedId, [ fed.userId ], false));
+				promises.push(service.assignFederationDeliveryServices(newFedId, [ fed.dsId ], false));
 
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+				$q.all(promises).then(
+					function() {
+						messageModel.setMessages(alerts, true);
+						locationUtils.navigateToPath('/cdns/' + cdn.id + '/federations/' + newFedId);
+					},
+					function(err) {
+						console.error(err);
+					}
+				);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
-	this.updateFederation = function(fed) {
-		return fed.put()
-			.then(
-				function() {
-					service.assignFederationDeliveryServices(fed.id, [ fed.dsId ], true)
-						.then(
-								function() {
-									messageModel.setMessages([ { level: 'success', text: 'Federation updated' } ], false);
-								}
-							);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+	this.updateFederation = function(cdnName, fed) {
+		return $http.put(ENV.api['root'] + 'cdns/' + cdnName + '/federations/' + fed.id, fed).then(
+			function() {
+				service.assignFederationDeliveryServices(fed.id, [ fed.dsId ], true).then(
+					function() {
+						messageModel.setMessages([{level: 'success', text: 'Federation updated'}], false);
+					},
+					function(err) {
+						console.error(err);
+					}
+				);
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 	this.deleteFederation = function(cdnId, fedId) {
-		return Restangular.one('cdns', cdnId).one('federations', fedId).remove()
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Federation deleted' } ], true);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, true);
-				}
-			);
+		return $http.delete(ENV.api['root'] + 'cdns/' + cdnId + '/federations/' + fedId).then(
+			function(result) {
+				messageModel.setMessages([{level: 'success', text: 'Federation deleted'}], true);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, true);
+				throw err;
+			}
+		);
 	};
 
 	this.getFederationUsers = function(fedId) {
-		return Restangular.one('federations', fedId).getList('users');
+		return $http.get(ENV.api['root'] + 'federations/' + fedId + '/users').then(
+			function (result) {
+				return result.data.response;
+			},
+			function (err) {
+				throw err;
+			}
+		);
 	};
 
 	this.assignFederationUsers = function(fedId, userIds, replace) {
-		return $http.post(ENV.api['root'] + 'federations/' + fedId + '/users', { userIds: userIds, replace: replace })
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Users linked to federation' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.post(ENV.api['root'] + 'federations/' + fedId + '/users', { userIds: userIds, replace: replace }).then(
+			function(result) {
+				messageModel.setMessages([{level: 'success', text: 'Users linked to federation'}], false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 	this.deleteFederationUser = function(fedId, userId) {
-		return httpService.delete(ENV.api['root'] + 'federations/' + fedId + '/users/' + userId)
-			.then(
-				function() {
+		return $http.delete(ENV.api['root'] + 'federations/' + fedId + '/users/' + userId).then(
+				function(result) {
 					messageModel.setMessages([ { level: 'success', text: 'Federation and user were unlinked.' } ], false);
+					return result;
 				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, true);
+				function(err) {
+					messageModel.setMessages(err.data.alerts, true);
+					throw err;
 				}
 			);
 	};
 
 	this.getFederationDeliveryServices = function(fedId) {
-		return Restangular.one('federations', fedId).getList('deliveryservices');
+		return $http.get(ENV.api['root'] + 'federations/' + fedId + '/deliveryservices').then(
+			function (result) {
+				return result.data.response;
+			},
+			function (err) {
+				throw err;
+			}
+		);
 	};
 
 	this.assignFederationDeliveryServices = function(fedId, dsIds, replace) {
-		return $http.post(ENV.api['root'] + 'federations/' + fedId + '/deliveryservices', { dsIds: dsIds, replace: replace })
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery services linked to federation' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.post(ENV.api['root'] + 'federations/' + fedId + '/deliveryservices', { dsIds: dsIds, replace: replace }).then(
+			function(result) {
+				messageModel.setMessages([{level: 'success', text: 'Delivery services linked to federation'}], false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 	this.deleteFederationDeliveryService = function(fedId, dsId) {
-		return httpService.delete(ENV.api['root'] + 'federations/' + fedId + '/deliveryservices/' + dsId)
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Federation and delivery service were unlinked.' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
+		return $http.delete(ENV.api['root'] + 'federations/' + fedId + '/deliveryservices/' + dsId).then(
+			function(result) {
+				messageModel.setMessages([{level: 'success', text: 'Federation and delivery service were unlinked.'}], false);
+				return result;
+			},
+			function(err) {
+				messageModel.setMessages(err.data.alerts, false);
+				throw err;
+			}
+		);
 	};
 
 	this.getFederationFederationResolvers = function(fedId) {
-		return Restangular.one('federations', fedId).getList('federation_resolvers');
+		return $http.get(ENV.api['root'] + 'federations/' + fedId + '/federation_resolvers').then(
+			function (result) {
+				return result.data.response;
+			},
+			function (err) {
+				throw err;
+			}
+		);
 	};
 
 };
 
-FederationService.$inject = ['Restangular', '$http', '$q', 'ENV', 'locationUtils', 'messageModel', 'httpService'];
+FederationService.$inject = ['$http', '$q', 'ENV', 'locationUtils', 'messageModel'];
 module.exports = FederationService;
