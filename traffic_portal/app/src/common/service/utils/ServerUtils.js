@@ -27,6 +27,10 @@ var ServerUtils = function($window, propertiesModel, userModel) {
 		return server.type && (server.type.indexOf('EDGE') == 0);
 	};
 
+	this.isOrigin = function(server) {
+		return server.type && (server.type.indexOf('ORG') == 0);
+	};
+
 	this.isOffline = function(status) {
 		return (status == 'OFFLINE' || status == 'ADMIN_DOWN');
 	};
