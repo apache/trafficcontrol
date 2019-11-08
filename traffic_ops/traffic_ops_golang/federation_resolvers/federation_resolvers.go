@@ -49,6 +49,18 @@ FROM federation_resolver
 LEFT OUTER JOIN type ON type.id = federation_resolver.type
 `
 
+const deleteQuery = `
+DELETE FROM federation_resolver
+WHERE federation_resolver.id = $1
+RETURNING federation_resolver.id,
+          federation_resolver.ip_address,
+          (
+          	SELECT type.name
+          	FROM type
+          	WHERE type.id = federation_resolver.type
+          ) AS type
+`
+
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -71,7 +83,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fr.TypeID = nil
 	if inf.Version.Major < 2 && inf.Version.Minor < 4 {
 		fr.LastUpdated = nil
 	}
@@ -135,4 +146,33 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteResp(w, r, resolvers)
+}
+
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if sysErr != nil || userErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var result tc.FederationResolver
+	err := tx.QueryRow(deleteQuery, inf.IntParams["id"]).Scan(&result.ID, &result.IPAddress, &result.Type)
+	if err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	changeLogMsg := fmt.Sprintf("FEDERATION_RESOLVER: %s, ID: %d, ACTION: Deleted", *result.IPAddress, *result.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+
+	alertMsg := fmt.Sprintf("Federation resolver deleted [ IP = %s ] with id: %d", *result.IPAddress, *result.ID)
+	if inf.Version.Major < 2 && inf.Version.Minor < 4 {
+		api.WriteRespAlert(w, r, tc.SuccessLevel, alertMsg)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, result)
 }
