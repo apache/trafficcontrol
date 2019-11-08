@@ -155,7 +155,7 @@ func (to *Session) AddFederationResolverMappingsForCurrentUser(mappings tc.Deliv
 		return alerts, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPost, apiBase + "/federations", bts)
+	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+"/federations", bts)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return alerts, reqInf, err
@@ -173,7 +173,7 @@ func (to *Session) DeleteFederationResolverMappingsForCurrentUser() (tc.Alerts, 
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
 	var alerts tc.Alerts
 
-	resp, remoteAddr, err := to.request(http.MethodDelete, apiBase + "/federations", nil)
+	resp, remoteAddr, err := to.request(http.MethodDelete, apiBase+"/federations", nil)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return alerts, reqInf, err
@@ -199,7 +199,7 @@ func (to *Session) ReplaceFederationResolverMappingsForCurrentUser(mappings tc.D
 		return alerts, reqInf, err
 	}
 
-	resp, remoteAddr, err := to.request(http.MethodPut, apiBase + "/federations", bts)
+	resp, remoteAddr, err := to.request(http.MethodPut, apiBase+"/federations", bts)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return alerts, reqInf, err

@@ -657,6 +657,28 @@
             "description": "fooya"
         }
     ],
+    "federation_resolvers": [
+        {
+            "ipAddress": "1.2.3.4",
+            "type": "RESOLVE4",
+            "id": 1
+        },
+        {
+            "ipAddress": "0.0.0.0/12",
+            "type": "RESOLVE4",
+            "id": 2
+        },
+        {
+            "ipAddress": "dead::babe",
+            "type": "RESOLVE6",
+            "id": 3
+        },
+        {
+            "ipAddress": "::f1d0:f00d/123",
+            "type": "RESOLVE6",
+            "id": 4
+        }
+    ],
     "coordinates": [
         {
             "latitude": 1.1,
