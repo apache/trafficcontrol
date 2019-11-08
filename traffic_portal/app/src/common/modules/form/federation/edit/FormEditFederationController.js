@@ -156,7 +156,6 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 			}
 		});
 		modalInstance.result.then(function(selectedResolverIds) {
-			debugger;
 			assignFederationResolvers($scope.federation.id, selectedResolverIds);
 		}, function () {
 			// do nothing
