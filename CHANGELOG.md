@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.2/current_stats
   - /api/1.1/osversions
 
+- Traffic Router: Added a tunable bounded queue to support DNS request processing.
 - Traffic Ops API Routing Blacklist: via the `routing_blacklist` field in `cdn.conf`, enable certain whitelisted Go routes to be handled by Perl instead (via the `perl_routes` list) in case a regression is found in the Go handler, and explicitly disable any routes via the `disabled_routes` list. Requests to disabled routes are immediately given a 503 response. Both fields are lists of Route IDs, and route information (ID, version, method, path, and whether or not it can bypass to Perl) can be found by running `./traffic_ops_golang --api-routes`. To disable a route or have it bypassed to Perl, find its Route ID using the previous command and put it in the `disabled_routes` or `perl_routes` list, respectively.
 - To support reusing a single riak cluster connection, an optional parameter is added to riak.conf: "HealthCheckInterval". This options takes a 'Duration' value (ie: 10s, 5m) which affects how often the riak cluster is health checked.  Default is currently set to: "HealthCheckInterval": "5s".
 - Added a new Go db/admin binary to replace the Perl db/admin.pl script which is now deprecated and will be removed in a future release. The new db/admin binary is essentially a drop-in replacement for db/admin.pl since it supports all of the same commands and options; therefore, it should be used in place of db/admin.pl for all the same tasks.
