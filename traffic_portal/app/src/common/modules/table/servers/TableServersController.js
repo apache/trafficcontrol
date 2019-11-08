@@ -247,7 +247,10 @@ var TableServersController = function(servers, $scope, $state, $uibModal, $windo
         {
             text: 'Manage Delivery Services',
             displayed: function ($itemScope) {
-                return serverUtils.isEdge($itemScope.s);
+                return serverUtils.isEdge($itemScope.s) || serverUtils.isOrigin($itemScope.s);
+            },
+            hasTopDivider: function ($itemScope) {
+                return !serverUtils.isCache($itemScope.s);
             },
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/servers/' + $itemScope.s.id + '/delivery-services');
