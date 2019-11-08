@@ -39,7 +39,8 @@ RETURNING federation_resolver.id,
           	SELECT type.name
           	FROM type
           	WHERE type.id = federation_resolver.type
-          ) AS type
+          ) AS type,
+          federation_resolver.type as typeId
 `
 
 const readQuery = `
@@ -78,7 +79,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := tx.QueryRow(insertFederationResolverQuery, fr.IPAddress, fr.TypeID).Scan(&fr.ID, &fr.IPAddress, &fr.Type)
+	err := tx.QueryRow(insertFederationResolverQuery, fr.IPAddress, fr.TypeID).Scan(&fr.ID, &fr.IPAddress, &fr.Type, &fr.TypeID)
 	if err != nil {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -87,6 +88,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	if inf.Version.Major < 2 && inf.Version.Minor < 4 {
 		fr.LastUpdated = nil
+		fr.Type = nil
 	}
 
 	changeLogMsg := fmt.Sprintf("FEDERATION_RESOLVER: %s, ID: %d, ACTION: Created", *fr.IPAddress, *fr.ID)
