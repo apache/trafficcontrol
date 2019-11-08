@@ -64,7 +64,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
-	serverName, ok, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, server)
+	serverInfo, ok, err := dbhelpers.GetServerInfo(server, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
 		return
@@ -73,10 +73,12 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	usrErr, sysErr, status := ValidateDSCapabilities(dsList, serverName, inf.Tx.Tx)
-	if usrErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
-		return
+	if !strings.HasPrefix(serverInfo.Type, "ORG") {
+		usrErr, sysErr, status := ValidateDSCapabilities(dsList, serverInfo.HostName, inf.Tx.Tx)
+		if usrErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
+			return
+		}
 	}
 
 	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
@@ -85,7 +87,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverInfo.HostName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
 }
 
