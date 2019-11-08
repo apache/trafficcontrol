@@ -78,7 +78,7 @@ func TestCreateDeliveryServicesRequiredCapability(t *testing.T) {
 	mockTenantID(t, mock, 1)
 
 	arrayRows := sqlmock.NewRows([]string{"array"})
-	mock.ExpectQuery("SELECT server FROM deliveryservice_server").WillReturnRows(arrayRows)
+	mock.ExpectQuery("SELECT ds.server FROM deliveryservice_server").WillReturnRows(arrayRows)
 
 	rows := sqlmock.NewRows([]string{"required_capability", "deliveryservice_id", "last_updated"}).AddRow(
 		util.StrPtr("mem"),

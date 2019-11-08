@@ -24,6 +24,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -181,11 +182,14 @@ AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 		}
 		eligible := true
 
-		for _, dsc := range s.DeliveryServiceCapabilities {
-			if !util.ContainsStr(s.ServerCapabilities, dsc) {
-				eligible = false
+		if !strings.HasPrefix(s.Type, "ORG") {
+			for _, dsc := range s.DeliveryServiceCapabilities {
+				if !util.ContainsStr(s.ServerCapabilities, dsc) {
+					eligible = false
+				}
 			}
 		}
+
 		if eligible {
 			servers = append(servers, s)
 		}

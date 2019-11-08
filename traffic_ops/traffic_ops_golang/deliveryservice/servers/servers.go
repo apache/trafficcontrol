@@ -448,6 +448,24 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 // ValidateServerCapabilities checks that the delivery service's requirements are met by each server to be assigned.
 func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (error, error, int) {
+	nonOriginServerNames := []string{}
+	nonOriginTypeQuery := `
+	SELECT ARRAY(
+		SELECT s.host_name
+		FROM server s
+		JOIN type t ON s.type = t.id
+		WHERE t.name LIKE 'EDGE%' AND s.host_name = ANY($1)
+	)`
+
+	serverNamePqArray := pq.Array(serverNames)
+
+	if err := tx.QueryRow(nonOriginTypeQuery, serverNamePqArray).Scan(pq.Array(&nonOriginServerNames)); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil, http.StatusOK
+		}
+		return nil, err, http.StatusInternalServerError
+	}
+
 	var sCaps []string
 	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
 
@@ -455,14 +473,14 @@ func ValidateServerCapabilities(dsID int, serverNames []string, tx *sql.Tx) (err
 		return nil, err, http.StatusInternalServerError
 	}
 
-	for _, name := range serverNames {
+	for _, name := range nonOriginServerNames {
 		sCaps, err = dbhelpers.GetServerCapabilitiesFromName(name, tx)
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
 		for _, dsc := range dsCaps {
 			if !util.ContainsStr(sCaps, dsc) {
-				return errors.New(fmt.Sprintf("Caching server cannot be assigned to this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, name)), nil, http.StatusBadRequest
+				return fmt.Errorf("Caching server cannot be assigned to this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, name), nil, http.StatusBadRequest
 			}
 		}
 	}

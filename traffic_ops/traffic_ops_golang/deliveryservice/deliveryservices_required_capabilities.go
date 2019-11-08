@@ -275,9 +275,12 @@ func (rc *RequiredCapability) ensureDSServerCap() (error, error, int) {
 	dsServerIDs := []int64{}
 	if err := tx.Tx.QueryRow(`
 	SELECT ARRAY(
-		SELECT server 
-		FROM deliveryservice_server 
-		WHERE deliveryservice=$1
+		SELECT ds.server 
+		FROM deliveryservice_server ds
+		JOIN server s ON ds.server = s.id
+		JOIN type t ON s.type = t.id
+		WHERE ds.deliveryservice=$1
+		AND NOT t.name LIKE 'ORG%'
 	)`, rc.DeliveryServiceID).Scan(pq.Array(&dsServerIDs)); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("reading delivery service %v servers: %v", *rc.DeliveryServiceID, err), http.StatusInternalServerError
 	}
@@ -292,13 +295,9 @@ func (rc *RequiredCapability) ensureDSServerCap() (error, error, int) {
 	SELECT ARRAY(
 		SELECT server
 		FROM server_server_capability 
-		WHERE server IN (
-			SELECT server 
-			FROM deliveryservice_server 
-			WHERE deliveryservice=$1
-		)
+		WHERE server = ANY($1)
 		AND server_capability=$2
-	)`, rc.DeliveryServiceID, rc.RequiredCapability).Scan(pq.Array(&capServerIDs)); err != nil && err != sql.ErrNoRows {
+	)`, pq.Array(dsServerIDs), rc.RequiredCapability).Scan(pq.Array(&capServerIDs)); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("reading servers that have server capability %v attached: %v", *rc.RequiredCapability, err), http.StatusInternalServerError
 	}
 
