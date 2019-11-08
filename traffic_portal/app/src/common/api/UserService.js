@@ -113,43 +113,6 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
         );
     };
 
-    this.getUnassignedUserDeliveryServices = function(userId) {
-        return $http.get(ENV.api['root'] + "user/" + userId + "/deliveryservices/available").then(
-            function(result) {
-                return result.data.response;
-            },
-            function(err) {
-                throw err;
-            }
-        );
-    };
-
-    this.deleteUserDeliveryService = function(userId, dsId) {
-        return $http.delete(ENV.api['root'] + 'deliveryservice_user/' + dsId + '/' + userId).then(
-            function(result) {
-                messageModel.setMessages([ { level: 'success', text: 'User and delivery service were unlinked.' } ], false);
-                return result;
-            },
-            function(err) {
-                messageModel.setMessages(err.data.alerts, true);
-                throw err;
-            }
-        );
-    };
-
-    this.assignUserDeliveryServices = function(userId, deliveryServices) {
-        return $http.post(ENV.api['root'] + 'deliveryservice_user', { userId: userId, deliveryServices: deliveryServices, replace: true } ).then(
-            function(result) {
-                messageModel.setMessages([ { level: 'success', text: 'Delivery services linked to user' } ], false);
-                return result;
-            },
-            function(err) {
-                messageModel.setMessages(err.data.alerts, false);
-                throw err;
-            }
-        );
-    };
-
     this.registerUser = function(registration) {
         return $http.post(ENV.api['root'] + "users/register", registration).then(
             function(result) {
