@@ -330,7 +330,7 @@ This configuration file is mostly generated from various server data, but can be
 
 logging.config
 ''''''''''''''
-This configuration file can only be affect by Parameters with specific :ref:`Names <parameter-name>`. Specifically, for each Parameter assigned to this Config File on the :ref:`Profile <profiles>` used by the :term:`cache server` with the name :file:`LogFormat{N}.Name` where ``N`` is either the empty string or a natural number on the interval [1,9] the text in :ref:`logging.config-format-snippet` will be inserted. In that snippet, ``NAME`` is the Value_ of the Parameter with the :ref:`parameter-name` :file:`LogFormat{N}.Name`, and ``FORMAT`` is the Value_ of the Parameter with the :ref:`parameter-name` :file:`LogFormat{N}.Format` for the same value of ``N``\ [#logs-format]_.
+This configuration file can only be affected by Parameters with specific :ref:`Names <parameter-name>`. Specifically, for each Parameter assigned to this Config File on the :ref:`Profile <profiles>` used by the :term:`cache server` with the name :file:`LogFormat{N}.Name` where ``N`` is either the empty string or a natural number on the interval [1,9] the text in :ref:`logging.config-format-snippet` will be inserted. In that snippet, ``NAME`` is the Value_ of the Parameter with the :ref:`parameter-name` :file:`LogFormat{N}.Name`, and ``FORMAT`` is the Value_ of the Parameter with the :ref:`parameter-name` :file:`LogFormat{N}.Format` for the same value of ``N``\ [#logs-format]_.
 
 .. _logging.config-format-snippet:
 
