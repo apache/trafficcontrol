@@ -146,7 +146,7 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 				return result.data.response;
 			},
 			function (err) {
-				return throw err;
+				throw err;
 			}
 		);
 	};
