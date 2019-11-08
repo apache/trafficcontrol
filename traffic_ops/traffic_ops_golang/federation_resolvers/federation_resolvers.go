@@ -19,6 +19,8 @@ package federation_resolvers
  * under the License.
  */
 
+import "database/sql"
+import "encoding/json"
 import "fmt"
 import "net/http"
 
@@ -157,22 +159,89 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	var result tc.FederationResolver
-	err := tx.QueryRow(deleteQuery, inf.IntParams["id"]).Scan(&result.ID, &result.IPAddress, &result.Type)
-	if err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+	userErr, sysErr, statusCode, alert, respObj := delete(inf)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alert.Text, respObj)
+}
+
+func delete(inf *api.APIInfo) (error, error, int, tc.Alert, tc.FederationResolver) {
+	var userErr error
+	var sysErr error
+	var statusCode = http.StatusOK
+	var alert tc.Alert
+	var result tc.FederationResolver
+
+	err := inf.Tx.Tx.QueryRow(deleteQuery, inf.IntParams["id"]).Scan(&result.ID, &result.IPAddress, &result.Type)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			userErr = fmt.Errorf("No federation resolver by ID %d", inf.IntParams["id"])
+			statusCode = http.StatusNotFound
+		} else {
+			userErr, sysErr, statusCode = api.ParseDBError(err)
+		}
+		return userErr, sysErr, statusCode, alert, result
 	}
 
 	changeLogMsg := fmt.Sprintf("FEDERATION_RESOLVER: %s, ID: %d, ACTION: Deleted", *result.IPAddress, *result.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
 
 	alertMsg := fmt.Sprintf("Federation resolver deleted [ IP = %s ] with id: %d", *result.IPAddress, *result.ID)
-	if inf.Version.Major < 2 && inf.Version.Minor < 4 {
-		api.WriteRespAlert(w, r, tc.SuccessLevel, alertMsg)
+	alert = tc.Alert {
+		Level: tc.SuccessLevel.String(),
+		Text: alertMsg,
+	}
+
+	return userErr, sysErr, statusCode, alert, result
+}
+
+func DeleteByID(w http.ResponseWriter, r *http.Request) {
+	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if sysErr != nil || userErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	userErr, sysErr, statusCode, alert, respObj := delete(inf)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, result)
+	var resp = struct {
+		tc.Alerts
+		Response *tc.FederationResolver `json:"response,omitempty"`
+	} {
+		tc.Alerts{
+			Alerts: []tc.Alert{
+				alert,
+				tc.Alert{
+					Level: tc.WarnLevel.String(),
+					Text: "This endpoint is deprecated, please use '/federation_resolvers' instead",
+				},
+			},
+		},
+		&respObj,
+	}
+
+	if inf.Version.Major < 2 && inf.Version.Minor < 4 {
+		resp.Response = nil
+	}
+
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		sysErr = fmt.Errorf("marhsaling response: %v", err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.WriteHeader(statusCode)
+	w.Write(append(respBts, '\n'))
 }
