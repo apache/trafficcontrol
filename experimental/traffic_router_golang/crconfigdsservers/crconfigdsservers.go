@@ -1,5 +1,9 @@
 package crconfigdsservers
 
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -28,8 +32,8 @@ type DSServer struct {
 	DSFQDNs []string // TOOD determine if neccessary, how to index
 }
 
-type DSServer struct {
-	DirectMatches                      map[string]tc.DeliveryServiceName
-	DotStartSlashDotFooSlashDotDotStar map[string]tc.DeliveryServiceName
-	RegexMatch                         map[*regexp.Regexp]tc.DeliveryServiceName
-}
+// type DSServer struct {
+// 	DirectMatches                      map[string]tc.DeliveryServiceName
+// 	DotStartSlashDotFooSlashDotDotStar map[string]tc.DeliveryServiceName
+// 	RegexMatch                         map[*regexp.Regexp]tc.DeliveryServiceName
+// }

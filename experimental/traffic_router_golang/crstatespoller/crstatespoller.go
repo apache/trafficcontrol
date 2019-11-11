@@ -26,10 +26,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/availableservers"
-	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/crconfig"
-	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/crstates"
-	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/fetch"
+	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/availableservers"
+	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/crconfig"
+	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/crstates"
+	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/fetch"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -65,7 +65,7 @@ func Start(fetcher fetch.Fetcher, interval time.Duration, crc crconfig.Ths) (crs
 	thsCrs := crstates.NewThs()
 	availableServers := availableservers.New()
 	prevBts := []byte{}
-	prevCrs := (*tc.CRStates)(nil)
+	// prevCrs := (*tc.CRStates)(nil)
 
 	get := func() {
 		newBts, err := fetcher.Fetch()
@@ -88,7 +88,7 @@ func Start(fetcher fetch.Fetcher, interval time.Duration, crc crconfig.Ths) (crs
 
 		thsCrs.Set(crs)
 		prevBts = newBts
-		prevCrs = crs
+		// prevCrs = crs
 
 		updateAvailableServers(crc, thsCrs, availableServers) // TODO update AvailableServers when CRStates OR CRConfig is update, via channel and manager goroutine?
 

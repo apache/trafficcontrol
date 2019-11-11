@@ -8,9 +8,9 @@ package main
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package main
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"crypto/tls"
@@ -28,8 +27,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/test/router/load"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"net/http/cookiejar"
+	"net/url"
 )
 
 var done chan struct{}
@@ -67,7 +66,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		url := fmt.Sprintf("https://%v/api/1.2/user/login", r.URL.Query().Get("opsHost"))
 
 		resp, err := client.Post(url, "application/json", r.Body)
-		defer resp.Body.Close();
+		defer resp.Body.Close()
 
 		if err != nil {
 			fmt.Println("Failed to proxy authentication to traffic ops", err.Error())
@@ -82,16 +81,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		opsCookies = resp.Cookies()
-		fmt.Println("ops cookies",opsCookies)
+		fmt.Println("ops cookies", opsCookies)
 
 		for _, cookie := range resp.Cookies() {
-			fmt.Println("cookie",cookie)
+			fmt.Println("cookie", cookie)
 			http.SetCookie(w, cookie)
 		}
 
 		fmt.Println("woo-hoo I think I proxied authentication!!!")
 
-		w.Write([]byte(fmt.Sprintf("{\"opsHost\":\"%v\"}", r.URL.Query().Get("opsHost"))));
+		w.Write([]byte(fmt.Sprintf("{\"opsHost\":\"%v\"}", r.URL.Query().Get("opsHost"))))
 		return
 	}
 
@@ -107,8 +106,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		u, err := url.Parse(urlString)
 
 		if err != nil {
-			fmt.Println("Failed parsing", urlString,err.Error())
-			w.WriteHeader(500);
+			fmt.Println("Failed parsing", urlString, err.Error())
+			w.WriteHeader(500)
 			return
 		}
 
@@ -124,7 +123,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(opsCookies)
 		fmt.Println("BBBB")
 
-		fmt.Println("client",client)
+		fmt.Println("client", client)
 		fmt.Println("jar", client.Jar)
 
 		client.Jar, err = cookiejar.New(nil)
@@ -155,7 +154,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 		}
 
-		fmt.Println("proxying response",string(buf))
+		fmt.Println("proxying response", string(buf))
 		w.Write(buf)
 		return
 	}
