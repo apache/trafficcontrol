@@ -38,6 +38,20 @@ under the License.
     </div>
     <div class="widget_summary">
         <div class="w_left w_25">
+            <span>Deep Coverage Zone</span>
+        </div>
+        <div class="w_center w_55">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" ng-style="{'width': deepCoverageZone + '%'}" style="background-color: #3063BD;"></div>
+            </div>
+        </div>
+        <div class="w_right w_20">
+            <span>{{deepCoverageZone | number:3}}%</span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="widget_summary">
+        <div class="w_left w_25">
             <span>3rd Party</span>
         </div>
         <div class="w_center w_55">
