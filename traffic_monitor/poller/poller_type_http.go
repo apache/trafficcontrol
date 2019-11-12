@@ -117,7 +117,7 @@ func httpPoll(ctxI interface{}, url string, host string, pollID uint64) ([]byte,
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		reqEnd := time.Now()
 		reqTime := reqEnd.Sub(startReq) // note this is the time to transfer the entire body, not just the roundtrip
-    return nil, reqEnd, reqTime, fmt.Errorf("id %v url %v fetch error: bad HTTP status: %v", ctx.PollerID, url, resp.StatusCode)
+		return nil, reqEnd, reqTime, fmt.Errorf("id %v url %v fetch error: bad HTTP status: %v", ctx.PollerID, url, resp.StatusCode)
 	}
 
 	bts, err := ioutil.ReadAll(resp.Body)
