@@ -22,146 +22,124 @@ under the License.
     <div class="clearfix"></div>
 </div>
 <div class="x_content">
-    <div class="widget_summary">
+    <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <span>Native</span>
+            <label for="cz-meter">Native</label>
         </div>
         <div class="w_center w_55">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" ng-style="{'width': native + '%'}" style="background-color: #357EBD;"></div>
-            </div>
+            <meter id="cz-meter" min="0" max="100" value="{{native | number:3}}"> {{native | number:3}}% </meter>
         </div>
         <div class="w_right w_20">
             <span>{{native | number:3}}%</span>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="widget_summary">
+    <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <span>Deep Coverage Zone</span>
+            <label for="deep-cz-meter">Deep Coverage Zone</label>
         </div>
         <div class="w_center w_55">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" ng-style="{'width': deepCoverageZone + '%'}" style="background-color: #3063BD;"></div>
-            </div>
+            <meter id="deep-cz-meter" min="0" max="100" value="{{deepCoverageZone | number:3}}"> {{deepCoverageZone | number:3}}% </meter>
         </div>
         <div class="w_right w_20">
             <span>{{deepCoverageZone | number:3}}%</span>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="widget_summary">
+    <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <span>3rd Party</span>
+            <label for="third-party-meter">3rd Party</label>
         </div>
         <div class="w_center w_55">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" ng-style="{'width': thirdParty + '%'}" style="background-color: #263C53;"></div>
-            </div>
+            <meter id="third-party-meter" min="0" max="100" value="{{thirdParty | number:3}}"> {{thirdParty | number:3}}% </meter>
         </div>
         <div class="w_right w_20">
             <span>{{thirdParty | number:3}}%</span>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="widget_summary">
+    <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <span>Federated</span>
+            <label for="fed-meter">Federated</label>
         </div>
         <div class="w_center w_55">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" ng-style="{'width': federated + '%'}" style="background-color: #8a00e6;"></div>
-            </div>
+            <meter id="fed-meter" min="0" max="100" value="{{federated | number:3}}"> {{federated | number:3}}% </meter>
         </div>
         <div class="w_right w_20">
             <span>{{federated | number:3}}%</span>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="widget_summary">
+    <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <span>Miss</span>
+            <label for="miss-meter">Miss</label>
         </div>
         <div class="w_center w_55">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" ng-style="{'width': miss + '%'}" style="background-color: #a94442;"></div>
-            </div>
+            <meter id="miss-meter" min="0" max="100" value="{{miss | number:3}}"> {{miss | number:3}}% </meter>
         </div>
         <div class="w_right w_20">
             <span>{{miss | number:3}}%</span>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="widget_summary">
+    <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <span>Static</span>
+            <label for="static-meter">Static</label>
         </div>
         <div class="w_center w_55">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" ng-style="{'width': static + '%'}" style="background-color: #cccccc;"></div>
-            </div>
+            <meter id="static-meter" min="0" max="100" value="{{static | number:3}}"> {{static | number:3}}% </meter>
         </div>
         <div class="w_right w_20">
             <span>{{static | number:3}}%</span>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="widget_summary">
+    <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <span>DSR</span>
+            <label for="dsr-meter">DSR</label>
         </div>
         <div class="w_center w_55">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" ng-style="{'width': dsr + '%'}" style="background-color: #3c763d;"></div>
-            </div>
+            <meter id="dsr-meter" min="0" max="100" value="{{dsr | number:3}}"> {{dsr | number:3}}% </meter>
         </div>
         <div class="w_right w_20">
             <span>{{dsr | number:3}}%</span>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="widget_summary">
+    <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <span>Error</span>
+            <label for="err-meter">Error</label>
         </div>
         <div class="w_center w_55">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" ng-style="{'width': error + '%'}" style="background-color: #E74C3C"></div>
-            </div>
+            <meter id="err-meter" min="0" max="100" value="{{error | number:3}}"> {{error | number:3}}% </meter>
         </div>
         <div class="w_right w_20">
             <span>{{error | number:3}}%</span>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="widget_summary">
+    <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <span>Regional Alternate</span>
+            <label for="reg-alt-meter">Regional Alternate</label>
         </div>
         <div class="w_center w_55">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" ng-style="{'width': regionalAlternate + '%'}" style="background-color: #666666;"></div>
-            </div>
+            <meter id="reg-alt-meter" min="0" max="100" value="{{regionalAlternate | number:3}}"> {{regionalAlternate | number:3}}% </meter>
         </div>
         <div class="w_right w_20">
             <span>{{regionalAlternate | number:3}}%</span>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="widget_summary">
+    <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <span>Regional Denied</span>
+            <label for="reg-den-meter">Regional Denied</label>
         </div>
         <div class="w_center w_55">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" ng-style="{'width': regionalDenied + '%'}" style="background-color: #666666;"></div>
-            </div>
+            <meter id="reg-den-meter" min="0" max="100" value="{{regionalDenied | number:3}}"> {{regionalDenied | number:3}}% </meter>
         </div>
         <div class="w_right w_20">
             <span>{{regionalDenied | number:3}}%</span>
         </div>
         <div class="clearfix"></div>
     </div>
-
 </div>
-
