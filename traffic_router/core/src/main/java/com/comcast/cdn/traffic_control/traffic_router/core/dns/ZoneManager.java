@@ -480,12 +480,12 @@ public class ZoneManager extends Resolver {
 		final List<Record> list = zoneMap.get(domain);
 		final Name admin = newName(ZoneUtils.getAdminString(soa, "admin", "traffic_ops", domain));
 		list.add(new SOARecord(name, DClass.IN,
-				ZoneUtils.getLong(ttl, "SOA", 86400), getGlueName(ds, trafficRouters.get(hostname), name, hostname), admin,
-				ZoneUtils.getLong(soa, "serial", ZoneUtils.getSerial(data.getStats())),
-				ZoneUtils.getLong(soa, "refresh", 28800),
-				ZoneUtils.getLong(soa, "retry", 7200),
-				ZoneUtils.getLong(soa, "expire", 604800),
-				ZoneUtils.getLong(soa, "minimum", 60)));
+		ZoneUtils.getLong(ttl, "SOA", 86400), getGlueName(ds, trafficRouters.get(hostname), name, hostname), admin,
+		ZoneUtils.getLong(soa, "serial", ZoneUtils.getSerial(data.getStats())),
+		ZoneUtils.getLong(soa, "refresh", 28800),
+		ZoneUtils.getLong(soa, "retry", 7200),
+		ZoneUtils.getLong(soa, "expire", 604800),
+		ZoneUtils.getLong(soa, "minimum", 60)));
 		addTrafficRouters(list, trafficRouters, name, ttl, domain, ds);
 		addStaticDnsEntries(list, ds, domain);
 
@@ -552,7 +552,7 @@ public class ZoneManager extends Resolver {
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static void primeDNSDeliveryServices(final String domain, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> dzc,
-			final Zone zone, final DeliveryService ds, final CacheRegister data) throws TextParseException {
+		final Zone zone, final DeliveryService ds, final CacheRegister data) throws TextParseException {
 		final Name edgeName = newName(ds.getRoutingName(), domain);
 		final JsonNode config = data.getConfig();
 		final int primerLimit = JsonUtils.optInt(config, "dynamic.cache.primer.limit", DEFAULT_PRIMER_LIMIT);
