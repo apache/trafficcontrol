@@ -49,7 +49,7 @@ Request Structure
 Response Structure
 ------------------
 :cz:                The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Coverage Zone File`
-:deepCz:            The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a Deep :term:`Coverage Zone File`
+:deepCz:            The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Deep Coverage Zone File`
 :dsr:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to an overflow :term:`Delivery Service`
 :err:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that resulted in an error
 :fed:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to a federated CDN
