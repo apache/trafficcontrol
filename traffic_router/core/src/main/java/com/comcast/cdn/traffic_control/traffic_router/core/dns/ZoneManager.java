@@ -727,7 +727,11 @@ public class ZoneManager extends Resolver {
 	}
 
 	private static Name newName(final String hostname, final String domain) throws TextParseException {
-		return newName(hostname + "." + domain);
+		if ("".equals(hostname)) {
+			return newName(domain);
+		} else {
+			return newName(hostname + "." + domain);
+		}
 	}
 
 	private static Name newName(final String fqdn) throws TextParseException {
