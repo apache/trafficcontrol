@@ -673,7 +673,7 @@ public class ZoneManager extends Resolver {
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static void addTrafficRouters(final List<Record> list, final JsonNode trafficRouters, final Name name,
-			final JsonNode ttl, final String domain, final DeliveryService ds)
+		final JsonNode ttl, final String domain, final DeliveryService ds)
 					throws TextParseException, UnknownHostException {
 		final boolean ip6RoutingEnabled = (ds == null || (ds != null && ds.isIp6RoutingEnabled())) ? true : false;
 
