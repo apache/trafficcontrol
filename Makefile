@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+.PHONY: lint unit
 
 lint:
 	@echo ? Running golangci-lint
