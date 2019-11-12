@@ -80,6 +80,9 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
     $scope.server = server;
 
+    $scope.server.ip6IsService = $scope.server.ip6IsService === undefined ? true : $scope.server.ip6IsService;
+    $scope.server.ipIsService = $scope.server.ipIsService === undefined ? true: $scope.server.ipIsService;
+
     $scope.falseTrue = [
         { value: true, label: 'true' },
         { value: false, label: 'false' }
@@ -157,6 +160,47 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.hasError = formUtils.hasError;
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
+
+    $scope.oneInputHasPropertyError = formUtils.oneInputHasPropertyError;
+
+    $scope.elementId = '';
+
+    $scope.toggleIpAddressRequired = function(elementId) {
+        var elementToChange = elementId === 'ipAddress' ? 'ip6Address' : 'ipAddress';
+
+        if (document.getElementById(elementId).value === '') {
+            document.getElementById(elementToChange).required = true;
+            // document.getElementById(elementToChange).setAttribute('required', 'required');
+        } else {
+            document.getElementById(elementToChange).required = false;
+            // document.getElementById(elementToChange).setAttribute('required', '');
+        }
+    };
+
+    $scope.toggleIpGatewayRequired = function(elementId) {
+        var elementToChange = elementId === 'ipGateway' ? 'ip6Gateway' : 'ipGateway';
+
+        if (document.getElementById(elementId).value === '') {
+            document.getElementById(elementToChange).required = true;
+            // document.getElementById(elementToChange).setAttribute('required', 'required');
+        } else {
+            document.getElementById(elementToChange).required = false;
+            // document.getElementById(elementToChange).setAttribute('required', '');
+        }
+    };
+
+    $scope.isIPv4 = function() {
+        return document.getElementById('ipAddress').value !== '';
+    };
+    $scope.isIPv6 = function() {
+        return document.getElementById('ip6Address').value !== '';
+    };
+    $scope.IpAddressesBothBlank = function() {
+        return document.getElementById('ipAddress').value === '' && document.getElementById('ip6Address').value === '';
+    };
+    // $scope.IpGatewaysBothBlank = function() {
+    //     return document.getElementById('ipGateway').value === '' && document.getElementById('ip6Gateway').value === '';
+    // };
 
     var init = function () {
         getPhysLocations();

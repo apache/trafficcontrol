@@ -111,7 +111,7 @@ func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 
 	// TODO select deliveryservices as array?
 	q := `
-select s.host_name, cg.name as cachegroup, concat(s.host_name, '.', s.domain_name) as fqdn, s.xmpp_id as hashid, s.https_port, s.interface_name, s.ip_address, s.ip6_address, s.tcp_port, p.name as profile_name, cast(p.routing_disabled as int), st.name as status, t.name as type
+select s.host_name, cg.name as cachegroup, concat(s.host_name, '.', s.domain_name) as fqdn, s.xmpp_id as hashid, s.https_port, s.interface_name, case when s.ip_address_is_service = true then s.ip_address else '' end, case when s.ip6_address_is_service = true then s.ip6_address else '' end, s.tcp_port, p.name as profile_name, cast(p.routing_disabled as int), st.name as status, t.name as type
 from server as s
 inner join cachegroup as cg ON cg.id = s.cachegroup
 inner join type as t on t.id = s.type

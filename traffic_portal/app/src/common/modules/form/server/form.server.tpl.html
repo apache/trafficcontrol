@@ -133,20 +133,21 @@ under the License.
                     <span ng-show="hasError(serverForm.interfaceName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipAddress), 'has-feedback': hasError(serverForm.ipAddress)}">
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipAddress) && hasError(serverForm.ip6Address), 'has-feedback': hasError(serverForm.ipAddress) && hasError(serverForm.ip6Address)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Network IP *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ipAddress" type="text" class="form-control" ng-model="server.ipAddress" ng-maxlength="45" ng-pattern="ipRegex()" required autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipAddress, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipAddress, 'maxlength')">Too Long</small>
+                    <input name="ipAddress" id="ipAddress" type="text" class="form-control" ng-model="server.ipAddress" ng-maxlength="45" ng-pattern="ipRegex()" ng-change="toggleIpAddressRequired('ipAddress')" ng-required="IpAddressesBothBlank()" autofocus>
+                    <small class="input-error" ng-show="oneInputHasPropertyError('required', serverForm.ip6Address, serverForm.ipAddress)">At Least One IP Address Is Required</small>
+					<small ng-if="server.ipAddress && server.ipAddress !== ''"><input id="ipIsService" ng-model="server.ipIsService" type="checkbox" name="ipIsService" title="This IP Address will be used for ATS to serve traffic">  Is Service Address</small>
+					<small class="input-error" ng-show="hasPropertyError(serverForm.ipAddress, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipAddress, 'pattern')">Invalid</small>
-                    <span ng-show="hasError(serverForm.ipAddress)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <span ng-show="hasError(serverForm.ipAddress) && hasError(serverForm.ip6Address)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipNetmask), 'has-feedback': hasError(serverForm.ipNetmask)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Network Subnet *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ipNetmask" type="text" class="form-control" ng-model="server.ipNetmask" ng-maxlength="45" ng-pattern="validations.ipRegex" required autofocus>
+                    <input name="ipNetmask" type="text" class="form-control" ng-model="server.ipNetmask" ng-maxlength="45" ng-pattern="validations.ipRegex" ng-required="IpAddressesBothBlank() || isIPv4()" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipNetmask, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipNetmask, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipNetmask, 'pattern')">Invalid</small>
@@ -156,7 +157,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipGateway), 'has-feedback': hasError(serverForm.ipGateway)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Network Gateway *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ipGateway" type="text" class="form-control" ng-model="server.ipGateway" ng-maxlength="45" ng-pattern="ipRegex()" required autofocus>
+                    <input name="ipGateway" id="ipGateway" type="text" class="form-control" ng-model="server.ipGateway" ng-maxlength="45" ng-pattern="ipRegex()" ng-change="toggleIpGatewayRequired('ipGateway')" ng-required="IpAddressesBothBlank() || isIPv4()" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipGateway, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipGateway, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ipGateway, 'pattern')">Invalid</small>
@@ -182,18 +183,20 @@ under the License.
                     <small ng-show="server.physLocationId"><a href="/#!/phys-locations/{{server.physLocationId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(serverForm.ip6Address), 'has-feedback': hasError(serverForm.ip6Address)}">
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.ip6Address) && hasError(serverForm.ipAddress), 'has-feedback': hasError(serverForm.ip6Address) && hasError(serverForm.ipAddress)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Address</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ip6Address" type="text" class="form-control" ng-model="server.ip6Address" ng-maxlength="50" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.ip6Address, 'maxlength')">Too Long</small>
-                    <span ng-show="hasError(serverForm.ip6Address)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <input name="ip6Address" id="ip6Address" type="text" class="form-control" ng-model="server.ip6Address" ng-maxlength="50" ng-change="toggleIpAddressRequired('ip6Address');" ng-required="IpAddressesBothBlank()" autofocus>
+					<small class="input-error" ng-show="oneInputHasPropertyError('required', serverForm.ip6Address, serverForm.ipAddress)">At Least One IP Address Is Required</small>
+					<small ng-if="server.ip6Address && server.ip6Address !== ''"><input id="ip6IsService" type="checkbox" ng-model="server.ip6IsService" name="ip6IsService" title="This IP Address will be used for ATS to serve traffic" checked>  Is Service Address</small>
+					<small class="input-error" ng-show="hasPropertyError(serverForm.ip6Address, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.ip6Address) && hasError(serverForm.ipAddress)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.ip6Gateway), 'has-feedback': hasError(serverForm.ip6Gateway)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Gateway</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ip6Gateway" type="text" class="form-control" ng-model="server.ip6Gateway" ng-maxlength="50" autofocus>
+                    <input name="ip6Gateway"  id="ip6Gateway" type="text" class="form-control" ng-model="server.ip6Gateway" ng-maxlength="50" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.ip6Gateway, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(serverForm.ip6Gateway)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>

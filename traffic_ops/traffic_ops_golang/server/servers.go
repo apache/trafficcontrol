@@ -95,6 +95,14 @@ func (s *TOServer) Validate() error {
 	s.Sanitize()
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
+	errs := []error{}
+	if server.IPAddress == nil && server.IP6Address == nil {
+		errs = append(errs, tc.NeedsAtLeastOneIPError)
+	}
+
+	if server.IPGateway == nil && server.IP6Gateway == nil {
+		errs = append(errs, tc.NeedsAtLeastOneGatewayError)
+	}
 	validateErrs := validation.Errors{
 		"cachegroupId":   validation.Validate(s.CachegroupID, validation.NotNil),
 		"cdnId":          validation.Validate(s.CDNID, validation.NotNil),
@@ -102,10 +110,6 @@ func (s *TOServer) Validate() error {
 		"hostName":       validation.Validate(s.HostName, validation.NotNil, noSpaces),
 		"interfaceMtu":   validation.Validate(s.InterfaceMtu, validation.NotNil),
 		"interfaceName":  validation.Validate(s.InterfaceName, validation.NotNil),
-		"ipAddress":      validation.Validate(s.IPAddress, validation.NotNil, is.IPv4),
-		"ipNetmask":      validation.Validate(s.IPNetmask, validation.NotNil),
-		"ipGateway":      validation.Validate(s.IPGateway, validation.NotNil),
-		"ip6Address":     validation.Validate(s.IP6Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress)),
 		"physLocationId": validation.Validate(s.PhysLocationID, validation.NotNil),
 		"profileId":      validation.Validate(s.ProfileID, validation.NotNil),
 		"statusId":       validation.Validate(s.StatusID, validation.NotNil),
@@ -114,7 +118,15 @@ func (s *TOServer) Validate() error {
 		"httpsPort":      validation.Validate(s.HTTPSPort, validation.By(tovalidate.IsValidPortNumber)),
 		"tcpPort":        validation.Validate(s.TCPPort, validation.By(tovalidate.IsValidPortNumber)),
 	}
-	errs := tovalidate.ToErrors(validateErrs)
+	if s.IPAddress != nil && *s.IPAddress != "" {
+		validateErrs["ipAddress"] = validation.Validate(s.IPAddress, is.IPv4)
+		validateErrs["ipNetmask"] = validation.Validate(s.IPNetmask, validation.NotNil)
+		validateErrs["ipGateway"] = validation.Validate(s.IPGateway, validation.NotNil)
+	}
+	if s.IP6Address != nil && *s.IP6Address != "" {
+		validateErrs["ip6Address"] = validation.Validate(s.IP6Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress))
+	}
+	errs = tovalidate.ToErrors(validateErrs)
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)
 	}
@@ -174,6 +186,14 @@ func (s TOServer) ChangeLogMessage(action string) (string, error) {
 }
 
 func (s *TOServer) Read() ([]interface{}, error, error, int) {
+	version := s.APIInfo().Version
+	if version == nil {
+		return nil, nil, errors.New("TODeliveryService.Read called with nil API version"), http.StatusInternalServerError
+	}
+	if version.Major != 1 || version.Minor < 1 {
+		return nil, nil, fmt.Errorf("TODeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+	}
+
 	returnable := []interface{}{}
 
 	servers, userErr, sysErr, errCode := getServers(s.ReqInfo.Params, s.ReqInfo.Tx, s.ReqInfo.User)
@@ -183,7 +203,15 @@ func (s *TOServer) Read() ([]interface{}, error, error, int) {
 	}
 
 	for _, server := range servers {
-		returnable = append(returnable, server)
+		switch {
+		// NOTE: it's required to handle minor version cases in a descending >= manner
+		case version.Minor >= 4:
+			returnable = append(returnable, server)
+		case version.Minor >= 1:
+			returnable = append(returnable, server.ServerNullableV11)
+		default:
+			return nil, nil, fmt.Errorf("TOServer.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError
+		}
 	}
 
 	return returnable, nil, nil, http.StatusOK
@@ -350,6 +378,27 @@ func (s *TOServer) Update() (error, error, int) {
 		}
 	}
 
+	current := TOServer{}
+	err := s.ReqInfo.Tx.QueryRowx(selectV14UpdatesQuery() + ` WHERE sv.id=` + strconv.Itoa(*sv.ID)).StructScan(&current)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+	defaultIsService := true
+	if s.IPIsService == nil {
+		if current.IPIsService != nil {
+			s.IPIsService = current.IPIsService
+		} else {
+			s.IPIsService = &defaultIsService
+		}
+	}
+	if s.IP6IsService == nil {
+		if current.IP6IsService != nil {
+			s.IP6IsService = current.IP6IsService
+		} else {
+			s.IP6IsService = &defaultIsService
+		}
+	}
+
 	return api.GenericUpdate(s)
 }
 
@@ -362,10 +411,28 @@ func (s *TOServer) Create() (error, error, int) {
 		hostName := *s.HostName
 		s.XMPPID = &hostName
 	}
+
+	// default the is service field to true if omitted and to upgrade version < 1.4
+	defaultIsService := true
+	if s.IPIsService == nil {
+		s.IPIsService = &defaultIsService
+	}
+	if s.IP6IsService == nil {
+		s.IP6IsService = &defaultIsService
+	}
+
 	return api.GenericCreate(s)
 }
 
 func (s *TOServer) Delete() (error, error, int) { return api.GenericDelete(s) }
+
+func selectV14UpdatesQuery() string {
+	return `SELECT 
+sv.ip_address_is_service, 
+sv.ip6_address_is_service 
+FROM 
+	server sv`
+}
 
 func selectQuery() string {
 	const JumboFrameBPS = 9000
@@ -387,8 +454,10 @@ s.ilo_username,
 COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
 s.interface_name,
 s.ip6_address,
+s.ip6_address_is_service,
 s.ip6_gateway,
 s.ip_address,
+s.ip_address_is_service,
 s.ip_gateway,
 s.ip_netmask,
 s.last_updated,
@@ -438,8 +507,10 @@ ilo_password,
 interface_mtu,
 interface_name,
 ip6_address,
+ip6_address_is_service,
 ip6_gateway,
 ip_address,
+ip_address_is_service,
 ip_netmask,
 ip_gateway,
 mgmt_ip_address,
@@ -471,8 +542,10 @@ xmpp_passwd
 :interface_mtu,
 :interface_name,
 :ip6_address,
+:ip6_address_is_service,
 :ip6_gateway,
 :ip_address,
+:ip_address_is_service,
 :ip_netmask,
 :ip_gateway,
 :mgmt_ip_address,
@@ -510,8 +583,10 @@ ilo_password=:ilo_password,
 interface_mtu=:interface_mtu,
 interface_name=:interface_name,
 ip6_address=:ip6_address,
+ip6_address_is_service=:ip6_address_is_service,
 ip6_gateway=:ip6_gateway,
 ip_address=:ip_address,
+ip_address_is_service=:ip_address_is_service,
 ip_netmask=:ip_netmask,
 ip_gateway=:ip_gateway,
 mgmt_ip_address=:mgmt_ip_address,
