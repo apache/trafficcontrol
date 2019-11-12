@@ -65,7 +65,6 @@ func Start(fetcher fetch.Fetcher, interval time.Duration, crc crconfig.Ths) (crs
 	thsCrs := crstates.NewThs()
 	availableServers := availableservers.New()
 	prevBts := []byte{}
-	// prevCrs := (*tc.CRStates)(nil)
 
 	get := func() {
 		newBts, err := fetcher.Fetch()
@@ -88,7 +87,6 @@ func Start(fetcher fetch.Fetcher, interval time.Duration, crc crconfig.Ths) (crs
 
 		thsCrs.Set(crs)
 		prevBts = newBts
-		// prevCrs = crs
 
 		updateAvailableServers(crc, thsCrs, availableServers) // TODO update AvailableServers when CRStates OR CRConfig is update, via channel and manager goroutine?
 

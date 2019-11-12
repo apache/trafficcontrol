@@ -31,9 +31,3 @@ type DSServer struct {
 	Name    string
 	DSFQDNs []string // TOOD determine if neccessary, how to index
 }
-
-// type DSServer struct {
-// 	DirectMatches                      map[string]tc.DeliveryServiceName
-// 	DotStartSlashDotFooSlashDotDotStar map[string]tc.DeliveryServiceName
-// 	RegexMatch                         map[*regexp.Regexp]tc.DeliveryServiceName
-// }

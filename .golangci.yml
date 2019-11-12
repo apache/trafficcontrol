@@ -32,12 +32,12 @@ linters:
   enable:
     - govet
     - errcheck
-    - unused
     - structcheck
     - varcheck
     - deadcode
     - typecheck
     - golint
     - gofmt
+    - staticcheck
 
 
