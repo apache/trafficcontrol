@@ -33,7 +33,7 @@ func AssignTestDeliveryService(t *testing.T) {
 	rs, _, err := TOSession.GetServerByHostName(testData.Servers[0].HostName)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
-	} else if rs == nil || len(rs) == 0 {
+	} else if len(rs) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
 	firstServer := rs[0]
@@ -41,7 +41,7 @@ func AssignTestDeliveryService(t *testing.T) {
 	rd, _, err := TOSession.GetDeliveryServiceByXMLID(testData.DeliveryServices[0].XMLID)
 	if err != nil {
 		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if rd == nil || len(rd) == 0 {
+	} else if len(rd) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
 	firstDS := rd[0]
@@ -61,11 +61,7 @@ func AssignTestDeliveryService(t *testing.T) {
 
 	var found bool
 	for _,ds := range response {
-		if ds.ID == nil {
-			continue
-		}
-
-		if *ds.ID == firstDS.ID {
+		if ds.ID != nil && *ds.ID == firstDS.ID {
 			found = true
 			break
 		}
@@ -91,7 +87,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	rs, _, err := TOSession.GetServerByHostName(server.HostName)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
-	} else if rs == nil || len(rs) == 0 {
+	} else if len(rs) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
 	server = &rs[0]
@@ -99,7 +95,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	rd, _, err := TOSession.GetDeliveryServiceByXMLID(testData.DeliveryServices[0].XMLID)
 	if err != nil {
 		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if rd == nil || len(rd) == 0 {
+	} else if len(rd) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
 	firstDS := rd[0]
@@ -117,11 +113,8 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 
 	var found bool
 	for _,ds := range response {
-		if ds.ID == nil {
-			continue
-		}
 
-		if *ds.ID == firstDS.ID {
+		if ds.ID != nil && *ds.ID == firstDS.ID {
 			found = true
 			break
 		}
