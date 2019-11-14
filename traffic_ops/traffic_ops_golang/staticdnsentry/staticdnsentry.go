@@ -20,6 +20,7 @@ package staticdnsentry
  */
 
 import (
+	"regexp"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -106,7 +107,7 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	}
 
 	errs := validation.Errors{
-		"host":              validation.Validate(staticDNSEntry.Host, validation.Required),
+		"host":              validation.Validate(staticDNSEntry.Host, validation.Required, validation.Match(regexp.MustCompile(`^([a-zA-Z0-9_@*]{1}[a-zA-Z0-9_-]{0,62}){1}(\.[a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62})*[\._]?$`))),
 		"address":           addressErr,
 		"deliveryserviceId": validation.Validate(staticDNSEntry.DeliveryServiceID, validation.Required),
 		"ttl":               validation.Validate(staticDNSEntry.TTL, validation.Required),
