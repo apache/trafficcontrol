@@ -74,16 +74,7 @@ func TestLogout(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	expiry := time.Now().Add(24 * time.Hour)
-	cookie := tocookie.New(testUser.UserName, expiry, "secret")
-	httpCookie := http.Cookie{
-		Name:     tocookie.Name,
-		Value:    cookie,
-		Path:     "/",
-		Expires:  expiry,
-		HttpOnly: true,
-	}
-
+	cookie := tocookie.GetCookie(testUser.UserName, 24*time.Hour, "secret")
 	rr := httptest.NewRecorder()
 	req, err := http.NewRequest(http.MethodPost, "/api/1.4/logout", nil)
 	if err != nil {
@@ -99,10 +90,10 @@ func TestLogout(t *testing.T) {
 	ctx = context.WithValue(ctx, api.APIRespWrittenKey, false)
 	ctx = context.WithValue(ctx, auth.CurrentUserKey, testUser)
 	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{})
-	ctx, _ = context.WithDeadline(ctx, expiry)
+	ctx, _ = context.WithDeadline(ctx, time.Now().Add(24*time.Hour))
 	req = req.WithContext(ctx)
 
-	req.AddCookie(&httpCookie)
+	req.AddCookie(cookie)
 	LogoutHandler("test")(rr, req)
 
 	if rr.Code != http.StatusOK {

@@ -19,6 +19,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -93,13 +94,12 @@ func NewRawMsg(msg, key []byte) string {
 	return base64Msg + "--" + base64Sig
 }
 
-func New(user string, expiration time.Time, key string) string {
-	cookieMsg := Cookie{By: GeneratedByStr, AuthData: user, ExpiresUnix: expiration.Unix()}
-	msg, _ := json.Marshal(cookieMsg)
-	return NewRawMsg(msg, []byte(key))
-}
-
-// Update takes an existing cookie and returns a new serialized cookie with an updated expiration
-func Refresh(c *Cookie, key string) string {
-	return New(c.AuthData, time.Now().Add(DefaultDuration), key)
+func GetCookie(authData string, duration time.Duration, secret string) *http.Cookie {
+	expiry := time.Now().Add(duration)
+	maxAge := int(duration.Seconds())
+	c := Cookie{By: GeneratedByStr, AuthData: authData, ExpiresUnix: expiry.Unix()}
+	m, _ := json.Marshal(c)
+	msg := NewRawMsg(m, []byte(secret))
+	httpCookie := http.Cookie{Name: "mojolicious", Value: msg, Path: "/", Expires: expiry, MaxAge: maxAge, HttpOnly: true}
+	return &httpCookie
 }

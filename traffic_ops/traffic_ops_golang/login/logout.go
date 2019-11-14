@@ -22,7 +22,6 @@ package login
 import "encoding/json"
 import "fmt"
 import "net/http"
-import "time"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -38,16 +37,8 @@ func LogoutHandler(secret string) http.HandlerFunc {
 		}
 		defer inf.Close()
 
-		expiry := time.Now()
-		cookie := tocookie.New(inf.User.UserName, expiry, secret)
-		httpCookie := http.Cookie{
-			Name:  tocookie.Name,
-			Value: cookie, Path: "/",
-			Expires:  expiry,
-			HttpOnly: true,
-		}
-
-		http.SetCookie(w, &httpCookie)
+		cookie := tocookie.GetCookie(inf.User.UserName, 0, secret)
+		http.SetCookie(w, cookie)
 		resp := struct {
 			tc.Alerts
 		}{tc.CreateAlerts(tc.SuccessLevel, "You are logged out.")}
