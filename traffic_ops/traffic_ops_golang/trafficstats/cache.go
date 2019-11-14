@@ -103,7 +103,7 @@ func GetCacheStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, err := dbhelpers.CDNExists(c.CDN, tx)
+	exists, err := dbhelpers.CDNExists(tx, c.CDN)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return

@@ -939,7 +939,7 @@ func GetCDNNameFromNameOrID(tx *sql.Tx, cdnNameOrID string) (string, error, erro
 	}
 
 	cdnName := cdnNameOrID
-	if ok, err := dbhelpers.CDNExists(cdnName, tx); err != nil {
+	if ok, err := dbhelpers.CDNExists(tx, cdnName); err != nil {
 		return "", nil, fmt.Errorf("checking CDN name '%v' existence: %v", cdnName, err), http.StatusInternalServerError
 	} else if !ok {
 		return "", errors.New("cdn not found"), nil, http.StatusNotFound
