@@ -39,6 +39,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
@@ -435,6 +436,13 @@ func (inf *APIInfo) Close() {
 // SendMail is a convenience method used to call SendMail using an APIInfo structure's configuration.
 func (inf *APIInfo) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
 	return SendMail(to, msg, inf.Config)
+}
+
+// IsResourceAuthorizedToCurrentUser is a convenience method used to call
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant.IsResourceAuthorizedToUserTx
+// using an APIInfo structure to provide the current user and database transaction.
+func (inf *APIInfo) IsResourceAuthorizedToCurrentUser(resourceTenantID int) (bool, error) {
+	return tenant.IsResourceAuthorizedToUserTx(resourceTenantID, inf.User, inf.Tx.Tx)
 }
 
 // SendMail sends an email msg to the address identified by to. The msg parameter should be an
