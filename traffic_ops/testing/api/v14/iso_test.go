@@ -7,7 +7,8 @@ import (
 )
 
 func TestGetOSVersions(t *testing.T) {
-	// Default value per ./traffic_ops/install/data/perl/osversions.cfg file
+	// Default value per ./traffic_ops/install/data/perl/osversions.cfg file.
+	// This is what the CIAB environment uses.
 	expected := map[string]string{
 		"CentOS 7.2": "centos72",
 	}
@@ -39,7 +40,7 @@ func TestGetOSVersions(t *testing.T) {
 	}
 
 	// Update database with a Parameter entry. This should cause the endpoint
-	// to use the Parameter's value as the configuration file directory. In this
+	// to use the Parameter's value as the configuration file's directory. In this
 	// case, an intentionally missing/invalid directory is provided.
 	// Ensure authenticated request client returns an error.
 
