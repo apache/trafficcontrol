@@ -40,9 +40,31 @@ import (
 
 type needsCheck struct {
 	CDN uint
-	ID uint
+	CDNName string
+	DSID uint
+	DSXMLID string
 	Tenant int
 }
+
+const needsCheckInfoQuery = `
+SELECT deliveryservice.id,
+       deliveryservice.cdn_id,
+       deliveryservice.tenant_id,
+       deliveryservice.xml_id,
+       cdn.name
+FROM deliveryservice
+LEFT OUTER JOIN cdn ON cdn.id=deliveryservice.cdn_id
+WHERE deliveryservice.id = ANY($1)
+`
+
+const serverInfoQuery = `
+SELECT server.cdn_id,
+       server.host_name,
+       cdn.name
+FROM server
+LEFT OUTER JOIN cdn ON cdn.id=server.cdn_id
+WHERE server.id=$1
+`
 
 func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
@@ -89,8 +111,10 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	var serverCDN uint
-	row := inf.Tx.Tx.QueryRow(`SELECT cdn_id FROM server WHERE id=$1`, inf.IntParams["id"])
-	if err := row.Scan(&serverCDN); err != nil {
+	var serverName string
+	var serverCDNName string
+	row := inf.Tx.Tx.QueryRow(serverInfoQuery, inf.IntParams["id"])
+	if err := row.Scan(&serverCDN, &serverName, &serverCDNName); err != nil {
 		if err == sql.ErrNoRows {
 			userErr = errors.New("No such server!")
 			errCode = http.StatusNotFound
@@ -102,7 +126,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	rows, err := inf.Tx.Tx.Query(`SELECT id, cdn_id, tenant_id FROM deliveryservice WHERE id = ANY($1)`, pq.Array(dsList))
+	rows, err := inf.Tx.Tx.Query(needsCheckInfoQuery, pq.Array(dsList))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			userErr = errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!")
@@ -119,7 +143,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 	tenantsToCheck := make([]needsCheck, 0, len(dsList))
 	for rows.Next() {
 		var n needsCheck
-		if err = rows.Scan(&n.ID, &n.CDN, &n.Tenant); err != nil {
+		if err = rows.Scan(&n.DSID, &n.CDN, &n.Tenant, &n.DSXMLID, &n.CDNName); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Scanning cdn_id for ds: %v", err))
 			return
 		}
@@ -136,12 +160,12 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 
 	for _,t := range tenantsToCheck {
 		if ok, err := tenant.IsResourceAuthorizedToUserTx(t.Tenant, inf.User, inf.Tx.Tx); err != nil {
-			sysErr = fmt.Errorf("Checking availability of ds %d (tenant_id: %d) to tenant_id %d: %v", t.ID, t.Tenant, err, inf.User.TenantID, err)
+			sysErr = fmt.Errorf("Checking availability of ds %d (tenant_id: %d) to tenant_id %d: %v", t.DSID, t.Tenant, err, inf.User.TenantID, err)
 			errCode = http.StatusInternalServerError
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
 			return
 		} else if !ok {
-			sysErr = fmt.Errorf("User %s denied access to inaccessible DS %d (owned by tenant_id %d)", inf.User.UserName, t.ID, t.Tenant)
+			sysErr = fmt.Errorf("User %s denied access to inaccessible DS %d (owned by tenant_id %d)", inf.User.UserName, t.DSID, t.Tenant)
 
 			// In keeping with the behavior of /deliveryservices, we don't disclose the existences
 			// of Delivery Services to which the user is forbidden access
@@ -153,7 +177,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 
 		if t.CDN != serverCDN {
 			errCode = http.StatusBadRequest
-			userErr = fmt.Errorf("Delivery Service %d is not in the same CDN as server %d (server is in %d, DS is in %d)!", t.ID, server, serverCDN, t.CDN)
+			userErr = fmt.Errorf("Delivery Service %s (#%d) is not in the same CDN as server %s (#%d) (server is in %s (#%d), DS is in %s (#%d))!", t.DSXMLID, t.DSID, serverName, server, serverCDNName, serverCDN, t.CDN, t.CDNName)
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 			return
 		}
