@@ -1,0 +1,10 @@
+{
+	"dbTypeName": "postgres",
+	"dbName": "to_production",
+	"dbUser": "tm_user",
+	"dbPassword": "YourPasswdHere",
+	"listenerType": "http",
+	"listenerPort": "8080",
+	"listenerCertFile": "",
+	"listenerKeyFile": ""
+}
