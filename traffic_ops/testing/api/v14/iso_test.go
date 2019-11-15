@@ -73,6 +73,7 @@ func TestGetOSVersions(t *testing.T) {
 	// to use the Parameter's value as the configuration file's directory. In this
 	// case, a valid alternative directory is provided. Ensure authenticated request
 	// client returns data from the alternative config file.
+	// NOTE: this assumes this test and TO are using the same filesystem.
 	t.Run("parameter-valid", func(t *testing.T) {
 		expected := tc.OSVersionsResponse{
 			"TempleOS": "temple503",

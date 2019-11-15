@@ -31,6 +31,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// GetOSVersions returns a map of available Operating System (OS) versions for ISO generation,
+// as well as the name of the directory where the "kickstarter" files are found.
+// The returned data comes from a configuration file. There's a default location of the config file
+// which can be overridden via a Parameter database entry.
 func GetOSVersions(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
