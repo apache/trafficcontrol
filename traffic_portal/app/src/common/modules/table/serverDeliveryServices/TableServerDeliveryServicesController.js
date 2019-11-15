@@ -76,6 +76,9 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 
 	$scope.isEdge = serverUtils.isEdge;
 
+	$scope.isOrigin = serverUtils.isOrigin;
+
+
 	$scope.cloneDsAssignments = function(server) {
 		var params = {
 			title: 'Clone Delivery Service Assignments',

@@ -66,6 +66,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added ATS config generation omitting parents without Delivery Service Required Capabilities.
 - In Traffic Portal, added the ability to create, view and delete server capabilities and associate those server capabilities with servers and delivery services. See [blueprint](./blueprints/server-capabilitites.md)
 - Added validation to prevent assigning servers to delivery services without required capabilities.
+- Added deep coverage zone routing percentage to the Traffic Portal dashboard.
 
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)
@@ -78,9 +79,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - Updated /api/1.1/cachegroups: Cache Group Fallbacks are included
   - Updated /api/1.1/cachegroups: fixed so fallbackToClosest can be set through API
     - Warning:  a PUT of an old Cache Group JSON without the fallbackToClosest field will result in a `null` value for that field
+- Traffic Router: fixed a bug which would cause `REFUSED` DNS answers if the zone priming execution did not complete within the configured `zonemanager.init.timeout` period.
 - Issue 2821: Fixed "Traffic Router may choose wrong certificate when SNI names overlap"
 - traffic_ops/app/bin/checks/ToDnssecRefresh.pl now requires "user" and "pass" parameters of an operations-level user! Update your scripts accordingly! This was necessary to move to an API endpoint with proper authentication, which may be safely exposed.
 - Traffic Monitor UI updated to support HTTP or HTTPS traffic.
+- Traffic Monitor health/stat time now includes full body download (like prior TM <=2.1 version)
 - Modified Traffic Router logging format to include an additional field for DNS log entries, namely `rhi`. This defaults to '-' and is only used when EDNS0 client subnet extensions are enabled and a client subnet is present in the request. When enabled and a subnet is present, the subnet appears in the `chi` field and the resolver address is in the `rhi` field.
 - Changed traffic_ops_ort.pl so that hdr_rw-<ds>.config files are compared with strict ordering and line duplication when detecting configuration changes.
 - Traffic Ops (golang), Traffic Monitor, Traffic Stats are now compiled using Go version 1.11. Grove was already being compiled with this version which improves performance for TLS when RSA certificates are used.

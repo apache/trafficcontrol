@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestDeliveryServiceServers(t *testing.T) {
@@ -32,6 +33,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, DeliveryServices, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
 		CreateTestDeliveryServiceServersWithRequiredCapabilities(t)
+		CreateTestMSODSServerWithReqCap(t)
 	})
 }
 
@@ -101,6 +103,81 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 				t.Fatalf("*DELETE delivery service required capability: %v\n", err)
 			}
 		})
+	}
+}
+
+func CreateTestMSODSServerWithReqCap(t *testing.T) {
+	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("msods1"), nil)
+	if err != nil {
+		t.Fatalf("GET delivery service required capabilites: %v\n", err)
+	}
+
+	if len(dsReqCap) == 0 {
+		t.Fatalf("no delivery service required capabilites found for ds msods1\n")
+	}
+
+	// Associate origin server to msods1 even though it does not have req cap
+
+	servers, _, err := TOSession.GetServerByHostName("denver-mso-org-01")
+	if err != nil {
+		t.Fatalf("GET server denver-mso-org-01: %v\n", err)
+	}
+	if len(servers) != 1 {
+		t.Fatalf("expected 1 server with hostname denver-mso-org-01\n")
+	}
+
+	s := servers[0]
+
+	// Make sure server has no caps to ensure test correctness
+	sccs, _, err := TOSession.GetServerServerCapabilities(&s.ID, nil, nil)
+	if err != nil {
+		t.Fatalf("GET server server capabilities for denver-mso-org-01: %v\n", err)
+	}
+	if len(sccs) != 0 {
+		t.Fatalf("expected 0 server server capabilities for server denver-mso-org-01\n")
+	}
+
+	// Is origin included in eligible servers even though it doesnt have required capability
+	eServers, _, err := TOSession.GetDeliveryServicesEligible(*dsReqCap[0].DeliveryServiceID)
+	if err != nil {
+		t.Fatalf("GET delivery service msods1 eligible servers: %v\n", err)
+	}
+	found := false
+	for _, es := range eServers {
+		if es.HostName != nil && *es.HostName == "denver-mso-org-01" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected to find origin server denver-mso-org-01 to be in eligible server return even though it is missing a required capability\n")
+	}
+
+	if _, err = TOSession.CreateDeliveryServiceServers(*dsReqCap[0].DeliveryServiceID, []int{s.ID}, true); err != nil {
+		t.Fatalf("POST delivery service origin servers without capabilities: %v\n", err)
+	}
+
+	// Create new bogus server capability
+	if _, _, err = TOSession.CreateServerCapability(tc.ServerCapability{Name: "newfun"}); err != nil {
+		t.Fatalf("cannot CREATE newfun server capability: %v\n", err)
+	}
+
+	// Attempt to assign to DS should not fail
+	if _, _, err = TOSession.CreateDeliveryServicesRequiredCapability(tc.DeliveryServicesRequiredCapability{
+		DeliveryServiceID:  dsReqCap[0].DeliveryServiceID,
+		RequiredCapability: util.StrPtr("newfun"),
+	}); err != nil {
+		t.Fatalf("POST required capability newfun to ds msods1: %v\n", err)
+	}
+
+	// Remove required capablity
+	if _, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*dsReqCap[0].DeliveryServiceID, "newfun"); err != nil {
+		t.Fatalf("DELETE delivery service required capability: %v\n", err)
+	}
+
+	// Delete server capability
+	if _, _, err = TOSession.DeleteServerCapability("newfun"); err != nil {
+		t.Fatalf("DELETE newfun server capability: %v\n", err)
 	}
 }
 

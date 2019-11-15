@@ -448,7 +448,7 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 	}
 	resp := struct {
 		tc.Alerts
-		Response string    `json:"response"`
+		Response string `json:"response"`
 	}{
 		alerts,
 		createdMsg,
@@ -476,7 +476,7 @@ func getMappingsFromRequestBody(v api.Version, body io.ReadCloser) (tc.DeliveryS
 		return mappings, errors.New("Couldn't read request"), fmt.Errorf("Reading request body: %v", err)
 	}
 
-	if v.Major <=1 && v.Minor <= 3 {
+	if v.Major <= 1 && v.Minor <= 3 {
 		var req tc.LegacyDeliveryServiceFederationResolverMappingRequest
 		if err := json.Unmarshal(b, &req); err != nil {
 			return mappings, fmt.Errorf("parsing request: %v", err), nil

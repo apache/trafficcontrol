@@ -709,7 +709,7 @@ Interface Name
 		.. seealso:: `The Link aggregation Wikipedia Page <https://en.wikipedia.org/wiki/Link_aggregation>`_
 
 Stream ISO
-	If this is 'yes', then the download will start immediately as the ISO is written directly to the socket connection to Traffic Ops. If this is 'no', then the download will begin only *after* the ISO has finished being generated. For almost all use cases, this should be 'yes'.
+	If this is 'yes', then the download will start immediately as the ISO is written directly to the socket connection from Traffic Ops. If this is 'no', then the download will begin only *after* the ISO has finished being generated. For almost all use cases, this should be 'yes'.
 
 .. impl-detail:: Traffic Ops uses Red Hat's `Kickstart <https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/installation_guide/chap-kickstart-installations>` to create these ISOs, so many configuration options not available here can be tweaked in the :ref:`Kickstart configuration file <Creating-CentOS-Kickstart>`.
 

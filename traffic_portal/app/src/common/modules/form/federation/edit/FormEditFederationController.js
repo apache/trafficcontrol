@@ -61,7 +61,7 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 	};
 
 	$scope.save = function(fed) {
-		federationService.updateFederation(fed).
+		federationService.updateFederation(cdn.name, fed).
 			then(function() {
 				$scope.cname = angular.copy(fed.cname);
 				$anchorScroll(); // scrolls window to top
@@ -156,7 +156,6 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 			}
 		});
 		modalInstance.result.then(function(selectedResolverIds) {
-			debugger;
 			assignFederationResolvers($scope.federation.id, selectedResolverIds);
 		}, function () {
 			// do nothing

@@ -23,6 +23,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,12 +33,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
@@ -170,59 +176,77 @@ public class ZoneManager extends Resolver {
 			}
 
 			final ExecutorService initExecutor = Executors.newFixedThreadPool(poolSize);
+			final List<Runnable> generationTasks = new ArrayList<>();
+			final BlockingQueue<Runnable> primingTasks = new LinkedBlockingQueue<>();
 
 			final ExecutorService ze = Executors.newFixedThreadPool(poolSize);
 			final ScheduledExecutorService me = Executors.newScheduledThreadPool(2); // 2 threads, one for static, one for dynamic, threads to refresh zones
 			final int maintenanceInterval = JsonUtils.optInt(config, "zonemanager.cache.maintenance.interval", 300); // default 5 minutes
-			final String dspec = "expireAfterAccess=" + (JsonUtils.optString(config, "zonemanager.dynamic.response.expiration", "300s")); // default to 5 minutes
+			final int initTimeout = JsonUtils.optInt(config, "zonemanager.init.timeout", 10);
 
-
-			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, CacheBuilderSpec.parse(dspec));
+			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, getDynamicZoneCacheSpec(config, poolSize));
 			final LoadingCache<ZoneKey, Zone> zc = createZoneCache(ZoneCacheType.STATIC);
 
 			initZoneDirectory();
 
 			try {
 				LOGGER.info("Generating zone data");
-				generateZones(tr, zc, dzc, initExecutor);
-				initExecutor.shutdown();
-				initExecutor.awaitTermination(5, TimeUnit.MINUTES);
+				generateZones(tr, zc, dzc, generationTasks, primingTasks);
+				initExecutor.invokeAll(generationTasks.stream().map(Executors::callable).collect(Collectors.toList()));
 				LOGGER.info("Zone generation complete");
+				final Instant primingStart = Instant.now();
+				final List<Future<Object>> futures = initExecutor.invokeAll(primingTasks.stream().map(Executors::callable).collect(Collectors.toList()), initTimeout, TimeUnit.MINUTES);
+				final Instant primingEnd = Instant.now();
+				if (futures.stream().anyMatch(Future::isCancelled)) {
+					LOGGER.warn(String.format("Priming zone cache exceeded time limit of %d minute(s); continuing", initTimeout));
+				} else {
+					LOGGER.info(String.format("Priming zone cache completed in %s", Duration.between(primingStart, primingEnd).toString()));
+				}
+
+				me.scheduleWithFixedDelay(getMaintenanceRunnable(dzc, ZoneCacheType.DYNAMIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
+				me.scheduleWithFixedDelay(getMaintenanceRunnable(zc, ZoneCacheType.STATIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
+
+				final ExecutorService tze = ZoneManager.zoneExecutor;
+				final ScheduledExecutorService tme = ZoneManager.zoneMaintenanceExecutor;
+				final LoadingCache<ZoneKey, Zone> tzc = ZoneManager.zoneCache;
+				final LoadingCache<ZoneKey, Zone> tdzc = ZoneManager.dynamicZoneCache;
+
+				ZoneManager.zoneExecutor = ze;
+				ZoneManager.zoneMaintenanceExecutor = me;
+				ZoneManager.dynamicZoneCache = dzc;
+				ZoneManager.zoneCache = zc;
+
+				if (tze != null) {
+					tze.shutdownNow();
+				}
+
+				if (tme != null) {
+					tme.shutdownNow();
+				}
+
+				if (tzc != null) {
+					tzc.invalidateAll();
+				}
+
+				if (tdzc != null) {
+					tdzc.invalidateAll();
+				}
+				LOGGER.info("Initialization of zone data completed");
 			} catch (final InterruptedException ex) {
-				LOGGER.warn("Initialization of zone data exceeded time limit of 5 minutes; continuing", ex);
+				LOGGER.warn(String.format("Initialization of zone data was interrupted, timeout of %d minute(s); continuing", initTimeout), ex);
 			} catch (IOException ex) {
 				LOGGER.fatal("Caught fatal exception while generating zone data!", ex);
 			}
-
-			me.scheduleWithFixedDelay(getMaintenanceRunnable(dzc, ZoneCacheType.DYNAMIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
-			me.scheduleWithFixedDelay(getMaintenanceRunnable(zc, ZoneCacheType.STATIC, maintenanceInterval), 0, maintenanceInterval, TimeUnit.SECONDS);
-
-			final ExecutorService tze = ZoneManager.zoneExecutor;
-			final ScheduledExecutorService tme = ZoneManager.zoneMaintenanceExecutor;
-			final LoadingCache<ZoneKey, Zone> tzc = ZoneManager.zoneCache;
-			final LoadingCache<ZoneKey, Zone> tdzc = ZoneManager.dynamicZoneCache;
-
-			ZoneManager.zoneExecutor = ze;
-			ZoneManager.zoneMaintenanceExecutor = me;
-			ZoneManager.dynamicZoneCache = dzc;
-			ZoneManager.zoneCache = zc;
-
-			if (tze != null) {
-				tze.shutdownNow();
-			}
-
-			if (tme != null) {
-				tme.shutdownNow();
-			}
-
-			if (tzc != null) {
-				tzc.invalidateAll();
-			}
-
-			if (tdzc != null) {
-				tdzc.invalidateAll();
-			}
 		}
+	}
+
+	private static CacheBuilderSpec getDynamicZoneCacheSpec(final JsonNode config, final int poolSize) {
+		final List<String> cacheSpec = new ArrayList<>();
+		cacheSpec.add("expireAfterAccess=" + JsonUtils.optString(config, "zonemanager.dynamic.response.expiration", "3600s")); // default to one hour
+		cacheSpec.add("concurrencyLevel=" + JsonUtils.optString(config, "zonemanager.dynamic.concurrencylevel", String.valueOf(poolSize))); // default to pool size, 4 is the actual default
+		cacheSpec.add("initialCapacity=" + JsonUtils.optInt(config, "zonemanager.dynamic.initialcapacity", 10000)); // set the initial capacity to avoid expensive resizing
+
+		return CacheBuilderSpec.parse(cacheSpec.stream().collect(Collectors.joining(",")));
 	}
 
 	private static Runnable getMaintenanceRunnable(final LoadingCache<ZoneKey, Zone> cache, final ZoneCacheType type, final int refreshInterval) {
@@ -335,7 +359,7 @@ public class ZoneManager extends Resolver {
 		return zone;
 	}
 
-	private static void generateZones(final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final ExecutorService initExecutor) throws IOException {
+	private static void generateZones(final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks) throws IOException {
 		final CacheRegister data = tr.getCacheRegister();
 		final Map<String, List<Record>> zoneMap = new HashMap<String, List<Record>>();
 		final Map<String, DeliveryService> dsMap = new HashMap<String, DeliveryService>();
@@ -362,8 +386,8 @@ public class ZoneManager extends Resolver {
 		}
 
 		final Map<String, List<Record>> superDomains = populateZoneMap(zoneMap, dsMap, data);
-		final List<Record> superRecords = fillZones(zoneMap, dsMap, tr, zc, dzc, initExecutor);
-		final List<Record> upstreamRecords = fillZones(superDomains, dsMap, tr, superRecords, zc, dzc, initExecutor);
+		final List<Record> superRecords = fillZones(zoneMap, dsMap, tr, zc, dzc, generationTasks, primingTasks);
+		final List<Record> upstreamRecords = fillZones(superDomains, dsMap, tr, superRecords, zc, dzc, generationTasks, primingTasks);
 
 		for (final Record record : upstreamRecords) {
 			if (record.getType() == Type.DS) {
@@ -372,12 +396,12 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
-	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final ExecutorService initExecutor)
+	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks)
 			throws IOException {
-		return fillZones(zoneMap, dsMap, tr, null, zc, dzc, initExecutor);
+		return fillZones(zoneMap, dsMap, tr, null, zc, dzc, generationTasks, primingTasks);
 	}
 
-	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final List<Record> superRecords, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final ExecutorService initExecutor)
+	private static List<Record> fillZones(final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, final TrafficRouter tr, final List<Record> superRecords, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks)
 			throws IOException {
 		final String hostname = InetAddress.getLocalHost().getHostName().replaceAll("\\..*", "");
 
@@ -388,7 +412,7 @@ public class ZoneManager extends Resolver {
 				zoneMap.get(domain).addAll(superRecords);
 			}
 
-			records.addAll(createZone(domain, zoneMap, dsMap, tr, zc, dzc, initExecutor, hostname));
+			records.addAll(createZone(domain, zoneMap, dsMap, tr, zc, dzc, generationTasks, primingTasks, hostname));
 		}
 
 		return records;
@@ -396,7 +420,7 @@ public class ZoneManager extends Resolver {
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, 
-			final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final ExecutorService initExecutor, final String hostname) throws IOException {
+			final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks, final BlockingQueue<Runnable> primingTasks, final String hostname) throws IOException {
 		final DeliveryService ds = dsMap.get(domain);
 		final CacheRegister data = tr.getCacheRegister();
 		final JsonNode trafficRouters = data.getTrafficRouters();
@@ -432,65 +456,86 @@ public class ZoneManager extends Resolver {
 			final long maxTTL = ZoneUtils.getMaximumTTL(list);
 			records.addAll(signatureManager.generateDSRecords(name, maxTTL));
 			list.addAll(signatureManager.generateDNSKEYRecords(name, maxTTL));
-			initExecutor.execute(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						final Zone zone = zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
-						final boolean primeDynCache = JsonUtils.optBoolean(config, "dynamic.cache.primer.enabled", true);
-						final int primerLimit = JsonUtils.optInt(config, "dynamic.cache.primer.limit", DEFAULT_PRIMER_LIMIT);
-
-						// prime the dynamic zone cache
-						if (primeDynCache && ds != null && ds.isDns()) {
-							final DNSRequest request = new DNSRequest();
-							final Name edgeName = newName(ds.getRoutingName(), domain);
-							request.setHostname(edgeName.toString(true)); // Name.toString(true) - omit the trailing dot
-
-							for (final CacheLocation cacheLocation : data.getCacheLocations()) {
-								final List<Cache> caches = tr.selectCachesByCZ(ds, cacheLocation);
-
-								if (caches == null) {
-									continue;
-								}
-
-								// calculate number of permutations if maxDnsIpsForLocation > 0 and we're not using consistent DNS routing
-								int p = 1;
-
-								if (ds.getMaxDnsIps() > 0 && !tr.isConsistentDNSRouting() && caches.size() > ds.getMaxDnsIps()) {
-									for (int c = caches.size(); c > (caches.size() - ds.getMaxDnsIps()); c--) {
-										p *= c;
-									}
-								}
-
-								final Set<List<InetRecord>> pset = new HashSet<List<InetRecord>>();
-
-								for (int i = 0; i < primerLimit; i++) {
-									final List<InetRecord> records = tr.inetRecordsFromCaches(ds, caches, request);
-
-									if (!pset.contains(records)) {
-										fillDynamicZone(dzc, zone, edgeName, records, signatureManager.isDnssecEnabled());
-										pset.add(records);
-										LOGGER.debug("Primed " + ds.getId() + " @ " + cacheLocation.getId() + "; permutation " + pset.size() + "/" + p);
-									}
-
-									if (pset.size() == p) {
-										break;
-									}
-								}
-							}
-						}
-					} catch (ExecutionException ex) {
-						LOGGER.fatal("Unable to load zone into cache: " + ex.getMessage(), ex);
-					} catch (TextParseException ex) { // only occurs due to newName above
-						LOGGER.fatal("Unable to prime dynamic zone " + domain, ex);
-					}
-				}
-			});
 		} catch (NoSuchAlgorithmException ex) {
 			LOGGER.fatal("Unable to create zone: " + ex.getMessage(), ex);
 		}
 
+		primeZoneCache(domain, name, list, tr, zc, dzc, generationTasks, primingTasks, ds);
+
 		return records;
+	}
+
+	@SuppressWarnings("PMD.CyclomaticComplexity")
+	private static void primeZoneCache(final String domain, final Name name, final List<Record> list, final TrafficRouter tr,
+			final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final List<Runnable> generationTasks,
+			final BlockingQueue<Runnable> primingTasks, final DeliveryService ds) {
+		generationTasks.add(() -> {
+			try {
+				final Zone zone = zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
+				final CacheRegister data = tr.getCacheRegister();
+				final JsonNode config = data.getConfig();
+				final boolean primeDynCache = JsonUtils.optBoolean(config, "dynamic.cache.primer.enabled", true);
+
+				// prime the dynamic zone cache
+				if (primeDynCache && ds != null && ds.isDns()) {
+					primingTasks.add(() -> {
+						try {
+							primeDNSDeliveryServices(domain, tr, dzc, zone, ds, data);
+						} catch (TextParseException ex) {
+							LOGGER.fatal("Unable to prime dynamic zone " + domain, ex);
+						}
+					});
+				}
+			} catch (ExecutionException ex) {
+				LOGGER.fatal("Unable to load zone into cache: " + ex.getMessage(), ex);
+			}
+		});
+	}
+
+	@SuppressWarnings("PMD.CyclomaticComplexity")
+	private static void primeDNSDeliveryServices(final String domain, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> dzc,
+			final Zone zone, final DeliveryService ds, final CacheRegister data) throws TextParseException {
+		final Name edgeName = newName(ds.getRoutingName(), domain);
+		final JsonNode config = data.getConfig();
+		final int primerLimit = JsonUtils.optInt(config, "dynamic.cache.primer.limit", DEFAULT_PRIMER_LIMIT);
+
+		LOGGER.info("Priming " + edgeName);
+
+		final DNSRequest request = new DNSRequest();
+		request.setHostname(edgeName.toString(true)); // Name.toString(true) - omit the trailing dot
+
+		for (final CacheLocation cacheLocation : data.getCacheLocations()) {
+			final List<Cache> caches = tr.selectCachesByCZ(ds, cacheLocation);
+
+			if (caches == null) {
+				continue;
+			}
+
+			// calculate number of permutations if maxDnsIpsForLocation > 0 and we're not using consistent DNS routing
+			int p = 1;
+
+			if (ds.getMaxDnsIps() > 0 && !tr.isConsistentDNSRouting() && caches.size() > ds.getMaxDnsIps()) {
+				for (int c = caches.size(); c > (caches.size() - ds.getMaxDnsIps()); c--) {
+					p *= c;
+				}
+			}
+
+			final Set<List<InetRecord>> pset = new HashSet<>();
+
+			for (int i = 0; i < primerLimit; i++) {
+				final List<InetRecord> records = tr.inetRecordsFromCaches(ds, caches, request);
+
+				if (!pset.contains(records)) {
+					fillDynamicZone(dzc, zone, edgeName, records, signatureManager.isDnssecEnabled());
+					pset.add(records);
+					LOGGER.debug("Primed " + ds.getId() + " @ " + cacheLocation.getId() + "; permutation " + pset.size() + "/" + p);
+				}
+
+				if (pset.size() == p) {
+					break;
+				}
+			}
+		}
 	}
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
