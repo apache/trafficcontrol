@@ -18,3 +18,15 @@
 .widget_summary .w_right span {
   font-size: 16px;
 }
+
+
+.widget_summary {
+  .w_right span {
+    font-size: 16px;
+  }
+  meter {
+    height: 100%;
+    width: 100%;
+  }
+
+}
