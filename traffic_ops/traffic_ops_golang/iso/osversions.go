@@ -65,20 +65,29 @@ func GetOSVersions(w http.ResponseWriter, r *http.Request) {
 const (
 	ksFilesParamName       = "kickstart.files.location"
 	ksFilesParamConfigFile = "mkisofs"
-	//defaultCfgDir          = "/var/www/files"
-	defaultCfgDir = "."
+
+	cfgDefaultDir = "/var/www/files"
 	cfgFilename   = "osversions.json"
 )
 
+// osversionsCfgPath returns a path to the configuration file
+// containing the OS versions data. The name of the configuration
+// file is constant, but a specific Parameter database entry can update the
+// directory where the file is expected.
 func osversionCfgPath(tx *sqlx.Tx) (string, error) {
 	var cfgDir string
-	if err := tx.QueryRow(`SELECT value FROM parameter WHERE name = $1 AND config_file = $2 LIMIT 1`, ksFilesParamName, ksFilesParamConfigFile).Scan(&cfgDir); err != nil {
+	err := tx.QueryRow(
+		`SELECT value FROM parameter WHERE name = $1 AND config_file = $2 LIMIT 1`,
+		ksFilesParamName,
+		ksFilesParamConfigFile,
+	).Scan(&cfgDir)
+	if err != nil {
 		if err != sql.ErrNoRows {
 			return "", err
 		}
 	}
 	if cfgDir == "" {
-		cfgDir = defaultCfgDir
+		cfgDir = cfgDefaultDir
 	}
 
 	return path.Join(cfgDir, cfgFilename), nil
