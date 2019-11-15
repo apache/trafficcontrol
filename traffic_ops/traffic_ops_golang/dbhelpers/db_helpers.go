@@ -550,7 +550,7 @@ func GetFederationIDForUserIDByXMLID(tx *sql.Tx, userID int, xmlid string) (uint
 // returned will be 'false', while the error indicates unexpected errors that occurred when querying.
 func GetUserByEmail(tx *sqlx.Tx, email string) (tc.User, bool, error) {
 	var u tc.User
-	if err := tx.QueryRow(getUserByEmailQuery, email).StructScan(&u); err != nil {
+	if err := tx.QueryRowx(getUserByEmailQuery, email).StructScan(&u); err != nil {
 		if err == sql.ErrNoRows {
 			return u, false, nil
 		}

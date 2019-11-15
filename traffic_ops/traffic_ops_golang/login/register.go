@@ -19,16 +19,20 @@ package login
  * under the License.
  */
 
+import "bytes"
+import "database/sql"
+import "errors"
 import "fmt"
 import "html/template"
 import "net/http"
 
+import "github.com/apache/trafficcontrol/lib/go-log"
 import "github.com/apache/trafficcontrol/lib/go-rfc"
 import "github.com/apache/trafficcontrol/lib/go-tc"
 
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 type registrationEmailFormatter struct {
 	From rfc.EmailAddress
@@ -95,7 +99,6 @@ Subject: {{.InstanceName}} New User Registration` + "\r\n\r" + `
 		.button_link {
 			display: block;
 			width: 130px;
-			height: 35px;
 			background: #2682AF;
 			padding: 5px;
 			text-align: center;
@@ -159,7 +162,7 @@ func RegisterUser (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok, err := inf.IsResourceAuthorizedToCurrentUser(req.TenantID); err != nil {
+	if ok, err := inf.IsResourceAuthorizedToCurrentUser(int(req.TenantID)); err != nil {
 		sysErr = fmt.Errorf("Checking tenancy permissions of current user (%+v) on tenant #%d", inf.User, req.TenantID)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
@@ -208,7 +211,7 @@ func RegisterUser (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg, err := createRegistrationMsg(req.Email, token, tx, inf.Config.ConfigPortal)
+	msg, err := createRegistrationMsg(req.Email, t, tx, inf.Config.ConfigPortal)
 	if err != nil {
 		sysErr = fmt.Errorf("Failed to create email message: %v", err)
 		errCode = http.StatusInternalServerError
