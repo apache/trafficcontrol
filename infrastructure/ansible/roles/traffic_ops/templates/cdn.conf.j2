@@ -47,7 +47,7 @@
       "no_account_found_msg" : "{{ to_account_missing_msg }}"
    },
    "smtp" : {
-      "enabled" : {{ to_smtp_enabled | lower }},
+      "enabled" : {{ to_smtp_enabled | bool | lower }},
       "user" : "{{ to_smtp_username }}",
       "password" : "{{ to_smtp_password }}",
       "address" : "{{ to_smtp_address }}"

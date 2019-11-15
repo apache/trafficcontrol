@@ -16,5 +16,5 @@
     "delivery_stats_db_name": "{{ to_influxdb_deliveryservice_stats_db_name }}",
     "password": "{{ to_influxdb_password }}",
     "user": "{{ to_influxdb_user }}",
-    "secure": {{ to_influxdb_secure | lower }}
+    "secure": {{ to_influxdb_secure | bool | lower }}
 }

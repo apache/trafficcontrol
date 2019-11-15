@@ -156,8 +156,8 @@ to_pi_health_thresh_kbps: "1750000"
 to_pi_health_connect_timeout: "2000"
 
 # --- influxdb.conf
-to_influxdb_user: ""
-to_influxdb_password: ""
+to_influxdb_user: "influxuser"
+to_influxdb_password: "password"
 to_influxdb_deliveryservice_stats_db_name: "delivery_stats"
 to_influxdb_cache_stats_db_name: "cache_stats"
 to_influxdb_secure: false
