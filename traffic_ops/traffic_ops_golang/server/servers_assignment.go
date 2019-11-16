@@ -40,11 +40,11 @@ import (
 )
 
 type needsCheck struct {
-	CDN uint
+	CDN     uint
 	CDNName string
-	DSID uint
+	DSID    uint
 	DSXMLID string
-	Tenant int
+	Tenant  int
 }
 
 const needsCheckInfoQuery = `
@@ -149,7 +149,7 @@ func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.
 		return http.StatusNotFound, errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!"), nil
 	}
 
-	for _,t := range tenantsToCheck {
+	for _, t := range tenantsToCheck {
 		if ok, err := tenant.IsResourceAuthorizedToUserTx(t.Tenant, user, tx); err != nil {
 			return http.StatusInternalServerError, nil, fmt.Errorf("Checking availability of ds %d (tenant_id: %d) to tenant_id %d: %v", t.DSID, t.Tenant, err, user.TenantID, err)
 		} else if !ok {
