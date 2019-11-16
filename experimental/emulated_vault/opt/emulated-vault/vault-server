@@ -17,22 +17,42 @@
 #
 #
 
+    
+import fnmatch
+import inspect
 import json
 import logging
-import sys
 import os
-import inspect
-from BaseHTTPServer import HTTPServer
-from BaseHTTPServer import BaseHTTPRequestHandler
+import re
 import ssl
-import urlparse, json
-import re, fnmatch
+import sys
 
-import adaptor.fs
+import adapter.fs
+
+if sys.version_info >= (3, 0):
+    #python 3
+    from http.server import HTTPServer
+    from http.server import BaseHTTPRequestHandler
+    from configparser import ConfigParser
+    import urllib.parse as urlparse
+else:    
+    #python 2
+    from BaseHTTPServer import HTTPServer
+    from BaseHTTPServer import BaseHTTPRequestHandler
+    from ConfigParser import ConfigParser
+    import urlparse
+
 
 class RequestHandler(BaseHTTPRequestHandler):
+    """
+    An HTTP server, emulating RIAK behavior on the calls done by traffic-ops.
+    The class implements BaseHTTPRequestHandler functions
+    """
 
     def do_GET(self):
+        """
+        Base class function implementation -  to be called upon HTTP GET/HEAD requests
+        """
         try:
             self._do_GET()
         except:
@@ -41,6 +61,9 @@ class RequestHandler(BaseHTTPRequestHandler):
     do_HEAD = do_GET
 
     def do_POST(self):
+        """
+        Base class function implementation -  to be called upon HTTP POST/PUT requests
+        """
         try:
             self._do_POST()
         except:
@@ -49,102 +72,129 @@ class RequestHandler(BaseHTTPRequestHandler):
     do_PUT = do_POST
 
     def do_DELETE(self):
+        """
+        Base class function implementation -  to be called upon HTTP DEL request
+        """
         try:
             self._do_DELETE()
         except:
             logger.exception("do_DELETE exception")
 
     def _do_GET(self):
+        """
+        Actual GET logic
+        :raises: Exception
+        """
         logger.debug("GET %s", self.path)
         parsed_path = urlparse.urlparse(self.path)
 
         if parsed_path.path == "/ping":
             logger.info("Ping")
-            success, value = adaptor.ping()
-            if not success:
-                self.send_response(503)
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                self.wfile.write("Failure")
-                return
+            self._do_GET_ping()
+        elif parsed_path.path == "/search/query/sslkeys":
+            logger.info("Search SSL: path=%s query=%s", parsed_path.path, parsed_path.query)
+            self._do_GET_sslkeys(parsed_path)
+        else:
+            self._do_GET_general(parsed_path)
 
-            self.send_response(200)
+    def _do_GET_ping(self):
+        """
+        Actual GET logic for ping request
+        :raises: Exception
+        """        
+        success, value = adapter.ping()
+        if not success:
+            self.send_response(503)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write(value)
+            self.wfile.write("Failure".encode())
             return
 
-        if parsed_path.path == "/search/query/sslkeys":
-            logger.info("Search SSL: path=%s query=%s", parsed_path.path, parsed_path.query)
-            filters = {}
-            keyFilters = {}
-            cdnFind = re.search(".*q=cdn:([^&]*).*", parsed_path.query)
-            if cdnFind:
-                def cdnFilter(key,val):
-                    try:
-                        data = json.loads(val)
-                        return data['cdn']==cdnFind.group(1)
-                    except:
-                        return False
-                filters['cdn'] = cdnFilter
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(value.encode())
 
-            dsFind = re.search(".*q=deliveryservice:([^&]*).*", parsed_path.query)
-            if dsFind:
-                def dsFilter(key,val):
-                    try:
-                        data = json.loads(val)
-                        return data['deliveryservice']==dsFind.group(1)
-                    except:
-                        return False
-                filters['ds'] = dsFilter
+    def _do_GET_sslkeys(self, parsed_path):
+        """
+        Actual GET logic for ssl keys request
+        :param parsed_path: key's url path
+        :type parsed_path: str
+        :raises: Exception
+        """
+        filters = {}
+        keyFilters = {}
+        cdnFind = re.search(".*q=cdn:([^&]*).*", parsed_path.query)
+        if cdnFind:
+            def cdnFilter(key,val):
+                try:
+                    data = json.loads(val)
+                    return data['cdn']==cdnFind.group(1)
+                except:
+                    return False
+            filters['cdn'] = cdnFilter
 
-            keyFind = re.search(".*q=_yz_rk:([^&]*).*", parsed_path.query)
-            if keyFind:
-                def keyFilter(key):
-                    return fnmatch.fnmatch(os.path.basename(key), keyFind.group(1))
-                keyFilters['key-match'] = keyFilter
+        dsFind = re.search(".*q=deliveryservice:([^&]*).*", parsed_path.query)
+        if dsFind:
+            def dsFilter(key,val):
+                try:
+                    data = json.loads(val)
+                    return data['deliveryservice']==dsFind.group(1)
+                except:
+                    return False
+            filters['ds'] = dsFilter
 
-            success, parameters = adaptor.searchParameters("riak/ssl/", keyFilters=keyFilters, filters=filters)
-            if not success:
-                self.send_response(503)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write('{"Failure"}')
-                return
+        keyFind = re.search(".*q=_yz_rk:([^&]*).*", parsed_path.query)
+        if keyFind:
+            keyFilters['key-match'] = lambda key: fnmatch.fnmatch(os.path.basename(key), keyFind.group(1))
 
-            docs = []
-            for key,val in parameters.iteritems():
-                docs.append(json.loads(val))
-            toReturn = {"response":{"numFound":len(docs),"start":0, "docs":docs}}
-
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(toReturn))
-            return
-
-        logger.info("GET %s", self.path)
-        success, value = adaptor.getParameter(parsed_path.path[1:])
+        success, parameters = adapter.searchParameters("riak/ssl/", keyFilters=keyFilters, filters=filters)
         if not success:
             self.send_response(503)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write('{"Failure"}')
+            self.wfile.write('{"Failure"}'.encode())
+            return
+
+        docs = [json.loads(val) for i in parameters.values()]
+        toReturn = {"response":{"numFound":len(docs),"start":0, "docs":docs}}
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(toReturn).encode())
+
+    def _do_GET_general(self, parsed_path):
+        """
+        Actual GET logic for general variable request
+        :param parsed_path: key's url path
+        :type parsed_path: str
+        :raises: Exception
+        """
+        success, value = adapter.getParameter(parsed_path.path[1:])
+        if not success:
+            self.send_response(503)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write('{"Failure"}'.encode())
             return
 
         if value is None:
             self.send_response(404)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write('{"Not found"}')
+            self.wfile.write('{"Not found"}'.encode())
             return
 
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
-        self.wfile.write(value)
+        self.wfile.write(value.encode())
 
     def _do_POST(self):
+        """
+        Actual POST request logic
+        """
         logger.info("POST %s", self.path)
         parsed_path = urlparse.urlparse(self.path)
         content_len = int(self.headers.getheader('content-length'))
@@ -154,12 +204,12 @@ class RequestHandler(BaseHTTPRequestHandler):
         if parsed_path.path.startswith('/riak/ssl/'):
             for item in data['certificate']:
                 data['certificate.%s'%item]=data['certificate'][item]
-        success = adaptor.setParameter(parsed_path.path[1:], json.dumps(data))
+        success = adapter.setParameter(parsed_path.path[1:], json.dumps(data))
         if not success:
             self.send_response(503)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write('{"Failure"}')
+            self.wfile.write('{"Failure"}'.encode())
             return
 
         self.send_response(204)
@@ -169,21 +219,24 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
     def _do_DELETE(self):
+        """
+        Actual DEL request logic
+        """
         logger.info("DELETE %s", self.path)
         parsed_path = urlparse.urlparse(self.path)
 
-        success = adaptor.deleteParameter(parsed_path.path[1:])
+        success = adapter.deleteParameter(parsed_path.path[1:])
         if not success:
             self.send_response(503)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write('{"Failure"}')
+            self.wfile.write('{"Failure"}'.encode())
             return
 
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
-        self.wfile.write('{"Deleted"}')
+        self.wfile.write('{"Deleted"}'.encode())
         return
 
 
@@ -194,15 +247,31 @@ if __name__ == '__main__':
     progAbsPath = os.path.dirname(os.path.normpath(progAbsPath))
 
     confDir = os.path.join(progAbsPath, "conf")
-    confFile = os.path.join(confDir, "cfg.json")
-    with open(confFile) as fd:
-        cfg = json.load(fd)
+    confFile = os.path.join(confDir, "cfg.ini")
+    try:
+        config = ConfigParser()
+        config.read(confFile)
+    except IOError as e:
+        sys.stderr.write("Failed to read configuration - I/O error({0}): {1}\n".format(e.errno, e.strerror))
+        sys.exit(1)
+    except Exception as e:
+        sys.stderr.write("Failed to read configuration: {0}\n".format(e))
+        sys.exit(1)
 
-    logDir = os.path.join(progAbsPath, "var/log")
+    generalCfg = dict(config.items("general")) if config.has_section("general") else {}
+    logDir = generalCfg.get("log-dir", os.path.join(progAbsPath, "var/log"))
     debugLogFile = os.path.join(logDir, "traffic-ops-vault-debug.log")
     mainLogFile = os.path.join(logDir, "traffic-ops-vault.log")
-    if not os.path.exists(logDir):
-        os.makedirs(logDir)
+    try:
+        if not os.path.exists(logDir):
+            os.makedirs(logDir)
+    except IOError as e:
+        sys.stderr.write("Failed to create log dir - I/O error({0}): {1}\n".format(e.errno, e.strerror))
+        sys.exit(1)
+    except Exception as e:
+        sys.stderr.write("Failed to create log dir: {0}\n".format(e))
+        sys.exit(1)
+
 
     global logger
     logger = logging.getLogger(__name__)
@@ -220,30 +289,58 @@ if __name__ == '__main__':
     logger.addHandler(fhm)
     logger.addHandler(fhd)
 
-    basePath = cfg["data"]["db-path"]
-    pingRelPath = cfg["data"]["ping-rel-path"]
-    listenIP = cfg["data"]["listen-ip"]
-    listenPort = cfg["data"]["listen-port"]
-    adaptorType = cfg["data"]["adaptor-type"]
-    use_ssl = cfg["data"]["use-ssl"]
-
-    global adaptor
-    if adaptorType == "fs":
-        adaptor = adaptor.fs.Fs(logger=logger, basePath=basePath, pingRelPath=pingRelPath)
+    httpServerCfg = dict(config.items("http-server")) if config.has_section("http-server") else {}
+    listenIP = httpServerCfg.get("listen-ip", "0.0.0.0")
+    try:
+        listenPort = int(httpServerCfg.get("listen-port", "8088"))
+    except:
+        logger.exception("Failed %s integer conversion failed", "listen-port")
+        sys.exit(1)
+    use_ssl_val = httpServerCfg.get("use-ssl", "True")
+    if use_ssl_val in ["False", "false", "0"]:
+        use_ssl=False
+    elif use_ssl_val in ["True", "true", "1"]:
+        use_ssl=True
     else:
-        logger.error("Invalid adaptor type '%s'", adaptorType)
+        logger.error("Invalid %s value", "use-ssl")
+        sys.exit(1)
+    if use_ssl:
+        sslKey = httpServerCfg.get("ssl-key-path")
+        if not sslKey:
+            sys.stderr.write("Missing configuration: {0}/{1}\n".format("http-server", "ssl-key-path"))
+            sys.exit(1)
+        sslCert = httpServerCfg.get("ssl-cert-path")
+        if not sslCert:
+            sys.stderr.write("Missing configuration: {0}/{1}\n".format("http-server", "ssl-cert-path"))
+            sys.exit(1)
+        
+    global adapter
+    adapterType = generalCfg.get("adapter-type")
+    if not adapterType:
+        logger.error("Missing adapter type cfg")
+        sys.exit(1)
+    elif adapterType == "fs":
+        adapter = adapter.fs.Fs(logger=logger)
+    else:
+        logger.error("Invalid adapter type '%s'", adapterType)
         sys.exit(1)
 
-    if not adaptor.init_ping():
-        logger.error("Failed initialization")
+    if not adapter.init_cfg(config):
+        logger.error("Failed adapter initialization")
+        sys.exit(1)        
+    if not adapter.init_ping():
+        logger.error("Failed adaper ping initialization")
         sys.exit(1)        
 
     server = HTTPServer((listenIP, listenPort), RequestHandler)
-    if use_ssl:
-        key = cfg["data"]["ssl-key-path"]
-        cert = cfg["data"]["ssl-cert-path"]
-        server.socket = ssl.wrap_socket (server.socket, keyfile=key, certfile=cert, server_side=True)
+    if use_ssl:        
+        try:
+            server.socket = ssl.wrap_socket (server.socket, keyfile=sslKey, certfile=sslCert, server_side=True)
+        except:
+            logger.exception("Failed on SSL init")
+            sys.exit(1)
+
     msg = 'Starting server at http%s://%s:%d'%("s" if use_ssl else "", listenIP, listenPort)
-    print >> sys.stderr, msg
+    sys.stderr.write("%s\n"%msg)
     logger.info(msg)
     server.serve_forever()
