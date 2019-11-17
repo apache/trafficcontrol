@@ -57,6 +57,7 @@ to_certs_ca: /etc/pki/ca-trust/source/anchors/root.ca.crt
 to_certs_verify: "0x00"
 
 to_inactivity_timeout: 120
+to_influxdb_conf_path: "{{ to_conf_installdir }}/influxdb.conf"
 to_gen_new_secret: "yes"
 to_no_of_secrets_to_keep: "2"
 
@@ -101,6 +102,10 @@ to_go_read_header_timeout: 120
 to_go_read_timeout: 120
 to_go_write_timeout: 120
 
+to_smtp_enabled: false
+to_smtp_username: ""
+to_smtp_password: ""
+to_smtp_address: ""
 
 # --- database.conf & dbconf.yml
 todb_db_name: traffic_ops
@@ -149,6 +154,13 @@ to_pi_ram_drive_letters: "0,1,2,3,4,5,6,7"
 to_pi_health_thresh_load_avg: "25"
 to_pi_health_thresh_kbps: "1750000"
 to_pi_health_connect_timeout: "2000"
+
+# --- influxdb.conf
+to_influxdb_user: "influxuser"
+to_influxdb_password: "password"
+to_influxdb_deliveryservice_stats_db_name: "delivery_stats"
+to_influxdb_cache_stats_db_name: "cache_stats"
+to_influxdb_secure: false
 
 # --- log4perl.conf
 to_log_file: "/var/log/traffic_ops/traffic_ops.log"
