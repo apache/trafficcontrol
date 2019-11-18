@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 // Users gets an array of Users.
@@ -155,4 +156,30 @@ func (to *Session) DeleteUserByID(id int) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// RegisterNewUser requests the registration of a new user with the given tenant ID and role ID,
+// through their email.
+func (to *Session) RegisterNewUser(tenantID uint, roleID uint, email rfc.EmailAddress) (tc.Alerts, ReqInf, error) {
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
+	var alerts tc.Alerts
+
+	reqBody, err := json.Marshal(tc.UserRegistrationRequest{
+		Email: email,
+		TenantID: tenantID,
+		Role: roleID,
+	})
+	if err != nil {
+		return alerts, reqInf, err
+	}
+
+	resp, remoteAddr, err := to.request(http.MethodPost, apiBase+"/users/register", reqBody)
+	reqInf.RemoteAddr = remoteAddr
+	if err != nil {
+		return alerts, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, err
 }
