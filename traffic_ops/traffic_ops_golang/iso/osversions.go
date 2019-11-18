@@ -33,8 +33,13 @@ import (
 
 // GetOSVersions returns a map of available Operating System (OS) versions for ISO generation,
 // as well as the name of the directory where the "kickstarter" files are found.
+//
 // The returned data comes from a configuration file. There's a default location of the config file
 // which can be overridden via a Parameter database entry.
+//
+// Note: The api.CRUDer interface could not be used for this endpoint because the original Perl
+// endpoint returned a single JSON object, whereas the CRUDer interface returns an array of JSON
+// objects per the Read method.
 func GetOSVersions(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -43,27 +48,28 @@ func GetOSVersions(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	f := api.RespWriter(w, r, inf.Tx.Tx)
+	api.RespWriter(w, r, inf.Tx.Tx)(getOSVersions(inf.Tx))
+}
 
-	cfgPath, err := osversionCfgPath(inf.Tx)
+// getOSVersions is used in conjunction with GetOSVersions. It is a
+// separate function for ease of testing.
+func getOSVersions(tx *sqlx.Tx) (tc.OSVersionsResponse, error) {
+	cfgPath, err := osversionCfgPath(tx)
 	if err != nil {
-		f(nil, err)
-		return
+		return nil, err
 	}
 
 	b, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
-		f(nil, err)
-		return
+		return nil, err
 	}
 
 	var data tc.OSVersionsResponse
 	if err = json.Unmarshal(b, &data); err != nil {
-		f(nil, err)
-		return
+		return nil, err
 	}
 
-	f(data, nil)
+	return data, nil
 }
 
 const (

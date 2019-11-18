@@ -2,13 +2,122 @@ package iso
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
+	"log"
+	"os"
 	"path"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
+
+func TestGetOSVersions(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	// Temporary directory prefix. Use the top-level `t` to ensure
+	// there's no `/` symbols in the name.
+	tmpPrefix := t.Name()
+
+	t.Run("valid-file", func(t *testing.T) {
+		expected := tc.OSVersionsResponse{
+			"TempleOS": "temple503",
+		}
+
+		dir, err := ioutil.TempDir("", tmpPrefix)
+		if err != nil {
+			log.Fatalf("error creating tempdir: %v", err)
+		}
+		// Clean up temp dir + file
+		defer os.RemoveAll(dir)
+
+		// Create config file within temp dir
+		fd, err := os.Create(path.Join(dir, "osversions.json"))
+		if err != nil {
+			t.Fatalf("error creating tempfile: %v", err)
+		}
+		defer fd.Close()
+		if err = json.NewEncoder(fd).Encode(expected); err != nil {
+			t.Fatal(err)
+		}
+
+		dbCtx, cancel := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+		defer cancel()
+
+		// Setup mock DB to return row for SELECT query on parameter table.
+		mock.ExpectBegin()
+		cols := []string{"value"}
+		rows := sqlmock.NewRows(cols)
+		rows = rows.AddRow(dir) // return temp dir
+		mock.ExpectQuery("SELECT").WillReturnRows(rows)
+		mock.ExpectCommit()
+
+		tx, err := db.BeginTxx(dbCtx, nil)
+		if err != nil {
+			t.Fatalf("BeginTxx() err: %v", err)
+		}
+		defer tx.Commit()
+
+		got, err := getOSVersions(tx)
+		if err != nil {
+			t.Fatalf("getOSVersions() err = %v; expected nil", err)
+		}
+		t.Logf("getOSVersions(): %#v", got)
+
+		if lenGot, lenExp := len(got), len(expected); lenGot != lenExp {
+			t.Fatalf("incorrect map length: got %d map entries, expected %d", lenGot, lenExp)
+		}
+		for k, expectedVal := range expected {
+			if gotVal := got[k]; gotVal != expectedVal {
+				t.Fatalf("incorrect map entry for key %q: got %q, expected %q", k, gotVal, expectedVal)
+			}
+		}
+	})
+
+	t.Run("invalid-file", func(t *testing.T) {
+		dir, err := ioutil.TempDir("", tmpPrefix)
+		if err != nil {
+			log.Fatalf("error creating tempdir: %v", err)
+		}
+		// Clean up temp dir + file
+		defer os.RemoveAll(dir)
+
+		// No config file is created within temp dir
+
+		dbCtx, cancel := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+		defer cancel()
+
+		// Setup mock DB to return row for SELECT query on parameter table.
+		mock.ExpectBegin()
+		cols := []string{"value"}
+		rows := sqlmock.NewRows(cols)
+		rows = rows.AddRow(dir) // return temp dir, which is empty
+		mock.ExpectQuery("SELECT").WillReturnRows(rows)
+		mock.ExpectCommit()
+
+		tx, err := db.BeginTxx(dbCtx, nil)
+		if err != nil {
+			t.Fatalf("BeginTxx() err: %v", err)
+		}
+		defer tx.Commit()
+
+		_, err = getOSVersions(tx)
+		if err == nil {
+			t.Fatalf("getOSVersions() err = %v; expected non-nil", err)
+		}
+		t.Logf("getOSVersions() err (expected) = %v", err)
+	})
+}
 
 func TestOsversionsCfgPath(t *testing.T) {
 	cases := []struct {
