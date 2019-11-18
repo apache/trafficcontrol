@@ -175,6 +175,26 @@ func RegisterUser (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	privLevel, ok, err := dbhelpers.GetPrivLevelFromRoleID(tx, int(req.Role))
+	if err != nil {
+		sysErr = fmt.Errorf("Checking role #%d privilege level: %v", req.Role, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		return
+	}
+	if !ok {
+		userErr = fmt.Errorf("No such role: %d", req.Role)
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
+		return
+	}
+	if privLevel > inf.User.PrivLevel {
+		userErr = errors.New("Cannot register a user with a role with higher privileges than yourself")
+		errCode = http.StatusForbidden
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
+		return
+	}
+
 	t, err := generateToken()
 	if err != nil {
 		errCode = http.StatusInternalServerError
