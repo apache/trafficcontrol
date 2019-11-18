@@ -70,8 +70,8 @@ const (
 	ksFilesParamName       = "kickstart.files.location"
 	ksFilesParamConfigFile = "mkisofs"
 
-	cfgDefaultDir = "/var/www/files"
-	cfgFilename   = "osversions.json"
+	cfgDefaultDir = "/var/www/files"  // default directory containing config file
+	cfgFilename   = "osversions.json" // the config file's name is constant, regardless of directory
 )
 
 // osversionsCfgPath returns a path to the configuration file
@@ -85,11 +85,10 @@ func osversionCfgPath(tx *sqlx.Tx) (string, error) {
 		ksFilesParamName,
 		ksFilesParamConfigFile,
 	).Scan(&cfgDir)
-	if err != nil {
-		if err != sql.ErrNoRows {
-			return "", err
-		}
+	if err != nil && err != sql.ErrNoRows {
+		return "", err
 	}
+
 	if cfgDir == "" {
 		cfgDir = cfgDefaultDir
 	}

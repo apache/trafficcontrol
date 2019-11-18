@@ -31,7 +31,7 @@ import (
 )
 
 func TestGetOSVersions(t *testing.T) {
-	// Default value per ./traffic_ops/install/data/perl/osversions.cfg file.
+	// Default value per ./traffic_ops/install/data/json/osversions.json file.
 	// This should be the data returned in the CiaB environment.
 	expected := map[string]string{
 		"CentOS 7.2": "centos72",
