@@ -71,7 +71,7 @@ Response Structure
 	Date: Thu, 15 Nov 2018 15:11:38 GMT
 	Server: Mojolicious (Perl)
 	Set-Cookie: last_seen_log="2018-11-15% 15:11:38"; path=/; Max-Age=604800
-	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 19:11:38 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: 40dV+azaZ3b6F30y6YHVbV3H2a3ekZrdoxICupwaxQnj62pwYfb7YCM7Qhe3OAItmB77Tbg9INy27ymaz3hr9A==
 	Content-Length: 357

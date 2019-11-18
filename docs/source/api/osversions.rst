@@ -48,7 +48,7 @@ This endpoint has no constant keys in its ``response``. Instead, each key in the
 	Content-Type: application/json
 	Date: Fri, 30 Nov 2018 19:14:36 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Fri, 30 Nov 2018 23:14:36 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: RxbRY2DZ+lYOdTzzUETEZ3wtLBiD2BwXMVuaZjhe4a4cwgcZKRBWxZ6Qy5YYujFe1+UBiTG4sML/Amn27F4AVg==
 	Content-Length: 38
