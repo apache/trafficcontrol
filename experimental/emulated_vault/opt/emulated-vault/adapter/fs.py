@@ -225,7 +225,7 @@ class Fs(object):
         try:
             with open(parameterOsPath) as fd:
                 value = fd.read()
-        except:
+        except OSError as e:
             self.logger.exception("%s parameter os path not found.", parameterOsPath)
             return False, None
 
@@ -288,7 +288,7 @@ class Fs(object):
                 os.makedirs(dirname)
             with open(parameterOsPath, "w") as fd:
                 fd.write(value)            
-        except:
+        except OSError as e:
             self.logger.exception("could not post parameter os path %s", parameterOsPath)
             return False
         self.logger.debug("Set parameter os path %s done", parameterOsPath)
@@ -305,7 +305,7 @@ class Fs(object):
         self.logger.debug("Delete parameter os path %s", parameterOsPath)
         try:
             os.remove(_parameterOsPath)
-        except:
+        except OSError as e:
             self.logger.exception("could not delete parameter os path %s", parameterOsPath)
             return False
         self.logger.debug("Delete parameter os path %s done", parameterOsPath)

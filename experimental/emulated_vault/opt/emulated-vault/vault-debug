@@ -17,6 +17,8 @@
 #
 #
 
+from __future__ import print_function
+
 import inspect
 import json
 import logging
@@ -45,10 +47,10 @@ if __name__ == '__main__':
         config = ConfigParser()
         config.read(confFile)
     except IOError as e:
-        sys.stderr.write("Failed to read configuration - I/O error({0}): {1}\n".format(e.errno, e.strerror))
+        print("Failed to read configuration - I/O error({0}): {1}".format(e.errno, e.strerror), file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        sys.stderr.write("Failed to read configuration: {0}\n".format(e))
+        print("Failed to read configuration: {0}".format(e), file=sys.stderr)
         sys.exit(1)
 
     generalCfg = dict(config.items("general")) if config.has_section("general") else {}
@@ -59,10 +61,10 @@ if __name__ == '__main__':
         if not os.path.exists(logDir):
             os.makedirs(logDir)
     except IOError as e:
-        sys.stderr.write("Failed to create log dir - I/O error({0}): {1}\n".format(e.errno, e.strerror))
+        print("Failed to create log dir - I/O error({0}): {1}".format(e.errno, e.strerror), file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        sys.stderr.write("Failed to create log dir: {0}\n".format(e))
+        print("Failed to create log dir: {0}".format(e), file=sys.stderr)
         sys.exit(1)
 
     global logger
