@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormProfileController = function(profile, Restangular, $scope, $location, $uibModal, fileUtils, formUtils, locationUtils, cdnService, profileService) {
+var FormProfileController = function(profile, $scope, $location, $uibModal, fileUtils, formUtils, locationUtils, cdnService, profileService) {
 
     var getCDNs = function() {
         cdnService.getCDNs(true)
@@ -108,5 +108,5 @@ var FormProfileController = function(profile, Restangular, $scope, $location, $u
 
 };
 
-FormProfileController.$inject = ['profile', 'Restangular', '$scope', '$location', '$uibModal', 'fileUtils', 'formUtils', 'locationUtils', 'cdnService', 'profileService'];
+FormProfileController.$inject = ['profile', '$scope', '$location', '$uibModal', 'fileUtils', 'formUtils', 'locationUtils', 'cdnService', 'profileService'];
 module.exports = FormProfileController;

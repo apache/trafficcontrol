@@ -96,7 +96,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Mon, 10 Dec 2018 17:11:53 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Mon, 10 Dec 2018 21:11:53 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: ZDeQrG0D7Q3Wy3ZEUT9t21QQ9F9Yc3RR/Qr91n22UniYubdhdKnir3B+LYP5ZKkVg8ByrVPFyx6Nao0iiBTGTQ==
 	Content-Length: 800

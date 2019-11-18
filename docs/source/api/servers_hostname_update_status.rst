@@ -76,7 +76,7 @@ Each object in the returned array\ [1]_ will contain the following fields:
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: R6BjNVrcecHGn3eGDqQ1yDiBnEDGQe7QtOMIsRwlpck9SZR8chRQznrkTF3YdROAZ1l8BxR3fXTIvKHIzK2/dA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 04 Feb 2019 16:24:01 GMT

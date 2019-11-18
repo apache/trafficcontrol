@@ -90,7 +90,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: RxFZN2+OvP3HEyp+KlCPDFT74PwPFNjxBjibGIMPhbRjVEb8PhdaF7Gq61wklNRfda4PgTP2tzOheiM0oUzUTQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 19 Jun 2019 13:23:18 GMT
@@ -179,7 +179,7 @@ Response Structure
 	Content-Encoding: gzip
 	Content-Type: application/json
 	Location: https://trafficops.infra.ciab.test/api/1.4/jobs?id=3
-	Set-Cookie: mojolicious=...
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: zQrzB3SLXTbpxLaVWq4WHeONUfEirXDaLRlCi/4+fekgtbjnDgGnA+Sq6MGaxRyQ92/96IsYjAP3Re6ZoN7rzg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 19 Jun 2019 13:19:51 GMT

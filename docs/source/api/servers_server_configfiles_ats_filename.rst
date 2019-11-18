@@ -66,7 +66,7 @@ Response Structure
 	Content-Type: text/plain;charset=UTF-8
 	Date: Thu, 15 Nov 2018 15:32:25 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Thu, 15 Nov 2018 19:32:25 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: EmhHogPfcxQq2zHmFFJtjwzZiUHNgOZvE572Se/H/54gwarkkKjm89+xJr7fQbfytc7xWYApzwfjNl6LfbM0hg==
 	Content-Length: 107

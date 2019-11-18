@@ -35,6 +35,7 @@ import java.util.Set;
 
 public class RouterNioEndpoint extends NioEndpoint {
 	private static final Logger LOGGER = Logger.getLogger(RouterNioEndpoint.class);
+	private String protocols;
 
 	// Grabs the aliases from our custom certificate registry, creates a sslHostConfig for them
 	// and adds the newly created config to the list of sslHostConfigs.  We also remove the default config
@@ -68,7 +69,7 @@ public class RouterNioEndpoint extends NioEndpoint {
 			cert.setCertificateKeyAlias(alias);
 			sslHostConfig.addCertificate(cert);
 			sslHostConfig.setCertificateKeyAlias(alias);
-			sslHostConfig.setProtocols("all");
+			sslHostConfig.setProtocols(protocols != null ? protocols : "all");
 			sslHostConfig.setConfigType(getSslConfigType());
 			sslHostConfig.setCertificateVerification("none");
 			LOGGER.info("sslHostConfig: "+sslHostConfig.getHostName() + " " + sslHostConfig.getTruststoreAlgorithm());
@@ -158,6 +159,14 @@ public class RouterNioEndpoint extends NioEndpoint {
 				SSL.getLastErrorNumber();
 			}
 		}
+	}
+
+	public String getProtocols() {
+		return protocols;
+	}
+
+	public void setProtocols(final String protocols) {
+		this.protocols = protocols;
 	}
 
 }

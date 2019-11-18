@@ -49,6 +49,7 @@ Request Structure
 Response Structure
 ------------------
 :cz:                The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Coverage Zone File`
+:deepCz:            The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by a :term:`Deep Coverage Zone File`
 :dsr:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to an overflow :term:`Delivery Service`
 :err:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that resulted in an error
 :fed:               The percent of requests to the Traffic Router for this :term:`Delivery Service` that were satisfied by sending the client to a federated CDN
@@ -70,22 +71,22 @@ Response Structure
 	Content-Type: application/json
 	Date: Fri, 30 Nov 2018 15:08:07 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Fri, 30 Nov 2018 19:08:07 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: UgPziRC/5u4+CfkZ9xm0EkEzjjJVu6cwBrFd/n3xH/ZmlkaXkQaa1y4+B7DyE46vxFLYE0ODOcQchyn7JkoQOg==
 	Content-Length: 132
 
 	{ "response": {
-		"staticRoute": 0,
-		"geo": 100,
-		"err": 0,
-		"fed": 0,
-		"cz": 0,
+		"cz": 79,
+		"deepCz": 0.50,
 		"dsr": 0,
+		"err": 0,
+		"fed": 0.25,
+		"geo": 20,
+		"miss": 0.25,
 		"regionalAlternate": 0,
-		"deepCz": 0,
 		"regionalDenied": 0,
-		"miss": 0
+		"staticRoute": 0
 	}}
 
 .. [#tenancy] Users will only be able to view routing details for the :term:`Delivery Services` their :term:`Tenant` is allowed to see.

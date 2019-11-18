@@ -129,7 +129,7 @@ func (to *Session) login() (net.Addr, error) {
 	}
 
 	path := apiBase + "/user/login"
-	resp, remoteAddr, err := to.rawRequest("POST", path, credentials)
+	resp, remoteAddr, err := to.RawRequest("POST", path, credentials)
 	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
 	if err != nil {
 		return remoteAddr, errors.New("requesting: " + err.Error())
@@ -158,7 +158,7 @@ func (to *Session) login() (net.Addr, error) {
 
 func (to *Session) loginWithToken(token []byte) (net.Addr, error) {
 	path := apiBase + "/user/login/token"
-	resp, remoteAddr, err := to.rawRequest(http.MethodPost, path, token)
+	resp, remoteAddr, err := to.RawRequest(http.MethodPost, path, token)
 	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
 	if err != nil {
 		return remoteAddr, fmt.Errorf("requesting: %v", err)
@@ -187,7 +187,7 @@ func (to *Session) logout() (net.Addr, error) {
 	}
 
 	path := apiBase + "/user/logout"
-	resp, remoteAddr, err := to.rawRequest("POST", path, credentials)
+	resp, remoteAddr, err := to.RawRequest("POST", path, credentials)
 	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
 	if err != nil {
 		return remoteAddr, errors.New("requesting: " + err.Error())
@@ -340,7 +340,7 @@ func (to *Session) getURL(path string) string { return to.URL + path }
 // Returns the response, the remote address of the Traffic Ops instance used, and any error.
 // The returned net.Addr is guaranteed to be either nil or valid, even if the returned error is not nil. Callers are encouraged to check and use the net.Addr if an error is returned, and use the remote address in their own error messages. This violates the Go idiom that a non-nil error implies all other values are undefined, but it's more straightforward than alternatives like typecasting.
 func (to *Session) request(method, path string, body []byte) (*http.Response, net.Addr, error) {
-	r, remoteAddr, err := to.rawRequest(method, path, body)
+	r, remoteAddr, err := to.RawRequest(method, path, body)
 	if err != nil {
 		return r, remoteAddr, err
 	}
@@ -352,14 +352,14 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, ne
 	}
 
 	// return second request, even if it's another Unauthorized or Forbidden.
-	r, remoteAddr, err = to.rawRequest(method, path, body)
+	r, remoteAddr, err = to.RawRequest(method, path, body)
 	return to.ErrUnlessOK(r, remoteAddr, err, path)
 }
 
-// rawRequest performs the actual HTTP request to Traffic Ops, simply, without trying to refresh the cookie if an Unauthorized code is returned.
+// RawRequest performs the actual HTTP request to Traffic Ops, simply, without trying to refresh the cookie if an Unauthorized code is returned.
 // Returns the response, the remote address of the Traffic Ops instance used, and any error.
 // The returned net.Addr is guaranteed to be either nil or valid, even if the returned error is not nil. Callers are encouraged to check and use the net.Addr if an error is returned, and use the remote address in their own error messages. This violates the Go idiom that a non-nil error implies all other values are undefined, but it's more straightforward than alternatives like typecasting.
-func (to *Session) rawRequest(method, path string, body []byte) (*http.Response, net.Addr, error) {
+func (to *Session) RawRequest(method, path string, body []byte) (*http.Response, net.Addr, error) {
 	url := to.getURL(path)
 
 	var req *http.Request
