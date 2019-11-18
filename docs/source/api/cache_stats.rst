@@ -125,7 +125,7 @@ Response Structure
 	Access-Control-Allow-Origin: *
 	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: p4asf1n7fXGtgpW/dWgolJWdXjwDcCjyvjOPFqkckbgoXGUHEj5/wlz7brlQ48t3ZnOWCqOlbsu2eSiBssBtUQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 28 Oct 2019 20:49:51 GMT

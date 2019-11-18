@@ -740,8 +740,9 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 		return auth.CurrentUser{}, userErr, sysErr, code
 	}
 
-	newCookieVal := tocookie.Refresh(oldCookie, secret)
-	http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
+	duration := tocookie.DefaultDuration
+	newCookie := tocookie.GetCookie(oldCookie.AuthData, duration, secret)
+	http.SetCookie(w, newCookie)
 	return user, nil, nil, http.StatusOK
 }
 

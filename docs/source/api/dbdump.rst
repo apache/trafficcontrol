@@ -57,7 +57,7 @@ Response Structure
 	Access-Control-Allow-Origin: *
 	Content-Type: application/sql
 	Content-Disposition: attachment
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: YwvPB0ZToyzT8ilBnDlWWdwV+E3f2Xgus1OKrkNaipQqgrw5zGwq0rC1U9TZ8Zl6kAGcRZgCYnr1EWfHXpJRkg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 09 Sep 2019 21:08:28 GMT

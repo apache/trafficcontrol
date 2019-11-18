@@ -50,7 +50,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: d6Llm5qNc2sfgVH9IimW7hA4wvtBUq6EzUmpJf805kB0k6v2WysNgFEWK4hBXNdAYkr8hYuKPrwDy3tCx0OZ8Q==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 03 Dec 2018 17:19:13 GMT
@@ -145,7 +145,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: B7TSUOYZPRPyi3mVy+CuxiXR5k/d0s07w4i6kYzpWS+YL79juEfkuSqfedaYG/kMA8O9XbjkWRjcBAdxOVrdTQ==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 23 Oct 2019 22:28:02 GMT
@@ -193,7 +193,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: fd7P45mIiHuYqZZW6+8K+YjY1Pe504Aaw4J4Zp9AhrqLX72ERytTqWtAp1msutzNSRUdUSC72+odNPtpv3O8uw==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 23 Oct 2019 23:34:53 GMT
@@ -271,7 +271,7 @@ Response Structure
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: dQ5AvQULhc254zQwgUpBl1/CHbLr/clKtkbs0Ju9f1BM4xIfbbO3puFNN9zaEaZ1iz0lBvHFp/PgfUqisD3QHA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 23 Oct 2019 23:22:03 GMT
