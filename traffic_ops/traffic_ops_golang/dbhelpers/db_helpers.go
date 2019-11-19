@@ -65,7 +65,7 @@ WHERE federation_deliveryservice.deliveryservice IN (
 
 const getUserByEmailQuery = `
 SELECT u.id,
-       u.username as username,
+       u.username,
        u.public_ssh_key,
        u.role,
        r.name as rolename,
