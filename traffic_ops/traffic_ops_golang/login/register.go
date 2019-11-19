@@ -146,6 +146,7 @@ func createRegistrationMsg(addr rfc.EmailAddress, t string, tx *sql.Tx, c config
 	return tmpl.Bytes(), nil
 }
 
+// RegisterUser is the handler for /users/register. It sends registration through Email.
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	var tx = inf.Tx.Tx
