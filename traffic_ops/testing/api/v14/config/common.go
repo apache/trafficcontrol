@@ -12,6 +12,7 @@
    limitations under the License.
 */
 
+// Package config provides testing helpers for Traffic Ops API tests.
 package config
 
 import (
@@ -148,17 +149,17 @@ func ValidateIPRange(ip string) error {
 
 		// both must be valid
 		if ip1 == nil || ip2 == nil {
-			return fmt.Errorf("invalid IP range: %v \n", ip)
+			return fmt.Errorf("invalid IP range: %v", ip)
 		}
 
 		// must be of the same type
 		if (ip1.To4() == nil) != (ip2.To4() == nil) {
-			return fmt.Errorf("invalid IP range: %v \n", ip)
+			return fmt.Errorf("invalid IP range: %v", ip)
 		}
 
 		// ip2 must be less than ip1
 		if bytes.Compare(ip2, ip1) < 0 {
-			return fmt.Errorf("invalid IP range: %v \n", ip)
+			return fmt.Errorf("invalid IP range: %v", ip)
 		}
 		return nil
 	}
@@ -179,7 +180,7 @@ func ValidateIPRange(ip string) error {
 		if _, _, err = net.ParseCIDR(ip); err == nil {
 			return nil
 		}
-		return fmt.Errorf("invalid CIDR address: %v \n", ip)
+		return fmt.Errorf("invalid CIDR address: %v", ip)
 	}
 
 	return fmt.Errorf("invalid IP range: %v", ip)
