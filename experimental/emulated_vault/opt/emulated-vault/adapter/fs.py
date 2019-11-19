@@ -16,8 +16,9 @@
 #
 
 import os
+from . base import Base
 
-class Fs(object):
+class Fs(Base):
     """
     Fs (file system) adapter class.
     This class implements the API required for storing and retriving the content kept in the vault.
@@ -27,21 +28,24 @@ class Fs(object):
     :param ping-os-path: The path of a variable mimicing the RIAK ping functionality
 
     Interface methods 
-    :meth:`init_cfg` given a config-parser object, read the parameters required for 
+    :meth:`_get_parameter_storage_path` given a url-key of a parameter return the storage path
+    :meth:`_get_parameter_storage_path_from_url_path` given a storage path of a parameter
+    retrun the url-key
+    :meth:`_init_cfg` given a config-parser object, read the parameters required for 
     adapter's operation. Return "success" boolean value
-    :meth:`init_ping` prepare the adapter for beign able to provide info to reply for 
+    :meth:`_init_ping` prepare the adapter for beign able to provide info to reply for 
     "ping" requests. Return "success" boolean value
-    :meth:`ping` test the 'ping' status with the adapter. 
+    :meth:`_ping` test the 'ping' status with the adapter. 
     Return a tuple: "success" boolean & "value" kept as ping variable
-    :meth:`getParameter` given a parameter key (in url-path format) retrieve the parameter value.
+    :meth:`_read_parameter_by_storage_path` given a storage path retrieve the parameter value.
     Return a tuple: "success" boolean & "value" kept in the parameter
-    :meth:`searchParameter` given a parameters key prefix (in url-path format) and, a dict holding
-    variable key filters, and a key holding filters on the values as well.
+    :meth:`_read_parameters_by_storage_path` given a storage and and a key holding 
+    filters on the key and values.
     Return "success" boolean indicating a sucessful write, and a key->value dictionary 
     for the relevant parameters
-    :meth:`setParameter` given a parameter key (in url-path format) and a value string,
+    :meth:`_write_parameter_by_storage_path` given a storage path and a value string,
     keep the parameter value. Return "success" boolean indicating a sucessful write
-    :meth:`deleteParameter` given a parameter key (in url-path format), delete the parameter
+    :meth:`_remove_parameter_by_storage_path` given a storage path, delete the parameter
     from the DB. Return "success" boolean indicating a sucessful deletion        
     """
     def __init__ (self, logger):
@@ -50,10 +54,9 @@ class Fs(object):
         :param logger: logger to send log messages to
         :type logger: a python logging logger class
         """
-        
-        self.logger = logger
+        Base.__init__(self, logger)
 
-    def init_cfg(self, fullConfig):
+    def _init_cfg(self, fullConfig):
         """
         Initialize the class basic parameters. Part of Adapter required API.
         :param fullConfig: configuration to operate upon.
@@ -66,248 +69,153 @@ class Fs(object):
         if self.basePath is None:
             self.logger.error("Missing %s/%s configuration", "fs-adapter", "db-base-os-path")
             return False 
-        self.pingOsPath = myCfgData.get("ping-os-path")
-        if self.pingOsPath is None:
+        self.pingStoragePath = myCfgData.get("ping-os-path")
+        if self.pingStoragePath is None:
             self.logger.error("Missing %s/%s configuration", "fs-adapter", "ping-os-path")
             return False 
         return True
 
-    def init_ping(self):
+    def _get_parameter_storage_path(self, parameterUrlPath):
+        """
+        Conversion function - taking a key's path and translate to a file path on the file system
+        :param parameterUrlPath: the "url-path" like key of the variable
+        :type parameterUrlPath: str
+        :return: file path of where the value is be kept
+        :rtype: str
+        """
+        return os.path.join(self.basePath, parameterUrlPath.lstrip("/").replace("/", os.path.sep))
+
+    def _get_parameter_storage_path_from_url_path(self, parameterStoragePath):
+        """
+        Conversion function - taking file path on the file system and translate to key's path
+        :param parameterStoragePath: the file name holding a value
+        :type parameterUrlPath: str
+        :return: the matching variable url-path like key
+        :rtype: str
+        """
+        return "/"+os.path.relpath(parameterStoragePath, self.basePath).replace(os.path.sep, "/")
+
+    def _init_ping(self):
         """
         Initialize the class ability to answer for ping. Part of Adapter required API.
         :return: 'True' for successful initialization
         :rtype: Boolean
         """
         value = "OK"
-        success = self._write_parameter_os_path(self.pingOsPath, value)
+        success = self._write_parameter_by_storage_path(self.pingStoragePath, value)
         if not success:
-            self.logger.error("Failed to set parameter %s", self.pingOsPath)
+            self.logger.error("Failed to set parameter %s", self.pingStoragePath)
             return False
         return True
 
-    def ping(self):
+    def _ping(self):
         """
         get value for the ping request. Part of Adapter required API.
         :return: A tuple - 'True' for successful retrival and the retrieved value
         :rtype: Tuple[Boolean, str]
         """
-        success, value = self._read_parameter_os_path(self.pingOsPath)
+        success, value = self._read_parameter_by_storage_path(self.pingStoragePath)
         if not success or value is None:
             self.logger.error("no ping response")
             return (False, "")
         self.logger.debug("ping response: %s", value)
         return (True, value)
 
-    def getParameter(self, parameterKeyUrlPath):
-        """
-        Get value for the specified parameter. Part of Adapter required API.
-        :param parameterKeyUrlPath: the key of the parameter as presented as url path 
-        (tokens seperated by "/", with "/" as a prefix)
-        :type parameterKeyUrlPath: str
-        :return: A tuple - 'True' for successful retrival and the retrieved value
-        :rtype: Tuple[Boolean, str]
-        """
-        parameterOsPath = self._get_parameter_os_path(parameterKeyUrlPath)        
-        success, value = self._read_parameter_os_path(parameterOsPath)
-        if not success:
-            self.logger.error("Failed to bring parameter %s", parameterKeyUrlPath)
-            return False, ""
-        if value is None:
-            self.logger.error("Could not find parameter %s", parameterKeyUrlPath)
-            return True, None
-        self.logger.debug("Parameter get response for %s ready", parameterKeyUrlPath)
-        return True, value
-
-    def searchParameters(self, parameterKeyPrefixUrlPath, keyFilters, filters):        
-        """
-        Get key/value dict of parameters by key pprefix
-        :param parameterKeyPrefixUrlPath: the key prefix for the parameter as presented as url path 
-        (tokens seperated by "/", with "/" as a prefix)
-        :type parameterKeyPrefixUrlPath: str
-        :param keyFilters: a dictionary of filter-name/filter-functions - 
-        each function gets a single variable - a parameter key - 
-        and return "True" if the variable should be included in the response.
-        :type keyFilters: Dict[str, function[str]]
-        :param filters: a dictionary of filter-name/filter-functions - 
-        each function gets 2 variable - a parameter key and val - 
-        and return "True" if the variable should be included in the response.
-        :type filters: Dict[str, function[str,str]]        
-        :return: 'True' for successful retrival and the retrieved values dict (parameter-key/value)
-        :rtype: Tuple[boolean, Dict[str, str]]        
-        """
-        self.logger.debug("Get parameters under path %s", parameterKeyPrefixUrlPath)
-        parameterOsPathPrefix = self._get_parameter_os_path(parameterKeyPrefixUrlPath)
-        success, items = self._read_parameter_os_paths(parameterOsPathPrefix, keyFilters=keyFilters)
-        if not success:
-            self.logger.error("Failed to bring parameters by prefix %s", parameterOsPathPrefix)
-            return False, ""
-
-        filtered = {}
-        for key, val in items.items():#items() - supporting python 2&3
-            skip = False
-            for filterName, filterfunc in filters.items():#items() - supporting python 2&3
-                if not filterfunc(key, val):
-                    self.logger.debug("Parameter %s dropped, not matching filter %s", key, filterName)
-                    skip = True
-                    break
-            if skip:
-                continue
-            filtered[key] = val
-
-        return True, filtered
-
-    def setParameter(self, parameterKeyUrlPath, value):
-        """
-        Set value for the specified parameter. Part of Adapter required API.
-        :param parameterKeyUrlPath: the key of the parameter as presented as url path 
-        (tokens seperated by "/", with "/" as a prefix)
-        :type parameterKeyUrlPath: str
-        :param value: the value to be kept
-        :type value: str
-        :return: 'True' for successful settings
-        :rtype: Boolean
-        """
-        self.logger.debug("Set parameter %s", parameterKeyUrlPath)
-        parameterOsPath = self._get_parameter_os_path(parameterKeyUrlPath)
-        success = self._write_parameter_os_path(parameterOsPath, value)
-        if not success:
-            self.logger.error("Failed to set parameter %s", parameterKeyUrlPath)
-            return False
-        return True
-
-    def deleteParameter(self, parameterKeyUrlPath):
-        """
-        Delete the specified parameter. Part of Adapter required API.
-        :param parameterKeyUrlPath: the key of the parameter as presented as url path 
-        (tokens seperated by "/", with "/" as a prefix)
-        :type parameterKeyUrlPath: str
-        :return: 'True' for successful deletion
-        :rtype: Boolean
-        """
-        self.logger.debug("Delete parameter %s", parameterKeyUrlPath)
-        parameterOsPath = self._get_parameter_os_path(parameterKeyUrlPath)
-        success = self._remove_parameter_os_path(parameterOsPath)
-        if not success:
-            self.logger.error("Failed to delete parameter %s", parameterKeyUrlPath)
-            return False
-        return True
-
-    def _get_parameter_os_path(self, parameterKeyUrlPath):
-        """
-        Conversion function - taking a key's path and translate to a file path on the file system
-        :param parameterKeyUrlPath: the "url-path" like key of the variable
-        :type parameterKeyUrlPath: str
-        :return: file path of where the value is be kept
-        :rtype: str
-        """
-        return os.path.join(self.basePath, parameterKeyUrlPath.lstrip("/").replace("/", os.path.sep))
-
-    def _get_parameter_os_path_key_url_path(self, parameterOsPath):
-        """
-        Conversion function - taking file path on the file system and translate to key's path
-        :param parameterOsPath: the file name holding a value
-        :type parameterKeyUrlPath: str
-        :return: the matching variable url-path like key
-        :rtype: str
-        """
-        return "/"+os.path.relpath(parameterOsPath, self.basePath).replace(os.path.sep, "/")
-        
-
-    def _read_parameter_os_path(self, parameterOsPath):
+    def _read_parameter_by_storage_path(self, parameterStoragePath):
         """
         Reading the value from the provided file name.
-        :param parameterOsPath: the file name 
-        :type parameterKeyUrlPath: str
+        :param parameterStoragePath: the file name 
+        :type parameterStoragePath: str
         :return: 'True' for successful retrivaland the retrieved value
         :rtype: Tuple[boolean, str]
         """
-        self.logger.debug("Get parameter by os path: %s", parameterOsPath)
+        self.logger.debug("Get parameter by os path: %s", parameterStoragePath)
         try:
-            with open(parameterOsPath) as fd:
+            with open(parameterStoragePath) as fd:
                 value = fd.read()
-        except OSError as e:
-            self.logger.exception("%s parameter os path not found.", parameterOsPath)
+        except Exception as e:
+            self.logger.exception("%s parameter os path not found.", parameterStoragePath)
             return False, None
 
-        self.logger.debug("Get parameter by os path %s succeed", parameterOsPath)
+        self.logger.debug("Get parameter by os path %s succeed", parameterStoragePath)
         return True, value
 
-    def _read_parameter_os_paths(self, parameterOsPathPrefix, keyFilters):
+    def _read_parameters_by_storage_path(self, parameterStoragePathPrefix, keyFilters):
         """
         Reading the values of the parameters the provided directory.
-        :param parameterOsPathPrefix: the directory to look into
-        :type parameterOsPathPrefix: str
+        :param parameterStoragePathPrefix: the directory to look into
+        :type parameterStoragePathPrefix: str
         :param keyFilters: filter-name/filter-func dict, holding functions that get a key as 
         input and retunn "true" if key should be included in the result
         :type keyFilters: Dict[str,function[str]]
         :return: 'True' for successful retrival and a dict for key-name/value 
         :rtype: Tuple[boolean, Dict[str, str]]
         """
-        self.logger.debug("Get parameters under os path %s", parameterOsPathPrefix)
+        self.logger.debug("Get parameters under os path %s", parameterStoragePathPrefix)
         parameters = {}
 
         fileNames = []
-        for (dirpath, _, filenames) in os.walk(parameterOsPathPrefix):
+        for (dirpath, _, filenames) in os.walk(parameterStoragePathPrefix):
             fileNames += [os.path.join(dirpath, file) for file in filenames]
 
         for fileName in fileNames:
             filteredOut = False
             for filterName, filterfunc in keyFilters.items():#items() - supporting python 2&3
                 if not filterfunc(fileName):
-                    self.logger.debug("Parameter os path %s dropped, not matching filter %s", self._get_parameter_os_path_key_url_path(fileName), filterName)
+                    self.logger.debug("Parameter os path %s dropped, not matching filter %s", self._get_parameter_storage_path_from_url_path(fileName), filterName)
                     filteredOut = True
                     break
             if filteredOut:
                 continue
 
-            parameterKeyUrlPath = self._get_parameter_os_path_key_url_path(fileName)
-            success, value = self._read_parameter_os_path(fileName)
+            parameterUrlPath = self._get_parameter_storage_path_from_url_path(fileName)
+            success, value = self._read_parameter_by_storage_path(fileName)
             if not success:
                 self.logger.error("%s parameter os path not found.", fileName)
                 return False, None
                 
-            parameters[parameterKeyUrlPath] = value
+            parameters[parameterUrlPath] = value
 
         return True, parameters
 
 
-    def _write_parameter_os_path(self, parameterOsPath, value):
+    def _write_parameter_by_storage_path(self, parameterStoragePath, value):
         """
         Writing the value to the provided file name.
-        :param parameterOsPath: the file name 
-        :type parameterKeyUrlPath: str
+        :param parameterStoragePath: the file name 
+        :type parameterStoragePath: str
         :param value: value to be writen
-        :type parameterKeyUrlPath: str
+        :type value: str
         :return: 'True' for successful writing
         :rtype: Boolean        
        """
-        self.logger.debug("Set parameter by os path %s", parameterOsPath)
+        self.logger.debug("Set parameter by os path %s", parameterStoragePath)
         try:
-            dirname = os.path.dirname(parameterOsPath)
+            dirname = os.path.dirname(parameterStoragePath)
             if dirname and not os.path.exists(dirname):
                 os.makedirs(dirname)
-            with open(parameterOsPath, "w") as fd:
+            with open(parameterStoragePath, "w") as fd:
                 fd.write(value)            
-        except OSError as e:
-            self.logger.exception("could not post parameter os path %s", parameterOsPath)
+        except Exception as e:
+            self.logger.exception("could not post parameter os path %s", parameterStoragePath)
             return False
-        self.logger.debug("Set parameter os path %s done", parameterOsPath)
+        self.logger.debug("Set parameter os path %s done", parameterStoragePath)
         return True
 
-    def _remove_parameter_os_path(self, parameterOsPath):
+    def _remove_parameter_by_storage_path(self, parameterStoragePath):
         """
         Deleting the the provided file.
-        :param parameterOsPath: the file name 
-        :type parameterKeyUrlPath: str
+        :param parameterStoragePath: the file name 
+        :type parameterStoragePath: str
         :return: 'True' for successful deletion
         :rtype: Boolean        
        """
-        self.logger.debug("Delete parameter os path %s", parameterOsPath)
+        self.logger.debug("Delete parameter os path %s", parameterStoragePath)
         try:
-            os.remove(_parameterOsPath)
-        except OSError as e:
-            self.logger.exception("could not delete parameter os path %s", parameterOsPath)
+            os.remove(_parameterStoragePath)
+        except Exception as e:
+            self.logger.exception("could not delete parameter os path %s", parameterStoragePath)
             return False
-        self.logger.debug("Delete parameter os path %s done", parameterOsPath)
+        self.logger.debug("Delete parameter os path %s done", parameterStoragePath)
         return True
 
