@@ -32,7 +32,7 @@ func TestReadOnlyCannotModify(t *testing.T) {
 
 func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 	if len(testData.CDNs) == 0 {
-		t.Fatalf("Can't test readonly user creating a cdns: test data has no cdns\n")
+		t.Fatalf("Can't test readonly user creating a cdns: test data has no cdns")
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)

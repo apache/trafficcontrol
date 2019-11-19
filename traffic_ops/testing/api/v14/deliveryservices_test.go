@@ -311,7 +311,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 	}
 	respDS = data.Response[0]
 	if dsV13FieldsAreNil(respDS) {
-		t.Errorf("expected 1.3 values to be non-nil, actual: nil\n")
+		t.Errorf("expected 1.3 values to be non-nil, actual: nil")
 	}
 	if !dsV14FieldsAreNil(respDS) {
 		t.Errorf("expected 1.4 values to be nil, actual: non-nil")
@@ -444,7 +444,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("cannot PUT 1.1 deliveryservice, failed to make request: %s\n", err.Error())
 	}
 	if !dsV14FieldsAreNil(putDSResp.Response[0]) {
-		t.Errorf("PUT 1.3 expected 1.4 values to be nil, actual: non-nil\n")
+		t.Errorf("PUT 1.3 expected 1.4 values to be nil, actual: non-nil")
 	}
 	respID = putDSResp.Response[0].ID
 	getDS, _, err = TOSession.GetDeliveryServiceNullable(strconv.Itoa(*respID))
@@ -452,7 +452,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("cannot GET deliveryservice: %s\n", err.Error())
 	}
 	if !dsV14FieldsAreNilOrDefault(*getDS) {
-		t.Errorf("PUT 1.3 expected 1.4 values to be nil/default, actual: non-nil/default\n")
+		t.Errorf("PUT 1.3 expected 1.4 values to be nil/default, actual: non-nil/default")
 	}
 }
 

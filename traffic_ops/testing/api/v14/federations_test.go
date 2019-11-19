@@ -141,7 +141,7 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	// Attempt to delete the last one which should fail as you cannot remove the last
 	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, ds1.ID)
 	if err == nil {
-		t.Fatalf("expected to receive error from attempting to delete last Delivery Service from a Federation\n")
+		t.Fatalf("expected to receive error from attempting to delete last Delivery Service from a Federation")
 	}
 }
 

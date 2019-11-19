@@ -39,6 +39,6 @@ func GetTestDeliveryServicesEligible(t *testing.T) {
 		t.Errorf("getting delivery services eligible: %v\n", err)
 	}
 	if len(servers) == 0 {
-		t.Errorf("getting delivery services eligible returned no servers\n")
+		t.Errorf("getting delivery services eligible returned no servers")
 	}
 }

@@ -49,7 +49,7 @@ func CreateTestOrigins(t *testing.T) {
 func NotFoundDeleteTest(t *testing.T) {
 	_, _, err := TOSession.DeleteOriginByID(2020)
 	if !strings.Contains(err.Error(), "not found") {
-		t.Errorf("deleted origin with what should be a non-existent id\n")
+		t.Errorf("deleted origin with what should be a non-existent id")
 	}
 }
 

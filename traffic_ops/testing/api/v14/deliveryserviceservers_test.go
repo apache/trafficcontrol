@@ -113,7 +113,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	if len(dsReqCap) == 0 {
-		t.Fatalf("no delivery service required capabilites found for ds msods1\n")
+		t.Fatalf("no delivery service required capabilites found for ds msods1")
 	}
 
 	// Associate origin server to msods1 even though it does not have req cap
@@ -123,7 +123,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 		t.Fatalf("GET server denver-mso-org-01: %v\n", err)
 	}
 	if len(servers) != 1 {
-		t.Fatalf("expected 1 server with hostname denver-mso-org-01\n")
+		t.Fatalf("expected 1 server with hostname denver-mso-org-01")
 	}
 
 	s := servers[0]
@@ -134,7 +134,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 		t.Fatalf("GET server server capabilities for denver-mso-org-01: %v\n", err)
 	}
 	if len(sccs) != 0 {
-		t.Fatalf("expected 0 server server capabilities for server denver-mso-org-01\n")
+		t.Fatalf("expected 0 server server capabilities for server denver-mso-org-01")
 	}
 
 	// Is origin included in eligible servers even though it doesnt have required capability
@@ -150,7 +150,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Fatalf("expected to find origin server denver-mso-org-01 to be in eligible server return even though it is missing a required capability\n")
+		t.Fatalf("expected to find origin server denver-mso-org-01 to be in eligible server return even though it is missing a required capability")
 	}
 
 	if _, err = TOSession.CreateDeliveryServiceServers(*dsReqCap[0].DeliveryServiceID, []int{s.ID}, true); err != nil {

@@ -50,7 +50,7 @@ func CreateTestInvalidTOExtensions(t *testing.T) {
 	// Fail Attempt to Create ToExtension as non extension user
 	_, _, err := TOSession.CreateTOExtension(testData.TOExtensions[0])
 	if err == nil {
-		t.Errorf("expected to receive error with non extension user\n")
+		t.Errorf("expected to receive error with non extension user")
 	}
 }
 

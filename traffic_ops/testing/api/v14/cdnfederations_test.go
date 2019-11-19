@@ -50,7 +50,7 @@ func CreateTestCDNFederations(t *testing.T) {
 
 		// need to save the ids, otherwise the other tests won't be able to reference the federations
 		if data.Response.ID == nil {
-			t.Errorf("Federation id is nil after posting\n")
+			t.Errorf("Federation id is nil after posting")
 		} else {
 			fedIDs = append(fedIDs, *data.Response.ID)
 		}

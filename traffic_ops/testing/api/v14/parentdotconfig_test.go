@@ -35,11 +35,11 @@ func GetTestParentDotConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GET delivery service servers: %v\n", err)
 	} else if len(dsServers.Response) == 0 {
-		t.Fatalf("GET delivery service servers: no servers found\n")
+		t.Fatalf("GET delivery service servers: no servers found")
 	} else if dsServers.Response[0].Server == nil {
-		t.Fatalf("GET delivery service servers: returned nil server\n")
+		t.Fatalf("GET delivery service servers: returned nil server")
 	} else if dsServers.Response[0].DeliveryService == nil {
-		t.Fatalf("GET delivery service servers: returned nil ds\n")
+		t.Fatalf("GET delivery service servers: returned nil ds")
 	}
 	serverID := *dsServers.Response[0].Server
 

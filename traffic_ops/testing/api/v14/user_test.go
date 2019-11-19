@@ -81,7 +81,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 		"localPasswd": "better_twelve",
 		"confirmLocalPasswd": "better_twelve",
 		"role": %d,
-		"tenantId": %d 
+		"tenantId": %d
 	}`, *roles[0].ID, tenants[0].ID)
 
 	reader := strings.NewReader(blob)
@@ -133,7 +133,7 @@ func OpsUpdateAdminTest(t *testing.T) {
 
 	_, _, err = opsTOClient.UpdateUserByID(*user.ID, &user)
 	if err == nil {
-		t.Errorf("ops user incorrectly updated an admin\n")
+		t.Errorf("ops user incorrectly updated an admin")
 	}
 }
 
@@ -189,7 +189,7 @@ func UserUpdateOwnRoleTest(t *testing.T) {
 	*user.Role = *user.Role + 1
 	_, _, err = TOSession.UpdateUserByID(*user.ID, &user)
 	if err == nil {
-		t.Errorf("user incorrectly updated their role\n")
+		t.Errorf("user incorrectly updated their role")
 	}
 }
 

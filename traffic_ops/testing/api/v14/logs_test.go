@@ -39,6 +39,6 @@ func GetTestLogsByLimit(t *testing.T) {
 		t.Fatalf("error getting logs: " + err.Error())
 	}
 	if len(toLogs) != 10 {
-		t.Fatalf("GET logs by limit: incorrect number of logs returned\n")
+		t.Fatalf("GET logs by limit: incorrect number of logs returned")
 	}
 }

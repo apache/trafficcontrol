@@ -45,7 +45,7 @@ func UpdateTestStatuses(t *testing.T) {
 
 	firstStatus := testData.Statuses[0]
 	if firstStatus.Name == nil {
-		t.Fatalf("cannot update test statuses: first test data status must have a name\n")
+		t.Fatalf("cannot update test statuses: first test data status must have a name")
 	}
 
 	// Retrieve the Status by name so we can get the id for the Update
@@ -78,7 +78,7 @@ func GetTestStatuses(t *testing.T) {
 
 	for _, status := range testData.Statuses {
 		if status.Name == nil {
-			t.Fatalf("cannot get ftest statuses: test data statuses must have names\n")
+			t.Fatalf("cannot get ftest statuses: test data statuses must have names")
 		}
 		resp, _, err := TOSession.GetStatusByName(*status.Name)
 		if err != nil {
@@ -91,7 +91,7 @@ func DeleteTestStatuses(t *testing.T) {
 
 	for _, status := range testData.Statuses {
 		if status.Name == nil {
-			t.Fatalf("cannot get ftest statuses: test data statuses must have names\n")
+			t.Fatalf("cannot get ftest statuses: test data statuses must have names")
 		}
 
 		// Retrieve the Status by name so we can get the id for the Update
