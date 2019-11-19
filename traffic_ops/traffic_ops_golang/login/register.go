@@ -35,11 +35,11 @@ import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 type registrationEmailFormatter struct {
-	From rfc.EmailAddress
+	From         rfc.EmailAddress
 	InstanceName string
-	RegisterURL string
-	To rfc.EmailAddress
-	Token string
+	RegisterURL  string
+	To           rfc.EmailAddress
+	Token        string
 }
 
 const registerUserQuery = `
@@ -131,12 +131,12 @@ func createRegistrationMsg(addr rfc.EmailAddress, t string, tx *sql.Tx, c config
 		return nil, err
 	}
 
-	var f = registrationEmailFormatter {
-		From: c.EmailFrom,
+	var f = registrationEmailFormatter{
+		From:         c.EmailFrom,
 		InstanceName: instanceName,
-		RegisterURL: c.BaseURL.String() + c.UserRegisterPath,
-		To: addr,
-		Token: t,
+		RegisterURL:  c.BaseURL.String() + c.UserRegisterPath,
+		To:           addr,
+		Token:        t,
 	}
 
 	var tmpl bytes.Buffer
@@ -146,7 +146,7 @@ func createRegistrationMsg(addr rfc.EmailAddress, t string, tx *sql.Tx, c config
 	return tmpl.Bytes(), nil
 }
 
-func RegisterUser (w http.ResponseWriter, r *http.Request) {
+func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	var tx = inf.Tx.Tx
 	if userErr != nil || sysErr != nil {

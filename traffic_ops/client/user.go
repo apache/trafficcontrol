@@ -23,8 +23,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Users gets an array of Users.
@@ -165,9 +165,9 @@ func (to *Session) RegisterNewUser(tenantID uint, roleID uint, email rfc.EmailAd
 	var alerts tc.Alerts
 
 	reqBody, err := json.Marshal(tc.UserRegistrationRequest{
-		Email: email,
+		Email:    email,
 		TenantID: tenantID,
-		Role: roleID,
+		Role:     roleID,
 	})
 	if err != nil {
 		return alerts, reqInf, err

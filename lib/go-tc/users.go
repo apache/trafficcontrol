@@ -149,13 +149,13 @@ type UserPasswordResetRequest struct {
 type UserRegistrationRequest struct {
 	Email rfc.EmailAddress `json:"email"`
 	// Role - despite being named "Role" - is actually merely the *ID* of a Role to give the new user.
-	Role uint `json:"role"`
+	Role     uint `json:"role"`
 	TenantID uint `json:"tenantId"`
 }
 
 // Validate implements the
 // github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator interface.
-func (urr UserRegistrationRequest) Validate (tx *sql.Tx) (error) {
+func (urr UserRegistrationRequest) Validate(tx *sql.Tx) error {
 	var errs = []error{}
 	if urr.Role == 0 {
 		errs = append(errs, errors.New("role: required and cannot be zero."))

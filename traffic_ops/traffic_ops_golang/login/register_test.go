@@ -29,22 +29,22 @@ func TestRegistrationTemplateRender(t *testing.T) {
 	to := rfc.EmailAddress{
 		mail.Address{
 			Address: "em@i.l",
-			Name: "",
+			Name:    "",
 		},
 	}
 	from := rfc.EmailAddress{
 		mail.Address{
 			Address: "no-reply@test.quest",
-			Name: "",
+			Name:    "",
 		},
 	}
 
 	f := registrationEmailFormatter{
-		From: from,
+		From:         from,
 		InstanceName: "test",
-		RegisterURL: "http://localhost/#!/user",
-		To: to,
-		Token: "token",
+		RegisterURL:  "http://localhost/#!/user",
+		To:           to,
+		Token:        "token",
 	}
 
 	var tmpl bytes.Buffer
