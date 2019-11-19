@@ -24,8 +24,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"path"
+	"os"
+	"path/filepath"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
@@ -61,6 +63,12 @@ func getOSVersions(tx *sqlx.Tx) (tc.OSVersionsResponse, error) {
 
 	b, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
+		// Warn if the old Perl config file exists, but there's an
+		// error reading the file from the new location.
+		oldCfgPath := filepath.Join(filepath.Dir(cfgPath), cfgFilenamePerl)
+		if _, statErr := os.Stat(oldCfgPath); statErr == nil {
+			log.Warnf("The configuration file for the /osversions endpoint has changed from %q to %q: %v", oldCfgPath, cfgPath, err)
+		}
 		return nil, err
 	}
 
@@ -76,8 +84,9 @@ const (
 	ksFilesParamName       = "kickstart.files.location"
 	ksFilesParamConfigFile = "mkisofs"
 
-	cfgDefaultDir = "/var/www/files"  // default directory containing config file
-	cfgFilename   = "osversions.json" // the config file's name is constant, regardless of directory
+	cfgDefaultDir   = "/var/www/files"  // default directory containing config file
+	cfgFilename     = "osversions.json" // the config file's name is constant, regardless of directory
+	cfgFilenamePerl = "osversions.cfg"  // config file name in the Perl version
 )
 
 // osversionsCfgPath returns a path to the configuration file
@@ -99,5 +108,5 @@ func osversionCfgPath(tx *sqlx.Tx) (string, error) {
 		cfgDir = cfgDefaultDir
 	}
 
-	return path.Join(cfgDir, cfgFilename), nil
+	return filepath.Join(cfgDir, cfgFilename), nil
 }

@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -42,7 +42,7 @@ func TestGetOSVersions(t *testing.T) {
 		defer os.RemoveAll(dir)
 
 		// Create config file within temp dir
-		fd, err := os.Create(path.Join(dir, "osversions.json"))
+		fd, err := os.Create(filepath.Join(dir, "osversions.json"))
 		if err != nil {
 			t.Fatalf("error creating tempfile: %v", err)
 		}
@@ -128,12 +128,12 @@ func TestOsversionsCfgPath(t *testing.T) {
 		{
 			"default",
 			"", // No db parameter entry
-			path.Join(cfgDefaultDir, cfgFilename),
+			filepath.Join(cfgDefaultDir, cfgFilename),
 		},
 		{
 			"override",
 			"/this/is/not/the/default/",
-			path.Join("/this/is/not/the/default", cfgFilename),
+			filepath.Join("/this/is/not/the/default", cfgFilename),
 		},
 		{
 			"override-cwd",
