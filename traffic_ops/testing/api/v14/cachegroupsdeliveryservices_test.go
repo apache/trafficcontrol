@@ -60,7 +60,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Errorf("setting cachegroup delivery services returned error: %v\n", err)
 	}
 	if len(resp.Response.ServerNames) == 0 {
-		t.Errorf("setting cachegroup delivery services returned success, but no servers set")
+		t.Error("setting cachegroup delivery services returned success, but no servers set")
 	}
 
 	// Note this second post of the same cg-dses specifically tests a previous bug, where the query failed if any servers with location parameters were already assigned, due to an fk violation. See https://github.com/apache/trafficcontrol/pull/3199
@@ -69,7 +69,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Errorf("setting cachegroup delivery services returned error: %v\n", err)
 	}
 	if len(resp.Response.ServerNames) == 0 {
-		t.Errorf("setting cachegroup delivery services returned success, but no servers set")
+		t.Error("setting cachegroup delivery services returned success, but no servers set")
 	}
 
 	for _, serverName := range resp.Response.ServerNames {

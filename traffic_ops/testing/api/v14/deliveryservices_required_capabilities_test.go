@@ -167,7 +167,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 		t.Fatalf("cannot GET delivery service required capabilities: %v\n", err)
 	}
 	if len(capabilities) == 0 {
-		t.Fatalf("delivery service ds1 needs at least one capability required")
+		t.Fatal("delivery service ds1 needs at least one capability required")
 	}
 
 	// First assign current capabilities to edge server so we can assign it to the DS
@@ -215,7 +215,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 		RequiredCapability: util.StrPtr("newcap"),
 	})
 	if err == nil {
-		t.Fatalf("expected error requiring a capability that is not associated on the delivery service's servers")
+		t.Fatal("expected error requiring a capability that is not associated on the delivery service's servers")
 	}
 
 	// Disassociate server from DS

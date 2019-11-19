@@ -143,7 +143,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			t.Errorf("Error getting empty list of DeliveryServiceRequests %v++", err)
 		}
 		if dsrs == nil {
-			t.Errorf("Expected empty DeliveryServiceRequest slice -- got nil")
+			t.Error("Expected empty DeliveryServiceRequest slice -- got nil")
 		}
 		if len(dsrs) != 0 {
 			t.Errorf("Expected no entries in DeliveryServiceRequest slice -- got %d", len(dsrs))

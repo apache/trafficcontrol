@@ -48,7 +48,7 @@ func GetTestServerCapabilities(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET server capability: %v - %v\n", err, resp)
 		} else if resp == nil {
-			t.Errorf("GET server capability expected non-nil response")
+			t.Error("GET server capability expected non-nil response")
 		}
 	}
 
@@ -64,7 +64,7 @@ func GetTestServerCapabilities(t *testing.T) {
 func ValidationTestServerCapabilities(t *testing.T) {
 	_, _, err := TOSession.CreateServerCapability(tc.ServerCapability{Name: "b@dname"})
 	if err == nil {
-		t.Errorf("expected POST with invalid name to return an error, actual: nil")
+		t.Error("expected POST with invalid name to return an error, actual: nil")
 	}
 }
 

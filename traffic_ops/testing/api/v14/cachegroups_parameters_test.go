@@ -37,7 +37,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 		t.Errorf("cannot GET Cache Group by name: %v - %v\n", firstCacheGroup.Name, err)
 	}
 	if cacheGroupResp == nil {
-		t.Fatalf("Cache Groups response should not be nil")
+		t.Fatal("Cache Groups response should not be nil")
 	}
 
 	// Get Parameter to assign to Cache Group
@@ -47,7 +47,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 		t.Errorf("cannot GET Parameter by name: %v - %v\n", firstParameter.Name, err)
 	}
 	if paramResp == nil {
-		t.Fatalf("Parameter response should not be nil")
+		t.Fatal("Parameter response should not be nil")
 	}
 
 	// Assign Parameter to Cache Group
@@ -58,7 +58,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 		t.Errorf("could not CREATE cache group parameter: %v\n", err)
 	}
 	if resp == nil {
-		t.Fatalf("Cache Group Parameter response should not be nil")
+		t.Fatal("Cache Group Parameter response should not be nil")
 	}
 	testData.CacheGroupParameterRequests = append(testData.CacheGroupParameterRequests, resp.Response...)
 }
@@ -70,7 +70,7 @@ func GetTestCacheGroupParameters(t *testing.T) {
 			t.Errorf("cannot GET Parameter by cache group: %v - %v\n", err, resp)
 		}
 		if resp == nil {
-			t.Fatalf("Cache Group Parameters response should not be nil")
+			t.Fatal("Cache Group Parameters response should not be nil")
 		}
 	}
 }
@@ -83,7 +83,7 @@ func GetTestCacheGroupUnassignedParameters(t *testing.T) {
 			t.Errorf("could not get unassigned parameters for cache group %v: %v\n", cgp.CacheGroupID, err)
 		}
 		if unassignedCGParamsResp == nil {
-			t.Fatalf("unassigned parameters response should not be nil")
+			t.Fatal("unassigned parameters response should not be nil")
 		}
 
 		for _, param := range unassignedCGParamsResp {
@@ -115,7 +115,7 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 		t.Errorf("error deleting Parameter name: %s\n", err.Error())
 	}
 	if parameters == nil {
-		t.Fatalf("Cache Group Parameters response should not be nil")
+		t.Fatal("Cache Group Parameters response should not be nil")
 	}
 	if len(parameters) > 0 {
 		t.Errorf("expected Parameter: %d to be to be disassociated from Cache Group: %d\n", cgp.ParameterID, cgp.CacheGroupID)
@@ -127,7 +127,7 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 		t.Errorf("could not get unassigned parameters for cache group %v: %v\n", cgp.CacheGroupID, err)
 	}
 	if unassignedCGParamsResp == nil {
-		t.Fatalf("unassigned parameters response should not be nil")
+		t.Fatal("unassigned parameters response should not be nil")
 	}
 	found := false
 	for _, param := range unassignedCGParamsResp {

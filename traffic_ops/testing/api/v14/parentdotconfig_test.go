@@ -35,11 +35,11 @@ func GetTestParentDotConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GET delivery service servers: %v\n", err)
 	} else if len(dsServers.Response) == 0 {
-		t.Fatalf("GET delivery service servers: no servers found")
+		t.Fatal("GET delivery service servers: no servers found")
 	} else if dsServers.Response[0].Server == nil {
-		t.Fatalf("GET delivery service servers: returned nil server")
+		t.Fatal("GET delivery service servers: returned nil server")
 	} else if dsServers.Response[0].DeliveryService == nil {
-		t.Fatalf("GET delivery service servers: returned nil ds")
+		t.Fatal("GET delivery service servers: returned nil ds")
 	}
 	serverID := *dsServers.Response[0].Server
 
@@ -74,7 +74,7 @@ func CreateTestDeliveryServiceServers(t *testing.T) {
 		t.Errorf("cannot GET DeliveryServices: %v\n", err)
 	}
 	if len(dses) < 1 {
-		t.Errorf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
+		t.Error("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 
 	servers, _, err := TOSession.GetServers()
@@ -82,7 +82,7 @@ func CreateTestDeliveryServiceServers(t *testing.T) {
 		t.Errorf("cannot GET Servers: %v\n", err)
 	}
 	if len(servers) < 1 {
-		t.Errorf("GET Servers returned no dses, must have at least 1 to test ds-servers")
+		t.Error("GET Servers returned no dses, must have at least 1 to test ds-servers")
 	}
 
 	for _, ds := range dses {
@@ -105,7 +105,7 @@ func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
 		t.Errorf("cannot GET DeliveryServices: %v\n", err)
 	}
 	if len(dses) < 1 {
-		t.Errorf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
+		t.Error("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 	ds := dses[0]
 
@@ -114,7 +114,7 @@ func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
 		t.Errorf("cannot GET Servers: %v\n", err)
 	}
 	if len(servers) < 1 {
-		t.Errorf("GET Servers returned no dses, must have at least 1 to test ds-servers")
+		t.Error("GET Servers returned no dses, must have at least 1 to test ds-servers")
 	}
 	server := servers[0]
 
@@ -131,7 +131,7 @@ func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Errorf("POST delivery service servers returned success, but ds-server not in GET")
+		t.Error("POST delivery service servers returned success, but ds-server not in GET")
 	}
 
 	if _, _, err := TOSession.DeleteDeliveryServiceServer(ds.ID, server.ID); err != nil {
@@ -151,6 +151,6 @@ func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
 		}
 	}
 	if found {
-		t.Errorf("DELETE delivery service servers returned success, but still in GET")
+		t.Error("DELETE delivery service servers returned success, but still in GET")
 	}
 }

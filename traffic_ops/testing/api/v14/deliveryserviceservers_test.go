@@ -113,7 +113,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	if len(dsReqCap) == 0 {
-		t.Fatalf("no delivery service required capabilites found for ds msods1")
+		t.Fatal("no delivery service required capabilites found for ds msods1")
 	}
 
 	// Associate origin server to msods1 even though it does not have req cap
@@ -123,7 +123,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 		t.Fatalf("GET server denver-mso-org-01: %v\n", err)
 	}
 	if len(servers) != 1 {
-		t.Fatalf("expected 1 server with hostname denver-mso-org-01")
+		t.Fatal("expected 1 server with hostname denver-mso-org-01")
 	}
 
 	s := servers[0]
@@ -134,7 +134,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 		t.Fatalf("GET server server capabilities for denver-mso-org-01: %v\n", err)
 	}
 	if len(sccs) != 0 {
-		t.Fatalf("expected 0 server server capabilities for server denver-mso-org-01")
+		t.Fatal("expected 0 server server capabilities for server denver-mso-org-01")
 	}
 
 	// Is origin included in eligible servers even though it doesnt have required capability
@@ -150,7 +150,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Fatalf("expected to find origin server denver-mso-org-01 to be in eligible server return even though it is missing a required capability")
+		t.Fatal("expected to find origin server denver-mso-org-01 to be in eligible server return even though it is missing a required capability")
 	}
 
 	if _, err = TOSession.CreateDeliveryServiceServers(*dsReqCap[0].DeliveryServiceID, []int{s.ID}, true); err != nil {
@@ -203,7 +203,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Errorf("POST delivery service servers returned success, but ds-server not in GET")
+		t.Error("POST delivery service servers returned success, but ds-server not in GET")
 	}
 
 	if _, _, err := TOSession.DeleteDeliveryServiceServer(ds.ID, server.ID); err != nil {
@@ -223,7 +223,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		}
 	}
 	if found {
-		t.Errorf("DELETE delivery service servers returned success, but still in GET")
+		t.Error("DELETE delivery service servers returned success, but still in GET")
 	}
 }
 
@@ -233,7 +233,7 @@ func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.Server) {
 		t.Fatalf("cannot GET DeliveryServices: %v\n", err)
 	}
 	if len(dses) < 1 {
-		t.Fatalf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
+		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 
 	servers, _, err := TOSession.GetServers()
@@ -241,7 +241,7 @@ func getServersAndDSes(t *testing.T) ([]tc.DeliveryService, []tc.Server) {
 		t.Fatalf("cannot GET Servers: %v\n", err)
 	}
 	if len(servers) < 1 {
-		t.Fatalf("GET Servers returned no dses, must have at least 1 to test ds-servers")
+		t.Fatal("GET Servers returned no dses, must have at least 1 to test ds-servers")
 	}
 
 	return dses, servers

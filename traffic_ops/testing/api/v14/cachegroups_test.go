@@ -45,7 +45,7 @@ func CreateTestCacheGroups(t *testing.T) {
 
 		// Testing 'join' fields during create
 		if cg.ParentName != nil && resp.Response.ParentName == nil {
-			t.Errorf("Parent cachegroup is null in response when it should have a value")
+			t.Error("Parent cachegroup is null in response when it should have a value")
 		}
 		if cg.SecondaryParentName != nil && resp.Response.SecondaryParentName == nil {
 			t.Error("Secondary parent cachegroup is null in response when it should have a value\n")
@@ -54,10 +54,10 @@ func CreateTestCacheGroups(t *testing.T) {
 			t.Error("Type is null in response when it should have a value\n")
 		}
 		if resp.Response.LocalizationMethods == nil {
-			t.Errorf("Localization methods are null")
+			t.Error("Localization methods are null")
 		}
 		if resp.Response.Fallbacks == nil {
-			t.Errorf("Fallbacks are null")
+			t.Error("Fallbacks are null")
 		}
 
 	}
@@ -96,7 +96,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 
 	// Check response to make sure fields aren't null
 	if cg.ParentName != nil && updResp.Response.ParentName == nil {
-		t.Errorf("Parent cachegroup is null in response when it should have a value")
+		t.Error("Parent cachegroup is null in response when it should have a value")
 	}
 	if cg.SecondaryParentName != nil && updResp.Response.SecondaryParentName == nil {
 		t.Error("Secondary parent cachegroup is null in response when it should have a value\n")
@@ -105,10 +105,10 @@ func UpdateTestCacheGroups(t *testing.T) {
 		t.Error("Type is null in response when it should have a value\n")
 	}
 	if updResp.Response.LocalizationMethods == nil {
-		t.Errorf("Localization methods are null")
+		t.Error("Localization methods are null")
 	}
 	if updResp.Response.Fallbacks == nil {
-		t.Errorf("Fallbacks are null")
+		t.Error("Fallbacks are null")
 	}
 
 	// Retrieve the CacheGroup to check CacheGroup name got updated

@@ -156,7 +156,7 @@ func GetTestProfiles(t *testing.T) {
 			t.Errorf("error exporting Profile: %v - %v\n", profileID, err)
 		}
 		if exportResp == nil {
-			t.Errorf("error exporting Profile: response nil")
+			t.Error("error exporting Profile: response nil")
 		}
 	}
 }
@@ -168,7 +168,7 @@ func ImportProfile(t *testing.T) {
 		t.Fatalf("cannot GET Profile by name: %v - %v\n", err, resp)
 	}
 	if resp == nil {
-		t.Fatalf("error getting Profile: response nil")
+		t.Fatal("error getting Profile: response nil")
 	}
 	if len(resp) != 1 {
 		t.Fatalf("Profiles expected 1, actual %v\n", len(resp))
@@ -181,7 +181,7 @@ func ImportProfile(t *testing.T) {
 		t.Fatalf("error exporting Profile: %v - %v\n", profileID, err)
 	}
 	if exportResp == nil {
-		t.Fatalf("error exporting Profile: response nil")
+		t.Fatal("error exporting Profile: response nil")
 	}
 
 	// Modify Profile and import
@@ -206,7 +206,7 @@ func ImportProfile(t *testing.T) {
 		t.Fatalf("error importing Profile: %v - %v\n", profileID, err)
 	}
 	if importResp == nil {
-		t.Errorf("error importing Profile: response nil")
+		t.Error("error importing Profile: response nil")
 	}
 
 	// Add newly create profile and parameter to testData so it gets deleted

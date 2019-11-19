@@ -74,7 +74,7 @@ func UpdateTestServerStatus(t *testing.T) {
 		edge1cdn2,
 	} {
 		if s.UpdPending {
-			t.Errorf("expected UpdPending: false, actual: true")
+			t.Error("expected UpdPending: false, actual: true")
 		}
 	}
 
@@ -119,7 +119,7 @@ func UpdateTestServerStatus(t *testing.T) {
 		Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
 		OfflineReason: util.StrPtr("testing")})
 	if err == nil {
-		t.Errorf("update server status exected: err, actual: nil")
+		t.Error("update server status exected: err, actual: nil")
 	}
 
 	// status does not exist
@@ -127,7 +127,7 @@ func UpdateTestServerStatus(t *testing.T) {
 		Status:        util.JSONNameOrIDStr{Name: util.StrPtr("NOT_A_REAL_STATUS")},
 		OfflineReason: util.StrPtr("testing")})
 	if err == nil {
-		t.Errorf("update server status exected: err, actual: nil")
+		t.Error("update server status exected: err, actual: nil")
 	}
 
 	// offlineReason required for OFFLINE status
@@ -135,7 +135,7 @@ func UpdateTestServerStatus(t *testing.T) {
 		Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
 		OfflineReason: nil})
 	if err == nil {
-		t.Errorf("update server status exected: err, actual: nil")
+		t.Error("update server status exected: err, actual: nil")
 	}
 
 	// offlineReason required for ADMIN_DOWN status
@@ -143,7 +143,7 @@ func UpdateTestServerStatus(t *testing.T) {
 		Status:        util.JSONNameOrIDStr{Name: util.StrPtr("ADMIN_DOWN")},
 		OfflineReason: nil})
 	if err == nil {
-		t.Errorf("update server status exected: err, actual: nil")
+		t.Error("update server status exected: err, actual: nil")
 	}
 
 }

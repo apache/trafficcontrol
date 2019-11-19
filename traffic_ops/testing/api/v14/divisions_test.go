@@ -42,7 +42,7 @@ func TryToDeleteDivision(t *testing.T) {
 	_, _, err = TOSession.DeleteDivisionByID(division.ID)
 
 	if err == nil {
-		t.Errorf("should not be able to delete a division prematurely")
+		t.Error("should not be able to delete a division prematurely")
 		return
 	}
 

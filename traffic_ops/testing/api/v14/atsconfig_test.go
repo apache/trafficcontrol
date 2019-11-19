@@ -29,7 +29,7 @@ func TestATSConfigs(t *testing.T) {
 
 func GetTestATSConfigs(t *testing.T) {
 	if len(testData.Servers) < 1 {
-		t.Fatalf("cannot GET Server: no test data")
+		t.Fatal("cannot GET Server: no test data")
 	}
 	testServer := testData.Servers[0]
 

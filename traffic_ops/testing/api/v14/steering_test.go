@@ -27,11 +27,11 @@ func TestSteering(t *testing.T) {
 
 func GetTestSteering(t *testing.T) {
 	if len(testData.SteeringTargets) < 1 {
-		t.Errorf("get steering: no steering target test data")
+		t.Error("get steering: no steering target test data")
 	}
 	st := testData.SteeringTargets[0]
 	if st.DeliveryService == nil {
-		t.Errorf("get steering: test data missing ds")
+		t.Error("get steering: test data missing ds")
 	}
 
 	steerings, _, err := TOSession.Steering()

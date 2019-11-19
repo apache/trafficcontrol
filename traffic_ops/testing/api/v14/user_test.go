@@ -61,7 +61,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 		t.Errorf("could not get roles: %v", err)
 	}
 	if len(roles) == 0 {
-		t.Fatalf("there should be at least one role to test the user")
+		t.Fatal("there should be at least one role to test the user")
 	}
 
 	tenants, _, err := TOSession.Tenants()
@@ -69,7 +69,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 		t.Errorf("could not get tenants: %v", err)
 	}
 	if len(tenants) == 0 {
-		t.Fatalf("there should be at least one tenant to test the user")
+		t.Fatal("there should be at least one tenant to test the user")
 	}
 
 	// this user never does anything, so the role and tenant aren't important
@@ -98,7 +98,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 	buf.ReadFrom(resp.Body)
 	strResp := buf.String()
 	if !strings.Contains(strResp, "roleName") {
-		t.Errorf("incorrect json was returned for POST")
+		t.Error("incorrect json was returned for POST")
 	}
 
 	request, err = http.NewRequest("GET", fmt.Sprintf("%v/api/1.4/users?username=test_user", TOSession.URL), nil)
@@ -108,7 +108,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 	buf.ReadFrom(resp.Body)
 	strResp = buf.String()
 	if !strings.Contains(strResp, "rolename") {
-		t.Errorf("incorrect json was returned for GET")
+		t.Error("incorrect json was returned for GET")
 	}
 
 }
@@ -133,7 +133,7 @@ func OpsUpdateAdminTest(t *testing.T) {
 
 	_, _, err = opsTOClient.UpdateUserByID(*user.ID, &user)
 	if err == nil {
-		t.Errorf("ops user incorrectly updated an admin")
+		t.Error("ops user incorrectly updated an admin")
 	}
 }
 
@@ -169,7 +169,7 @@ func UserSelfUpdateTest(t *testing.T) {
 	updatedUser := resp2[0]
 
 	if updatedUser.FullName == nil || updatedUser.Email == nil {
-		t.Errorf("user was not correctly updated, field is null")
+		t.Error("user was not correctly updated, field is null")
 	}
 	if *updatedUser.FullName != fullName {
 		t.Errorf("results do not match actual: %s, expected: %s\n", *updatedUser.FullName, fullName)
@@ -189,7 +189,7 @@ func UserUpdateOwnRoleTest(t *testing.T) {
 	*user.Role = *user.Role + 1
 	_, _, err = TOSession.UpdateUserByID(*user.ID, &user)
 	if err == nil {
-		t.Errorf("user incorrectly updated their role")
+		t.Error("user incorrectly updated their role")
 	}
 }
 
@@ -320,7 +320,7 @@ func ForceDeleteTestUsers(t *testing.T) {
 	//  This is required here because the DeleteUser action does not really delete users,  but disables them.
 	db, err := OpenConnection()
 	if err != nil {
-		t.Errorf("cannot open db")
+		t.Error("cannot open db")
 	}
 	defer db.Close()
 

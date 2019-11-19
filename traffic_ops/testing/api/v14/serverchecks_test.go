@@ -50,7 +50,7 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 
 	_, _, err := TOSession.InsertServerCheckStatus(testData.Serverchecks[0])
 	if err == nil {
-		t.Errorf("expected to receive error with non extension user")
+		t.Error("expected to receive error with non extension user")
 	}
 
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
@@ -65,14 +65,14 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 	// Attempt to create a ServerCheck with invalid server ID
 	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
 	if err == nil {
-		t.Errorf("expected to receive error with invalid id")
+		t.Error("expected to receive error with invalid id")
 	}
 
 	invalidServerCheck.ID = nil
 	// Attempt to create a ServerCheck with invalid host name
 	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
 	if err == nil {
-		t.Errorf("expected to receive error with invalid host name")
+		t.Error("expected to receive error with invalid host name")
 	}
 
 	// get valid name to get past host check
@@ -81,7 +81,7 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 	// Attempt to create a ServerCheck with invalid servercheck name
 	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
 	if err == nil {
-		t.Errorf("expected to receive error with invalid servercheck name")
+		t.Error("expected to receive error with invalid servercheck name")
 	}
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }

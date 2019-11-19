@@ -16,6 +16,7 @@ package v14
 */
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -33,7 +34,7 @@ func TestFederations(t *testing.T) {
 
 func GetTestFederations(t *testing.T) {
 	if len(testData.Federations) == 0 {
-		t.Errorf("no federations test data")
+		t.Error("no federations test data")
 	}
 
 	feds, _, err := TOSession.AllFederations()
@@ -47,24 +48,24 @@ func GetTestFederations(t *testing.T) {
 	fed := feds[0]
 
 	if len(fed.Mappings) < 1 {
-		t.Errorf("federation mappings expected <0, actual: 0")
+		t.Error("federation mappings expected <0, actual: 0")
 	}
 
 	mapping := fed.Mappings[0]
 	if mapping.CName == nil {
-		t.Errorf("federation mapping expected cname, actual: nil")
+		t.Error("federation mapping expected cname, actual: nil")
 	}
 	if mapping.TTL == nil {
-		t.Errorf("federation mapping expected ttl, actual: nil")
+		t.Error("federation mapping expected ttl, actual: nil")
 	}
 
 	matched := false
 	for _, testFed := range testData.Federations {
 		if testFed.CName == nil {
-			t.Errorf("test federation missing cname!")
+			t.Error("test federation missing cname!")
 		}
 		if testFed.TTL == nil {
-			t.Errorf("test federation missing ttl!")
+			t.Error("test federation missing ttl!")
 		}
 
 		if *mapping.CName != *testFed.CName {
@@ -87,13 +88,13 @@ func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryService, tc
 		return -1, tc.DeliveryService{}, tc.DeliveryService{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 	if len(dses) == 0 {
-		return -1, tc.DeliveryService{}, tc.DeliveryService{}, fmt.Errorf("no delivery services, must have at least 1 ds to test federations deliveryservices")
+		return -1, tc.DeliveryService{}, tc.DeliveryService{}, errors.New("no delivery services, must have at least 1 ds to test federations deliveryservices")
 	}
 	ds := dses[0]
 	ds1 := dses[1]
 
 	if len(fedIDs) == 0 {
-		return -1, ds, ds1, fmt.Errorf("no federations, must have at least 1 federation to test federations deliveryservices")
+		return -1, ds, ds1, errors.New("no federations, must have at least 1 federation to test federations deliveryservices")
 	}
 	fedID := fedIDs[0]
 
@@ -141,13 +142,13 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	// Attempt to delete the last one which should fail as you cannot remove the last
 	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, ds1.ID)
 	if err == nil {
-		t.Fatalf("expected to receive error from attempting to delete last Delivery Service from a Federation")
+		t.Fatal("expected to receive error from attempting to delete last Delivery Service from a Federation")
 	}
 }
 
 func RemoveFederationResolversForCurrentUserTest(t *testing.T) {
 	if len(testData.Federations) < 1 {
-		t.Fatalf("No test Federations, deleting resolvers cannot be tested!")
+		t.Fatal("No test Federations, deleting resolvers cannot be tested!")
 	}
 
 	alerts, _, err := TOSession.DeleteFederationResolverMappingsForCurrentUser()
@@ -167,7 +168,7 @@ func RemoveFederationResolversForCurrentUserTest(t *testing.T) {
 	if err != nil {
 		t.Logf("Received expected error deleting Federation Resolvers for current user: %v", err)
 	} else {
-		t.Errorf("Expected an error deleting zero Federation Resolvers, but didn't get one.")
+		t.Error("Expected an error deleting zero Federation Resolvers, but didn't get one.")
 	}
 }
 
@@ -183,7 +184,7 @@ func AddFederationResolversForCurrentUserTest(t *testing.T) {
 		t.Fatalf("Couldn't figure out who I am: %v", err)
 	}
 	if me.ID == nil {
-		t.Fatalf("Current user has no ID, cannot continue.")
+		t.Fatal("Current user has no ID, cannot continue.")
 	}
 
 	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*me.ID}, false)
@@ -232,7 +233,7 @@ func AddFederationResolversForCurrentUserTest(t *testing.T) {
 
 	alerts, _, err = TOSession.AddFederationResolverMappingsForCurrentUser(mappings)
 	if err == nil {
-		t.Fatalf("Expected error adding Federation Resolver mappings for the current user, but didn't get one")
+		t.Fatal("Expected error adding Federation Resolver mappings for the current user, but didn't get one")
 	}
 	for _, a := range alerts.Alerts {
 		if a.Level != tc.SuccessLevel.String() {

@@ -155,7 +155,7 @@ func DeleteTestTenants(t *testing.T) {
 			break
 		}
 		if len(deletedTenants) == initLenDeleted {
-			t.Fatalf("could not delete tenants: not tenant without an existing child found (cycle?)")
+			t.Fatal("could not delete tenants: not tenant without an existing child found (cycle?)")
 		}
 	}
 }
@@ -205,9 +205,9 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// ds3 has tenant3. Even though tenant3 is inactive, we should still be able to get it, because our user is tenant1, which is active.
 	dses, _, err := TOSession.GetDeliveryServiceByXMLID("ds3")
 	if err != nil {
-		t.Fatalf("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active)")
+		t.Fatal("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active)")
 	} else if len(dses) != 1 {
-		t.Errorf("admin user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
+		t.Error("admin user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
 	}
 
 	setTenantActive(t, "tenant1", true)
@@ -217,7 +217,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// ds3 has tenant3. Even though tenant3's parent, tenant2, is inactive, we should still be able to get it, because our user is tenant1, which is active.
 	_, _, err = TOSession.GetDeliveryServiceByXMLID("ds3")
 	if err != nil {
-		t.Fatalf("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active)")
+		t.Fatal("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active)")
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
@@ -256,7 +256,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	if err != nil {
 		t.Errorf("tenant3user getting delivery service ds3 error expected: nil, actual: %+v", err)
 	} else if len(dses) == 0 {
-		t.Errorf("tenant3user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
+		t.Error("tenant3user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
 	}
 
 	// 1. ds2 has tenant2.

@@ -16,6 +16,7 @@ package config
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net"
 	"regexp"
@@ -39,16 +40,16 @@ func Validate24HrTimeRange(rng string) error {
 
 	t1, err := time.Parse(militaryTimeFmt, match[1])
 	if err != nil {
-		return fmt.Errorf("time range must be a 24Hr format")
+		return errors.New("time range must be a 24Hr format")
 	}
 
 	t2, err := time.Parse(militaryTimeFmt, match[2])
 	if err != nil {
-		return fmt.Errorf("second time range must be a 24Hr format")
+		return errors.New("second time range must be a 24Hr format")
 	}
 
 	if t1.After(t2) {
-		return fmt.Errorf("first time should be smaller than the second")
+		return errors.New("first time should be smaller than the second")
 	}
 
 	return nil
@@ -60,14 +61,14 @@ func Validate24HrTimeRange(rng string) error {
 func ValidateDHMSTimeFormat(time string) error {
 
 	if time == "" {
-		return fmt.Errorf("time string cannot be empty")
+		return errors.New("time string cannot be empty")
 	}
 
 	dhms := regexp.MustCompile(`^(\d+)([dhms])(\S*)$`)
 	match := dhms.FindStringSubmatch(time)
 
 	if match == nil {
-		return fmt.Errorf("invalid time format")
+		return errors.New("invalid time format")
 	}
 
 	var count = map[string]int{

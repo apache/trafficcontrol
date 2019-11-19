@@ -31,7 +31,7 @@ func GetTestDeliveryServicesEligible(t *testing.T) {
 		t.Errorf("cannot GET DeliveryServices: %v\n", err)
 	}
 	if len(dses) == 0 {
-		t.Errorf("GET DeliveryServices returned no delivery services, need at least 1 to test")
+		t.Error("GET DeliveryServices returned no delivery services, need at least 1 to test")
 	}
 	dsID := dses[0].ID
 	servers, _, err := TOSession.GetDeliveryServicesEligible(dsID)
@@ -39,6 +39,6 @@ func GetTestDeliveryServicesEligible(t *testing.T) {
 		t.Errorf("getting delivery services eligible: %v\n", err)
 	}
 	if len(servers) == 0 {
-		t.Errorf("getting delivery services eligible returned no servers")
+		t.Error("getting delivery services eligible returned no servers")
 	}
 }

@@ -37,11 +37,11 @@ func GetTestRemapDotConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GET delivery service servers: %v\n", err)
 	} else if len(dsServers.Response) == 0 {
-		t.Fatalf("GET delivery service servers: no servers found")
+		t.Fatal("GET delivery service servers: no servers found")
 	} else if dsServers.Response[0].Server == nil {
-		t.Fatalf("GET delivery service servers: returned nil server")
+		t.Fatal("GET delivery service servers: returned nil server")
 	} else if dsServers.Response[0].DeliveryService == nil {
-		t.Fatalf("GET delivery service servers: returned nil ds")
+		t.Fatal("GET delivery service servers: returned nil ds")
 	}
 	serverID := *dsServers.Response[0].Server
 
@@ -61,7 +61,7 @@ func GetTestRemapDotConfig(t *testing.T) {
 		break
 	}
 	if ds == nil || ds.XMLID == "" {
-		t.Fatalf("no Delivery Service found with assigned servers that isn't an ANY_MAP service, can't test remap.config")
+		t.Fatal("no Delivery Service found with assigned servers that isn't an ANY_MAP service, can't test remap.config")
 	}
 
 	originURI, err := url.Parse(ds.OrgServerFQDN)

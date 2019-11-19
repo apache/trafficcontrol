@@ -33,14 +33,14 @@ func CreateTestUsersDeliveryServices(t *testing.T) {
 		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, dses)
 	}
 	if len(dses) == 0 {
-		t.Errorf("no delivery services, must have at least 1 ds to test users_deliveryservices")
+		t.Error("no delivery services, must have at least 1 ds to test users_deliveryservices")
 	}
 	users, _, err := TOSession.GetUsers()
 	if err != nil {
 		t.Errorf("cannot GET users: %v\n", err)
 	}
 	if len(users) == 0 {
-		t.Errorf("no users, must have at least 1 user to test users_deliveryservices")
+		t.Error("no users, must have at least 1 user to test users_deliveryservices")
 	}
 
 	dsIDs := []int{}
@@ -78,7 +78,7 @@ func CreateTestUsersDeliveryServices(t *testing.T) {
 	actualDSIDMap := map[int]struct{}{}
 	for _, userDS := range userDSes.Response {
 		if userDS.ID == nil {
-			t.Errorf("get user delivery services returned a DS with a nil ID")
+			t.Error("get user delivery services returned a DS with a nil ID")
 		}
 		actualDSIDMap[*userDS.ID] = struct{}{}
 	}
@@ -95,14 +95,14 @@ func GetTestUsersDeliveryServices(t *testing.T) {
 		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, dses)
 	}
 	if len(dses) == 0 {
-		t.Errorf("no delivery services, must have at least 1 ds to test users_deliveryservices")
+		t.Error("no delivery services, must have at least 1 ds to test users_deliveryservices")
 	}
 	users, _, err := TOSession.GetUsers()
 	if err != nil {
 		t.Errorf("cannot GET users: %v\n", err)
 	}
 	if len(users) == 0 {
-		t.Errorf("no users, must have at least 1 user to test users_deliveryservices")
+		t.Error("no users, must have at least 1 user to test users_deliveryservices")
 	}
 
 	dsIDs := []int64{}
@@ -135,7 +135,7 @@ func GetTestUsersDeliveryServices(t *testing.T) {
 	actualDSIDMap := map[int]struct{}{}
 	for _, userDS := range userDSes.Response {
 		if userDS.ID == nil {
-			t.Errorf("get user delivery services returned a DS with a nil ID")
+			t.Error("get user delivery services returned a DS with a nil ID")
 		}
 		actualDSIDMap[*userDS.ID] = struct{}{}
 	}
@@ -152,7 +152,7 @@ func DeleteTestUsersDeliveryServices(t *testing.T) {
 		t.Errorf("cannot GET users: %v\n", err)
 	}
 	if len(users) == 0 {
-		t.Errorf("no users, must have at least 1 user to test users_deliveryservices")
+		t.Error("no users, must have at least 1 user to test users_deliveryservices")
 	}
 	userID := 0
 	foundUser := false
@@ -177,7 +177,7 @@ func DeleteTestUsersDeliveryServices(t *testing.T) {
 
 	for _, ds := range dses.Response {
 		if ds.ID == nil {
-			t.Errorf("get user delivery services returned ds with nil ID")
+			t.Error("get user delivery services returned ds with nil ID")
 		}
 		_, err := TOSession.DeleteDeliveryServiceUser(userID, *ds.ID)
 		if err != nil {

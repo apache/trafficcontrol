@@ -301,7 +301,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 	}
 	respDS := data.Response[0]
 	if !dsV13FieldsAreNil(respDS) || !dsV14FieldsAreNil(respDS) {
-		t.Errorf("expected 1.3 and 1.4 values to be nil, actual: non-nil")
+		t.Error("expected 1.3 and 1.4 values to be nil, actual: non-nil")
 	}
 
 	// GET 1.3, verify 1.3 fields are non-nil and 1.4 fields are nil
@@ -311,10 +311,10 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 	}
 	respDS = data.Response[0]
 	if dsV13FieldsAreNil(respDS) {
-		t.Errorf("expected 1.3 values to be non-nil, actual: nil")
+		t.Error("expected 1.3 values to be non-nil, actual: nil")
 	}
 	if !dsV14FieldsAreNil(respDS) {
-		t.Errorf("expected 1.4 values to be nil, actual: non-nil")
+		t.Error("expected 1.4 values to be nil, actual: non-nil")
 	}
 	if _, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID)); err != nil {
 		t.Errorf("cannot DELETE deliveryservice: %s\n", err.Error())
@@ -336,7 +336,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("cannot POST 1.3 deliveryservice, failed to make request: %s\n", err.Error())
 	}
 	if !dsV14FieldsAreNil(postDSResp.Response[0]) {
-		t.Errorf("POST 1.3 expected 1.4 values to be nil, actual: non-nil")
+		t.Error("POST 1.3 expected 1.4 values to be nil, actual: non-nil")
 	}
 	respID := postDSResp.Response[0].ID
 	getDS, _, err := TOSession.GetDeliveryServiceNullable(strconv.Itoa(*respID))
@@ -344,7 +344,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("cannot GET deliveryservice: %s\n", err.Error())
 	}
 	if !dsV14FieldsAreNilOrDefault(*getDS) {
-		t.Errorf("POST 1.3 expected 1.4 values to be nil/default, actual: non-nil/default")
+		t.Error("POST 1.3 expected 1.4 values to be nil/default, actual: non-nil/default")
 	}
 	if _, err = TOSession.DeleteDeliveryService(strconv.Itoa(*respID)); err != nil {
 		t.Errorf("cannot DELETE deliveryservice: %s\n", err.Error())
@@ -444,7 +444,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("cannot PUT 1.1 deliveryservice, failed to make request: %s\n", err.Error())
 	}
 	if !dsV14FieldsAreNil(putDSResp.Response[0]) {
-		t.Errorf("PUT 1.3 expected 1.4 values to be nil, actual: non-nil")
+		t.Error("PUT 1.3 expected 1.4 values to be nil, actual: non-nil")
 	}
 	respID = putDSResp.Response[0].ID
 	getDS, _, err = TOSession.GetDeliveryServiceNullable(strconv.Itoa(*respID))
@@ -452,7 +452,7 @@ func DeliveryServiceMinorVersionsTest(t *testing.T) {
 		t.Errorf("cannot GET deliveryservice: %s\n", err.Error())
 	}
 	if !dsV14FieldsAreNilOrDefault(*getDS) {
-		t.Errorf("PUT 1.3 expected 1.4 values to be nil/default, actual: non-nil/default")
+		t.Error("PUT 1.3 expected 1.4 values to be nil/default, actual: non-nil/default")
 	}
 }
 
@@ -562,7 +562,7 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 	tenant3DS.XMLID = util.StrPtr("deliveryservicetenancytest")
 	tenant3DS.DisplayName = util.StrPtr("deliveryservicetenancytest")
 	if _, err = tenant4TOClient.CreateDeliveryServiceNullable(&tenant3DS); err == nil {
-		t.Errorf("expected tenant4user to be unable to create a deliveryservice outside of its tenant")
+		t.Error("expected tenant4user to be unable to create a deliveryservice outside of its tenant")
 	}
 
 }
