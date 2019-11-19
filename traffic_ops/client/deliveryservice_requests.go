@@ -94,7 +94,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	if err != nil {
 		return alerts, reqInf, err
 	}
-	resp, remoteAddr, err := to.rawRequest(http.MethodPost, API_DS_REQUESTS, reqBody)
+	resp, remoteAddr, err := to.RawRequest(http.MethodPost, API_DS_REQUESTS, reqBody)
 	defer resp.Body.Close()
 
 	if err == nil {
@@ -195,7 +195,7 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 // DELETE a DeliveryServiceRequest by DeliveryServiceRequest assignee
 func (to *Session) DeleteDeliveryServiceRequestByID(id int) (tc.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
-	resp, remoteAddr, err := to.rawRequest(http.MethodDelete, route, nil)
+	resp, remoteAddr, err := to.RawRequest(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err

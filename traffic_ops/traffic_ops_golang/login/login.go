@@ -62,6 +62,8 @@ WHERE name='tm.instance_name' AND
 const userQueryByEmail = `SELECT EXISTS(SELECT * FROM tm_user WHERE email=$1)`
 const setTokenQuery = `UPDATE tm_user SET token=$1 WHERE email=$2`
 
+const defaultCookieDuration = 6 * time.Hour
+
 var resetPasswordEmailTemplate = template.Must(template.New("Password Reset Email").Parse("From: {{.From.Address.Address}}\r" + `
 To: {{.To.Address.Address}}` + "\r" + `
 Content-Type: text/html` + "\r" + `
@@ -144,10 +146,8 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				}
 			}
 			if authenticated {
-				expiry := time.Now().Add(time.Hour * 6)
-				cookie := tocookie.New(form.Username, expiry, cfg.Secrets[0])
-				httpCookie := http.Cookie{Name: "mojolicious", Value: cookie, Path: "/", Expires: expiry, HttpOnly: true}
-				http.SetCookie(w, &httpCookie)
+				httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
+				http.SetCookie(w, httpCookie)
 				resp = struct {
 					tc.Alerts
 				}{tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")}
@@ -196,10 +196,8 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		expiry := time.Now().Add(time.Hour * 6)
-		cookie := tocookie.New(username, expiry, cfg.Secrets[0])
-		httpCookie := http.Cookie{Name: "mojolicious", Value: cookie, Path: "/", Expires: expiry, HttpOnly: true}
-		http.SetCookie(w, &httpCookie)
+		httpCookie := tocookie.GetCookie(username, defaultCookieDuration, cfg.Secrets[0])
+		http.SetCookie(w, httpCookie)
 		respBts, err := json.Marshal(tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in."))
 		if err != nil {
 			sysErr := fmt.Errorf("Marshaling response: %v", err)
@@ -343,10 +341,8 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		if userAllowed && authenticated {
-			expiry := time.Now().Add(time.Hour * 6)
-			cookie := tocookie.New(userId, expiry, cfg.Secrets[0])
-			httpCookie := http.Cookie{Name: "mojolicious", Value: cookie, Path: "/", Expires: expiry, HttpOnly: true}
-			http.SetCookie(w, &httpCookie)
+			httpCookie := tocookie.GetCookie(userId, defaultCookieDuration, cfg.Secrets[0])
+			http.SetCookie(w, httpCookie)
 			resp = struct {
 				tc.Alerts
 			}{tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")}

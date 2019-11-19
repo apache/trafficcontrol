@@ -319,11 +319,11 @@ For the yaml component:
 ./vendor/gopkg.in/yaml.v2/LICENSE.libyaml
 
 For the jwt-go component:
-@traffic_ops/experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/*
-./traffic_ops/experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/LICENSE
+@experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/*
+./experimental/traffic_ops_auth/vendor/github.com/dgrijalva/jwt-go/LICENSE
 
 For the pq component:
-@traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
+@experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
 @vendor/github.com/lib/pq/*
 ./vendor/github.com/lib/pq/LICENSE.md
 

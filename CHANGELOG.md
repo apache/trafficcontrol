@@ -71,6 +71,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)
 - Traffic Portal:  Traffic Portal now allows Regional Geo Blocking to be enabled for a Steering Delivery Service.
+- Traffic Ops: fixed a regression where the `Expires` cookie header was not being set properly in responses. Also, added the `Max-Age` cookie header in responses.
 - Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
   - validates modulus of private and public keys
   - validates current timestamp falls within the certificate date bracket
