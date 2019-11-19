@@ -56,7 +56,7 @@ VALUES ($1,
         $2,
         $3,
         $4,
-        $4)
+        'registration_' || (SELECT md5(random()::text)))
 RETURNING (
 	SELECT role.name
 	FROM role
