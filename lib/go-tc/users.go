@@ -162,7 +162,7 @@ func (urr UserRegistrationRequest) Validate(tx *sql.Tx) error {
 	}
 
 	if urr.TenantID == 0 {
-		errs = append(errs, errors.New("role: required and cannot be zero."))
+		errs = append(errs, errors.New("tenantId: required and cannot be zero."))
 	}
 
 	return util.JoinErrs(errs)
