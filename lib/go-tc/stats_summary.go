@@ -1,5 +1,7 @@
 package tc
 
+import "time"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -26,18 +28,21 @@ type StatsSummaryResponse struct {
 
 // StatsSummary ...
 type StatsSummary struct {
-	CDNName         string `json:"cdnName"`
-	DeliveryService string `json:"deliveryServiceName"`
-	StatName        string `json:"statName"`
-	StatValue       string `json:"statValue"`
-	SummaryTime     string `json:"summaryTime"`
-	StatDate        string `json:"statDate"`
+	ID              int       `json:"-"  db:"id"`
+	CDNName         string    `json:"cdnName"  db:"cdn_name"`
+	DeliveryService string    `json:"deliveryServiceName"  db:"deliveryservice_name"`
+	StatName        string    `json:"statName"  db:"stat_name"`
+	StatValue       float64   `json:"statValue"  db:"stat_value"`
+	SummaryTime     time.Time `json:"summaryTime"  db:"summary_time"`
+	StatDate        time.Time `json:"statDate"  db:"stat_date"`
 }
 
-// LastUpdated ...
-type LastUpdated struct {
-	Version  string `json:"version"`
-	Response struct {
-		SummaryTime string `json:"summaryTime"`
-	} `json:"response"`
+// StatsSummaryLastUpdated ...
+type StatsSummaryLastUpdated struct {
+	SummaryTime time.Time `json:"summaryTime"  db:"summary_time"`
+}
+
+// StatsSummaryLastUpdatedResponse ...
+type StatsSummaryLastUpdatedResponse struct {
+	Response StatsSummaryLastUpdated `json:"response"`
 }

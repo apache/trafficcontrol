@@ -316,9 +316,9 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 					statsSummary.CDNName = cdn
 					statsSummary.DeliveryService = "all"
 					statsSummary.StatName = "daily_maxgbps"
-					statsSummary.StatValue = strconv.FormatFloat(value, 'f', 2, 64)
-					statsSummary.SummaryTime = time.Now().Format(time.RFC3339)
-					statsSummary.StatDate = statTime.Format("2006-01-02")
+					statsSummary.StatValue = value
+					statsSummary.SummaryTime = time.Now()
+					statsSummary.StatDate = statTime
 					go writeSummaryStats(config, statsSummary)
 
 					//write to influxdb
@@ -376,9 +376,9 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 			statsSummary.CDNName = cdn
 			statsSummary.DeliveryService = "all"
 			statsSummary.StatName = "daily_bytesserved"
-			statsSummary.StatValue = strconv.FormatFloat(bytesServedTB, 'f', 2, 64)
-			statsSummary.SummaryTime = time.Now().Format(time.RFC3339)
-			statsSummary.StatDate = startTime.Format("2006-01-02")
+			statsSummary.StatValue = bytesServedTB
+			statsSummary.SummaryTime = time.Now()
+			statsSummary.StatDate = time.Now()
 			go writeSummaryStats(config, statsSummary)
 			//write to Influxdb
 			tags := map[string]string{"cdn": cdn, "deliveryservice": "all"}
@@ -422,7 +422,7 @@ func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummary) {
 		log.Error(newErr)
 		return
 	}
-	err = to.AddSummaryStats(statsSummary)
+	_, _, err = to.CreateSummaryStats(statsSummary)
 	if err != nil {
 		log.Error(err)
 	}
@@ -502,16 +502,11 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		}
 	}
 
-	lastSummaryTimeStr, err := to.SummaryStatsLastUpdated("daily_maxgbps")
+	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated("daily_maxgbps")
 	if err != nil {
 		errHndlr(err, ERROR)
 	} else {
-		lastSummaryTime, err := time.Parse("2006-01-02 15:04:05-07", lastSummaryTimeStr)
-		if err != nil {
-			log.Error("Error parsing lastSummaryTime: " + err.Error())
-		} else {
-			runningConfig.LastSummaryTime = lastSummaryTime
-		}
+		runningConfig.LastSummaryTime = lastSummaryTimeResponse.Response.SummaryTime
 	}
 
 	configChan <- runningConfig
