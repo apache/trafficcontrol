@@ -159,7 +159,7 @@ func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.
 		}
 
 		if int(t.CDN) != serverInfo.CDNID {
-			return http.StatusConflict, fmt.Errorf("Delivery Service %s (#%d) is not in the same CDN as server %s (#%d) (server is in %s (#%d), DS is in %s (#%d))!", t.DSXMLID, t.DSID, serverInfo.HostName, server, serverCDN, serverInfo.CDNID, t.CDN, t.CDNName), nil
+			return http.StatusConflict, fmt.Errorf("Delivery Service %s (#%d) is not in the same CDN as server %s (#%d) (server is in %s (#%d), DS is in %s (#%d))!", t.DSXMLID, t.DSID, serverInfo.HostName, server, serverCDN, serverInfo.CDNID, t.CDNName, t.CDN), nil
 		}
 	}
 
