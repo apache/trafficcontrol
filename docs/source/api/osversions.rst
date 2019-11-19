@@ -41,16 +41,14 @@ This endpoint has no constant keys in its ``response``. Instead, each key in the
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
-	Date: Fri, 30 Nov 2018 19:14:36 GMT
-	Server: Mojolicious (Perl)
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Vary: Accept-Encoding
 	Whole-Content-Sha512: RxbRY2DZ+lYOdTzzUETEZ3wtLBiD2BwXMVuaZjhe4a4cwgcZKRBWxZ6Qy5YYujFe1+UBiTG4sML/Amn27F4AVg==
+	X-Server-Name: traffic_ops_golang/
+	Date: Fri, 30 Nov 2018 19:14:36 GMT
 	Content-Length: 38
 
 	{ "response": {
