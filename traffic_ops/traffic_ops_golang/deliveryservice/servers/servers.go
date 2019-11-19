@@ -416,7 +416,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	serverNames := payload.ServerNames
 
 	usrErr, sysErr, status := ValidateServerCapabilities(ds.ID, serverNames, inf.Tx.Tx)
-	if err != nil {
+	if usrErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, usrErr, sysErr)
 		return
 	}
