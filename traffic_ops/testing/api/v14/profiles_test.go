@@ -69,33 +69,33 @@ func CreateTestProfiles(t *testing.T) {
 			t.Errorf("could not GET profile with name: %s %v\n", pr.Name, err)
 		}
 		if len(profiles) == 0 {
-			t.Errorf("could not GET profile %++v: not found\n", pr)
+			t.Errorf("could not GET profile %+v: not found\n", pr)
 		}
 		profileID := profiles[0].ID
 
 		for _, param := range pr.Parameters {
 			if param.Name == nil || param.Value == nil || param.ConfigFile == nil {
-				t.Errorf("invalid parameter specification: %++v", param)
+				t.Errorf("invalid parameter specification: %+v", param)
 				continue
 			}
 			_, _, err := TOSession.CreateParameter(tc.Parameter{Name: *param.Name, Value: *param.Value, ConfigFile: *param.ConfigFile})
 			if err != nil {
 				// ok if already exists
 				if !strings.Contains(err.Error(), "already exists") {
-					t.Errorf("could not CREATE parameter %++v: %s\n", param, err.Error())
+					t.Errorf("could not CREATE parameter %+v: %s\n", param, err.Error())
 					continue
 				}
 			}
 			p, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(*param.Name, *param.ConfigFile, *param.Value)
 			if err != nil {
-				t.Errorf("could not GET parameter %++v: %s\n", param, err.Error())
+				t.Errorf("could not GET parameter %+v: %s\n", param, err.Error())
 			}
 			if len(p) == 0 {
-				t.Errorf("could not GET parameter %++v: not found\n", param)
+				t.Errorf("could not GET parameter %+v: not found\n", param)
 			}
 			_, _, err = TOSession.CreateProfileParameter(tc.ProfileParameter{ProfileID: profileID, ParameterID: p[0].ID})
 			if err != nil {
-				t.Errorf("could not CREATE profile_parameter %++v: %s\n", param, err.Error())
+				t.Errorf("could not CREATE profile_parameter %+v: %s\n", param, err.Error())
 			}
 		}
 

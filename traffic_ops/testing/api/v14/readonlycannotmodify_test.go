@@ -64,6 +64,6 @@ func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 
 	cdns, _, _ := TOSession.GetCDNByName(cdn.Name)
 	if len(cdns) > 0 {
-		t.Errorf("readonlyuser getting created cdn, len(cdns) expected: 0, actual: %+v %++v", len(cdns), cdns)
+		t.Errorf("readonlyuser getting created cdn, len(cdns) expected: 0, actual: %+v %+v", len(cdns), cdns)
 	}
 }
