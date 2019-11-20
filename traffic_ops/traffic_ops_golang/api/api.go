@@ -410,8 +410,11 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 	if !cfg.SMTP.Enabled {
 		return http.StatusInternalServerError, nil, errors.New("SMTP is not enabled; mail cannot be sent")
 	}
-	auth := smtp.PlainAuth("", cfg.SMTP.User, cfg.SMTP.Password, strings.Split(cfg.SMTP.Address, ":")[0])
-	err := smtp.SendMail(cfg.SMTP.Address, auth, cfg.ConfigTO.EmailFrom.String(), []string{to.String()}, msg)
+	var auth smtp.Auth
+	if cfg.SMTP.User != "" {
+		auth = LoginAuth("", cfg.SMTP.User, cfg.SMTP.Password, strings.Split(cfg.SMTP.Address, ":")[0])
+	}
+	err := smtp.SendMail(cfg.SMTP.Address, auth, cfg.ConfigTO.EmailFrom.Address.Address, []string{to.Address.Address}, msg)
 	if err != nil {
 		return http.StatusInternalServerError, nil, fmt.Errorf("Failed to send email: %v", err)
 	}
@@ -737,8 +740,9 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 		return auth.CurrentUser{}, userErr, sysErr, code
 	}
 
-	newCookieVal := tocookie.Refresh(oldCookie, secret)
-	http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
+	duration := tocookie.DefaultDuration
+	newCookie := tocookie.GetCookie(oldCookie.AuthData, duration, secret)
+	http.SetCookie(w, newCookie)
 	return user, nil, nil, http.StatusOK
 }
 
@@ -746,4 +750,45 @@ func AddUserToReq(r *http.Request, u auth.CurrentUser) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey, u)
 	*r = *r.WithContext(ctx)
+}
+
+type loginAuth struct {
+	identity, username, password, host string
+}
+
+func LoginAuth(identity, username, password, host string) smtp.Auth {
+	return &loginAuth{identity, username, password, host}
+}
+
+func isLocalhost(name string) bool {
+	return name == "localhost" || name == "127.0.0.1" || name == "::1"
+}
+
+func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	if !server.TLS && !isLocalhost(server.Name) {
+		return "", nil, errors.New("unencrypted connection")
+	}
+	if server.Name != a.host {
+		return "", nil, errors.New("wrong host name")
+	}
+	resp := []byte(a.identity + "\x00" + a.username + "\x00" + a.password)
+	return "LOGIN", resp, nil
+}
+
+func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	command := string(fromServer)
+	command = strings.TrimSpace(command)
+	command = strings.TrimSuffix(command, ":")
+	command = strings.ToLower(command)
+
+	if more {
+		if command == "username" {
+			return []byte(a.username), nil
+		} else if command == "password" {
+			return []byte(a.password), nil
+		} else {
+			return nil, fmt.Errorf("unexpected server challenge: %s", command)
+		}
+	}
+	return nil, nil
 }

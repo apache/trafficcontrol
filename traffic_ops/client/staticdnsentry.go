@@ -97,7 +97,7 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, sdns tc.StaticDNSEntry) (tc.
 		return tc.Alerts{}, reqInf, 0, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_v13_StaticDNSEntries, id)
-	resp, remoteAddr, errClient := to.rawRequest(http.MethodPut, route, reqBody)
+	resp, remoteAddr, errClient := to.RawRequest(http.MethodPut, route, reqBody)
 	if resp != nil {
 		defer resp.Body.Close()
 		var alerts tc.Alerts

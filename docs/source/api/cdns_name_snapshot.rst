@@ -352,7 +352,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: 220bc4XXwaj+s7ODd3QAF5leGj06lnApiN5E8H/B2RgxSphnQIfnwy6WWbBDjonWXPV1IWDCjBMO+rR+lAabMg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 12 Dec 2018 17:36:25 GMT

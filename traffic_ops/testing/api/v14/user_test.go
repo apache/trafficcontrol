@@ -81,7 +81,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 		"localPasswd": "better_twelve",
 		"confirmLocalPasswd": "better_twelve",
 		"role": %d,
-		"tenantId": %d 
+		"tenantId": %d
 	}`, *roles[0].ID, tenants[0].ID)
 
 	reader := strings.NewReader(blob)
