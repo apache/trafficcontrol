@@ -35,13 +35,13 @@ func TestProfileDotConfig(t *testing.T) {
 func GetTestProfileDotConfig(t *testing.T) {
 	dsServers, _, err := TOSession.GetDeliveryServiceServers()
 	if err != nil {
-		t.Fatalf("GET delivery service servers: %v\n", err)
+		t.Fatalf("GET delivery service servers: %v", err)
 	} else if len(dsServers.Response) == 0 {
-		t.Fatalf("GET delivery service servers: no servers found\n")
+		t.Fatal("GET delivery service servers: no servers found")
 	} else if dsServers.Response[0].Server == nil {
-		t.Fatalf("GET delivery service servers: returned nil server\n")
+		t.Fatal("GET delivery service servers: returned nil server")
 	} else if dsServers.Response[0].DeliveryService == nil {
-		t.Fatalf("GET delivery service servers: returned nil ds\n")
+		t.Fatal("GET delivery service servers: returned nil ds")
 	}
 	serverID := *dsServers.Response[0].Server
 
@@ -60,7 +60,7 @@ func GetTestProfileDotConfig(t *testing.T) {
 
 	servers, _, err := TOSession.GetServers()
 	if err != nil {
-		t.Errorf("cannot GET Servers: %v\n", err)
+		t.Errorf("cannot GET Servers: %v", err)
 	}
 
 	server := tc.Server{ID: -1}
@@ -71,7 +71,7 @@ func GetTestProfileDotConfig(t *testing.T) {
 		server = potentialServer
 	}
 	if server.ID == -1 {
-		t.Errorf("GET Servers returned no edge servers, must have at least 1 to test")
+		t.Error("GET Servers returned no edge servers, must have at least 1 to test")
 	}
 
 	profileDotConfig, _, err := TOSession.GetATSProfileConfig(server.ProfileID, "cache.config")

@@ -39,7 +39,7 @@ func CreateTestServerChecks(t *testing.T) {
 		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
 		log.Debugf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
 		if err != nil {
-			t.Errorf("could not CREATE servercheck: %v\n", err)
+			t.Errorf("could not CREATE servercheck: %v", err)
 		}
 	}
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
@@ -50,7 +50,7 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 
 	_, _, err := TOSession.InsertServerCheckStatus(testData.Serverchecks[0])
 	if err == nil {
-		t.Errorf("expected to receive error with non extension user\n")
+		t.Error("expected to receive error with non extension user")
 	}
 
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
@@ -65,14 +65,14 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 	// Attempt to create a ServerCheck with invalid server ID
 	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
 	if err == nil {
-		t.Errorf("expected to receive error with invalid id\n")
+		t.Error("expected to receive error with invalid id")
 	}
 
 	invalidServerCheck.ID = nil
 	// Attempt to create a ServerCheck with invalid host name
 	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
 	if err == nil {
-		t.Errorf("expected to receive error with invalid host name\n")
+		t.Error("expected to receive error with invalid host name")
 	}
 
 	// get valid name to get past host check
@@ -81,7 +81,7 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 	// Attempt to create a ServerCheck with invalid servercheck name
 	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
 	if err == nil {
-		t.Errorf("expected to receive error with invalid servercheck name\n")
+		t.Error("expected to receive error with invalid servercheck name")
 	}
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }
@@ -93,7 +93,7 @@ func UpdateTestServerChecks(t *testing.T) {
 		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
 		log.Debugf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
 		if err != nil {
-			t.Errorf("could not update servercheck: %v\n", err)
+			t.Errorf("could not update servercheck: %v", err)
 		}
 	}
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
@@ -104,24 +104,24 @@ func GetTestServerChecks(t *testing.T) {
 	// Get server checks
 	serverChecksResp, _, err := TOSession.GetServerChecks()
 	if err != nil {
-		t.Fatalf("could not GET serverchecks: %v\n", err)
+		t.Fatalf("could not GET serverchecks: %v", err)
 	}
 	found := false
 	for _, sc := range serverChecksResp.Response {
 		if sc.HostName == *hostname {
 			found = true
 			if sc.Checks.ORT != 12 {
-				t.Errorf("%v returned for ORT value servercheck - expected 12\n", sc.Checks.ORT)
+				t.Errorf("%v returned for ORT value servercheck - expected 12", sc.Checks.ORT)
 			}
 
 			if sc.Checks.ILO != 0 {
-				t.Errorf("%v returned for ILO value servercheck - expected 1\n", sc.Checks.ILO)
+				t.Errorf("%v returned for ILO value servercheck - expected 1", sc.Checks.ILO)
 			}
 			break
 		}
 	}
 	if !found {
-		t.Errorf("expected to find servercheck for host %v\n", hostname)
+		t.Errorf("expected to find servercheck for host %v", hostname)
 	}
 }
 

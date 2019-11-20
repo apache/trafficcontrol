@@ -62,40 +62,40 @@ func CreateTestProfiles(t *testing.T) {
 
 		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("could not CREATE profiles with name: %s %v\n", pr.Name, err)
+			t.Errorf("could not CREATE profiles with name: %s %v", pr.Name, err)
 		}
 		profiles, _, err := TOSession.GetProfileByName(pr.Name)
 		if err != nil {
-			t.Errorf("could not GET profile with name: %s %v\n", pr.Name, err)
+			t.Errorf("could not GET profile with name: %s %v", pr.Name, err)
 		}
 		if len(profiles) == 0 {
-			t.Errorf("could not GET profile %++v: not found\n", pr)
+			t.Errorf("could not GET profile %+v: not found", pr)
 		}
 		profileID := profiles[0].ID
 
 		for _, param := range pr.Parameters {
 			if param.Name == nil || param.Value == nil || param.ConfigFile == nil {
-				t.Errorf("invalid parameter specification: %++v", param)
+				t.Errorf("invalid parameter specification: %+v", param)
 				continue
 			}
 			_, _, err := TOSession.CreateParameter(tc.Parameter{Name: *param.Name, Value: *param.Value, ConfigFile: *param.ConfigFile})
 			if err != nil {
 				// ok if already exists
 				if !strings.Contains(err.Error(), "already exists") {
-					t.Errorf("could not CREATE parameter %++v: %s\n", param, err.Error())
+					t.Errorf("could not CREATE parameter %+v: %s", param, err.Error())
 					continue
 				}
 			}
 			p, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(*param.Name, *param.ConfigFile, *param.Value)
 			if err != nil {
-				t.Errorf("could not GET parameter %++v: %s\n", param, err.Error())
+				t.Errorf("could not GET parameter %+v: %s", param, err.Error())
 			}
 			if len(p) == 0 {
-				t.Errorf("could not GET parameter %++v: not found\n", param)
+				t.Errorf("could not GET parameter %+v: not found", param)
 			}
 			_, _, err = TOSession.CreateProfileParameter(tc.ProfileParameter{ProfileID: profileID, ParameterID: p[0].ID})
 			if err != nil {
-				t.Errorf("could not CREATE profile_parameter %++v: %s\n", param, err.Error())
+				t.Errorf("could not CREATE profile_parameter %+v: %s", param, err.Error())
 			}
 		}
 
@@ -108,7 +108,7 @@ func UpdateTestProfiles(t *testing.T) {
 	// Retrieve the Profile by name so we can get the id for the Update
 	resp, _, err := TOSession.GetProfileByName(firstProfile.Name)
 	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v\n", firstProfile.Name, err)
+		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}
 	remoteProfile := resp[0]
 	expectedProfileDesc := "UPDATED"
@@ -116,17 +116,17 @@ func UpdateTestProfiles(t *testing.T) {
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile)
 	if err != nil {
-		t.Errorf("cannot UPDATE Profile by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the Profile to check Profile name got updated
 	resp, _, err = TOSession.GetProfileByID(remoteProfile.ID)
 	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v\n", firstProfile.Name, err)
+		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}
 	respProfile := resp[0]
 	if respProfile.Description != expectedProfileDesc {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respProfile.Description, expectedProfileDesc)
+		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
 	}
 
 }
@@ -136,27 +136,27 @@ func GetTestProfiles(t *testing.T) {
 	for _, pr := range testData.Profiles {
 		resp, _, err := TOSession.GetProfileByName(pr.Name)
 		if err != nil {
-			t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
 		}
 		profileID := resp[0].ID
 
 		resp, _, err = TOSession.GetProfileByParameter(pr.Parameter)
 		if err != nil {
-			t.Errorf("cannot GET Profile by param: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
 		}
 
 		resp, _, err = TOSession.GetProfileByCDNID(pr.CDNID)
 		if err != nil {
-			t.Errorf("cannot GET Profile by cdn: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Profile by cdn: %v - %v", err, resp)
 		}
 
 		// Export Profile
 		exportResp, _, err := TOSession.ExportProfile(profileID)
 		if err != nil {
-			t.Errorf("error exporting Profile: %v - %v\n", profileID, err)
+			t.Errorf("error exporting Profile: %v - %v", profileID, err)
 		}
 		if exportResp == nil {
-			t.Errorf("error exporting Profile: response nil\n")
+			t.Error("error exporting Profile: response nil")
 		}
 	}
 }
@@ -165,23 +165,23 @@ func ImportProfile(t *testing.T) {
 	// Get ID of Profile to export
 	resp, _, err := TOSession.GetProfileByName(testData.Profiles[0].Name)
 	if err != nil {
-		t.Fatalf("cannot GET Profile by name: %v - %v\n", err, resp)
+		t.Fatalf("cannot GET Profile by name: %v - %v", err, resp)
 	}
 	if resp == nil {
-		t.Fatalf("error getting Profile: response nil\n")
+		t.Fatal("error getting Profile: response nil")
 	}
 	if len(resp) != 1 {
-		t.Fatalf("Profiles expected 1, actual %v\n", len(resp))
+		t.Fatalf("Profiles expected 1, actual %v", len(resp))
 	}
 	profileID := resp[0].ID
 
 	// Export Profile to import
 	exportResp, _, err := TOSession.ExportProfile(profileID)
 	if err != nil {
-		t.Fatalf("error exporting Profile: %v - %v\n", profileID, err)
+		t.Fatalf("error exporting Profile: %v - %v", profileID, err)
 	}
 	if exportResp == nil {
-		t.Fatalf("error exporting Profile: response nil\n")
+		t.Fatal("error exporting Profile: response nil")
 	}
 
 	// Modify Profile and import
@@ -203,10 +203,10 @@ func ImportProfile(t *testing.T) {
 	}
 	importResp, _, err := TOSession.ImportProfile(&importReq)
 	if err != nil {
-		t.Fatalf("error importing Profile: %v - %v\n", profileID, err)
+		t.Fatalf("error importing Profile: %v - %v", profileID, err)
 	}
 	if importResp == nil {
-		t.Errorf("error importing Profile: response nil\n")
+		t.Error("error importing Profile: response nil")
 	}
 
 	// Add newly create profile and parameter to testData so it gets deleted
@@ -228,24 +228,24 @@ func GetTestProfilesWithParameters(t *testing.T) {
 	firstProfile := testData.Profiles[0]
 	resp, _, err := TOSession.GetProfileByName(firstProfile.Name)
 	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
+		t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
 		return
 	}
 	if len(resp) == 0 {
-		t.Errorf("cannot GET Profile by name: not found - %v\n", resp)
+		t.Errorf("cannot GET Profile by name: not found - %v", resp)
 		return
 	}
 	respProfile := resp[0]
 	// query by name does not retrieve associated parameters.  But query by id does.
 	resp, _, err = TOSession.GetProfileByID(respProfile.ID)
 	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
+		t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
 	}
 	if len(resp) > 0 {
 		respProfile = resp[0]
 		respParameters := respProfile.Parameters
 		if len(respParameters) == 0 {
-			t.Errorf("expected a profile with parameters to be retrieved: %v - %v\n", err, respParameters)
+			t.Errorf("expected a profile with parameters to be retrieved: %v - %v", err, respParameters)
 		}
 	}
 }
@@ -256,11 +256,11 @@ func DeleteTestProfiles(t *testing.T) {
 		// Retrieve the Profile by name so we can get the id for the Update
 		resp, _, err := TOSession.GetProfileByName(pr.Name)
 		if err != nil {
-			t.Errorf("cannot GET Profile by name: %s - %v\n", pr.Name, err)
+			t.Errorf("cannot GET Profile by name: %s - %v", pr.Name, err)
 			continue
 		}
 		if len(resp) == 0 {
-			t.Errorf("cannot GET Profile by name: not found - %s\n", pr.Name)
+			t.Errorf("cannot GET Profile by name: not found - %s", pr.Name)
 			continue
 		}
 
@@ -268,35 +268,35 @@ func DeleteTestProfiles(t *testing.T) {
 		// query by name does not retrieve associated parameters.  But query by id does.
 		resp, _, err = TOSession.GetProfileByID(profileID)
 		if err != nil {
-			t.Errorf("cannot GET Profile by id: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Profile by id: %v - %v", err, resp)
 		}
 		// delete any profile_parameter associations first
 		// the parameter is what's being deleted, but the delete is cascaded to profile_parameter
 		for _, param := range resp[0].Parameters {
 			_, _, err := TOSession.DeleteParameterByID(*param.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE parameter with parameterID %d: %s\n", *param.ID, err.Error())
+				t.Errorf("cannot DELETE parameter with parameterID %d: %s", *param.ID, err.Error())
 			}
 		}
 		delResp, _, err := TOSession.DeleteProfileByID(profileID)
 		if err != nil {
-			t.Errorf("cannot DELETE Profile by name: %v - %v\n", err, delResp)
+			t.Errorf("cannot DELETE Profile by name: %v - %v", err, delResp)
 		}
 		//time.Sleep(1 * time.Second)
 
 		// Retrieve the Profile to see if it got deleted
 		prs, _, err := TOSession.GetProfileByName(pr.Name)
 		if err != nil {
-			t.Errorf("error deleting Profile name: %s\n", err.Error())
+			t.Errorf("error deleting Profile name: %s", err.Error())
 		}
 		if len(prs) > 0 {
-			t.Errorf("expected Profile Name: %s to be deleted\n", pr.Name)
+			t.Errorf("expected Profile Name: %s to be deleted", pr.Name)
 		}
 
 		// Attempt to export Profile
 		profile, _, err := TOSession.ExportProfile(profileID)
 		if profile != nil {
-			t.Errorf("expected Profile: %s to be nil on export\n", pr.Name)
+			t.Errorf("expected Profile: %s to be nil on export", pr.Name)
 		}
 	}
 }
