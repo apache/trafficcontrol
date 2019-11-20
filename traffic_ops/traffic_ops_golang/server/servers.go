@@ -39,7 +39,7 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 )
@@ -342,7 +342,7 @@ func (sv *TOServer) Update() (error, error, int) {
 			return nil, fmt.Errorf("getting server assigned delivery services: %v", err), http.StatusInternalServerError
 		}
 		if len(dsIDs) != 0 {
-			return errors.New("server type can not be updated when it is currently assigned to delivery services"), nil, http.StatusBadRequest
+			return errors.New("server type can not be updated when it is currently assigned to delivery services"), nil, http.StatusConflict
 		}
 	}
 

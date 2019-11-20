@@ -101,7 +101,7 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatalf("cannot GET Server Types: %v", err)
 	}
 	if len(serverTypes) < 2 {
-		t.Fatal("GET Server Types returned no types, must have at least 2 to test invalid type server update")
+		t.Fatal("GET Server Types returned less then 2 types, must have at least 2 to test invalid type server update")
 	}
 	for _, t := range serverTypes {
 		if t.ID != remoteServer.TypeID {
