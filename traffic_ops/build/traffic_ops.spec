@@ -205,8 +205,8 @@ fi
 %attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/*.pl
 %config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/conf
 %config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/db/dbconf.yml
-%config(noreplace)/var/www/files/osversions.json
 %config(noreplace)/var/www/files/osversions.cfg
+%config(noreplace)/var/www/files/osversions.json
 %{PACKAGEDIR}/app/cpanfile
 %{PACKAGEDIR}/app/db
 %{PACKAGEDIR}/app/lib
