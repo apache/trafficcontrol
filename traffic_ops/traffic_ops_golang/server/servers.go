@@ -20,11 +20,14 @@ package server
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/lib/pq"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -36,7 +39,7 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 )
@@ -322,6 +325,27 @@ func (sv *TOServer) Update() (error, error, int) {
 	if sv.IP6Address != nil && len(strings.TrimSpace(*sv.IP6Address)) == 0 {
 		sv.IP6Address = nil
 	}
+
+	// see if type changed
+	typeID := -1
+	if err := sv.APIInfo().Tx.QueryRow("SELECT type FROM server WHERE id = $1", sv.ID).Scan(&typeID); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("no server found with this id"), nil, http.StatusNotFound
+		}
+		return nil, fmt.Errorf("getting current server type: %v", err), http.StatusInternalServerError
+	}
+
+	// If type is changing ensure it isnt assigned to any DSes
+	if typeID != *sv.TypeID {
+		dsIDs := []int64{}
+		if err := sv.APIInfo().Tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", sv.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
+			return nil, fmt.Errorf("getting server assigned delivery services: %v", err), http.StatusInternalServerError
+		}
+		if len(dsIDs) != 0 {
+			return errors.New("server type can not be updated when it is currently assigned to delivery services"), nil, http.StatusBadRequest
+		}
+	}
+
 	return api.GenericUpdate(sv)
 }
 
