@@ -96,6 +96,7 @@ Built: %(date) by %{getenv: USER}
 
     %__mkdir -p $RPM_BUILD_ROOT/var/www/files
     %__cp install/data/perl/osversions.cfg $RPM_BUILD_ROOT/var/www/files/.
+    %__cp install/data/json/osversions.json $RPM_BUILD_ROOT/var/www/files/.
 
     if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing ]; then
         %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing
@@ -153,7 +154,7 @@ Built: %(date) by %{getenv: USER}
     %__chmod +x /etc/init.d/traffic_ops
     %__chmod +x %{PACKAGEDIR}/install/bin/*
     /sbin/chkconfig --add traffic_ops
-	
+
     %__mkdir -p %{TRAFFIC_OPS_LOG_DIR}
 
     if [ -f /var/tmp/traffic_ops-backup.tar ]; then
@@ -193,7 +194,7 @@ if [ "$1" = "0" ]; then
 	# this is an uninstall
 	%__rm -rf %{PACKAGEDIR}
 	%__rm /etc/init.d/traffic_ops
-    /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER} 
+    /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER}
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
 fi
 
@@ -205,6 +206,7 @@ fi
 %config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/conf
 %config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/db/dbconf.yml
 %config(noreplace)/var/www/files/osversions.cfg
+%config(noreplace)/var/www/files/osversions.json
 %{PACKAGEDIR}/app/cpanfile
 %{PACKAGEDIR}/app/db
 %{PACKAGEDIR}/app/lib
