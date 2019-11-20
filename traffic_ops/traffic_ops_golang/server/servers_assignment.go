@@ -151,7 +151,7 @@ func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.
 
 	for _, t := range tenantsToCheck {
 		if ok, err := tenant.IsResourceAuthorizedToUserTx(t.Tenant, user, tx); err != nil {
-			return http.StatusInternalServerError, nil, fmt.Errorf("Checking availability of ds %d (tenant_id: %d) to tenant_id %d: %v", t.DSID, t.Tenant, err, user.TenantID, err)
+			return http.StatusInternalServerError, nil, fmt.Errorf("Checking availability of ds %d (tenant_id: %d) to tenant_id %d: %v", t.DSID, t.Tenant, user.TenantID, err)
 		} else if !ok {
 			// In keeping with the behavior of /deliveryservices, we don't disclose the existences
 			// of Delivery Services to which the user is forbidden access
