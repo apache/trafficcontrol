@@ -39,6 +39,17 @@ func TestMain(m *testing.M) {
 	tcFixturesFileName := flag.String("fixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
 	flag.Parse()
 
+	// Skip loading configuration when run with `go test -list=<pat>`. The -list
+	// flag does not actually run tests, so configuration data is not needed in
+	// that mode. If the user is just trying to list the available tests we
+	// don't want to abort with an error about a bad configuration the user
+	// doesn't care about yet.
+	if f := flag.Lookup("test.list"); f != nil {
+		if f.Value.String() != "" {
+			os.Exit(m.Run())
+		}
+	}
+
 	var err error
 	if Config, err = config.LoadConfig(*configFileName); err != nil {
 		fmt.Printf("Error Loading Config: %v\n", err)
