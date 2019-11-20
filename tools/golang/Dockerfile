@@ -42,4 +42,4 @@ CMD ["golangci-lint", "run", "./..."]
 
 FROM base AS unit
 
-CMD ["go", "test", "./..."]
+CMD sh -c 'go test $(go list ./... | grep -v  -e experimental -e "test/router")'

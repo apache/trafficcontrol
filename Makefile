@@ -18,9 +18,9 @@
 .PHONY: lint unit
 
 lint:
-	@echo ? Running golangci-lint
-	@docker-compose -f tools/golang/docker-compose.yml up lint
+	@echo -n '? '
+	docker-compose -f tools/golang/docker-compose.yml up lint
 
 unit:
-	@echo ? Running golang unit tests
-	@docker-compose -f tools/golang/docker-compose.yml up unit
+	@echo -n '? '
+	docker-compose -f tools/golang/docker-compose.yml up unit

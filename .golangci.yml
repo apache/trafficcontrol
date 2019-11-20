@@ -18,7 +18,7 @@ run:
   issues-exit-code: 0 # TODO: once all enabled linters are satisfied  
   tests: false
   skip-dirs:
-    (^|/).*traffic_router_golang.*($|/)
+    - ^experimental.*($|/)
   skip-dirs-use-default: true
 
   output:
@@ -33,11 +33,6 @@ linters:
     - govet
     - errcheck
     - structcheck
-    - varcheck
-    - deadcode
-    - typecheck
     - golint
     - gofmt
     - staticcheck
-
-
