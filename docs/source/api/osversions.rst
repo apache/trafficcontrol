@@ -32,6 +32,8 @@ Request Structure
 -----------------
 No parameters available.
 
+.. _response-structure:
+
 Response Structure
 ------------------
 This endpoint has no constant keys in its ``response``. Instead, each key in the ``response`` object is the name of an OS, and the value is a string that names the directory where the ISO source can be found. These directories sit under `/var/www/files/` on the Traffic Ops host machine by default, or at the location defined by the ``kickstart.files.location`` :term:`Parameter` of the Traffic Ops server's :term:`Profile`, if it is defined.
@@ -54,3 +56,27 @@ This endpoint has no constant keys in its ``response``. Instead, each key in the
 	{ "response": {
 		"CentOS 7.2": "centos72"
 	}}
+
+
+Configuration File
+------------------
+The data returned from the endpoint comes directly from a configuration file. By default, the file is located at ``/var/www/files/osversions.json``.
+The **directory** of the file can be changed by creating a specific :term:`Parameter` named ``kickstart.files.location`` in configuration file ``mkisofs``.
+
+The format of the file is a JSON object as described in :ref:`response-structure`.
+
+.. code-block:: json
+        :caption: Example osversions.json file
+
+        {
+          "CentOS 7.2": "centos72"
+        }
+
+
+The legacy Perl Traffic Ops used a Perl configuration file located by default at ``/var/www/files/osversions.cfg``. A Perl script is provided
+to convert the legacy configuration file to the new JSON format. The script is located within the Traffic Control repository at ``traffic_ops/app/bin/osversions-convert.pl``.
+
+.. code-block:: shell
+        :caption: Example usage of conversion script
+
+        ./osversions-convert.pl < /var/www/files/osversions.cfg > /var/www/files/osversions.json
