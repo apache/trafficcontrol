@@ -35,7 +35,7 @@ func TestProfileDotConfig(t *testing.T) {
 func GetTestProfileDotConfig(t *testing.T) {
 	dsServers, _, err := TOSession.GetDeliveryServiceServers()
 	if err != nil {
-		t.Fatalf("GET delivery service servers: %v\n", err)
+		t.Fatalf("GET delivery service servers: %v", err)
 	} else if len(dsServers.Response) == 0 {
 		t.Fatal("GET delivery service servers: no servers found")
 	} else if dsServers.Response[0].Server == nil {
@@ -60,7 +60,7 @@ func GetTestProfileDotConfig(t *testing.T) {
 
 	servers, _, err := TOSession.GetServers()
 	if err != nil {
-		t.Errorf("cannot GET Servers: %v\n", err)
+		t.Errorf("cannot GET Servers: %v", err)
 	}
 
 	server := tc.Server{ID: -1}

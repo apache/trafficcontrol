@@ -36,7 +36,7 @@ func TryToDeleteDivision(t *testing.T) {
 
 	resp, _, err := TOSession.GetDivisionByName(division.Name)
 	if err != nil {
-		t.Errorf("cannot GET Division by name: %v - %v\n", division.Name, err)
+		t.Errorf("cannot GET Division by name: %v - %v", division.Name, err)
 	}
 	division = resp[0]
 	_, _, err = TOSession.DeleteDivisionByID(division.ID)
@@ -63,7 +63,7 @@ func CreateTestDivisions(t *testing.T) {
 		resp, _, err := TOSession.CreateDivision(division)
 		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("could not CREATE division: %v\n", err)
+			t.Errorf("could not CREATE division: %v", err)
 		}
 	}
 }
@@ -74,7 +74,7 @@ func UpdateTestDivisions(t *testing.T) {
 	// Retrieve the Division by division so we can get the id for the Update
 	resp, _, err := TOSession.GetDivisionByName(firstDivision.Name)
 	if err != nil {
-		t.Errorf("cannot GET Division by division: %v - %v\n", firstDivision.Name, err)
+		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}
 	remoteDivision := resp[0]
 	expectedDivision := "division-test"
@@ -82,24 +82,24 @@ func UpdateTestDivisions(t *testing.T) {
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
 	if err != nil {
-		t.Errorf("cannot UPDATE Division by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the Division to check division got updated
 	resp, _, err = TOSession.GetDivisionByID(remoteDivision.ID)
 	if err != nil {
-		t.Errorf("cannot GET Division by division: %v - %v\n", firstDivision.Name, err)
+		t.Errorf("cannot GET Division by division: %v - %v", firstDivision.Name, err)
 	}
 	respDivision := resp[0]
 	if respDivision.Name != expectedDivision {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respDivision.Name, expectedDivision)
+		t.Errorf("results do not match actual: %s, expected: %s", respDivision.Name, expectedDivision)
 	}
 
 	// Set the name back to the fixture value so we can delete it after
 	remoteDivision.Name = firstDivision.Name
 	alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
 	if err != nil {
-		t.Errorf("cannot UPDATE Division by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE Division by id: %v - %v", err, alert)
 	}
 
 }
@@ -108,7 +108,7 @@ func GetTestDivisions(t *testing.T) {
 	for _, division := range testData.Divisions {
 		resp, _, err := TOSession.GetDivisionByName(division.Name)
 		if err != nil {
-			t.Errorf("cannot GET Division by division: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Division by division: %v - %v", err, resp)
 		}
 	}
 }
@@ -119,22 +119,22 @@ func DeleteTestDivisions(t *testing.T) {
 		// Retrieve the Division by name so we can get the id
 		resp, _, err := TOSession.GetDivisionByName(division.Name)
 		if err != nil {
-			t.Errorf("cannot GET Division by name: %v - %v\n", division.Name, err)
+			t.Errorf("cannot GET Division by name: %v - %v", division.Name, err)
 		}
 		respDivision := resp[0]
 
 		delResp, _, err := TOSession.DeleteDivisionByID(respDivision.ID)
 		if err != nil {
-			t.Errorf("cannot DELETE Division by division: %v - %v\n", err, delResp)
+			t.Errorf("cannot DELETE Division by division: %v - %v", err, delResp)
 		}
 
 		// Retrieve the Division to see if it got deleted
 		divisionResp, _, err := TOSession.GetDivisionByName(division.Name)
 		if err != nil {
-			t.Errorf("error deleting Division division: %s\n", err.Error())
+			t.Errorf("error deleting Division division: %s", err.Error())
 		}
 		if len(divisionResp) > 0 {
-			t.Errorf("expected Division : %s to be deleted\n", division.Name)
+			t.Errorf("expected Division : %s to be deleted", division.Name)
 		}
 	}
 }

@@ -37,7 +37,7 @@ func CreateTestTenants(t *testing.T) {
 		resp, err := TOSession.CreateTenant(&ten)
 
 		if err != nil {
-			t.Errorf("could not CREATE tenant %s: %v\n", ten.Name, err)
+			t.Errorf("could not CREATE tenant %s: %v", ten.Name, err)
 		}
 		if resp.Response.Name != ten.Name {
 			t.Errorf("expected tenant %+v; got %+v", ten, resp.Response)
@@ -48,7 +48,7 @@ func CreateTestTenants(t *testing.T) {
 func GetTestTenants(t *testing.T) {
 	resp, _, err := TOSession.Tenants()
 	if err != nil {
-		t.Errorf("cannot GET all tenants: %v - %v\n", err, resp)
+		t.Errorf("cannot GET all tenants: %v - %v", err, resp)
 		return
 	}
 	foundTenants := make(map[string]tc.Tenant, len(resp))
@@ -79,27 +79,27 @@ func UpdateTestTenants(t *testing.T) {
 	parentName := "tenant1"
 	modTenant, _, err := TOSession.TenantByName(name)
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v\n", name, err)
+		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
 	}
 
 	newParent, _, err := TOSession.TenantByName(parentName)
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v\n", parentName, err)
+		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
 	}
 	modTenant.ParentID = newParent.ID
 
 	_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant)
 	if err != nil {
-		t.Errorf("cannot UPDATE Tenant by id: %v\n", err)
+		t.Errorf("cannot UPDATE Tenant by id: %v", err)
 	}
 
 	// Retrieve the Tenant to check Tenant parent name got updated
 	respTenant, _, err := TOSession.Tenant(strconv.Itoa(modTenant.ID))
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %v - %v\n", name, err)
+		t.Errorf("cannot GET Tenant by name: %v - %v", name, err)
 	}
 	if respTenant.ParentName != parentName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respTenant.ParentName, parentName)
+		t.Errorf("results do not match actual: %s, expected: %s", respTenant.ParentName, parentName)
 	}
 
 }
@@ -110,7 +110,7 @@ func DeleteTestTenants(t *testing.T) {
 	tenant1, _, err := TOSession.TenantByName(t1)
 
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %v - %v\n", t1, err)
+		t.Errorf("cannot GET Tenant by name: %v - %v", t1, err)
 	}
 	expectedChildDeleteErrMsg := `Tenant '` + strconv.Itoa(tenant1.ID) + `' has child tenants. Please update these child tenants and retry.`
 	if _, err := TOSession.DeleteTenant(strconv.Itoa(tenant1.ID)); err == nil {
@@ -296,11 +296,11 @@ func UpdateTestTenantsActive(t *testing.T) {
 func setTenantActive(t *testing.T, name string, active bool) {
 	tn, _, err := TOSession.TenantByName(name)
 	if err != nil {
-		t.Fatalf("cannot GET Tenant by name: %s - %v\n", name, err)
+		t.Fatalf("cannot GET Tenant by name: %s - %v", name, err)
 	}
 	tn.Active = active
 	_, err = TOSession.UpdateTenant(strconv.Itoa(tn.ID), tn)
 	if err != nil {
-		t.Fatalf("cannot UPDATE Tenant by id: %v\n", err)
+		t.Fatalf("cannot UPDATE Tenant by id: %v", err)
 	}
 }

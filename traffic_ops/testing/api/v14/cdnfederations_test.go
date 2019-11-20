@@ -84,7 +84,7 @@ func UpdateTestCDNFederations(t *testing.T) {
 		if resp2.Response[0].CName == nil {
 			log.Errorln("CName is nil after updating")
 		} else if *resp2.Response[0].CName != expectedCName {
-			t.Errorf("results do not match actual: %s, expected: %s\n", *resp2.Response[0].CName, expectedCName)
+			t.Errorf("results do not match actual: %s, expected: %s", *resp2.Response[0].CName, expectedCName)
 		}
 
 	}
@@ -112,7 +112,7 @@ func DeleteTestCDNFederations(t *testing.T) {
 	for _, id := range fedIDs {
 		resp, _, err := TOSession.DeleteCDNFederationByID("foo", id)
 		if err != nil {
-			t.Errorf("cannot DELETE federation by id: '%d' %v\n", id, err)
+			t.Errorf("cannot DELETE federation by id: '%d' %v", id, err)
 		}
 		bytes, err := json.Marshal(resp)
 		log.Debugf("DELETE Response: %s\n", bytes)

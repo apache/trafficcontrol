@@ -34,7 +34,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 	firstCacheGroup := testData.CacheGroups[0]
 	cacheGroupResp, _, err := TOSession.GetCacheGroupNullableByName(*firstCacheGroup.Name)
 	if err != nil {
-		t.Errorf("cannot GET Cache Group by name: %v - %v\n", firstCacheGroup.Name, err)
+		t.Errorf("cannot GET Cache Group by name: %v - %v", firstCacheGroup.Name, err)
 	}
 	if cacheGroupResp == nil {
 		t.Fatal("Cache Groups response should not be nil")
@@ -44,7 +44,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 	firstParameter := testData.Parameters[0]
 	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v\n", firstParameter.Name, err)
+		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
 	if paramResp == nil {
 		t.Fatal("Parameter response should not be nil")
@@ -55,7 +55,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 	parameterID := paramResp[0].ID
 	resp, _, err := TOSession.CreateCacheGroupParameter(*cacheGroupID, parameterID)
 	if err != nil {
-		t.Errorf("could not CREATE cache group parameter: %v\n", err)
+		t.Errorf("could not CREATE cache group parameter: %v", err)
 	}
 	if resp == nil {
 		t.Fatal("Cache Group Parameter response should not be nil")
@@ -67,7 +67,7 @@ func GetTestCacheGroupParameters(t *testing.T) {
 	for _, cgp := range testData.CacheGroupParameterRequests {
 		resp, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID)
 		if err != nil {
-			t.Errorf("cannot GET Parameter by cache group: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Parameter by cache group: %v - %v", err, resp)
 		}
 		if resp == nil {
 			t.Fatal("Cache Group Parameters response should not be nil")
@@ -80,7 +80,7 @@ func GetTestCacheGroupUnassignedParameters(t *testing.T) {
 		// Check that Unassigned Parameters does not include Assigned Parameter
 		unassignedCGParamsResp, _, err := TOSession.GetCacheGroupUnassignedParameters(cgp.CacheGroupID)
 		if err != nil {
-			t.Errorf("could not get unassigned parameters for cache group %v: %v\n", cgp.CacheGroupID, err)
+			t.Errorf("could not get unassigned parameters for cache group %v: %v", cgp.CacheGroupID, err)
 		}
 		if unassignedCGParamsResp == nil {
 			t.Fatal("unassigned parameters response should not be nil")
@@ -104,7 +104,7 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 
 	delResp, _, err := TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, cgp.ParameterID)
 	if err != nil {
-		t.Errorf("cannot DELETE Parameter by cache group: %v - %v\n", err, delResp)
+		t.Errorf("cannot DELETE Parameter by cache group: %v - %v", err, delResp)
 	}
 
 	// Retrieve the Cache Group Parameter to see if it got deleted
@@ -112,19 +112,19 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 
 	parameters, _, err := TOSession.GetCacheGroupParametersByQueryParams(cgp.CacheGroupID, queryParams)
 	if err != nil {
-		t.Errorf("error deleting Parameter name: %s\n", err.Error())
+		t.Errorf("error deleting Parameter name: %s", err.Error())
 	}
 	if parameters == nil {
 		t.Fatal("Cache Group Parameters response should not be nil")
 	}
 	if len(parameters) > 0 {
-		t.Errorf("expected Parameter: %d to be to be disassociated from Cache Group: %d\n", cgp.ParameterID, cgp.CacheGroupID)
+		t.Errorf("expected Parameter: %d to be to be disassociated from Cache Group: %d", cgp.ParameterID, cgp.CacheGroupID)
 	}
 
 	// Check that the disassociated Parameter is now apart of Unassigned Parameters
 	unassignedCGParamsResp, _, err := TOSession.GetCacheGroupUnassignedParameters(cgp.CacheGroupID)
 	if err != nil {
-		t.Errorf("could not get unassigned parameters for cache group %v: %v\n", cgp.CacheGroupID, err)
+		t.Errorf("could not get unassigned parameters for cache group %v: %v", cgp.CacheGroupID, err)
 	}
 	if unassignedCGParamsResp == nil {
 		t.Fatal("unassigned parameters response should not be nil")

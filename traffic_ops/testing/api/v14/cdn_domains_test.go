@@ -25,7 +25,7 @@ func GetTestDomains(t *testing.T) {
 	resp, _, err := TOSession.GetDomains()
 	log.Debugln("Response: ", resp)
 	if err != nil {
-		t.Errorf("could not GET domains: %v\n", err)
+		t.Errorf("could not GET domains: %v", err)
 	}
 }
 

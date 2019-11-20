@@ -36,7 +36,7 @@ func CreateTestServers(t *testing.T) {
 		resp, _, err := TOSession.CreateServer(server)
 		log.Debugln("Response: ", server.HostName, " ", resp)
 		if err != nil {
-			t.Errorf("could not CREATE servers: %v\n", err)
+			t.Errorf("could not CREATE servers: %v", err)
 		}
 	}
 
@@ -47,7 +47,7 @@ func GetTestServers(t *testing.T) {
 	for _, server := range testData.Servers {
 		resp, _, err := TOSession.GetServerByHostName(server.HostName)
 		if err != nil {
-			t.Errorf("cannot GET Server by name: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Server by name: %v - %v", err, resp)
 		}
 	}
 }
@@ -60,7 +60,7 @@ func UpdateTestServers(t *testing.T) {
 	resp, _, err := TOSession.GetServerByHostName(hostName)
 
 	if err != nil {
-		t.Errorf("cannot GET Server by hostname: %v - %v\n", firstServer.HostName, err)
+		t.Errorf("cannot GET Server by hostname: %v - %v", firstServer.HostName, err)
 	}
 	remoteServer := resp[0]
 	updatedServerInterface := "bond1"
@@ -72,19 +72,19 @@ func UpdateTestServers(t *testing.T) {
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
 	if err != nil {
-		t.Errorf("cannot UPDATE Server by hostname: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE Server by hostname: %v - %v", err, alert)
 	}
 
 	// Retrieve the server to check rack and interfaceName values were updated
 	resp, _, err = TOSession.GetServerByID(remoteServer.ID)
 	if err != nil {
-		t.Errorf("cannot GET Server by ID: %v - %v\n", remoteServer.HostName, err)
+		t.Errorf("cannot GET Server by ID: %v - %v", remoteServer.HostName, err)
 	}
 
 	respServer := resp[0]
 	if respServer.InterfaceName != updatedServerInterface || respServer.Rack != updatedServerRack {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respServer.InterfaceName, updatedServerInterface)
-		t.Errorf("results do not match actual: %s, expected: %s\n", respServer.Rack, updatedServerRack)
+		t.Errorf("results do not match actual: %s, expected: %s", respServer.InterfaceName, updatedServerInterface)
+		t.Errorf("results do not match actual: %s, expected: %s", respServer.Rack, updatedServerRack)
 	}
 
 }
@@ -94,23 +94,23 @@ func DeleteTestServers(t *testing.T) {
 	for _, server := range testData.Servers {
 		resp, _, err := TOSession.GetServerByHostName(server.HostName)
 		if err != nil {
-			t.Errorf("cannot GET Server by hostname: %v - %v\n", server.HostName, err)
+			t.Errorf("cannot GET Server by hostname: %v - %v", server.HostName, err)
 		}
 		if len(resp) > 0 {
 			respServer := resp[0]
 
 			delResp, _, err := TOSession.DeleteServerByID(respServer.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE Server by ID: %v - %v\n", err, delResp)
+				t.Errorf("cannot DELETE Server by ID: %v - %v", err, delResp)
 			}
 
 			// Retrieve the Server to see if it got deleted
 			serv, _, err := TOSession.GetServerByHostName(server.HostName)
 			if err != nil {
-				t.Errorf("error deleting Server hostname: %s\n", err.Error())
+				t.Errorf("error deleting Server hostname: %s", err.Error())
 			}
 			if len(serv) > 0 {
-				t.Errorf("expected Server hostname: %s to be deleted\n", server.HostName)
+				t.Errorf("expected Server hostname: %s to be deleted", server.HostName)
 			}
 		}
 	}

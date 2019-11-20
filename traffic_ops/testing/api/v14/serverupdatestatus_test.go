@@ -59,7 +59,7 @@ func UpdateTestServerStatus(t *testing.T) {
 		} {
 			resp, _, err := TOSession.GetServerByHostName(s.name)
 			if err != nil {
-				t.Errorf("cannot GET Server by hostname: %v - %v\n", s.name, err)
+				t.Errorf("cannot GET Server by hostname: %v - %v", s.name, err)
 			}
 			*s.server = resp[0]
 		}

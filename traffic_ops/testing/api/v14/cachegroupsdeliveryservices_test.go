@@ -28,15 +28,15 @@ const TestEdgeServerCacheGroupName = "cachegroup1" // TODO this is the name hard
 func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	dss, _, err := TOSession.GetDeliveryServiceServers()
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceServers: %v\n", err)
+		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
 	}
 	if len(dss.Response) > 0 {
-		t.Errorf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v\n", len(dss.Response))
+		t.Errorf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v", len(dss.Response))
 	}
 
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v - %v\n", err, dses)
+		t.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 
 	clientCGs, _, err := TOSession.GetCacheGroupByName(TestEdgeServerCacheGroupName)
@@ -44,7 +44,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Errorf("getting cachegroup: " + err.Error() + "\n")
 	}
 	if len(clientCGs) != 1 {
-		t.Errorf("getting cachegroup expected 1, got %v\n", len(clientCGs))
+		t.Errorf("getting cachegroup expected 1, got %v", len(clientCGs))
 	}
 	clientCG := clientCGs[0]
 
@@ -57,7 +57,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 
 	resp, _, err := TOSession.SetCachegroupDeliveryServices(cgID, dsIDs)
 	if err != nil {
-		t.Errorf("setting cachegroup delivery services returned error: %v\n", err)
+		t.Errorf("setting cachegroup delivery services returned error: %v", err)
 	}
 	if len(resp.Response.ServerNames) == 0 {
 		t.Error("setting cachegroup delivery services returned success, but no servers set")
@@ -66,7 +66,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	// Note this second post of the same cg-dses specifically tests a previous bug, where the query failed if any servers with location parameters were already assigned, due to an fk violation. See https://github.com/apache/trafficcontrol/pull/3199
 	resp, _, err = TOSession.SetCachegroupDeliveryServices(cgID, dsIDs)
 	if err != nil {
-		t.Errorf("setting cachegroup delivery services returned error: %v\n", err)
+		t.Errorf("setting cachegroup delivery services returned error: %v", err)
 	}
 	if len(resp.Response.ServerNames) == 0 {
 		t.Error("setting cachegroup delivery services returned success, but no servers set")
@@ -78,7 +78,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 			t.Errorf("getting server: " + err.Error())
 		}
 		if len(servers) != 1 {
-			t.Errorf("getting servers: expected 1 got %v\n", len(servers))
+			t.Errorf("getting servers: expected 1 got %v", len(servers))
 		}
 		server := servers[0]
 		serverID := server.ID
@@ -94,7 +94,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 				}
 			}
 			if !found {
-				t.Errorf("post succeeded, but didn't assign delivery service %v to server\n", dsID)
+				t.Errorf("post succeeded, but didn't assign delivery service %v to server", dsID)
 			}
 		}
 	}
@@ -103,7 +103,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 	dss, _, err := TOSession.GetDeliveryServiceServersN(1000000)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceServers: %v\n", err)
+		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
 	}
 	for _, ds := range dss.Response {
 		_, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server)
@@ -114,9 +114,9 @@ func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 
 	dss, _, err = TOSession.GetDeliveryServiceServers()
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceServers: %v\n", err)
+		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
 	}
 	if len(dss.Response) > 0 {
-		t.Errorf("deleting delivery service servers: delete succeeded, expected empty subsequent get, actual %v\n", len(dss.Response))
+		t.Errorf("deleting delivery service servers: delete succeeded, expected empty subsequent get, actual %v", len(dss.Response))
 	}
 }

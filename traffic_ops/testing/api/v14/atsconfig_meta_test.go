@@ -36,7 +36,7 @@ func GetTestATSConfigMeta(t *testing.T) {
 
 	serverList, _, err := TOSession.GetServerByHostName(testServer.HostName)
 	if err != nil {
-		t.Fatalf("cannot GET Server: %v\n", err)
+		t.Fatalf("cannot GET Server: %v", err)
 	}
 	if len(serverList) < 1 {
 		t.Fatalf("cannot GET Server '" + testServer.HostName + "', returned no servers\n")

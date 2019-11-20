@@ -35,7 +35,7 @@ func TestRemapDotConfig(t *testing.T) {
 func GetTestRemapDotConfig(t *testing.T) {
 	dsServers, _, err := TOSession.GetDeliveryServiceServers()
 	if err != nil {
-		t.Fatalf("GET delivery service servers: %v\n", err)
+		t.Fatalf("GET delivery service servers: %v", err)
 	} else if len(dsServers.Response) == 0 {
 		t.Fatal("GET delivery service servers: no servers found")
 	} else if dsServers.Response[0].Server == nil {
@@ -89,7 +89,7 @@ func GetTestRemapDotConfig(t *testing.T) {
 			continue
 		}
 		if !strings.HasPrefix(line, "map") {
-			t.Errorf("expected: remap.config line %v to start with 'map', actual: '%v'\n", i, line)
+			t.Errorf("expected: remap.config line %v to start with 'map', actual: '%v'", i, line)
 		}
 	}
 }

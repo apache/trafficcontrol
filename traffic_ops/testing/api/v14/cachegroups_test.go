@@ -40,7 +40,7 @@ func CreateTestCacheGroups(t *testing.T) {
 
 		resp, _, err = TOSession.CreateCacheGroupNullable(cg)
 		if err != nil {
-			t.Errorf("could not CREATE cachegroups: %v, request: %v\n", err, cg)
+			t.Errorf("could not CREATE cachegroups: %v, request: %v", err, cg)
 		}
 
 		// Testing 'join' fields during create
@@ -67,7 +67,7 @@ func GetTestCacheGroups(t *testing.T) {
 	for _, cg := range testData.CacheGroups {
 		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 		if err != nil {
-			t.Errorf("cannot GET CacheGroup by name: %v - %v\n", err, resp)
+			t.Errorf("cannot GET CacheGroup by name: %v - %v", err, resp)
 		}
 	}
 }
@@ -76,7 +76,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	firstCG := testData.CacheGroups[0]
 	resp, _, err := TOSession.GetCacheGroupNullableByName(*firstCG.Name)
 	if err != nil {
-		t.Errorf("cannot GET CACHEGROUP by name: %v - %v\n", *firstCG.Name, err)
+		t.Errorf("cannot GET CACHEGROUP by name: %v - %v", *firstCG.Name, err)
 	}
 	cg := resp[0]
 	expectedShortName := "blah"
@@ -91,7 +91,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 
 	updResp, _, err := TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, updResp)
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
 
 	// Check response to make sure fields aren't null
@@ -114,11 +114,11 @@ func UpdateTestCacheGroups(t *testing.T) {
 	// Retrieve the CacheGroup to check CacheGroup name got updated
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by name: '%s', %v\n", *firstCG.Name, err)
+		t.Errorf("cannot GET CacheGroup by name: '%s', %v", *firstCG.Name, err)
 	}
 	cg = resp[0]
 	if *cg.ShortName != expectedShortName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", *cg.ShortName, expectedShortName)
+		t.Errorf("results do not match actual: %s, expected: %s", *cg.ShortName, expectedShortName)
 	}
 
 	// test coordinate updates
@@ -128,19 +128,19 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg.Longitude = &expectedLong
 	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, updResp)
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
 
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", *cg.ID, err)
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
 	}
 	cg = resp[0]
 	if *cg.Latitude != expectedLat {
-		t.Errorf("failed to update latitude (expected = %f, actual = %f)\n", expectedLat, *cg.Latitude)
+		t.Errorf("failed to update latitude (expected = %f, actual = %f)", expectedLat, *cg.Latitude)
 	}
 	if *cg.Longitude != expectedLong {
-		t.Errorf("failed to update longitude (expected = %f, actual = %f)\n", expectedLong, *cg.Longitude)
+		t.Errorf("failed to update longitude (expected = %f, actual = %f)", expectedLong, *cg.Longitude)
 	}
 
 	// test localizationMethods
@@ -148,16 +148,16 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg.LocalizationMethods = &expectedMethods
 	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, updResp)
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
 
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", *cg.ID, err)
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
 	}
 	cg = resp[0]
 	if !reflect.DeepEqual(expectedMethods, *cg.LocalizationMethods) {
-		t.Errorf("failed to update localizationMethods (expected = %v, actual = %v)\n", expectedMethods, *cg.LocalizationMethods)
+		t.Errorf("failed to update localizationMethods (expected = %v, actual = %v)", expectedMethods, *cg.LocalizationMethods)
 	}
 
 	// test cachegroup fallbacks
@@ -166,11 +166,11 @@ func UpdateTestCacheGroups(t *testing.T) {
 	firstEdgeCGName := "cachegroup1"
 	resp, _, err = TOSession.GetCacheGroupNullableByName(firstEdgeCGName)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by name: '$%s', %v\n", firstEdgeCGName, err)
+		t.Errorf("cannot GET CacheGroup by name: '$%s', %v", firstEdgeCGName, err)
 	}
 	cg = resp[0]
 	if *cg.Name != firstEdgeCGName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", *cg.ShortName, firstEdgeCGName)
+		t.Errorf("results do not match actual: %s, expected: %s", *cg.ShortName, firstEdgeCGName)
 	}
 
 	// Test adding fallbacks when previously nil
@@ -178,16 +178,16 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg.Fallbacks = &expectedFallbacks
 	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, updResp)
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
 
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", *cg.ID, err)
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
 	}
 	cg = resp[0]
 	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
-		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)\n", expectedFallbacks, *cg.Fallbacks)
+		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)", expectedFallbacks, *cg.Fallbacks)
 	}
 
 	// Test adding fallback to existing list
@@ -195,16 +195,16 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg.Fallbacks = &expectedFallbacks
 	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v)\n", err, updResp)
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v)", err, updResp)
 	}
 
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", *cg.ID, err)
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
 	}
 	cg = resp[0]
 	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
-		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)\n", expectedFallbacks, *cg.Fallbacks)
+		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)", expectedFallbacks, *cg.Fallbacks)
 	}
 
 	// Test removing fallbacks
@@ -212,16 +212,16 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg.Fallbacks = &expectedFallbacks
 	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, updResp)
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
 	}
 
 	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", *cg.ID, err)
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v", *cg.ID, err)
 	}
 	cg = resp[0]
 	if !reflect.DeepEqual(expectedFallbacks, *cg.Fallbacks) {
-		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)\n", expectedFallbacks, *cg.Fallbacks)
+		t.Errorf("failed to update fallbacks (expected = %v, actual = %v)", expectedFallbacks, *cg.Fallbacks)
 	}
 }
 
@@ -233,7 +233,7 @@ func DeleteTestCacheGroups(t *testing.T) {
 		// Retrieve the CacheGroup by name so we can get the id for the Update
 		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 		if err != nil {
-			t.Errorf("cannot GET CacheGroup by name: %v - %v\n", *cg.Name, err)
+			t.Errorf("cannot GET CacheGroup by name: %v - %v", *cg.Name, err)
 		}
 		// Mids are parents and need to be deleted only after the children
 		// cachegroups are deleted.
@@ -245,15 +245,15 @@ func DeleteTestCacheGroups(t *testing.T) {
 			respCG := resp[0]
 			_, _, err := TOSession.DeleteCacheGroupByID(*respCG.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE CacheGroup by name: '%s' %v\n", *respCG.Name, err)
+				t.Errorf("cannot DELETE CacheGroup by name: '%s' %v", *respCG.Name, err)
 			}
 			// Retrieve the CacheGroup to see if it got deleted
 			cgs, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 			if err != nil {
-				t.Errorf("error deleting CacheGroup by name: %s\n", err.Error())
+				t.Errorf("error deleting CacheGroup by name: %s", err.Error())
 			}
 			if len(cgs) > 0 {
-				t.Errorf("expected CacheGroup name: %s to be deleted\n", *cg.Name)
+				t.Errorf("expected CacheGroup name: %s to be deleted", *cg.Name)
 			}
 		}
 	}
@@ -262,22 +262,22 @@ func DeleteTestCacheGroups(t *testing.T) {
 		// Retrieve the CacheGroup by name so we can get the id for the Update
 		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 		if err != nil {
-			t.Errorf("cannot GET CacheGroup by name: %v - %v\n", *cg.Name, err)
+			t.Errorf("cannot GET CacheGroup by name: %v - %v", *cg.Name, err)
 		}
 		if len(resp) > 0 {
 			respCG := resp[0]
 			_, _, err := TOSession.DeleteCacheGroupByID(*respCG.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE CacheGroup by name: '%s' %v\n", *respCG.Name, err)
+				t.Errorf("cannot DELETE CacheGroup by name: '%s' %v", *respCG.Name, err)
 			}
 
 			// Retrieve the CacheGroup to see if it got deleted
 			cgs, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 			if err != nil {
-				t.Errorf("error deleting CacheGroup name: %s\n", err.Error())
+				t.Errorf("error deleting CacheGroup name: %s", err.Error())
 			}
 			if len(cgs) > 0 {
-				t.Errorf("expected CacheGroup name: %s to be deleted\n", *cg.Name)
+				t.Errorf("expected CacheGroup name: %s to be deleted", *cg.Name)
 			}
 		}
 	}
@@ -290,7 +290,7 @@ func CheckCacheGroupsAuthentication(t *testing.T) {
 
 	resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by name: %v - %v\n", *cg.Name, err)
+		t.Errorf("cannot GET CacheGroup by name: %v - %v", *cg.Name, err)
 	}
 	cg = resp[0]
 

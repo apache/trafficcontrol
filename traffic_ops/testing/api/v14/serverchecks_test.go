@@ -39,7 +39,7 @@ func CreateTestServerChecks(t *testing.T) {
 		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
 		log.Debugf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
 		if err != nil {
-			t.Errorf("could not CREATE servercheck: %v\n", err)
+			t.Errorf("could not CREATE servercheck: %v", err)
 		}
 	}
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
@@ -93,7 +93,7 @@ func UpdateTestServerChecks(t *testing.T) {
 		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
 		log.Debugf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
 		if err != nil {
-			t.Errorf("could not update servercheck: %v\n", err)
+			t.Errorf("could not update servercheck: %v", err)
 		}
 	}
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
@@ -104,24 +104,24 @@ func GetTestServerChecks(t *testing.T) {
 	// Get server checks
 	serverChecksResp, _, err := TOSession.GetServerChecks()
 	if err != nil {
-		t.Fatalf("could not GET serverchecks: %v\n", err)
+		t.Fatalf("could not GET serverchecks: %v", err)
 	}
 	found := false
 	for _, sc := range serverChecksResp.Response {
 		if sc.HostName == *hostname {
 			found = true
 			if sc.Checks.ORT != 12 {
-				t.Errorf("%v returned for ORT value servercheck - expected 12\n", sc.Checks.ORT)
+				t.Errorf("%v returned for ORT value servercheck - expected 12", sc.Checks.ORT)
 			}
 
 			if sc.Checks.ILO != 0 {
-				t.Errorf("%v returned for ILO value servercheck - expected 1\n", sc.Checks.ILO)
+				t.Errorf("%v returned for ILO value servercheck - expected 1", sc.Checks.ILO)
 			}
 			break
 		}
 	}
 	if !found {
-		t.Errorf("expected to find servercheck for host %v\n", hostname)
+		t.Errorf("expected to find servercheck for host %v", hostname)
 	}
 }
 

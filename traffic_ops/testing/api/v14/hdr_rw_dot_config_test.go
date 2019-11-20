@@ -75,7 +75,7 @@ func GetTestHdrRwDotConfigWithNewline(t *testing.T) {
 	*ds.EdgeHeaderRewrite = "rw1\nrw2\nedge\nheader\nre-rewrite [L]"
 	_, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), ds)
 	if err != nil {
-		t.Errorf("couldn't update delivery servie: %v\n", err)
+		t.Errorf("couldn't update delivery servie: %v", err)
 	}
 
 	filename := fmt.Sprintf("%s_%s.config", EdgeHdrRwPrefix, *ds.XMLID)
@@ -84,7 +84,7 @@ func GetTestHdrRwDotConfigWithNewline(t *testing.T) {
 	expectedLines := getExpectedLines(*ds.EdgeHeaderRewrite)
 	count := strings.Count(config, "\n")
 	if expectedLines != count {
-		t.Errorf("expected %d lines in the config (actual = %d)\n", expectedLines, count)
+		t.Errorf("expected %d lines in the config (actual = %d)", expectedLines, count)
 	} else {
 		log.Debugf("Tested %s sucessfully\n", filename)
 	}
@@ -95,7 +95,7 @@ func GetTestHdrRwDotConfig(t *testing.T) {
 	*ds.EdgeHeaderRewrite = "rw1__RETURN__rw2__RETURN__edge__RETURN__header__RETURN__re-rewrite [L]"
 	_, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), ds)
 	if err != nil {
-		t.Errorf("couldn't update delivery servie: %v\n", err)
+		t.Errorf("couldn't update delivery servie: %v", err)
 	}
 
 	filename := fmt.Sprintf("%s_%s.config", EdgeHdrRwPrefix, *ds.XMLID)
@@ -104,7 +104,7 @@ func GetTestHdrRwDotConfig(t *testing.T) {
 	expectedLines := getExpectedLines(*ds.EdgeHeaderRewrite)
 	count := strings.Count(config, "\n")
 	if expectedLines != count {
-		t.Errorf("expected %d lines in the config (actual = %d)\n", expectedLines, count)
+		t.Errorf("expected %d lines in the config (actual = %d)", expectedLines, count)
 	} else {
 		log.Debugf("Tested %s sucessfully\n", filename)
 	}
@@ -115,7 +115,7 @@ func GetTestHdrRwMidDotConfig(t *testing.T) {
 	*ds.MidHeaderRewrite = "rw1__RETURN__mid__RETURN__header__RETURN__re-rewrite [L]"
 	_, err := TOSession.UpdateDeliveryServiceNullable(strconv.Itoa(*ds.ID), ds)
 	if err != nil {
-		t.Errorf("couldn't update delivery servie: %v\n", err)
+		t.Errorf("couldn't update delivery servie: %v", err)
 	}
 
 	filename := fmt.Sprintf("%s_%s.config", MidHdrRwPrefix, *ds.XMLID)
@@ -124,7 +124,7 @@ func GetTestHdrRwMidDotConfig(t *testing.T) {
 	expectedLines := getExpectedLines(*ds.MidHeaderRewrite)
 	count := strings.Count(config, "\n")
 	if expectedLines != count {
-		t.Errorf("expected %d lines in the config (actual = %d)\n", expectedLines, count)
+		t.Errorf("expected %d lines in the config (actual = %d)", expectedLines, count)
 	} else {
 		log.Debugf("Tested %s sucessfully\n", filename)
 	}

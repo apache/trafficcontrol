@@ -36,32 +36,32 @@ func GetTestSteering(t *testing.T) {
 
 	steerings, _, err := TOSession.Steering()
 	if err != nil {
-		t.Errorf("steering get: getting steering: %v\n", err)
+		t.Errorf("steering get: getting steering: %v", err)
 	}
 
 	if len(steerings) != len(testData.SteeringTargets) {
-		t.Errorf("steering get: expected %v actual %v\n", len(testData.SteeringTargets), len(steerings))
+		t.Errorf("steering get: expected %v actual %v", len(testData.SteeringTargets), len(steerings))
 	}
 
 	if steerings[0].ClientSteering {
-		t.Errorf("steering get: ClientSteering expected %v actual %v\n", false, true)
+		t.Errorf("steering get: ClientSteering expected %v actual %v", false, true)
 	}
 	if len(steerings[0].Targets) != 1 {
-		t.Errorf("steering get: Targets expected %v actual %v\n", 1, len(steerings[0].Targets))
+		t.Errorf("steering get: Targets expected %v actual %v", 1, len(steerings[0].Targets))
 	}
 	if steerings[0].Targets[0].Order != 0 {
-		t.Errorf("steering get: Targets Order expected %v actual %v\n", 0, steerings[0].Targets[0].Order)
+		t.Errorf("steering get: Targets Order expected %v actual %v", 0, steerings[0].Targets[0].Order)
 	}
 	if testData.SteeringTargets[0].Value != nil && steerings[0].Targets[0].Weight != int32(*testData.SteeringTargets[0].Value) {
-		t.Errorf("steering get: Targets Order expected %v actual %v\n", testData.SteeringTargets[0].Value, steerings[0].Targets[0].Weight)
+		t.Errorf("steering get: Targets Order expected %v actual %v", testData.SteeringTargets[0].Value, steerings[0].Targets[0].Weight)
 	}
 	if steerings[0].Targets[0].GeoOrder != nil {
-		t.Errorf("steering get: Targets Order expected %v actual %+v\n", nil, *steerings[0].Targets[0].GeoOrder)
+		t.Errorf("steering get: Targets Order expected %v actual %+v", nil, *steerings[0].Targets[0].GeoOrder)
 	}
 	if steerings[0].Targets[0].Longitude != nil {
-		t.Errorf("steering get: Targets Order expected %v actual %+v\n", nil, *steerings[0].Targets[0].Longitude)
+		t.Errorf("steering get: Targets Order expected %v actual %+v", nil, *steerings[0].Targets[0].Longitude)
 	}
 	if steerings[0].Targets[0].Latitude != nil {
-		t.Errorf("steering get: Targets Order expected %v actual %+v\n", nil, *steerings[0].Targets[0].Latitude)
+		t.Errorf("steering get: Targets Order expected %v actual %+v", nil, *steerings[0].Targets[0].Latitude)
 	}
 }

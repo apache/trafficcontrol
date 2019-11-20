@@ -41,7 +41,7 @@ func CreateTestOrigins(t *testing.T) {
 	for _, origin := range testData.Origins {
 		_, _, err := TOSession.CreateOrigin(origin)
 		if err != nil {
-			t.Errorf("could not CREATE origins: %v\n", err)
+			t.Errorf("could not CREATE origins: %v", err)
 		}
 	}
 }
@@ -56,13 +56,13 @@ func NotFoundDeleteTest(t *testing.T) {
 func GetTestOrigins(t *testing.T) {
 	_, _, err := TOSession.GetOrigins()
 	if err != nil {
-		t.Errorf("cannot GET origins: %v\n", err)
+		t.Errorf("cannot GET origins: %v", err)
 	}
 
 	for _, origin := range testData.Origins {
 		resp, _, err := TOSession.GetOriginByName(*origin.Name)
 		if err != nil {
-			t.Errorf("cannot GET Origin by name: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Origin by name: %v - %v", err, resp)
 		}
 	}
 }
@@ -72,7 +72,7 @@ func UpdateTestOrigins(t *testing.T) {
 	// Retrieve the origin by name so we can get the id for the Update
 	resp, _, err := TOSession.GetOriginByName(*firstOrigin.Name)
 	if err != nil {
-		t.Errorf("cannot GET origin by name: %v - %v\n", *firstOrigin.Name, err)
+		t.Errorf("cannot GET origin by name: %v - %v", *firstOrigin.Name, err)
 	}
 	remoteOrigin := resp[0]
 	updatedPort := 4321
@@ -83,28 +83,28 @@ func UpdateTestOrigins(t *testing.T) {
 	remoteOrigin.FQDN = &updatedFQDN
 	updResp, _, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin)
 	if err != nil {
-		t.Errorf("cannot UPDATE Origin by name: %v - %v\n", err, updResp.Alerts)
+		t.Errorf("cannot UPDATE Origin by name: %v - %v", err, updResp.Alerts)
 	}
 
 	// Retrieve the origin to check port and FQDN values were updated
 	resp, _, err = TOSession.GetOriginByID(*remoteOrigin.ID)
 	if err != nil {
-		t.Errorf("cannot GET Origin by ID: %v - %v\n", *remoteOrigin.Name, err)
+		t.Errorf("cannot GET Origin by ID: %v - %v", *remoteOrigin.Name, err)
 	}
 
 	respOrigin := resp[0]
 	if *respOrigin.Port != updatedPort {
-		t.Errorf("results do not match actual: %d, expected: %d\n", *respOrigin.Port, updatedPort)
+		t.Errorf("results do not match actual: %d, expected: %d", *respOrigin.Port, updatedPort)
 	}
 	if *respOrigin.FQDN != updatedFQDN {
-		t.Errorf("results do not match actual: %s, expected: %s\n", *respOrigin.FQDN, updatedFQDN)
+		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.FQDN, updatedFQDN)
 	}
 }
 
 func OriginTenancyTest(t *testing.T) {
 	origins, _, err := TOSession.GetOrigins()
 	if err != nil {
-		t.Errorf("cannot GET origins: %v\n", err)
+		t.Errorf("cannot GET origins: %v", err)
 	}
 	tenant3Origin := tc.Origin{}
 	foundTenant3Origin := false
@@ -156,7 +156,7 @@ func OriginTenancyTest(t *testing.T) {
 func VerifyPaginationSupport(t *testing.T) {
 	origins, _, err := TOSession.GetOriginsByQueryParams("?orderby=id")
 	if err != nil {
-		t.Fatalf("cannot GET origins: %v\n", err)
+		t.Fatalf("cannot GET origins: %v", err)
 	}
 
 	originsWithLimit, _, err := TOSession.GetOriginsByQueryParams("?orderby=id&limit=1")
@@ -198,23 +198,23 @@ func DeleteTestOrigins(t *testing.T) {
 	for _, origin := range testData.Origins {
 		resp, _, err := TOSession.GetOriginByName(*origin.Name)
 		if err != nil {
-			t.Errorf("cannot GET Origin by name: %v - %v\n", *origin.Name, err)
+			t.Errorf("cannot GET Origin by name: %v - %v", *origin.Name, err)
 		}
 		if len(resp) > 0 {
 			respOrigin := resp[0]
 
 			delResp, _, err := TOSession.DeleteOriginByID(*respOrigin.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE Origin by ID: %v - %v\n", err, delResp)
+				t.Errorf("cannot DELETE Origin by ID: %v - %v", err, delResp)
 			}
 
 			// Retrieve the Origin to see if it got deleted
 			org, _, err := TOSession.GetOriginByName(*origin.Name)
 			if err != nil {
-				t.Errorf("error deleting Origin name: %s\n", err.Error())
+				t.Errorf("error deleting Origin name: %s", err.Error())
 			}
 			if len(org) > 0 {
-				t.Errorf("expected Origin name: %s to be deleted\n", *origin.Name)
+				t.Errorf("expected Origin name: %s to be deleted", *origin.Name)
 			}
 		}
 	}

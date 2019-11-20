@@ -71,7 +71,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	anymapDSID := res[0].ID
 	_, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
 	if err != nil {
-		t.Errorf("POST delivery service servers: %v\n", err)
+		t.Errorf("POST delivery service servers: %v", err)
 	}
 
 	_, err = TOSession.SnapshotCRConfig(cdn)
@@ -119,7 +119,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 
 	paramResp, _, err := TOSession.GetParameterByName(tmURLParamName)
 	if err != nil {
-		t.Fatalf("cannot GET Parameter by name: %v - %v\n", tmURLParamName, err)
+		t.Fatalf("cannot GET Parameter by name: %v - %v", tmURLParamName, err)
 	}
 	if len(paramResp) == 0 {
 		t.Fatal("CRConfig create tm.url parameter was successful, but GET returned no parameters")
@@ -128,6 +128,6 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 
 	delResp, _, err := TOSession.DeleteParameterByID(tmURLParam.ID)
 	if err != nil {
-		t.Fatalf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
+		t.Fatalf("cannot DELETE Parameter by name: %v - %v", err, delResp)
 	}
 }

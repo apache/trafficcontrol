@@ -43,7 +43,7 @@ func PostTestLoginFail(t *testing.T) {
 	userAgent := "to-api-v14-client-tests-loginfailtest"
 	uninitializedTOClient, err := getUninitializedTOClient(Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.URL, userAgent, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
 	if err != nil {
-		t.Fatalf("getting uninitialized client: %+v\n", err)
+		t.Fatalf("getting uninitialized client: %+v", err)
 	}
 
 	if len(testData.CDNs) < 1 {
@@ -52,14 +52,14 @@ func PostTestLoginFail(t *testing.T) {
 	expectedCDN := testData.CDNs[0]
 	actualCDNs, _, err := uninitializedTOClient.GetCDNByName(expectedCDN.Name)
 	if err != nil {
-		t.Fatalf("GetCDNByName err expected nil, actual '%+v'\n", err)
+		t.Fatalf("GetCDNByName err expected nil, actual '%+v'", err)
 	}
 	if len(actualCDNs) < 1 {
 		t.Fatal("uninitialized client should have retried login (possibly login failed with a 200, so it didn't try again, and the CDN request returned an auth failure with a 200, which the client reasonably thought was success, and deserialized with no matching keys, resulting in an empty object); len(actualCDNs) expected >1, actual 0")
 	}
 	actualCDN := actualCDNs[0]
 	if expectedCDN.Name != actualCDN.Name {
-		t.Fatalf("cdn.Name expected '%+v' actual '%+v'\n", expectedCDN.Name, actualCDN.Name)
+		t.Fatalf("cdn.Name expected '%+v' actual '%+v'", expectedCDN.Name, actualCDN.Name)
 	}
 }
 

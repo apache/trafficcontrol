@@ -116,16 +116,16 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	// Test get created Federation Delivery Services
 	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID)
 	if err != nil {
-		t.Fatalf("cannot GET Federation DeliveryServices: %v\n", err)
+		t.Fatalf("cannot GET Federation DeliveryServices: %v", err)
 	}
 	if len(fedDSes) != 2 {
-		t.Fatalf("two Federation DeliveryService expected for Federation %v, %v was returned\n", fedID, len(fedDSes))
+		t.Fatalf("two Federation DeliveryService expected for Federation %v, %v was returned", fedID, len(fedDSes))
 	}
 
 	// Delete one of the Delivery Services from the Federation
 	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, ds.ID)
 	if err != nil {
-		t.Fatalf("cannot Delete Federation %v DeliveryService %v: %v\n", fedID, ds.ID, err)
+		t.Fatalf("cannot Delete Federation %v DeliveryService %v: %v", fedID, ds.ID, err)
 	}
 
 	// Make sure it is deleted
@@ -133,10 +133,10 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	// Test get created Federation Delivery Services
 	fedDSes, _, err = TOSession.GetFederationDeliveryServices(fedID)
 	if err != nil {
-		t.Fatalf("cannot GET Federation DeliveryServices: %v\n", err)
+		t.Fatalf("cannot GET Federation DeliveryServices: %v", err)
 	}
 	if len(fedDSes) != 1 {
-		t.Fatalf("one Federation DeliveryService expected for Federation %v, %v was returned\n", fedID, len(fedDSes))
+		t.Fatalf("one Federation DeliveryService expected for Federation %v, %v was returned", fedID, len(fedDSes))
 	}
 
 	// Attempt to delete the last one which should fail as you cannot remove the last
