@@ -78,10 +78,6 @@ Response Structure
 			DNSSEC is used within this CDN
 
 	:domain_name:                        The Top-Level Domain Name (TLD) served by the CDN
-	:edge.dns.limit:                     This field is of unknown use, and may be remnants of a legacy system
-	:edge.dns.routing:                   This field is of unknown use, and may be remnants of a legacy system
-	:edge.http.limit:                    This field is of unknown use, and may be remnants of a legacy system
-	:edge.http.routing:                  This field is of unknown use, and may be remnants of a legacy system
 	:federationmapping.polling.interval: A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for new federation mappings
 	:federationmapping.polling.url:      The URL where Traffic Control components can request federation mappings
 	:geolocation.polling.interval:       A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for new IP-to-geographic-location mapping databases
@@ -368,10 +364,6 @@ Response Structure
 			"dnssec.dynamic.response.expiration": "300s",
 			"dnssec.enabled": "false",
 			"domain_name": "mycdn.ciab.test",
-			"edge.dns.limit": "6",
-			"edge.dns.routing": "true",
-			"edge.http.limit": "6",
-			"edge.http.routing": "true",
 			"federationmapping.polling.interval": "60000",
 			"federationmapping.polling.url": "https://${toHostname}/internal/api/1.3/federations.json",
 			"geolocation.polling.interval": "86400000",

@@ -159,26 +159,6 @@
       "configFile": "CRConfig.json",
       "name": "tld.ttls.SOA",
       "value": "86400"
-    },
-    {
-      "configFile": "CRConfig.json",
-      "name": "edge.dns.limit",
-      "value": "6"
-    },
-    {
-      "configFile": "CRConfig.json",
-      "name": "edge.http.limit",
-      "value": "6"
-    },
-    {
-      "configFile": "CRConfig.json",
-      "name": "edge.dns.routing",
-      "value": "true"
-    },
-    {
-      "configFile": "CRConfig.json",
-      "name": "edge.http.routing",
-      "value": "true"
     }
   ]
 }
