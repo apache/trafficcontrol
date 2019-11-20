@@ -26,7 +26,8 @@ import optparse
 import os
 import sys
 
-import adapter.fs
+import storage.fs_adapter
+import vault.db
 
 if sys.version_info >= (3, 0):
 	#python 3
@@ -114,23 +115,26 @@ def main():
 
 	(options, args) = parser.parse_args()
 
-	global adapter
-	adapterType = generalCfg.get("adapter-type")
-	if not adapterType:
-		logger.error("Missing adapter type cfg")
+	storageAdapterType = generalCfg.get("storage-adapter-type")
+	if not storageAdapterType:
+		logger.error("Missing storage adapter type cfg")
 		return 1
-	elif adapterType == "fs":
-		adapter = adapter.fs.Fs(logger=logger)
+	elif storageAdapterType == "fs":
+		storageAdapter = storage.fs_adapter.FsAdapter(logger=logger)
 	else:
-		logger.error("Invalid adapter type '%s'", adapterType)
+		logger.error("Invalid storage adapter type '%s'", storageAdapterType)
 		return 1
 
-	if not adapter.init_cfg(config):
-		logger.error("Failed adapter initialization")
+
+	if not storageAdapter.init_cfg(config):
+		logger.error("Failed storage adapter initialization")
 		return 1		
-	if not adapter.init_ping():
-		logger.error("Failed adaper ping initialization")
+	if not storageAdapter.init():
+		logger.error("Failed storage adaper initialization")
 		return 1		
+
+	global db
+	db = vault.db.Db(logger, storageAdapter)
 
 	if options.ping:
 		if len(args) != 0:
@@ -144,7 +148,7 @@ def main():
 	if options.getParameter:
 		if len(args) != 1:
 			parser.error("Command should get a single argument - parameter key.")
-		success, value = adapter.getParameter(args[0])
+		success, value = db.getParameter(args[0])
 		if not success:
 			return 1
 		if value is None:
@@ -155,7 +159,7 @@ def main():
 	if options.searchParameters:
 		if len(args) != 1:
 			parser.error("Command should get a single argument - parameter key.")
-		success, value = adapter.searchParameters(args[0], keyFilters={}, filters={})
+		success, value = db.searchParameters(args[0], keyFilters={}, filters={})
 		if not success:
 			return 1
 		print(json.dumps(value))
@@ -164,7 +168,7 @@ def main():
 	if options.setParameter:
 		if len(args) != 2:
 			parser.error("Command should get 2 arguments - parameter key and value.")
-		success = adapter.setParameter(args[0], args[1])
+		success = db.setParameter(args[0], args[1])
 		if not success:
 			return 1
 		return 0
@@ -172,7 +176,7 @@ def main():
 	if options.deleteParameter:
 		if len(args) != 1:
 			parser.error("Command should get a single argument - parameter key.")
-		success = adapter.deleteParameter(args[0])
+		success = db.deleteParameter(args[0])
 		if not success:
 			return 1
 		return 0

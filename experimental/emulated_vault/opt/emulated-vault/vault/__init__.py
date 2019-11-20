@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#	 http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,17 +14,3 @@
 #
 #
 #
-
-[general]
-storage-adapter-type = fs
-# Optional: log-dir = /var/log/messages/emulated-vault
-[http-server]
-ssl-key-path = path/to/cert/key.pem
-ssl-cert-path = path/to/cert/cert.pem
-# Optional: use-ssl = False
-# Optional: listen-ip = 1.2.3.4
-# Optional: listen-port = 12345
-
-[fs-adapter]
-db-base-os-path = /opt/emulated-vault/db
-ping-os-path = /opt/emulated-vault/ping

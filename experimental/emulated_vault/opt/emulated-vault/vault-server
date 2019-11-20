@@ -28,7 +28,8 @@ import re
 import ssl
 import sys
 
-import adapter.fs
+import storage.fs_adapter
+import vault.db
 
 if sys.version_info >= (3, 0):
 	#python 3
@@ -103,7 +104,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 		Actual GET logic for ping request
 		:raises: Exception
 		"""		
-		success, value = adapter.ping()
+		success, value = db.ping()
 		if not success:
 			self.send_response(503)
 			self.send_header('Content-type', 'text/html')
@@ -149,7 +150,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 		if keyFind:
 			keyFilters['key-match'] = lambda key: fnmatch.fnmatch(os.path.basename(key), keyFind.group(1))
 
-		success, parameters = adapter.searchParameters("riak/ssl/", keyFilters=keyFilters, filters=filters)
+		success, parameters = db.searchParameters("riak/ssl/", keyFilters=keyFilters, filters=filters)
 		if not success:
 			self.send_response(503)
 			self.send_header('Content-Type', 'application/json')
@@ -172,7 +173,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 		:type parsed_path: str
 		:raises: Exception
 		"""
-		success, value = adapter.getParameter(parsed_path.path)
+		success, value = db.getParameter(parsed_path.path)
 		if not success:
 			self.send_response(503)
 			self.send_header('Content-Type', 'application/json')
@@ -205,7 +206,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 		if parsed_path.path.startswith('/riak/ssl/'):
 			certificate_data = data.get('certificate', {})
 			data.update({"certificate.%s"%key: value for key, value in certificate_data.items()})
-		success = adapter.setParameter(parsed_path.path, json.dumps(data))
+		success = db.setParameter(parsed_path.path, json.dumps(data))
 		if not success:
 			self.send_response(503)
 			self.send_header('Content-Type', 'application/json')
@@ -226,7 +227,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 		logger.info("DELETE %s", self.path)
 		parsed_path = urlparse.urlparse(self.path)
 
-		success = adapter.deleteParameter(parsed_path.path)
+		success = db.deleteParameter(parsed_path.path)
 		if not success:
 			self.send_response(503)
 			self.send_header('Content-Type', 'application/json')
@@ -315,24 +316,27 @@ def main():
 			print("Missing configuration: {0}/{1}".format("http-server", "ssl-cert-path"), file=sys.stderr)
 			return 1
 		
-	global adapter
-	adapterType = generalCfg.get("adapter-type")
-	if not adapterType:
-		logger.error("Missing adapter type cfg")
+	storageAdapterType = generalCfg.get("storage-adapter-type")
+	if not storageAdapterType:
+		logger.error("Missing storage adapter type cfg")
 		return 1
-	elif adapterType == "fs":
-		adapter = adapter.fs.Fs(logger=logger)
+	elif storageAdapterType == "fs":
+		storageAdapter = storage.fs_adapter.FsAdapter(logger=logger)
 	else:
-		logger.error("Invalid adapter type '%s'", adapterType)
+		logger.error("Invalid storage adapter type '%s'", storageAdapterType)
 		return 1
 
-	if not adapter.init_cfg(config):
-		logger.error("Failed adapter initialization")
+
+	if not storageAdapter.init_cfg(config):
+		logger.error("Failed storage adapter initialization")
 		return 1		
-	if not adapter.init_ping():
-		logger.error("Failed adaper ping initialization")
+	if not storageAdapter.init():
+		logger.error("Failed storage adaper initialization")
 		return 1		
 
+	global db
+	db = vault.db.Db(logger, storageAdapter)
+	
 	server = HTTPServer((listenIP, listenPort), RequestHandler)
 	if use_ssl:		
 		try:
