@@ -621,7 +621,7 @@
             "type": "HTTP_LIVE",
             "xmlId": "msods1",
             "anonymousBlockingEnabled": true
-        }    
+        }
     ],
     "deliveryservicesRequiredCapabilities": [
         {
@@ -902,7 +902,7 @@
             "routingDisabled": false,
             "type": "ATS_PROFILE",
             "params": [
-                 {
+                {
                     "configFile": "records.config",
                     "name": "CONFIG proxy.config.proxy_name",
                     "secure": false,
@@ -1276,6 +1276,14 @@
             "type": "ATS_PROFILE"
         },
         {
+            "cdnName": "cdn2",
+            "description": "edge2 description",
+            "lastUpdated": "2018-03-02T17:27:11.818418+00:00",
+            "name": "EDGEInCDN2",
+            "routing_disabled": false,
+            "type": "ATS_PROFILE"
+        },
+        {
             "cdnName": "cdn4",
             "description": "edge2 description",
             "lastUpdated": "2018-03-02T17:27:11.818418+00:00",
@@ -1408,6 +1416,43 @@
             "updPending": false,
             "xmppId": "atlanta-edge-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "cachegroup1",
+            "cdnName": "cdn2",
+            "domainName": "ga.atlanta.kabletown.net",
+            "guid": null,
+            "hostName": "cdn2-test-edge",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaceMtu": 1500,
+            "interfaceName": "eth0",
+            "ip6Address": "",
+            "ip6Gateway": "",
+            "ipAddress": "0.0.0.0",
+            "ipGateway": "0.0.0.0",
+            "ipNetmask": "0.0.0.0",
+            "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "EDGEInCDN2",
+            "rack": "",
+            "revalPending": false,
+            "routerHostName": "",
+            "routerPortName": "",
+            "status": "REPORTED",
+            "tcpPort": 80,
+            "type": "EDGE",
+            "updPending": false,
+            "xmppId": "",
+            "xmppPasswd": ""
         },
         {
             "cachegroup": "cachegroup1",

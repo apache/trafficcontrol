@@ -301,10 +301,6 @@ For the underscore component:
 @traffic_portal/app/src/assets/js/underscore-min_1.8.3.js
 ./licenses/MIT-underscore
 
-For the selenium component:
-@infrastructure/test/ui/vendor/github.com/tebeka/selenium/*
-./infrastructure/test/ui/vendor/github.com/tebeka/selenium/LICENSE.txt
-
 For the stoppableListener component:
 @traffic_monitor/vendor/github.com/hydrogen18/stoppableListener/*
 ./traffic_monitor/vendor/github.com/hydrogen18/stoppableListener/LICENSE

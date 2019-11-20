@@ -33,9 +33,30 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/lib/pq"
 )
+
+type needsCheck struct {
+	CDN     uint
+	CDNName string
+	DSID    uint
+	DSXMLID string
+	Tenant  int
+}
+
+const needsCheckInfoQuery = `
+SELECT deliveryservice.id,
+       deliveryservice.cdn_id,
+       deliveryservice.tenant_id,
+       deliveryservice.xml_id,
+       cdn.name
+FROM deliveryservice
+LEFT OUTER JOIN cdn ON cdn.id=deliveryservice.cdn_id
+WHERE deliveryservice.id = ANY($1)
+`
 
 func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
@@ -58,16 +79,11 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	serverPathParameter := inf.Params["id"]
-	server, err := strconv.Atoi(serverPathParameter)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
-	}
+	server := inf.IntParams["id"]
+
 	serverInfo, ok, err := dbhelpers.GetServerInfo(server, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
-		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
 		return
@@ -81,14 +97,73 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	// We already know the CDN exists because that's part of the serverInfo query above
+	serverCDN, _, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(serverInfo.CDNID))
+	if err != nil {
+		sysErr = fmt.Errorf("Failed to get CDN name from ID: %v", err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	}
+
+	if len(dsList) > 0 {
+		if errCode, userErr, sysErr = checkTenancyAndCDN(inf.Tx.Tx, string(serverCDN), server, serverInfo, dsList, inf.User); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+	}
+
 	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
 		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverInfo.HostName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
+}
+
+func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.ServerInfo, dsList []int, user *auth.CurrentUser) (int, error, error) {
+	rows, err := tx.Query(needsCheckInfoQuery, pq.Array(dsList))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusBadRequest, errors.New("Either at least one Delivery Service ID doesn't exist, or is outside your tenancy!"), nil
+		}
+		return http.StatusInternalServerError, nil, err
+	}
+	defer rows.Close()
+
+	tenantsToCheck := make([]needsCheck, 0, len(dsList))
+	for rows.Next() {
+		var n needsCheck
+		if err = rows.Scan(&n.DSID, &n.CDN, &n.Tenant, &n.DSXMLID, &n.CDNName); err != nil {
+			return http.StatusInternalServerError, nil, fmt.Errorf("Scanning cdn_id for ds: %v", err)
+		}
+
+		tenantsToCheck = append(tenantsToCheck, n)
+	}
+
+	if len(tenantsToCheck) != len(dsList) {
+		return http.StatusNotFound, errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!"), nil
+	}
+
+	for _, t := range tenantsToCheck {
+		if ok, err := tenant.IsResourceAuthorizedToUserTx(t.Tenant, user, tx); err != nil {
+			return http.StatusInternalServerError, nil, fmt.Errorf("Checking availability of ds %d (tenant_id: %d) to tenant_id %d: %v", t.DSID, t.Tenant, err, user.TenantID, err)
+		} else if !ok {
+			// In keeping with the behavior of /deliveryservices, we don't disclose the existences
+			// of Delivery Services to which the user is forbidden access
+			return http.StatusNotFound, errors.New("Either no Delivery Service ids given, or at least one id doesn't exist!"), fmt.Errorf("User %s denied access to inaccessible DS %d (owned by tenant_id %d)", user.UserName, t.DSID, t.Tenant)
+		}
+
+		if int(t.CDN) != serverInfo.CDNID {
+			return http.StatusConflict, fmt.Errorf("Delivery Service %s (#%d) is not in the same CDN as server %s (#%d) (server is in %s (#%d), DS is in %s (#%d))!", t.DSXMLID, t.DSID, serverInfo.HostName, server, serverCDN, serverInfo.CDNID, t.CDNName, t.CDN), nil
+		}
+	}
+
+	return http.StatusOK, nil, nil
 }
 
 // ValidateDSCapabilities checks that the server meets the requirements of each delivery service to be assigned.

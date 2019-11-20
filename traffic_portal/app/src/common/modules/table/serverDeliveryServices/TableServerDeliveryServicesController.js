@@ -94,7 +94,7 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 					return params;
 				},
 				collection: function(serverService) {
-					return serverService.getServers({ type: server.type, orderby: 'hostName' });
+					return serverService.getServers({ type: server.type, orderby: 'hostName', cdn: server.cdnId }).then(function(xs){return xs.filter(function(x){return x.id!=server.id})}, function(err){throw err});
 				}
 			}
 		});
