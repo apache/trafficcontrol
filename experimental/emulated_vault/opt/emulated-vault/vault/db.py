@@ -54,7 +54,7 @@ class Db(object):
 		"""
 		if self.storage_adaper.ping():
 			return (True, "OK")
-		return (False, "")
+		return False, None
 
 	def getParameter(self, parameterUrlPath):
 		"""
@@ -65,11 +65,14 @@ class Db(object):
 		:return: A tuple - 'True' for successful retrival and the retrieved value
 		:rtype: Tuple[bool, str]
 		"""
-		parameterStoragePath = self.storage_adaper.get_parameter_storage_path(parameterUrlPath)		
+		success_path, parameterStoragePath = self.storage_adaper.get_parameter_storage_path(parameterUrlPath)
+		if not success_path:
+			self.logger.error("Invalid parameter url path: %s", parameterUrlPath)
+			return False, None
 		success, value = self.storage_adaper.read_parameter_by_storage_path(parameterStoragePath)
 		if not success:
 			self.logger.error("Failed to bring parameter %s", parameterUrlPath)
-			return False, ""
+			return False, None
 		if value is None:
 			self.logger.error("Could not find parameter %s", parameterUrlPath)
 			return True, None
@@ -94,11 +97,14 @@ class Db(object):
 		:rtype: Tuple[bool, Dict[str, str]]		
 		"""
 		self.logger.debug("Get parameters under path %s", parameterKeyPrefixUrlPath)
-		parameterStoragePathPrefix = self.storage_adaper.get_parameter_storage_path(parameterKeyPrefixUrlPath)
+		success_path, parameterStoragePathPrefix = self.storage_adaper.get_parameter_storage_path(parameterKeyPrefixUrlPath)
+		if not success_path:
+			self.logger.error("Invalid parameter url path prefix: %s", parameterKeyPrefixUrlPath)
+			return False, None
 		success, items = self.storage_adaper.read_parameters_by_storage_path(parameterStoragePathPrefix, keyFilters=keyFilters)
 		if not success:
 			self.logger.error("Failed to bring parameters by prefix %s", parameterStoragePathPrefix)
-			return False, ""
+			return False, None
 
 		filtered = {}
 		for key, val in items.items():#items() - supporting python 2&3
@@ -126,7 +132,10 @@ class Db(object):
 		:rtype: bool
 		"""
 		self.logger.debug("Set parameter %s", parameterUrlPath)
-		parameterStoragePath = self.storage_adaper.get_parameter_storage_path(parameterUrlPath)
+		success_path, parameterStoragePath = self.storage_adaper.get_parameter_storage_path(parameterUrlPath)
+		if not success_path:
+			self.logger.error("Invalid parameter url path: %s", parameterUrlPath)
+			return False, None
 		success = self.storage_adaper.write_parameter_by_storage_path(parameterStoragePath, value)
 		if not success:
 			self.logger.error("Failed to set parameter %s", parameterUrlPath)
@@ -143,7 +152,10 @@ class Db(object):
 		:rtype: bool
 		"""
 		self.logger.debug("Delete parameter %s", parameterUrlPath)
-		parameterStoragePath = self.storage_adaper.get_parameter_storage_path(parameterUrlPath)
+		success_path, parameterStoragePath = self.storage_adaper.get_parameter_storage_path(parameterUrlPath)
+		if not success_path:
+			self.logger.error("Invalid parameter url path: %s", parameterUrlPath)
+			return False, None
 		success = self.storage_adaper.remove_parameter_by_storage_path(parameterStoragePath)
 		if not success:
 			self.logger.error("Failed to delete parameter %s", parameterUrlPath)

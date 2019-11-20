@@ -74,26 +74,26 @@ class AdapterBase(ABC):
 		raise NotImplemented()#...
 
 	@abstractmethod	
-	def get_parameter_storage_path(self, parameterUrlPath):# -> str:
+	def get_parameter_storage_path(self, parameterUrlPath):# -> (bool, str):
 		"""
 		Method to be implemented at derived classes
 		Conversion function - taking a key's path and translate to a file path on the file system
 		:param parameterUrlPath: the "url-path" like key of the variable
 		:type parameterUrlPath: str
-		:return: file path of where the value is be kept
-		:rtype: str
+		:return: "success" bool and a file path of where the value is be kept
+		:rtype: Tuple[bool, str]
 		"""
 		raise NotImplemented()#...
 
 	@abstractmethod	
-	def get_parameter_storage_path_from_url_path(self, parameterStoragePath):# -> str:
+	def get_parameter_url_path_from_storage_path(self, parameterStoragePath):# -> (bool, str):
 		"""
 		Method to be implemented at derived classes
 		Conversion function - taking file path on the file system and translate to key's path
 		:param parameterStoragePath: the file name holding a value
 		:type parameterUrlPath: str
-		:return: the matching variable url-path like key
-		:rtype: str
+		:return: "success" bool and the matching variable url-path like key
+		:rtype: Tuple[bool, str]
 		"""
 		raise NotImplemented()#...
 
@@ -103,7 +103,7 @@ class AdapterBase(ABC):
 		Method to be implemented at derived classes
 		Check ping connection
 		:return: 'True' for successful connection with the storage layer
-		:rtype: Tuple[bool, str]
+		:rtype: bool
 		"""
 		raise NotImplemented()#...
 
@@ -160,3 +160,4 @@ class AdapterBase(ABC):
 		:rtype: bool		
 		"""
 		raise NotImplemented()#...
+	

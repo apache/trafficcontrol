@@ -63,17 +63,23 @@ class FsAdapter(AdapterBase):
 			return False
 		return True
 
-	def get_parameter_storage_path(self, parameterUrlPath):# -> str:
+	def get_parameter_storage_path(self, parameterUrlPath):# -> bool, str:
 		"""
 		Conversion function - taking a key's path and translate to a file path on the file system
 		"""
-		return os.path.join(self.basePath, parameterUrlPath.lstrip("/").replace("/", os.path.sep))
+		#verifying the existance of "/" at the beging
+		if not parameterUrlPath.startswith("/"):
+			self.logger.error("Failed to translate url path '%s': no leading '/'", parameterUrlPath)
+			return False, ""
+		# avoiding the use of os.path.join in purpuse. 
+		# we do not want the "/" at the begining push us to the root path		
+		return True, self.basePath + parameterUrlPath.replace("/", os.path.sep)
 
-	def get_parameter_storage_path_from_url_path(self, parameterStoragePath):# -> str:
+	def get_parameter_url_path_from_storage_path(self, parameterStoragePath):# -> str:
 		"""
 		Conversion function - taking file path on the file system and translate to key's path
 		"""
-		return "/"+os.path.relpath(parameterStoragePath, self.basePath).replace(os.path.sep, "/")
+		return True, "/"+os.path.relpath(parameterStoragePath, self.basePath).replace(os.path.sep, "/")
 
 	def ping(self):# -> bool:
 		"""
@@ -116,13 +122,16 @@ class FsAdapter(AdapterBase):
 			filteredOut = False
 			for filterName, filterfunc in keyFilters.items():#items() - supporting python 2&3
 				if not filterfunc(fileName):
-					self.logger.debug("Parameter os path %s dropped, not matching filter %s", self.get_parameter_storage_path_from_url_path(fileName), filterName)
+					self.logger.debug("Parameter os path %s dropped, not matching filter '%s'", self.get_parameter_url_path_from_storage_path(fileName)[1], filterName)
 					filteredOut = True
 					break
 			if filteredOut:
 				continue
 
-			parameterUrlPath = self.get_parameter_storage_path_from_url_path(fileName)
+			success_path, parameterUrlPath = self.get_parameter_url_path_from_storage_path(fileName)
+			if not success_path:
+				self.logger.error("%s parameter os path is invalid.", fileName)
+				return False, None				
 			success, value = self.read_parameter_by_storage_path(fileName)
 			if not success:
 				self.logger.error("%s parameter os path not found.", fileName)

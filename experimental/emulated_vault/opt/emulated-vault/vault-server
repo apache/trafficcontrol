@@ -150,7 +150,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 		if keyFind:
 			keyFilters['key-match'] = lambda key: fnmatch.fnmatch(os.path.basename(key), keyFind.group(1))
 
-		success, parameters = db.searchParameters("riak/ssl/", keyFilters=keyFilters, filters=filters)
+		success, parameters = db.searchParameters("/riak/ssl/", keyFilters=keyFilters, filters=filters)
 		if not success:
 			self.send_response(503)
 			self.send_header('Content-Type', 'application/json')
