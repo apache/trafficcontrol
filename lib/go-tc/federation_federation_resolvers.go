@@ -19,9 +19,19 @@ package tc
  * under the License.
  */
 
-// FederationsFederationResolver represents an association between a federation and a federation_resolver.
-type FederationsFederationResolver struct {
-	LastUpdated          *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	FederationID         *int       `json:"federationID" db:"federation"`
-	FederationResolverID *int       `json:"federationResolverID" db:"federation_resolver"`
+// FederationFederationResolversResponse represents an API response of association between a federation and a federation_resolver.
+type FederationFederationResolversResponse struct {
+	Response []FederationResolver `json:"response"`
+}
+
+// AssignFederationFederationResolvers represents an API response of federation_resolver assignment to a federation.
+type AssignFederationFederationResolversResponse struct {
+	Alerts   []tc.Alerts                      `json:"alerts"`
+	Response AssignFederationResolversRequest `json:"response"`
+}
+
+// AssignFederationResolversRequest represents an API request/response for assigning federation_resolvers to a federation.
+type AssignFederationResolversRequest struct {
+	Replace        bool  `json:"replace"`
+	FedResolverIDs []int `json:"fedResolverIds"`
 }

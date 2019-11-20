@@ -318,6 +318,42 @@ func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNNa
 	return dsName, cdnName, true, nil
 }
 
+// GetFederationResolversByFederationID fetches all of the federation resolvers currently assigned to a federation.
+func GetFederationResolversByFederationID(tx *sql.Tx, id int) ([]tc.FederationResolver, bool, error) {
+	qry := `
+		SELECT
+		  fr.ip_address
+		  frt.name as resolver_type,
+		  ffr.federation_resolver,
+		FROM
+		  federation_federation_resolver ffr
+		  JOIN federation_resolver fr ON ffr.federation_resolver = fr.id
+		  JOIN type frt on fr.type = frt.id
+		WHERE
+		  ffr.federation = $1
+	`
+	rows, err := tx.Query(qry, fedID)
+	if err != nil {
+		return nil, false, errors.New("error getting federation_resolvers by federation ID query: " + err.Error())
+	}
+	defer rows.Close()
+
+	resolvers := []tc.FederationResolver
+	for rows.Next() {
+		fr := tc.FederationResolver{}
+		err := rows.Scan(
+			&fr.IPAddress,
+			&fr.Type,
+			&fr.ID,
+		)
+		if err != nil {
+			return nil, false, errors.New("GET federation_resolvers by federation ID scanning rows: " + err.Error())
+		}
+		resolvers = append(resolvers, fr)
+	}
+	return resolvers, true, nil
+}
+
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
 func GetProfileNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	name := ""
