@@ -32,6 +32,7 @@ WORKDIR /opt/traffic_ops/app
 
 COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
 COPY --from=trafficops-perl /opt/traffic_ops/app/conf/ /opt/traffic_ops/app/conf/
+COPY --from=trafficops-perl /var/www/files/ /var/www/files/
 
 
 ADD enroller/server_template.json \
