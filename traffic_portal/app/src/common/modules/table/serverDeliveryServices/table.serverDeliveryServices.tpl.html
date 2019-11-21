@@ -41,13 +41,13 @@ under the License.
                 </menu>
             </div>
             <div class="btn-group" role="group" ng-show="isEdge(server) || isOrigin(server)" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li><a ng-click="selectDeliveryServices(server)">Link Delivery Services to Server</a></li>
-                    <li ng-if="isEdge(server) && deliveryServices.length > 0"><a ng-click="cloneDsAssignments(server)">Clone Delivery Service Assignments</a></li>
+                    <li ng-if="isEdge(server) && deliveryServices.length > 0"><a name="clone-ds-assignments" ng-click="cloneDsAssignments(server)">Clone Delivery Service Assignments</a></li>
                 </ul>
             </div>
         </div>
