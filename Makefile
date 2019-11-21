@@ -14,13 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+DC_OPTS ?= "--no-ansi"
 
 .PHONY: lint unit
 
 lint:
 	@echo -n '? '
-	docker-compose -f tools/golang/docker-compose.yml up lint
+	docker-compose $(DC_OPTS) -f tools/golang/docker-compose.yml up lint
 
 unit:
 	@echo -n '? '
-	docker-compose -f tools/golang/docker-compose.yml up unit
+	docker-compose $(DC_OPTS) -f tools/golang/docker-compose.yml up unit
