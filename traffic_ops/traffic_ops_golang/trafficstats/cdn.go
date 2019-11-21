@@ -36,6 +36,9 @@ const (
 	cdnStatsQuery = `
 SELECT last(value) FROM "%s"."monthly"."%s"
 	WHERE cdn = $cdn`
+	bwMetricName   = "bandwidth.cdn.1min"
+	connMetricName = "connections.cdn.1min"
+	kbpsMetricName = "maxkbps.cdn.1min"
 )
 
 // GetCurrentStats handler for getting current stats for CDNs
@@ -71,50 +74,50 @@ func GetCurrentStats(w http.ResponseWriter, r *http.Request) {
 	totalStats := tc.TrafficStatsTotalStats{
 		CDN: "total",
 	}
-	// util func to add to total
-	addToTotal := func(v, t *float64) *float64 {
-		if v == nil {
-			return t
-		}
-		if t == nil {
-			t = util.FloatPtr(0.0)
-		}
-		*t += *v
-		return t
-	}
 
 	for _, cdn := range cdns {
 		cdnStats := tc.TrafficStatsCDNStats{
 			CDN: cdn,
 		}
-		bw, err := getCDNStat(client, cdn, "bandwidth.cdn.1min", inf.Config.ConfigInflux.CacheDBName)
+		bw, err := getCDNStat(client, cdn, bwMetricName, inf.Config.ConfigInflux.CacheDBName)
 		if err != nil {
 			sysErr = fmt.Errorf("getting bandwidth from cdn %v: %v", cdn, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
-		totalStats.Bandwidth = addToTotal(bw, totalStats.Bandwidth)
+		if bw != nil {
+			if totalStats.Bandwidth == nil {
+				totalStats.Bandwidth = util.FloatPtr(0.0)
+			}
+			*totalStats.Bandwidth += *bw
+		}
 
 		if bw != nil {
 			cdnStats.Bandwidth = util.FloatPtr(*bw / 1000000)
 		}
 
-		con, err := getCDNStat(client, cdn, "connections.cdn.1min", inf.Config.ConfigInflux.CacheDBName)
+		con, err := getCDNStat(client, cdn, connMetricName, inf.Config.ConfigInflux.CacheDBName)
 		if err != nil {
 			sysErr = fmt.Errorf("getting connections from cdn %v: %v", cdn, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
-		totalStats.Connnections = addToTotal(con, totalStats.Connnections)
+		if con != nil {
+			if totalStats.Connnections == nil {
+				totalStats.Connnections = util.FloatPtr(0.0)
+			}
+			*totalStats.Connnections += *con
+		}
 		cdnStats.Connnections = con
 
-		cap, err := getCDNStat(client, cdn, "maxkbps.cdn.1min", inf.Config.ConfigInflux.CacheDBName)
+		cap, err := getCDNStat(client, cdn, kbpsMetricName, inf.Config.ConfigInflux.CacheDBName)
 		if err != nil {
 			sysErr = fmt.Errorf("getting maxkbps from cdn %v: %v", cdn, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 		if cap != nil {
+			// Perl implementation hardcoded capacity as 85 percent of Gbps
 			cdnStats.Capacity = util.FloatPtr(*cap / 1000000 * .85)
 		}
 
@@ -143,6 +146,9 @@ func getCDNStat(client *influx.Client, cdnName, metricName, db string) (*float64
 	}
 	if series == nil {
 		return nil, nil
+	}
+	if len(series.Values) == 0 {
+		return nil, fmt.Errorf("influxdb query for metrtic %v returned series with no values", metricName)
 	}
 	vals := series.Values[0]
 	mappedValues := map[string]interface{}{}
