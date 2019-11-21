@@ -27,7 +27,7 @@ func TestFederationUsers(t *testing.T) {
 
 func CreateTestFederationUsers(t *testing.T) {
 	if len(testData.Federations) == 0 {
-		t.Errorf("no federations test data")
+		t.Error("no federations test data")
 	}
 
 	fedID := fedIDs[0]
@@ -38,7 +38,7 @@ func CreateTestFederationUsers(t *testing.T) {
 		t.Fatalf("getting users: " + err.Error())
 	}
 	if len(users) < 3 {
-		t.Fatalf("need > 3 users to create federation users")
+		t.Fatal("need > 3 users to create federation users")
 	}
 
 	u1 := users[0].ID
@@ -90,7 +90,7 @@ func CreateTestFederationUsers(t *testing.T) {
 
 func CreateTestInvalidFederationUsers(t *testing.T) {
 	if len(testData.Federations) == 0 {
-		t.Errorf("no federations test data")
+		t.Error("no federations test data")
 	}
 
 	fedID := fedIDs[0]
@@ -101,25 +101,25 @@ func CreateTestInvalidFederationUsers(t *testing.T) {
 		t.Fatalf("getting users: " + err.Error())
 	}
 	if len(users) == 0 {
-		t.Fatalf("need at least 1 user to test invalid federation user create")
+		t.Fatal("need at least 1 user to test invalid federation user create")
 	}
 
 	// Associate with invalid federdation id
 	_, _, err = TOSession.CreateFederationUsers(-1, []int{*users[0].ID}, false)
 	if err == nil {
-		t.Errorf("expected to get error back from associating non existent federation id")
+		t.Error("expected to get error back from associating non existent federation id")
 	}
 
 	// Associate with invalid user id
 	_, _, err = TOSession.CreateFederationUsers(fedID, []int{-1}, false)
 	if err == nil {
-		t.Errorf("expected to get error back from associating non existent user id")
+		t.Error("expected to get error back from associating non existent user id")
 	}
 }
 
 func DeleteTestFederationUsers(t *testing.T) {
 	if len(testData.Federations) == 0 {
-		t.Errorf("no federations test data")
+		t.Error("no federations test data")
 	}
 
 	fedID := fedIDs[0]

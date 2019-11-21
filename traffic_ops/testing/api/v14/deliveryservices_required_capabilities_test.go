@@ -164,16 +164,16 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// Get Delivery Capability for a DS
 	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("ds1"), nil)
 	if err != nil {
-		t.Fatalf("cannot GET delivery service required capabilities: %v\n", err)
+		t.Fatalf("cannot GET delivery service required capabilities: %v", err)
 	}
 	if len(capabilities) == 0 {
-		t.Fatalf("delivery service ds1 needs at least one capability required")
+		t.Fatal("delivery service ds1 needs at least one capability required")
 	}
 
 	// First assign current capabilities to edge server so we can assign it to the DS
 	servers, _, err := TOSession.GetServerByHostName("atlanta-edge-01")
 	if err != nil {
-		t.Fatalf("cannot GET Server by hostname: %v\n", err)
+		t.Fatalf("cannot GET Server by hostname: %v", err)
 	}
 	if len(servers) < 1 {
 		t.Fatal("need at least one server to test invalid ds required capability assignment")
@@ -190,7 +190,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 		}
 		_, _, err := TOSession.CreateServerServerCapability(sCap)
 		if err != nil {
-			t.Errorf("could not POST the server capability %v to server %v: %v\n", *cap.RequiredCapability, sID, err)
+			t.Errorf("could not POST the server capability %v to server %v: %v", *cap.RequiredCapability, sID, err)
 		}
 		serverCaps = append(serverCaps, sCap)
 	}
@@ -198,7 +198,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// Assign server to ds
 	_, err = TOSession.CreateDeliveryServiceServers(*dsID, []int{sID}, false)
 	if err != nil {
-		t.Fatalf("cannot CREATE server delivery service assignement: %v\n", err)
+		t.Fatalf("cannot CREATE server delivery service assignement: %v", err)
 	}
 
 	// Create new bogus server capability
@@ -206,7 +206,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 		Name: "newcap",
 	})
 	if err != nil {
-		t.Fatalf("cannot CREATE newcap server capability: %v\n", err)
+		t.Fatalf("cannot CREATE newcap server capability: %v", err)
 	}
 
 	// Attempt to assign to DS should fail
@@ -215,27 +215,27 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 		RequiredCapability: util.StrPtr("newcap"),
 	})
 	if err == nil {
-		t.Fatalf("expected error requiring a capability that is not associated on the delivery service's servers")
+		t.Fatal("expected error requiring a capability that is not associated on the delivery service's servers")
 	}
 
 	// Disassociate server from DS
 	_, _, err = TOSession.DeleteDeliveryServiceServer(*dsID, sID)
 	if err != nil {
-		t.Fatalf("could not DELETE the server %v from ds %v: %v\n", sID, *dsID, err)
+		t.Fatalf("could not DELETE the server %v from ds %v: %v", sID, *dsID, err)
 	}
 
 	// Remove server capabilities from server
 	for _, ssc := range serverCaps {
 		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
 		if err != nil {
-			t.Errorf("could not DELETE the server capability %v from server %v: %v\n", *ssc.ServerCapability, *ssc.Server, err)
+			t.Errorf("could not DELETE the server capability %v from server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
 		}
 	}
 
 	// Delete server capability
 	_, _, err = TOSession.DeleteServerCapability("newcap")
 	if err != nil {
-		t.Fatalf("cannot DELETE newcap server capability: %v\n", err)
+		t.Fatalf("cannot DELETE newcap server capability: %v", err)
 	}
 
 }
@@ -297,7 +297,7 @@ func helperGetDeliveryServiceID(t *testing.T, capability tc.DeliveryServicesRequ
 		t.Fatal(err)
 	}
 	if len(ds) != 1 {
-		t.Fatalf("cannot GET deliveyservice by xml id: %v. Response did not include record.\n", *capability.XMLID)
+		t.Fatalf("cannot GET deliveyservice by xml id: %v. Response did not include record.", *capability.XMLID)
 	}
 	return &ds[0].ID
 }

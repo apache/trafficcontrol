@@ -29,7 +29,7 @@ func TestFederationResolvers(t *testing.T) {
 func GetTestFederationResolvers(t *testing.T) {
 	var tdlen = len(testData.FederationResolvers)
 	if tdlen < 1 {
-		t.Fatalf("no federation resolvers test data")
+		t.Fatal("no federation resolvers test data")
 	}
 
 	frs, _, err := TOSession.GetFederationResolvers()
@@ -124,7 +124,7 @@ func cmpr(testFr, apiFr tc.FederationResolver, t *testing.T) {
 func CreateTestFederationResolvers(t *testing.T) {
 	for _, fr := range testData.FederationResolvers {
 		if fr.Type == nil {
-			t.Fatalf("testData Federation Resolver has nil Type")
+			t.Fatal("testData Federation Resolver has nil Type")
 		}
 
 		tid, _, err := TOSession.GetTypeByName(*fr.Type)

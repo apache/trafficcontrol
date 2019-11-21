@@ -32,7 +32,7 @@ func TestReadOnlyCannotModify(t *testing.T) {
 
 func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 	if len(testData.CDNs) == 0 {
-		t.Fatalf("Can't test readonly user creating a cdns: test data has no cdns\n")
+		t.Fatal("Can't test readonly user creating a cdns: test data has no cdns")
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
@@ -49,7 +49,7 @@ func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 	alerts, _, err := readonlyTOClient.CreateCDN(cdn)
 
 	if err == nil {
-		t.Errorf("readonlyuser creating cdn error expected: not nil, actual: nil error")
+		t.Error("readonlyuser creating cdn error expected: not nil, actual: nil error")
 	}
 
 	if !strings.Contains(strings.ToLower(err.Error()), "forbidden") {
@@ -64,6 +64,6 @@ func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 
 	cdns, _, _ := TOSession.GetCDNByName(cdn.Name)
 	if len(cdns) > 0 {
-		t.Errorf("readonlyuser getting created cdn, len(cdns) expected: 0, actual: %+v %++v", len(cdns), cdns)
+		t.Errorf("readonlyuser getting created cdn, len(cdns) expected: 0, actual: %+v %+v", len(cdns), cdns)
 	}
 }

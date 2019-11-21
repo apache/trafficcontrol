@@ -40,7 +40,7 @@ func CreateTestParameters(t *testing.T) {
 		resp, _, err := TOSession.CreateParameter(pl)
 		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("could not CREATE parameters: %v\n", err)
+			t.Errorf("could not CREATE parameters: %v", err)
 		}
 	}
 
@@ -52,7 +52,7 @@ func UpdateTestParameters(t *testing.T) {
 	// Retrieve the Parameter by name so we can get the id for the Update
 	resp, _, err := TOSession.GetParameterByName(firstParameter.Name)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v\n", firstParameter.Name, err)
+		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
 	remoteParameter := resp[0]
 	expectedParameterValue := "UPDATED"
@@ -60,17 +60,17 @@ func UpdateTestParameters(t *testing.T) {
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter)
 	if err != nil {
-		t.Errorf("cannot UPDATE Parameter by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the Parameter to check Parameter name got updated
 	resp, _, err = TOSession.GetParameterByID(remoteParameter.ID)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v\n", firstParameter.Name, err)
+		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
 	respParameter := resp[0]
 	if respParameter.Value != expectedParameterValue {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respParameter.Value, expectedParameterValue)
+		t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
 	}
 
 }
@@ -80,7 +80,7 @@ func GetTestParameters(t *testing.T) {
 	for _, pl := range testData.Parameters {
 		resp, _, err := TOSession.GetParameterByName(pl.Name)
 		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Parameter by name: %v - %v", err, resp)
 		}
 	}
 }
@@ -112,29 +112,29 @@ func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 	// Retrieve the Parameter by name so we can get the id for the Update
 	resp, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v\n", pl.Name, err)
+		t.Errorf("cannot GET Parameter by name: %v - %v", pl.Name, err)
 	}
 
 	if len(resp) == 0 {
 		// TODO This fails for the ProfileParameters test; determine a way to check this, even for ProfileParameters
-		// t.Errorf("DeleteTestParameter got no params for %+v %+v\n", pl.Name, pl.ConfigFile)
+		// t.Errorf("DeleteTestParameter got no params for %+v %+v", pl.Name, pl.ConfigFile)
 	} else if len(resp) > 1 {
 		// TODO figure out why this happens, and be more precise about deleting things where created.
-		// t.Errorf("DeleteTestParameter params for %+v %+v expected 1, actual %+v\n", pl.Name, pl.ConfigFile, len(resp))
+		// t.Errorf("DeleteTestParameter params for %+v %+v expected 1, actual %+v", pl.Name, pl.ConfigFile, len(resp))
 	}
 	for _, respParameter := range resp {
 		delResp, _, err := TOSession.DeleteParameterByID(respParameter.ID)
 		if err != nil {
-			t.Errorf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
+			t.Errorf("cannot DELETE Parameter by name: %v - %v", err, delResp)
 		}
 
 		// Retrieve the Parameter to see if it got deleted
 		pls, _, err := TOSession.GetParameterByID(pl.ID)
 		if err != nil {
-			t.Errorf("error deleting Parameter name: %s\n", err.Error())
+			t.Errorf("error deleting Parameter name: %s", err.Error())
 		}
 		if len(pls) > 0 {
-			t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted\n", pl.Name, pl.ConfigFile)
+			t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted", pl.Name, pl.ConfigFile)
 		}
 	}
 }

@@ -35,7 +35,7 @@ func CreateTestTypes(t *testing.T) {
 	for _, typ := range testData.Types {
 		resp, _, err := TOSession.CreateType(typ)
 		if err != nil {
-			t.Errorf("could not CREATE types: %v\n", err)
+			t.Errorf("could not CREATE types: %v", err)
 		}
 		log.Debugln("Response: ", resp)
 	}
@@ -49,7 +49,7 @@ func UpdateTestTypes(t *testing.T) {
 	// Retrieve the Type by name so we can get the id for the Update
 	resp, _, err := TOSession.GetTypeByName(firstType.Name)
 	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v\n", firstType.Name, err)
+		t.Errorf("cannot GET Type by name: %v - %v", firstType.Name, err)
 	}
 	remoteType := resp[0]
 	expectedTypeName := "testType1"
@@ -57,17 +57,17 @@ func UpdateTestTypes(t *testing.T) {
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType)
 	if err != nil {
-		t.Errorf("cannot UPDATE Type by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE Type by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the Type to check Type name got updated
 	resp, _, err = TOSession.GetTypeByID(remoteType.ID)
 	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v\n", firstType.Name, err)
+		t.Errorf("cannot GET Type by name: %v - %v", firstType.Name, err)
 	}
 	respType := resp[0]
 	if respType.Name != expectedTypeName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respType.Name, expectedTypeName)
+		t.Errorf("results do not match actual: %s, expected: %s", respType.Name, expectedTypeName)
 	}
 
 	log.Debugln("Response Type: ", respType)
@@ -75,7 +75,7 @@ func UpdateTestTypes(t *testing.T) {
 	respType.Name = firstType.Name
 	alert, _, err = TOSession.UpdateTypeByID(respType.ID, respType)
 	if err != nil {
-		t.Errorf("cannot restore UPDATE Type by id: %v - %v\n", err, alert)
+		t.Errorf("cannot restore UPDATE Type by id: %v - %v", err, alert)
 	}
 }
 
@@ -85,7 +85,7 @@ func GetTestTypes(t *testing.T) {
 	for _, typ := range testData.Types {
 		resp, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil {
-			t.Errorf("cannot GET Type by name: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Type by name: %v - %v", err, resp)
 
 		}
 
@@ -100,22 +100,22 @@ func DeleteTestTypes(t *testing.T) {
 		// Retrieve the Type by name so we can get the id for the Update
 		resp, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil || len(resp) == 0 {
-			t.Errorf("cannot GET Type by name: %v - %v\n", typ.Name, err)
+			t.Errorf("cannot GET Type by name: %v - %v", typ.Name, err)
 		}
 		respType := resp[0]
 
 		delResp, _, err := TOSession.DeleteTypeByID(respType.ID)
 		if err != nil {
-			t.Errorf("cannot DELETE Type by name: %v - %v\n", err, delResp)
+			t.Errorf("cannot DELETE Type by name: %v - %v", err, delResp)
 		}
 
 		// Retrieve the Type to see if it got deleted
 		types, _, err := TOSession.GetTypeByName(typ.Name)
 		if err != nil {
-			t.Errorf("error deleting Type name: %s\n", err.Error())
+			t.Errorf("error deleting Type name: %s", err.Error())
 		}
 		if len(types) > 0 {
-			t.Errorf("expected Type name: %s to be deleted\n", typ.Name)
+			t.Errorf("expected Type name: %s to be deleted", typ.Name)
 		}
 	}
 }

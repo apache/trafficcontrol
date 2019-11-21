@@ -50,7 +50,7 @@ func CreateTestCDNFederations(t *testing.T) {
 
 		// need to save the ids, otherwise the other tests won't be able to reference the federations
 		if data.Response.ID == nil {
-			t.Errorf("Federation id is nil after posting\n")
+			t.Error("Federation id is nil after posting")
 		} else {
 			fedIDs = append(fedIDs, *data.Response.ID)
 		}
@@ -82,9 +82,9 @@ func UpdateTestCDNFederations(t *testing.T) {
 		log.Debugf("GET Response: %s\n", bytes)
 
 		if resp2.Response[0].CName == nil {
-			log.Errorf("CName is nil after updating\n")
+			log.Errorln("CName is nil after updating")
 		} else if *resp2.Response[0].CName != expectedCName {
-			t.Errorf("results do not match actual: %s, expected: %s\n", *resp2.Response[0].CName, expectedCName)
+			t.Errorf("results do not match actual: %s, expected: %s", *resp2.Response[0].CName, expectedCName)
 		}
 
 	}
@@ -112,14 +112,14 @@ func DeleteTestCDNFederations(t *testing.T) {
 	for _, id := range fedIDs {
 		resp, _, err := TOSession.DeleteCDNFederationByID("foo", id)
 		if err != nil {
-			t.Errorf("cannot DELETE federation by id: '%d' %v\n", id, err)
+			t.Errorf("cannot DELETE federation by id: '%d' %v", id, err)
 		}
 		bytes, err := json.Marshal(resp)
 		log.Debugf("DELETE Response: %s\n", bytes)
 
 		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
 		if len(data.Response) != 0 {
-			t.Errorf("expected federation to be deleted")
+			t.Error("expected federation to be deleted")
 		}
 	}
 	fedIDs = nil // reset the global variable for the next test

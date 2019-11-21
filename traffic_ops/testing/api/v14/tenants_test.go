@@ -37,7 +37,7 @@ func CreateTestTenants(t *testing.T) {
 		resp, err := TOSession.CreateTenant(&ten)
 
 		if err != nil {
-			t.Errorf("could not CREATE tenant %s: %v\n", ten.Name, err)
+			t.Errorf("could not CREATE tenant %s: %v", ten.Name, err)
 		}
 		if resp.Response.Name != ten.Name {
 			t.Errorf("expected tenant %+v; got %+v", ten, resp.Response)
@@ -48,7 +48,7 @@ func CreateTestTenants(t *testing.T) {
 func GetTestTenants(t *testing.T) {
 	resp, _, err := TOSession.Tenants()
 	if err != nil {
-		t.Errorf("cannot GET all tenants: %v - %v\n", err, resp)
+		t.Errorf("cannot GET all tenants: %v - %v", err, resp)
 		return
 	}
 	foundTenants := make(map[string]tc.Tenant, len(resp))
@@ -79,27 +79,27 @@ func UpdateTestTenants(t *testing.T) {
 	parentName := "tenant1"
 	modTenant, _, err := TOSession.TenantByName(name)
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v\n", name, err)
+		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
 	}
 
 	newParent, _, err := TOSession.TenantByName(parentName)
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v\n", parentName, err)
+		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
 	}
 	modTenant.ParentID = newParent.ID
 
 	_, err = TOSession.UpdateTenant(strconv.Itoa(modTenant.ID), modTenant)
 	if err != nil {
-		t.Errorf("cannot UPDATE Tenant by id: %v\n", err)
+		t.Errorf("cannot UPDATE Tenant by id: %v", err)
 	}
 
 	// Retrieve the Tenant to check Tenant parent name got updated
 	respTenant, _, err := TOSession.Tenant(strconv.Itoa(modTenant.ID))
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %v - %v\n", name, err)
+		t.Errorf("cannot GET Tenant by name: %v - %v", name, err)
 	}
 	if respTenant.ParentName != parentName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respTenant.ParentName, parentName)
+		t.Errorf("results do not match actual: %s, expected: %s", respTenant.ParentName, parentName)
 	}
 
 }
@@ -110,7 +110,7 @@ func DeleteTestTenants(t *testing.T) {
 	tenant1, _, err := TOSession.TenantByName(t1)
 
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %v - %v\n", t1, err)
+		t.Errorf("cannot GET Tenant by name: %v - %v", t1, err)
 	}
 	expectedChildDeleteErrMsg := `Tenant '` + strconv.Itoa(tenant1.ID) + `' has child tenants. Please update these child tenants and retry.`
 	if _, err := TOSession.DeleteTenant(strconv.Itoa(tenant1.ID)); err == nil {
@@ -155,7 +155,7 @@ func DeleteTestTenants(t *testing.T) {
 			break
 		}
 		if len(deletedTenants) == initLenDeleted {
-			t.Fatalf("could not delete tenants: not tenant without an existing child found (cycle?)")
+			t.Fatal("could not delete tenants: not tenant without an existing child found (cycle?)")
 		}
 	}
 }
@@ -205,9 +205,9 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// ds3 has tenant3. Even though tenant3 is inactive, we should still be able to get it, because our user is tenant1, which is active.
 	dses, _, err := TOSession.GetDeliveryServiceByXMLID("ds3")
 	if err != nil {
-		t.Fatalf("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active)")
+		t.Fatal("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active)")
 	} else if len(dses) != 1 {
-		t.Errorf("admin user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
+		t.Error("admin user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
 	}
 
 	setTenantActive(t, "tenant1", true)
@@ -217,7 +217,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// ds3 has tenant3. Even though tenant3's parent, tenant2, is inactive, we should still be able to get it, because our user is tenant1, which is active.
 	_, _, err = TOSession.GetDeliveryServiceByXMLID("ds3")
 	if err != nil {
-		t.Fatalf("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active)")
+		t.Fatal("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active)")
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
@@ -256,7 +256,7 @@ func UpdateTestTenantsActive(t *testing.T) {
 	if err != nil {
 		t.Errorf("tenant3user getting delivery service ds3 error expected: nil, actual: %+v", err)
 	} else if len(dses) == 0 {
-		t.Errorf("tenant3user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
+		t.Error("tenant3user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
 	}
 
 	// 1. ds2 has tenant2.
@@ -296,11 +296,11 @@ func UpdateTestTenantsActive(t *testing.T) {
 func setTenantActive(t *testing.T, name string, active bool) {
 	tn, _, err := TOSession.TenantByName(name)
 	if err != nil {
-		t.Fatalf("cannot GET Tenant by name: %s - %v\n", name, err)
+		t.Fatalf("cannot GET Tenant by name: %s - %v", name, err)
 	}
 	tn.Active = active
 	_, err = TOSession.UpdateTenant(strconv.Itoa(tn.ID), tn)
 	if err != nil {
-		t.Fatalf("cannot UPDATE Tenant by id: %v\n", err)
+		t.Fatalf("cannot UPDATE Tenant by id: %v", err)
 	}
 }
