@@ -28,9 +28,9 @@ import (
 )
 
 const (
-	API_v13_Servers = "/api/1.3/servers"
+	API_v13_Servers                        = "/api/1.3/servers"
 	API_v14_Server_Assign_DeliveryServices = "/api/1.4/servers/%d/deliveryservices?replace=%t"
-	API_v14_Server_DeliveryServices = "/api/1.4/servers/%d/deliveryservices"
+	API_v14_Server_DeliveryServices        = "/api/1.4/servers/%d/deliveryservices"
 )
 
 // Create a Server
@@ -297,7 +297,6 @@ func (to *Session) GetServersShortNameSearch(shortname string) ([]string, ReqInf
 // assignments to the server will be replaced.
 func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, replace bool) (tc.Alerts, ReqInf, error) {
 	// datatypes here match the library tc.Server's and tc.DeliveryService's ID fields
-
 
 	var remoteAddr net.Addr
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
