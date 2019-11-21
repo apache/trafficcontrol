@@ -198,7 +198,7 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 				return tuple.IPv4
 			}
 			// if both IP addresses are defined then report availability based on both
-			return tuple.IPv4 && tuple.IPv6
+			return tuple.IPv4 || tuple.IPv6
 		default:
 			log.Errorln("received an unknown PollingProtocol: " + protocol.String())
 		}
@@ -262,10 +262,10 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 				protocol = "IPv6"
 			}
 			log.Infof("Changing state for %s was: %t now: %t because %s poller: %v on protocol %v error: %v", result.ID, available.IsAvailable, newAvailableState, whyAvailable, pollerName, protocol, result.Error)
-			events.Add(Event{Time: Time(time.Now()), Description: "Protocol: (" + protocol + ") " + whyAvailable + " (" + pollerName + ")", Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[result.ID].String(), Available: newAvailableState})
+			events.Add(Event{Time: Time(time.Now()), Description: "Protocol: (" + protocol + ") " + whyAvailable + " (" + pollerName + ")", Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[result.ID].String(), Available: newAvailableState, IPv4Available: availableTuple.IPv4, IPv6Available: availableTuple.IPv6})
 		}
 
-		localStates.SetCache(result.ID, tc.IsAvailable{IsAvailable: newAvailableState})
+		localStates.SetCache(result.ID, tc.IsAvailable{IsAvailable: newAvailableState, Ipv4Available: availableTuple.IPv4, Ipv6Available: availableTuple.IPv6})
 	}
 	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates, toData)
 	localCacheStatusThreadsafe.Set(localCacheStatuses)

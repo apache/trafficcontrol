@@ -74,7 +74,8 @@ The :term:`cache servers` are polled at the URL specified in the ``health.pollin
 
 This :term:`parameter` must have the config file ``rascal.properties``.
 
-The value is a template with the text ``${hostname}`` being replaced with the :term:`cache server`'s Network IP (IPv4), and ``${interface_name}`` being replaced with the :term:`cache server`'s network Interface Name. For example, ``http://${hostname}/_astats?application=&inf.name=${interface_name}``.
+The value is a template with the text ``${hostname}`` being replaced with the :term:`cache server`'s Network IP (IPv4, IPv6, or alternating between IPv4 and IPv6 depending on the cache polling protocol described above), and ``${interface_name}`` being replaced with the :term:`cache server`'s network Interface Name. For example, ``http://${hostname}/_astats?application=&inf.name=${interface_name}``.
+.. Note:: When an IPv6 address is used, it must be surrounded by square brackets ``[`` and ``]``.  This is done when the text ``${hostname}`` is replaced and should not be done in the server configuration itself.
 
 If the template contains a port, that port will be used, and the :term:`cache server`'s HTTPS and TCP Ports will not be added.
 
@@ -83,6 +84,7 @@ If the template does not contain a port, then if the template starts with ``http
 Examples:
 
 Template ``http://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://192.0.2.42:8080/_astats?application=&inf.name=${interface_name}``.
+Template ``http://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``2001:DB8:0:0:1::1`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://[2001:DB8:0:0:1::1]/_astats?application=&inf.name=${interface_name}``.
 Template ``https://${hostname}/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``https://192.0.2.42:8443/_astats?application=&inf.name=${interface_name}``.
 Template ``http://${hostname}:1234/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``http://192.0.2.42:1234/_astats?application=&inf.name=${interface_name}``.
 Template ``https://${hostname}:1234/_astats?application=&inf.name=${interface_name}`` Server IP ``192.0.2.42`` Server TCP Port ``8080`` HTTPS Port ``8443`` becomes ``https://192.0.2.42:1234/_astats?application=&inf.name=${interface_name}``.

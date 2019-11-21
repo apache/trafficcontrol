@@ -39,9 +39,14 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	private static final Logger LOGGER = Logger.getLogger(Cache.class);
 	private static final int REPLICAS = 1000;
 
+	public enum IpVersions {
+		IPV4ONLY, IPV6ONLY, BOTH
+	}
+	private IpVersions ipAvailableVersions;
 	private final String id;
 	private String fqdn;
 	private List<InetRecord> ipAddresses;
+	private List<InetRecord> unavailableIpAddresses;
 	private int port;
 	private final Map<String, DeliveryServiceReference> deliveryServices = new HashMap<String, DeliveryServiceReference>();
 	private final Geolocation geolocation;
@@ -205,6 +210,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	InetAddress ip6;
 	public void setIpAddress(final String ip, final String ip6, final long ttl) throws UnknownHostException {
 		this.ipAddresses = new ArrayList<InetRecord>();
+		this.unavailableIpAddresses = new ArrayList<InetRecord>();
 
 		if (ip != null && !ip.isEmpty()) {
 			this.ip4 = InetAddress.getByName(ip);
@@ -228,9 +234,53 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		return ip6;
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public void setState(final JsonNode state) {
 		final boolean isAvailable = JsonUtils.optBoolean(state, "isAvailable", true);
+		final boolean ipv4Available = JsonUtils.optBoolean(state, "ipv4Available", true);
+		final boolean ipv6Available = JsonUtils.optBoolean(state, "ipv6Available", true);
+
+		final List<InetRecord> newlyAvailable = new ArrayList<>();
+		final List<InetRecord> newlyUnavailable = new ArrayList<>();
+
+		if (ipv4Available && !ipv6Available) {
+			this.ipAvailableVersions = IpVersions.IPV4ONLY;
+		} else if (ipv6Available && !ipv4Available) {
+			this.ipAvailableVersions = IpVersions.IPV6ONLY;
+		} else {
+			this.ipAvailableVersions = IpVersions.BOTH;
+		}
+
+		for (final InetRecord record : ipAddresses) {
+			if (record.getAddress() == ip4 && !ipv4Available) {
+				newlyUnavailable.add(record);
+				LOGGER.info("disabling IPv4 address " + record.getAddress());
+			}
+			if (record.getAddress() == ip6 && !ipv6Available) {
+				newlyUnavailable.add(record);
+				LOGGER.info("disabling IPv6 address " + record.getAddress());
+			}
+		}
+
+		for (final InetRecord record : unavailableIpAddresses) {
+			if (record.getAddress() == ip4 && ipv4Available) {
+				newlyAvailable.add(record);
+				LOGGER.info("enabling IPv4 address " + record.getAddress());
+			}
+			if (record.getAddress() == ip6 && ipv6Available) {
+				newlyAvailable.add(record);
+				LOGGER.info("enabling IPv6 address " + record.getAddress());
+			}
+		}
+
+		ipAddresses.addAll(newlyAvailable);
+		ipAddresses.removeAll(newlyUnavailable);
+		unavailableIpAddresses.addAll(newlyUnavailable);
+		unavailableIpAddresses.removeAll(newlyAvailable);
+
 		this.setIsAvailable(isAvailable);
+
+
 	}
 
 	@Override
@@ -270,5 +320,13 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	@Override
 	public void setOrder(final int order) {
 		hashable.setOrder(order);
+	}
+
+	public IpVersions getIpAvailableVersions() {
+		return ipAvailableVersions;
+	}
+
+	public void setIpAvailableVersions(final IpVersions ipAvailableVersions) {
+		this.ipAvailableVersions = ipAvailableVersions;
 	}
 }

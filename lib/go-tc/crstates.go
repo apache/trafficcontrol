@@ -37,7 +37,9 @@ type CRStatesDeliveryService struct {
 
 // IsAvailable contains whether the given cache or delivery service is available. It is designed for JSON serialization, namely in the Traffic Monitor 1.0 API.
 type IsAvailable struct {
-	IsAvailable bool `json:"isAvailable"`
+	IsAvailable   bool `json:"isAvailable"`
+	Ipv4Available bool `json:"ipv4Available"`
+	Ipv6Available bool `json:"ipv6Available"`
 }
 
 // NewCRStates creates a new CR states object, initializing pointer members.

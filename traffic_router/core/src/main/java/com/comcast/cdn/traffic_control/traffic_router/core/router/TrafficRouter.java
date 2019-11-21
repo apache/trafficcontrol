@@ -16,10 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -534,7 +531,7 @@ public class TrafficRouter {
 	 * @param track A {@link Track} object used to track routing statistics
 	 * @return The list of routes available to service the client's request.
 	 */
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public HTTPRouteResult multiRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request, true);
 
@@ -564,6 +561,11 @@ public class TrafficRouter {
 			final DeliveryService ds = steeringResult.getDeliveryService();
 			List<Cache> caches = selectCaches(request, ds, track);
 
+			try {
+				caches = editCacheListForIpVersion(InetAddress.getByName(request.getClientIP()) instanceof Inet4Address, caches);
+			} catch (UnknownHostException e) {
+				LOGGER.debug("Could not parse IP, accepting cache list as is.");
+			}
 			// child Delivery Services can use their query parameters
 			final String pathToHash = steeringHash + ds.extractSignificantQueryParams(request);
 
@@ -695,7 +697,12 @@ public class TrafficRouter {
 
 		routeResult.setDeliveryService(deliveryService);
 
-		final List<Cache> caches = selectCaches(request, deliveryService, track);
+		List<Cache> caches = selectCaches(request, deliveryService, track);
+		try {
+			caches = editCacheListForIpVersion(InetAddress.getByName(request.getClientIP()) instanceof Inet4Address, caches);
+		} catch (UnknownHostException e) {
+			LOGGER.debug("Could not parse IP, accepting cache list as is.");
+		}
 
 		if (caches == null || caches.isEmpty()) {
 			if (track.getResult() == ResultType.GEO_REDIRECT) {
@@ -732,6 +739,18 @@ public class TrafficRouter {
 		routeResult.setUrl(new URL(uriString));
 
 		return routeResult;
+	}
+
+	private List<Cache> editCacheListForIpVersion(final boolean requestIsIpv4, final List<Cache> caches) {
+		final List<Cache> removeCaches = new ArrayList<>();
+		for (final Cache cache : caches) {
+			if ((!requestIsIpv4 && cache.getIpAvailableVersions() == Cache.IpVersions.IPV4ONLY) ||
+					requestIsIpv4 && cache.getIpAvailableVersions() == Cache.IpVersions.IPV6ONLY) {
+				removeCaches.add(cache);
+			}
+		}
+		caches.removeAll(removeCaches);
+		return caches;
 	}
 
 	@SuppressWarnings({"PMD.NPathComplexity"})
