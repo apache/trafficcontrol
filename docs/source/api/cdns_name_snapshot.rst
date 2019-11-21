@@ -78,10 +78,6 @@ Response Structure
 			DNSSEC is used within this CDN
 
 	:domain_name:                        The Top-Level Domain Name (TLD) served by the CDN
-	:edge.dns.limit:                     This field is of unknown use, and may be remnants of a legacy system
-	:edge.dns.routing:                   This field is of unknown use, and may be remnants of a legacy system
-	:edge.http.limit:                    This field is of unknown use, and may be remnants of a legacy system
-	:edge.http.routing:                  This field is of unknown use, and may be remnants of a legacy system
 	:federationmapping.polling.interval: A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for new federation mappings
 	:federationmapping.polling.url:      The URL where Traffic Control components can request federation mappings
 	:geolocation.polling.interval:       A string containing an integer which specifies the interval, in seconds, on which other Traffic Control components should check for new IP-to-geographic-location mapping databases
@@ -352,7 +348,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: 220bc4XXwaj+s7ODd3QAF5leGj06lnApiN5E8H/B2RgxSphnQIfnwy6WWbBDjonWXPV1IWDCjBMO+rR+lAabMg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 12 Dec 2018 17:36:25 GMT
@@ -368,10 +364,6 @@ Response Structure
 			"dnssec.dynamic.response.expiration": "300s",
 			"dnssec.enabled": "false",
 			"domain_name": "mycdn.ciab.test",
-			"edge.dns.limit": "6",
-			"edge.dns.routing": "true",
-			"edge.http.limit": "6",
-			"edge.http.routing": "true",
 			"federationmapping.polling.interval": "60000",
 			"federationmapping.polling.url": "https://${toHostname}/internal/api/1.3/federations.json",
 			"geolocation.polling.interval": "86400000",

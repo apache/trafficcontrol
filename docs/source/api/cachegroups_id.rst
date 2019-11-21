@@ -97,7 +97,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: EXO+TK1CIwQ5lzTXQGqlLDzU641pLLCQbyqz5Z8QUYSPAjjn5cqC9W3c0ioDiCdK9bUWvHP3E4/ERBzkBTi06g==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 14 Nov 2018 18:35:53 GMT
@@ -236,7 +236,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: t1W65/2kj25QyHt0Ib0xpBaAR2sXu2kOsRZ49WjKZp/AK5S1YWhX7VNWCuUGiN1VNM4QRNqODC/7ewhYDFUncA==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 14 Nov 2018 19:14:28 GMT
@@ -307,7 +307,7 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: 5jZBgO7h1eNF70J/cmlbi3Hf9KJPx+WLMblH/pSKF3FWb/10GUHIN35ZOB+lN5LZYCkmk3izGbTFkiruG8I41Q==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 14 Nov 2018 20:31:04 GMT

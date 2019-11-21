@@ -12,10 +12,12 @@
    limitations under the License.
 */
 
+// Package config provides testing helpers for Traffic Ops API tests.
 package config
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net"
 	"regexp"
@@ -39,16 +41,16 @@ func Validate24HrTimeRange(rng string) error {
 
 	t1, err := time.Parse(militaryTimeFmt, match[1])
 	if err != nil {
-		return fmt.Errorf("time range must be a 24Hr format")
+		return errors.New("time range must be a 24Hr format")
 	}
 
 	t2, err := time.Parse(militaryTimeFmt, match[2])
 	if err != nil {
-		return fmt.Errorf("second time range must be a 24Hr format")
+		return errors.New("second time range must be a 24Hr format")
 	}
 
 	if t1.After(t2) {
-		return fmt.Errorf("first time should be smaller than the second")
+		return errors.New("first time should be smaller than the second")
 	}
 
 	return nil
@@ -60,14 +62,14 @@ func Validate24HrTimeRange(rng string) error {
 func ValidateDHMSTimeFormat(time string) error {
 
 	if time == "" {
-		return fmt.Errorf("time string cannot be empty")
+		return errors.New("time string cannot be empty")
 	}
 
 	dhms := regexp.MustCompile(`^(\d+)([dhms])(\S*)$`)
 	match := dhms.FindStringSubmatch(time)
 
 	if match == nil {
-		return fmt.Errorf("invalid time format")
+		return errors.New("invalid time format")
 	}
 
 	var count = map[string]int{
@@ -147,17 +149,17 @@ func ValidateIPRange(ip string) error {
 
 		// both must be valid
 		if ip1 == nil || ip2 == nil {
-			return fmt.Errorf("invalid IP range: %v \n", ip)
+			return fmt.Errorf("invalid IP range: %v", ip)
 		}
 
 		// must be of the same type
 		if (ip1.To4() == nil) != (ip2.To4() == nil) {
-			return fmt.Errorf("invalid IP range: %v \n", ip)
+			return fmt.Errorf("invalid IP range: %v", ip)
 		}
 
 		// ip2 must be less than ip1
 		if bytes.Compare(ip2, ip1) < 0 {
-			return fmt.Errorf("invalid IP range: %v \n", ip)
+			return fmt.Errorf("invalid IP range: %v", ip)
 		}
 		return nil
 	}
@@ -178,7 +180,7 @@ func ValidateIPRange(ip string) error {
 		if _, _, err = net.ParseCIDR(ip); err == nil {
 			return nil
 		}
-		return fmt.Errorf("invalid CIDR address: %v \n", ip)
+		return fmt.Errorf("invalid CIDR address: %v", ip)
 	}
 
 	return fmt.Errorf("invalid IP range: %v", ip)

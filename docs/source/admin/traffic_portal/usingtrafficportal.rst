@@ -665,7 +665,7 @@ Generates a boot-able system image for any of the servers in the Servers table (
 Copy Server Attributes From
 	Optional. This option lets the user choose a server from the Traffic Ops database and will auto-fill the other fields as much as possible based on that server's properties
 OS Version
-	This list is populated by modifying the :file:`osversions.cfg` file on the Traffic Ops server. This file maps OS names to the name of a directory under ``app/public/iso/`` directory within the Traffic Ops install directory
+	This list is populated by modifying the :file:`osversions.json` file on the Traffic Ops server. This file maps OS names to the name of a directory under ``app/public/iso/`` directory within the Traffic Ops install directory
 Hostname
 	The desired hostname of the resultant system
 Domain

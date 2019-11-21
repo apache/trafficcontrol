@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/federations/:id/users
   - /api/1.1/federations/:id/users/:userID
   - /api/1.2/current_stats
+  - /api/1.1/osversions
 
 - To support reusing a single riak cluster connection, an optional parameter is added to riak.conf: "HealthCheckInterval". This options takes a 'Duration' value (ie: 10s, 5m) which affects how often the riak cluster is health checked.  Default is currently set to: "HealthCheckInterval": "5s".
 - Added a new Go db/admin binary to replace the Perl db/admin.pl script which is now deprecated and will be removed in a future release. The new db/admin binary is essentially a drop-in replacement for db/admin.pl since it supports all of the same commands and options; therefore, it should be used in place of db/admin.pl for all the same tasks.
@@ -68,10 +69,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - In Traffic Portal, added the ability to create, view and delete server capabilities and associate those server capabilities with servers and delivery services. See [blueprint](./blueprints/server-capabilitites.md)
 - Added validation to prevent assigning servers to delivery services without required capabilities.
 - Added deep coverage zone routing percentage to the Traffic Portal dashboard.
+- Added a `traffic_ops/app/bin/osversions-convert.pl` script to convert the `osversions.cfg` file from Perl to JSON as part of the `/osversions` endpoint rewrite.
 
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)
 - Traffic Portal:  Traffic Portal now allows Regional Geo Blocking to be enabled for a Steering Delivery Service.
+- Traffic Ops: fixed a regression where the `Expires` cookie header was not being set properly in responses. Also, added the `Max-Age` cookie header in responses.
 - Traffic Router, added TLS certificate validation on certificates imported from Traffic Ops
   - validates modulus of private and public keys
   - validates current timestamp falls within the certificate date bracket

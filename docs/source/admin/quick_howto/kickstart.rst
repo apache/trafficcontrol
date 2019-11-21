@@ -39,7 +39,7 @@ Generating a System Image
 	vim ks.src
 	vim isolinux/isolinux.cfg
 	cd ..
-	vim osversions.cfg
+	vim osversions.json
 
 :file:`ks.src` is a standard, Kickstart-formatted file that the will be used to create the Kickstart (ks.cfg) file for the install whenever a system image is generated from the source tree. :file:`ks.src` is a template - it will be overwritten by any information set in the form submitted from :menuselection:`Tools --> Generate ISO` in Traffic Portal. Ultimately, the two are combined to create the final Kickstart file (:file:`ks.cfg`).
 

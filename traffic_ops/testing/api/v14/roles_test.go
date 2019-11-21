@@ -49,7 +49,7 @@ func CreateTestRoles(t *testing.T) {
 		log.Debugln("Response: ", alerts)
 		if err != nil {
 			log.Debugf("error: %v", err)
-			//t.Errorf("could not CREATE role: %v\n", err)
+			//t.Errorf("could not CREATE role: %v", err)
 		}
 		if !reflect.DeepEqual(alerts, expectedAlerts[i]) {
 			t.Errorf("got alerts: %v but expected alerts: %v", alerts, expectedAlerts[i])
@@ -58,15 +58,15 @@ func CreateTestRoles(t *testing.T) {
 }
 
 func UpdateTestRoles(t *testing.T) {
-	log.Debugf("testData.Roles contains: %++v\n", testData.Roles)
+	log.Debugf("testData.Roles contains: %+v\n", testData.Roles)
 	firstRole := testData.Roles[0]
 	// Retrieve the Role by role so we can get the id for the Update
 	resp, _, status, err := TOSession.GetRoleByName(*firstRole.Name)
 	log.Debugln("Status Code: ", status)
 	if err != nil {
-		t.Errorf("cannot GET Role by role: %v - %v\n", firstRole.Name, err)
+		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
 	}
-	log.Debugf("got response: %++v\n", resp)
+	log.Debugf("got response: %+v\n", resp)
 	remoteRole := resp[0]
 	expectedRole := "new admin2"
 	remoteRole.Name = &expectedRole
@@ -74,18 +74,18 @@ func UpdateTestRoles(t *testing.T) {
 	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole)
 	log.Debugln("Status Code: ", status)
 	if err != nil {
-		t.Errorf("cannot UPDATE Role by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the Role to check role got updated
 	resp, _, status, err = TOSession.GetRoleByID(*remoteRole.ID)
 	log.Debugln("Status Code: ", status)
 	if err != nil {
-		t.Errorf("cannot GET Role by role: %v - %v\n", firstRole.Name, err)
+		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
 	}
 	respRole := resp[0]
 	if *respRole.Name != expectedRole {
-		t.Errorf("results do not match actual: %s, expected: %s\n", *respRole.Name, expectedRole)
+		t.Errorf("results do not match actual: %s, expected: %s", *respRole.Name, expectedRole)
 	}
 
 	// Set the name back to the fixture value so we can delete it after
@@ -93,7 +93,7 @@ func UpdateTestRoles(t *testing.T) {
 	alert, _, status, err = TOSession.UpdateRoleByID(*remoteRole.ID, remoteRole)
 	log.Debugln("Status Code: ", status)
 	if err != nil {
-		t.Errorf("cannot UPDATE Role by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)
 	}
 
 }
@@ -103,7 +103,7 @@ func GetTestRoles(t *testing.T) {
 	resp, _, status, err := TOSession.GetRoleByName(*role.Name)
 	log.Debugln("Status Code: ", status)
 	if err != nil {
-		t.Errorf("cannot GET Role by role: %v - %v\n", err, resp)
+		t.Errorf("cannot GET Role by role: %v - %v", err, resp)
 	}
 
 }
@@ -128,17 +128,17 @@ func VerifyGetRolesOrder(t *testing.T) {
 	descResp, _, status, err := TOSession.GetRoleByQueryParams(params)
 	log.Debugln("Status Code: ", status)
 	if err != nil {
-		t.Errorf("cannot GET Role by role: %v - %v\n", err, descResp)
+		t.Errorf("cannot GET Role by role: %v - %v", err, descResp)
 	}
 	params["sortOrder"] = "asc"
 	ascResp, _, status, err := TOSession.GetRoleByQueryParams(params)
 	log.Debugln("Status Code: ", status)
 	if err != nil {
-		t.Errorf("cannot GET Role by role: %v - %v\n", err, ascResp)
+		t.Errorf("cannot GET Role by role: %v - %v", err, ascResp)
 	}
 
 	if reflect.DeepEqual(descResp, ascResp) {
-		t.Errorf("Role responses for descending and ascending are the same: %v - %v\n", descResp, ascResp)
+		t.Errorf("Role responses for descending and ascending are the same: %v - %v", descResp, ascResp)
 	}
 
 	// reverse the descending-sorted response and compare it to the ascending-sorted one
@@ -146,7 +146,7 @@ func VerifyGetRolesOrder(t *testing.T) {
 		descResp[start], descResp[end] = descResp[end], descResp[start]
 	}
 	if !reflect.DeepEqual(descResp, ascResp) {
-		t.Errorf("Role responses are not equal after reversal: %v - %v\n", descResp, ascResp)
+		t.Errorf("Role responses are not equal after reversal: %v - %v", descResp, ascResp)
 	}
 }
 
@@ -157,7 +157,7 @@ func DeleteTestRoles(t *testing.T) {
 	resp, _, status, err := TOSession.GetRoleByName(*role.Name)
 	log.Debugln("Status Code: ", status)
 	if err != nil {
-		t.Errorf("cannot GET Role by name: %v - %v\n", role.Name, err)
+		t.Errorf("cannot GET Role by name: %v - %v", role.Name, err)
 	}
 	respRole := resp[0]
 
@@ -165,7 +165,7 @@ func DeleteTestRoles(t *testing.T) {
 	log.Debugln("Status Code: ", status)
 
 	if err != nil {
-		t.Errorf("cannot DELETE Role by role: %v - %v\n", err, delResp)
+		t.Errorf("cannot DELETE Role by role: %v - %v", err, delResp)
 	}
 
 	// Retrieve the Role to see if it got deleted
@@ -173,10 +173,10 @@ func DeleteTestRoles(t *testing.T) {
 	log.Debugln("Status Code: ", status)
 
 	if err != nil {
-		t.Errorf("error deleting Role role: %s\n", err.Error())
+		t.Errorf("error deleting Role role: %s", err.Error())
 	}
 	if len(roleResp) > 0 {
-		t.Errorf("expected Role : %s to be deleted\n", *role.Name)
+		t.Errorf("expected Role : %s to be deleted", *role.Name)
 	}
 
 }

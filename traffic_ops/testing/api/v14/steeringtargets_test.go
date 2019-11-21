@@ -52,30 +52,30 @@ func SetupSteeringTargets(t *testing.T) {
 func CreateTestSteeringTargets(t *testing.T) {
 	for _, st := range testData.SteeringTargets {
 		if st.Type == nil {
-			t.Errorf("creating steering target: test data missing type\n")
+			t.Error("creating steering target: test data missing type")
 		}
 		if st.DeliveryService == nil {
-			t.Errorf("creating steering target: test data missing ds\n")
+			t.Error("creating steering target: test data missing ds")
 		}
 		if st.Target == nil {
-			t.Errorf("creating steering target: test data missing target\n")
+			t.Error("creating steering target: test data missing target")
 		}
 
 		{
 			respTypes, _, err := SteeringUserSession.GetTypeByName(*st.Type)
 			if err != nil {
-				t.Errorf("creating steering target: getting type: %v\n", err)
+				t.Errorf("creating steering target: getting type: %v", err)
 			} else if len(respTypes) < 1 {
-				t.Errorf("creating steering target: getting type: not found\n")
+				t.Error("creating steering target: getting type: not found")
 			}
 			st.TypeID = util.IntPtr(respTypes[0].ID)
 		}
 		{
 			respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
 			if err != nil {
-				t.Errorf("creating steering target: getting ds: %v\n", err)
+				t.Errorf("creating steering target: getting ds: %v", err)
 			} else if len(respDS) < 1 {
-				t.Errorf("creating steering target: getting ds: not found\n")
+				t.Error("creating steering target: getting ds: not found")
 			}
 			dsID := uint64(respDS[0].ID)
 			st.DeliveryServiceID = &dsID
@@ -83,9 +83,9 @@ func CreateTestSteeringTargets(t *testing.T) {
 		{
 			respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.Target))
 			if err != nil {
-				t.Errorf("creating steering target: getting target ds: %v\n", err)
+				t.Errorf("creating steering target: getting target ds: %v", err)
 			} else if len(respTarget) < 1 {
-				t.Errorf("creating steering target: getting target ds: not found\n")
+				t.Error("creating steering target: getting target ds: not found")
 			}
 			targetID := uint64(respTarget[0].ID)
 			st.TargetID = &targetID
@@ -94,38 +94,38 @@ func CreateTestSteeringTargets(t *testing.T) {
 		resp, _, err := SteeringUserSession.CreateSteeringTarget(st)
 		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("creating steering target: %v\n", err)
+			t.Errorf("creating steering target: %v", err)
 		}
 	}
 }
 
 func UpdateTestSteeringTargets(t *testing.T) {
 	if len(testData.SteeringTargets) < 1 {
-		t.Errorf("updating steering target: no steering target test data\n")
+		t.Error("updating steering target: no steering target test data")
 	}
 	st := testData.SteeringTargets[0]
 	if st.DeliveryService == nil {
-		t.Errorf("updating steering target: test data missing ds\n")
+		t.Error("updating steering target: test data missing ds")
 	}
 	if st.Target == nil {
-		t.Errorf("updating steering target: test data missing target\n")
+		t.Error("updating steering target: test data missing target")
 	}
 
 	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
 	if err != nil {
-		t.Errorf("updating steering target: getting ds: %v\n", err)
+		t.Errorf("updating steering target: getting ds: %v", err)
 	}
 	if len(respDS) < 1 {
-		t.Errorf("updating steering target: getting ds: not found\n")
+		t.Error("updating steering target: getting ds: not found")
 	}
 	dsID := respDS[0].ID
 
 	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
-		t.Errorf("updating steering targets: getting steering target: %v\n", err)
+		t.Errorf("updating steering targets: getting steering target: %v", err)
 	}
 	if len(sts) < 1 {
-		t.Errorf("updating steering targets: getting steering target: got 0\n")
+		t.Error("updating steering targets: getting steering target: got 0")
 	}
 	st = sts[0]
 
@@ -137,108 +137,108 @@ func UpdateTestSteeringTargets(t *testing.T) {
 
 	_, _, err = SteeringUserSession.UpdateSteeringTarget(st)
 	if err != nil {
-		t.Errorf("updating steering targets: updating: %+v\n", err)
+		t.Errorf("updating steering targets: updating: %+v", err)
 	}
 
 	sts, _, err = SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
-		t.Errorf("updating steering targets: getting updated steering target: %v\n", err)
+		t.Errorf("updating steering targets: getting updated steering target: %v", err)
 	}
 	if len(sts) < 1 {
-		t.Errorf("updating steering targets: getting updated steering target: got 0\n")
+		t.Error("updating steering targets: getting updated steering target: got 0")
 	}
 	actual := sts[0]
 
 	if actual.DeliveryServiceID == nil {
-		t.Errorf("steering target update: ds id expected %v actual %v\n", dsID, nil)
+		t.Errorf("steering target update: ds id expected %v actual %v", dsID, nil)
 	} else if *actual.DeliveryServiceID != uint64(dsID) {
-		t.Errorf("steering target update: ds id expected %v actual %v\n", dsID, *actual.DeliveryServiceID)
+		t.Errorf("steering target update: ds id expected %v actual %v", dsID, *actual.DeliveryServiceID)
 	}
 	if actual.TargetID == nil {
-		t.Errorf("steering target update: ds id expected %v actual %v\n", dsID, nil)
+		t.Errorf("steering target update: ds id expected %v actual %v", dsID, nil)
 	} else if *actual.TargetID != *st.TargetID {
-		t.Errorf("steering target update: ds id expected %v actual %v\n", *st.TargetID, *actual.TargetID)
+		t.Errorf("steering target update: ds id expected %v actual %v", *st.TargetID, *actual.TargetID)
 	}
 	if actual.TypeID == nil {
-		t.Errorf("steering target update: ds id expected %v actual %v\n", *st.TypeID, nil)
+		t.Errorf("steering target update: ds id expected %v actual %v", *st.TypeID, nil)
 	} else if *actual.TypeID != *st.TypeID {
-		t.Errorf("steering target update: ds id expected %v actual %v\n", *st.TypeID, *actual.TypeID)
+		t.Errorf("steering target update: ds id expected %v actual %v", *st.TypeID, *actual.TypeID)
 	}
 	if actual.DeliveryService == nil {
-		t.Errorf("steering target update: ds expected %v actual %v\n", *st.DeliveryService, nil)
+		t.Errorf("steering target update: ds expected %v actual %v", *st.DeliveryService, nil)
 	} else if *st.DeliveryService != *actual.DeliveryService {
-		t.Errorf("steering target update: ds name expected %v actual %v\n", *st.DeliveryService, *actual.DeliveryService)
+		t.Errorf("steering target update: ds name expected %v actual %v", *st.DeliveryService, *actual.DeliveryService)
 	}
 	if actual.Target == nil {
-		t.Errorf("steering target update: target expected %v actual %v\n", *st.Target, nil)
+		t.Errorf("steering target update: target expected %v actual %v", *st.Target, nil)
 	} else if *st.Target != *actual.Target {
-		t.Errorf("steering target update: target expected %v actual %v\n", *st.Target, *actual.Target)
+		t.Errorf("steering target update: target expected %v actual %v", *st.Target, *actual.Target)
 	}
 	if actual.Type == nil {
-		t.Errorf("steering target update: type expected %v actual %v\n", *st.Type, nil)
+		t.Errorf("steering target update: type expected %v actual %v", *st.Type, nil)
 	} else if *st.Type != *actual.Type {
-		t.Errorf("steering target update: type expected %v actual %v\n", *st.Type, *actual.Type)
+		t.Errorf("steering target update: type expected %v actual %v", *st.Type, *actual.Type)
 	}
 	if actual.Value == nil {
-		t.Errorf("steering target update: ds expected %v actual %v\n", *st.Value, nil)
+		t.Errorf("steering target update: ds expected %v actual %v", *st.Value, nil)
 	} else if *st.Value != *actual.Value {
-		t.Errorf("steering target update: value expected %v actual %v\n", *st.Value, actual.Value)
+		t.Errorf("steering target update: value expected %v actual %v", *st.Value, actual.Value)
 	}
 }
 
 func GetTestSteeringTargets(t *testing.T) {
 	if len(testData.SteeringTargets) < 1 {
-		t.Errorf("updating steering target: no steering target test data\n")
+		t.Error("updating steering target: no steering target test data")
 	}
 	st := testData.SteeringTargets[0]
 	if st.DeliveryService == nil {
-		t.Errorf("updating steering target: test data missing ds\n")
+		t.Error("updating steering target: test data missing ds")
 	}
 
 	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
 	if err != nil {
-		t.Errorf("creating steering target: getting ds: %v\n", err)
+		t.Errorf("creating steering target: getting ds: %v", err)
 	} else if len(respDS) < 1 {
-		t.Errorf("steering target get: getting ds: not found\n")
+		t.Error("steering target get: getting ds: not found")
 	}
 	dsID := respDS[0].ID
 
 	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
-		t.Errorf("steering target get: getting steering target: %v\n", err)
+		t.Errorf("steering target get: getting steering target: %v", err)
 	}
 
 	if len(sts) != len(testData.SteeringTargets) {
-		t.Errorf("steering target get: expected %v actual %v\n", len(testData.SteeringTargets), len(sts))
+		t.Errorf("steering target get: expected %v actual %v", len(testData.SteeringTargets), len(sts))
 	}
 
 	expected := testData.SteeringTargets[0]
 	actual := sts[0]
 
 	if actual.DeliveryServiceID == nil {
-		t.Errorf("steering target get: ds id expected %v actual %v\n", dsID, nil)
+		t.Errorf("steering target get: ds id expected %v actual %v", dsID, nil)
 	} else if *actual.DeliveryServiceID != uint64(dsID) {
-		t.Errorf("steering target get: ds id expected %v actual %v\n", dsID, *actual.DeliveryServiceID)
+		t.Errorf("steering target get: ds id expected %v actual %v", dsID, *actual.DeliveryServiceID)
 	}
 	if actual.DeliveryService == nil {
-		t.Errorf("steering target get: ds expected %v actual %v\n", expected.DeliveryService, nil)
+		t.Errorf("steering target get: ds expected %v actual %v", expected.DeliveryService, nil)
 	} else if *expected.DeliveryService != *actual.DeliveryService {
-		t.Errorf("steering target get: ds name expected %v actual %v\n", expected.DeliveryService, actual.DeliveryService)
+		t.Errorf("steering target get: ds name expected %v actual %v", expected.DeliveryService, actual.DeliveryService)
 	}
 	if actual.Target == nil {
-		t.Errorf("steering target get: target expected %v actual %v\n", expected.Target, nil)
+		t.Errorf("steering target get: target expected %v actual %v", expected.Target, nil)
 	} else if *expected.Target != *actual.Target {
-		t.Errorf("steering target get: target expected %v actual %v\n", expected.Target, actual.Target)
+		t.Errorf("steering target get: target expected %v actual %v", expected.Target, actual.Target)
 	}
 	if actual.Type == nil {
-		t.Errorf("steering target get: type expected %v actual %v\n", expected.Type, nil)
+		t.Errorf("steering target get: type expected %v actual %v", expected.Type, nil)
 	} else if *expected.Type != *actual.Type {
-		t.Errorf("steering target get: type expected %v actual %v\n", expected.Type, actual.Type)
+		t.Errorf("steering target get: type expected %v actual %v", expected.Type, actual.Type)
 	}
 	if actual.Value == nil {
-		t.Errorf("steering target get: ds expected %v actual %v\n", expected.Value, nil)
+		t.Errorf("steering target get: ds expected %v actual %v", expected.Value, nil)
 	} else if *expected.Value != *actual.Value {
-		t.Errorf("steering target get: value expected %v actual %v\n", *expected.Value, *actual.Value)
+		t.Errorf("steering target get: value expected %v actual %v", *expected.Value, *actual.Value)
 	}
 }
 
@@ -246,17 +246,17 @@ func DeleteTestSteeringTargets(t *testing.T) {
 	dsIDs := []uint64{}
 	for _, st := range testData.SteeringTargets {
 		if st.DeliveryService == nil {
-			t.Errorf("deleting steering target: test data missing ds\n")
+			t.Error("deleting steering target: test data missing ds")
 		}
 		if st.Target == nil {
-			t.Errorf("deleting steering target: test data missing target\n")
+			t.Error("deleting steering target: test data missing target")
 		}
 
 		respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService))
 		if err != nil {
-			t.Errorf("deleting steering target: getting ds: %v\n", err)
+			t.Errorf("deleting steering target: getting ds: %v", err)
 		} else if len(respDS) < 1 {
-			t.Errorf("deleting steering target: getting ds: not found\n")
+			t.Error("deleting steering target: getting ds: not found")
 		}
 		dsID := uint64(respDS[0].ID)
 		st.DeliveryServiceID = &dsID
@@ -265,26 +265,26 @@ func DeleteTestSteeringTargets(t *testing.T) {
 
 		respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.Target))
 		if err != nil {
-			t.Errorf("deleting steering target: getting target ds: %v\n", err)
+			t.Errorf("deleting steering target: getting target ds: %v", err)
 		} else if len(respTarget) < 1 {
-			t.Errorf("deleting steering target: getting target ds: not found\n")
+			t.Error("deleting steering target: getting target ds: not found")
 		}
 		targetID := uint64(respTarget[0].ID)
 		st.TargetID = &targetID
 
 		_, _, err = SteeringUserSession.DeleteSteeringTarget(int(*st.DeliveryServiceID), int(*st.TargetID))
 		if err != nil {
-			t.Errorf("deleting steering target: deleting: %+v\n", err)
+			t.Errorf("deleting steering target: deleting: %+v", err)
 		}
 	}
 
 	for _, dsID := range dsIDs {
 		sts, _, err := SteeringUserSession.GetSteeringTargets(int(dsID))
 		if err != nil {
-			t.Errorf("deleting steering targets: getting steering target: %v\n", err)
+			t.Errorf("deleting steering targets: getting steering target: %v", err)
 		}
 		if len(sts) != 0 {
-			t.Errorf("deleting steering targets: after delete, getting steering target: expected 0 actual %+v\n", len(sts))
+			t.Errorf("deleting steering targets: after delete, getting steering target: expected 0 actual %+v", len(sts))
 		}
 	}
 }

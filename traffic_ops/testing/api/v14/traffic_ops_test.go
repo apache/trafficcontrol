@@ -1,3 +1,4 @@
+// Package v14 provides tests for the Traffic Ops API.
 package v14
 
 /*
@@ -34,19 +35,30 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	var err error
 	configFileName := flag.String("cfg", "traffic-ops-test.conf", "The config file path")
 	tcFixturesFileName := flag.String("fixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
 	flag.Parse()
 
+	// Skip loading configuration when run with `go test -list=<pat>`. The -list
+	// flag does not actually run tests, so configuration data is not needed in
+	// that mode. If the user is just trying to list the available tests we
+	// don't want to abort with an error about a bad configuration the user
+	// doesn't care about yet.
+	if f := flag.Lookup("test.list"); f != nil {
+		if f.Value.String() != "" {
+			os.Exit(m.Run())
+		}
+	}
+
+	var err error
 	if Config, err = config.LoadConfig(*configFileName); err != nil {
-		fmt.Printf("Error Loading Config %v %v\n", Config, err)
-		return
+		fmt.Printf("Error Loading Config: %v\n", err)
+		os.Exit(1)
 	}
 
 	if err = log.InitCfg(Config); err != nil {
 		fmt.Printf("Error initializing loggers: %v\n", err)
-		return
+		os.Exit(1)
 	}
 
 	log.Infof(`Using Config values:
@@ -92,5 +104,4 @@ func TestMain(m *testing.M) {
 	// Now run the test case
 	rc := m.Run()
 	os.Exit(rc)
-
 }

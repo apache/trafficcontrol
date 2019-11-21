@@ -51,7 +51,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 14 Nov 2018 18:24:12 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Wed, 14 Nov 2018 22:24:12 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: PZyh09NeYYy4sXSv+Bfov0v32EuEk/1y7/B+4fyvhbcPxWQ650NXBDpAe8IsmYZQYVRB03xlBtc33bo3Ixunbg==
 	Content-Length: 124
@@ -115,7 +115,7 @@ Response Structure
 	Content-Type: application/json
 	Date: Wed, 14 Nov 2018 15:47:49 GMT
 	Server: Mojolicious (Perl)
-	Set-Cookie: mojolicious=...; expires=Wed, 14 Nov 2018 19:47:49 GMT; path=/; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: wCv388wFaSjgFLCnI9dchlcyGxaVr8IhBAG25F+rpI2/azCswEYTcVBSlYOg6NxTQRzGkluMvn67jI6rV+vNsQ==
 	Content-Length: 136

@@ -31,7 +31,7 @@ func TestCRConfig(t *testing.T) {
 
 func UpdateTestCRConfigSnapshot(t *testing.T) {
 	if len(testData.CDNs) < 1 {
-		t.Errorf("no cdn test data")
+		t.Error("no cdn test data")
 	}
 	cdn := testData.CDNs[0].Name
 
@@ -66,12 +66,12 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Errorf("GetDeliveryServiceByXMLID err expected nil, actual %+v", err)
 	}
 	if len(res) != 1 {
-		t.Errorf("GetDeliveryServiceByXMLID expected 1 DS, actual 0")
+		t.Error("GetDeliveryServiceByXMLID expected 1 DS, actual 0")
 	}
 	anymapDSID := res[0].ID
 	_, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
 	if err != nil {
-		t.Errorf("POST delivery service servers: %v\n", err)
+		t.Errorf("POST delivery service servers: %v", err)
 	}
 
 	_, err = TOSession.SnapshotCRConfig(cdn)
@@ -88,19 +88,19 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 
 	if len(crc.DeliveryServices) == 0 {
-		t.Errorf("GetCRConfig len(crc.DeliveryServices) expected: >0, actual: 0")
+		t.Error("GetCRConfig len(crc.DeliveryServices) expected: >0, actual: 0")
 	}
 
 	// verify no ANY_MAP delivery services are in the CRConfig
 	for ds := range crc.DeliveryServices {
 		if ds == "anymap-ds" {
-			t.Errorf("found ANY_MAP delivery service in CRConfig deliveryServices")
+			t.Error("found ANY_MAP delivery service in CRConfig deliveryServices")
 		}
 	}
 	for server := range crc.ContentServers {
 		for ds := range crc.ContentServers[server].DeliveryServices {
 			if ds == "anymap-ds" {
-				t.Errorf("found ANY_MAP delivery service in contentServers deliveryServices mapping")
+				t.Error("found ANY_MAP delivery service in contentServers deliveryServices mapping")
 			}
 		}
 	}
@@ -119,15 +119,15 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 
 	paramResp, _, err := TOSession.GetParameterByName(tmURLParamName)
 	if err != nil {
-		t.Fatalf("cannot GET Parameter by name: %v - %v\n", tmURLParamName, err)
+		t.Fatalf("cannot GET Parameter by name: %v - %v", tmURLParamName, err)
 	}
 	if len(paramResp) == 0 {
-		t.Fatalf("CRConfig create tm.url parameter was successful, but GET returned no parameters")
+		t.Fatal("CRConfig create tm.url parameter was successful, but GET returned no parameters")
 	}
 	tmURLParam := paramResp[0]
 
 	delResp, _, err := TOSession.DeleteParameterByID(tmURLParam.ID)
 	if err != nil {
-		t.Fatalf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
+		t.Fatalf("cannot DELETE Parameter by name: %v - %v", err, delResp)
 	}
 }

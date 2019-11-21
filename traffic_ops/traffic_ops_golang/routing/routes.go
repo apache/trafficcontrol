@@ -60,6 +60,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federations"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/invalidationjobs"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/iso"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/login"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/logs"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/origin"
@@ -204,6 +205,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.4, http.MethodPost, `user/login/oauth/?$`, login.OauthLoginHandler(d.DB, d.Config), 0, NoAuth, nil},
 		{1.1, http.MethodPost, `user/login/token(/|\.json)?$`, login.TokenLoginHandler(d.DB, d.Config), 0, NoAuth, nil},
 		{1.1, http.MethodPost, `user/reset_password(/|\.json)?$`, login.ResetPassword(d.DB, d.Config), 0, NoAuth, nil},
+
+		//ISO
+		{1.1, http.MethodGet, `osversions(/|\.json)?$`, iso.GetOSVersions, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//User: CRUD
 		{1.1, http.MethodGet, `users/?(\.json)?$`, api.ReadHandler(&user.TOUser{}), auth.PrivLevelReadOnly, Authenticated, nil},
