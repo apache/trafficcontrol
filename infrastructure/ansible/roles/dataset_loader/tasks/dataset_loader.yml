@@ -463,7 +463,7 @@
     - name: Assemble mapping of hardware info to profile hardware index
       set_fact:
         cache_hardware_profile_index: "{{ cache_hardware_profile_index | default({}) | combine({profilename: item}) }}"
-      loop: "{{ dl_ds_cache_hardware_info.values() | unique | sort }}"
+      loop: "{{ dl_ds_cache_hardware_info.values() | list | unique }}"
       loop_control:
         index_var: index
       vars:

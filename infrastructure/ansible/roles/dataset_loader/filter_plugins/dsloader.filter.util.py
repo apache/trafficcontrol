@@ -11,6 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# Make coding more python3-ish
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+__metaclass__ = type
+
 import re
 
 class FilterModule(object):
@@ -32,7 +36,7 @@ class FilterModule(object):
 
     def denormalize_association(self, association):
         out = {}
-        for key, vals in association.items():
+        for key, vals in list(association.items()):
             for val in vals:
                 out[val] = key
         return out
@@ -44,7 +48,7 @@ class FilterModule(object):
         compound_key_to_host_map = {}
         for cdnName in set(hostvars[host]['cdn'] for host in hostvars):
             for componentName in set(hostvars[host]['component'] for host in hostvars):
-                compound_key = ""+cdnName+"_"+componentName
+                compound_key = ""+(cdnName)+"_"+(componentName)
                 eligible_profiles = []
                 for profileName in profile_list:
                     common_profileName_re = hardware_profile_suffix_regex.search(profileName) # should always match unless something is really wrong
@@ -63,12 +67,12 @@ class FilterModule(object):
                         compound_key_to_host_map[compound_key] = eligible_hosts
 
         # Ignores combinations that either have no profiles or hosts
-        for key in compound_key_to_host_map.keys():
+        for key in list(compound_key_to_host_map.keys()):
             host_to_profile_commonName_map = self.denormalize_association(self.associate_round_robin(compound_key_to_profile_map[key],compound_key_to_host_map[key]))
-            for host, common_profileName in host_to_profile_commonName_map.items():
-                if host in hardware_profile_map.keys():
+            for host, common_profileName in list(host_to_profile_commonName_map.items()):
+                if host in list(hardware_profile_map.keys()):
                     # Re-apply the hardware profile variances
-                    out[host] = common_profileName.encode('ascii','ignore')+"_"+hardware_profile_map[host]['hardware_profile'].encode('ascii','ignore')
+                    out[host] = common_profileName+"_"+hardware_profile_map[host]['hardware_profile']
                 else:
                     out[host] = common_profileName
 
