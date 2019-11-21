@@ -39,7 +39,7 @@ func CreateTestTOExtensions(t *testing.T) {
 		resp, _, err := TOSession.CreateTOExtension(ext)
 		log.Debugf("Response: %v %v", *ext.Name, resp)
 		if err != nil {
-			t.Errorf("could not create to_extension %v: %v\n", ext.Name, err)
+			t.Errorf("could not create to_extension %v: %v", ext.Name, err)
 		}
 	}
 
@@ -50,7 +50,7 @@ func CreateTestInvalidTOExtensions(t *testing.T) {
 	// Fail Attempt to Create ToExtension as non extension user
 	_, _, err := TOSession.CreateTOExtension(testData.TOExtensions[0])
 	if err == nil {
-		t.Errorf("expected to receive error with non extension user\n")
+		t.Error("expected to receive error with non extension user")
 	}
 }
 
@@ -59,10 +59,10 @@ func DeleteTestTOExtensions(t *testing.T) {
 
 	extensions, _, err := TOSession.GetTOExtensions()
 	if err != nil {
-		t.Errorf("could not get to_extensions: %v\n", err)
+		t.Errorf("could not get to_extensions: %v", err)
 	}
 	if len(extensions.Response) != len(testData.TOExtensions) {
-		t.Errorf("%v to_extensions returned - expected %v\n", len(extensions.Response), len(testData.TOExtensions))
+		t.Errorf("%v to_extensions returned - expected %v", len(extensions.Response), len(testData.TOExtensions))
 	}
 
 	ids := []int{}
@@ -76,7 +76,7 @@ func DeleteTestTOExtensions(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("expected to find to_extension %v\n", *ext.Name)
+			t.Errorf("expected to find to_extension %v", *ext.Name)
 		}
 	}
 
@@ -84,15 +84,15 @@ func DeleteTestTOExtensions(t *testing.T) {
 		resp, _, err := TOSession.DeleteTOExtension(id)
 		log.Debugf("Response: %v %v", id, resp)
 		if err != nil {
-			t.Errorf("cannot delete to_extension: %v - %v\n", id, err)
+			t.Errorf("cannot delete to_extension: %v - %v", id, err)
 		}
 	}
 	extensions, _, err = TOSession.GetTOExtensions()
 	if err != nil {
-		t.Errorf("could not get to_extensions: %v\n", err)
+		t.Errorf("could not get to_extensions: %v", err)
 	}
 	if len(extensions.Response) != 0 {
-		t.Errorf("%v to_extensions returned - expected %v\n", len(extensions.Response), 0)
+		t.Errorf("%v to_extensions returned - expected %v", len(extensions.Response), 0)
 	}
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }

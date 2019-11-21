@@ -29,6 +29,8 @@ import (
 
 const (
 	API_v13_Servers = "/api/1.3/servers"
+	API_v14_Server_Assign_DeliveryServices = "/api/1.4/servers/%d/deliveryservices?replace=%t"
+	API_v14_Server_DeliveryServices = "/api/1.4/servers/%d/deliveryservices"
 )
 
 // Create a Server
@@ -287,4 +289,48 @@ func (to *Session) GetServersShortNameSearch(shortname string) ([]string, ReqInf
 		return serverlst, reqInf, fmt.Errorf("No Servers Found")
 	}
 	return serverlst, reqInf, nil
+}
+
+// AssignDeliveryServiceIDsToServerID assigns a set of Delivery Services to a single server, optionally
+// replacing any and all existing assignments. 'server' should be the requested server's ID, 'dsIDs'
+// should be a slice of the requested Delivery Services' IDs. If 'replace' is 'true', existing
+// assignments to the server will be replaced.
+func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, replace bool) (tc.Alerts, ReqInf, error) {
+	// datatypes here match the library tc.Server's and tc.DeliveryService's ID fields
+
+
+	var remoteAddr net.Addr
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+
+	endpoint := fmt.Sprintf(API_v14_Server_Assign_DeliveryServices, server, replace)
+
+	reqBody, err := json.Marshal(dsIDs)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+
+	resp, remoteAddr, err := to.request(http.MethodPost, endpoint, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	reqInf.RemoteAddr = remoteAddr
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, err
+}
+
+func (to *Session) GetServerIDDeliveryServices(server int) ([]tc.DeliveryServiceNullable, ReqInf, error) {
+	endpoint := fmt.Sprintf(API_v14_Server_DeliveryServices, server)
+
+	resp, remoteAddr, err := to.request(http.MethodGet, endpoint, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.DeliveryServicesNullableResponse
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data.Response, reqInf, err
 }

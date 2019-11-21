@@ -40,28 +40,28 @@ func CookiesTest(t *testing.T) {
 
 	js, err := json.Marshal(credentials)
 	if err != nil {
-		t.Fatalf("unable to json marshal login credentials")
+		t.Fatal("unable to json marshal login credentials")
 	}
 	path := "/api/1.4/user/login"
 	loginResp, _, err := s.RawRequest(http.MethodPost, path, js)
 	if err != nil {
-		t.Fatalf("unable to request POST /user/login")
+		t.Fatal("unable to request POST /user/login")
 	}
 	defer loginResp.Body.Close()
 	_, readErr := ioutil.ReadAll(loginResp.Body)
 	if readErr != nil {
-		t.Fatalf("unable to read response body from POST /user/login")
+		t.Fatal("unable to read response body from POST /user/login")
 	}
 	ensureCookie(loginResp, t)
 
 	cdnResp, _, err := s.RawRequest(http.MethodGet, "/api/1.4/cdns", nil)
 	if err != nil {
-		t.Fatalf("unable to request GET /cdns")
+		t.Fatal("unable to request GET /cdns")
 	}
 	defer cdnResp.Body.Close()
 	_, readErr = ioutil.ReadAll(cdnResp.Body)
 	if readErr != nil {
-		t.Fatalf("unable to read response body from GET /cdns")
+		t.Fatal("unable to read response body from GET /cdns")
 	}
 	ensureCookie(cdnResp, t)
 }
@@ -69,7 +69,7 @@ func CookiesTest(t *testing.T) {
 func ensureCookie(r *http.Response, t *testing.T) {
 	cookies := r.Cookies()
 	if len(cookies) < 1 {
-		t.Fatalf("expected at least one cookie in response, actual: zero")
+		t.Fatal("expected at least one cookie in response, actual: zero")
 	}
 	if cookies[0].MaxAge < 1 {
 		t.Errorf("expected auth cookie Max-Age > 0, actual: %v", *cookies[0])

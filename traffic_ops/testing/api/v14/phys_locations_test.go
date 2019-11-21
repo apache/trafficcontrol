@@ -34,7 +34,7 @@ func CreateTestPhysLocations(t *testing.T) {
 		resp, _, err := TOSession.CreatePhysLocation(pl)
 		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("could not CREATE physlocations: %v\n", err)
+			t.Errorf("could not CREATE physlocations: %v", err)
 		}
 	}
 
@@ -46,7 +46,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 	// Retrieve the PhysLocation by name so we can get the id for the Update
 	resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name)
 	if err != nil {
-		t.Errorf("cannot GET PhysLocation by name: '%s', %v\n", firstPhysLocation.Name, err)
+		t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
 	}
 	remotePhysLocation := resp[0]
 	expectedPhysLocationCity := "city1"
@@ -54,17 +54,17 @@ func UpdateTestPhysLocations(t *testing.T) {
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation)
 	if err != nil {
-		t.Errorf("cannot UPDATE PhysLocation by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE PhysLocation by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the PhysLocation to check PhysLocation name got updated
 	resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID)
 	if err != nil {
-		t.Errorf("cannot GET PhysLocation by name: '$%s', %v\n", firstPhysLocation.Name, err)
+		t.Errorf("cannot GET PhysLocation by name: '$%s', %v", firstPhysLocation.Name, err)
 	}
 	respPhysLocation := resp[0]
 	if respPhysLocation.City != expectedPhysLocationCity {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respPhysLocation.City, expectedPhysLocationCity)
+		t.Errorf("results do not match actual: %s, expected: %s", respPhysLocation.City, expectedPhysLocationCity)
 	}
 
 }
@@ -74,7 +74,7 @@ func GetTestPhysLocations(t *testing.T) {
 	for _, cdn := range testData.PhysLocations {
 		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 		if err != nil {
-			t.Errorf("cannot GET PhysLocation by name: %v - %v\n", err, resp)
+			t.Errorf("cannot GET PhysLocation by name: %v - %v", err, resp)
 		}
 	}
 }
@@ -85,23 +85,23 @@ func DeleteTestPhysLocations(t *testing.T) {
 		// Retrieve the PhysLocation by name so we can get the id for the Update
 		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 		if err != nil {
-			t.Errorf("cannot GET PhysLocation by name: %v - %v\n", cdn.Name, err)
+			t.Errorf("cannot GET PhysLocation by name: %v - %v", cdn.Name, err)
 		}
 		if len(resp) > 0 {
 			respPhysLocation := resp[0]
 
 			_, _, err := TOSession.DeletePhysLocationByID(respPhysLocation.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE PhysLocation by name: '%s' %v\n", respPhysLocation.Name, err)
+				t.Errorf("cannot DELETE PhysLocation by name: '%s' %v", respPhysLocation.Name, err)
 			}
 
 			// Retrieve the PhysLocation to see if it got deleted
 			cdns, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 			if err != nil {
-				t.Errorf("error deleting PhysLocation name: %s\n", err.Error())
+				t.Errorf("error deleting PhysLocation name: %s", err.Error())
 			}
 			if len(cdns) > 0 {
-				t.Errorf("expected PhysLocation name: %s to be deleted\n", cdn.Name)
+				t.Errorf("expected PhysLocation name: %s to be deleted", cdn.Name)
 			}
 		}
 	}

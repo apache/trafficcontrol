@@ -35,13 +35,13 @@ func TestRemapDotConfig(t *testing.T) {
 func GetTestRemapDotConfig(t *testing.T) {
 	dsServers, _, err := TOSession.GetDeliveryServiceServers()
 	if err != nil {
-		t.Fatalf("GET delivery service servers: %v\n", err)
+		t.Fatalf("GET delivery service servers: %v", err)
 	} else if len(dsServers.Response) == 0 {
-		t.Fatalf("GET delivery service servers: no servers found\n")
+		t.Fatal("GET delivery service servers: no servers found")
 	} else if dsServers.Response[0].Server == nil {
-		t.Fatalf("GET delivery service servers: returned nil server\n")
+		t.Fatal("GET delivery service servers: returned nil server")
 	} else if dsServers.Response[0].DeliveryService == nil {
-		t.Fatalf("GET delivery service servers: returned nil ds\n")
+		t.Fatal("GET delivery service servers: returned nil ds")
 	}
 	serverID := *dsServers.Response[0].Server
 
@@ -61,7 +61,7 @@ func GetTestRemapDotConfig(t *testing.T) {
 		break
 	}
 	if ds == nil || ds.XMLID == "" {
-		t.Fatalf("no Delivery Service found with assigned servers that isn't an ANY_MAP service, can't test remap.config")
+		t.Fatal("no Delivery Service found with assigned servers that isn't an ANY_MAP service, can't test remap.config")
 	}
 
 	originURI, err := url.Parse(ds.OrgServerFQDN)
@@ -89,7 +89,7 @@ func GetTestRemapDotConfig(t *testing.T) {
 			continue
 		}
 		if !strings.HasPrefix(line, "map") {
-			t.Errorf("expected: remap.config line %v to start with 'map', actual: '%v'\n", i, line)
+			t.Errorf("expected: remap.config line %v to start with 'map', actual: '%v'", i, line)
 		}
 	}
 }

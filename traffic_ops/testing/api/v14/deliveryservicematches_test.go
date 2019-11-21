@@ -30,7 +30,7 @@ func TestDeliveryServiceMatches(t *testing.T) {
 func GetTestDeliveryServiceMatches(t *testing.T) {
 	dsMatches, _, err := TOSession.GetDeliveryServiceMatches()
 	if err != nil {
-		t.Errorf("cannot GET DeliveryService matches: %v\n", err)
+		t.Errorf("cannot GET DeliveryService matches: %v", err)
 	}
 
 	dsMatchMap := map[tc.DeliveryServiceName][]string{}
@@ -43,7 +43,7 @@ func GetTestDeliveryServiceMatches(t *testing.T) {
 			continue // ANY_MAP DSes don't require matchLists
 		}
 		if _, ok := dsMatchMap[tc.DeliveryServiceName(ds.XMLID)]; !ok {
-			t.Errorf("GET DeliveryService matches missing: %v\n", ds.XMLID)
+			t.Errorf("GET DeliveryService matches missing: %v", ds.XMLID)
 		}
 	}
 }

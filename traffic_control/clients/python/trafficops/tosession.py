@@ -1570,7 +1570,7 @@ class TOSession(RestApiSession):
 	def get_osversions(self):
 		"""
 		Get all OS versions for ISO generation and the directory where the kickstarter files are
-		found. The values are retrieved from osversions.cfg found in either ``/var/www/files`` or in
+		found. The values are retrieved from osversions.json found in either ``/var/www/files`` or in
 		the location defined by the kickstart.files.location parameter (if defined).
 		:ref:`to-api-osversions`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]

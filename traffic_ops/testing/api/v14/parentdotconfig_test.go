@@ -33,13 +33,13 @@ func TestParentDotConfig(t *testing.T) {
 func GetTestParentDotConfig(t *testing.T) {
 	dsServers, _, err := TOSession.GetDeliveryServiceServers()
 	if err != nil {
-		t.Fatalf("GET delivery service servers: %v\n", err)
+		t.Fatalf("GET delivery service servers: %v", err)
 	} else if len(dsServers.Response) == 0 {
-		t.Fatalf("GET delivery service servers: no servers found\n")
+		t.Fatal("GET delivery service servers: no servers found")
 	} else if dsServers.Response[0].Server == nil {
-		t.Fatalf("GET delivery service servers: returned nil server\n")
+		t.Fatal("GET delivery service servers: returned nil server")
 	} else if dsServers.Response[0].DeliveryService == nil {
-		t.Fatalf("GET delivery service servers: returned nil ds\n")
+		t.Fatal("GET delivery service servers: returned nil ds")
 	}
 	serverID := *dsServers.Response[0].Server
 
@@ -71,18 +71,18 @@ func GetTestParentDotConfig(t *testing.T) {
 func CreateTestDeliveryServiceServers(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v\n", err)
+		t.Errorf("cannot GET DeliveryServices: %v", err)
 	}
 	if len(dses) < 1 {
-		t.Errorf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
+		t.Error("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 
 	servers, _, err := TOSession.GetServers()
 	if err != nil {
-		t.Errorf("cannot GET Servers: %v\n", err)
+		t.Errorf("cannot GET Servers: %v", err)
 	}
 	if len(servers) < 1 {
-		t.Errorf("GET Servers returned no dses, must have at least 1 to test ds-servers")
+		t.Error("GET Servers returned no dses, must have at least 1 to test ds-servers")
 	}
 
 	for _, ds := range dses {
@@ -93,7 +93,7 @@ func CreateTestDeliveryServiceServers(t *testing.T) {
 
 		_, err = TOSession.CreateDeliveryServiceServers(ds.ID, serverIDs, true)
 		if err != nil {
-			t.Errorf("POST delivery service servers: %v\n", err)
+			t.Errorf("POST delivery service servers: %v", err)
 		}
 	}
 }
@@ -102,25 +102,25 @@ func CreateTestDeliveryServiceServers(t *testing.T) {
 func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
 	dses, _, err := TOSession.GetDeliveryServices()
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v\n", err)
+		t.Errorf("cannot GET DeliveryServices: %v", err)
 	}
 	if len(dses) < 1 {
-		t.Errorf("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
+		t.Error("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 	ds := dses[0]
 
 	servers, _, err := TOSession.GetServers()
 	if err != nil {
-		t.Errorf("cannot GET Servers: %v\n", err)
+		t.Errorf("cannot GET Servers: %v", err)
 	}
 	if len(servers) < 1 {
-		t.Errorf("GET Servers returned no dses, must have at least 1 to test ds-servers")
+		t.Error("GET Servers returned no dses, must have at least 1 to test ds-servers")
 	}
 	server := servers[0]
 
 	dsServers, _, err := TOSession.GetDeliveryServiceServersN(1000000)
 	if err != nil {
-		t.Errorf("GET delivery service servers: %v\n", err)
+		t.Errorf("GET delivery service servers: %v", err)
 	}
 
 	found := false
@@ -131,16 +131,16 @@ func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Errorf("POST delivery service servers returned success, but ds-server not in GET")
+		t.Error("POST delivery service servers returned success, but ds-server not in GET")
 	}
 
 	if _, _, err := TOSession.DeleteDeliveryServiceServer(ds.ID, server.ID); err != nil {
-		t.Errorf("DELETE delivery service server: %v\n", err)
+		t.Errorf("DELETE delivery service server: %v", err)
 	}
 
 	dsServers, _, err = TOSession.GetDeliveryServiceServers()
 	if err != nil {
-		t.Errorf("GET delivery service servers: %v\n", err)
+		t.Errorf("GET delivery service servers: %v", err)
 	}
 
 	found = false
@@ -151,6 +151,6 @@ func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
 		}
 	}
 	if found {
-		t.Errorf("DELETE delivery service servers returned success, but still in GET")
+		t.Error("DELETE delivery service servers returned success, but still in GET")
 	}
 }

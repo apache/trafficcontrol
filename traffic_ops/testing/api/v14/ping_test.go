@@ -22,11 +22,11 @@ import (
 func TestPing(t *testing.T) {
 	_, _, err := TOSession.Ping()
 	if err != nil {
-		t.Errorf("could not Ping authenticated: %v\n", err)
+		t.Errorf("could not Ping authenticated: %v", err)
 	}
 
 	_, _, err = NoAuthTOSession.Ping()
 	if err != nil {
-		t.Errorf("could not Ping unauthenticated: %v\n", err)
+		t.Errorf("could not Ping unauthenticated: %v", err)
 	}
 }

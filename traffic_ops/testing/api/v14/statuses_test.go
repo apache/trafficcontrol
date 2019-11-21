@@ -35,7 +35,7 @@ func CreateTestStatuses(t *testing.T) {
 		resp, _, err := TOSession.CreateStatusNullable(status)
 		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("could not CREATE types: %v\n", err)
+			t.Errorf("could not CREATE types: %v", err)
 		}
 	}
 
@@ -45,13 +45,13 @@ func UpdateTestStatuses(t *testing.T) {
 
 	firstStatus := testData.Statuses[0]
 	if firstStatus.Name == nil {
-		t.Fatalf("cannot update test statuses: first test data status must have a name\n")
+		t.Fatal("cannot update test statuses: first test data status must have a name")
 	}
 
 	// Retrieve the Status by name so we can get the id for the Update
 	resp, _, err := TOSession.GetStatusByName(*firstStatus.Name)
 	if err != nil {
-		t.Errorf("cannot GET Status by name: %v - %v\n", firstStatus.Name, err)
+		t.Errorf("cannot GET Status by name: %v - %v", firstStatus.Name, err)
 	}
 	remoteStatus := resp[0]
 	expectedStatusDesc := "new description"
@@ -59,17 +59,17 @@ func UpdateTestStatuses(t *testing.T) {
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateStatusByID(remoteStatus.ID, remoteStatus)
 	if err != nil {
-		t.Errorf("cannot UPDATE Status by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE Status by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the Status to check Status name got updated
 	resp, _, err = TOSession.GetStatusByID(remoteStatus.ID)
 	if err != nil {
-		t.Errorf("cannot GET Status by ID: %v - %v\n", firstStatus.Description, err)
+		t.Errorf("cannot GET Status by ID: %v - %v", firstStatus.Description, err)
 	}
 	respStatus := resp[0]
 	if respStatus.Description != expectedStatusDesc {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respStatus.Name, expectedStatusDesc)
+		t.Errorf("results do not match actual: %s, expected: %s", respStatus.Name, expectedStatusDesc)
 	}
 
 }
@@ -78,11 +78,11 @@ func GetTestStatuses(t *testing.T) {
 
 	for _, status := range testData.Statuses {
 		if status.Name == nil {
-			t.Fatalf("cannot get ftest statuses: test data statuses must have names\n")
+			t.Fatal("cannot get ftest statuses: test data statuses must have names")
 		}
 		resp, _, err := TOSession.GetStatusByName(*status.Name)
 		if err != nil {
-			t.Errorf("cannot GET Status by name: %v - %v\n", err, resp)
+			t.Errorf("cannot GET Status by name: %v - %v", err, resp)
 		}
 	}
 }
@@ -91,28 +91,28 @@ func DeleteTestStatuses(t *testing.T) {
 
 	for _, status := range testData.Statuses {
 		if status.Name == nil {
-			t.Fatalf("cannot get ftest statuses: test data statuses must have names\n")
+			t.Fatal("cannot get ftest statuses: test data statuses must have names")
 		}
 
 		// Retrieve the Status by name so we can get the id for the Update
 		resp, _, err := TOSession.GetStatusByName(*status.Name)
 		if err != nil {
-			t.Errorf("cannot GET Status by name: %v - %v\n", status.Name, err)
+			t.Errorf("cannot GET Status by name: %v - %v", status.Name, err)
 		}
 		respStatus := resp[0]
 
 		delResp, _, err := TOSession.DeleteStatusByID(respStatus.ID)
 		if err != nil {
-			t.Errorf("cannot DELETE Status by name: %v - %v\n", err, delResp)
+			t.Errorf("cannot DELETE Status by name: %v - %v", err, delResp)
 		}
 
 		// Retrieve the Status to see if it got deleted
 		types, _, err := TOSession.GetStatusByName(*status.Name)
 		if err != nil {
-			t.Errorf("error deleting Status name: %s\n", err.Error())
+			t.Errorf("error deleting Status name: %s", err.Error())
 		}
 		if len(types) > 0 {
-			t.Errorf("expected Status name: %s to be deleted\n", *status.Name)
+			t.Errorf("expected Status name: %s to be deleted", *status.Name)
 		}
 	}
 }
