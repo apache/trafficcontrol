@@ -23,12 +23,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/test/router/data"
-	"github.com/apache/incubator-trafficcontrol/test/router/load"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+
+	"github.com/apache/trafficcontrol/test/router/data"
+	"github.com/apache/trafficcontrol/test/router/load"
 )
 
 var done chan struct{}
