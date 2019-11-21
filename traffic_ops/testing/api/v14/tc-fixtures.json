@@ -112,6 +112,8 @@
             "latitude": 0,
             "longitude": 0,
             "name": "cachegroup3",
+            "parentCachegroupName": "parentCachegroup",
+            "secondaryParentCachegroupName": "secondaryCachegroup",
             "shortName": "cg3",
             "typeName": "EDGE_LOC"
         }
