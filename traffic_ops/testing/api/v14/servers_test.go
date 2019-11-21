@@ -23,7 +23,7 @@ import (
 )
 
 func TestServers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, Servers}, func() {
 		UpdateTestServers(t)
 		GetTestServers(t)
 	})
@@ -85,6 +85,41 @@ func UpdateTestServers(t *testing.T) {
 	if respServer.InterfaceName != updatedServerInterface || respServer.Rack != updatedServerRack {
 		t.Errorf("results do not match actual: %s, expected: %s", respServer.InterfaceName, updatedServerInterface)
 		t.Errorf("results do not match actual: %s, expected: %s", respServer.Rack, updatedServerRack)
+	}
+
+	// Assign server to DS and then attempt to update to a different type
+	dses, _, err := TOSession.GetDeliveryServices()
+	if err != nil {
+		t.Fatalf("cannot GET DeliveryServices: %v", err)
+	}
+	if len(dses) < 1 {
+		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test invalid type server update")
+	}
+
+	serverTypes, _, err := TOSession.GetTypes("server")
+	if err != nil {
+		t.Fatalf("cannot GET Server Types: %v", err)
+	}
+	if len(serverTypes) < 2 {
+		t.Fatal("GET Server Types returned less then 2 types, must have at least 2 to test invalid type server update")
+	}
+	for _, t := range serverTypes {
+		if t.ID != remoteServer.TypeID {
+			remoteServer.TypeID = t.ID
+			break
+		}
+	}
+
+	// Assign server to DS
+	_, err = TOSession.CreateDeliveryServiceServers(dses[0].ID, []int{remoteServer.ID}, true)
+	if err != nil {
+		t.Fatalf("POST delivery service servers: %v", err)
+	}
+
+	// Attempt Update - should fail
+	_, _, err = TOSession.UpdateServerByID(remoteServer.ID, remoteServer)
+	if err == nil {
+		t.Errorf("expected error when updating Server Type of a server assigned to DSes")
 	}
 
 }
