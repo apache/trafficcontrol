@@ -82,7 +82,10 @@ var TableServerDeliveryServicesController = function(server, deliveryServices, $
 	$scope.cloneDsAssignments = function(server) {
 		var params = {
 			title: 'Clone Delivery Service Assignments',
-			message: "Please select another " + server.type + " cache to assign these " + deliveryServices.length + " delivery services to.<br><br><strong>WARNING THIS CANNOT BE UNDONE</strong> - Any delivery services currently assigned to the selected cache will be lost and replaced with these " + deliveryServices.length + " delivery service assignments.",
+			message: "Please select another " + server.type + " cache to assign these " + deliveryServices.length + " delivery services to." +
+				"<br>" +
+				"<br>" +
+				"<strong>WARNING THIS CANNOT BE UNDONE</strong> - Any delivery services currently assigned to the selected cache will be lost and replaced with these " + deliveryServices.length + " delivery service assignments.",
 			labelFunction: function(item) { return item['hostName'] + '.' + item['domainName'] }
 		};
 		var modalInstance = $uibModal.open({
