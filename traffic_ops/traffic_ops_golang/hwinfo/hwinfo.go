@@ -20,6 +20,7 @@ package hwinfo
  */
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -77,12 +78,26 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := tc.HWInfoResponse{
+	resp := struct {
+		tc.Alerts
+		Response []tc.HWInfo `json:"response"`
+		Limit uint64 `json:"limit"`
+	}{
+		Alerts: alerts,
 		Response: hwInfo,
-		Limit:    limit,
+		Limit: limit,
 	}
 
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, resp)
+	var respBts []byte
+	if respBts, err = json.Marshal(resp); err != nil {
+		log.Errorf("Marshaling JSON: %v", err)
+		alerts.AddNewAlert(tc.ErrorLevel, http.StatusText(http.StatusInternalServerError))
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
+		return
+	}
+
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Write(append(respBts, '\n'))
 }
 
 func getHWInfo(tx *sqlx.Tx, params map[string]string) ([]tc.HWInfo, error) {
