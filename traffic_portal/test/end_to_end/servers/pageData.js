@@ -22,6 +22,7 @@ module.exports = function(){
 	this.viewCapabilitiesMenuItem=element(by.css('a[ng-click*=viewCapabilities]'));
 	this.addCapabilityBtn=element(by.name('addCapabilityBtn'));
 	this.selectFormDropdown=element(by.name('selectFormDropdown'));
+	this.viewDeliveryServicesMenuItem=element(by.css('a[ng-click*=viewDeliveryServices]'));
 	this.status=element(by.name('status'));
 	this.hostName=element(by.name('hostName'));
 	this.domainName=element(by.name('domainName'));
