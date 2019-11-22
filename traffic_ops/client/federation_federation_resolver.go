@@ -14,23 +14,20 @@ package client
    limitations under the License.
 */
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // GetFederationsFederationResolversByID retrieves all Federation Resolvers belonging to Federation of ID.
-func (to *Session) GetFederationsFederationResolversByID(ID uint) (tc.FederationsFederationResolver, ReqInf, error) {
-	var ffr tc.FederationsFederationResolver
-	ffrs, inf, err := to.getFederationsFederationResolvers(&ID, nil, nil)
+func (to *Session) GetFederationsFederationResolversByID(id *int) (tc.FederationFederationResolversResponse, ReqInf, error) {
+	ffrs, inf, err := to.getFederationsFederationResolvers(id)
 	return ffrs, inf, err
 }
 
 // AssignFederationsFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) AssignFederationsFederationResolver(ffr tc.FederationsFederationResolver) (tc.Alerts, ReqInf, error) {
-	var reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
+func (to *Session) AssignFederationsFederationResolver(fedID int, ids []int) (tc.Alerts, ReqInf, error) {
+	/*var reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
 	var alerts tc.Alerts
 
 	req, err := json.Marshal(ffr)
@@ -47,14 +44,14 @@ func (to *Session) AssignFederationsFederationResolver(ffr tc.FederationsFederat
 
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, err
+	*/
+	return tc.Alerts{}, ReqInf{}, nil
 }
 
-func (to *Session) getFederationsFederationResolvers(id *uint) ([]tc.FederationsFederationResolver, ReqInf, error) {
+func (to *Session) getFederationsFederationResolvers(id *int) (tc.FederationFederationResolversResponse, ReqInf, error) {
 	var path = fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, id)
 
-	var data struct {
-		Response []tc.FederationsFederationResolver `json:"response"`
-	}
+	data := tc.FederationFederationResolversResponse{}
 	inf, err := get(to, path, &data)
-	return data.Response, inf, err
+	return data, inf, err
 }
