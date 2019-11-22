@@ -1,3 +1,5 @@
+// Package routing defines the HTTP routes for Traffic Ops and provides tools to
+// register those routes with appropriate middleware.
 package routing
 
 /*

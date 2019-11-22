@@ -1,3 +1,5 @@
+// Package server provides tools for manipulating the server database table and
+// corresponding http handlers.
 package server
 
 /*
@@ -44,7 +46,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-//we need a type alias to define functions on
+// A TOServer combines data about a server with metadata from an API request and
+// provides methods that implement several interfaces from the api package.
 type TOServer struct {
 	api.APIInfoImpl `json:"-"`
 	tc.ServerNullable
@@ -278,10 +281,14 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 	return servers, nil, nil, http.StatusOK
 }
 
-// getMidServers gets mids used by the servers in this ds
+// getMidServers gets the mids used by the servers in this DS.
+//
 // Original comment from the Perl code:
-// if the delivery service employs mids, we're gonna pull mid servers too by pulling the cachegroups of the edges and finding those cachegroups parent cachegroup...
-// then we see which servers have cachegroup in parent cachegroup list...that's how we find mids for the ds :)
+//
+// If the delivery service employs mids, we're gonna pull mid servers too by
+// pulling the cachegroups of the edges and finding those cachegroups parent
+// cachegroup... then we see which servers have cachegroup in parent cachegroup
+// list...that's how we find mids for the ds :)
 func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullable, error, error, int) {
 	if len(servers) == 0 {
 		return nil, nil, nil, http.StatusOK
@@ -335,7 +342,7 @@ func (sv *TOServer) Update() (error, error, int) {
 		return nil, fmt.Errorf("getting current server type: %v", err), http.StatusInternalServerError
 	}
 
-	// If type is changing ensure it isnt assigned to any DSes
+	// If type is changing ensure it isn't assigned to any DSes.
 	if typeID != *sv.TypeID {
 		dsIDs := []int64{}
 		if err := sv.APIInfo().Tx.QueryRowx("SELECT ARRAY(SELECT deliveryservice FROM deliveryservice_server WHERE server = $1)", sv.ID).Scan(pq.Array(&dsIDs)); err != nil && err != sql.ErrNoRows {
