@@ -128,7 +128,7 @@ describe('Traffic Portal Servers Test Suite', function() {
 	it('should ensure you cannot clone delivery service assignments because there are no delivery services assigned to the server', function() {
 		console.log('Ensure you cannot clone delivery service assignments for ' + mockVals.hostName);
 		pageData.moreBtn.click();
-		expect(element(by.css('clone-ds-assignments')).isPresent()).toEqual(false);
+		expect(element(by.css('.clone-ds-assignments')).isPresent()).toEqual(false);
 	});
 
 	it('should navigate back to the new server and delete it', function() {
