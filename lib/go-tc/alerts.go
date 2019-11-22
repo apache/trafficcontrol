@@ -84,4 +84,19 @@ func (alerts *Alerts) ToStrings() []string {
 	return alertStrs
 }
 
+func (self *Alerts) AddNewAlert(level AlertLevel, text string) {
+	self.AddAlert(Alert{Level: level.String(), Text: text})
+}
+
+func (self *Alerts) AddAlert(alert Alert) {
+	self.Alerts = append(self.Alerts, alert)
+}
+
+func (self *Alerts) AddAlerts(alerts Alerts) {
+	newAlerts := make([]Alert, 0, len(self.Alerts)+len(alerts.Alerts))
+	copy(newAlerts, self.Alerts)
+	newAlerts = append(newAlerts, alerts.Alerts...)
+	self.Alerts = newAlerts
+}
+
 var StatusKey = "status"
