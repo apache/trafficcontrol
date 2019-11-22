@@ -48,7 +48,7 @@ func TestLoginWithEmptyCredentials(t *testing.T) {
 		}
 		LoginHandler(nil, config.Config{})(w, r)
 
-		expected := `{"alerts":[{"text":"username and password are required","level":"error"}]}`
+		expected := "{\"alerts\":[{\"text\":\"username and password are required\",\"level\":\"error\"}]}\n"
 		if w.Body.String() != expected {
 			t.Error("Expected body", expected, "got", w.Body.String())
 		}

@@ -142,7 +142,7 @@ func TestCreateHandler(t *testing.T) {
 	createFunc(w, r)
 
 	//verifies the body is in the expected format
-	body := `{"alerts":[{"text":"tester was created.","level":"success"}],"response":{"ID":1}}`
+	body := "{\"alerts\":[{\"text\":\"tester was created.\",\"level\":\"success\"}],\"response\":{\"ID\":1}}\n"
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
@@ -228,7 +228,7 @@ func TestUpdateHandler(t *testing.T) {
 	updateFunc(w, r)
 
 	//verifies the body is in the expected format
-	body := `{"alerts":[{"text":"tester was updated.","level":"success"}],"response":{"ID":1}}`
+	body := "{\"alerts\":[{\"text\":\"tester was updated.\",\"level\":\"success\"}],\"response\":{\"ID\":1}}\n"
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
@@ -273,7 +273,7 @@ func TestDeleteHandler(t *testing.T) {
 	deleteFunc(w, r)
 
 	//verifies the body is in the expected format
-	body := `{"alerts":[{"text":"tester was deleted.","level":"success"}]}`
+	body := "{\"alerts\":[{\"text\":\"tester was deleted.\",\"level\":\"success\"}]}\n"
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
