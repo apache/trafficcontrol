@@ -27,7 +27,7 @@ var DeliveryServiceStatsService = function($http, ENV, messageModel) {
 			serverType: 'edge',
 			startDate: start.seconds(0).format(),
 			endDate: end.seconds(0).format(),
-			interval: '60s'
+			interval: '1m'
 		};
 
 		return $http.get(url, { params: params }).then(
@@ -49,7 +49,7 @@ var DeliveryServiceStatsService = function($http, ENV, messageModel) {
 			serverType: 'edge',
 			startDate: start.seconds(0).format(),
 			endDate: end.seconds(0).format(),
-			interval: '60s'
+			interval: '1m'
 		};
 
 		return $http.get(url, { params: params }).then(
@@ -71,7 +71,7 @@ var DeliveryServiceStatsService = function($http, ENV, messageModel) {
 			serverType: 'edge',
 			startDate: start.seconds(0).format(),
 			endDate: end.seconds(0).format(),
-			interval: '60s'
+			interval: '1m'
 		};
 
 		return $http.get(url, { params: params }).then(
