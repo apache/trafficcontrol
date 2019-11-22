@@ -21,6 +21,7 @@ package tc
 
 type HWInfoResponse struct {
 	Response []HWInfo `json:"response"`
+	Limit    uint64   `json:"limit"`
 }
 
 type HWInfo struct {
