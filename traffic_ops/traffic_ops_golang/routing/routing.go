@@ -21,6 +21,7 @@ package routing
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"regexp"
 	"sort"
@@ -53,6 +54,12 @@ type Route struct {
 	RequiredPrivLevel int
 	Authenticated     bool
 	Middlewares       []Middleware
+	ID                int  // unique ID for referencing this Route
+	CanBypassToPerl   bool // if true, this Route can be passed through to Perl
+}
+
+func (r Route) String() string {
+	return fmt.Sprintf("id=%d method=%s version=%.1f path=%s perl_bypass=%t", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl)
 }
 
 // RawRoute is an HTTP route to be served at the root, rather than under /api/version. Raw Routes should be rare, and almost exclusively converted old Perl routes which have yet to be moved to an API path.
@@ -106,17 +113,21 @@ type PathHandler struct {
 
 // CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
 // Returns the map of routes, and a map of API versions served.
-func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTimeOutSeconds int) (map[string][]PathHandler, map[float64]struct{}) {
+func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRouteIDs []int, perlHandler http.HandlerFunc, authBase AuthBase, reqTimeOutSeconds int) (map[string][]PathHandler, map[float64]struct{}) {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
 	requestTimeout := time.Second * time.Duration(60)
 	if reqTimeOutSeconds > 0 {
 		requestTimeout = time.Second * time.Duration(reqTimeOutSeconds)
 	}
+	perlRoutes := getRouteIDMap(perlRouteIDs)
+	disabledRoutes := getRouteIDMap(disabledRouteIDs)
 	m := map[string][]PathHandler{}
 	for _, r := range rs {
 		versionI := sort.SearchFloat64s(versions, r.Version)
 		nextMajorVer := float64(int(r.Version) + 1)
+		_, isPerlRoute := perlRoutes[r.ID]
+		_, isDisabledRoute := disabledRoutes[r.ID]
 		for _, version := range versions[versionI:] {
 			if version >= nextMajorVer {
 				break
@@ -124,7 +135,14 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTime
 			vstr := strconv.FormatFloat(version, 'f', -1, 64)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
 			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
-			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares)})
+
+			if isPerlRoute {
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: perlHandler})
+			} else if isDisabledRoute {
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: wrapAccessLog(authBase.secret, DisabledRouteHandler())})
+			} else {
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares)})
+			}
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
@@ -276,7 +294,7 @@ func RegisterRoutes(d ServerData) error {
 	}
 
 	authBase := AuthBase{secret: d.Config.Secrets[0], override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
-	routes, versions := CreateRouteMap(routeSlice, rawRoutes, authBase, d.RequestTimeout)
+	routes, versions := CreateRouteMap(routeSlice, rawRoutes, d.PerlRoutes, d.DisabledRoutes, handlerToFunc(catchall), authBase, d.RequestTimeout)
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

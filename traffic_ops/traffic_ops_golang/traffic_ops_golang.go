@@ -55,6 +55,7 @@ func init() {
 func main() {
 	showVersion := flag.Bool("version", false, "Show version and exit")
 	showPlugins := flag.Bool("plugins", false, "Show the list of plugins and exit")
+	showRoutes := flag.Bool("api-routes", false, "Show the list of API routes and exit")
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path")
@@ -66,6 +67,14 @@ func main() {
 	}
 	if *showPlugins {
 		fmt.Println(strings.Join(plugin.List(), "\n"))
+		os.Exit(0)
+	}
+	if *showRoutes {
+		fake := routing.ServerData{Config: config.NewFakeConfig()}
+		routes, _, _, _ := routing.Routes(fake)
+		for _, r := range routes {
+			fmt.Printf("id=%d\tmethod=%s\tversion=%.1f\tpath=%s\tperl_bypass=%t\n", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl)
+		}
 		os.Exit(0)
 	}
 	if len(os.Args) < 2 {
