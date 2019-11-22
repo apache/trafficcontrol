@@ -158,7 +158,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var req tc.UserRegistrationRequest
-	if userErr = api.Parse(r.Body, tx, req); userErr != nil {
+	if userErr = api.Parse(r.Body, tx, &req); userErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
