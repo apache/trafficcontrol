@@ -30,7 +30,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-// ISOs handler is responsible for generating and returning an ISO image.
+// ISOs handler is responsible for generating and returning an ISO image,
+// either as a streaming download or a link to the image.
 //
 // Response types:
 //
@@ -68,9 +69,28 @@ func ISOs(w http.ResponseWriter, req *http.Request) {
 	}
 	defer inf.Close()
 
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+
 	var ir isoRequest
 	if err := json.NewDecoder(req.Body).Decode(&ir); err != nil {
 		api.HandleErr(w, req, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to process request"), err)
+		return
+	}
+	if errMsgs := ir.validate(); len(errMsgs) > 0 {
+		resp := struct {
+			tc.Alerts
+		}{
+			Alerts: tc.CreateAlerts(tc.ErrorLevel, errMsgs...),
+		}
+
+		body, err := json.Marshal(resp)
+		if err != nil {
+			statusCode := http.StatusInternalServerError
+			api.HandleErr(w, req, nil, statusCode, errors.New(http.StatusText(statusCode)), errors.New("marshalling JSON: "+err.Error()))
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(body)
 		return
 	}
 
@@ -107,44 +127,11 @@ type isoRequest struct {
 	Stream        boolStr `json:"stream"`
 }
 
-func (i *isoRequest) validate() []error {
-	/*
-		# Validation checks to perform
-		checks => [
-			osversionDir  => [ is_required("is required") ],
-			hostName      => [ is_required("is required") ],
-			domainName    => [ is_required("is required") ],
-			rootPass      => [ is_required("is required") ],
-			dhcp          => [ is_required("is required") ],
-			interfaceMtu  => [ is_required("is required") ],
-			disk          => [ is_required("is required") ],
-			mgmtInterface => [ is_required_if((defined($mgmtIpAddress) && $mgmtIpAddress ne ""), "- Management interface is required when Management IP is provided") ],
-			mgmtIpGateway => [ is_required_if((defined($mgmtIpAddress) && $mgmtIpAddress ne ""), "- Management gateway is required when Management IP is provided") ],
-			ipAddress     => is_required_if(
-				sub {
-					my $params = shift;
-					return $params->{dhcp} eq 'no';
-				},
-				"is required if DHCP is no"
-			),
-			ipNetmask => is_required_if(
-				sub {
-					my $params = shift;
-					return $params->{dhcp} eq 'no';
-				},
-				"is required if DHCP is no"
-			),
-			ipGateway => is_required_if(
-				sub {
-					my $params = shift;
-					return $params->{dhcp} eq 'no';
-				},
-				"is required if DHCP is no"
-			),
-		]
-	*/
-	var errs []error
-	addErr := func(msg string) { errs = append(errs, errors.New(msg)) }
+// validate returns an empty slice if the isoRequest is valid. Otherwise,
+// it returns a slice of error messages.
+func (i *isoRequest) validate() []string {
+	var errs []string
+	addErr := func(msg string) { errs = append(errs, msg) }
 
 	if i.OSVersionDir == "" {
 		addErr("osversionDir is required")
@@ -175,7 +162,7 @@ func (i *isoRequest) validate() []error {
 			addErr("mgmtIpGateway is required when mgmtIpAddress is provided")
 		}
 	}
-	if i.DHCP.val == false {
+	if i.DHCP.isSet && i.DHCP.val == false {
 		if len(i.IPAddr) == 0 {
 			addErr("ipAddress is required if DHCP is no")
 		}
