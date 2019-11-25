@@ -95,7 +95,13 @@ const Authenticated = true
 // NoAuth ...
 const NoAuth = false
 
+// perlBypass means the route is ABLE to bypass to TO-Perl for handling. Generally, this should only be used for Routes
+// that have been rewritten from Perl to Go but have not been "vetted" in production environment yet. Once a Route has
+// been "vetted", it should be changed to use noPerlBypass instead.
 const perlBypass = true
+
+// noPerlBypass means the route is UNABLE to bypass to TO-Perl for handling. Generally, this should only be used for
+// NEW Routes that have no Perl-equivalent, or Go-rewritten routes that have been "vetted" in production.
 const noPerlBypass = false
 
 func handlerToFunc(handler http.Handler) http.HandlerFunc {
