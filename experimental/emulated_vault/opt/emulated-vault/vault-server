@@ -158,7 +158,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 			self.wfile.write('{"Failure"}'.encode())
 			return
 
-		docs = [json.loads(val) for i in parameters.values()]
+		docs = [json.loads(val) for val in parameters.values()]
 		toReturn = {"response":{"numFound":len(docs),"start":0, "docs":docs}}
 
 		self.send_response(200)

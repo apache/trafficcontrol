@@ -61,7 +61,7 @@ class AdapterBase(ABC):
 		:return: 'True' for successful initialization
 		:rtype: bool
 		"""
-		raise NotImplemented()#...
+		raise NotImplementedError()#...
 
 	@abstractmethod	
 	def init(self):# -> bool:
@@ -71,7 +71,7 @@ class AdapterBase(ABC):
 		:return: 'True' for successful initialization
 		:rtype: bool
 		"""
-		raise NotImplemented()#...
+		raise NotImplementedError()#...
 
 	@abstractmethod	
 	def get_parameter_storage_path(self, parameterUrlPath):# -> (bool, str):
@@ -83,7 +83,7 @@ class AdapterBase(ABC):
 		:return: "success" bool and a file path of where the value is be kept
 		:rtype: Tuple[bool, str]
 		"""
-		raise NotImplemented()#...
+		raise NotImplementedError()#...
 
 	@abstractmethod	
 	def get_parameter_url_path_from_storage_path(self, parameterStoragePath):# -> (bool, str):
@@ -95,7 +95,7 @@ class AdapterBase(ABC):
 		:return: "success" bool and the matching variable url-path like key
 		:rtype: Tuple[bool, str]
 		"""
-		raise NotImplemented()#...
+		raise NotImplementedError()#...
 
 	@abstractmethod	
 	def ping(self):# -> bool:
@@ -105,7 +105,7 @@ class AdapterBase(ABC):
 		:return: 'True' for successful connection with the storage layer
 		:rtype: bool
 		"""
-		raise NotImplemented()#...
+		raise NotImplementedError()#...
 
 	@abstractmethod	
 	def read_parameter_by_storage_path(self, parameterStoragePath):# -> (bool, str):
@@ -117,7 +117,7 @@ class AdapterBase(ABC):
 		:return: 'True' for successful retrivaland the retrieved value
 		:rtype: Tuple[bool, str]
 		"""
-		raise NotImplemented()#...
+		raise NotImplementedError()#...
 
 	@abstractmethod	
 	def read_parameters_by_storage_path(self, parameterStoragePathPrefix, keyFilters):# -> (bool, dict(str,str)):
@@ -132,7 +132,7 @@ class AdapterBase(ABC):
 		:return: 'True' for successful retrival and a dict for key-name/value 
 		:rtype: Tuple[bool, Dict[str, str]]
 		"""
-		raise NotImplemented()#...
+		raise NotImplementedError()#...
 
 
 	@abstractmethod	
@@ -147,7 +147,7 @@ class AdapterBase(ABC):
 		:return: 'True' for successful writing
 		:rtype: bool		
 	   """
-		raise NotImplemented()#...
+		raise NotImplementedError()#...
 
 	@abstractmethod	
 	def remove_parameter_by_storage_path(self, parameterStoragePath):# -> bool:
@@ -159,5 +159,5 @@ class AdapterBase(ABC):
 		:return: 'True' for successful deletion
 		:rtype: bool		
 		"""
-		raise NotImplemented()#...
-	
+		raise NotImplementedError()#...
+
