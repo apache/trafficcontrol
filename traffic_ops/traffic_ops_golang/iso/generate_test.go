@@ -20,38 +20,19 @@ package iso
  */
 
 import (
-	"encoding/json"
 	"net"
-	"strings"
 	"testing"
 )
 
-func TestISORequest(t *testing.T) {
+func TestISORequest_validate(t *testing.T) {
 	cases := []struct {
-		input            string
-		expected         isoRequest
+		name             string
 		expectedValidate bool
+		input            isoRequest
 	}{
 		{
-			`{
-				"dhcp": "no",
-				"stream": "yes",
-				"osversionDir": "centos72",
-				"hostName": "db",
-				"domainName": "infra.ciab.test",
-				"ipAddress": "172.20.0.4",
-				"interfaceMtu": 1500,
-				"interfaceName": "eth0",
-				"ip6Address": null,
-				"ip6Gateway": "",
-				"ipGateway": "172.20.0.1",
-				"ipNetmask": "255.255.0.0",
-				"mgmtIpAddress": "",
-				"mgmtIpGateway": "",
-				"mgmtIpNetmask": "",
-				"disk": "sda",
-				"rootPass": "12345678"
-			}`,
+			"valid with dhcp false",
+			true,
 			isoRequest{
 				DHCP:          boolStr{true, false},
 				Stream:        boolStr{true, true},
@@ -65,35 +46,115 @@ func TestISORequest(t *testing.T) {
 				IP6Gateway:    net.IP{},
 				IPGateway:     net.IP{172, 20, 0, 1},
 				IPNetmask:     net.IP{255, 255, 0, 0},
+				MgmtInterface: "",
 				MgmtIPAddress: net.IP{},
 				MgmtIPGateway: net.IP{},
 				MgmtIPNetmask: net.IP{},
 				Disk:          "sda",
 				RootPass:      "12345678",
 			},
+		},
+		{
+			"valid with dhcp true",
 			true,
+			isoRequest{
+				DHCP:          boolStr{true, true},
+				Stream:        boolStr{true, true},
+				OSVersionDir:  "centos72",
+				HostName:      "db",
+				DomainName:    "infra.ciab.test",
+				IPAddr:        net.IP{},
+				InterfaceMTU:  1500,
+				InterfaceName: "eth0",
+				IP6Address:    net.IP{},
+				IP6Gateway:    net.IP{},
+				IPGateway:     net.IP{},
+				IPNetmask:     net.IP{},
+				MgmtInterface: "",
+				MgmtIPAddress: net.IP{},
+				MgmtIPGateway: net.IP{},
+				MgmtIPNetmask: net.IP{},
+				Disk:          "sda",
+				RootPass:      "12345678",
+			},
+		},
+		{
+			"invalid with dhcp false",
+			false,
+			isoRequest{
+				DHCP:          boolStr{true, false},
+				Stream:        boolStr{true, true},
+				OSVersionDir:  "centos72",
+				HostName:      "db",
+				DomainName:    "infra.ciab.test",
+				IPAddr:        net.IP{},
+				InterfaceMTU:  1500,
+				InterfaceName: "eth0",
+				IP6Address:    net.IP{},
+				IP6Gateway:    net.IP{},
+				IPGateway:     net.IP{},
+				IPNetmask:     net.IP{},
+				MgmtInterface: "",
+				MgmtIPAddress: net.IP{},
+				MgmtIPGateway: net.IP{},
+				MgmtIPNetmask: net.IP{},
+				Disk:          "sda",
+				RootPass:      "12345678",
+			},
 		},
 
 		{
-			`{
-				"dhcp": null,
-				"stream": "",
-				"osversionDir": "",
-				"hostName": "",
-				"domainName": "",
-				"ipAddress": "",
-				"interfaceMtu": 0,
-				"interfaceName": "",
-				"ip6Address": null,
-				"ip6Gateway": "",
-				"ipGateway": "",
-				"ipNetmask": "",
-				"mgmtIpAddress": "",
-				"mgmtIpGateway": "",
-				"mgmtIpNetmask": "",
-				"disk": "",
-				"rootPass": ""
-			}`,
+			"valid with mgmt addr",
+			true,
+			isoRequest{
+				DHCP:          boolStr{true, true},
+				Stream:        boolStr{true, true},
+				OSVersionDir:  "centos72",
+				HostName:      "db",
+				DomainName:    "infra.ciab.test",
+				IPAddr:        net.IP{},
+				InterfaceMTU:  1500,
+				InterfaceName: "eth0",
+				IP6Address:    net.IP{},
+				IP6Gateway:    net.IP{},
+				IPGateway:     net.IP{},
+				IPNetmask:     net.IP{},
+				MgmtInterface: "not empty",
+				MgmtIPAddress: net.IP{192, 168, 0, 1},
+				MgmtIPGateway: net.IP{192, 168, 0, 2},
+				MgmtIPNetmask: net.IP{},
+				Disk:          "sda",
+				RootPass:      "12345678",
+			},
+		},
+		{
+			"invalid with mgmt addr",
+			false,
+			isoRequest{
+				DHCP:          boolStr{true, true},
+				Stream:        boolStr{true, true},
+				OSVersionDir:  "centos72",
+				HostName:      "db",
+				DomainName:    "infra.ciab.test",
+				IPAddr:        net.IP{},
+				InterfaceMTU:  1500,
+				InterfaceName: "eth0",
+				IP6Address:    net.IP{},
+				IP6Gateway:    net.IP{},
+				IPGateway:     net.IP{},
+				IPNetmask:     net.IP{},
+				MgmtInterface: "",
+				MgmtIPAddress: net.IP{192, 168, 0, 1},
+				MgmtIPGateway: net.IP{192, 168, 0, 2},
+				MgmtIPNetmask: net.IP{},
+				Disk:          "sda",
+				RootPass:      "12345678",
+			},
+		},
+
+		{
+			"invalid with zero values",
+			false,
 			isoRequest{
 				DHCP:          boolStr{false, false},
 				Stream:        boolStr{false, false},
@@ -113,24 +174,60 @@ func TestISORequest(t *testing.T) {
 				Disk:          "",
 				RootPass:      "",
 			},
-			false,
 		},
 	}
 
 	for _, tc := range cases {
-		var got isoRequest
-		if err := json.NewDecoder(strings.NewReader(tc.input)).Decode(&got); err != nil {
-			t.Fatalf("unexpected error decoding input: %s", err)
-		}
-		if !got.equal(tc.expected) {
-			t.Fatalf("got isoRequest not equal to expected\ngot:\n%+v\nexpected:\n%+v", got, tc.expected)
-		}
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			gotErrs := tc.input.validate()
+			if tc.expectedValidate != (len(gotErrs) == 0) {
+				t.Fatalf("isoRequest.validate() = %v; expected errors %v", gotErrs, tc.expectedValidate)
+			}
+			t.Logf("isoRequest.validate() = %+v", gotErrs)
+		})
+	}
+}
 
-		gotErrs := got.validate()
-		if tc.expectedValidate != (len(gotErrs) == 0) {
-			t.Fatalf("isoRequest.validate() = %v; expected errors %v", gotErrs, tc.expectedValidate)
-		}
+func TestBoolStr_UnmarshalText(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected boolStr
+	}{
+		{
+			`no`,
+			boolStr{isSet: true, val: false},
+		},
+		{
+			`No`,
+			boolStr{isSet: true, val: false},
+		},
+		{
+			`YES`,
+			boolStr{isSet: true, val: true},
+		},
+		{
+			`other`,
+			boolStr{isSet: false, val: false},
+		},
+		{
+			``,
+			boolStr{isSet: false, val: false},
+		},
+	}
 
-		t.Logf("newISORequest() = %+v\nisoRequest.validate() = %+v", got, gotErrs)
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			var got boolStr
+			if err := got.UnmarshalText([]byte(tc.input)); err != nil {
+				t.Fatal(err)
+			}
+
+			if got != tc.expected {
+				t.Fatalf("got %+v; expected %+v", got, tc.expected)
+			}
+			t.Logf("got %+v", got)
+		})
 	}
 }
