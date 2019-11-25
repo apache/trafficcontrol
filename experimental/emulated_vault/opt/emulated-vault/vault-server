@@ -1,0 +1,355 @@
+#! /usr/bin/python
+
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#	 http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
+#
+
+from __future__ import print_function
+
+import fnmatch
+import inspect
+import json
+import logging
+import os
+import re
+import ssl
+import sys
+
+import storage.fs_adapter
+import vault.db
+
+if sys.version_info >= (3, 0):
+	#python 3
+	from http.server import HTTPServer
+	from http.server import BaseHTTPRequestHandler
+	from configparser import ConfigParser
+	import urllib.parse as urlparse
+else:	
+	#python 2
+	from BaseHTTPServer import HTTPServer
+	from BaseHTTPServer import BaseHTTPRequestHandler
+	from ConfigParser import ConfigParser
+	import urlparse
+
+
+class RequestHandler(BaseHTTPRequestHandler):
+	"""
+	An HTTP server, emulating RIAK behavior on the calls done by traffic-ops.
+	The class implements BaseHTTPRequestHandler functions
+	"""
+
+	def do_GET(self):
+		"""
+		Base class function implementation -  to be called upon HTTP GET/HEAD requests
+		"""
+		try:
+			self._do_GET()
+		except Exception as e:
+			logger.exception("do_GET exception")
+
+	do_HEAD = do_GET
+
+	def do_POST(self):
+		"""
+		Base class function implementation -  to be called upon HTTP POST/PUT requests
+		"""
+		try:
+			self._do_POST()
+		except Exception as e:
+			logger.exception("do_POST exception")
+
+	do_PUT = do_POST
+
+	def do_DELETE(self):
+		"""
+		Base class function implementation -  to be called upon HTTP DEL request
+		"""
+		try:
+			self._do_DELETE()
+		except Exception as e:
+			logger.exception("do_DELETE exception")
+
+	def _do_GET(self):
+		"""
+		Actual GET logic
+		:raises: Exception
+		"""
+		logger.debug("GET %s", self.path)
+		parsed_path = urlparse.urlparse(self.path)
+
+		if parsed_path.path == "/ping":
+			logger.info("Ping")
+			self._do_GET_ping()
+		elif parsed_path.path == "/search/query/sslkeys":
+			logger.info("Search SSL: path=%s query=%s", parsed_path.path, parsed_path.query)
+			self._do_GET_sslkeys(parsed_path)
+		else:
+			self._do_GET_general(parsed_path)
+
+	def _do_GET_ping(self):
+		"""
+		Actual GET logic for ping request
+		:raises: Exception
+		"""		
+		success, value = db.ping()
+		if not success:
+			self.send_response(503)
+			self.send_header('Content-type', 'text/html')
+			self.end_headers()
+			self.wfile.write("Failure".encode())
+			return
+
+		self.send_response(200)
+		self.send_header('Content-type', 'text/html')
+		self.end_headers()
+		self.wfile.write(value.encode())
+
+	def _do_GET_sslkeys(self, parsed_path):
+		"""
+		Actual GET logic for ssl keys request
+		:param parsed_path: key's url path
+		:type parsed_path: str
+		:raises: Exception
+		"""
+		filters = {}
+		keyFilters = {}
+		cdnFind = re.search(".*q=cdn:([^&]*).*", parsed_path.query)
+		if cdnFind:
+			def cdnFilter(key,val):
+				try:
+					data = json.loads(val)
+					return data['cdn']==cdnFind.group(1)
+				except Exception as e:
+					return False
+			filters['cdn'] = cdnFilter
+
+		dsFind = re.search(".*q=deliveryservice:([^&]*).*", parsed_path.query)
+		if dsFind:
+			def dsFilter(key,val):
+				try:
+					data = json.loads(val)
+					return data['deliveryservice']==dsFind.group(1)
+				except Exception as e:
+					return False
+			filters['ds'] = dsFilter
+
+		keyFind = re.search(".*q=_yz_rk:([^&]*).*", parsed_path.query)
+		if keyFind:
+			keyFilters['key-match'] = lambda key: fnmatch.fnmatch(os.path.basename(key), keyFind.group(1))
+
+		success, parameters = db.searchParameters("/riak/ssl/", keyFilters=keyFilters, filters=filters)
+		if not success:
+			self.send_response(503)
+			self.send_header('Content-Type', 'application/json')
+			self.end_headers()
+			self.wfile.write('{"Failure"}'.encode())
+			return
+
+		docs = [json.loads(val) for val in parameters.values()]
+		toReturn = {"response":{"numFound":len(docs),"start":0, "docs":docs}}
+
+		self.send_response(200)
+		self.send_header('Content-Type', 'application/json')
+		self.end_headers()
+		self.wfile.write(json.dumps(toReturn).encode())
+
+	def _do_GET_general(self, parsed_path):
+		"""
+		Actual GET logic for general variable request
+		:param parsed_path: key's url path
+		:type parsed_path: str
+		:raises: Exception
+		"""
+		success, value = db.getParameter(parsed_path.path)
+		if not success:
+			self.send_response(503)
+			self.send_header('Content-Type', 'application/json')
+			self.end_headers()
+			self.wfile.write('{"Failure"}'.encode())
+			return
+
+		if value is None:
+			self.send_response(404)
+			self.send_header('Content-Type', 'application/json')
+			self.end_headers()
+			self.wfile.write('{"Not found"}'.encode())
+			return
+
+		self.send_response(200)
+		self.send_header('Content-Type', 'application/json')
+		self.end_headers()
+		self.wfile.write(value.encode())
+
+	def _do_POST(self):
+		"""
+		Actual POST request logic
+		"""
+		logger.info("POST %s", self.path)
+		parsed_path = urlparse.urlparse(self.path)
+		content_len = int(self.headers.getheader('content-length'))
+		post_body = self.rfile.read(content_len)
+		data = json.loads(post_body)
+		#mimic vault beahvior
+		if parsed_path.path.startswith('/riak/ssl/'):
+			certificate_data = data.get('certificate', {})
+			data.update({"certificate.%s"%key: value for key, value in certificate_data.items()})
+		success = db.setParameter(parsed_path.path, json.dumps(data))
+		if not success:
+			self.send_response(503)
+			self.send_header('Content-Type', 'application/json')
+			self.end_headers()
+			self.wfile.write('{"Failure"}'.encode())
+			return
+
+		self.send_response(204)
+		self.send_header('Content-Type', 'application/json')
+		self.end_headers()
+		return
+
+
+	def _do_DELETE(self):
+		"""
+		Actual DEL request logic
+		"""
+		logger.info("DELETE %s", self.path)
+		parsed_path = urlparse.urlparse(self.path)
+
+		success = db.deleteParameter(parsed_path.path)
+		if not success:
+			self.send_response(503)
+			self.send_header('Content-Type', 'application/json')
+			self.end_headers()
+			self.wfile.write('{"Failure"}'.encode())
+			return
+
+		self.send_response(200)
+		self.send_header('Content-Type', 'application/json')
+		self.end_headers()
+		self.wfile.write('{"Deleted"}'.encode())
+		return
+
+
+
+def main():
+	progPath = inspect.stack()[-1][1]
+	progAbsPath = os.path.abspath( progPath )
+	progAbsPath = os.path.dirname(os.path.normpath(progAbsPath))
+
+	confDir = os.path.join(progAbsPath, "conf")
+	confFile = os.path.join(confDir, "cfg.ini")
+	try:
+		config = ConfigParser()
+		config.read(confFile)
+	except IOError as e:
+		print("Failed to read configuration - I/O error({0}): {1}".format(e.errno, e.strerror), file=sys.stderr)
+		return 1
+	except Exception as e:
+		print("Failed to read configuration: {0}".format(e), file=sys.stderr)
+		return 1
+
+	generalCfg = dict(config.items("general")) if config.has_section("general") else {}
+	logDir = generalCfg.get("log-dir", os.path.join(progAbsPath, "var/log"))
+	debugLogFile = os.path.join(logDir, "traffic-ops-vault-debug.log")
+	mainLogFile = os.path.join(logDir, "traffic-ops-vault.log")
+	try:
+		if not os.path.exists(logDir):
+			os.makedirs(logDir)
+	except IOError as e:
+		print("Failed to create log dir - I/O error({0}): {1}".format(e.errno, e.strerror), file=sys.stderr)
+		return 1
+	except Exception as e:
+		print("Failed to create log dir: {0}".format(e), file=sys.stderr)
+		return 1
+
+
+	global logger
+	logger = logging.getLogger(__name__)
+	logger.setLevel(logging.INFO)
+	# create file handler which logs even debug messages
+	fhd = logging.FileHandler(debugLogFile)
+	fhd.setLevel(logging.DEBUG)
+	fhm = logging.FileHandler(mainLogFile)
+	fhm.setLevel(logging.INFO)
+	# create formatter and add it to the handlers
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	fhm.setFormatter(formatter)
+	fhd.setFormatter(formatter)
+	# add the handlers to the logger
+	logger.addHandler(fhm)
+	logger.addHandler(fhd)
+
+	httpServerCfg = dict(config.items("http-server")) if config.has_section("http-server") else {}
+	listenIP = httpServerCfg.get("listen-ip", "0.0.0.0")
+	try:
+		listenPort = int(httpServerCfg.get("listen-port", "8088"))
+	except Exception as e:
+		logger.exception("Failed %s integer conversion failed", "listen-port")
+		return 1
+	use_ssl_val = httpServerCfg.get("use-ssl", "True")
+	if use_ssl_val in ["False", "false", "0"]:
+		use_ssl=False
+	elif use_ssl_val in ["True", "true", "1"]:
+		use_ssl=True
+	else:
+		logger.error("Invalid %s value", "use-ssl")
+		return 1
+	if use_ssl:
+		sslKey = httpServerCfg.get("ssl-key-path")
+		if not sslKey:
+			print("Missing configuration: {0}/{1}".format("http-server", "ssl-key-path"), file=sys.stderr)
+			return 1
+		sslCert = httpServerCfg.get("ssl-cert-path")
+		if not sslCert:
+			print("Missing configuration: {0}/{1}".format("http-server", "ssl-cert-path"), file=sys.stderr)
+			return 1
+		
+	storageAdapterType = generalCfg.get("storage-adapter-type")
+	if not storageAdapterType:
+		logger.error("Missing storage adapter type cfg")
+		return 1
+	elif storageAdapterType == "fs":
+		storageAdapter = storage.fs_adapter.FsAdapter(logger=logger)
+	else:
+		logger.error("Invalid storage adapter type '%s'", storageAdapterType)
+		return 1
+
+
+	if not storageAdapter.init_cfg(config):
+		logger.error("Failed storage adapter initialization")
+		return 1		
+	if not storageAdapter.init():
+		logger.error("Failed storage adaper initialization")
+		return 1		
+
+	global db
+	db = vault.db.Db(logger, storageAdapter)
+	
+	server = HTTPServer((listenIP, listenPort), RequestHandler)
+	if use_ssl:		
+		try:
+			server.socket = ssl.wrap_socket (server.socket, keyfile=sslKey, certfile=sslCert, server_side=True)
+		except Exception as e:
+			logger.exception("Failed on SSL init")
+			return 1
+
+	msg = 'Starting server at http%s://%s:%d'%("s" if use_ssl else "", listenIP, listenPort)
+	print(msg, file=sys.stderr)
+	logger.info(msg)
+	server.serve_forever()
+	return 0
+
+if __name__ == '__main__':
+	sys.exit(main())
