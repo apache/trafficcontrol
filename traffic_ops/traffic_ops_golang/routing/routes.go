@@ -126,6 +126,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// 1.1 and 1.2 routes are simply a Go replacement for the equivalent Perl route. They may or may not conform with the API guidelines (https://cwiki.apache.org/confluence/display/TC/API+Guidelines).
 		// 1.3 routes exist only in a Go. There is NO equivalent Perl route. They should conform with the API guidelines (https://cwiki.apache.org/confluence/display/TC/API+Guidelines).
 
+		// NOTE: Route IDs are immutable and unique. DO NOT change the ID of an existing Route; otherwise, existing
+		// configurations may break. New Route IDs can be any integer between 0 and 2147483647 (inclusive), as long as
+		// it's unique.
+
 		//ASN: CRUD
 		{1.2, http.MethodGet, `asns/?(\.json)?$`, api.ReadHandler(&asn.TOASNV11{}), auth.PrivLevelReadOnly, Authenticated, nil, 473877722, noPerlBypass},
 		{1.1, http.MethodGet, `asns/?(\.json)?$`, asn.V11ReadAll, auth.PrivLevelReadOnly, Authenticated, nil, 570341929, noPerlBypass},
