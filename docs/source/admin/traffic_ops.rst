@@ -280,7 +280,7 @@ traffic_ops_golang
 
 .. option:: --api-routes
 
-	Print information about all API routes and exit.
+	Print information about all API routes and exit. If also used with the :option:`--cfg` option, also print out the configured routing blacklist information from `cdn.conf`_.
 
 	.. note:: This only accounts for routes in the Go version, API routes in Perl but not in Go are not included.
 
@@ -419,8 +419,8 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 		.. versionadded:: 4.0
 
-		:perl_routes: A list of API route IDs to be handled by TO-Perl (rather than by the matching routes in ``traffic_ops_golang``). This list can only contain IDs for routes that are on the hardcoded (within ``traffic_ops_golang``) whitelist of routes that can be bypassed to TO-Perl. This configuration is meant to allow falling back to TO-Perl for routes that have been rewritten to TO-Go but have been found to contain regressions. In order to find which routes can be bypassed to TO-Perl, run ``./traffic_ops_golang --api-routes``. This will print out information about all API routes in ``traffic_ops_golang``, including route IDs, paths, and whether or not routes can be bypassed to Perl. In general, the whitelist will contain only routes that have recently been rewritten to Go but not yet included in a release, and only if the Go route has not deviated from its corresponding Perl route in a way that would make it dangerous to fall back to. This whitelist should be expected to change as Go routes become "vetted" in a release. Once TO-Perl is removed, this field will be removed/ignored.
-		:disabled_routes: A list of API route IDs to disable. Requests matching these routes will receive a 503 response. To find the route ID for a given path you would like to disable, run ``./traffic_ops_golang --api-routes`` to view all the route information, including route IDs and paths.
+		:perl_routes: A list of API route IDs to be handled by TO-Perl (rather than by the matching routes in ``traffic_ops_golang``). This list can only contain IDs for routes that are on the hardcoded (within ``traffic_ops_golang``) whitelist of routes that can be bypassed to TO-Perl. This configuration is meant to allow falling back to TO-Perl for routes that have been rewritten to TO-Go but have been found to contain regressions. In order to find which routes can be bypassed to TO-Perl, run ``./traffic_ops_golang`` using the :option:`--api-routes` option. This will print out information about all API routes in ``traffic_ops_golang``, including route IDs, paths, and whether or not routes can be bypassed to Perl. In general, the whitelist will contain only routes that have recently been rewritten to Go but not yet included in a release, and only if the Go route has not deviated from its corresponding Perl route in a way that would make it dangerous to fall back to. This whitelist should be expected to change as Go routes become "vetted" in a release. Once TO-Perl is removed, this field will be removed/ignored.
+		:disabled_routes: A list of API route IDs to disable. Requests matching these routes will receive a 503 response. To find the route ID for a given path you would like to disable, run ``./traffic_ops_golang`` using the :option:`--api-routes` option to view all the route information, including route IDs and paths.
 
 Example cdn.conf
 ''''''''''''''''
