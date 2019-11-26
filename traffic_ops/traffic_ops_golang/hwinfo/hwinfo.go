@@ -81,11 +81,11 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	resp := struct {
 		tc.Alerts
 		Response []tc.HWInfo `json:"response"`
-		Limit uint64 `json:"limit"`
+		Limit    uint64      `json:"limit"`
 	}{
-		Alerts: alerts,
+		Alerts:   alerts,
 		Response: hwInfo,
-		Limit: limit,
+		Limit:    limit,
 	}
 
 	var respBts []byte
