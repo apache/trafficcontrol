@@ -290,6 +290,6 @@ func DisabledRouteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(tc.ContentType, tc.ApplicationJson)
 		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write([]byte(`{"alerts":[{"level":"error","text":"The requested route is currently disabled."}]}`))
+		w.Write([]byte(`{"alerts":[{"level":"error","text":"The requested route is currently disabled."}]}` + "\n"))
 	})
 }
