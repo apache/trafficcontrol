@@ -109,10 +109,12 @@ type ConfigTrafficOpsGolang struct {
 	CRConfigEmulateOldPath bool `json:"crconfig_emulate_old_path"`
 }
 
-// RoutingBlacklist contains the list of route IDs that will be handled by TO-Perl and a list of route IDs that are disabled.
+// RoutingBlacklist contains the list of route IDs that will be handled by TO-Perl, a list of route IDs that are disabled,
+// and whether or not to ignore unknown routes.
 type RoutingBlacklist struct {
-	PerlRoutes     []int `json:"perl_routes"`
-	DisabledRoutes []int `json:"disabled_routes"`
+	IgnoreUnknownRoutes bool  `json:"ignore_unknown_routes"`
+	PerlRoutes          []int `json:"perl_routes"`
+	DisabledRoutes      []int `json:"disabled_routes"`
 }
 
 // ConfigTO contains information to identify Traffic Ops in a network sense.

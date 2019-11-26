@@ -112,6 +112,7 @@ const (
 		"write_timeout" : 60,
 		"idle_timeout" : 60,
 		"routing_blacklist": {
+			"ignore_unknown_routes": true,
 			"perl_routes": [1, 2, 3],
 			"disabled_routes": [4, 5, 6]
 		},

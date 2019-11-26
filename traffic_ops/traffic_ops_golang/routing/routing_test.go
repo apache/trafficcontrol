@@ -172,6 +172,15 @@ func TestCompileRoutes(t *testing.T) {
 	}
 }
 
+func TestRoutes(t *testing.T) {
+	fake := ServerData{Config: config.NewFakeConfig()}
+	_, _, _, err := Routes(fake)
+	if err != nil {
+		t.Fatalf("expected: no error getting Routes, actual: %v", err)
+	}
+	// TODO: verify that all returned Routes are unique
+}
+
 func TestCreateRouteMap(t *testing.T) {
 	authBase := AuthBase{"secret", func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {

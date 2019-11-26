@@ -59,7 +59,7 @@ type Route struct {
 }
 
 func (r Route) String() string {
-	return fmt.Sprintf("id=%d method=%s version=%.1f path=%s perl_bypass=%t", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl)
+	return fmt.Sprintf("id=%d method=%s version=%.1f path=%s can_bypass_to_perl=%t", r.ID, r.Method, r.Version, r.Path, r.CanBypassToPerl)
 }
 
 // RawRoute is an HTTP route to be served at the root, rather than under /api/version. Raw Routes should be rare, and almost exclusively converted old Perl routes which have yet to be moved to an API path.
@@ -120,8 +120,8 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, perlRouteIDs, disabledRout
 	if reqTimeOutSeconds > 0 {
 		requestTimeout = time.Second * time.Duration(reqTimeOutSeconds)
 	}
-	perlRoutes := getRouteIDMap(perlRouteIDs)
-	disabledRoutes := getRouteIDMap(disabledRouteIDs)
+	perlRoutes := GetRouteIDMap(perlRouteIDs)
+	disabledRoutes := GetRouteIDMap(disabledRouteIDs)
 	m := map[string][]PathHandler{}
 	for _, r := range rs {
 		versionI := sort.SearchFloat64s(versions, r.Version)

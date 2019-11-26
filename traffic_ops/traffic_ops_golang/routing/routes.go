@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -110,7 +111,8 @@ func handlerToFunc(handler http.Handler) http.HandlerFunc {
 	}
 }
 
-func getRouteIDMap(IDs []int) map[int]struct{} {
+// GetRouteIDMap takes a []int Route IDs and converts it into a map for fast lookup.
+func GetRouteIDMap(IDs []int) map[int]struct{} {
 	m := make(map[int]struct{}, len(IDs))
 	for _, id := range IDs {
 		m[id] = struct{}{}
@@ -562,20 +564,39 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 	}
 
 	// sanity check to make sure all Route IDs are unique
-	routeIDs := make(map[int]struct{}, len(routes))
+	knownRouteIDs := make(map[int]struct{}, len(routes))
 	for _, r := range routes {
-		if _, found := routeIDs[r.ID]; !found {
-			routeIDs[r.ID] = struct{}{}
+		if _, found := knownRouteIDs[r.ID]; !found {
+			knownRouteIDs[r.ID] = struct{}{}
 		} else {
 			return nil, nil, nil, fmt.Errorf("route ID %d is already taken. Please give it a unique Route ID", r.ID)
 		}
 	}
 
 	// verify configured perl_routes are actually able to pass through to Perl
-	perlRoutes := getRouteIDMap(d.PerlRoutes)
+	perlRoutes := GetRouteIDMap(d.PerlRoutes)
 	for _, r := range routes {
 		if _, isPerlRoute := perlRoutes[r.ID]; isPerlRoute && !r.CanBypassToPerl {
 			return nil, nil, nil, fmt.Errorf("route '%s' is configured as a perl_route but cannot be passed through to Perl", r.String())
+		}
+	}
+
+	// check for unknown route IDs in cdn.conf
+	disabledRoutes := GetRouteIDMap(d.DisabledRoutes)
+	unknownRouteIDs := []string{}
+	for _, routeMap := range []map[int]struct{}{perlRoutes, disabledRoutes} {
+		for routeID, _ := range routeMap {
+			if _, known := knownRouteIDs[routeID]; !known {
+				unknownRouteIDs = append(unknownRouteIDs, fmt.Sprintf("%d", routeID))
+			}
+		}
+	}
+	if len(unknownRouteIDs) > 0 {
+		msg := "unknown route IDs in routing_blacklist: " + strings.Join(unknownRouteIDs, ", ")
+		if d.IgnoreUnknownRoutes {
+			log.Warnln(msg)
+		} else {
+			return nil, nil, nil, errors.New(msg)
 		}
 	}
 
