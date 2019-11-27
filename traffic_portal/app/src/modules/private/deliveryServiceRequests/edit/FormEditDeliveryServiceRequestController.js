@@ -83,7 +83,8 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus($scope.dsRequest.id, status).
 				then(function() {
 					$state.reload();
-				});
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request status was updated' } ], false);
+			});
 		}, function () {
 			// do nothing
 		});
@@ -249,7 +250,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		modalInstance.result.then(function() {
 			deliveryServiceRequestService.deleteDeliveryServiceRequest($stateParams.deliveryServiceRequestId).
 				then(function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery service request deleted' } ], true);
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was deleted' } ], true);
 					locationUtils.navigateToPath('/delivery-service-requests');
 				});
 		}, function () {
