@@ -19,8 +19,8 @@
 
 var DeliveryServiceUriSigningKeysService = function($http, ENV) {
 
-	this.getKeys = function(id) {
-		return $http.get(ENV.api['root'] + 'deliveryservices/' + id + '/urisignkeys').then(
+	this.getKeys = function(xmlID) {
+		return $http.get(ENV.api['root'] + 'deliveryservices/' + xmlID + '/urisignkeys').then(
 			function(result) {
 				return result.data;
 			},
@@ -30,8 +30,8 @@ var DeliveryServiceUriSigningKeysService = function($http, ENV) {
 		);
 	};
 
-	this.setKeys = function(id, newKeys) {
-		return $http.post(ENV.api['root'] + 'deliveryservices/' + id + '/urisignkeys', newKeys).then(
+	this.setKeys = function(xmlID, newKeys) {
+		return $http.post(ENV.api['root'] + 'deliveryservices/' + xmlID + '/urisignkeys', newKeys).then(
 			function(result) {
 				return result.data;
 			},
