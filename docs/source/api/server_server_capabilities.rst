@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Gets all associations of Server Capabilities to servers
+Gets all associations of :term:`Server Capabilities` to :term:`Cache Servers`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -33,28 +33,26 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| Name             | Required | Description                                                                                                   |
-	+==================+==========+===============================================================================================================+
-	| serverId         | no       | Filter associated Server Capabilities by server ID                                                            |
-	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| serverHostName   | no       | Filter associated Server Capabilities by server host name                                                     |
-	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| serverCapability | no       | Filter associated Server Capabilities by server capability                                                    |
-	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| orderby          | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
-	|                  |          | array                                                                                                         |
-	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| sortOrder        | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
-	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| limit            | no       | Choose the maximum number of results to return                                                                |
-	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| offset           | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit.         |
-	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| page             | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
-	|                  |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
-	|                  |          | defined to make use of ``page``.                                                                              |
-	+------------------+----------+---------------------------------------------------------------------------------------------------------------+
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| Name             | Required | Description                                                                                                                  |
+	+==================+==========+==============================================================================================================================+
+	| serverId         | no       | Filter :term:`Server Capability` associations by the integral, unique identifier of the server to which they are assigned    |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| serverHostName   | no       | Filter :term:`Server Capability` associations by the host name of the server to which they are assigned                      |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| serverCapability | no       | Filter :term:`Server Capability` associations by :term:`Server Capability` name                                              |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| orderby          | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``  array         |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder        | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                     |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| limit            | no       | Choose the maximum number of results to return                                                                               |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| offset           | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit.                        |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| page             | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first    |
+	|                  |          | page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``. |
+	+------------------+----------+------------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -68,9 +66,9 @@ Request Structure
 Response Structure
 ------------------
 :serverHostName:   The server's host name
-:serverId:         The server's ID
-:lastUpdated:      The date and time at which this association between the server and the Server Capability was last updated, in an ISO-like format
-:serverCapability: The Server Capability's name
+:serverId:         The server's integral, unique identifier
+:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in an ISO-like format
+:serverCapability: The :term:`Server Capability`'s name
 
 .. code-block:: http
 	:caption: Response Example
@@ -106,7 +104,7 @@ Response Structure
 
 ``POST``
 ========
-Associates a Server Capability to a server.
+Associates a :term:`Server Capability` to a server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -114,10 +112,10 @@ Associates a Server Capability to a server.
 
 Request Structure
 -----------------
-:serverId:         The server's ID to associate
-:serverCapability: The Server Capability's name to associate
+:serverId:         The integral, unique identifier of a server to be associated with a :term:`Server Capability`
+:serverCapability: The :term:`Server Capability`'s name to associate
 
-.. note:: The server referenced must have a server type of either EDGE or MID.
+.. note:: The server referenced must be either an :term:`Edge-tier` or :term:`Mid-tier Cache Server`.
 
 .. code-block:: http
 	:caption: Request Example
@@ -137,9 +135,9 @@ Request Structure
 
 Response Structure
 ------------------
-:serverId:         The server's ID
-:lastUpdated:      The date and time at which this association between the server and the Server Capability was last updated, in an ISO-like format
-:serverCapability: The Server Capability's name
+:serverId:         The integral, unique identifier of the newly associated server
+:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in an ISO-like format
+:serverCapability: The :term:`Server Capability`'s name
 
 .. code-block:: http
 	:caption: Response Example
@@ -172,25 +170,25 @@ Response Structure
 
 ``DELETE``
 ==========
-Disassociate a server from a Server Capability
+Disassociate a server from a :term:`Server Capability`.
 
-	.. note:: If the ``serverCapability`` is a required capability on a :term:`Delivery Service` that the server is assigned to the DELETE will be blocked until either the server is unassigned from the :term:`Delivery Service` or the server capability is removed as a required capability from the :term:`Delivery Service`.
+	.. note:: If the ``serverCapability`` is a :term:`Server Capability` required by a :term:`Delivery Service` that to which the server is assigned the DELETE will be blocked until either the server is unassigned from the :term:`Delivery Service` or the :term:`Server Capability` is no longer required by the :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Response Type:  Object
+:Response Type:  ``undefined``
 
 Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+------------------+----------+------------------------------------------------------------------+
-	| Name             | Required | Description                                                      |
-	+==================+==========+==================================================================+
-	| serverId         | yes      | ID of the server to disassociate                                 |
-	+------------------+----------+------------------------------------------------------------------+
-	| serverCapability | yes      | Server Capability name to disassociate from given server         |
-	+------------------+----------+------------------------------------------------------------------+
+	+------------------+----------+-----------------------------------------------------------------+
+	| Name             | Required | Description                                                     |
+	+==================+==========+=================================================================+
+	| serverId         | yes      | The integral, unique identifier of the server to disassociate   |
+	+------------------+----------+-----------------------------------------------------------------+
+	| serverCapability | yes      | term:`Server Capability` name to disassociate from given server |
+	+------------------+----------+-----------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
