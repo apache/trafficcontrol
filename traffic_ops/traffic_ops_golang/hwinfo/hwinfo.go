@@ -43,7 +43,7 @@ SELECT
 	h.description,
 	h.val,
 	h.last_updated
-FROM hwInfo h
+FROM hwinfo h
 JOIN server s ON s.id = h.serverid
 `
 
