@@ -31,7 +31,7 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
 
         return $http.post(ENV.api['root'] + "deliveryservices/sslkeys/generate", generateSslKeyForm).then(
             function(result) {
-            	messageModel.setMessages(result.data.response, true);
+            	messageModel.setMessages([{level: "success", text: result.data.response}], true);
                 return result.data.response;
             },
             function(err) {
