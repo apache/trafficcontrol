@@ -24,15 +24,20 @@
     method: GET
   register: get_all_profiles
   no_log: true
+  retries: 10
+  until: get_all_profiles['status']|default(0) == 200
 
-- name: Get All Parameters per Profile
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item }}/parameters"
-    method: GET
-  vars:
-    profile_query: "response.id"
-  with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
-  no_log: true
+#- name: Get All Parameters per Profile
+#  uri:
+#    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item }}/parameters"
+#    method: GET
+#  vars:
+#    profile_query: "response.id"
+#  with_items: "{{ get_all_profiles.json.response | map(attribute='name') | list }}"
+#  no_log: true
+#  register: get_all_parameters_by_profile
+#  loop_control:
+#    pause: 3
 
 - name: Create Delivery Services
   uri:
@@ -118,12 +123,17 @@
       cdn: Target_cdn_id
   register: get_all_ds_cdn
   no_log: true
+  retries: 10
+  until: get_all_ds_cdn['status']|default(0) == 200
 
 - name: you have to call get once for Riak/TO to work right before you can add certs
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/name/{{ Target_cdn_name }}/sslkeys.json"
     method: GET
   no_log: true
+  register: initialize_riak_results
+  retries: 10
+  until: initialize_riak_results['status']|default(0) == 200
 
 - name: Assign Servers to Delivery Services - Grove
   uri:
