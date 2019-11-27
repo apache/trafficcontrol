@@ -53,7 +53,6 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 
 		return $http.put(ENV.api['root'] + "deliveryservice_requests?id=" + id, dsRequest).then(
 			function(result) {
-				console.info("updated delivery service request: ", result);
 				return result;
 			},
 			function(err) {
@@ -78,7 +77,6 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	this.assignDeliveryServiceRequest = function(id, userId) {
 		return $http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/assign", { id: id, assigneeId: userId }).then(
 			function(result) {
-				console.info("delivery service request assigned: ", result);
 				return result;
 			},
 			function(err) {
@@ -91,7 +89,6 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	this.updateDeliveryServiceRequestStatus = function(id, status) {
 		return $http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/status", { id: id, status: status }).then(
 			function(result) {
-				console.info("Delivery service request status updated: ", result);
 				return result;
 			},
 			function(err) {
@@ -126,7 +123,6 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	this.updateDeliveryServiceRequestComment = function(comment) {
 		return $http.put(ENV.api['root'] + "deliveryservice_request_comments", comment, {params: {id: comment.id}}).then(
 				function(result) {
-					console.info('Delivery Service request comment updated: ', result);
 					return result;
 				},
 				function(err) {
