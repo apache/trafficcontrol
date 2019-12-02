@@ -27,11 +27,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/availableservers"
-	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/cgsrch"
-	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/coveragezone"
-	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/crconfigregex"
-	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/nextcache"
+	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/availableservers"
+	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/cgsrch"
+	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/coveragezone"
+	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/crconfigregex"
+	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/nextcache"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"

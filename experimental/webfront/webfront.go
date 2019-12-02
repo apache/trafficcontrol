@@ -1,16 +1,16 @@
 /*
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-        http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 */
 
 // Started with https://github.com/nf/webfront/blob/master/main.go
@@ -45,18 +45,18 @@ type Server struct {
 
 // Rule represents a rule in a configuration file.
 type Rule struct {
-	Host          string              // to match against request Host header
-	Path          string              // to match against a path (start)
-	Forward       string              // reverse proxy map-to
-	Secure        bool                // protect with jwt?
-	Capabilities  map[string]string   // map HTTP methods to capabilitues  
+	Host         string            // to match against request Host header
+	Path         string            // to match against a path (start)
+	Forward      string            // reverse proxy map-to
+	Secure       bool              // protect with jwt?
+	Capabilities map[string]string // map HTTP methods to capabilitues
 
 	handler http.Handler
 }
 
 type Claims struct {
-    Capabilities []string `json:"cap"`
-    jwt.StandardClaims
+	Capabilities []string `json:"cap"`
+	jwt.StandardClaims
 }
 
 // Config holds the configuration of the server.
@@ -119,7 +119,7 @@ func main() {
 	}
 
 	Logger.Printf("Starting webfront on port %d...", config.ListenPort)
-	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.pem", "server.key", s))
+	Logger.Fatal(http.ListenAndServeTLS(":"+strconv.Itoa(int(config.ListenPort)), "server.pem", "server.key", s))
 }
 
 func validateToken(tokenString string) (*jwt.Token, error) {
@@ -182,17 +182,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Authorization: Check is the list of capabilities in the token's claims contains 
+		// Authorization: Check is the list of capabilities in the token's claims contains
 		// the reqired capability that is listed in the rule
 		for _, c := range claims.Capabilities {
-        	if c == rule.Capabilities[r.Method] {
+			if c == rule.Capabilities[r.Method] {
 				isAuthorized = true
 				break
 			}
-        }
+		}
 
-		Logger.Printf("%v %v Valid token. Subject=%v, ExpiresAt=%v, Capabilities=%v, Required=%v, Authorized=%v", 
-			r.Method, r.URL.RequestURI(), claims.Subject, claims.ExpiresAt, claims.Capabilities, 
+		Logger.Printf("%v %v Valid token. Subject=%v, ExpiresAt=%v, Capabilities=%v, Required=%v, Authorized=%v",
+			r.Method, r.URL.RequestURI(), claims.Subject, claims.ExpiresAt, claims.Capabilities,
 			rule.Capabilities[r.Method], isAuthorized)
 
 	} else {

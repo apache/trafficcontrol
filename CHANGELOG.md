@@ -69,6 +69,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added validation to prevent assigning servers to delivery services without required capabilities.
 - Added deep coverage zone routing percentage to the Traffic Portal dashboard.
 - Added a `traffic_ops/app/bin/osversions-convert.pl` script to convert the `osversions.cfg` file from Perl to JSON as part of the `/osversions` endpoint rewrite.
+- Added [Experimental] - Emulated Vault suppling a HTTP server mimicking RIAK behavior for usage as traffic-control vault.
 
 ### Changed
 - Traffic Router:  TR will now allow steering DSs and steering target DSs to have RGB enabled. (fixes #3910)
@@ -108,6 +109,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Issue #3871 - provides users with a specified role the ability to mark any delivery service request as complete.
 - Fixed Traffic Ops Golang POST servers/id/deliveryservice continuing erroneously after a database error.
 - Fixed Traffic Ops Golang POST servers/id/deliveryservice double-logging errors.
+- Issue #4131 - The "Clone Delivery Service Assignments" menu item is hidden on a cache when the cache has zero delivery service assignments to clone.
 
 ### Deprecated/Removed
 - The TO API `cachegroup_fallbacks` endpoint is now deprecated
