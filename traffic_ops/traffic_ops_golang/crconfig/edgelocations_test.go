@@ -94,7 +94,7 @@ func TestMakeLocations(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actualEdgeLocs, actualRouterLocs, err := makeLocations(cdn, tx)
+	actualEdgeLocs, actualRouterLocs, err := makeLocations(tx, cdn, true)
 	if err != nil {
 		t.Fatalf("makeLocations expected: nil error, actual: %v", err)
 	}

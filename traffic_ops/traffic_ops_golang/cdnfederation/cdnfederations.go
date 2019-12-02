@@ -175,7 +175,7 @@ func (fed *TOCDNFederation) Read() ([]interface{}, error, error, int) {
 		if fed.ID != nil {
 			return nil, errors.New("not found"), nil, http.StatusNotFound
 		}
-		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx.Tx); err != nil {
+		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Tx.Tx, fed.APIInfo().Params["name"]); err != nil {
 			return nil, nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError
 		} else if !ok {
 			return nil, errors.New("cdn not found"), nil, http.StatusNotFound

@@ -217,7 +217,7 @@ func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryS
 			"",
 			queryParams)
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestMakeDSes(t *testing.T) {
@@ -253,7 +253,7 @@ func TestMakeDSes(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := makeDSes(cdn, domain, tx)
+	actual, err := makeDSes(tx, cdn, domain, true)
 	if err != nil {
 		t.Fatalf("makeDSes expected: nil error, actual: %v", err)
 	}
@@ -294,7 +294,7 @@ func MockGetServerProfileParams(mock sqlmock.Sqlmock, expected map[string]map[st
 			rows = rows.AddRow(param, val, dsName)
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetServerProfileParams(t *testing.T) {
@@ -320,7 +320,7 @@ func TestGetServerProfileParams(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getServerProfileParams(cdn, tx)
+	actual, err := getServerProfileParams(tx, cdn, true)
 	if err != nil {
 		t.Fatalf("getServerProfileParams expected: nil error, actual: %v", err)
 	}
@@ -376,7 +376,7 @@ func MockGetDSRegexesDomains(mock sqlmock.Sqlmock, expectedMatchsets map[string]
 			}
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetDSRegexesDomains(t *testing.T) {
@@ -408,7 +408,7 @@ func TestGetDSRegexesDomains(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actualMatchsets, actualDomains, err := getDSRegexesDomains(cdn, domain, tx)
+	actualMatchsets, actualDomains, err := getDSRegexesDomains(tx, cdn, domain, true)
 	if err != nil {
 		t.Fatalf("getDSRegexesDomains expected: nil error, actual: %v", err)
 	}
@@ -445,7 +445,7 @@ func MockGetStaticDNSEntries(mock sqlmock.Sqlmock, expected map[tc.DeliveryServi
 			rows = rows.AddRow(dsName, entry.Name, entry.TTL, entry.Value, entry.Type+"_RECORD")
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetStaticDNSEntries(t *testing.T) {
@@ -471,7 +471,7 @@ func TestGetStaticDNSEntries(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getStaticDNSEntries(cdn, tx)
+	actual, err := getStaticDNSEntries(tx, cdn, true)
 	if err != nil {
 		t.Fatalf("getStaticDNSEntries expected: nil error, actual: %v", err)
 	}

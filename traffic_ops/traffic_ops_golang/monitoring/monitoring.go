@@ -22,12 +22,11 @@ package monitoring
 import (
 	"database/sql"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -104,74 +103,60 @@ type DeliveryService struct {
 	TotalKBPSThreshold float64 `json:"totalKbpsThreshold"`
 }
 
-func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(GetMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"]))
-}
-
-func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
-	monitors, caches, routers, err := getMonitoringServers(tx, cdnName)
-	if err != nil {
+func GetMonitoringJSON(tx *sql.Tx, cdnName string, live bool) (*Monitoring, error) {
+	mn := &Monitoring{}
+	err := error(nil)
+	routers := []Router{}
+	if mn.TrafficMonitors, mn.TrafficServers, routers, err = getMonitoringServers(tx, cdnName, live); err != nil {
 		return nil, fmt.Errorf("error getting servers: %v", err)
 	}
-
-	cachegroups, err := getCachegroups(tx, cdnName)
-	if err != nil {
+	if mn.Cachegroups, err = getCachegroups(tx, cdnName, live); err != nil {
 		return nil, fmt.Errorf("error getting cachegroups: %v", err)
 	}
-
-	profiles, err := getProfiles(tx, caches, routers)
-	if err != nil {
+	if mn.Profiles, err = getProfiles(tx, cdnName, mn.TrafficServers, routers, live); err != nil {
 		return nil, fmt.Errorf("error getting profiles: %v", err)
 	}
-
-	deliveryServices, err := getDeliveryServices(tx, routers)
-	if err != nil {
+	if mn.DeliveryServices, err = getDeliveryServices(tx, routers, live); err != nil {
 		return nil, fmt.Errorf("error getting deliveryservices: %v", err)
 	}
-
-	config, err := getConfig(tx)
-	if err != nil {
+	if mn.Config, err = getConfig(tx, cdnName, live); err != nil {
 		return nil, fmt.Errorf("error getting config: %v", err)
 	}
-
-	return &Monitoring{
-		TrafficServers:   caches,
-		TrafficMonitors:  monitors,
-		Cachegroups:      cachegroups,
-		Profiles:         profiles,
-		DeliveryServices: deliveryServices,
-		Config:           config,
-	}, nil
+	return mn, nil
 }
 
-func getMonitoringServers(tx *sql.Tx, cdn string) ([]Monitor, []Cache, []Router, error) {
-	query := `SELECT
-me.host_name as hostName,
-CONCAT(me.host_name, '.', me.domain_name) as fqdn,
-status.name as status,
-cachegroup.name as cachegroup,
-me.tcp_port as port,
-me.ip_address as ip,
-me.ip6_address as ip6,
-profile.name as profile,
-me.interface_name as interfaceName,
-type.name as type,
-me.xmpp_id as hashID
-FROM server me
-JOIN type type ON type.id = me.type
-JOIN status status ON status.id = me.status
-JOIN cachegroup cachegroup ON cachegroup.id = me.cachegroup
-JOIN profile profile ON profile.id = me.profile
-JOIN cdn cdn ON cdn.id = me.cdn_id
-WHERE cdn.name = $1`
+func getMonitoringServers(tx *sql.Tx, cdn string, live bool) ([]Monitor, []Cache, []Router, error) {
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `host_name, fqdn, status, cachegroup, port, ip, ip6, profile, interface_name, server_type, hash_id`,
+		PrimaryKeys:     `s.host_name`,
+		SelectBody: `
+  s.host_name,
+  CONCAT(s.host_name, '.', s.domain_name) fqdn,
+  st.name status,
+  cg.name cachegroup,
+  s.tcp_port port,
+  s.ip_address ip,
+  s.ip6_address ip6,
+  pr.name profile,
+  s.interface_name,
+  tp.name server_type,
+  s.xmpp_id hash_id,
+  c.name as cdn_snapshot_name,
+  s.deleted
+FROM
+  server_snapshot s
+  JOIN type_snapshot tp ON tp.id = s.type
+  JOIN status_snapshot st ON st.id = s.status
+  JOIN cachegroup_snapshot cg ON cg.id = s.cachegroup
+  JOIN profile_snapshot pr ON pr.id = s.profile
+  JOIN cdn_snapshot c ON c.id = s.cdn_id
+`,
+		Where:        `cdn_snapshot_name = (select v from cdn_name)`,
+		TableAliases: []string{"s", "tp", "st", "cg", "pr", "c"},
+	})
 
-	rows, err := tx.Query(query, cdn)
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -237,16 +222,29 @@ WHERE cdn.name = $1`
 	return monitors, caches, routers, nil
 }
 
-func getCachegroups(tx *sql.Tx, cdn string) ([]Cachegroup, error) {
-	query := `
-SELECT cg.name, co.latitude, co.longitude
-FROM cachegroup cg
-LEFT JOIN coordinate co ON co.id = cg.coordinate
-WHERE cg.id IN
-  (SELECT cachegroup FROM server WHERE server.cdn_id =
-    (SELECT id FROM cdn WHERE name = $1));`
+func getCachegroups(tx *sql.Tx, cdn string, live bool) ([]Cachegroup, error) {
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `name, latitude, longitude`,
+		PrimaryKeys:     `cg.name`,
+		SelectBody: `
+  cg.name,
+  co.latitude,
+  co.longitude,
+  c.name as cdn_snapshot_name,
+  cg.deleted
+FROM
+  cachegroup_snapshot cg
+  LEFT JOIN coordinate_snapshot co ON co.id = cg.coordinate
+  JOIN server_snapshot s ON s.cachegroup = cg.id
+  JOIN cdn_snapshot c ON c.id = s.cdn_id
+`,
+		Where:                `cdn_snapshot_name = (select v from cdn_name)`,
+		TableAliases:         []string{"cg", "co", "s", "c"},
+		NullableTableAliases: map[string]bool{"co": true},
+	})
 
-	rows, err := tx.Query(query, cdn)
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +269,26 @@ WHERE cg.id IN
 	return cachegroups, nil
 }
 
-func getProfiles(tx *sql.Tx, caches []Cache, routers []Router) ([]Profile, error) {
+func getProfiles(tx *sql.Tx, cdn string, caches []Cache, routers []Router, live bool) ([]Profile, error) {
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `profile, name, value`,
+		PrimaryKeys:     `pr.name, pa.name, pa.value`,
+		SelectBody: `
+  pr.name as profile,
+  pa.name,
+  pa.value,
+  pa.config_file,
+  pa.deleted
+FROM
+  parameter_snapshot pa
+  JOIN profile_snapshot pr ON pr.name = ANY($2)
+  JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
+`,
+		Where:        `config_file = $3`,
+		TableAliases: []string{`pa`, `pr`, `pp`},
+	})
+
 	cacheProfileTypes := map[string]string{}
 	profiles := map[string]Profile{}
 	profileNames := []string{}
@@ -293,14 +310,7 @@ func getProfiles(tx *sql.Tx, caches []Cache, routers []Router) ([]Profile, error
 		}
 	}
 
-	query := `
-SELECT p.name as profile, pr.name, pr.value
-FROM parameter pr
-JOIN profile p ON p.name = ANY($1)
-JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
-WHERE pr.config_file = $2;
-`
-	rows, err := tx.Query(query, pq.Array(profileNames), CacheMonitorConfigFile)
+	rows, err := tx.Query(qry, cdn, pq.Array(profileNames), CacheMonitorConfigFile)
 	if err != nil {
 		return nil, err
 	}
@@ -337,20 +347,46 @@ WHERE pr.config_file = $2;
 	return profilesArr, nil
 }
 
-func getDeliveryServices(tx *sql.Tx, routers []Router) ([]DeliveryService, error) {
+func getDeliveryServices(tx *sql.Tx, routers []Router, live bool) ([]DeliveryService, error) {
 	profileNames := []string{}
 	for _, router := range routers {
 		profileNames = append(profileNames, router.Profile)
 	}
 
-	query := `
-SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps
-FROM deliveryservice ds
-JOIN profile profile ON profile.id = ds.profile
-WHERE profile.name = ANY($1)
-AND ds.active = true
+	qry := `
+SELECT
+  xml_id,
+  global_max_tps,
+  global_max_mbps,
+  ds_deleted
+FROM (
+SELECT DISTINCT ON (ds.xml_id)
+  ds.xml_id,
+  ds.global_max_tps,
+  ds.global_max_mbps,
+  ds.deleted as ds_deleted
+FROM
+  deliveryservice_snapshot ds
+  JOIN profile_snapshot pr ON pr.id = ds.profile
+  JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = ds.xml_id
+WHERE
+  pr.name = ANY($1)
+  AND ds.active = true
 `
-	rows, err := tx.Query(query, pq.Array(profileNames))
+	if !live {
+		qry += `
+  AND ds.last_updated <= dsn.time
+  AND pr.last_updated <= dsn.time
+`
+	}
+	qry += `
+ORDER BY
+  ds.xml_id DESC,
+  ds.last_updated DESC,
+  pr.last_updated DESC
+) s WHERE ds_deleted = false
+`
+	rows, err := tx.Query(qry, pq.Array(profileNames))
 	if err != nil {
 		return nil, err
 	}
@@ -375,24 +411,32 @@ AND ds.active = true
 	return dses, nil
 }
 
-func getConfig(tx *sql.Tx) (map[string]interface{}, error) {
+func getConfig(tx *sql.Tx, cdn string, live bool) (map[string]interface{}, error) {
 	// TODO remove 'like' in query? Slow?
-	query := fmt.Sprintf(`
-SELECT pr.name, pr.value
-FROM parameter pr
-JOIN profile p ON p.name LIKE '%s%%'
-JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
-WHERE pr.config_file = '%s'
-`, tc.MonitorProfilePrefix, MonitorConfigFile)
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `name, value`,
+		PrimaryKeys:     `pa.name, pa.value`,
+		SelectBody: `
+  pa.name,
+  pa.value,
+  pa.config_file
+FROM
+  parameter_snapshot pa
+  JOIN profile_snapshot pr ON pr.name LIKE '` + MonitorProfilePrefix + `%%'
+  JOIN profile_parameter_snapshot pp ON pp.profile = pr.id and pp.parameter = pa.id
+`,
+		Where:        `config_file = '` + MonitorConfigFile + `'`,
+		TableAliases: []string{`pa`, `pr`, `pp`},
+	})
 
-	rows, err := tx.Query(query)
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	cfg := map[string]interface{}{}
-
 	for rows.Next() {
 		var name sql.NullString
 		var val sql.NullString

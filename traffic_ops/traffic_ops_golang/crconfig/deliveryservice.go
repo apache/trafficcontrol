@@ -22,13 +22,15 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+
 	"github.com/lib/pq"
 )
 
@@ -43,7 +45,7 @@ const DefaultTLDTTLNS = 3600 * time.Second
 const GeoProviderMaxmindStr = "maxmindGeolocationService"
 const GeoProviderNeustarStr = "neustarGeolocationService"
 
-func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeliveryService, error) {
+func makeDSes(tx *sql.Tx, cdn string, domain string, live bool) (map[string]tc.CRConfigDeliveryService, error) {
 	dses := map[string]tc.CRConfigDeliveryService{}
 
 	admin := CDNSOAAdmin
@@ -71,7 +73,7 @@ func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeli
 	geoProvider1 := GeoProviderNeustarStr
 	geoProviderDefault := geoProvider0
 
-	serverParams, err := getServerProfileParams(cdn, tx)
+	serverParams, err := getServerProfileParams(tx, cdn, live)
 	if err != nil {
 		return nil, errors.New("getting deliveryservice parameters: " + err.Error())
 	}
@@ -81,56 +83,98 @@ func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeli
 		return nil, errors.New("getting deliveryservice server parameters: " + err.Error())
 	}
 
-	dsmatchsets, dsdomains, err := getDSRegexesDomains(cdn, domain, tx)
+	dsmatchsets, dsdomains, err := getDSRegexesDomains(tx, cdn, domain, live)
 	if err != nil {
 		return nil, errors.New("getting regex matchsets: " + err.Error())
 	}
 
-	staticDNSEntries, err := getStaticDNSEntries(cdn, tx)
+	staticDNSEntries, err := getStaticDNSEntries(tx, cdn, live)
 	if err != nil {
 		return nil, errors.New("getting static DNS entries: " + err.Error())
 	}
 
-	q := `
-SELECT d.xml_id,
-       d.miss_lat,
-       d.miss_long,
-       d.protocol,
-       d.ccr_dns_ttl AS ttl,
-       d.routing_name,
-       d.geo_provider,
-       t.name AS type,
-       d.geo_limit,
-       d.geo_limit_countries,
-       d.geolimit_redirect_url,
-       d.initial_dispersion,
-       d.regional_geo_blocking,
-       d.tr_response_headers,
-       d.max_dns_answers,
-       p.name AS profile,
-       d.dns_bypass_ip,
-       d.dns_bypass_ip6,
-       d.dns_bypass_ttl,
-       d.dns_bypass_cname,
-       d.http_bypass_fqdn,
-       d.ipv6_routing_enabled,
-       d.deep_caching_type,
-       d.tr_request_headers,
-       d.tr_response_headers,
-       d.anonymous_blocking_enabled,
-       d.consistent_hash_regex,
-       (SELECT ARRAY_AGG(name ORDER BY name)
-			  FROM deliveryservice_consistent_hash_query_param
-			  WHERE deliveryservice_id = d.id) AS query_keys
-FROM deliveryservice AS d
-INNER JOIN type AS t ON t.id = d.type
-LEFT OUTER JOIN profile AS p ON p.id = d.profile
-WHERE d.cdn_id = (select id FROM cdn WHERE name = $1)
-AND d.active = true
-`
-	q += fmt.Sprintf(" and t.name != '%s'", tc.DSTypeAnyMap)
-	rows, err := tx.Query(q, cdn)
+	// TODO fix cdn_id subquery to get distinct latest
+	qry := dbhelpers.BuildDSSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live: live,
+		SelectedColumns: `
+  xml_id,
+  miss_lat,
+  miss_long,
+  protocol,
+  ttl,
+  routing_name,
+  geo_provider,
+  type,
+  geo_limit,
+  geo_limit_countries,
+  geolimit_redirect_url,
+  initial_dispersion,
+  regional_geo_blocking,
+  tr_response_headers,
+  max_dns_answers,
+  profile,
+  dns_bypass_ip,
+  dns_bypass_ip6,
+  dns_bypass_ttl,
+  dns_bypass_cname,
+  http_bypass_fqdn,
+  ipv6_routing_enabled,
+  deep_caching_type,
+  ds_tr_request_headers,
+  ds_tr_response_headers,
+  anonymous_blocking_enabled,
+	consistent_hash_regex,
+	query_keys`,
+		PrimaryKeys: `d.xml_id`,
+		SelectBody: `
+  d.xml_id,
+  d.miss_lat,
+  d.miss_long,
+  d.protocol,
+  d.ccr_dns_ttl as ttl,
+  d.routing_name,
+  d.geo_provider,
+  t.name as type,
+  d.geo_limit,
+  d.geo_limit_countries,
+  d.geolimit_redirect_url,
+  d.initial_dispersion,
+  d.regional_geo_blocking,
+  d.tr_response_headers,
+  d.max_dns_answers,
+  p.name as profile,
+  d.dns_bypass_ip,
+  d.dns_bypass_ip6,
+  d.dns_bypass_ttl,
+  d.dns_bypass_cname,
+  d.http_bypass_fqdn,
+  d.ipv6_routing_enabled,
+  d.deep_caching_type,
+  d.tr_request_headers as ds_tr_request_headers,
+  d.tr_response_headers as ds_tr_response_headers,
+  d.anonymous_blocking_enabled,
+	d.consistent_hash_regex,
+	(SELECT ARRAY_AGG(name ORDER BY name)
+		FROM deliveryservice_consistent_hash_query_param
+		WHERE deliveryservice_id = d.id) AS query_keys, -- TODO change to a join, for readability?
+  d.active,
+  d.cdn_id,
+  dsn.time as ds_snapshot_time
+FROM
+  deliveryservice_snapshot d
+  JOIN type_snapshot t ON t.id = d.type
+  LEFT JOIN profile_snapshot p ON p.id = d.profile
+  JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = d.xml_id`,
+		Where: `cdn_id = (SELECT id FROM cdn_snapshot c WHERE c.name = (select v from cdn_name) AND c.last_updated <= ds_snapshot_time)
+  AND active = true
+  AND type != '` + string(tc.DSTypeAnyMap) + `'`,
+		TableAliases:         []string{"d", "t", "p"},
+		NullableTableAliases: map[string]bool{"p": true},
+	})
+
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
+		log.Errorln("makeDSes qry QQQ" + qry + "QQQ")
 		return nil, errors.New("querying deliveryservices: " + err.Error())
 	}
 	defer rows.Close()
@@ -412,19 +456,35 @@ AND d.active = true
 	return dses, nil
 }
 
-func getStaticDNSEntries(cdn string, tx *sql.Tx) (map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, error) {
+func getStaticDNSEntries(tx *sql.Tx, cdn string, live bool) (map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, error) {
 	entries := map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry{}
 
-	q := `
-select d.xml_id as ds, e.host as name, e.ttl, e.address as value, t.name as type
-from staticdnsentry as e
-inner join deliveryservice as d on d.id = e.deliveryservice
-inner join type as t on t.id = e.type
-where d.cdn_id = (select id from cdn where name = $1)
-and d.active = true
-`
-	rows, err := tx.Query(q, cdn)
+	qry := dbhelpers.BuildDSSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `ds, name, ttl, value, type`,
+		PrimaryKeys:     `e.host, e.address, e.deliveryservice, e.cachegroup`,
+		SelectBody: `
+  d.xml_id as ds,
+  e.host as name,
+  e.ttl,
+  e.address as value,
+  t.name as type,
+  d.cdn_id,
+  d.active as ds_active,
+  dsn.time as ds_snapshot_time
+FROM
+  staticdnsentry_snapshot e
+  JOIN deliveryservice_snapshot d on d.id = e.deliveryservice
+  JOIN type_snapshot t on t.id = e.type
+  JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = d.xml_id
+`,
+		Where: `cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= ds_snapshot_time)
+  AND ds_active = true`,
+		TableAliases: []string{"e", "d", "t"},
+	})
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
+		log.Errorln("getStaticDNSEntries qry QQQ" + qry + "QQQ")
 		return nil, errors.New("querying static DNS entries: " + err.Error())
 	}
 	defer rows.Close()
@@ -451,22 +511,38 @@ func getProtocolStr(dsType string) string {
 	return "HTTP"
 }
 
-func getDSRegexesDomains(cdn string, domain string, tx *sql.Tx) (map[string][]*tc.MatchSet, map[string][]string, error) {
+func getDSRegexesDomains(tx *sql.Tx, cdn string, domain string, live bool) (map[string][]*tc.MatchSet, map[string][]string, error) {
 	dsmatchsets := map[string][]*tc.MatchSet{}
 	domains := map[string][]string{}
 	patternToHostReplacer := strings.NewReplacer(`\`, ``, `.*`, ``, `.`, ``)
-	q := `
-select r.pattern, t.name as type, dt.name as dstype, COALESCE(dr.set_number, 0), d.xml_id as dsname
-from regex as r
-inner join deliveryservice_regex as dr on r.id = dr.regex
-inner join deliveryservice as d on d.id = dr.deliveryservice
-inner join type as t on t.id = r.type
-inner join type as dt on dt.id = d.type
-where d.cdn_id = (select id from cdn where name = $1)
-and d.active = true
-order by dr.set_number asc
-`
-	rows, err := tx.Query(q, cdn)
+
+	qry := dbhelpers.BuildDSSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `pattern, type, dstype, set_number, dsname`,
+		PrimaryKeys:     `dsname, pattern, type, set_number`,
+		SelectBody: `
+  r.pattern,
+  t.name as type,
+  dt.name as dstype,
+  COALESCE(dr.set_number, 0) as set_number,
+  d.xml_id as dsname,
+  d.active as ds_active,
+  d.cdn_id,
+  dsn.time as ds_snapshot_time
+FROM
+  regex_snapshot as r
+  JOIN deliveryservice_regex_snapshot dr on r.id = dr.regex
+  JOIN deliveryservice_snapshot d on d.id = dr.deliveryservice
+  JOIN type_snapshot t on t.id = r.type
+  JOIN type_snapshot dt on dt.id = d.type
+  JOIN deliveryservice_snapshots dsn ON dsn.deliveryservice = d.xml_id
+`,
+		Where: `cdn_id = (select id from cdn_snapshot c where c.name = (select v from cdn_name) and c.last_updated <= ds_snapshot_time)
+  AND ds_active = true`,
+		TableAliases: []string{"r", "dr", "d", "t", "dt"},
+	})
+
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
 		return nil, nil, errors.New("querying deliveryservices: " + err.Error())
 	}
@@ -548,16 +624,45 @@ func getDSParams(serverParams map[string]map[string]string) (map[string]string, 
 }
 
 // getDSProfileParams returns a map[dsname]map[paramname]paramvalue
-func getServerProfileParams(cdn string, tx *sql.Tx) (map[string]map[string]string, error) {
-	q := `
-select parameter.name, parameter.value, profile.name as profile
-from profile
-inner join profile_parameter as pp on pp.profile = profile.id
-inner join parameter on parameter.id = pp.parameter
-where profile.id in (select profile from server where server.cdn_id = (select id from cdn where name = $1))
-`
-	rows, err := tx.Query(q, cdn)
+func getServerProfileParams(tx *sql.Tx, cdn string, live bool) (map[string]map[string]string, error) {
+	qry := dbhelpers.BuildSnapshotQuery(dbhelpers.SnapshotQuery{
+		Live:            live,
+		SelectedColumns: `name, value, profile`,
+		PrimaryKeys:     `pa.name, pa.value, pr.name`,
+		SelectBody: `
+  pr.id as profile_id,
+  pa.name,
+  pa.value,
+  pr.name as profile
+FROM
+  profile_snapshot pr
+  JOIN profile_parameter_snapshot as pp on pp.profile = pr.id
+  JOIN parameter_snapshot pa on pa.id = pp.parameter
+`,
+		Where: `
+  profile_id in (
+    SELECT DISTINCT(profile) FROM (
+    SELECT DISTINCT ON (s.ip_address, profile)
+      s.profile,
+      s.cdn_id
+    FROM
+      server_snapshot s
+` + util.StrIf(!live, ` WHERE s.last_updated <= (SELECT v from snapshot_time)`) + `
+    ORDER BY
+      s.ip_address DESC,
+      s.profile DESC,
+      s.last_updated DESC
+    ) v
+    WHERE
+      cdn_id = (SELECT id FROM cdn_snapshot c WHERE c.name = (SELECT v from cdn_name) AND c.last_updated <= (SELECT v from snapshot_time))
+  )
+`,
+		TableAliases: []string{"pr", "pp", "pa"},
+	})
+
+	rows, err := tx.Query(qry, cdn)
 	if err != nil {
+		log.Errorln("getServerProfileParams qry QQ" + qry + "QQ")
 		return nil, errors.New("querying deliveryservices: " + err.Error())
 	}
 	defer rows.Close()

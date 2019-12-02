@@ -21,68 +21,28 @@ package crconfig
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
 )
 
-// Snapshot takes the CRConfig JSON-serializable object (which may be generated via crconfig.Make), and writes it to the snapshot table.
-// It also takes the monitoring config JSON and writes it to the snapshot table.
-func Snapshot(tx *sql.Tx, crc *tc.CRConfig, monitoringJSON *monitoring.Monitoring) error {
-	log.Debugln("calling Snapshot")
-	bts, err := json.Marshal(crc)
-	if err != nil {
-		return errors.New("marshalling JSON: " + err.Error())
-	}
-	date := time.Now()
-	if crc.Stats.DateUnixSeconds != nil {
-		date = time.Unix(*crc.Stats.DateUnixSeconds, 0)
+// Snapshot creates a new snapshot of the CDN. Returns whether the CDN exists, and any error creating the snapshot.
+// Note this does not include the "deliveryservices" key and "contentServers/{server}/deliveryservices" keys. Delivery Services must be snapshotted separately.
+func Snapshot(tx *sql.Tx, cdn tc.CDNName) error {
+	if err := UpdateSnapshotTables(tx); err != nil {
+		return errors.New("updating snapshot tables: " + err.Error())
 	}
 
-	btstm, err := json.Marshal(monitoringJSON)
-	if err != nil {
-		return errors.New("marshalling JSON: " + err.Error())
-	}
-
-	log.Debugf("calling Snapshot, writing %+v\n", date)
-	q := `insert into snapshot (cdn, crconfig, last_updated, monitoring) values ($1, $2, $3, $4) on conflict(cdn) do update set crconfig=$2, last_updated=$3, monitoring=$4`
-	if _, err := tx.Exec(q, crc.Stats.CDNName, bts, date, btstm); err != nil {
-		return errors.New("Error inserting the crconfig and monitoring snapshot into database: " + err.Error())
+	// TODO remove crconfig column, or at least not-null.
+	qry := `
+INSERT INTO snapshot (cdn, crconfig, monitoring, time) VALUES ($1, '{}', '{}', now())
+ON CONFLICT(cdn) DO UPDATE SET time=now()
+`
+	if _, err := tx.Exec(qry, cdn); err != nil {
+		return errors.New("inserting the cdn snapshot into database: " + err.Error())
 	}
 	return nil
-}
-
-// GetSnapshot gets the snapshot for the given CDN.
-// If the CDN does not exist, false is returned.
-// If the CDN exists, but the snapshot does not, the string for an empty JSON object "{}" is returned.
-// An error is only returned on database error, never if the CDN or snapshot does not exist.
-func GetSnapshot(tx *sql.Tx, cdn string) (string, bool, error) {
-	log.Debugln("calling GetSnapshot")
-
-	snapshot := sql.NullString{}
-	// cdn left join snapshot, so we get a row with null if the CDN exists but the snapshot doesn't, and no rows if the CDN doesn't exist.
-	q := `
-SELECT s.crconfig AS snapshot
-FROM cdn AS c
-LEFT JOIN snapshot AS s ON s.cdn = c.name
-WHERE c.name = $1
-`
-	if err := tx.QueryRow(q, cdn).Scan(&snapshot); err != nil {
-		if err == sql.ErrNoRows {
-			// CDN doesn't exist
-			return "", false, nil
-		}
-		return "", false, errors.New("Error querying crconfig snapshot: " + err.Error())
-	}
-	if !snapshot.Valid {
-		// CDN exists, but snapshot doesn't
-		return `{}`, true, nil
-	}
-	return snapshot.String, true, nil
 }
 
 // GetSnapshotMonitoring gets the monitor snapshot for the given CDN.
@@ -114,4 +74,19 @@ WHERE c.name = $1
 		return `{}`, true, nil
 	}
 	return monitorSnapshot.String, true, nil
+}
+
+func SnapshotDS(tx *sql.Tx, ds tc.DeliveryServiceName) error {
+	if err := UpdateSnapshotTablesForDS(tx, ds); err != nil {
+		return errors.New("updating snapshot tables for ds '" + string(ds) + "': " + err.Error())
+	}
+
+	qry := `
+INSERT INTO deliveryservice_snapshots (deliveryservice, time) VALUES ($1, now())
+ON CONFLICT(deliveryservice) DO UPDATE SET time=now()
+`
+	if _, err := tx.Exec(qry, ds); err != nil {
+		return errors.New("inserting the deliveryservice snapshot into database: " + err.Error())
+	}
+	return nil
 }

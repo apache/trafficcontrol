@@ -24,7 +24,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
-	"reflect"
 	"testing"
 	"time"
 
@@ -38,55 +37,8 @@ func ExpectedGetSnapshot(crc *tc.CRConfig) ([]byte, error) {
 }
 
 func ExpectedGetMontioringSnapshot(crc *tc.CRConfig, tx *sql.Tx) ([]byte, error) {
-	tm, _ := monitoring.GetMonitoringJSON(tx, *crc.Stats.CDNName)
+	tm, _ := monitoring.GetMonitoringJSON(tx, *crc.Stats.CDNName, true)
 	return json.Marshal(tm)
-}
-
-func MockGetSnapshot(mock sqlmock.Sqlmock, expected []byte, cdn string) {
-	rows := sqlmock.NewRows([]string{"snapshot"})
-	rows = rows.AddRow(expected)
-	rows = rows.AddRow(expected)
-	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
-}
-
-func TestGetSnapshot(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer db.Close()
-
-	cdn := "mycdn"
-
-	crc := &tc.CRConfig{}
-	crc.Stats.CDNName = &cdn
-
-	mock.ExpectBegin()
-	expected, err := ExpectedGetSnapshot(crc)
-	if err != nil {
-		t.Fatalf("GetSnapshot creating expected err expected: nil, actual: %v", err)
-	}
-	MockGetSnapshot(mock, expected, cdn)
-	mock.ExpectCommit()
-
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTx(dbCtx, nil)
-	if err != nil {
-		t.Fatalf("creating transaction: %v", err)
-	}
-	defer tx.Commit()
-
-	actual, exists, err := GetSnapshot(tx, cdn)
-	if err != nil {
-		t.Fatalf("GetSnapshot err expected: nil, actual: %v", err)
-	}
-	if !exists {
-		t.Fatalf("GetSnapshot exists expected: true, actual: false")
-	}
-
-	if !reflect.DeepEqual(string(expected), actual) {
-		t.Errorf("GetSnapshot expected: %+v, actual: %+v", string(expected), actual)
-	}
 }
 
 type AnyTime struct{}
@@ -121,29 +73,22 @@ func TestSnapshot(t *testing.T) {
 	crc.Stats.CDNName = &cdn
 	mock.ExpectBegin()
 
+	for i := 0; i < len(SnapshotTables)*2; i++ {
+		mock.ExpectExec("INSERT").WithArgs().WillReturnResult(sqlmock.NewResult(1, 1))
+	}
+
+	// actual snapshot insert, after the x_snapshot tables
+	mock.ExpectExec("INSERT").WithArgs().WillReturnResult(sqlmock.NewResult(1, 1))
+
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	expected, err := ExpectedGetSnapshot(crc)
-	if err != nil {
-		t.Fatalf("GetSnapshot creating expected err expected: nil, actual: %v", err)
-	}
-
-	expectedtm, err := ExpectedGetMontioringSnapshot(crc, tx)
-	if err != nil {
-		t.Fatalf("GetSnapshotMonitor creating expected err expected: nil, actual: %v", err)
-	}
-
-	tm, _ := monitoring.GetMonitoringJSON(tx, *crc.Stats.CDNName)
-	MockSnapshot(mock, expected, expectedtm, cdn)
-	mock.ExpectCommit()
-
 	defer tx.Commit()
 
-	if err := Snapshot(tx, crc, tm); err != nil {
+	if err := Snapshot(tx, tc.CDNName(cdn)); err != nil {
 		t.Fatalf("GetSnapshot err expected: nil, actual: %v", err)
 	}
 }

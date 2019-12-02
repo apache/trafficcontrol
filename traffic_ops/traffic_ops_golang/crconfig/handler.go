@@ -21,6 +21,7 @@ package crconfig
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
@@ -30,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
 )
@@ -44,12 +46,27 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	updateStart := time.Now()
+	if err := UpdateSnapshotTables(inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("updating snapshot tables: "+err.Error()))
+		return
+	}
+	log.Infof("CRConfig: time to update snapshot tables: %+v\n", time.Since(updateStart))
+
+	liveData := true
+
 	start := time.Now()
-	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
+	crConfig, snapshotExists, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath, liveData)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
+	if !snapshotExists {
+		log.Errorln("Live CRConfig returned snapshotExists=false - should never happen! Returning {} to client!\n")
+		api.WriteResp(w, r, struct{}{}) // emulates Perl
+		return
+	}
+
 	log.Infof("CRConfig time to generate: %+v\n", time.Since(start))
 	api.WriteResp(w, r, crConfig)
 }
@@ -63,17 +80,48 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	snapshot, cdnExists, err := GetSnapshot(inf.Tx.Tx, inf.Params["cdn"])
+	cdn := inf.Params["cdn"]
+
+	if notModified, snapshotTime := IsNotModified(r, tc.CDNName(cdn), inf.Tx.Tx); notModified {
+		AddModifiedHdrs(w, snapshotTime)
+		code := http.StatusNotModified
+		w.WriteHeader(code)
+		w.Write([]byte(http.StatusText(code)))
+		return
+	}
+
+	liveData := false
+
+	if cdnExists, err := dbhelpers.CDNExists(inf.Tx.Tx, cdn); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking cdn existence: "+err.Error()))
+		return
+	} else if !cdnExists {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
+		return
+	}
+
+	crc, snapshotExists, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath, liveData)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
 		return
 	}
-	if !cdnExists {
+	if !snapshotExists {
+		api.WriteResp(w, r, struct{}{}) // emulates Perl
+		return
+	}
+
+	snapshotTime, ok, err := GetCRConfigSnapshotTime(inf.Tx.Tx, tc.CDNName(cdn))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		return
+	} else if !ok {
+		log.Errorln("GetCRConfigSnapshotTime returned !ok, but crconfig.Make was successful! Should never happen! Returning 404 to client!")
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write([]byte(`{"response":` + snapshot + `}`))
+
+	AddModifiedHdrs(w, snapshotTime)
+	api.WriteResp(w, r, crc)
 }
 
 // SnapshotGetMonitoringHandler gets and serves the CRConfig from the snapshot table.
@@ -85,17 +133,15 @@ func SnapshotGetMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	snapshot, cdnExists, err := GetSnapshotMonitoring(inf.Tx.Tx, inf.Params["cdn"])
+	// TODO check CDN/snapshot existence, and return a helpful message?
+
+	live := false
+	monitoring, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"], live)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
 		return
 	}
-	if !cdnExists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
-		return
-	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write([]byte(`{"response":` + snapshot + `}`))
+	api.WriteResp(w, r, monitoring)
 }
 
 // SnapshotOldGetHandler gets and serves the CRConfig from the snapshot table, not wrapped in response to match the old non-API CRConfig-Snapshots endpoint
@@ -107,15 +153,34 @@ func SnapshotOldGetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	snapshot, cdnExists, err := GetSnapshot(inf.Tx.Tx, inf.Params["cdn"])
+	cdn := inf.Params["cdn"]
+
+	liveData := false
+
+	if cdnExists, err := dbhelpers.CDNExists(inf.Tx.Tx, cdn); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking cdn existence: "+err.Error()))
+		return
+	} else if !cdnExists {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
+		return
+	}
+
+	crc, snapshotExists, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath, liveData)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
 		return
 	}
-	if !cdnExists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
+	if !snapshotExists {
+		api.WriteResp(w, r, struct{}{}) // emulates Perl
 		return
 	}
+
+	snapshot, err := json.Marshal(crc)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("old handler marshalling snapshot: "+err.Error()))
+		return
+	}
+
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
 	w.Write([]byte(snapshot))
 }
@@ -154,20 +219,15 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		cdn = name
 	}
 
-	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+	if ok, err := dbhelpers.CDNExists(inf.Tx.Tx, string(cdn)); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" checking CDN existence: "+err.Error()))
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("cdn '"+cdn+"' not found"), nil)
 		return
 	}
 
-	monitoringJSON, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, cdn)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" getting monitoring.json data: "+err.Error()))
-		return
-	}
-
-	if err := Snapshot(inf.Tx.Tx, crConfig, monitoringJSON); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snaphsotting CRConfig and Monitoring: "+err.Error()))
+	if err := Snapshot(inf.Tx.Tx, tc.CDNName(cdn)); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snapshotting CRConfig and Monitoring: "+err.Error()))
 		return
 	}
 
@@ -189,28 +249,23 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	cdn := inf.Params["cdn"]
+
+	if ok, err := dbhelpers.CDNExists(inf.Tx.Tx, string(cdn)); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" checking CDN existence: "+err.Error()))
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("cdn '"+cdn+"' not found"), nil)
+		return
+	}
+
 	db, err := api.GetDB(r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("SnapshotHandler getting db from context: "+err.Error()))
 		return
 	}
 
-	cdn := inf.Params["cdn"]
-
-	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version, inf.Config.CRConfigUseRequestHost, inf.Config.CRConfigEmulateOldPath)
-	if err != nil {
-		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
-		return
-	}
-
-	tm, err := monitoring.GetMonitoringJSON(inf.Tx.Tx, cdn)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" getting monitoring.json data: "+err.Error()))
-		return
-	}
-
-	if err := Snapshot(inf.Tx.Tx, crConfig, tm); err != nil {
-		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
+	if err := Snapshot(inf.Tx.Tx, tc.CDNName(cdn)); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snapshotting CRConfig and Monitoring: "+err.Error()))
 		return
 	}
 
@@ -220,6 +275,7 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, inf.User, inf.Tx.Tx)
+
 	http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Successfully wrote the CRConfig.json!"), http.StatusFound)
 }
 
@@ -227,4 +283,30 @@ func writePerlHTMLErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, logErr
 	log.Errorln(logErr.Error())
 	tx.Rollback()
 	http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Error: "+err.Error()), http.StatusFound)
+}
+
+func SnapshotDSHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"ds-name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	ds := tc.DeliveryServiceName(inf.Params["ds-name"])
+
+	if ok, err := dbhelpers.DSExists(inf.Tx.Tx, ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("snapshot ds handler checking delivery service existence: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service '"+string(ds)+"' not found"), nil)
+		return
+	}
+
+	if err := SnapshotDS(inf.Tx.Tx, ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("performing ds '"+string(ds)+"' snapshot: "+err.Error()))
+		return
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of DS performed for '"+string(ds)+"'", inf.User, inf.Tx.Tx)
+	w.WriteHeader(http.StatusNoContent)
 }

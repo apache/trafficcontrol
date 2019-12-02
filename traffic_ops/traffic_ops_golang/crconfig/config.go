@@ -26,8 +26,10 @@ import (
 	"strings"
 )
 
-func makeCRConfigConfig(cdn string, tx *sql.Tx, dnssecEnabled bool, domain string) (map[string]interface{}, error) {
-	configParams, err := getConfigParams(cdn, tx)
+// makeCRConfigConfig creates the "config" key for the CRConfig.
+// The live argument is whether to get the latest data, not the snapshot time. Note this still queries the snapshot tables, so live calls must be preceded by populating the snapshot tables, e.g. with UpdateSnapshotTables.
+func makeCRConfigConfig(tx *sql.Tx, cdn string, dnssecEnabled bool, domain string, live bool) (map[string]interface{}, error) {
+	configParams, err := getConfigParams(tx, cdn, live)
 	if err != nil {
 		return nil, errors.New("Error getting router params: " + err.Error())
 	}
@@ -87,19 +89,29 @@ type CRConfigConfigParameter struct {
 	Value string
 }
 
-func getConfigParams(cdn string, tx *sql.Tx) ([]CRConfigConfigParameter, error) {
+func getConfigParams(tx *sql.Tx, cdn string, live bool) ([]CRConfigConfigParameter, error) {
 	// TODO change to []struct{string,string} ? Speed might matter.
-	q := `
-select name, value from parameter where id in (
-  select parameter from profile_parameter where profile in (
-  	select distinct profile from server where cdn_id = (
-	    select id from cdn where name = $1
+	qryArgs := []interface{}{}
+	// TODO change to use dbhelpers.BuildSnapshotQuery
+	withCDNSnapshotTimeQueryPart, qryArgs := WithCDNSnapshotTime(cdn, live, qryArgs)
+	qry := `
+WITH ` + withCDNSnapshotTimeQueryPart + `,
+ ` + ParameterTable.WithLatest() + `,
+ ` + ProfileParameterTable.WithLatest() + `,
+ ` + ServerTable.WithLatest() + `,
+ ` + CDNTable.WithLatest() + `
+SELECT name, value FROM ` + ParameterTable.SnapshotLatestTable() + ` WHERE id in (
+  SELECT parameter from ` + ProfileParameterTable.SnapshotLatestTable() + ` WHERE profile in (
+    SELECT DISTINCT profile FROM ` + ServerTable.SnapshotLatestTable() + ` WHERE cdn_id = (
+      SELECT id FROM ` + CDNTable.SnapshotLatestTable() + ` WHERE name = $` + strconv.Itoa(len(qryArgs)+1) + `
     )
   )
 )
-and config_file = 'CRConfig.json'
+AND config_file = 'CRConfig.json'
 `
-	rows, err := tx.Query(q, cdn)
+	qryArgs = append(qryArgs, cdn)
+
+	rows, err := tx.Query(qry, qryArgs...)
 	if err != nil {
 		return nil, errors.New("Error querying router params: " + err.Error())
 	}

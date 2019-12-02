@@ -21,8 +21,10 @@ package crconfig
 
 import (
 	"context"
+	// "fmt"
 	"math/rand"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -103,7 +105,7 @@ func MockGetServerParams(mock sqlmock.Sqlmock, expected map[string]ServerParams,
 	rows = rows.AddRow("cache1", "api.port", *expected["cache1"].APIPort)
 	rows = rows.AddRow("cache1", "weight", *expected["cache1"].Weight)
 	rows = rows.AddRow("cache1", "weightMultiplier", *expected["cache1"].WeightMultiplier)
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetServerParams(t *testing.T) {
@@ -127,7 +129,7 @@ func TestGetServerParams(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getServerParams(cdn, tx)
+	actual, err := getServerParams(tx, cdn, true)
 	if err != nil {
 		t.Fatalf("getServerParams expected: nil error, actual: %v", err)
 	}
@@ -164,11 +166,11 @@ func ExpectedGetAllServers(params map[string]ServerParams) map[string]ServerUnio
 }
 
 func MockGetAllServers(mock sqlmock.Sqlmock, expected map[string]ServerUnion, cdn string) {
-	rows := sqlmock.NewRows([]string{"host_name", "cachegroup", "fqdn", "hashid", "https_port", "interface_name", "ip_address", "ip6_address", "tcp_port", "profile_name", "routing_disabled", "status", "type"})
+	rows := sqlmock.NewRows([]string{"host_name", "cachegroup", "fqdn", "hashid", "https_port", "interface_name", "ip_address", "ip6_address", "tcp_port", "profile_name", "routing_disabled", "status", "type", "id"})
 	for name, s := range expected {
-		rows = rows.AddRow(name, *s.CacheGroup, *s.Fqdn, *s.HashId, *s.HttpsPort, *s.InterfaceName, *s.Ip, *s.Ip6, *s.Port, *s.Profile, s.RoutingDisabled, *s.ServerStatus, *s.ServerType)
+		rows = rows.AddRow(name, *s.CacheGroup, *s.Fqdn, *s.HashId, *s.HttpsPort, *s.InterfaceName, *s.Ip, *s.Ip6, *s.Port, *s.Profile, s.RoutingDisabled, *s.ServerStatus, *s.ServerType, s.ID)
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetAllServers(t *testing.T) {
@@ -195,7 +197,7 @@ func TestGetAllServers(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getAllServers(cdn, tx)
+	actual, err := getAllServers(tx, cdn, true)
 
 	if err != nil {
 		t.Fatalf("getAllServers expected: nil error, actual: %v", err)
@@ -217,21 +219,21 @@ func TestGetAllServers(t *testing.T) {
 	}
 }
 
-func ExpectedGetServerDSNames() map[tc.CacheName][]tc.DeliveryServiceName {
-	return map[tc.CacheName][]tc.DeliveryServiceName{
-		"cache0": []tc.DeliveryServiceName{"ds0", "ds1"},
-		"cache1": []tc.DeliveryServiceName{"ds0", "ds1"},
+func ExpectedGetServerDSNames() map[int][]int {
+	return map[int][]int{
+		0: []int{0, 1},
+		1: []int{0, 1},
 	}
 }
 
-func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[tc.CacheName][]tc.DeliveryServiceName, cdn string) {
-	rows := sqlmock.NewRows([]string{"host_name", "xml_id"})
+func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[int][]int, cdn string) {
+	rows := sqlmock.NewRows([]string{"server", "deliveryservice"})
 	for cache, dses := range expected {
 		for _, ds := range dses {
 			rows = rows.AddRow(cache, ds)
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetServerDSNames(t *testing.T) {
@@ -255,7 +257,7 @@ func TestGetServerDSNames(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getServerDSNames(cdn, tx)
+	actual, err := getServerDSNames(tx, cdn, true)
 
 	if err != nil {
 		t.Fatalf("getServerDSNames expected: nil error, actual: %v", err)
@@ -270,19 +272,19 @@ func TestGetServerDSNames(t *testing.T) {
 	}
 }
 
-func ExpectedGetServerDSes(expectedGetServerDSNames map[tc.CacheName][]tc.DeliveryServiceName) map[tc.CacheName]map[string][]string {
-	e := map[tc.CacheName]map[string][]string{}
+func ExpectedGetServerDSes(expectedGetServerDSNames map[int][]int) map[string]map[string][]string {
+	e := map[string]map[string][]string{}
 	for cache, dses := range expectedGetServerDSNames {
-		e[cache] = map[string][]string{}
+		e[strconv.Itoa(cache)] = map[string][]string{}
 		for _, ds := range dses {
-			e[cache][string(ds)] = []string{string(ds) + "regex0", string(ds) + "regex1"}
+			e[strconv.Itoa(cache)][strconv.Itoa(ds)] = []string{strconv.Itoa(ds) + "regex0", strconv.Itoa(ds) + "regex1"}
 		}
 	}
 	return e
 }
 
-func MockGetServerDSes(mock sqlmock.Sqlmock, expected map[tc.CacheName]map[string][]string, cdn string) {
-	rows := sqlmock.NewRows([]string{"ds", "ds_type", "routing_name", "pattern"})
+func MockGetServerDSes(mock sqlmock.Sqlmock, expected map[string]map[string][]string, cdn string) {
+	rows := sqlmock.NewRows([]string{"ds_id", "ds", "ds_type", "routing_name", "pattern"})
 	dsmap := map[string][]string{}
 	for _, dses := range expected {
 		for ds, patterns := range dses {
@@ -292,10 +294,11 @@ func MockGetServerDSes(mock sqlmock.Sqlmock, expected map[tc.CacheName]map[strin
 
 	for ds, patterns := range dsmap {
 		for _, pattern := range patterns {
-			rows = rows.AddRow(ds, "DNS", "", pattern)
+			id, _ := strconv.Atoi(ds)
+			rows = rows.AddRow(id, ds, "DNS", "", pattern)
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetServerDSes(t *testing.T) {
@@ -323,14 +326,24 @@ func TestGetServerDSes(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getServerDSes(cdn, tx, domain)
+	serverIDNames := map[int]string{0: "0", 1: "1"}
+	actual, err := getServerDSes(tx, cdn, domain, serverIDNames, true)
 
 	if err != nil {
 		t.Fatalf("getServerDSes expected: nil error, actual: %v", err)
 	}
 
 	if !reflect.DeepEqual(expected, actual) {
+
+		// for ek, ev := range expected {
+		// 	fmt.Printf("expected key %v val '"+ev+"' len "+len(ev), ek)
+		// }
+		// for ek, ev := range actual {
+		// 	fmt.Println("actual key '" + ek + "' len " + len(ek) + " val '" + ev + "' len " + len(ev))
+		// }
+
 		t.Errorf("getServerDSes expected: %v, actual: %v", expected, actual)
+		t.Errorf("getServerDSes types expected: %T, actual: %T", expected, actual)
 	}
 }
 
@@ -341,7 +354,7 @@ func ExpectedGetCDNInfo() (string, bool) {
 func MockGetCDNInfo(mock sqlmock.Sqlmock, expectedDomain string, expectedDNSSECEnabled bool, cdn string) {
 	rows := sqlmock.NewRows([]string{"domain_name", "dnssec_enabled"})
 	rows = rows.AddRow(expectedDomain, expectedDNSSECEnabled)
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetCDNInfo(t *testing.T) {
@@ -365,7 +378,7 @@ func TestGetCDNInfo(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actualDomain, actualDNSSECEnabled, err := getCDNInfo(cdn, tx)
+	actualDomain, actualDNSSECEnabled, _, err := getCDNInfo(tx, cdn, true)
 	if err != nil {
 		t.Fatalf("getCDNInfo expected: nil error, actual: %v", err)
 	}
@@ -385,7 +398,7 @@ func ExpectedGetCDNNameFromID() string {
 func MockGetCDNNameFromID(mock sqlmock.Sqlmock, expected string, cdnID int) {
 	rows := sqlmock.NewRows([]string{"name"})
 	rows = rows.AddRow(expected)
-	mock.ExpectQuery("select").WithArgs(cdnID).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdnID).WillReturnRows(rows)
 }
 
 func TestGetCDNNameFromID(t *testing.T) {

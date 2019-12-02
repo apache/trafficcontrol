@@ -29,34 +29,41 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// Make creates and returns the CRConfig from the database.
-func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReqHost bool, emulateOldPath bool) (*tc.CRConfig, error) {
+// Make creates and returns the CRConfig from the database, the snapshot time, and any error. If live, use latest data; otherwise, use the latest data up to the snapshot times.
+// If live, the returned snapshot time will be now.
+// Returns the CRConfig, whether a snapshot existed in the database, and any error.
+// If live, existence is always true.
+func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReqHost bool, emulateOldPath bool, live bool) (*tc.CRConfig, bool, error) {
 	crc := tc.CRConfig{}
 	err := error(nil)
 
-	cdnDomain, dnssecEnabled, err := getCDNInfo(cdn, tx)
+	cdnDomain, dnssecEnabled, snapshotExists, err := getCDNSnapshotInfo(tx, cdn, live)
 	if err != nil {
-		return nil, errors.New("Error getting CDN info: " + err.Error())
+		return nil, false, errors.New("Error getting CDN info: " + err.Error())
 	}
 
-	if crc.Config, err = makeCRConfigConfig(cdn, tx, dnssecEnabled, cdnDomain); err != nil {
-		return nil, errors.New("Error getting Config: " + err.Error())
+	if !snapshotExists {
+		return nil, false, nil
 	}
 
-	if crc.ContentServers, crc.ContentRouters, crc.Monitors, err = makeCRConfigServers(cdn, tx, cdnDomain); err != nil {
-		return nil, errors.New("Error getting Servers: " + err.Error())
+	if crc.Config, err = makeCRConfigConfig(tx, cdn, dnssecEnabled, cdnDomain, live); err != nil {
+		return nil, false, errors.New("Error getting Config: " + err.Error())
 	}
-	if crc.EdgeLocations, crc.RouterLocations, err = makeLocations(cdn, tx); err != nil {
-		return nil, errors.New("Error getting Edge Locations: " + err.Error())
+
+	if crc.ContentServers, crc.ContentRouters, crc.Monitors, err = makeCRConfigServers(tx, cdn, cdnDomain, live); err != nil {
+		return nil, false, errors.New("Error getting Servers: " + err.Error())
 	}
-	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, tx); err != nil {
-		return nil, errors.New("Error getting Delivery Services: " + err.Error())
+	if crc.EdgeLocations, crc.RouterLocations, err = makeLocations(tx, cdn, live); err != nil {
+		return nil, false, errors.New("Error getting Edge Locations: " + err.Error())
+	}
+	if crc.DeliveryServices, err = makeDSes(tx, cdn, cdnDomain, live); err != nil {
+		return nil, false, errors.New("Error getting Delivery Services: " + err.Error())
 	}
 
 	if !useClientReqHost {
 		paramTMURL, ok, err := getGlobalParam(tx, "tm.url")
 		if err != nil {
-			return nil, errors.New("getting global 'tm.url' parameter: " + err.Error())
+			return nil, false, errors.New("getting global 'tm.url' parameter: " + err.Error())
 		}
 		if !ok {
 			log.Warnln("Making CRConfig: no global tm.url parameter found! Using request host header instead!")
@@ -69,7 +76,7 @@ func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string, useClientReq
 	}
 
 	crc.Stats = makeStats(cdn, user, toHost, reqPath, toVersion)
-	return &crc, nil
+	return &crc, true, nil
 }
 
 // getTMURLHost returns the FQDN from a tm.url global parameter, which should be either an FQDN or a Hostname.

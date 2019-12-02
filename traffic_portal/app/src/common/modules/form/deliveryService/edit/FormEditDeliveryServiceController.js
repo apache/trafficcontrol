@@ -154,6 +154,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 		isNew: false,
 		isRequest: false,
 		saveLabel: 'Update',
+		snapshotLabel: 'Apply',
 		deleteLabel: 'Delete'
 	};
 
@@ -227,6 +228,20 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, type, 
 					}
 				);
 		}
+	};
+
+	$scope.snapshot = function(deliveryService) {
+		deliveryServiceService.snapshotDeliveryService(deliveryService).
+			then(
+				function() {
+					$state.reload(); // reloads all the resolves for the view
+					messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] applied' } ], false);
+				},
+				function(fault) {
+					$anchorScroll(); // scrolls window to top
+					messageModel.setMessages(fault.data.alerts, false);
+				}
+			);
 	};
 
 	$scope.confirmDelete = function(deliveryService) {

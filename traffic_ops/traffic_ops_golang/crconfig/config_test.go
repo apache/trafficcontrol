@@ -44,7 +44,7 @@ func MockGetConfigParams(mock sqlmock.Sqlmock, expected []CRConfigConfigParamete
 		v := param.Value
 		rows = rows.AddRow(n, v)
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetConfigParams(t *testing.T) {
@@ -68,7 +68,7 @@ func TestGetConfigParams(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getConfigParams(cdn, tx)
+	actual, err := getConfigParams(tx, cdn, true)
 	if err != nil {
 		t.Fatalf("getConfigParams err expected: nil, actual: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestMakeCRConfigConfig(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := makeCRConfigConfig(cdn, tx, dnssecEnabled, domain)
+	actual, err := makeCRConfigConfig(tx, cdn, dnssecEnabled, domain, true)
 
 	if err != nil {
 		t.Fatalf("makeCRConfigConfig err expected: nil, actual: %v", err)
