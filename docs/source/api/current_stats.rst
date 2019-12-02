@@ -69,22 +69,24 @@ Response Structure
 	Date: Thu, 14 Nov 2019 15:35:31 GMT
 	Content-Length: 138
 
-	{"response": [
-		{
-			"bandwidth": null,
-			"capacity": null,
-			"cdn": "ALL",
-			"connections": null
-		},
-		{
-			"bandwidth": 0.000104,
-			"capacity": 17,
-			"cdn": "CDN-in-a-Box",
-			"connections": 4
-		},
-		{
-			"bandwidth": 0.000104,
-			"cdn": "total",
-			"connections": 4
-		}
-	]}
+	{"response": {
+	    "currentStats": [
+			{
+				"bandwidth": null,
+				"capacity": null,
+				"cdn": "ALL",
+				"connections": null
+			},
+			{
+				"bandwidth": 0.000104,
+				"capacity": 17,
+				"cdn": "CDN-in-a-Box",
+				"connections": 4
+			},
+			{
+				"bandwidth": 0.000104,
+				"cdn": "total",
+				"connections": 4
+			}
+		]
+	}}
