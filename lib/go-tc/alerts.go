@@ -28,15 +28,23 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
+// Alert represents an informational message, typically returned through the Traffic Ops API.
 type Alert struct {
-	Text  string `json:"text"`
+	// Text is the actual message being conveyed.
+	Text string `json:"text"`
+	// Level describes what kind of message is being relayed. In practice, it should be the string
+	// representation of one of ErrorLevel, WarningLevel, InfoLevel or SuccessLevel.
 	Level string `json:"level"`
 }
 
+// Alerts is merely a collection of arbitrary "Alert"s for ease of use in other structures, most
+// notably those used in Traffic Ops API responses.
 type Alerts struct {
 	Alerts []Alert `json:"alerts"`
 }
 
+// CreateErrorAlerts creates and returns an Alerts structure filled with ErrorLevel-level "Alert"s
+// using the errors to provide text.
 func CreateErrorAlerts(errs ...error) Alerts {
 	alerts := []Alert{}
 	for _, err := range errs {
@@ -47,6 +55,8 @@ func CreateErrorAlerts(errs ...error) Alerts {
 	return Alerts{alerts}
 }
 
+// CreateAlerts creates and returns an Alerts structure filled with "Alert"s that are all of the
+// provided level, each having one of messages as text in turn.
 func CreateAlerts(level AlertLevel, messages ...string) Alerts {
 	alerts := []Alert{}
 	for _, message := range messages {
@@ -55,6 +65,12 @@ func CreateAlerts(level AlertLevel, messages ...string) Alerts {
 	return Alerts{alerts}
 }
 
+// GetHandleErrorsFunc is used to provide an error-handling function. The error handler provides a
+// response to an HTTP request made to the Traffic Ops API and accepts a response code and a set of
+// errors to display as alerts.
+//
+// Deprecated: Traffic Ops API handlers should use
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.HandleErr instead.
 func GetHandleErrorsFunc(w http.ResponseWriter, r *http.Request) func(status int, errs ...error) {
 	return func(status int, errs ...error) {
 		log.Errorf("%v %v\n", r.RemoteAddr, errs)
@@ -75,6 +91,8 @@ func GetHandleErrorsFunc(w http.ResponseWriter, r *http.Request) func(status int
 	}
 }
 
+// ToStrings converts Alerts to a slice of strings that are their messages. Note that this return
+// value doesn't contain their Levels anywhere.
 func (alerts *Alerts) ToStrings() []string {
 	alertStrs := []string{}
 	for _, alrt := range alerts.Alerts {
@@ -82,6 +100,25 @@ func (alerts *Alerts) ToStrings() []string {
 		alertStrs = append(alertStrs, at)
 	}
 	return alertStrs
+}
+
+// AddNewAlert constructs a new Alert with the given Level and Text and appends it to the Alerts
+// structure.
+func (self *Alerts) AddNewAlert(level AlertLevel, text string) {
+	self.AddAlert(Alert{Level: level.String(), Text: text})
+}
+
+// AddAlert appends an alert to the Alerts structure.
+func (self *Alerts) AddAlert(alert Alert) {
+	self.Alerts = append(self.Alerts, alert)
+}
+
+// AddAlerts appends all of the "Alert"s in the given Alerts structure to this Alerts structure.
+func (self *Alerts) AddAlerts(alerts Alerts) {
+	newAlerts := make([]Alert, len(self.Alerts), len(self.Alerts)+len(alerts.Alerts))
+	copy(newAlerts, self.Alerts)
+	newAlerts = append(newAlerts, alerts.Alerts...)
+	self.Alerts = newAlerts
 }
 
 var StatusKey = "status"

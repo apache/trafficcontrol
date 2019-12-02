@@ -112,7 +112,7 @@ func CreateTestDeliveryServiceServers(t *testing.T) {
 // DeleteTestDeliveryServiceServersCreated deletes the dss assignments created by CreateTestDeliveryServiceServers.
 func DeleteTestDeliveryServiceServersCreated(t *testing.T) {
 	// You gotta do this because TOSession.GetDeliveryServiceServers doesn't fetch the complete response.......
-	dssLen := len(testData.Servers)*len(testData.DeliveryServices)
+	dssLen := len(testData.Servers) * len(testData.DeliveryServices)
 	dsServers, _, err := TOSession.GetDeliveryServiceServersN(dssLen)
 	if err != nil {
 		t.Fatalf("GET delivery service servers: %v", err)
