@@ -128,8 +128,13 @@ func GetCurrentStats(w http.ResponseWriter, r *http.Request) {
 		*totalStats.Bandwidth /= 1000000
 	}
 	currentStats = append(currentStats, totalStats)
+	resp := struct {
+		CurrentStats []interface{} `json:"currentStats"`
+	}{
+		CurrentStats: currentStats,
+	}
 
-	api.WriteResp(w, r, currentStats)
+	api.WriteResp(w, r, resp)
 }
 
 func getCDNStat(client *influx.Client, cdnName, metricName, db string) (*float64, error) {

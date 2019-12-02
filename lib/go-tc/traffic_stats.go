@@ -289,5 +289,10 @@ type TrafficStatsTotalStats struct {
 
 // TrafficStatsCDNStatsResponse contains response for getting current stats
 type TrafficStatsCDNStatsResponse struct {
-	Response []TrafficStatsCDNStats `json:"response"`
+	Response []TrafficStatsCDNsStats `json:"response"`
+}
+
+// TrafficStatsCDNsStats contains a list of CDN summary statistics
+type TrafficStatsCDNsStats struct {
+	Stats []TrafficStatsCDNStats `json:"currentStats"`
 }
