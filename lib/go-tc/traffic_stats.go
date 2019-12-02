@@ -270,3 +270,29 @@ func MessagesToString(msgs []influx.Message) string {
 	b.WriteRune(']')
 	return b.String()
 }
+
+// TrafficStatsCDNStats contains summary statistics for a given CDN
+type TrafficStatsCDNStats struct {
+	Bandwidth    *float64 `json:"bandwidth"`
+	Capacity     *float64 `json:"capacity"`
+	CDN          string   `json:"cdn"`
+	Connnections *float64 `json:"connections"`
+}
+
+// TrafficStatsTotalStats contains summary statistics across CDNs
+// Different then TrafficStatsCDNStats as it omits Capacity
+type TrafficStatsTotalStats struct {
+	Bandwidth    *float64 `json:"bandwidth"`
+	CDN          string   `json:"cdn"`
+	Connnections *float64 `json:"connections"`
+}
+
+// TrafficStatsCDNStatsResponse contains response for getting current stats
+type TrafficStatsCDNStatsResponse struct {
+	Response []TrafficStatsCDNsStats `json:"response"`
+}
+
+// TrafficStatsCDNsStats contains a list of CDN summary statistics
+type TrafficStatsCDNsStats struct {
+	Stats []TrafficStatsCDNStats `json:"currentStats"`
+}

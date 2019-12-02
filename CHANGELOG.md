@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/deliveryservices/request
   - /api/1.1/federations/:id/users
   - /api/1.1/federations/:id/users/:userID
+  - /api/1.2/current_stats
   - /api/1.1/osversions
 
 - To support reusing a single riak cluster connection, an optional parameter is added to riak.conf: "HealthCheckInterval". This options takes a 'Duration' value (ie: 10s, 5m) which affects how often the riak cluster is health checked.  Default is currently set to: "HealthCheckInterval": "5s".
