@@ -36,59 +36,67 @@ func GetTestRemapDotConfig(t *testing.T) {
 	dsServers, _, err := TOSession.GetDeliveryServiceServers()
 	if err != nil {
 		t.Fatalf("GET delivery service servers: %v", err)
-	} else if len(dsServers.Response) == 0 {
-		t.Fatal("GET delivery service servers: no servers found")
-	} else if dsServers.Response[0].Server == nil {
-		t.Fatal("GET delivery service servers: returned nil server")
-	} else if dsServers.Response[0].DeliveryService == nil {
-		t.Fatal("GET delivery service servers: returned nil ds")
 	}
-	serverID := *dsServers.Response[0].Server
+	if len(dsServers.Response) == 0 {
+		t.Fatal("GET delivery service servers: no servers found")
+	}
 
-	ds := (*tc.DeliveryService)(nil)
+	var ds *tc.DeliveryService
+	var serverID int
 	for _, dsServer := range dsServers.Response {
-		ds, _, err = TOSession.GetDeliveryService(strconv.Itoa(*dsServer.DeliveryService))
-		if err != nil {
-			t.Fatalf("Getting ds %+v: "+err.Error()+"\n", *dsServers.Response[0].DeliveryService)
-		} else if ds == nil {
-			t.Fatalf("Getting ds %+v: "+"got nil response"+"\n", *dsServers.Response[0].DeliveryService)
-		} else if ds.OrgServerFQDN == "" {
-			t.Fatalf("Getting ds %+v: "+"got empty ds.OrgServerFQDN"+"\n", *dsServers.Response[0].DeliveryService)
-		}
-		if ds.Type == tc.DSTypeAnyMap {
+		if dsServer.Server == nil {
+			t.Error("Found DS-Server assignment with nil server")
 			continue
 		}
-		break
+		if dsServer.DeliveryService == nil {
+			t.Error("Found DS-Server assignment with nil Delivery Service")
+			continue
+		}
+
+		serverID = *dsServer.Server
+
+		ds, _, err = TOSession.GetDeliveryService(strconv.Itoa(*dsServer.DeliveryService))
+		if err != nil {
+			t.Errorf("Getting ds %+v: %v", *dsServer.DeliveryService, err)
+			continue
+		}
+		if ds == nil {
+			t.Errorf("Getting ds %+v: got nil response", *dsServer.DeliveryService)
+			continue
+		}
+		if ds.OrgServerFQDN == "" {
+			t.Errorf("Getting ds %+v: got empty ds.OrgServerFQDN", *dsServer.DeliveryService)
+			continue
+		}
+
+		if ds.Type != tc.DSTypeAnyMap {
+			break
+		}
 	}
+
 	if ds == nil || ds.XMLID == "" {
 		t.Fatal("no Delivery Service found with assigned servers that isn't an ANY_MAP service, can't test remap.config")
 	}
 
 	originURI, err := url.Parse(ds.OrgServerFQDN)
 	if err != nil {
-		t.Fatalf("Getting ds %+v: "+" ds.OrgServerFQDN '%+v' failed to parse as a URL: %+v\n", *dsServers.Response[0].DeliveryService, ds.OrgServerFQDN, err)
+		t.Fatalf("Getting ds %+v: ds.OrgServerFQDN '%+v' failed to parse as a URL: %+v", ds.XMLID, ds.OrgServerFQDN, err)
 	}
 	originHost := originURI.Hostname()
 
 	remapDotConfig, _, err := TOSession.GetATSServerConfig(serverID, "remap.config")
 	if err != nil {
-		t.Fatalf("Getting server %+v config remap.config: "+err.Error()+"\n", serverID)
+		t.Fatalf("Getting server %+v config remap.config: %v", serverID, err)
 	}
 
 	if !strings.Contains(remapDotConfig, originHost) {
-		t.Errorf("expected: remap.config to contain delivery service origin FQDN '%+v' host '%+v', actual: '''%+v'''", ds.OrgServerFQDN, originHost, remapDotConfig)
+		t.Errorf("expected: remap.config to contain delivery service origin FQDN '%v' host '%v', actual:\n'''\n%v\n'''", ds.OrgServerFQDN, originHost, remapDotConfig)
 	}
 
 	remapDotConfigLines := strings.Split(remapDotConfig, "\n")
 	for i, line := range remapDotConfigLines {
 		line = strings.TrimSpace(line)
-		if len(line) == 0 {
-			continue
-		}
-		if line[0] == '#' {
-			continue
-		}
-		if !strings.HasPrefix(line, "map") {
+		if len(line) > 0 && line[0] != '#' && !strings.HasPrefix(line, "map") {
 			t.Errorf("expected: remap.config line %v to start with 'map', actual: '%v'", i, line)
 		}
 	}

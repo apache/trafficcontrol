@@ -14,7 +14,6 @@ package v14
 	limitations under the License.
 */
 
-
 import (
 	"testing"
 
@@ -46,7 +45,6 @@ func AssignTestDeliveryService(t *testing.T) {
 	}
 	firstDS := rd[0]
 
-
 	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(firstServer.ID, []int{firstDS.ID}, true)
 	if err != nil {
 		t.Errorf("Couldn't assign DS '%+v' to server '%+v': %v (alerts: %v)", firstDS, firstServer, err, alerts)
@@ -60,7 +58,7 @@ func AssignTestDeliveryService(t *testing.T) {
 	}
 
 	var found bool
-	for _,ds := range response {
+	for _, ds := range response {
 		if ds.ID != nil && *ds.ID == firstDS.ID {
 			found = true
 			break
@@ -112,7 +110,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	}
 
 	var found bool
-	for _,ds := range response {
+	for _, ds := range response {
 
 		if ds.ID != nil && *ds.ID == firstDS.ID {
 			found = true

@@ -8,9 +8,9 @@ package dnssec
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,11 +19,10 @@ package dnssec
  * under the License.
  */
 
-
 import (
-. "github.com/miekg/dns"
-. "github.com/onsi/gomega"
-"log"
+	. "github.com/miekg/dns"
+	. "github.com/onsi/gomega"
+	"log"
 )
 
 type DnssecClient struct {
@@ -47,13 +46,13 @@ func MakeLabelHierarchy(label string) []string {
 	for !done {
 		label = label[i:]
 		labels = append([]string{label}, labels...)
-		i, done = NextLabel(label,i)
+		i, done = NextLabel(label, i)
 	}
 
 	return append([]string{"."}, labels...)
 }
 
-func (d *DnssecClient) GetRecords(nameserver string, name string, t uint16) (*Msg) {
+func (d *DnssecClient) GetRecords(nameserver string, name string, t uint16) *Msg {
 	m := new(Msg)
 	m.Id = Id()
 	m.RecursionDesired = true
@@ -72,7 +71,7 @@ func sigCovers(s RRSIG, rr RR) bool {
 		s.Hdr.Ttl == rr.Header().Ttl
 }
 
-func (d *DnssecClient) GetSignedRRSets(nameserver string, name string, t uint16) ([]SignedRRSet) {
+func (d *DnssecClient) GetSignedRRSets(nameserver string, name string, t uint16) []SignedRRSet {
 	records := []RR{}
 	rrsigs := []RR{}
 
@@ -107,12 +106,12 @@ func (d *DnssecClient) GetSignedRRSets(nameserver string, name string, t uint16)
 			}
 
 			for _, rr := range records {
-				if sigCovers(*s,rr) {
+				if sigCovers(*s, rr) {
 					signedSet.RRSet = append(signedSet.RRSet, rr)
 				} else {
 					log.Println("rrsig does not cover record")
-					log.Println(s.Header(),s.TypeCovered)
-					log.Println(rr.Header(),rr.Header().Rrtype)
+					log.Println(s.Header(), s.TypeCovered)
+					log.Println(rr.Header(), rr.Header().Rrtype)
 				}
 			}
 
@@ -124,7 +123,7 @@ func (d *DnssecClient) GetSignedRRSets(nameserver string, name string, t uint16)
 	return rrsets
 }
 
-func (d *DnssecClient) DelegationSignerData(nameserver string, name string) ([]SignedRRSet) {
+func (d *DnssecClient) DelegationSignerData(nameserver string, name string) []SignedRRSet {
 	return d.GetSignedRRSets(nameserver, name, TypeDS)
 }
 
@@ -139,13 +138,13 @@ func (d *DnssecClient) SigningData(nameserver string, name string) SignedKeys {
 	for _, signedRRset := range signedRrsets {
 		if len(signedRRset.RRSet) < 1 {
 			log.Println("****** no rrset")
-			continue;
+			continue
 		}
 
 		for _, rr := range signedRRset.RRSet {
 			switch k := rr.(type) {
 			case *DNSKEY:
-				if k.Flags & 1 == 1 {
+				if k.Flags&1 == 1 {
 					signedKeys.SignedKsks = append(signedKeys.SignedKsks, signedRRset)
 				} else {
 					signedKeys.SignedZsks = append(signedKeys.SignedZsks, signedRRset)
@@ -156,4 +155,3 @@ func (d *DnssecClient) SigningData(nameserver string, name string) SignedKeys {
 
 	return signedKeys
 }
-

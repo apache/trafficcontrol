@@ -17,17 +17,31 @@
  * under the License.
  */
 
-var DeliveryServiceUriSigningKeysService = function(Restangular) {
+var DeliveryServiceUriSigningKeysService = function($http, ENV) {
 
-	this.getKeys = function(id) {
-		return Restangular.one("deliveryservices", id).one("urisignkeys").get();
+	this.getKeys = function(xmlID) {
+		return $http.get(ENV.api['root'] + 'deliveryservices/' + xmlID + '/urisignkeys').then(
+			function(result) {
+				return result.data;
+			},
+			function(err) {
+				throw err;
+			}
+		);
 	};
 
-	this.setKeys = function(id, newKeys) {
-		return Restangular.one("deliveryservices", id).post("urisignkeys", newKeys);
+	this.setKeys = function(xmlID, newKeys) {
+		return $http.post(ENV.api['root'] + 'deliveryservices/' + xmlID + '/urisignkeys', newKeys).then(
+			function(result) {
+				return result.data;
+			},
+			function(err) {
+				throw err;
+			}
+		);
 	}
 
 };
 
-DeliveryServiceUriSigningKeysService.$inject = ['Restangular'];
+DeliveryServiceUriSigningKeysService.$inject = ['$http', 'ENV'];
 module.exports = DeliveryServiceUriSigningKeysService;

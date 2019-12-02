@@ -43,8 +43,8 @@ exports.config = {
 			'regions/regions-spec.js',
 			'physLocations/phys-locations-spec.js',
 			'serverCapabilities/server-capabilities-spec.js',
-			'deliveryServices/delivery-services-spec.js',
-			'servers/servers-spec.js'
+			'servers/servers-spec.js',
+			'deliveryServices/delivery-services-spec.js'
 		]
 	}
 };
