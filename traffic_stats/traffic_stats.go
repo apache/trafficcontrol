@@ -380,7 +380,7 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 			statsSummary.StatName = "daily_bytesserved"
 			statsSummary.StatValue = bytesServedTB
 			statsSummary.SummaryTime = time.Now()
-			statsSummary.StatDate = time.Now()
+			statsSummary.StatDate = startTime
 			go writeSummaryStats(config, statsSummary)
 			//write to Influxdb
 			tags := map[string]string{"cdn": cdn, "deliveryservice": "all"}
