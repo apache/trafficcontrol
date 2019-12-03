@@ -51,7 +51,7 @@ Response Structure
 :id:        The integral, unique identifier of this regular expression
 :pattern:   The actual regular expression - ``\``\ s are escaped
 :setNumber: The order in which the regular expression is evaluated against requests
-:type:      The integral, unique identifier of the type of this regular expression
+:type:      The integral, unique identifier of the :term:`Type` of this regular expression
 :typeName:  The :term:`Type` of regular expression - determines that against which it will be evaluated
 
 .. code-block:: http

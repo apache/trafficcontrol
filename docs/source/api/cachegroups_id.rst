@@ -49,42 +49,39 @@ Request Structure
 
 .. table:: Request Path Parameters
 
-	+--------------+---------------------------------------------------------------+
-	| Parameter    | Description                                                   |
-	+==============+===============================================================+
-	| ID           | The integral, unique identifier of a :term:`Cache Group`      |
-	+--------------+---------------------------------------------------------------+
+	+--------------+----------------------------------------------------+
+	| Parameter    | Description                                        |
+	+==============+====================================================+
+	| ID           | The :ref:`cache-group-id` of a :term:`Cache Group` |
+	+--------------+----------------------------------------------------+
 
 Response Structure
 ------------------
-:fallbacks: An array of :term:`Cache Group` names that are registered as "fallbacks" for use when this :term:`Cache Group` is unavailable\ [#fallbacks]_
+:fallbacks: An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
 
 	.. versionadded:: ATCv4.0
 
-		This field was added to all versions of this endpoint with Apache Traffic Control version 4.0
+		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
 
-:fallbackToClosest:   If ``true``, Traffic Router will direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable\ [#fallbacks]_
-:id:                  Integral, unique identifier for the :term:`Cache Group`
-:lastUpdated:         The date and time at which this :term:`Cache Group` was last updated, in an ISO-like format
-:latitude:            Latitude of the :term:`Cache Group`
-:localizationMethods: An array of strings that name the localization methods enabled for this :term:`Cache Group`. Each of the three available localization methods may be present, with the following meanings:
+:fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
+:id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
+:lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format
+:latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
+:localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 
-	CZ
-		Lookup in the Traffic Router's "Coverage Zone" file is enabled
-	DEEP_CZ
-		Lookup in the Traffic Router's "Deep Coverage Zone" file is enabled
-	GEO
-		Use of a geographical location-to-IP mapping database is enabled
+	.. versionadded:: ATCv4.0
 
-:longitude:                     Longitude of the :term:`Cache Group`
-:name:                          The name of the :term:`Cache Group`
-:parentCachegroupId:            Integral, unique identifier of the :term:`Cache Group` that is this :term:`Cache Group`'s parent
-:parentCachegroupName:          The name of the :term:`Cache Group` that is this :term:`Cache Group`'s parent
-:secondaryParentCachegroupId:   Integral, unique identifier of the :term:`Cache Group` that is this :term:`Cache Group`'s secondary parent
-:secondaryParentCachegroupName: The name of the :term:`Cache Group` that is this :term:`Cache Group`'s secondary parent
-:shortName:                     Abbreviation of the :term:`Cache Group` Name
-:typeId:                        The integral, unique identifier for the :term:`Type` of :term:`Cache Group`
-:typeName:                      The name of the :term:`type` of this :term:`Cache Group`
+		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
+
+:longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
+:name:                          A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
+:parentCachegroupId:            An integer that is the :ref:`cache-group-id` of this :term:`Cache Group`'s :ref:`cache-group-parent` - or ``null`` if it doesn't have a :ref:`cache-group-parent`
+:parentCachegroupName:          A string containing the :ref:`cache-group-name` of this :term:`Cache Group`'s :ref:`cache-group-parent` - or ``null`` if it doesn't have a :ref:`cache-group-parent`
+:secondaryParentCachegroupId:   An integer that is the :ref:`cache-group-id` of this :term:`Cache Group`'s :ref:`cache-group-secondary-parent` - or ``null`` if it doesn't have a :ref:`cache-group-secondary-parent`
+:secondaryParentCachegroupName: A string containing the :ref:`cache-group-name` of this :term:`Cache Group`'s :ref:`cache-group-secondary-parent` :term:`Cache Group` - or ``null`` if it doesn't have a :ref:`cache-group-secondary-parent`
+:shortName:                     A string containing the :ref:`cache-group-short-name` of the :term:`Cache Group`
+:typeId:                        An integral, unique identifier for the ':term:`Type`' of the :term:`Cache Group`
+:typeName:                      A string that names the :ref:`cache-group-type` of this :term:`Cache Group`
 
 .. note:: The default value of ``fallbackToClosest`` is 'true', and if it is 'null' Traffic Control components will still interpret it as 'true'.
 
@@ -139,40 +136,39 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+--------------+---------------------------------------------------------------+
-	| Parameter    | Description                                                   |
-	+==============+===============================================================+
-	| ID           | The integral, unique identifier of a :term:`Cache Group`      |
-	+--------------+---------------------------------------------------------------+
+	+-----------+----------------------------------------------------+
+	| Parameter | Description                                        |
+	+===========+====================================================+
+	| ID        | The :ref:`cache-group-id` of a :term:`Cache Group` |
+	+-----------+----------------------------------------------------+
 
-:fallbacks: An optional field which, when present, should contain an array of names of other :term:`Cache Groups` on which the Traffic Router will fall back in the event that this :term:`Cache Group` fails/becomes unavailable\ [#fallbacks]_
+:fallbacks: An optional field which, when present, should contain an array of strings that are the :ref:`Names <cache-group-name>` of other :term:`Cache Groups` which will be the :ref:`cache-group-fallbacks`\ [#fallbacks]_
 
 	.. versionadded:: ATCv4.0
 
-		Support for this field was added to all versions of this endpoint with Apache Traffic Control version 4.0
+		Support for this field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0.
 
-:fallbackToClosest: An optional field which, if present and ``true``, will cause Traffic Router to direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable\ [#fallbacks]_
+:fallbackToClosest: A boolean that sets the :ref:`cache-group-fallback-to-closest` behavior of the :term:`Cache Group`\ [#fallbacks]_
 
-	.. note:: The default value of ``fallbackToClosest`` is ``true``, and if it is ``null`` or ``undefined`` Traffic Control components will still interpret it as ``true``.
+	.. note:: The default value of ``fallbackToClosest`` is ``true``, and if it is ``null`` Traffic Control components will still interpret it as though it were ``true``.
 
-:latitude:            An optional field which, if specified, will set the latitude of the new :term:`Cache Group`\ [#optional]_
-:localizationMethods: An optional array of strings that name the localization methods enabled for this :term:`Cache Group`. Each of the three available localization methods may be present, with the following meanings:
+:latitude:                    An optional field which, if present, should be a floating-point number that will define the :ref:`cache-group-latitude` for the :term:`Cache Group`\ [#optional]_
+:localizationMethods:         Array of :ref:`cache-group-localization-methods` (as strings)
 
-	CZ
-		Lookup in the Traffic Router's "Coverage Zone" file will be enabled
-	DEEP_CZ
-		Lookup in the Traffic Router's "Deep Coverage Zone" file will be enabled
-	GEO
-		Use of a geographical location-to-IP mapping database will be enabled
+	.. versionadded:: ATCv4.0
 
-:longitude:                 An optional field which, if specified, will set the longitude of the new :term:`Cache Group`\ [#optional]_
-:name:                      The desired name of the :term:`Cache Group` entry
-:parentCachegroup:          An optional field which, if specified, should be the integral, unique identifier of :term:`Cache Group` to use as the new :term:`Cache Group`'s parent
-:secondaryParentCachegroup: An optional field which, if specified, should be the integral, unique identifier of :term:`Cache Group` to use as the new :term:`Cache Group`'s parent
-:shortName:                 A more human-friendly abbreviation of the :term:`Cache Group`'s name
-:typeId:                    The integral, unique identifier of the desired :term:`type` of the new :term:`Cache Group` - by default the valid options are: "EDGE_LOC", "MID_LOC" or "ORG_LOC"
+		Support for this field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0.
 
-	.. note:: Rather than the actual name of the :term:`type`, be sure to use the "database ID" of the desired :term:`type`. Typically this will require looking up the types via the API first, as the IDs of even these default types is not deterministic.
+	.. tip:: This field has no defined meaning if the :ref:`cache-group-type` identified by ``typeId`` is not "EDGE_LOC".
+
+:longitude:                   An optional field which, if present, should be a floating-point number that will define the :ref:`cache-group-longitude` for the :term:`Cache Group`\ [#optional]_
+:name:                        The :ref:`cache-group-name` of the :term:`Cache Group`
+:parentCachegroupId:          An optional field which, if present, should be an integer that is the :ref:`cache-group-id` of a :ref:`cache-group-parent` for this :term:`Cache Group`.
+:secondaryParentCachegroupId: An optional field which, if present, should be an integral, unique identifier for this :term:`Cache Group`'s secondary parent
+:shortName:                   An abbreviation of the ``name``
+:typeId:                      An integral, unique identifier for the :ref:`Cache Group's Type <cache-group-type>`
+
+	.. note:: The actual, integral, unique identifiers for these :term:`Types` must first be obtained, generally via :ref:`to-api-types`.
 
 .. code-block:: http
 	:caption: Request Example
@@ -198,34 +194,31 @@ Request Structure
 
 Response Structure
 ------------------
-:fallbacks: An array of :term:`Cache Group` names that are registered as "fallbacks" for use when this :term:`Cache Group` is unavailable\ [#fallbacks]_
+:fallbacks: An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
 
 	.. versionadded:: ATCv4.0
 
-		This field was added to all versions of this endpoint with Apache Traffic Control version 4.0
+		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
 
-:fallbackToClosest:   If ``true``, Traffic Router will direct clients to peers of this :term:`Cache Group` in the event that it becomes unavailable\ [#fallbacks]_
-:id:                  Integral, unique identifier for the :term:`Cache Group`
-:lastUpdated:         The date and time at which this :term:`Cache Group` was last updated, in an ISO-like format
-:latitude:            Latitude of the :term:`Cache Group`
-:localizationMethods: An array of strings that name the localization methods enabled for this :term:`Cache Group`. Each of the three available localization methods may be present, with the following meanings:
+:fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
+:id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
+:lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format
+:latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
+:localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 
-	CZ
-		Lookup in the Traffic Router's "Coverage Zone" file is enabled
-	DEEP_CZ
-		Lookup in the Traffic Router's "Deep Coverage Zone" file is enabled
-	GEO
-		Use of a geographical location-to-IP mapping database is enabled
+	.. versionadded:: ATCv4.0
 
-:longitude:                     Longitude of the :term:`Cache Group`
-:name:                          The name of the :term:`Cache Group`
-:parentCachegroupId:            Integral, unique identifier of the :term:`Cache Group` that is this :term:`Cache Group`'s parent
-:parentCachegroupName:          The name of the :term:`Cache Group` that is this :term:`Cache Group`'s parent
-:secondaryParentCachegroupId:   Integral, unique identifier of the :term:`Cache Group` that is this :term:`Cache Group`'s secondary parent
-:secondaryParentCachegroupName: The name of the :term:`Cache Group` that is this :term:`Cache Group`'s secondary parent
-:shortName:                     Abbreviation of the :term:`Cache Group` Name
-:typeId:                        The integral, unique identifier for the :term:`Type` of :term:`Cache Group`
-:typeName:                      The name of the :term:`Type` of this :term:`Cache Group`
+		This field was added to all versions of this endpoint with :abbr:`ATC (Apache Traffic Control)` version 4.0
+
+:longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
+:name:                          A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
+:parentCachegroupId:            An integer that is the :ref:`cache-group-id` of this :term:`Cache Group`'s :ref:`cache-group-parent` - or ``null`` if it doesn't have a :ref:`cache-group-parent`
+:parentCachegroupName:          A string containing the :ref:`cache-group-name` of this :term:`Cache Group`'s :ref:`cache-group-parent` - or ``null`` if it doesn't have a :ref:`cache-group-parent`
+:secondaryParentCachegroupId:   An integer that is the :ref:`cache-group-id` of this :term:`Cache Group`'s :ref:`cache-group-secondary-parent` - or ``null`` if it doesn't have a :ref:`cache-group-secondary-parent`
+:secondaryParentCachegroupName: A string containing the :ref:`cache-group-name` of this :term:`Cache Group`'s :ref:`cache-group-secondary-parent` :term:`Cache Group` - or ``null`` if it doesn't have a :ref:`cache-group-secondary-parent`
+:shortName:                     A string containing the :ref:`cache-group-short-name` of the :term:`Cache Group`
+:typeId:                        An integral, unique identifier for the ':term:`Type`' of the :term:`Cache Group`
+:typeName:                      A string that names the :ref:`cache-group-type` of this :term:`Cache Group`
 
 .. code-block:: http
 	:caption: Response Example
@@ -271,7 +264,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Delete :term:`Cache Group`. :term:`Cache Groups` which have assigned servers or child :term:`Cache Groups` cannot be deleted.
+Delete a :term:`Cache Group`. A :term:`Cache Group` which has assigned servers or is the :ref:`cache-group-parent` of one or more other :term:`Cache Groups` cannot be deleted.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -281,11 +274,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+--------------+------------------------------------------------------------------------+
-	| Parameter    | Description                                                            |
-	+==============+========================================================================+
-	| ID           | The integral, unique identifier of a :term:`Cache Group` to be deleted |
-	+--------------+------------------------------------------------------------------------+
+	+-----------+------------------------------------------------------------------+
+	| Parameter | Description                                                      |
+	+===========+==================================================================+
+	| ID        | The :ref:`cache-group-id` of a :term:`Cache Group` to be deleted |
+	+-----------+------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

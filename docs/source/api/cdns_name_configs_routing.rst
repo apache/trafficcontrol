@@ -18,7 +18,7 @@
 *********************************
 ``cdns/{{name}}/configs/routing``
 *********************************
-.. caution:: This API route is currently broken, see `GitHub issue #2941 <https://github.com/apache/trafficcontrol/issues/2941>`_ for more information.
+.. caution:: This API route is currently broken, see :issue:`2941` for more information.
 
 ``GET``
 =======
@@ -40,9 +40,9 @@ Request Structure
 
 Response Structure
 ------------------
-:cacheGroups: A collection of cache groups.
+:cacheGroups: A collection of objects that represent :term:`Cache Groups`.
 
-	:coordinates: object
+	:coordinates: An object that represents the geographic location of the :term:`Cache Group`
 
 		:latitude:  number
 		:longitude: number

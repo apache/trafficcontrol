@@ -21,10 +21,7 @@
 
 ``GET``
 =======
-.. deprecated:: 1.1
-	Use the  ``id`` query parameter of a ``GET`` request to :ref:`to-api-tenants` instead.
-
-Get a specific tenant.
+Get a specific :term:`Tenant`.
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -51,10 +48,10 @@ Request Structure
 
 Response Structure
 ------------------
-:active:      A boolean which indicates whether or not the tenant is active
-:id:          The integral, unique identifier of this tenant
-:name:        This tenant's name
-:parentId:    The integral, unique identifier of this tenant's parent
+:active:      A boolean which indicates whether or not the :term:`Tenant` is active
+:id:          The integral, unique identifier of this :term:`Tenant`
+:name:        This :term:`Tenant`'s name
+:parentId:    The integral, unique identifier of this :term:`Tenant`'s parent
 
 .. code-block:: http
 	:caption: Response Example

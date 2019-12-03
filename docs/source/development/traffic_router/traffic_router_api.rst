@@ -165,7 +165,7 @@ Request Structure
 
 Response Structure
 ------------------
-:locations: An array of the names of :term:`Cache Groups` to which this Traffic Router is capable of routing client traffic
+:locations: An array of strings that are the :ref:`Names of Cache Groups <cache-group-name>` to which this Traffic Router is capable of routing client traffic
 
 .. code-block:: http
 	:caption: Response Example
@@ -232,11 +232,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------------+------------------------------------------------------------------------------------------------------------+
-	| Name       | Description                                                                                                |
-	+============+============================================================================================================+
-	| cachegroup | The name of a :term:`Cache Group` of which a list of constituent :term:`cache servers` will be retrieved   |
-	+------------+------------------------------------------------------------------------------------------------------------+
+	+------------+------------------------------------------------------------------------------------------------------------------------------+
+	| Name       | Description                                                                                                                  |
+	+============+==============================================================================================================================+
+	| cachegroup | The :ref:`Name of a Cache Group <cache-group-name>` of which a list of constituent :term:`cache servers` will be retrieved   |
+	+------------+------------------------------------------------------------------------------------------------------------------------------+
 
 
 .. code-block:: http
@@ -428,13 +428,13 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
-	| Name              | Required | Description                                                                                                  |
-	+===================+==========+==============================================================================================================+
-	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router |
-	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
-	| cacheLocationId   | yes      | The name of a :term:`Cache Group` to which this Traffic Router is capable of routing client traffic          |
-	+-------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------+
+	| Name              | Required | Description                                                                                                                    |
+	+===================+==========+================================================================================================================================+
+	| deliveryServiceId | yes      | The integral, unique identifier?/'xml_id'?/name? of a :term:`Delivery Service` served by this Traffic Router                   |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------+
+	| cacheLocationId   | yes      | The :ref:`Name of a Cache Group <cache-group-name>` to which this Traffic Router is capable of routing client traffic          |
+	+-------------------+----------+--------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
@@ -462,7 +462,7 @@ TBD
 
 ``/crs/deepcoveragezone/cachelocation``
 =======================================
-The resulting :term:`Cache Group` using deep coverage zone file (deep caching) for a given client IP and :term:`Delivery Service`.
+The resulting :term:`Cache Group` using the :term:`Deep Coverage Zone File` (deep caching) for a given client IP and :term:`Delivery Service`.
 
 Request Structure
 -----------------

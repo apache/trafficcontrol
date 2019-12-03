@@ -35,7 +35,7 @@ Request Structure
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| Name            | Required | Description                                                                                                                                                       |
 	+=================+==========+===================================================================================================================================================================+
-	| cachegroup      | no       | Return only :term:`origins` within the :term:`Cache Group` identified by this integral, unique identifier                                                         |
+	| cachegroup      | no       | Return only :term:`origins` within the :term:`Cache Group` that has this :ref:`cache-group-id`                                                                    |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| coordinate      | no       | Return only :term:`origins` located at the geographic coordinates identified by this integral, unique identifier                                                  |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -78,11 +78,11 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:        The name of the :term:`Cache Group` to which the :term:`origin` belongs
-:cachegroupId:      An integral, unique identifier for the :term:`Cache Group` to which the :term:`origin` belongs
+:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`origin` belongs
+:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`origin` belongs
 :coordinate:        The name of a coordinate pair that defines the origin's geographic location
-:coordinateID:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
-:deliveryService:   The 'xml_id' of the :term:`Delivery Service` to which the :term:`origin` belongs
+:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
+:deliveryService:   A string that is the :ref:`ds-xmlid` of the :term:`Delivery Service` to which the :term:`origin` belongs
 :deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`origin` belongs
 :fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
 :id:                An integral, unique identifier for this :term:`origin`
@@ -149,8 +149,8 @@ Creates a new origin definition.
 
 Request Structure
 -----------------
-:cachegroupId:      An optional, integral, unique identifier that identifies a :term:`Cache Group` to which the new :term:`origin` shall belong
-:coordinateID:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`origin`'s geographic location
+:cachegroupId:      An optional, integer which, if present, should be the :ref:`Cache Group ID <cache-group-id>` that identifies a :term:`Cache Group` to which the new :term:`origin` shall belong
+:coordinateId:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`origin`'s geographic location
 :deliveryServiceId: The integral, unique identifier of the :term:`Delivery Service` to which the new :term:`origin` shall belong
 :fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
 :ip6Address:        An optional string containing the IPv6 address of the :term:`origin`
@@ -189,10 +189,10 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:        The name of the :term:`Cache Group` to which the :term:`origin` belongs
-:cachegroupId:      An integral, unique identifier for the :term:`Cache Group` to which the :term:`origin` belongs
+:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`origin` belongs
+:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`origin` belongs
 :coordinate:        The name of a coordinate pair that defines the origin's geographic location
-:coordinateID:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
+:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
 :deliveryService:   The 'xml_id' of the :term:`Delivery Service` to which the :term:`origin` belongs
 :deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`origin` belongs
 :fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
@@ -267,11 +267,11 @@ Request Structure
 	+------+----------+-------------------------------------------------------------------------------+
 	| Name | Required | Description                                                                   |
 	+======+==========+===============================================================================+
-	|  id  | yes      | The integral, unique identifier of the :term:`origin` definition being edited |
+	| id   | yes      | The integral, unique identifier of the :term:`origin` definition being edited |
 	+------+----------+-------------------------------------------------------------------------------+
 
-:cachegroupId:      An optional, integral, unique identifier that identifies a :term:`Cache Group` to which the :term:`origin` shall belong
-:coordinateID:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`origin`'s geographic location
+:cachegroupId:      An optional, integer which, if present, should be the :ref:`Cache Group ID <cache-group-id>` that identifies a :term:`Cache Group` to which the new :term:`origin` shall belong
+:coordinateId:      An optional, integral, unique identifier of a coordinate pair that shall define the :term:`origin`'s geographic location
 :deliveryServiceId: The integral, unique identifier of the :term:`Delivery Service` to which the :term:`origin` shall belong
 :fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`
 :ip6Address:        An optional string containing the IPv6 address of the :term:`origin`
@@ -307,10 +307,10 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:        The name of the :term:`Cache Group` to which the :term:`origin` belongs
-:cachegroupId:      An integral, unique identifier for the :term:`Cache Group` to which the :term:`origin` belongs
+:cachegroup:        A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the :term:`origin` belongs
+:cachegroupId:      An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the :term:`origin` belongs
 :coordinate:        The name of a coordinate pair that defines the origin's geographic location
-:coordinateID:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
+:coordinateId:      An integral, unique identifier for the coordinate pair that defines the :term:`origin`'s geographic location
 :deliveryService:   The 'xml_id' of the :term:`Delivery Service` to which the :term:`origin` belongs
 :deliveryServiceId: An integral, unique identifier for the :term:`Delivery Service` to which the :term:`origin` belongs
 :fqdn:              The :abbr:`FQDN (Fully Qualified Domain Name)` of the :term:`origin`

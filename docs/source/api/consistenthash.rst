@@ -30,7 +30,7 @@ Queries database for an active Traffic Router on a given CDN and sends GET reque
 
 Request Structure
 -----------------
-:regex:       The regex to apply to the request path to get a resulting path that will be used for consistent hashing
+:regex:       The regular expression to apply to the request path to get a resulting path that will be used for consistent hashing
 :requestPath: The request path to use to test the regular expression against
 :cdnId:       The unique identifier of a CDN that will be used to query for an active Traffic Router
 
