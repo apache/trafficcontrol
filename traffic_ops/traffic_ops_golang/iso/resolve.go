@@ -19,7 +19,7 @@ func readDefaultUnixResolve() ([]string, error) {
 	return parseResolve(fd)
 }
 
-// parseResolve parses r and expects a resolv.conf format.
+// parseResolve parses r as a resolv.conf formatted string.
 // It returns all the nameservers found in the file. Any
 // formatting or other issues within the file itself are ignored,
 // only errors reading from r are returned.

@@ -10,53 +10,6 @@ import (
 	"strings"
 )
 
-// configWriter is a helper type to create config files
-// of format:
-//   OPT="VALUE"
-//   OPT="VALUE"
-type configWriter struct {
-	b    bytes.Buffer
-	line int
-}
-
-// addOpt adds an option to the config.
-func (c *configWriter) addOpt(name, value string) {
-	if c.line > 0 {
-		fmt.Fprintln(&c.b)
-	}
-	c.line++
-	fmt.Fprintf(&c.b, "%s=%q", name, value)
-}
-
-// addIP adds an IP option to the config. It handles the
-// case where the given IP is empty/nil.
-func (c *configWriter) addIP(name string, ip net.IP) {
-	// Avoid using `<nil>`, i.e. net.IP{}.String() = <nil>
-	var v string
-	if len(ip) > 0 {
-		v = ip.String()
-	}
-	c.addOpt(name, v)
-}
-
-// addBoolStr adds a BoolStr option to the config, using
-// "yes" / "no" values.
-func (c *configWriter) addBoolStr(name string, b boolStr) {
-	var v string
-	if b.val {
-		v = "yes"
-	} else {
-		v = "no"
-	}
-	c.addOpt(name, v)
-}
-
-// Read satisfies the io.Reader interface, and allows for
-// using the configWriter by the io.Copy() function.
-func (c *configWriter) Read(p []byte) (int, error) {
-	return c.b.Read(p)
-}
-
 // bondedRegex matches a bonded device interface name.
 var bondedRegex = regexp.MustCompile(`^bond\d+`)
 
@@ -120,4 +73,68 @@ func writeDiskCfg(w io.Writer, r isoRequest) error {
 
 	_, err := io.Copy(w, &cfg)
 	return err
+}
+
+// writePasswordCfg writes the password.cfg config to w.
+// The salt parameter is optional. If salt is blank, then a
+// random 8-character salt will be used.
+func writePasswordCfg(w io.Writer, r isoRequest, salt string) error {
+	if salt == "" {
+		salt = rndSalt(8)
+	}
+
+	cryptedPw, err := crypt(r.RootPass, salt)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(w, "rootpw --iscrypted %s\n", cryptedPw)
+	return err
+}
+
+// configWriter is a helper type to create config files
+// of format:
+//   OPT="VALUE"
+//   OPT="VALUE"
+type configWriter struct {
+	b    bytes.Buffer
+	line int
+}
+
+// addOpt adds an option to the config.
+func (c *configWriter) addOpt(name, value string) {
+	if c.line > 0 {
+		fmt.Fprintln(&c.b)
+	}
+	c.line++
+	fmt.Fprintf(&c.b, "%s=%q", name, value)
+}
+
+// addIP adds an IP option to the config. It handles the
+// case where the given IP is empty/nil.
+func (c *configWriter) addIP(name string, ip net.IP) {
+	// Avoid using `<nil>`, i.e. net.IP{}.String() = <nil>
+	var v string
+	if len(ip) > 0 {
+		v = ip.String()
+	}
+	c.addOpt(name, v)
+}
+
+// addBoolStr adds a BoolStr option to the config, using
+// "yes" / "no" values.
+func (c *configWriter) addBoolStr(name string, b boolStr) {
+	var v string
+	if b.val {
+		v = "yes"
+	} else {
+		v = "no"
+	}
+	c.addOpt(name, v)
+}
+
+// Read satisfies the io.Reader interface, and allows for
+// using the configWriter by the io.Copy() function.
+func (c *configWriter) Read(p []byte) (int, error) {
+	return c.b.Read(p)
 }

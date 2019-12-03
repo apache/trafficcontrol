@@ -260,3 +260,96 @@ boot_drives="sda1"
 		})
 	}
 }
+
+func TestWritePasswordCfg(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    isoRequest
+		salt     string
+		expected string
+	}{
+		{
+			"empty",
+			isoRequest{},
+			"salt",
+			"rootpw --iscrypted $1$salt$UsdFqFVB.FsuinRDK5eE..\n",
+		},
+
+		{
+			"non-empty",
+			isoRequest{
+				RootPass: "Traffic Ops",
+			},
+			"salt",
+			"rootpw --iscrypted $1$salt$17HeaymOIi.65dl76MkK01\n",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			var w bytes.Buffer
+			if err := writePasswordCfg(&w, tc.input, tc.salt); err != nil {
+				t.Fatalf("writePasswordCfg() err = %v", err)
+			}
+			got := w.String()
+
+			if got != tc.expected {
+				t.Fatalf("writePasswordCfg() got != expected\n got:\n%s\n expected:\n%s", got, tc.expected)
+			}
+			t.Logf("writePasswordCfg():\n%q", got)
+		})
+	}
+}
+
+func TestWritePasswordCfg_rndSalt(t *testing.T) {
+	cases := []struct {
+		name  string
+		input isoRequest
+	}{
+		{
+			"empty",
+			isoRequest{},
+		},
+
+		{
+			"non-empty",
+			isoRequest{
+				RootPass: "Traffic Ops",
+			},
+		},
+		{
+			"long",
+			isoRequest{
+				RootPass: "this is a long password made longer even now",
+			},
+		},
+	}
+
+	const (
+		expectedPrefix = "rootpw --iscrypted $1$"
+		expectedPWLen  = 32
+	)
+
+	// Ensure use of random salt generates correct looking passwords.
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			var w bytes.Buffer
+			if err := writePasswordCfg(&w, tc.input, ""); err != nil {
+				t.Fatalf("writePasswordCfg() err = %v", err)
+			}
+			got := w.String()
+
+			if !strings.HasPrefix(got, expectedPrefix) {
+				t.Fatalf("writePasswordCfg() got: %q\nexpected prefix of: %q", got, expectedPrefix)
+			}
+			if pwLen := len(got) - len(expectedPrefix); pwLen != expectedPWLen {
+				t.Fatalf("writePasswordCfg() got: %q with password length %d\nexpected password length of at least: %d", got, pwLen, expectedPWLen)
+			}
+
+			t.Logf("writePasswordCfg():\n%q", got)
+		})
+	}
+}
