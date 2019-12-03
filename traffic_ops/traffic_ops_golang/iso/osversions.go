@@ -87,6 +87,9 @@ const (
 	cfgDefaultDir   = "/var/www/files"  // default directory containing config file
 	cfgFilename     = "osversions.json" // the config file's name is constant, regardless of directory
 	cfgFilenamePerl = "osversions.cfg"  // config file name in the Perl version
+
+	// This is the directory we put the configuration files in for kickstart & scripts to process
+	ksCfgDir = "ks_scripts"
 )
 
 // osversionsCfgPath returns a path to the configuration file
