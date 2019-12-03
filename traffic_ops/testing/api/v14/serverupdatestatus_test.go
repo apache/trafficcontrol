@@ -95,47 +95,67 @@ func TestServerUpdateStatus(t *testing.T) {
 			t.Errorf("expected: server %s in different CDN than server with updated status to have no updates pending, actual: updates pending", edge2cdn1.HostName)
 		}
 
-		// update status of MID server to OFFLINE via ID
+		// update status of MID server to OFFLINE via status ID
 		status, _, err := TOSession.GetStatusByName("OFFLINE")
 		if err != nil {
 			t.Fatalf("cannot GET status by name: %v", err)
 		}
-		_, _, err = TOSession.UpdateServerStatus(mid1cdn1.ID, tc.ServerPutStatus{
-			Status:        util.JSONNameOrIDStr{ID: util.IntPtr(status[0].ID)},
-			OfflineReason: util.StrPtr("testing")})
+		_, _, err = TOSession.UpdateServerStatus(
+			mid1cdn1.ID,
+			tc.ServerPutStatus{
+				Status:        util.JSONNameOrIDStr{ID: util.IntPtr(status[0].ID)},
+				OfflineReason: util.StrPtr("testing"),
+			},
+		)
 		if err != nil {
 			t.Errorf("cannot update server status: %v", err)
 		}
 
 		// negative cases:
 		// server doesn't exist
-		_, _, err = TOSession.UpdateServerStatus(-1, tc.ServerPutStatus{
-			Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
-			OfflineReason: util.StrPtr("testing")})
+		_, _, err = TOSession.UpdateServerStatus(
+			-1,
+			tc.ServerPutStatus{
+				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
+				OfflineReason: util.StrPtr("testing"),
+			},
+		)
 		if err == nil {
 			t.Error("update server status exected: err, actual: nil")
 		}
 
 		// status does not exist
-		_, _, err = TOSession.UpdateServerStatus(-1, tc.ServerPutStatus{
-			Status:        util.JSONNameOrIDStr{Name: util.StrPtr("NOT_A_REAL_STATUS")},
-			OfflineReason: util.StrPtr("testing")})
+		_, _, err = TOSession.UpdateServerStatus(
+			mid1cdn1.ID,
+			tc.ServerPutStatus{
+				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("NOT_A_REAL_STATUS")},
+				OfflineReason: util.StrPtr("testing"),
+			},
+		)
 		if err == nil {
 			t.Error("update server status exected: err, actual: nil")
 		}
 
 		// offlineReason required for OFFLINE status
-		_, _, err = TOSession.UpdateServerStatus(-1, tc.ServerPutStatus{
-			Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
-			OfflineReason: nil})
+		_, _, err = TOSession.UpdateServerStatus(
+			mid1cdn1.ID,
+			tc.ServerPutStatus{
+				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
+				OfflineReason: nil,
+			},
+		)
 		if err == nil {
 			t.Error("update server status exected: err, actual: nil")
 		}
 
 		// offlineReason required for ADMIN_DOWN status
-		_, _, err = TOSession.UpdateServerStatus(-1, tc.ServerPutStatus{
-			Status:        util.JSONNameOrIDStr{Name: util.StrPtr("ADMIN_DOWN")},
-			OfflineReason: nil})
+		_, _, err = TOSession.UpdateServerStatus(
+			mid1cdn1.ID,
+			tc.ServerPutStatus{
+				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("ADMIN_DOWN")},
+				OfflineReason: nil,
+			},
+		)
 		if err == nil {
 			t.Error("update server status exected: err, actual: nil")
 		}
