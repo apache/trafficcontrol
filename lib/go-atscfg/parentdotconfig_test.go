@@ -238,3 +238,89 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
+	atsMajorVer := 7
+	serverName := "myserver"
+	toolName := "myToolName"
+	toURL := "https://myto.example.net"
+
+	parentConfigDSes := []ParentConfigDSTopLevel{
+		ParentConfigDSTopLevel{
+			ParentConfigDS: ParentConfigDS{
+				Name:            "ds0",
+				QStringIgnore:   tc.QStringIgnoreUseInCacheKeyAndPassUp,
+				OriginFQDN:      "http://ds0.example.net",
+				MultiSiteOrigin: true,
+				Type:            tc.DSTypeHTTP,
+				QStringHandling: "ds0qstringhandling",
+			},
+			MSOAlgorithm: ParentConfigDSParamDefaultMSOAlgorithm,
+		},
+	}
+
+	serverInfo := &ServerInfo{
+		CacheGroupID:                  42,
+		CDN:                           "myCDN",
+		CDNID:                         43,
+		DomainName:                    "serverdomain.example.net",
+		HostName:                      "myserver",
+		ID:                            44,
+		IP:                            "192.168.2.1",
+		ParentCacheGroupID:            InvalidID,
+		ParentCacheGroupType:          "myParentCGType",
+		ProfileID:                     46,
+		ProfileName:                   "MyProfileName",
+		Port:                          80,
+		SecondaryParentCacheGroupID:   InvalidID,
+		SecondaryParentCacheGroupType: "MySecondaryParentCGType",
+		Type:                          "EDGE",
+	}
+
+	serverParams := map[string]string{
+		ParentConfigParamQStringHandling: "myQStringHandlingParam",
+		ParentConfigParamAlgorithm:       tc.AlgorithmConsistentHash,
+		ParentConfigParamQString:         "myQstringParam",
+	}
+
+	parentInfos := map[OriginHost][]ParentInfo{
+		"ds0.example.net": []ParentInfo{
+			ParentInfo{
+				Host:            "my-parent-0",
+				Port:            80,
+				Domain:          "my-parent-0-domain",
+				Weight:          "1",
+				UseIP:           false,
+				Rank:            1,
+				IP:              "192.168.2.2",
+				PrimaryParent:   true,
+				SecondaryParent: false,
+			},
+			ParentInfo{
+				Host:            "my-parent-1",
+				Port:            80,
+				Domain:          "my-parent-1-domain",
+				Weight:          "1",
+				UseIP:           false,
+				Rank:            1,
+				IP:              "192.168.2.3",
+				PrimaryParent:   false,
+				SecondaryParent: true,
+			},
+		},
+	}
+
+	if !serverInfo.IsTopLevelCache() {
+		t.Fatal("server should have been top level, was not; cannot test MSO Secondary Parent")
+	}
+
+	txt := MakeParentDotConfig(serverInfo, atsMajorVer, toolName, toURL, parentConfigDSes, serverParams, parentInfos)
+
+	testComment(t, txt, serverName, toolName, toURL)
+
+	txt = strings.ReplaceAll(txt, " ", "")
+
+	if !strings.Contains(txt, `secondary_parent="my-parent-1.my-parent-1-domain`) {
+		t.Errorf("expected secondary parent 'my-parent-1.my-parent-1-domain', actual: '%v'", txt)
+	}
+}
