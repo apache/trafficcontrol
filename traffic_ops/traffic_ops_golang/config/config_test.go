@@ -111,6 +111,11 @@ const (
 		"read_header_timeout" : 60,
 		"write_timeout" : 60,
 		"idle_timeout" : 60,
+		"routing_blacklist": {
+			"ignore_unknown_routes": true,
+			"perl_routes": [1, 2, 3],
+			"disabled_routes": [4, 5, 6]
+		},
 		"log_location_error": "stderr",
 		"log_location_warning": "stdout",
 		"log_location_info": "stdout",
@@ -260,5 +265,77 @@ func TestLoadConfig(t *testing.T) {
 
 	if cfg.KeyPath != "/etc/pki/tls/private/localhost.key" {
 		t.Error("Expected KeyPath() == /etc/pki/tls/private/localhost.key")
+	}
+}
+
+func TestValidateRoutingBlacklist(t *testing.T) {
+	type testCase struct {
+		Input     RoutingBlacklist
+		ExpectErr bool
+	}
+	testCases := []testCase{
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     nil,
+				DisabledRoutes: nil,
+			},
+			ExpectErr: false,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{1, 2, 3},
+				DisabledRoutes: []int{4, 5, 6},
+			},
+			ExpectErr: false,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     nil,
+				DisabledRoutes: []int{4, 5, 6},
+			},
+			ExpectErr: false,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{4, 5, 6},
+				DisabledRoutes: nil,
+			},
+			ExpectErr: false,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{1, 1, 3},
+				DisabledRoutes: []int{2, 2, 4},
+			},
+			ExpectErr: true,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{1, 1, 3},
+				DisabledRoutes: []int{4, 5, 6},
+			},
+			ExpectErr: true,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{1, 2, 3},
+				DisabledRoutes: []int{4, 4, 6},
+			},
+			ExpectErr: true,
+		},
+		{
+			Input: RoutingBlacklist{
+				PerlRoutes:     []int{1, 2, 3},
+				DisabledRoutes: []int{1, 4, 5},
+			},
+			ExpectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		if err := ValidateRoutingBlacklist(tc.Input); err != nil && !tc.ExpectErr {
+			t.Errorf("Expected: no error, actual: %v", err)
+		} else if err == nil && tc.ExpectErr {
+			t.Errorf("Expected: non-nil error, actual: nil")
+		}
 	}
 }
