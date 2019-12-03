@@ -178,7 +178,7 @@ func TestRoutes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected: no error getting Routes, actual: %v", err)
 	}
-	// TODO: verify that all returned Routes are unique
+	// verify that all returned Routes are unique
 	for i := 0; i < len(routes); i++ {
 		for j := i + 1; j < len(routes); j++ {
 			if routes[i].Path == routes[j].Path && routes[i].Method == routes[j].Method && routes[i].Version == routes[j].Version {
