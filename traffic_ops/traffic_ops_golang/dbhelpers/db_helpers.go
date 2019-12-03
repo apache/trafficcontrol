@@ -85,9 +85,9 @@ SELECT u.id,
        t.name as tenant,
        u.last_updated
 FROM tm_user u
-WHERE u.email=$1
 LEFT JOIN tenant t ON u.tenant_id = t.id
 LEFT JOIN role r ON u.role = r.id
+WHERE u.email=$1
 `
 
 func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
