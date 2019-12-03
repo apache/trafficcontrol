@@ -145,7 +145,7 @@ Summary Stats
             "statValue": 1000,
             "summaryTime": "2019-11-19T00:04:06Z",
             "statDate": "2019-11-18T00:00:00Z"
-        },
+        }
     ]}
 
 Last Updated Summary Stat

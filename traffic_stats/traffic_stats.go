@@ -36,6 +36,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/traffic_ops/client"
 	log "github.com/cihub/seelog"
 	influx "github.com/influxdata/influxdb/client/v2"
@@ -502,7 +504,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		}
 	}
 
-	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated("daily_maxgbps")
+	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated(util.StrPtr("daily_maxgbps"))
 	if err != nil {
 		errHndlr(err, ERROR)
 	} else {

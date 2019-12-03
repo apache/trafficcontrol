@@ -2533,5 +2533,23 @@
             "startTime": "2100-06-19T13:57:51-06:00",
             "ttl": 2.1
         }
+    ],
+    "stats_summaries": [
+        {
+            "cdnName": "cdn1",
+            "deliveryServiceName": "all",
+            "statName": "daily_maxgbps",
+            "statValue": 5,
+            "summaryTime": "2019-01-01T00:00:00-06:00",
+            "statDate": "2019-01-01"
+        },
+        {
+            "cdnName": "cdn1",
+            "deliveryServiceName": "all",
+            "statName": "daily_bytesserved",
+            "statValue": 1000,
+            "summaryTime": "2019-01-01T00:00:00-06:00",
+            "statDate": "2019-01-01"
+        }
     ]
 }

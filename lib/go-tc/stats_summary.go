@@ -1,6 +1,9 @@
 package tc
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,6 +24,8 @@ import "time"
  * under the License.
  */
 
+const dateFormat = "2006-01-02"
+
 // StatsSummaryResponse ...
 type StatsSummaryResponse struct {
 	Response []StatsSummary `json:"response"`
@@ -35,6 +40,38 @@ type StatsSummary struct {
 	StatValue       float64   `json:"statValue"  db:"stat_value"`
 	SummaryTime     time.Time `json:"summaryTime"  db:"summary_time"`
 	StatDate        time.Time `json:"statDate"  db:"stat_date"`
+}
+
+// UnmarshalJSON Customized Unmarshal to force date format on statDate
+func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
+	type Alias StatsSummary
+	resp := struct {
+		StatDate string `json:"statDate"`
+		*Alias
+	}{
+		Alias: (*Alias)(ss),
+	}
+	err := json.Unmarshal(data, &resp)
+	if err != nil {
+		return err
+	}
+	ss.StatDate, err = time.Parse(dateFormat, resp.StatDate)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UnmarshalJSON Customized Marshal to force date format on statDate
+func (ss StatsSummary) MarshalJSON() ([]byte, error) {
+	type Alias StatsSummary
+	return json.Marshal(&struct {
+		StatDate string `json:"statDate"`
+		Alias
+	}{
+		StatDate: ss.StatDate.Format(dateFormat),
+		Alias:    (Alias)(ss),
+	})
 }
 
 // StatsSummaryLastUpdated ...
