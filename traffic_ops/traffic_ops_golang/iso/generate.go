@@ -162,7 +162,7 @@ func (i *isoRequest) validate() []string {
 			addErr("mgmtIpGateway is required when mgmtIpAddress is provided")
 		}
 	}
-	if i.DHCP.isSet && i.DHCP.val == false {
+	if i.DHCP.isSet && !i.DHCP.val {
 		if len(i.IPAddr) == 0 {
 			addErr("ipAddress is required if DHCP is no")
 		}
