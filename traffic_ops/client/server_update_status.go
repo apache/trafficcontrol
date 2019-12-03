@@ -18,33 +18,32 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const (
-	APIUpdateServerStatus = apiBase + "/servers/%d/status"
-)
-
 // UpdateServerStatus updates a server's status and returns the response.
 func (to *Session) UpdateServerStatus(serverID int, req tc.ServerPutStatus) (*tc.Alerts, ReqInf, error) {
-	var remoteAddr net.Addr
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss}
+
 	reqBody, err := json.Marshal(req)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
-	path := fmt.Sprintf(APIUpdateServerStatus, serverID)
+
+	path := fmt.Sprintf(apiBase+"/servers/%d/status", serverID)
 	resp, remoteAddr, err := to.request(http.MethodPut, path, reqBody)
+	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
+
 	alerts := tc.Alerts{}
 	if err = json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
 		return nil, reqInf, err
 	}
+
 	return &alerts, reqInf, nil
 }
