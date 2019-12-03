@@ -381,7 +381,7 @@ Glossary
 
 	Server Capability
 	Server Capabilities
-		A :dfn:`Server Capability` (not to be confused with a "Capability") expresses the capacity of a :term:`cache server` to serve a particular kind of traffic. For example, a :dfn:`Server Capability` could be created named "500GB" to be assigned to :term:`cache servers` with at least 500 GigaBytes of cache storage space. :dfn:`Server Capabilities` can also be required by :term:`Delivery Services`, which will prevent :term:`cache servers` without that :dfn:`Server Capability` from being assigned to them. It also prevents :term:`Mid-tier Cache Servers` without said :term:`Server Capability` from being selected to serve upstream requests from those :term:`Edge-tier Cache Servers` assigned to the requiring :term:`Delivery Services`.
+		A :dfn:`Server Capability` (not to be confused with a "Capability") expresses the capacity of a :term:`cache server` to serve a particular kind of traffic. For example, a :dfn:`Server Capability` could be created named "RAM" to be assigned to :term:`cache servers` that have RAM-disks allocated for content caching. :dfn:`Server Capabilities` can also be required by :term:`Delivery Services`, which will prevent :term:`cache servers` without that :dfn:`Server Capability` from being assigned to them. It also prevents :term:`Mid-tier Cache Servers` without said :term:`Server Capability` from being selected to serve upstream requests from those :term:`Edge-tier Cache Servers` assigned to the requiring :term:`Delivery Services`.
 
 	Snapshot
 	Snapshots
