@@ -20,74 +20,116 @@ package hwinfo
  */
 
 import (
-	"errors"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+
 	"github.com/jmoiron/sqlx"
 )
 
+const selectHWInfoQuery = `
+SELECT
+	s.host_name as serverhostname,
+	h.id,
+	h.serverid,
+	h.description,
+	h.val,
+	h.last_updated
+FROM hwinfo h
+JOIN server s ON s.id = h.serverid
+`
+
+// Get handles GET requests to /hwinfo
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(getHWInfo(inf.Tx, inf.Params))
+
+	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, and will be removed in the future")
+
+	// Mimic Perl behavior
+	if _, ok := inf.Params["limit"]; !ok {
+		inf.Params["limit"] = "1000"
+	}
+	limit, err := strconv.ParseUint(inf.Params["limit"], 10, 64)
+	if err != nil || limit == 0 {
+		alerts.AddNewAlert(tc.ErrorLevel, "'limit' parameter must be a positive integer")
+		api.WriteAlerts(w, r, http.StatusBadRequest, alerts)
+		return
+	}
+
+	hwInfo, err := getHWInfo(tx, inf.Params)
+	if err != nil {
+		log.Errorln(err.Error())
+		alerts.AddNewAlert(tc.ErrorLevel, http.StatusText(http.StatusInternalServerError))
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
+		return
+	}
+
+	resp := struct {
+		tc.Alerts
+		Response []tc.HWInfo `json:"response"`
+		Limit    uint64      `json:"limit"`
+	}{
+		Alerts:   alerts,
+		Response: hwInfo,
+		Limit:    limit,
+	}
+
+	var respBts []byte
+	if respBts, err = json.Marshal(resp); err != nil {
+		log.Errorf("Marshaling JSON: %v", err)
+		alerts.AddNewAlert(tc.ErrorLevel, http.StatusText(http.StatusInternalServerError))
+		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
+		return
+	}
+
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Write(append(respBts, '\n'))
 }
 
 func getHWInfo(tx *sqlx.Tx, params map[string]string) ([]tc.HWInfo, error) {
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
+
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
 		"id":             dbhelpers.WhereColumnInfo{"h.id", api.IsInt},
 		"serverHostName": dbhelpers.WhereColumnInfo{"s.host_name", nil},
-		"serverId":       dbhelpers.WhereColumnInfo{"s.id", api.IsInt}, // TODO: this can be either s.id or h.serverid not sure what makes the most sense
+		"serverId":       dbhelpers.WhereColumnInfo{"s.id", api.IsInt},
 		"description":    dbhelpers.WhereColumnInfo{"h.description", nil},
 		"val":            dbhelpers.WhereColumnInfo{"h.val", nil},
 		"lastUpdated":    dbhelpers.WhereColumnInfo{"h.last_updated", nil}, //TODO: this doesn't appear to work needs debugging
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, errors.New("getHWInfo building where clause: " + util.JoinErrsStr(errs))
+		return nil, fmt.Errorf("Building hwinfo query clauses: %v", util.JoinErrs(errs))
 	}
-	query := selectHWInfoQuery() + where + orderBy + pagination
-	log.Debugln("Query is ", query)
 
-	rows, err := tx.NamedQuery(query, queryValues)
+	rows, err := tx.NamedQuery(selectHWInfoQuery+where+orderBy+pagination, queryValues)
 	if err != nil {
-		return nil, errors.New("sqlx querying hwInfo: " + err.Error())
+		return nil, fmt.Errorf("querying hwinfo: %v", err)
 	}
 	defer rows.Close()
 
 	hwInfo := []tc.HWInfo{}
 	for rows.Next() {
-		s := tc.HWInfo{}
-		if err = rows.StructScan(&s); err != nil {
-			return nil, errors.New("sqlx scanning hwInfo: " + err.Error())
+		var info tc.HWInfo
+		if err = rows.StructScan(&info); err != nil {
+			return nil, fmt.Errorf("scanning hwinfo: %v", err)
 		}
-		hwInfo = append(hwInfo, s)
+
+		hwInfo = append(hwInfo, info)
 	}
+
 	return hwInfo, nil
-}
-
-func selectHWInfoQuery() string {
-
-	query := `SELECT
-	s.host_name as serverhostname,
-    h.id,
-    h.serverid,
-    h.description,
-    h.val,
-    h.last_updated
-
-FROM hwInfo h
-
-JOIN server s ON s.id = h.serverid`
-	return query
 }

@@ -100,6 +100,11 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 			var assigneeId = (assign) ? userModel.user.id : null;
 			deliveryServiceRequestService.assignDeliveryServiceRequest(request.id, assigneeId).then(function () {
 				$scope.refresh();
+				if (assign) {
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was assigned' } ], false);
+				} else {
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was unassigned' } ], false);
+				}
 			});
 		}, function () {
 			// do nothing
@@ -132,6 +137,7 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 			var status = (action.id == $scope.DRAFT) ? 'draft' : 'submitted';
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, status).then(function () {
 				$scope.refresh();
+				messageModel.setMessages([ { level: 'success', text: 'Delivery service request status was updated' } ], false);
 			});
 		}, function () {
 			// do nothing
@@ -169,6 +175,7 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'rejected').then(
 				function () {
 					$scope.refresh();
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request was rejected' } ], false);
 					createComment(request, 'Enter rejection reason...');
 				});
 		}, function () {
@@ -206,6 +213,7 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 		modalInstance.result.then(function () {
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'complete').then(function () {
 				$scope.refresh();
+				messageModel.setMessages([ { level: 'success', text: 'Delivery service request marked as complete' } ], false);
 				createComment(request, 'Enter comment...');
 			});
 		}, function () {
@@ -231,7 +239,7 @@ var TableDeliveryServicesRequestsController = function (dsRequests, $scope, $sta
 		});
 		modalInstance.result.then(function () {
 			deliveryServiceRequestService.deleteDeliveryServiceRequest(request.id).then(function () {
-				messageModel.setMessages([{level: 'success', text: 'Delivery service request deleted'}], false);
+				messageModel.setMessages([{level: 'success', text: 'Delivery service request was deleted'}], false);
 				$scope.refresh();
 			});
 		}, function () {

@@ -106,7 +106,7 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(respBts)
+	w.Write(append(respBts, '\n'))
 }
 
 // HandleErr handles an API error, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
@@ -148,7 +148,7 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 	log.Debugln(userErr.Error())
 	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, statusCode))
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
+	w.Write(append(respBts, '\n'))
 }
 
 // RespWriter is a helper to allow a one-line response, for endpoints with a function that returns the object that needs to be written and an error.
@@ -191,7 +191,7 @@ func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel,
 		return
 	}
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
+	w.Write(append(respBts, '\n'))
 }
 
 // WriteRespAlertObj Writes the given alert, and the given response object.
@@ -216,7 +216,48 @@ func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLev
 		return
 	}
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-	w.Write(respBts)
+	w.Write(append(respBts, '\n'))
+}
+
+func WriteAlerts(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts) {
+	if respWritten(r) {
+		log.Errorf("WriteAlerts called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	resp, err := json.Marshal(alerts)
+	if err != nil {
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
+		return
+	}
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.WriteHeader(code)
+	w.Write(append(resp, '\n'))
+}
+
+func WriteAlertsObj(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts, obj interface{}) {
+	if respWritten(r) {
+		log.Errorf("WriteAlertsObj called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	resp := struct {
+		tc.Alerts
+		Response interface{} `json:"response"`
+	}{
+		Alerts:   alerts,
+		Response: obj,
+	}
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
+		return
+	}
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.WriteHeader(code)
+	w.Write(append(respBts, '\n'))
 }
 
 // IntParams parses integer parameters, and returns map of the given params, or an error if any integer param is not an integer. The intParams may be nil if no integer parameters are required. Note this does not check existence; if an integer paramter is required, it should be included in the requiredParams given to NewInfo.

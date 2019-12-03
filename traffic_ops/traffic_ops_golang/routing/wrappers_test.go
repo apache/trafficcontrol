@@ -222,7 +222,7 @@ func TestWrapAuth(t *testing.T) {
 
 	f(w, r)
 
-	expectedError := `{"alerts":[{"text":"Unauthorized, please log in.","level":"error"}]}`
+	expectedError := `{"alerts":[{"text":"Unauthorized, please log in.","level":"error"}]}` + "\n"
 
 	if *debugLogging {
 		fmt.Printf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedError)

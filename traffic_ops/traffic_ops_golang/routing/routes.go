@@ -117,8 +117,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodDelete, `asns/{id}$`, api.DeleteHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, Authenticated, nil},
 
 		// Traffic Stats access
-		{1.2, http.MethodGet, `deliveryservice_stats`, trafficstats.GetDSStats, auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodGet, `cache_stats`, trafficstats.GetCacheStats, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `deliveryservice_stats/?(\.json)?$`, trafficstats.GetDSStats, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `cache_stats/?(\.json)?$`, trafficstats.GetCacheStats, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `current_stats/?(\.json)?$`, trafficstats.GetCurrentStats, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		{1.1, http.MethodGet, `caches/stats/?(\.json)?$`, cachesstats.Get, auth.PrivLevelReadOnly, Authenticated, nil},
 
@@ -185,7 +186,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `logs/newcount/?(\.json)?$`, logs.GetNewCount, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//HWInfo
-		{1.1, http.MethodGet, `hwinfo-wip/?(\.json)?$`, hwinfo.Get, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `hwinfo/?(\.json)?$`, hwinfo.Get, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Content invalidation jobs
 		{1.1, http.MethodGet, `jobs(/|\.json/?)?$`, api.ReadHandler(&invalidationjobs.InvalidationJob{}), auth.PrivLevelReadOnly, Authenticated, nil},

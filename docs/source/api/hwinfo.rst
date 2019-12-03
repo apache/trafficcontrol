@@ -51,16 +51,25 @@ Request Structure:
 	+----------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| sortOrder      | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
 	+----------------+----------+---------------------------------------------------------------------------------------------------------------+
-	| limit          | no       | Choose the maximum number of results to return                                                                |
+	| limit          | no       | Choose the maximum number of results to return. Default if not specified is 1000.                             |
 	+----------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| offset         | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
 	+----------------+----------+---------------------------------------------------------------------------------------------------------------+
 	| page           | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
-	|                |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
-	|                |          | defined to make use of ``page``.                                                                              |
+	|                |          | and the first page is 1. If ``offset`` was defined, this query parameter has no effect.                       |
 	+----------------+----------+---------------------------------------------------------------------------------------------------------------+
 
 .. caution:: The ``lastUpdated`` query parameter doesn't seem to work properly, and its use is therefore discouraged.
+
+.. code:: http
+	:caption: Request Example
+
+	GET /api/1.3/hwinfo HTTP/1.1
+	User-Agent: python-requests/2.22.0
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
@@ -70,21 +79,38 @@ Response Structure
 :serverId:       Local unique identifier for this specific server's hardware info
 :val:            Freeform value used to track anything about a server's hardware info
 
-.. code-block:: json
+Also, in addition to the regular ``response`` field and any and all ``alerts``, this endpoint returns an extra top-level JSON key: ``limit``.
+
+:limit: The number of results to which the result was limited. Should be exactly as specified in the `Request Structure`_.
+
+.. code-block:: http
 	:caption: Response Example
 
-	{ "response": [
-		{
-			"serverId": "odol-atsmid-cen-09",
-			"lastUpdated": "2014-05-27 09:06:02",
-			"val": "D1S4",
-			"description": "Physical Disk 0:1:0"
-		},
-		{
-			"serverId": "odol-atsmid-cen-09",
-			"lastUpdated": "2014-05-27 09:06:02",
-			"val": "D1S4",
-			"description": "Physical Disk 0:1:1"
-		}
-	]}
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Fri, 22 Nov 2019 20:28:07 GMT; Max-Age=3600; HttpOnly
+	X-Server-Name: traffic_ops_golang/
+	Date: Fri, 22 Nov 2019 19:28:07 GMT
+	Content-Length: 138
 
+	{ "alerts": [
+		{
+			"text": "This endpoint is deprecated, and will be removed in the future",
+			"level": "warning"
+		}
+	],
+	"response": [
+		{
+			"description": "quest",
+			"lastUpdated": "2019-11-22 19:31:26+00",
+			"serverHostName": "dns",
+			"serverId": 1,
+			"val": "test"
+		}
+	],
+	"limit": 1000
+	}

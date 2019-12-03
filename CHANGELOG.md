@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.1/deliveryservices/request
   - /api/1.1/federations/:id/users
   - /api/1.1/federations/:id/users/:userID
+  - /api/1.2/current_stats
   - /api/1.1/osversions
   - /api/1.1/stats_summary `GET`
 
