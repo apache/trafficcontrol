@@ -101,6 +101,7 @@ public class DeliveryService {
 	private final DeepCachingType deepCache;
 	private String consistentHashRegex;
 	private final Set<String> consistentHashQueryParams;
+	private boolean ecsEnabled;
 
 	public enum DeepCachingType {
 		NEVER,
@@ -129,6 +130,7 @@ public class DeliveryService {
 		this.domains = dsJo.get("domains");
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
+		this.ecsEnabled = JsonUtils.optBoolean(dsJo, "ecsEnabled");
 
 		this.consistentHashQueryParams = new HashSet<String>();
 		if (dsJo.has("consistentHashQueryParams")) {
@@ -729,5 +731,13 @@ public class DeliveryService {
 		}
 
 		return s.toString();
+	}
+
+	public boolean isEcsEnabled() {
+		return ecsEnabled;
+	}
+
+	public void setEcsEnabled(final boolean ecsEnabled) {
+		this.ecsEnabled = ecsEnabled;
 	}
 }

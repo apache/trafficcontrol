@@ -80,6 +80,10 @@ Response Structure
 :dnsBypassIp6:      A :ref:`ds-dns-bypass-ipv6`
 :dnsBypassTtl:      The :ref:`ds-dns-bypass-ttl`
 :dscp:              A :ref:`ds-dscp` to be used within the :term:`Delivery Service`
+:ecsEnabled:        A boolean that defines the :ref:`ds-ecs` setting on this :term:`Delivery Service`
+
+	.. versionadded:: 1.4
+
 :edgeHeaderRewrite: A set of :ref:`ds-edge-header-rw-rules`
 :exampleURLs:       An array of :ref:`ds-example-urls`
 :fqPacingRate:      The :ref:`ds-fqpr`
@@ -229,7 +233,8 @@ Response Structure
 		"trRequestHeaders": null,
 		"consistentHashRegex": null,
 		"consistentHashQueryParams": null,
-		"maxOriginConnections": null
+		"maxOriginConnections": null,
+		"ecsEnabled": false
 	}]}
 
 .. [#tenancy] While it is totally possible to assign a :term:`Delivery Service` to a user who's :term:`Tenant` does not have permission to own said :term:`Delivery Service`, users that request this endpoint will only see :term:`Delivery Services` that their :term:`Tenant` has permission to see. This means that there's no real guarantee that the output of this endpoint shows all of the :term:`Delivery Services` assigned to the user requested, even if the user is requesting their own assigned :term:`Delivery Services`.

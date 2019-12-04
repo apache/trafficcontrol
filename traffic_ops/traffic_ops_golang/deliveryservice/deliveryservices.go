@@ -255,7 +255,8 @@ func createV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS t
 		&ds.TRRequestHeaders,
 		&ds.TRResponseHeaders,
 		&ds.TypeID,
-		&ds.XMLID)
+		&ds.XMLID,
+		&ds.EcsEnabled)
 
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -649,6 +650,7 @@ func updateV14(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, reqDS *
 		&ds.AnonymousBlockingEnabled,
 		&ds.ConsistentHashRegex,
 		&ds.MaxOriginConnections,
+		&ds.EcsEnabled,
 		&ds.ID)
 
 	if err != nil {
@@ -988,6 +990,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.DNSBypassIP6,
 			&ds.DNSBypassTTL,
 			&ds.DSCP,
+			&ds.EcsEnabled,
 			&ds.EdgeHeaderRewrite,
 			&ds.GeoLimitRedirectURL,
 			&ds.GeoLimit,
@@ -1513,6 +1516,7 @@ ds.dns_bypass_ip,
 ds.dns_bypass_ip6,
 ds.dns_bypass_ttl,
 ds.dscp,
+ds.ecs_enabled,
 ds.edge_header_rewrite,
 ds.geolimit_redirect_url,
 ds.geo_limit,
@@ -1628,8 +1632,9 @@ type=$48,
 xml_id=$49,
 anonymous_blocking_enabled=$50,
 consistent_hash_regex=$51,
-max_origin_connections=$52
-WHERE id=$53
+max_origin_connections=$52,
+ecs_enabled=$53
+WHERE id=$54
 RETURNING last_updated
 `
 }
@@ -1688,9 +1693,10 @@ tenant_id,
 tr_request_headers,
 tr_response_headers,
 type,
-xml_id
+xml_id,
+ecs_enabled
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53)
 RETURNING id, last_updated
 `
 }

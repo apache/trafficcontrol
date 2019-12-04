@@ -164,6 +164,7 @@ type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV13
 	ConsistentHashRegex       *string  `json:"consistentHashRegex"`
 	ConsistentHashQueryParams []string `json:"consistentHashQueryParams"`
+	EcsEnabled                bool     `json:"ecsEnabled" db:"ecs_enabled"`
 	MaxOriginConnections      *int     `json:"maxOriginConnections" db:"max_origin_connections"`
 }
 
