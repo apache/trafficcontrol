@@ -68,7 +68,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 
 	dsList := []int{}
 	if err := json.NewDecoder(r.Body).Decode(&dsList); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("payload must be a list of integers representing delivery service ids"), nil)
 		return
 	}
 
