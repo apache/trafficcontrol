@@ -86,7 +86,7 @@ Traffic Ops Project Tree Overview
 
 		- bin/ - Directory for scripts and tools, :manpage:`cron(8)` jobs, etc.
 
-			- checks/ - Contains the :ref:`to-ext-check` scripts that are provided by default
+			- checks/ - Contains the :ref:`to-check-ext` scripts that are provided by default
 			- db/ - Contains scripts that manipulate the database beyond the scope of setup, migration, and seeding
 			- tests/ - Integration and unit test scripts for automation purposes - in general this has been superseded by :atc-file:`traffic_ops/testing/api/`\ [#perltest]_
 
@@ -131,38 +131,50 @@ Traffic Ops Project Tree Overview
 		- t_integration/ - High-level integration tests\ [#perltest]_
 		- templates/ - Mojolicious Embedded Perl (:file:`{template name}.ep`) files for the now-removed Traffic Ops UI
 
-	- build/ - contains files that are responsible for packaging Traffic Ops into an RPM file
-	- client/ - API endpoints handled by Go
-	- client_tests/ - lol
-	- doc/ - contains only a :file:`coverage-zone.json` example (?) file
-	- etc/ - configuration files needed for the Traffic Ops server
+	- build/ - Contains files that are responsible for packaging Traffic Ops into an RPM file - and also for doing the same with :term:`ORT`
+	- client/ - The Go client library for Traffic Ops
+	- etc/ - Configuration files for various systems associated with running production instances of Traffic Ops, which are installed under ``/etc`` by the Traffic Ops RPM
 
-		- cron.d/ - holds specifications for :manpage:`cron(8)` jobs that need to be run periodically on Traffic Ops servers
-		- init.d/ - contains the old initscripts-based job control for Traffic Ops
-		- logrotate.d/ - specifications for the Linux :manpage:`logrotate(8)` utility for Traffic Ops log files
-		- profile.d/traffic_ops.sh - sets up common environment variables for working with Traffic Ops
+		- cron.d/ - Holds specifications for :manpage:`cron(8)` jobs that need to be run periodically on Traffic Ops servers
 
-	- experimental/ - includes all kinds of prototype and/or abandoned tools and extensions
+			.. note:: At least one of these jobs expects itself to be run on a server that has the Perl implementation of Traffic Ops installed under ``/opt/traffic_ops/``. Nothing terrible will happen if that's not true, just that it/they won't work. Installation using the RPM will set up all of these kinds of things up automatically.
 
-		- ats_config/ - an attempt to provide an easier method of obtaining and/or writing configuration files for :abbr:`ATS (Apache Traffic Server)` :term:`cache servers`
-		- auth/ - a simple authentication server that mimics the authentication process of Traffic Ops, and provides a detailed view of a logged-in user's permissions and capabilities
-		- goto/ - an Angular (1.x) web page backed by a Go server that provides a ReST API interface for mySQL servers
-		- postgrest/ - originally probably going to be a web server that provides a ReST API for postgreSQL servers, this only contains a simple - albeit unfinished - Docker container specification for running postgreSQL client tools and/or server(s)
-		- server/ - a living copy of the original attempt at re-writing Traffic Ops in Go
-		- traffic_ops_auth/ - proof-of-concept for authenticating, creating and deleting users in a Traffic Ops schema.
-		- url-rewriter-nginx/ - Docker container specification for a modification to the NginX web server, meant to make it suitable for use as a caching server at the Edge-tier or Mid-tier levels of the Traffic Control architecture
-		- webfront/ - a simple HTTP caching server written from the ground-up, meant to be suitable as a caching server at the Edge-tier or Mid-tier levels of the Traffic Control architecture
+		- init.d/ - Contains the old, initscripts-based job control for Traffic Ops
+		- logrotate.d/ - Specifications for the Linux :manpage:`logrotate(8)` utility for Traffic Ops log files
+		- profile.d/traffic_ops.sh - Sets up common environment variables for working with Traffic Ops
 
-	- install/ - contains all of the resources necessary for a full install of Traffic Ops
+	- install/ - Contains all of the resources necessary for a full install of Traffic Ops
 
-		- bin/ - binaries related to installing Traffic Ops, as well as installing its prerequisites, certificates, and database
-		- data/ - almost nothing
-		- etc/ - this directory left empty; it's used to contain post-installation extensions and resources
-		- lib/ - contains libraries used by the various installation binaries
+		- bin/ - Binaries related to installing Traffic Ops, as well as installing its prerequisites, certificates, and database
+		- data/ - Contains things that need to be accessible by the running server for certain functionality - typically installed to ``/var/www/data`` by the RPM (hence the name).
+		- etc/ - This directory left empty; it's used to contain post-installation extensions and resources
+		- lib/ - Contains libraries used by the various installation binaries
 
-	- testing/ - holds utilities for testing the :ref:`to-api`, as well as comparing two separate API instances (for e.g. comparing a new build to a known-to-work build)
-	- traffic_ops_golang/ - has all of the functionality that has been re-written from Perl into Go
-	- vendor/ - contains "vendored" packages from third party sources
+	- ort/ - Contains :term:`ORT` and :abbr:`ATS (Apache Traffic Server)` configuration file-generation logic and tooling
+	- testing/ - Holds utilities for testing the :ref:`to-api`
+
+		- api/ - Integration testing for the `Traffic Ops Go client <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/client>`_ and Traffic Ops
+		- compare/ - Contains :ref:`compare-tool`
+
+	- traffic_ops_golang/ - The root of the Go implementation's code-base
+
+		.. note:: The vast majority of subdirectories of :atc-file:`traffic_ops/traffic_ops_golang/` contain handlers for the :ref:`to-api`, and are named according to the endpoint they handle. What follows is a list of subdirectories of interest that have a special role (i.e. don't handle a :ref:`to-api` endpoint).
+
+		.. seealso:: `The GoDoc documentation for this package <https://godoc.org/apache/trafficcontrol/traffic_ops/traffic_ops_golang>`_
+
+		- api/ - A library for use by :ref:`to-api` handlers that provides helpful utilities for common tasks like obtaining a database transaction handle or accessing Traffic Ops configuration
+		- auth/ - Contains definitions of privilege levels and access control code used in routing and provides a library for dealing with password and token-based authentication
+		- config/ - Defines configuration structures and methods for reading them in from files
+		- dbhelpers/ - Assorted utilities that provide functionality for common database tasks, e.g. "Get a user by email"
+		- plugin/ - The Traffic Ops plugin system, with examples
+		- riaksvc/ - In addition to handling routes that deal with storing secrets in or retrieving secrets from Traffic Vault, this package provides a library of functions for interacting with Traffic Vault for other handlers to use.
+		- routing/ - Contains logic for mapping all of the :ref:`to-api` endpoints to their handlers, as well as proxying requests back to the Perl implementation and managing plugins, and also provides some wrappers around registered handlers that set common HTTP headers and connection options
+		- swaggerdocs/ A currently abandoned attempt at defining the :ref:`to-api` using `Swagger <https://swagger.io/>`_ - it may be picked up again at some point in the (distant) future
+		- tenant/ - Contains utilities for dealing with :term:`Tenantable <Tenant>` resources, particularly for checking for permissions
+		- tocookie/ - Defines the method of generating the ``mojolicious`` cookie used by Traffic Ops for authentication
+		- vendor/ - contains "vendored" Go packages from third party sources
+
+	- vendor/ - contains "vendored" Go packages from third party sources
 
 .. _database-management:
 
@@ -237,7 +249,7 @@ Options and Arguments
 
 	db/admin --env=test reset
 
-The environments are defined in the :file:`app/db/dbconf.yml` file, and the name of the database generated will be the name of the environment for which it was created.
+The environments are defined in the :atc-file:`traffic_ops/app/db/dbconf.yml` file, and the name of the database generated will be the name of the environment for which it was created.
 
 Installing The Developer Environment
 ====================================
@@ -262,28 +274,137 @@ To install the Traffic Ops Developer environment:
 
 	.. note:: To ensure proper paths to Perl libraries and resource files, ``setup_kabletown.pl`` should be run from within the ``app/`` directory.
 
-#. Run the ``postinstall`` script, located in ``install/bin/``
-
-#. To start Traffic Ops, use the ``start.pl`` script located in the ``app/bin`` directory. If the server starts successfully, the STDOUT of the process should contain the line ``[<date and time>] [INFO] Listening at "http://*:3000"``, followed by the line ``Server available at http://127.0.0.1:3000`` (using default settings for port number and listening address, and where ``<date and time>`` is an actual date and time in ISO format).
-
-	.. note:: To ensure proper paths to Perl libraries and resource files, the ``start.pl`` script should be run from within the ``app/`` directory.
-
-#. Using a web browser, navigate to the given address: ``http://127.0.0.1:3000``
-#. A prompt for login credentials should appear. Assuming default settings are used, the initial login credentials will be
-
-	:User name: ``admin``
-	:Password:  ``password``
-
-#. Change the login credentials.
+#. Run the :atc-file:`traffic_ops/install/bin/postinstall` script, it will prompt for information like the default user login credentials
+#. To run Traffic Ops, follow the instructions in :ref:`to-running`.
 
 Test Cases
 ==========
-Use `prove <http://perldoc.perl.org/prove.html>`_ (should be installed with Perl) to execute test cases. Execute after a ``carton install`` of all required dependencies:
+
+Perl Tests
+----------
+Use `prove <http://perldoc.perl.org/prove.html>`_ (should be installed with Perl) to execute test cases\ [#perltest]_. Execute after a ``carton install`` of all required dependencies:
 
 - To run the Unit Tests: ``prove -qrp  app/t/``
 - To run the Integration Tests: ``prove -qrp app/t_integration/``
 
-.. note:: As progress continues on moving Traffic Ops to run entirely in Go, the number of passing tests has steadily decreased. This means that the tests are not a reliable way to test Traffic Ops, as they are expected to fail more and more as functionality is stripped from the Perl codebase.
+Go Tests
+--------
+Many (but not all) endpoint handlers and utility packages in the Go code-base define Go unit tests that can be run with :manpage:`go-test(1)`. There are integration tests for the Traffic Ops Go client in :atc-file:`traffic_ops/testing/api/`.
+
+.. code-block:: bash
+	:caption: Sample Run of Go Unit Tests
+
+	cd traffic_ops/traffic_ops_golang
+
+	# run just one test
+	go test ./about
+
+	# run all of the tests
+	go test ./...
+
+There are a few prerequisites to running the Go client integration tests:
+
+- A PostgreSQL server must be accessible and have a Traffic Ops database schema set up (though not necessarily populated with anything).
+- A running Traffic Ops Go implementation instance must be accessible - it shouldn't be necessary to also be running the Perl implementation.
+
+	.. note:: For testing purposes, SSL certificates are not verified, so self-signed certificates will work fine.
+
+	.. note:: It is *highly* recommended that the Traffic Ops instance be run on the same machine as the integration tests, as otherwise network latency can cause the tests to exceed their threshold time limit of ten minutes.
+
+The integration tests are run using :manpage:`go-test(1)`, with two configuration options available.
+
+.. note:: It should be noted that the integration tests will output thousands of lines of highly repetitive text not directly related to the tests its running at the time - even if the ``-v`` flag is not passed to :manpage:`go-test(1)`. This problem is tracked by :issue:`4017`.
+
+.. warning:: Running the tests will wipe the connected database clean, so do not **ever** run it on an instance of Traffic Ops that holds meaningful data.
+
+.. option:: --cfg CONFIG
+
+	Specify the path to a configuration file for the tests. If not specified, it will attempt to read a file named ``traffic-ops-test.config`` in the working directory.
+
+	.. seealso:: `Configuring the Integration Tests`_ for a detailed explanation of the format of this configuration file.
+.. option:: --fixtures FIXTURES
+
+	Specify the path to a file containing static data for the tests to use. This should almost never be used, because many of the tests depend on the data having a certain content and structure. If not specified, it will attempt to read a file named ``tc-fixtures.json`` in the working directory.
+
+Configuring the Integration Tests
+"""""""""""""""""""""""""""""""""
+Configuration is mainly done through the configuration file passed as :option:`--cfg`, but is also available through the following environment variables.
+
+.. envvar:: SESSION_TIMEOUT_IN_SECS
+
+	Sets the timeout of requests made to the Traffic Ops instance, in seconds.
+
+.. envvar:: TODB_DESCRIPTION
+
+	An utterly cosmetic variable which, if set, gives a description of the PostgreSQL database to which the tests will connect. This has no effect except possibly changing one line of debug output.
+
+.. envvar:: TODB_HOSTNAME
+
+	If set, will define the :abbr:`FQDN (Fully Qualified Domain Name)` at which the PostgreSQL server to be used by the tests resides\ [#integrationdb]_.
+
+.. envvar:: TODB_NAME
+
+	If set, will define the name of the database to which the tests will connect\ [#integrationdb]_.
+
+.. envvar:: TODB_PASSWORD
+
+	If set, defines the password to use when authenticating with the PostgreSQL server.
+
+.. envvar:: TODB_PORT
+
+	If set, defines the port on which the PostgreSQL server listens\ [#integrationdb]_.
+
+.. envvar:: TODB_SSL
+
+	If set, must be one of the following values:
+
+	true
+		The PostgreSQL server to which the tests will connect uses SSL on the port on which it will be contacted.
+	false
+		The PostgreSQL server to which the tests will connect does not use SSL on the port on which it will be contacted.
+
+.. envvar:: TODB_TYPE
+
+	If set, tells the database driver used by the tests the kind of SQL database to which they are connecting\ [#integrationdb]_. This author has no idea what will happen if this is set to something other than ``Pg``, but it's possible the tests will fail to run. Certainly never do it.
+
+.. envvar:: TODB_USER
+
+	If set, defines the user as whom to authenticate with the PostgreSQL server.
+
+.. envvar:: TO_URL
+
+	If set, will define the URL at which the Traffic Ops instance is running - including port number.
+
+.. envvar:: TO_USER_DISALLOWED
+
+	If set, will define the name of a user with the "disallowed" :term:`Role` that will be created by the tests\ [#existinguser]_.
+
+.. envvar:: TO_USER_EXTENSION
+
+	If set, will define the name of a user with the "extension" :term:`Role` that will be created by the tests\ [#existinguser]_.
+
+	.. caution:: Due to legacy constraints, the only truly safe value for this is ``extension`` - anything else could cause the tests to fail.
+
+.. envvar:: TO_USER_FEDERATION
+
+	If set, will define the name of a user with the "federation" :term:`Role` that will be created by the tests\ [#existinguser]_.
+
+.. envvar:: TO_USER_OPERATIONS
+
+	If set, will define the name of a user with the "operations" :term:`Role` that will be created by the tests\ [#existinguser]_.
+
+.. envvar:: TO_USER_PASSWORD
+
+	If set, will define the password used by all users created by the tests. This does not need to be the password of any pre-existing user.
+
+.. envvar:: TO_USER_PORTAL
+
+	If set, will define the name of a user with the "portal" :term:`Role` that will be created by the tests\ [#existinguser]_.
+
+.. envvar:: TO_USER_READ_ONLY
+
+	If set, will define the name of a user with the "read-only" :term:`Role` that will be created by the tests\ [#existinguser]_.
+
 
 The KableTown CDN example
 -------------------------
@@ -341,4 +462,6 @@ Development Configuration
 --------------------------
 To incorporate any custom :ref:`to-datasource-ext` during development set your ``PERL5LIB`` environment variable with any number of colon-separated directories with the understanding that the ``PERL5LIB`` search order is from left to right through this list. Once Perl locates your custom route or Perl package/class it 'pins' on that class or Mojolicious Route and doesn't look any further, which allows for the developer to override Traffic Ops functionality.
 
-.. [#perltest] As a symptom of large portions of Traffic Ops being rewritten in Go and subsequently abandoned in Perl (or superseded by something like Traffic Portal), the Perl tests have neither passed nor even been run in a good long while.
+.. [#perltest] As progress continues on moving Traffic Ops to run entirely in Go, the number of passing tests has steadily decreased. This means that the tests are not a reliable way to test Traffic Ops, as they are expected to fail more and more as functionality is stripped from the Perl codebase.
+.. [#integrationdb] The Traffic Ops instance *must* be using the same PostgreSQL database that the tests will use.
+.. [#existinguser] This does not need to match the name of any pre-existing user.
