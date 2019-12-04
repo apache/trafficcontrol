@@ -20,7 +20,9 @@ package atscdn
  */
 
 import (
+	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -52,9 +54,13 @@ func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds, err := getDeliveryService(inf.Tx, dsName)
+	ds, exist, err := getDeliveryService(inf.Tx, dsName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_xml-id.config text: "+err.Error()))
+		return
+	}
+	if !exist {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("delivery service %v not found", dsName), nil)
 		return
 	}
 
@@ -85,9 +91,13 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 
 	dsName := inf.Params["xml-id"]
 
-	ds, err := getDeliveryService(inf.Tx, dsName)
+	ds, exist, err := getDeliveryService(inf.Tx, dsName)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting hdr_rw_mid_xml-id.config text: "+err.Error()))
+		return
+	}
+	if !exist {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("delivery service %v not found", dsName), nil)
 		return
 	}
 
@@ -109,7 +119,7 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(txt))
 }
 
-func getDeliveryService(tx *sqlx.Tx, xmlId string) (atscfg.HeaderRewriteDS, error) {
+func getDeliveryService(tx *sqlx.Tx, xmlId string) (atscfg.HeaderRewriteDS, bool, error) {
 	qry := `
 SELECT
   ds.id,
@@ -125,9 +135,12 @@ WHERE
 `
 	ds := atscfg.HeaderRewriteDS{}
 	if err := tx.QueryRow(qry, xmlId).Scan(&ds.ID, &ds.Type, &ds.MaxOriginConnections, &ds.EdgeHeaderRewrite, &ds.MidHeaderRewrite); err != nil {
-		return atscfg.HeaderRewriteDS{}, errors.New("scanning: " + err.Error())
+		if err == sql.ErrNoRows {
+			return atscfg.HeaderRewriteDS{}, false, nil
+		}
+		return atscfg.HeaderRewriteDS{}, false, errors.New("scanning: " + err.Error())
 	}
-	return ds, nil
+	return ds, true, nil
 }
 
 func getEdges(tx *sqlx.Tx, dsName string) ([]atscfg.HeaderRewriteServer, error) {
