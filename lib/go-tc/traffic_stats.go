@@ -76,8 +76,6 @@ type TrafficStatsOrderable string
 const (
 	// TimeOrder indicates an ordering by time at which the measurement was taken
 	TimeOrder TrafficStatsOrderable = "time"
-	// ValueOrder indicates an ordering by the actual value of the measurement
-	ValueOrder TrafficStatsOrderable = "sum_count"
 )
 
 // OrderableFromString parses the passed string and returns the corresponding value as a pointer to
@@ -87,8 +85,6 @@ func OrderableFromString(v string) *TrafficStatsOrderable {
 	switch v {
 	case "time":
 		o = TimeOrder
-	case "value":
-		o = ValueOrder
 	default:
 		return nil
 	}
