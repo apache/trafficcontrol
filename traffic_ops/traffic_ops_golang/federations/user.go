@@ -117,7 +117,20 @@ func (v *TOUsers) GetType() string {
 	return fedUserType
 }
 
-func (v *TOUsers) Read() ([]interface{}, error, error, int) { return api.GenericRead(v) }
+func (v *TOUsers) Read() ([]interface{}, error, error, int) {
+	fedIDStr := v.APIInfo().Params["id"]
+	fedID, err := strconv.Atoi(fedIDStr)
+	if err != nil {
+		return nil, errors.New("federation id must be an integer"), nil, http.StatusBadRequest
+	}
+	_, exists, err := getFedNameByID(v.APIInfo().Tx.Tx, fedID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting federation cname from ID %v: %v", fedID, err), http.StatusInternalServerError
+	} else if !exists {
+		return nil, fmt.Errorf("federation %v not found", fedID), nil, http.StatusNotFound
+	}
+	return api.GenericRead(v)
+}
 
 func (v *TOUsers) Delete() (error, error, int) { return api.GenericDelete(v) }
 
@@ -130,11 +143,11 @@ func PostUsers(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	fedID := inf.IntParams["id"]
-	fedName, ok, err := getFedNameByID(inf.Tx.Tx, fedID)
+	fedName, exists, err := getFedNameByID(inf.Tx.Tx, fedID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting federation cname from ID '"+string(fedID)+"': "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting federation cname from ID %v: %v", fedID, err))
 		return
-	} else if !ok {
+	} else if !exists {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("federation %v not found", fedID), nil)
 		return
 	}
