@@ -22,6 +22,7 @@ import (
 func TestFederationUsers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, DeliveryServices, UsersDeliveryServices, CDNFederations, FederationUsers}, func() {
 		CreateTestInvalidFederationUsers(t)
+		GetTestInvalidFederationIDUsers(t)
 	})
 }
 
@@ -85,6 +86,13 @@ func CreateTestFederationUsers(t *testing.T) {
 	}
 	if len(fedUsers) != 3 {
 		t.Errorf("federation users expected 2, actual: %+v", len(fedUsers))
+	}
+}
+
+func GetTestInvalidFederationIDUsers(t *testing.T) {
+	_, _, err := TOSession.GetFederationUsers(-1)
+	if err == nil {
+		t.Fatalf("expected to get an error when requesting federation users for a non-existent federation")
 	}
 }
 
