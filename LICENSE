@@ -452,3 +452,7 @@ For the ogier/pflag (commit 45c278a) component:
 For the errors (commit 27936f6) component:
 @vendor/github.com/pkg/errors/*
 ./vendor/github.com/pkg/errors/LICENSE
+
+For the GehirnInc/crypt (commit 6c0105a) component:
+@traffic_ops/traffic_ops_golang/vendor/github.com/GehirnInc/crypt/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/GehirnInc/crypt/LICENSE
