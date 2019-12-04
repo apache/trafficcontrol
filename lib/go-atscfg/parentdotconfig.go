@@ -431,9 +431,9 @@ func getMSOParentStrs(ds ParentConfigDSTopLevel, parentInfos []ParentInfo, atsMa
 	parents := ""
 	secondaryParents := ""
 
-	if atsMajorVer >= 6 && ds.MSOAlgorithm == "consistent_hash" && len(secondaryParents) > 0 {
+	if atsMajorVer >= 6 && ds.MSOAlgorithm == "consistent_hash" && len(secondaryParentStr) > 0 {
 		parents = `parent="` + strings.Join(parentInfo, "") + `"`
-		secondaryParents = `" secondary_parent="` + secondaryParentStr + `"`
+		secondaryParents = ` secondary_parent="` + secondaryParentStr + `"`
 	} else {
 		parents = `parent="` + strings.Join(parentInfo, "") + secondaryParentStr + `"`
 	}
