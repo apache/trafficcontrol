@@ -243,7 +243,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debugf("Sending password reset email to %s", req.Email)
+	log.Debugf("Sending registration email to %s", req.Email)
 
 	if errCode, userErr, sysErr = inf.SendMail(req.Email, msg); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)

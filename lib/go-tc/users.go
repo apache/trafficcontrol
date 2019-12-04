@@ -167,7 +167,7 @@ func (urr *UserRegistrationRequest) Validate(tx *sql.Tx) error {
 
 	// This can only happen if an email isn't present in the request; the JSON parse handles actually
 	// invalid email addresses.
-	if Email.Address.Address == "" {
+	if urr.Email.Address.Address == "" {
 		errs = append(errs, errors.New("email: required"))
 	}
 
