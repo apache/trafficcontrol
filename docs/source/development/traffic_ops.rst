@@ -16,82 +16,121 @@
 ***********
 Traffic Ops
 ***********
+At its current stage in development, "Traffic Ops" actually refers to a concept with two implementations. The original Traffic Ops was written as a collection of Perl scripts based on the `Mojolicious framework <https://mojolicious.org/>`_ framework. At some point, the relatively poor performance and lack of knowledgeable developers as the project expanded became serious issues, and so for the past few years Traffic Ops has been undergoing a steady rewrite to Go.
 
 Introduction
 ============
-Traffic Ops uses a PostgreSQL database to store the configuration information, and the `Mojolicious framework <http://mojolicio.us/>`_ to generate the user interface and REST APIs.
+Traffic Ops at its core is mainly a PostgreSQL database used to store configuration information for :abbr:`ATC (Apache Traffic Control)`, and a set of RESTful API endpoints for interacting with and manipulating that information. It also serves as the single point of authentication for :abbr:`ATC (Apache Traffic Control)` components (that is, when one hears "user" in an :abbr:`ATC (Apache Traffic Control)` context it nearly always means a "user" as configured in Traffic Ops) and provides interfaces to other :abbr:`ATC (Apache Traffic Control)` components by proxy. Additionally, there is some miscellaneous, at times obscure functionality to Traffic Ops, such as generating arbitrary Linux system images.
 
 Software Requirements
 =====================
-To work on Traffic Ops you need a CentOS 7+ environment that has the following installed:
+Traffic Ops is only supported on CentOS 7+ systems (although many developers do use Mac OS with some success).
 
-- `Carton 1.0.12 <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_
+The two different implementations have different requirements, but they do share a few:
 
-	- libpcap (plus development library - usually "libpcap-dev" or "libpcap-devel")
-	- libpq (plus development library - usually "libpq-dev" or "libpq-devel")
-	- cpan JSON
-	- cpan JSON\:\:PP
+- `Goose <https://bitbucket.org/liamstask/goose/>`_ (although the ``postinstall`` Perl script will install this if desired)
+- `PostgreSQL 9.6.6 <https://www.postgresql.org/download/>`_ - the machine where (either implementation of) Traffic Ops is running must have the client tool set (e.g. :manpage:`psql(1)`), but the actual database can be run anywhere so long as it is accessible.
+- :manpage:`openssl(1SSL)` is recommended to generate server certificates, though not strictly required if certificates can be obtained by other means.
+- Some kind of SMTP server is required for certain :ref:`to-api` endpoints to work, but for purposes unrelated to them an SMTP server is not required.
 
-- `Go 1.8.3 <http://golang.org/doc/install>`_
+.. tip:: Alternatively, development and testing can be done using :ref:`ciab` - albeit somewhat more slowly.
+
+Perl Implementation Requirements
+--------------------------------
+Most dependencies are managed by `Carton 1.0.12 <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_, but there are some - outside of those shared with the Go implementation - that are not managed by that system.
+
+- `Carton itself <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_
 - Perl 5.10.1
-- Git
-- PostgreSQL 9.6.6
-- `Goose <https://bitbucket.org/liamstask/goose/>`_
+- libpcap and libpcap development library - usually ``libpcap-dev`` or ``libpcap-devel`` in your system's native package manager.
+- libpq and libpq development library - usually ``libpq-dev`` or ``libpq-devel`` in your system's native package manager.
+- The `JSON Perl pod from CPAN <https://metacpan.org/pod/JSON>`_
+- The `JSON::PP Perl pod from CPAN <https://metacpan.org/pod/JSON::PP>`_
+- Developers should use `Perltidy <http://perltidy.sourceforge.net/>`_ to format their Perl code.
+
+	.. code-block:: text
+		:caption: Example Perltidy Configuration (usually in :file:`{HOME}/.perltidyrc`)
+
+		-l=156
+		-et=4
+		-t
+		-ci=4
+		-st
+		-se
+		-vt=0
+		-cti=0
+		-pt=1
+		-bt=1
+		-sbt=1
+		-bbt=1
+		-nsfs
+		-nolq
+		-otr
+		-aws
+		-wls="= + - / * ."
+		-wrs=\"= + - / * .\"
+		-wbb="% + - * / x != == >= <= =~ < > | & **= += *= &= <<= &&= -= /= |= + >>= ||= .= %= ^= x="
+
+
+Go Implementation Requirements
+------------------------------
+- `Go 1.11 <http://golang.org/doc/install>`_
+- If the system's Go compiler doesn't provide it implicitly, also note that all Go code in the :abbr:`ATC (Apache Traffic Control)` repository should be formatted using `gofmt <https://golang.org/cmd/gofmt/>`_
 
 Traffic Ops Project Tree Overview
 =================================
-traffic_ops/ - The root of the Traffic Ops project
+- :atc-file:`traffic_ops/` - The root of the Traffic Ops project
 
-	- app/ - Holds most of the Perl code base
+	- app/ - Holds most of the Perl code base, though many of the files contained herein are also used by the Go implementation
 
-		- bin/ - Directory for scripts, :manpage:`cron(8)` jobs, etc
-		- conf/
+		.. note:: This directory is home to many things that no longer work as intended or have been superseded by other things - most notably code for the now-removed Traffic Ops UI. That does *not*, however, mean that they are safe to remove. The API code that is still relied upon today is deeply entangled with the UI code, and in a dynamic language like Perl it can be very dangerous to remove things, because it may not be apparent that something is broken until it's already in production. So please don't remove anything in here until we're ready to excise the Perl implementation entirely.
 
-			- development/ - Development (local) specific configuration files.
+		- bin/ - Directory for scripts and tools, :manpage:`cron(8)` jobs, etc.
+
+			- checks/ - Contains the :ref:`to-ext-check` scripts that are provided by default
+			- db/ - Contains scripts that manipulate the database beyond the scope of setup, migration, and seeding
+			- tests/ - Integration and unit test scripts for automation purposes - in general this has been superseded by :atc-file:`traffic_ops/testing/api/`\ [#perltest]_
+
+		- conf/ - Aggregated configuration for Traffic Ops. For convenience, different environments for the :ref:`database-management` tool are already set up
+
+			- development/ - Configuration files for the "development" environment
+			- integration/ - Configuration files for the "integration" environment
 			- misc/ - Miscellaneous configuration files.
-			- production/ - Production specific configuration files.
-			- test/ - Test (unit test) specific configuration files.
+			- production/ - Configuration files for the "production" environment
+			- test/ - Configuration files for the "test" environment
 
-		- db/ - Database related area.
+		- db/ - Database setup, seeding, and upgrade/downgrade helpers
 
-			- migrations/ - Database Migration files.
+			- migrations/ - Database migration files
+			- tools/ - Contains helper scripts for easing upgrade transitions when selective data manipulation must be done to achieve a desirable state
 
-		- lib/
+		- lib/ - Contains the main handling logic for the Perl implementation
 
 			- API/ - Mojolicious Controllers for the :ref:`to-api`
-			- Common/ - Common Code between both the :ref:`to-api` and the deprecated Traffic Ops UI
+			- Common/ - Code that is shared between both the :ref:`to-api` and the now-removed Traffic Ops UI
+			- Connection/ - Adapter definitions for connecting to external services
 			- Extensions/ - Contains :ref:`to-datasource-ext`
-			- Fixtures/ - Test Case fixture data for the 'to_test' database.
+			- Fixtures/ - Test-case fixture data for the "testing" environment\ [#perltest]_
 
-				- Integration/ - Integration Tests.
+				- Integration/ - Integration tests\ [#perltest]_
 
-			- MojoPlugins/ - Mojolicious Plugins for Common Controller Code.
-			- Schema/ - Database Schema area.
+			- Helpers/ - Contains route handlers for the Traffic Stats-related endpoints
+			- MojoPlugins/ - Mojolicious Plugins for common controller code
+			- Schema/Result/ - Contains schema definitions generated from a constructed database for use with the `DBIx Perl pod suite <https://metacpan.org/search?q=DBIx>`_. These were machine-generated in 2016 and *absolutely* **no one** *should be touching them ever again*.
+			- /Test - Common helpers for testing
+			- UI/ - Mojolicious controllers for the now-removed Traffic Ops UI
+			- Utils/ - Contains helpful utilities for certain objects and tasks
 
-				- /Result - DBIx ORM related files.
+				- Helper/ - Common utilities for the Traffic Ops application
 
-			- /Test - Common Test.
-			- UI/ - Mojolicious Controllers for the deprecated Traffic Ops UI.
-			- Utils/
+		- public/ - A directory from which files are served statically over HTTP by the Perl implementation. One common use-case is for hosting a :term:`Coverage Zone File` for Traffic Router.
+		- script/ - Mojolicious bootstrap/startup scripts.
+		- t/ - Unit tests for both the API (in ``api/``) and the now-removed Traffic Ops UI\ [#perltest]_
 
-				- Helper/ - Common utilities for the Traffic Ops application.
+			- api/ - Unit tests for the API\ [#perltest]_
 
-		- log/ - Log directory where the development and test files are written
-		- public/
+		- t_integration/ - High-level integration tests\ [#perltest]_
+		- templates/ - Mojolicious Embedded Perl (:file:`{template name}.ep`) files for the now-removed Traffic Ops UI
 
-		 - css/ - Stylesheets
-		 - images/ - Images
-		 - js/ - Javascripts
-
-		- script/ - Mojolicious Bootstrap scripts.
-		- t/ - Unit Tests for the UI.
-
-		 - api/ - Unit Tests for the API.
-
-		- t_integration/ - High level tests for Integration level testing.
-		- templates/ - Mojolicious Embedded Perl (``*.ep``) files for the UI.
-
-	- bin/ - holds executables related to Traffic Ops, but not actually a part of the Traffic Ops server's operation
 	- build/ - contains files that are responsible for packaging Traffic Ops into an RPM file
 	- client/ - API endpoints handled by Go
 	- client_tests/ - lol
@@ -124,33 +163,6 @@ traffic_ops/ - The root of the Traffic Ops project
 	- testing/ - holds utilities for testing the :ref:`to-api`, as well as comparing two separate API instances (for e.g. comparing a new build to a known-to-work build)
 	- traffic_ops_golang/ - has all of the functionality that has been re-written from Perl into Go
 	- vendor/ - contains "vendored" packages from third party sources
-
-Perl Formatting Conventions
-===========================
-`Perltidy <http://perltidy.sourceforge.net/>`_ is for use in code formatting.
-
-.. code-block:: text
-	:caption: Example Perltidy Configuration (usually in :file:`~/.perltidyrc`)
-
-	-l=156
-	-et=4
-	-t
-	-ci=4
-	-st
-	-se
-	-vt=0
-	-cti=0
-	-pt=1
-	-bt=1
-	-sbt=1
-	-bbt=1
-	-nsfs
-	-nolq
-	-otr
-	-aws
-	-wls="= + - / * ."
-	-wrs=\"= + - / * .\"
-	-wbb="% + - * / x != == >= <= =~ < > | & **= += *= &= <<= &&= -= /= |= + >>= ||= .= %= ^= x="
 
 .. _database-management:
 
@@ -328,3 +340,5 @@ Traffic Ops accesses each extension through the addition of a URL route as a cus
 Development Configuration
 --------------------------
 To incorporate any custom :ref:`to-datasource-ext` during development set your ``PERL5LIB`` environment variable with any number of colon-separated directories with the understanding that the ``PERL5LIB`` search order is from left to right through this list. Once Perl locates your custom route or Perl package/class it 'pins' on that class or Mojolicious Route and doesn't look any further, which allows for the developer to override Traffic Ops functionality.
+
+.. [#perltest] As a symptom of large portions of Traffic Ops being rewritten in Go and subsequently abandoned in Perl (or superseded by something like Traffic Portal), the Perl tests have neither passed nor even been run in a good long while.
