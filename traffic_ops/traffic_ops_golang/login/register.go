@@ -43,13 +43,13 @@ type registrationEmailFormatter struct {
 }
 
 const registerUserQuery = `
-INSERT INTO tm_user (tm_user.email,
-                     tm_user.new_user,
-                     tm_user.registration_sent,
-                     tm_user.role,
-                     tm_user.tenant_id,
-                     tm_user.token,
-                     tm_user.username)
+INSERT INTO tm_user (email,
+                     new_user,
+                     registration_sent,
+                     role,
+                     tenant_id,
+                     token,
+                     username)
 VALUES ($1,
         TRUE,
         NOW(),
@@ -64,6 +64,7 @@ RETURNING (
 ) AS role,
 (
 	SELECT tenant.name
+	FROM tenant
 	WHERE tenant.id=tm_user.tenant_id
 ) AS tenant
 `
@@ -82,6 +83,7 @@ RETURNING (
 ) AS role,
 (
 	SELECT tenant.name
+	FROM tenant
 	WHERE tenant.id=tm_user.tenant_id
 ) AS tenant
 `
@@ -227,6 +229,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
+		log.Errorf("Bare error: %v", err)
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return

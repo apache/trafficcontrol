@@ -93,7 +93,7 @@ type User struct {
 	Username         *string    `json:"username" db:"username"`
 	RegistrationSent *TimeNoMod `json:"registrationSent" db:"registration_sent"`
 	LocalPassword    *string    `json:"localPasswd,omitempty" db:"local_passwd"`
-	RoleName         *string    `json:"roleName,omitempty" db:"-"`
+	RoleName         *string    `json:"roleName,omitempty" db:"rolename"`
 	commonUserFields
 }
 
@@ -163,6 +163,12 @@ func (urr *UserRegistrationRequest) Validate(tx *sql.Tx) error {
 
 	if urr.TenantID == 0 {
 		errs = append(errs, errors.New("tenantId: required and cannot be zero."))
+	}
+
+	// This can only happen if an email isn't present in the request; the JSON parse handles actually
+	// invalid email addresses.
+	if Email.Address.Address == "" {
+		errs = append(errs, errors.New("email: required"))
 	}
 
 	return util.JoinErrs(errs)
