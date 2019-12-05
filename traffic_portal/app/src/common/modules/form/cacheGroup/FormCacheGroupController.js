@@ -128,7 +128,7 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
             cacheGroup.fallbacks = new Array();
         }
         // Add selected fallback to selected list if it is not already there
-        if (cacheGroup.fallbacks.indexOf($scope.fallbackSelected) === -1) {
+        if ($scope.fallbackSelected && cacheGroup.fallbacks.indexOf($scope.fallbackSelected) === -1) {
             cacheGroup.fallbacks.push($scope.fallbackSelected);
         }
         // Update list of available fallbacks so it does not include the newly selected fallback

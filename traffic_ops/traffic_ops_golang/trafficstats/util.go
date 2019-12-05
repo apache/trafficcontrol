@@ -101,7 +101,7 @@ func tsConfigFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficStatsConfig
 
 	if orderby, ok := i.Params["orderby"]; ok {
 		if c.OrderBy = tc.OrderableFromString(orderby); c.OrderBy == nil {
-			e = errors.New("Invalid orderby! Must be 'time' or 'value'")
+			e = errors.New("Invalid orderby! Can only be 'time'")
 			return c, http.StatusBadRequest, e
 		}
 	}
