@@ -30,7 +30,6 @@ var FormNewCacheGroupController = function(cacheGroup, types, cacheGroups, $scop
     };
 
     $scope.save = function(cacheGroup) {
-        $scope.setLocalizationMethods(cacheGroup);
         cacheGroupService.createCacheGroup(cacheGroup);
     };
 
