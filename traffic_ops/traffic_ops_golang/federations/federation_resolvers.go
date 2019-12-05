@@ -59,20 +59,21 @@ func AssignFederationResolversToFederation(w http.ResponseWriter, r *http.Reques
 	defer inf.Close()
 
 	ffrr := tc.AssignFederationResolversRequest{}
+	fedID := inf.IntParams["id"]
 	if err := json.NewDecoder(r.Body).Decode(&ffrr); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	// TODO: "Fed Resolver IDs must be an array"
 
-	name, _, err := dbhelpers.GetFederationNameFromID(ffrr.ID, inf.Tx.Tx)
+	name, _, err := dbhelpers.GetFederationNameFromID(fedID, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	for _, id := range ffrr.FedResolverIDs {
-		if _, err := inf.Tx.Tx.Exec(associateFederationWithResolverQuery, ffrr.ID, id); err != nil {
+		if _, err := inf.Tx.Tx.Exec(associateFederationWithResolverQuery, fedID, id); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}

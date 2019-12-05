@@ -333,6 +333,7 @@ func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) ([]tc.Federatio
 		  ffr.federation = $1
 	`
 	rows, err := tx.Query(qry, fedID)
+	fmt.Println(qry)
 	if err != nil {
 		return nil, false, errors.New("error getting federation_resolvers by federation ID query: " + err.Error())
 	}
@@ -357,6 +358,7 @@ func GetFederationResolversByFederationID(tx *sql.Tx, fedID int) ([]tc.Federatio
 // GetFederationNameFromID returns the federation's name.
 func GetFederationNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	var name string
+	fmt.Printf("Trying to get name from id: %d", id)
 	if err := tx.QueryRow(`SELECT cname from federation where id = $1`, id).Scan(&name); err != nil {
 		return name, false, errors.New("querying federation name from id: " + err.Error())
 	}

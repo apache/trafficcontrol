@@ -530,8 +530,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// Federation Resolvers
 		{1.1, http.MethodPost, `federation_resolvers(/|\.json)?$`, federation_resolvers.Create, auth.PrivLevelAdmin, Authenticated, nil, 1134373661, perlBypass},
 		{1.1, http.MethodGet, `federation_resolvers(/|\.json)?$`, federation_resolvers.Read, auth.PrivLevelReadOnly, Authenticated, nil, 556608759, perlBypass},
-		{1.1, http.MethodPost, `federations/{id}/federation_resolvers(/|\.json)?$`, federations.AssignFederationResolversToFederation, auth.PrivLevelAdmin, Authenticated, nil},
-		{1.1, http.MethodGet, `federations/{id}/federation_resolvers(/|\.json)?$`, federations.GetFederationFederationResolvers, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPost, `federations/{id}/federation_resolvers(/|\.json)?$`, federations.AssignFederationResolversToFederation, auth.PrivLevelAdmin, Authenticated, nil, 556608760, perlBypass},
+		{1.1, http.MethodGet, `federations/{id}/federation_resolvers(/|\.json)?$`, federations.GetFederationFederationResolvers, auth.PrivLevelReadOnly, Authenticated, nil, 556608761, perlBypass},
 
 		// Federations Users
 		{1.1, http.MethodPost, `federations/{id}/users/?(\.json)?$`, federations.PostUsers, auth.PrivLevelAdmin, Authenticated, nil, 1779334930, perlBypass},
