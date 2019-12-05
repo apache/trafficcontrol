@@ -32,7 +32,7 @@ func (to *Session) UpdateServerStatus(serverID int, req tc.ServerPutStatus) (*tc
 		return nil, reqInf, err
 	}
 
-	path := fmt.Sprintf(apiBase+"/servers/%d/status", serverID)
+	path := fmt.Sprintf("%s/servers/%d/status", apiBase, serverID)
 	resp, remoteAddr, err := to.request(http.MethodPut, path, reqBody)
 	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
