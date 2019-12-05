@@ -72,6 +72,12 @@ func AssignFederationResolversToFederation(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	if ffrr.Replace {
+		if _, err := inf.Tx.Tx.Exec(deleteFederationFederationResolversQuery, fedID); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			return
+		}
+	}
 	for _, id := range ffrr.FedResolverIDs {
 		if _, err := inf.Tx.Tx.Exec(associateFederationWithResolverQuery, fedID, id); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
