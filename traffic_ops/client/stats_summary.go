@@ -45,10 +45,7 @@ func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.S
 		url = fmt.Sprintf("%s?%s", basePathSummaryStats, param.Encode())
 	}
 	reqInf, err := get(to, url, &resp)
-	if err != nil {
-		return resp, reqInf, err
-	}
-	return resp, reqInf, nil
+	return resp, reqInf, err
 }
 
 // GetSummaryStatsLastUpdated time of the last summary for a given stat
@@ -63,10 +60,7 @@ func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummary
 	url := fmt.Sprintf("%s?%s", basePathSummaryStats, param.Encode())
 
 	reqInf, err := get(to, url, &resp)
-	if err != nil {
-		return resp, reqInf, err
-	}
-	return resp, reqInf, nil
+	return resp, reqInf, err
 }
 
 // CreateSummaryStats creates a stats summary

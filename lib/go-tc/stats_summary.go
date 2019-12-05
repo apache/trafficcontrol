@@ -46,7 +46,8 @@ type StatsSummary struct {
 func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
 	type Alias StatsSummary
 	resp := struct {
-		StatDate string `json:"statDate"`
+		SummaryTime string `json:"summaryTime"`
+		StatDate    string `json:"statDate"`
 		*Alias
 	}{
 		Alias: (*Alias)(ss),
@@ -59,24 +60,39 @@ func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	return nil
+	ss.SummaryTime, err = time.Parse(time.RFC3339, resp.SummaryTime)
+	if err == nil {
+		return nil
+	}
+	ss.SummaryTime, err = time.Parse(TimeLayout, resp.SummaryTime)
+	return err
 }
 
 // UnmarshalJSON Customized Marshal to force date format on statDate
 func (ss StatsSummary) MarshalJSON() ([]byte, error) {
 	type Alias StatsSummary
 	return json.Marshal(&struct {
-		StatDate string `json:"statDate"`
+		StatDate    string `json:"statDate"`
+		SummaryTime string `json:"summaryTime"`
 		Alias
 	}{
-		StatDate: ss.StatDate.Format(dateFormat),
-		Alias:    (Alias)(ss),
+		SummaryTime: ss.SummaryTime.Format(TimeLayout),
+		StatDate:    ss.StatDate.Format(dateFormat),
+		Alias:       (Alias)(ss),
 	})
 }
 
 // StatsSummaryLastUpdated ...
 type StatsSummaryLastUpdated struct {
 	SummaryTime time.Time `json:"summaryTime"  db:"summary_time"`
+}
+
+func (ss StatsSummaryLastUpdated) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		SummaryTime string `json:"summaryTime"`
+	}{
+		SummaryTime: ss.SummaryTime.Format(TimeLayout),
+	})
 }
 
 // StatsSummaryLastUpdatedResponse ...

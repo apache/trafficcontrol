@@ -32,13 +32,11 @@ var (
 const dateFormat = "2006-01-02"
 
 func TestStatsSummary(t *testing.T) {
-	WithObjs(t, []TCObj{}, func() {
-		testStatsSummaries = []tc.StatsSummary{}
-		latestTime = time.Now().Truncate(time.Second).UTC()
-		CreateTestStatsSummaries(t)
-		GetTestStatsSummaries(t)
-		GetTestStatsSummariesLastUpdated(t)
-	})
+	testStatsSummaries = []tc.StatsSummary{}
+	latestTime = time.Now().Truncate(time.Second).UTC()
+	CreateTestStatsSummaries(t)
+	GetTestStatsSummaries(t)
+	GetTestStatsSummariesLastUpdated(t)
 }
 
 func CreateTestStatsSummaries(t *testing.T) {
@@ -116,7 +114,7 @@ func GetTestStatsSummaries(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			tsr, _, err := TOSession.GetSummaryStats(tc.cdn, tc.ds, tc.stat)
 			if err != nil {
-				t.Fatalf("received unexpectant error %v on GET to stats_summary", err)
+				t.Fatalf("received unexpected error %v on GET to stats_summary", err)
 			}
 			if len(tc.expectedStatsSummaries) == 0 && len(tsr.Response) != 0 {
 				t.Fatalf("expected to recieve no stats summaries but received %v", len(tsr.Response))
@@ -130,7 +128,7 @@ func GetTestStatsSummaries(t *testing.T) {
 					}
 				}
 				if !found {
-					t.Fatalf("expected to find stat %v in stats summary response", ess.StatName)
+					t.Errorf("expected to find stat %v in stats summary response", ess.StatName)
 				}
 			}
 		})

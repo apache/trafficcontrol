@@ -39,28 +39,28 @@ Summary Stats
 
 .. table:: Request Query Parameters
 
-	+---------------------+----------+------------------------------------------------------------------------------------------------------+
-	| Name                | Required | Description                                                                                          |
-	+=====================+==========+======================================================================================================+
-	| deliveryServiceName | no       | Return only summary stats that were reported for :term:`Delivery Service` with the given name        |
-	+---------------------+----------+------------------------------------------------------------------------------------------------------+
-	| cdnName             | no       | Return only summary stats that were reported for CDN with the given name                             |
-	+---------------------+----------+------------------------------------------------------------------------------------------------------+
-	| statName            | no       | Return only summary stats that were reported for given stat name                                     |
-	+---------------------+----------+------------------------------------------------------------------------------------------------------+
-	| orderby             | no       | Choose the ordering of the results - can only be one of deliveryServiceName, statName or cdnName     |
-	+---------------------+----------+------------------------------------------------------------------------------------------------------+
-	| sortOrder           | no       | Changes the order of sorting. Either ascending (default or "asc") or                                 |
-	|                     |          | descending ("desc")                                                                                  |
-	+---------------------+----------+------------------------------------------------------------------------------------------------------+
-	| limit               | no       | Choose the maximum number of results to return                                                       |
-	+---------------------+----------+------------------------------------------------------------------------------------------------------+
-	| offset              | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit |
-	+---------------------+----------+------------------------------------------------------------------------------------------------------+
-	| page                | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are         |
-	|                     |          | ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no       |
-	|                     |          | effect. ``limit`` must be defined to make use of ``page``.                                           |
-	+---------------------+----------+------------------------------------------------------------------------------------------------------+
+	+---------------------+----------+-------------------------------------------------------------------------------------------------------+
+	| Name                | Required | Description                                                                                           |
+	+=====================+==========+=======================================================================================================+
+	| deliveryServiceName | no       | Return only summary stats that were reported for :term:`Delivery Service` with the given display name |
+	+---------------------+----------+-------------------------------------------------------------------------------------------------------+
+	| cdnName             | no       | Return only summary stats that were reported for CDN with the given name                              |
+	+---------------------+----------+-------------------------------------------------------------------------------------------------------+
+	| statName            | no       | Return only summary stats that were reported for given stat name                                      |
+	+---------------------+----------+-------------------------------------------------------------------------------------------------------+
+	| orderby             | no       | Choose the ordering of the results - can only be one of deliveryServiceName, statName or cdnName      |
+	+---------------------+----------+-------------------------------------------------------------------------------------------------------+
+	| sortOrder           | no       | Changes the order of sorting. Either ascending (default or "asc") or                                  |
+	|                     |          | descending ("desc")                                                                                   |
+	+---------------------+----------+-------------------------------------------------------------------------------------------------------+
+	| limit               | no       | Choose the maximum number of results to return                                                        |
+	+---------------------+----------+-------------------------------------------------------------------------------------------------------+
+	| offset              | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit  |
+	+---------------------+----------+-------------------------------------------------------------------------------------------------------+
+	| page                | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are          |
+	|                     |          | ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no        |
+	|                     |          | effect. ``limit`` must be defined to make use of ``page``.                                            |
+	+---------------------+----------+-------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -99,12 +99,15 @@ Response Structure
 Summary Stats
 """""""""""""
 
-:cdnName:             CDN name summary stat was taken for
-:deliveryServiceName: :term:`Delivery Service` name summary stat was taken for
+:cdnName:             The CDN name for which the summary stat was taken for
+:deliveryServiceName: The :term:`Delivery Service` display name for which the summary stat was taken for
+
+	.. note:: If the ``deliveryServiceName`` is equal to ``all`` it represents summary_stats across all delivery services within the given CDN
+
 :statName:            Stat name summary stat represents
 :statValue:           Summary stat value
-:summaryTime:         Timestamp of summary, in :rfc:`3339` format
-:statDate:            Date stat was taken
+:summaryTime:         Timestamp of summary, in an ISO-like format
+:statDate:            Date stat was taken, in :rfc:`3339` format
 
 .. code-block:: http
 	:caption: Response Example
@@ -127,24 +130,24 @@ Summary Stats
             "deliveryServiceName": "all",
             "statName": "daily_maxgbps",
             "statValue": 5,
-            "summaryTime": "2019-11-19T00:04:06Z",
-            "statDate": "2019-11-18T00:00:00Z"
+            "summaryTime": "2019-11-19 00:04:06+00",
+            "statDate": "2019-11-19
         },
 		{
             "cdnName": "CDN-in-a-Box",
             "deliveryServiceName": "all",
             "statName": "daily_maxgbps",
             "statValue": 3,
-            "summaryTime": "2019-11-18T00:04:06Z",
-            "statDate": "2019-11-17T00:00:00Z"
+            "summaryTime": "2019-11-18 00:04:06+00",
+            "statDate": "2019-11-18"
         },
         {
             "cdnName": "CDN-in-a-Box",
             "deliveryServiceName": "all",
             "statName": "daily_bytesserved",
             "statValue": 1000,
-            "summaryTime": "2019-11-19T00:04:06Z",
-            "statDate": "2019-11-18T00:00:00Z"
+            "summaryTime": "2019-11-19 00:04:06+00",
+            "statDate": "2019-11-19"
         }
     ]}
 
@@ -170,6 +173,6 @@ Last Updated Summary Stat
 
 	{ "response":
 		{
-			"summaryTime": "2019-11-19T00:04:06Z"
+			"summaryTime": "2019-11-19 00:04:06+00"
 		}
 	}
