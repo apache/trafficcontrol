@@ -1,4 +1,4 @@
-package routing
+package middleware
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -39,23 +39,39 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 )
 
+const DefaultRequestTimeout = time.Second * time.Duration(60)
+
+// Middleware ...
+type Middleware func(handlerFunc http.HandlerFunc) http.HandlerFunc
+
+func GetDefault(secret string, requestTimeout time.Duration) []Middleware {
+	return []Middleware{getWrapAccessLog(secret), timeOutWrapper(requestTimeout), wrapHeaders, wrapPanicRecover}
+}
+
+func Use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
+	for i := len(middlewares) - 1; i >= 0; i-- { //apply them in reverse order so they are used in a natural order.
+		h = middlewares[i](h)
+	}
+	return h
+}
+
 // ServerName - the server identifier
 var ServerName = "traffic_ops_golang" + "/" + about.About.Version
 
 // AuthBase ...
 type AuthBase struct {
-	secret   string
-	override Middleware
+	Secret   string
+	Override Middleware
 }
 
 // GetWrapper ...
 func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
-	if a.override != nil {
-		return a.override
+	if a.Override != nil {
+		return a.Override
 	}
 	return func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			user, userErr, sysErr, errCode := api.GetUserFromReq(w, r, a.secret)
+			user, userErr, sysErr, errCode := api.GetUserFromReq(w, r, a.Secret)
 			if userErr != nil || sysErr != nil {
 				api.HandleErr(w, r, nil, errCode, userErr, sysErr)
 				return
@@ -125,11 +141,11 @@ const AccessLogTimeFormat = "02/Jan/2006:15:04:05 -0700"
 
 func getWrapAccessLog(secret string) Middleware {
 	return func(h http.HandlerFunc) http.HandlerFunc {
-		return wrapAccessLog(secret, h)
+		return WrapAccessLog(secret, h)
 	}
 }
 
-func wrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
+func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		iw := &Interceptor{w: w}
 		user := "-"
