@@ -45,7 +45,7 @@ import (
 	"github.com/lib/pq"
 )
 
-// A TOServer combines data about a server with metadata from an API request and
+// TOServer combines data about a server with metadata from an API request and
 // provides methods that implement several interfaces from the api package.
 type TOServer struct {
 	api.APIInfoImpl `json:"-"`
