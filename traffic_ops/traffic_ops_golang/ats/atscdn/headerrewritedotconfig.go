@@ -24,6 +24,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
@@ -65,7 +66,7 @@ func GetEdgeHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	txt := atscfg.MakeHeaderRewriteDotConfig(tc.CDNName(cdnName), toToolName, toURL, ds, assignedEdges)
-	w.Header().Set(tc.ContentType, tc.ContentTypeTextPlain)
+	w.Header().Set(rfc.ContentType, rfc.ContentTypeTextPlain)
 	w.Write([]byte(txt))
 }
 
@@ -105,7 +106,7 @@ func GetMidHeaderRewriteDotConfig(w http.ResponseWriter, r *http.Request) {
 
 	txt := atscfg.MakeHeaderRewriteMidDotConfig(tc.CDNName(cdnName), toToolName, toURL, ds, assignedMids)
 
-	w.Header().Set(tc.ContentType, tc.ContentTypeTextPlain)
+	w.Header().Set(rfc.ContentType, rfc.ContentTypeTextPlain)
 	w.Write([]byte(txt))
 }
 

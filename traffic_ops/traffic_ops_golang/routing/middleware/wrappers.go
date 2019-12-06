@@ -1,3 +1,4 @@
+// Package middleware provides symbols for HTTP "middleware" which wraps handlers to perform common behaviors, such as authentication, headers, and compression.
 package middleware
 
 /*
@@ -27,27 +28,37 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"runtime"
-	"strings"
 	"time"
-	"unicode"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 )
 
+// DefaultRequestTimeout is the default request timeout, if no timeout is configured.
+// This should be used by all Traffic Ops routing, and is recommended for use by plugins.
 const DefaultRequestTimeout = time.Second * time.Duration(60)
 
-// Middleware ...
+// ServerName is the name and version of Traffic Ops.
+// Things that print the server application name and version, for example in headers or logs, should use this.
+var ServerName = "traffic_ops_golang" + "/" + about.About.Version
+
+// Middleware is an HTTP dispatch "middleware" function.
+// A Middleware is a function which takes an http.HandlerFunc and returns a new http.HandlerFunc, typically wrapping the execution of the given handlerFunc with some additional behavior. For example, adding headers or gzipping the body.
 type Middleware func(handlerFunc http.HandlerFunc) http.HandlerFunc
 
+// GetDefault returns the default middleware for Traffic Ops.
+// This includes writing to the access log, a request timeout, default headers such as CORS, and compression.
 func GetDefault(secret string, requestTimeout time.Duration) []Middleware {
-	return []Middleware{getWrapAccessLog(secret), timeOutWrapper(requestTimeout), wrapHeaders, wrapPanicRecover}
+	return []Middleware{GetWrapAccessLog(secret), TimeOutWrapper(requestTimeout), WrapHeaders, WrapPanicRecover}
 }
 
+// Use takes a slice of middlewares, and applies them in reverse order (which is the intuitive behavior) to the given HandlerFunc h.
+// It returns a HandlerFunc which will call all middlewares, and then h.
 func Use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
 	for i := len(middlewares) - 1; i >= 0; i-- { //apply them in reverse order so they are used in a natural order.
 		h = middlewares[i](h)
@@ -55,16 +66,15 @@ func Use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
 	return h
 }
 
-// ServerName - the server identifier
-var ServerName = "traffic_ops_golang" + "/" + about.About.Version
-
-// AuthBase ...
+// AuthBase is the basic authentication object for middleware.
+// It contains the data required for authentication, as well as a function to get a Middleware to perform authentication.
 type AuthBase struct {
 	Secret   string
 	Override Middleware
 }
 
-// GetWrapper ...
+// GetWrapper returns a Middleware which performs authentication of the current user at the given privilege level.
+// The returned Middleware also adds the auth.CurrentUser object to the request context, which may be retrieved by a handler via api.NewInfo or auth.GetCurrentUser.
 func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 	if a.Override != nil {
 		return a.Override
@@ -86,7 +96,9 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 	}
 }
 
-func timeOutWrapper(timeout time.Duration) Middleware {
+// TimeOutWrapper is a Middleware which adds the given timeout to the request.
+// This causes the request to abort and return an error to the user if the handler takes longer than the timeout to execute.
+func TimeOutWrapper(timeout time.Duration) Middleware {
 	return func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			http.TimeoutHandler(h, timeout, "server timed out").ServeHTTP(w, r)
@@ -94,29 +106,35 @@ func timeOutWrapper(timeout time.Duration) Middleware {
 	}
 }
 
-func wrapHeaders(h http.HandlerFunc) http.HandlerFunc {
+// WrapHeaders is a Middleware which adds common headers and behavior to the handler. It specifically:
+//  - Adds default CORS headers to the response.
+//  - Adds the Whole-Content-SHA512 checksum header to the response.
+//  - Gzips the response and sets the Content-Encoding header, if the client sent an Accept-Encoding: gzip header.
+func WrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie")
 		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("X-Server-Name", ServerName)
-		iw := &BodyInterceptor{w: w}
+		iw := &util.BodyInterceptor{W: w}
 		h(iw, r)
 
 		sha := sha512.Sum512(iw.Body())
 		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
 
-		gzipResponse(w, r, iw.Body())
+		GzipResponse(w, r, iw.Body())
 
 	}
 }
 
-func wrapPanicRecover(h http.HandlerFunc) http.HandlerFunc {
+// WrapPanicRecover is a Middleware which adds a panic recover call to the given HandlerFunc h.
+// If h throws an unhandled panic, an error is logged and an Internal Server Error is returned to the client.
+func WrapPanicRecover(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, stacktrace()))
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, util.Stacktrace()))
 				return
 			}
 		}()
@@ -124,30 +142,21 @@ func wrapPanicRecover(h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func stacktrace() []byte {
-	initialBufSize := 1024
-	buf := make([]byte, initialBufSize)
-	for {
-		n := runtime.Stack(buf, true)
-		if n < len(buf) {
-			return buf[:n]
-		}
-		buf = make([]byte, len(buf)*2)
-	}
-}
-
-// AccessLogTimeFormat ...
+// AccessLogTimeFormat is the time format of the access log, as used by time.Time.Format.
 const AccessLogTimeFormat = "02/Jan/2006:15:04:05 -0700"
 
-func getWrapAccessLog(secret string) Middleware {
+// GetWrapAccessLog returns a Middleware which writes to the Access Log (which is the lib/go-log EventLog) after the HandlerFunc finishes.
+func GetWrapAccessLog(secret string) Middleware {
 	return func(h http.HandlerFunc) http.HandlerFunc {
 		return WrapAccessLog(secret, h)
 	}
 }
 
+// WrapAccessLog takes the cookie secret and a http.Handler, and returns a HandlerFunc which writes to the Access Log (which is the lib/go-log EventLog) after the HandlerFunc finishes.
+// This is not a Middleware, because it needs the secret as a parameter. For a Middleware, see GetWrapAccessLog.
 func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		iw := &Interceptor{w: w}
+		iw := &util.Interceptor{W: w}
 		user := "-"
 		cookie, err := r.Cookie(tocookie.Name)
 		if err == nil && cookie != nil {
@@ -158,15 +167,17 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		}
 		start := time.Now()
 		defer func() {
-			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v"`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.code, iw.byteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
+			log.EventfRaw(`%s - %s [%s] "%v %v?%v %s" %v %v %v "%v"`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, r.URL.RawQuery, r.Proto, iw.Code, iw.ByteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
 		}()
 		h.ServeHTTP(iw, r)
 	}
 }
 
-// gzipResponse takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
-func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
-	bytes, err := gzipIfAccepts(r, w, bytes)
+// GzipResponse takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
+// It gzips the given bytes and writes them to w, as well as writing the appropriate 'Content-Encoding: gzip' header, if the request included an 'Accept-Encoding: gzip' header.
+// If the request doesn't accept gzip, the bytes are written to w unmodified.
+func GzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
+	bytes, err := GzipIfAccepts(r, w, bytes)
 	if err != nil {
 		log.Errorf("gzipping request '%v': %v\n", r.URL.EscapedPath(), err)
 		code := http.StatusInternalServerError
@@ -187,14 +198,14 @@ func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 	w.Write(bytes)
 }
 
-// gzipIfAccepts gzips the given bytes, writes a `Content-Encoding: gzip` header to the given writer, and returns the gzipped bytes, if the Request supports GZip (has an Accept-Encoding header). Else, returns the bytes unmodified. Note the given bytes are NOT written to the given writer. It is assumed the bytes may need to pass thru other middleware before being written.
+// GzipIfAccepts gzips the given bytes, writes a `Content-Encoding: gzip` header to the given writer, and returns the gzipped bytes, if the Request supports GZip (has an Accept-Encoding header). Else, returns the bytes unmodified. Note the given bytes are NOT written to the given writer. It is assumed the bytes may need to pass thru other middleware before being written.
 //TODO: drichardson - refactor these to a generic area
-func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, error) {
+func GzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, error) {
 	// TODO this could be made more efficient by wrapping ResponseWriter with the GzipWriter, and letting callers writer directly to it - but then we'd have to deal with Closing the gzip.Writer.
-	if len(b) == 0 || !acceptsGzip(r) {
+	if len(b) == 0 || !rfc.AcceptsGzip(r) {
 		return b, nil
 	}
-	w.Header().Set(tc.ContentEncoding, tc.Gzip)
+	w.Header().Set(rfc.ContentEncoding, rfc.Gzip)
 
 	buf := bytes.Buffer{}
 	zw := gzip.NewWriter(&buf)
@@ -210,101 +221,21 @@ func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, er
 	return buf.Bytes(), nil
 }
 
-func acceptsGzip(r *http.Request) bool {
-	encodingHeaders := r.Header["Accept-Encoding"] // headers are case-insensitive, but Go promises to Canonical-Case requests
-	for _, encodingHeader := range encodingHeaders {
-		encodingHeader = stripAllWhitespace(encodingHeader)
-		encodings := strings.Split(encodingHeader, ",")
-		for _, encoding := range encodings {
-			if strings.ToLower(encoding) == tc.Gzip { // encoding is case-insensitive, per the RFC
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func stripAllWhitespace(s string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) {
-			return -1
-		}
-		return r
-	}, s)
-}
-
-// Interceptor ...
-type Interceptor struct {
-	w         http.ResponseWriter
-	code      int
-	byteCount int
-}
-
-// WriteHeader ...
-func (i *Interceptor) WriteHeader(rc int) {
-	i.w.WriteHeader(rc)
-	i.code = rc
-}
-
-// Write ...
-func (i *Interceptor) Write(b []byte) (int, error) {
-	wi, werr := i.w.Write(b)
-	i.byteCount += wi
-	if i.code == 0 {
-		i.code = 200
-	}
-	return wi, werr
-}
-
-// Header ...
-func (i *Interceptor) Header() http.Header {
-	return i.w.Header()
-}
-
-// BodyInterceptor fulfills the Writer interface, but records the body and doesn't actually write. This allows performing operations on the entire body written by a handler, for example, compressing or hashing. To actually write, call `RealWrite()`. Note this means `len(b)` and `nil` are always returned by `Write()`, any real write errors will be returned by `RealWrite()`.
-type BodyInterceptor struct {
-	w    http.ResponseWriter
-	body []byte
-}
-
-// WriteHeader ...
-func (i *BodyInterceptor) WriteHeader(rc int) {
-	i.w.WriteHeader(rc)
-}
-
-// Write ...
-func (i *BodyInterceptor) Write(b []byte) (int, error) {
-	i.body = append(i.body, b...)
-	return len(b), nil
-}
-
-// Header ...
-func (i *BodyInterceptor) Header() http.Header {
-	return i.w.Header()
-}
-
-// RealWrite ...
-func (i *BodyInterceptor) RealWrite(b []byte) (int, error) {
-	wi, werr := i.w.Write(i.body)
-	return wi, werr
-}
-
-// Body ...
-func (i *BodyInterceptor) Body() []byte {
-	return i.body
-}
-
+// NotImplementedHandler returns a http.Handler which returns to the client a HTTP 501 Not Implemented status code, and a body which is a standard Traffic Ops error JSON.
+// Note this is common usage in Traffic Ops for unimplemented endpoints (for example, which were impossible or impractical to rewrite from Perl). This is a something of a misuse of the HTTP spec. RFC 7231 states 501 Not Implemented is intended for HTTP Methods which are not implemented. However, it's not a clear violation of the Spec, and Traffic Ops has determined it is the safest and least ambiguous way to indicate endpoints which no longer or don't yet exist.
 func NotImplementedHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		w.WriteHeader(http.StatusNotImplemented)
 		w.Write([]byte(`{"alerts":[{"level":"error","text":"The requested api version is not implemented by this server. If you are using a newer client with an older server, you will need to use an older client version or upgrade your server."}]}`))
 	})
 }
 
+// DisabledRouteHandler returns a http.Handler which returns a HTTP 5xx code to the client, and an error message indicating the route is currently disabled.
+// This is used for routes which have been disabled via configuration. See config.ConfigTrafficOpsGolang.RoutingBlacklist.DisabledRoutes.
 func DisabledRouteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		w.WriteHeader(http.StatusServiceUnavailable)
 		w.Write([]byte(`{"alerts":[{"level":"error","text":"The requested route is currently disabled."}]}` + "\n"))
 	})
