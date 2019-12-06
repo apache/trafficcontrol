@@ -556,6 +556,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// Stats Summary
 		{1.1, http.MethodGet, `stats_summary/?(\.json)?$`, trafficstats.GetStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380498598, perlBypass},
+		{1.4, http.MethodPost, `stats_summary/?(\.json)?$`, trafficstats.CreateStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380491598, noPerlBypass},
 
 		//Pattern based consistent hashing endpoint
 		{1.4, http.MethodPost, `consistenthash/?$`, consistenthash.Post, auth.PrivLevelReadOnly, Authenticated, nil, 1960755076, noPerlBypass},

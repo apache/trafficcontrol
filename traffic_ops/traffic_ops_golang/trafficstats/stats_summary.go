@@ -114,9 +114,56 @@ func queryStatsSummary(tx *sqlx.Tx, q string, queryValues map[string]interface{}
 	return statsSummaries, nil
 }
 
+// CreateStatsSummary handler for creating stats summaries
+func CreateStatsSummary(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{}, []string{})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	ss := tc.StatsSummary{}
+
+	if err := api.Parse(r.Body, inf.Tx.Tx, &ss); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	// CDN Name and Delivery service name are defaulted to "all" if not defined
+	if ss.CDNName == nil || len(*ss.CDNName) == 0 {
+		ss.CDNName = util.StrPtr("all")
+	}
+
+	if ss.DeliveryService == nil || len(*ss.DeliveryService) == 0 {
+		ss.DeliveryService = util.StrPtr("all")
+	}
+
+	id := -1
+	rows, err := inf.Tx.NamedQuery(insertQuery(), &ss)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting stats summary: %v", err))
+		return
+	}
+	for rows.Next() {
+		if err := rows.Scan(&id); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning created stats summary id: %v", err))
+			return
+		}
+	}
+	if id == -1 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("sstats summary id: %v", err))
+		return
+	}
+
+	successMsg := "Stats Summary was successfully created"
+	logMsg := fmt.Sprintf("STATSSUMMARY: %v, ID: %v, ACTION: create stats_summary", *ss.StatName, id)
+	api.CreateChangeLogRawTx(api.ApiChange, logMsg, inf.User, inf.Tx.Tx)
+	api.WriteRespAlert(w, r, tc.SuccessLevel, successMsg)
+}
+
 func selectQuery() string {
 	return `SELECT
-id,
 cdn_name,
 deliveryservice_name,
 stat_name,
@@ -124,4 +171,23 @@ stat_value,
 summary_time,
 stat_date
 FROM stats_summary`
+}
+
+func insertQuery() string {
+	return `
+INSERT INTO stats_summary (
+	cdn_name,
+	deliveryservice_name,
+	stat_name,
+	stat_value,
+	summary_time,
+	stat_date)
+VALUES (
+	:cdn_name,
+	:deliveryservice_name,
+	:stat_name,
+	:stat_value,
+	:summary_time,
+	:stat_date) RETURNING id
+`
 }

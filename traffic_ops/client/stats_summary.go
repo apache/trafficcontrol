@@ -72,6 +72,6 @@ func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, 
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	reqInf, err = post(to, fmt.Sprintf("%s/%s", basePathSummaryStats, "create"), reqBody, &alerts)
+	reqInf, err = post(to, basePathSummaryStats, reqBody, &alerts)
 	return alerts, reqInf, err
 }
