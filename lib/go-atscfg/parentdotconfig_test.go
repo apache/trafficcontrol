@@ -318,7 +318,7 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 
 	testComment(t, txt, serverName, toolName, toURL)
 
-	txt = strings.ReplaceAll(txt, " ", "")
+	txt = strings.Replace(txt, " ", "", -1)
 
 	if !strings.Contains(txt, `secondary_parent="my-parent-1.my-parent-1-domain`) {
 		t.Errorf("expected secondary parent 'my-parent-1.my-parent-1-domain', actual: '%v'", txt)
