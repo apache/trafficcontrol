@@ -26,6 +26,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 // Alert represents an informational message, typically returned through the Traffic Ops API.
@@ -81,7 +82,7 @@ func GetHandleErrorsFunc(w http.ResponseWriter, r *http.Request) func(status int
 			fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
 			return
 		}
-		w.Header().Set(ContentType, ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, StatusKey, status)

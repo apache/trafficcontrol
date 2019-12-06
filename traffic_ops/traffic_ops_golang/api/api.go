@@ -147,7 +147,7 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 	}
 	log.Debugln(userErr.Error())
 	*r = *r.WithContext(context.WithValue(r.Context(), tc.StatusKey, statusCode))
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write(append(respBts, '\n'))
 }
 
@@ -190,7 +190,7 @@ func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel,
 		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write(append(respBts, '\n'))
 }
 
@@ -215,7 +215,7 @@ func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLev
 		handleSimpleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.Write(append(respBts, '\n'))
 }
 
@@ -231,7 +231,7 @@ func WriteAlerts(w http.ResponseWriter, r *http.Request, code int, alerts tc.Ale
 		handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.WriteHeader(code)
 	w.Write(append(resp, '\n'))
 }
@@ -255,7 +255,7 @@ func WriteAlertsObj(w http.ResponseWriter, r *http.Request, code int, alerts tc.
 		handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
 		return
 	}
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.WriteHeader(code)
 	w.Write(append(respBts, '\n'))
 }

@@ -25,7 +25,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
@@ -34,7 +34,7 @@ const SysctlSeparator = " = "
 const SysctlFileName = "sysctl.conf"
 
 func GetSysctl(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, tc.ContentTypeTextPlain, makeSysctl)
+	WithProfileData(w, r, rfc.ContentTypeTextPlain, makeSysctl)
 }
 
 func makeSysctl(tx *sql.Tx, _ *config.Config, profile ats.ProfileData, _ string) (string, error) {

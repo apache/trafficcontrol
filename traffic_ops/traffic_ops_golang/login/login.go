@@ -166,7 +166,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		if !authenticated {
 			w.WriteHeader(http.StatusUnauthorized)
 		}
@@ -206,7 +206,7 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		w.Write(append(respBts, '\n'))
 
 		// TODO: afaik, Perl never clears these tokens. They should be reset to NULL on login, I think.
@@ -357,7 +357,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		if !authenticated {
 			w.WriteHeader(http.StatusUnauthorized)
 		}
@@ -503,7 +503,7 @@ func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		w.Write(append(respBts, '\n'))
 	}
 }

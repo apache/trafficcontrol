@@ -73,6 +73,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/profileparameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/region"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/role"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/server"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercheck"
@@ -170,8 +171,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `cdns/configs/?(\.json)?$`, cdn.GetConfigs, auth.PrivLevelReadOnly, Authenticated, nil, 1768437852, noPerlBypass},
 
 		{1.1, http.MethodGet, `cdns/domains/?(\.json)?$`, cdn.DomainsHandler, auth.PrivLevelReadOnly, Authenticated, nil, 296902560, noPerlBypass},
-		{1.1, http.MethodGet, `cdns/health$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}, 1443074329, noPerlBypass},
-		{1.1, http.MethodGet, `cdns/routing$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}, 66722982, noPerlBypass},
+		{1.1, http.MethodGet, `cdns/health$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 1443074329, noPerlBypass},
+		{1.1, http.MethodGet, `cdns/routing$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 66722982, noPerlBypass},
 
 		//CDN: CRUD
 		{1.1, http.MethodGet, `cdns/?(\.json)?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 1345914650, noPerlBypass},
@@ -297,10 +298,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Server
 		{1.1, http.MethodGet, `servers/status$`, server.GetServersStatusCountsHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2052786293, perlBypass},
-		{1.1, http.MethodGet, `servers/totals$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}, 2037840835, noPerlBypass},
+		{1.1, http.MethodGet, `servers/totals$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 2037840835, noPerlBypass},
 
 		//Serverchecks
-		{1.1, http.MethodGet, `servers/checks$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}, 1796112922, noPerlBypass},
+		{1.1, http.MethodGet, `servers/checks$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 1796112922, noPerlBypass},
 		{1.1, http.MethodPost, `servercheck/?(\.json)?$`, servercheck.CreateUpdateServercheck, auth.PrivLevelInvalid, Authenticated, nil, 1764281568, perlBypass},
 
 		//Server Details
@@ -663,7 +664,7 @@ func rootHandler(d ServerData) http.Handler {
 
 	log.Debugf("our reverseProxy: %++v\n", rp)
 	log.Debugf("our reverseProxy's transport: %++v\n", tr)
-	loggingProxyHandler := wrapAccessLog(d.Secrets[0], rp)
+	loggingProxyHandler := middleware.WrapAccessLog(d.Secrets[0], rp)
 
 	managerHandler := CreateThrottledHandler(loggingProxyHandler, d.BackendMaxConnections["mojolicious"])
 	return managerHandler

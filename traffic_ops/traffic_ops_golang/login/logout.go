@@ -24,6 +24,7 @@ import "fmt"
 import "net/http"
 
 import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/lib/go-rfc"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
@@ -51,7 +52,7 @@ func LogoutHandler(secret string) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		w.Write(append(respBts, '\n'))
 	}
 }

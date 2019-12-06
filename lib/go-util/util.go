@@ -1,4 +1,4 @@
-package tc
+package util
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,28 +19,20 @@ package tc
  * under the License.
  */
 
-type ErrorConstant string
-
-func (e ErrorConstant) Error() string { return string(e) }
-
-const DBError = ErrorConstant("database access error")
-const NilTenantError = ErrorConstant("tenancy is enabled but request tenantID is nil")
-const TenantUserNotAuthError = ErrorConstant("user not authorized for requested tenant")
-const TenantDSUserNotAuthError = ErrorConstant("user not authorized for requested delivery service tenant")
-
-type AlertLevel int
-
-const (
-	SuccessLevel AlertLevel = iota
-	InfoLevel
-	WarnLevel
-	ErrorLevel
+import (
+	"runtime"
 )
 
-var alertLevels = [4]string{"success", "info", "warning", "error"}
-
-func (a AlertLevel) String() string {
-	return alertLevels[a]
+// Stacktrace is a helper function which returns the current stacktrace.
+// It wraps runtime.Stack, which requires a sufficiently long buffer.
+func Stacktrace() []byte {
+	initialBufSize := 1024
+	buf := make([]byte, initialBufSize)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, len(buf)*2)
+	}
 }
-
-const CachegroupCoordinateNamePrefix = "from_cachegroup_"

@@ -25,14 +25,14 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
 func GetURLSig(w http.ResponseWriter, r *http.Request) {
-	WithProfileData(w, r, tc.ContentTypeTextPlain, urlSigDotConfig)
+	WithProfileData(w, r, rfc.ContentTypeTextPlain, urlSigDotConfig)
 }
 
 func urlSigDotConfig(tx *sql.Tx, cfg *config.Config, profile ats.ProfileData, fileName string) (string, error) {

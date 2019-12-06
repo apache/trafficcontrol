@@ -1,4 +1,4 @@
-package routing
+package middleware
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -31,7 +31,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
@@ -46,7 +46,7 @@ var debugLogging = flag.Bool("debug", false, "enable debug logging in test")
 // TestWrapHeaders checks that appropriate default headers are added to a request
 func TestWrapHeaders(t *testing.T) {
 	body := "We are here!!"
-	f := wrapHeaders(func(w http.ResponseWriter, r *http.Request) {
+	f := WrapHeaders(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(body))
 	})
 
@@ -85,12 +85,12 @@ func TestWrapHeaders(t *testing.T) {
 
 // TestWrapPanicRecover checks that a recovered panic returns a 500
 func TestWrapPanicRecover(t *testing.T) {
-	f := wrapPanicRecover(func(w http.ResponseWriter, r *http.Request) {
+	f := WrapPanicRecover(func(w http.ResponseWriter, r *http.Request) {
 		var foo *string
 		bar := *foo // will throw nil dereference panic
 		w.Write([]byte(bar))
 	})
-	f = wrapHeaders(f)
+	f = WrapHeaders(f)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest("", "/", nil)
@@ -120,7 +120,7 @@ func TestGzip(t *testing.T) {
 		t.Error("Error closing gzipper", err)
 	}
 
-	f := wrapHeaders(func(w http.ResponseWriter, r *http.Request) {
+	f := WrapHeaders(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(body))
 	})
 
@@ -182,7 +182,7 @@ func TestWrapAuth(t *testing.T) {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 
