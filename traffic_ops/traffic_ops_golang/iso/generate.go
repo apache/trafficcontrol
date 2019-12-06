@@ -22,8 +22,11 @@ package iso
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -61,6 +64,7 @@ import (
 //   HTTP 200
 //   Content-Disposition: attachment; filename="db.infra.ciab.test-centos72.iso"
 //   Content-Type: application/download
+//
 func ISOs(w http.ResponseWriter, req *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(req, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -69,37 +73,70 @@ func ISOs(w http.ResponseWriter, req *http.Request) {
 	}
 	defer inf.Close()
 
-	w.Header().Set(tc.ContentType, tc.ApplicationJson)
-
 	var ir isoRequest
 	if err := json.NewDecoder(req.Body).Decode(&ir); err != nil {
 		api.HandleErr(w, req, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to process request"), err)
 		return
 	}
+
 	if errMsgs := ir.validate(); len(errMsgs) > 0 {
-		resp := struct {
-			tc.Alerts
+		respData := struct {
+			tc.Alerts `json:"alerts"`
 		}{
 			Alerts: tc.CreateAlerts(tc.ErrorLevel, errMsgs...),
 		}
 
-		body, err := json.Marshal(resp)
+		body, err := json.Marshal(respData)
 		if err != nil {
 			statusCode := http.StatusInternalServerError
 			api.HandleErr(w, req, nil, statusCode, errors.New(http.StatusText(statusCode)), errors.New("marshalling JSON: "+err.Error()))
 			return
 		}
+		w.Header().Set(tc.ContentType, tc.ApplicationJson)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(body)
 		return
 	}
 
-	level, message, resp, err := isos(w, req)
-	if err != nil {
-		api.HandleErr(w, req, inf.Tx.Tx, 500, errors.New("user error"), errors.New("sys error"))
+	stream := ir.Stream.val
+
+	// TODO: Avoid allowing user input to determine part of destination.
+	isoDest := filepath.Join(
+		inf.Config.ConfigGenISO.ISORootPath,
+		"iso",
+		fmt.Sprintf("%s-%s.iso", ir.fqdn(), ir.OSVersionDir),
+	)
+	if err := os.MkdirAll(filepath.Dir(isoDest), 0777); err != nil {
+		statusCode := http.StatusInternalServerError
+		api.HandleErr(w, req, inf.Tx.Tx, statusCode, errors.New(http.StatusText(statusCode)), errors.New("error creating iso dir: "+err.Error()))
 		return
 	}
-	api.WriteRespAlertObj(w, req, level, message, resp)
+
+	if stream {
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filepath.Base(isoDest)))
+		w.Header().Set("Content-Type", "application/download")
+
+		if err := genISO(w, inf.Tx, ir, isoDest); err != nil {
+			statusCode := http.StatusInternalServerError
+			api.HandleErr(w, req, inf.Tx.Tx, statusCode, errors.New(http.StatusText(statusCode)), errors.New("error streaming iso: "+err.Error()))
+		}
+		return
+	}
+
+	if err := genISO(w, inf.Tx, ir, isoDest); err != nil {
+		statusCode := http.StatusInternalServerError
+		api.HandleErr(w, req, inf.Tx.Tx, statusCode, errors.New(http.StatusText(statusCode)), errors.New("error creating iso: "+err.Error()))
+	}
+
+	resp := struct {
+		ISOURL  string `json:"isoURL"`
+		ISOName string `json:"isoName"`
+	}{
+		ISOURL:  "http://path.com/iso.iso",
+		ISOName: filepath.Base(isoDest),
+	}
+
+	api.WriteRespAlertObj(w, req, tc.SuccessLevel, "Generate ISO was successful.", resp)
 }
 
 func isos(w http.ResponseWriter, req *http.Request) (tc.AlertLevel, string, interface{}, error) {
@@ -125,6 +162,14 @@ type isoRequest struct {
 	MgmtIPGateway net.IP  `json:"mgmtIpGateway"`
 	MgmtInterface string  `json:"mgmtInterface"`
 	Stream        boolStr `json:"stream"`
+}
+
+func (i *isoRequest) fqdn() string {
+	fqdn := i.HostName
+	if i.DomainName != "" {
+		fqdn += "." + i.DomainName
+	}
+	return fqdn
 }
 
 // validate returns an empty slice if the isoRequest is valid. Otherwise,

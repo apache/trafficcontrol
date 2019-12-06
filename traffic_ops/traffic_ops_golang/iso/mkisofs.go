@@ -1,14 +1,302 @@
 package iso
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import (
+	"bufio"
 	"bytes"
+	"database/sql"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/jmoiron/sqlx"
 )
+
+const (
+	ksCfgNetwork     = "network.cfg"
+	ksCfgMgmtNetwork = "mgmt_network.cfg"
+	ksCfgPassword    = "password.cfg"
+	ksCfgDisk        = "disk.cfg"
+	ksStateOut       = "state.out"
+)
+
+func genISO(w io.Writer, tx *sqlx.Tx, r isoRequest, isoDest string) error {
+	streamISO := r.Stream.val
+
+	ksDir, err := kickstarterDir(tx, r.OSVersionDir)
+	if err != nil {
+		return err
+	}
+	cfgDir := filepath.Join(ksDir, ksCfgDir)
+	log.Infof("cfg_dir: %s", cfgDir)
+
+	if err = writeKSCfgs(cfgDir, r); err != nil {
+		return err
+	}
+
+	if streamISO {
+		cmd := newStreamISOCmd(ksDir, isoDest)
+		log.Infof("Using %s ISO generation command: %s", cmd.cmdType, cmd.String())
+
+		// Create state.out
+		stateOut := fmt.Sprintf("Dir== %s\n%s\n", ksDir, cmd.String())
+		if err = ioutil.WriteFile(filepath.Join(cfgDir, ksStateOut), []byte(stateOut), 0666); err != nil {
+			return err
+		}
+
+		return cmd.stream(w)
+	}
+
+	cmd := newSaveISOCmd(ksDir, isoDest)
+	log.Infof("Using %s ISO generation command: %s", cmd.cmdType, cmd.String())
+
+	// Create state.out
+	stateOut := fmt.Sprintf("Dir== %s\n%s\n", ksDir, cmd.String())
+	if err = ioutil.WriteFile(filepath.Join(cfgDir, ksStateOut), []byte(stateOut), 0666); err != nil {
+		return err
+	}
+
+	result, err := cmd.save()
+	log.Infoln(result)
+
+	return err
+}
+
+func newStreamISOCmd(ksDir, isoDest string) *streamISOCmd {
+	s := streamISOCmd{
+		isoDest: isoDest,
+	}
+
+	if customExec := customGenISOPath(ksDir); customExec != "" {
+		s.cmdType = "custom"
+		s.cmd = exec.Command(customExec, isoDest)
+		s.isSavedToDisk = true
+	} else {
+		s.cmdType = "default"
+		s.cmd = exec.Command(
+			"mkisofs",
+			"-joliet-long",
+			"-input-charset", "utf-8",
+			"-b", "isolinux/isolinux.bin",
+			"-c", "isolinux/boot.cat",
+			"-no-emul-boot",
+			"-boot-load-size", "4",
+			"-boot-info-table",
+			"-R",
+			"-J",
+			"-v",
+			"-T",
+			ksDir,
+		)
+	}
+
+	return &s
+}
+
+type streamISOCmd struct {
+	cmd           *exec.Cmd
+	cmdType       string
+	isSavedToDisk bool
+	isoDest       string
+}
+
+func (s *streamISOCmd) String() string {
+	return strings.Join(s.cmd.Args, " ")
+}
+
+func (s *streamISOCmd) stream(w io.Writer) error {
+	if s.isSavedToDisk {
+		return s.streamFromFile(w)
+	}
+
+	return s.streamStdout(w)
+}
+
+func (s *streamISOCmd) streamStdout(w io.Writer) error {
+	s.cmd.Stdout = w
+	return s.cmd.Run()
+}
+
+func (s *streamISOCmd) streamFromFile(w io.Writer) error {
+	if err := s.cmd.Run(); err != nil {
+		return err
+	}
+	defer os.Remove(s.isoDest)
+
+	isoFd, err := os.Open(s.isoDest)
+	if err != nil {
+		return err
+	}
+	defer isoFd.Close()
+
+	_, err = io.Copy(w, bufio.NewReader(isoFd))
+	return err
+}
+
+func newSaveISOCmd(ksDir, isoDest string) *saveISOCmd {
+	var s saveISOCmd
+
+	if customExec := customGenISOPath(ksDir); customExec != "" {
+		s.cmdType = "custom"
+		s.cmd = exec.Command(customExec, isoDest)
+	} else {
+		s.cmdType = "default"
+		s.cmd = exec.Command(
+			"mkisofs",
+			"-o", isoDest, // output to file instead of STDOUT
+			"-joliet-long",
+			"-input-charset", "utf-8",
+			"-b", "isolinux/isolinux.bin",
+			"-c", "isolinux/boot.cat",
+			"-no-emul-boot",
+			"-boot-load-size", "4",
+			"-boot-info-table",
+			"-R",
+			"-J",
+			"-v",
+			"-T",
+			ksDir,
+		)
+	}
+
+	return &s
+}
+
+type saveISOCmd struct {
+	cmd     *exec.Cmd
+	cmdType string
+}
+
+func (s *saveISOCmd) String() string {
+	return strings.Join(s.cmd.Args, " ")
+}
+
+func (s *saveISOCmd) save() (string, error) {
+	result, err := s.cmd.CombinedOutput()
+	return string(result), err
+}
+
+func customGenISOPath(dir string) string {
+	// Allow for a custom script to be used instead of the default command.
+	// The script must:
+	// - Be inside the ksDir and named "generate"
+	// - Be executable (by somebody)
+	// - Accept a single argument indicating where the resulting ISO image should be saved
+
+	customPath := filepath.Join(dir, "generate")
+	stat, err := os.Stat(customPath)
+
+	// Check if file exists and is executable
+	const executablePermBits = 0111
+	if err == nil && stat.Mode().Perm()&executablePermBits != 0 {
+		return customPath
+	}
+	return ""
+}
+
+// kickstarterDir returns the directory containing the kickstarter files for
+// the given OS. This is the directory passed to the mkisofs command.
+// The root part of the directory can be overriden with a Parameter database entry.
+func kickstarterDir(tx *sqlx.Tx, osVersionDir string) (string, error) {
+	var baseDir string
+	err := tx.QueryRow(
+		`SELECT value FROM parameter WHERE name = $1 AND config_file = $2 LIMIT 1`,
+		ksFilesParamName,
+		ksFilesParamConfigFile,
+	).Scan(&baseDir)
+	if err != nil && err != sql.ErrNoRows {
+		return "", err
+	}
+
+	if baseDir == "" {
+		baseDir = cfgDefaultDir
+	}
+
+	return filepath.Join(baseDir, osVersionDir), nil
+}
+
+// writeKSCfgs writes to the given directory the various Kickstart
+// configuration files using the data from the given isoRequest.
+func writeKSCfgs(dir string, r isoRequest) error {
+	nameservers, err := readDefaultUnixResolve()
+	if err != nil {
+		return err
+	}
+
+	// Create network.cfg
+
+	networkCfgFd, err := os.Create(filepath.Join(dir, ksCfgNetwork))
+	if err != nil {
+		return err
+	}
+	defer networkCfgFd.Close()
+	if err = writeNetworkCfg(networkCfgFd, r, nameservers); err != nil {
+		return err
+	}
+
+	// Create mgmt_network.cfg
+
+	mgmtNetworkCfgFd, err := os.Create(filepath.Join(dir, ksCfgMgmtNetwork))
+	if err != nil {
+		return err
+	}
+	defer mgmtNetworkCfgFd.Close()
+	if err = writeMgmtNetworkCfg(mgmtNetworkCfgFd, r); err != nil {
+		return err
+	}
+
+	// Create password.cfg
+
+	passwordCfgFd, err := os.Create(filepath.Join(dir, ksCfgPassword))
+	if err != nil {
+		return err
+	}
+	defer passwordCfgFd.Close()
+	// Empty salt parameter causes a random salt to be generated,
+	// which is the desired behavior.
+	if err = writePasswordCfg(passwordCfgFd, r, ""); err != nil {
+		return err
+	}
+
+	// Create disk.cfg
+
+	diskCfgFd, err := os.Create(filepath.Join(dir, ksCfgDisk))
+	if err != nil {
+		return err
+	}
+	defer diskCfgFd.Close()
+	if err = writeDiskCfg(diskCfgFd, r); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 // bondedRegex matches a bonded device interface name.
 var bondedRegex = regexp.MustCompile(`^bond\d+`)
@@ -28,13 +316,7 @@ func writeNetworkCfg(w io.Writer, r isoRequest, nameservers []string) error {
 	}
 	cfg.addOpt("MTU", strconv.Itoa(r.InterfaceMTU))
 	cfg.addOpt("NAMESERVER", strings.Join(nameservers, ","))
-	cfg.addOpt("HOSTNAME", func() string {
-		fqdn := r.HostName
-		if r.DomainName != "" {
-			fqdn += "." + r.DomainName
-		}
-		return fqdn
-	}())
+	cfg.addOpt("HOSTNAME", r.fqdn())
 	cfg.addOpt("NETWORKING_IPV6", "yes")
 	cfg.addIP("IPV6ADDR", r.IP6Address)
 	cfg.addIP("IPV6_DEFAULTGW", r.IP6Gateway)
