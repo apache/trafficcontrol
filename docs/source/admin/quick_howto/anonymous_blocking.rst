@@ -63,7 +63,7 @@ Configure Anonymous Blocking
 		:width: 40%
 		:align: center
 
-#. Enable Anonmyous Blocking for a :term:`Delivery Service` using the :ref:`Delivery Services view in Traffic Portal <tp-services-delivery-service>` (don't forget to save changes!)
+#. Enable Anonymous Blocking for a :term:`Delivery Service` using the :ref:`Delivery Services view in Traffic Portal <tp-services-delivery-service>` (don't forget to save changes!)
 
 	.. figure:: anonymous_blocking/02.png
 		:width: 40%
