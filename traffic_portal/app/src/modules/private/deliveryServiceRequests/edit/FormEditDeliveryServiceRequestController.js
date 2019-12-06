@@ -100,6 +100,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest($scope.dsRequest.id, userModel.user.id));
 		// set the status to 'pending'
 		promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus($scope.dsRequest.id, 'pending'));
+		return promises;
 	};
 
 	$scope.fulfillRequest = function(ds) {
@@ -166,9 +167,13 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 					deliveryServiceService.deleteDeliveryService(ds).
 						then(
 							function() {
-								updateDeliveryServiceRequest(); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
-								messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], true);
-								locationUtils.navigateToPath('/delivery-service-requests');
+								let promises = updateDeliveryServiceRequest(); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
+								$q.all(promises)
+									.then(
+										function() {
+											messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], true);
+											locationUtils.navigateToPath('/delivery-service-requests');
+										});
 							},
 							function(fault) {
 								$anchorScroll(); // scrolls window to top
