@@ -48,3 +48,34 @@ func (to *Session) UpdateServerStatus(serverID int, req tc.ServerPutStatus) (*tc
 	}
 	return &alerts, reqInf, nil
 }
+
+var queueUpdateActions = map[bool]string{
+	false: "dequeue",
+	true:  "queue",
+}
+
+// SetServerQueueUpdate updates a server's status and returns the response.
+func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool) (tc.ServerQueueUpdateResponse, ReqInf, error) {
+	var (
+		req    = tc.ServerQueueUpdateRequest{Action: queueUpdateActions[queueUpdate]}
+		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
+		resp   tc.ServerQueueUpdateResponse
+	)
+
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return resp, reqInf, err
+	}
+
+	path := fmt.Sprintf("%s/servers/%d/queue_update", apiBase, serverID)
+	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody)
+	reqInf.RemoteAddr = remoteAddr
+	if err != nil {
+		return resp, reqInf, err
+	}
+	defer httpResp.Body.Close()
+
+	err = json.NewDecoder(httpResp.Body).Decode(&resp)
+
+	return resp, reqInf, err
+}

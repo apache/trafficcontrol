@@ -16,6 +16,9 @@ package v14
 */
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -146,4 +149,75 @@ func UpdateTestServerStatus(t *testing.T) {
 		t.Error("update server status exected: err, actual: nil")
 	}
 
+}
+
+func TestServerQueueUpdate(t *testing.T) {
+	WithObjs(t, []TCObj{Divisions, Regions, PhysLocations, Statuses, Types, CacheGroups, CDNs, Profiles, Servers}, func() {
+		const serverName = "atlanta-edge-01"
+
+		queueUpdateActions := map[bool]string{
+			false: "dequeue",
+			true:  "queue",
+		}
+
+		var s tc.Server
+		resp, _, err := TOSession.GetServerByHostName(serverName)
+		if err != nil {
+			t.Fatalf("failed to GET Server by hostname: %v - %v", serverName, err)
+		}
+		s = resp[0]
+
+		// assert that servers don't have updates pending
+		if got, want := s.UpdPending, false; got != want {
+			t.Fatalf("unexpected UpdPending, got: %v, want: %v", got, want)
+		}
+
+		for _, setVal := range [...]bool{true, false} {
+			t.Run(fmt.Sprint(setVal), func(t *testing.T) {
+				// queue update and check response
+				quResp, _, err := TOSession.SetServerQueueUpdate(s.ID, setVal)
+				if err != nil {
+					t.Fatalf("failed to set queue update for server with ID %v to %v: %v", s.ID, setVal, err)
+				}
+				if got, want := int(quResp.Response.ServerID), s.ID; got != want {
+					t.Errorf("wrong serverId in response, got: %v, want: %v", got, want)
+				}
+				if got, want := quResp.Response.Action, queueUpdateActions[setVal]; got != want {
+					t.Errorf("wrong action in response, got: %v, want: %v", got, want)
+				}
+
+				// assert that the server has updates queued
+				resp, _, err = TOSession.GetServerByID(s.ID)
+				if err != nil {
+					t.Fatalf("failed to GET Server by ID: %v - %v", s.ID, err)
+				}
+				s = resp[0]
+				if got, want := s.UpdPending, setVal; got != want {
+					t.Errorf("unexpected UpdPending, got: %v, want: %v", got, want)
+				}
+			})
+		}
+
+		t.Run("validations", func(t *testing.T) {
+			// server doesn't exist
+			_, _, err = TOSession.SetServerQueueUpdate(-1, true)
+			if err == nil {
+				t.Error("update server status expected: error, actual: nil")
+			}
+
+			// invalid action
+			req, err := json.Marshal(tc.ServerQueueUpdateRequest{Action: "foobar"})
+			if err != nil {
+				t.Fatalf("failed to encode request body: %v", err)
+			}
+			path := fmt.Sprintf("/api/1.4/servers/%d/queue_update", s.ID)
+			httpResp, _, err := TOSession.RawRequest(http.MethodPost, path, req)
+			if err != nil {
+				t.Fatalf("POST request failed: %v", err)
+			}
+			if httpResp.StatusCode >= 200 && httpResp.StatusCode <= 299 {
+				t.Errorf("unexpected status code: got %v, want something outside the range [200, 299]", httpResp.StatusCode)
+			}
+		})
+	})
 }
