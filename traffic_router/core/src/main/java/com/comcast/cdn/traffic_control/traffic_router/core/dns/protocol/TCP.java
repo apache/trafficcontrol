@@ -114,12 +114,14 @@ public class TCP extends AbstractProtocol {
 
         @Override
         public void cleanup() {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (final IOException e) {
-                    LOGGER.debug(e.getMessage(), e);
-                }
+            if (socket == null) {
+                return;
+            }
+
+            try {
+                socket.close();
+            } catch (final IOException e) {
+                LOGGER.debug(e.getMessage(), e);
             }
         }
     }

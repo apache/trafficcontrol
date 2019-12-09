@@ -107,7 +107,7 @@ public class UDPTest {
 
     @Test
     public void testSubmit() throws Exception {
-        final Runnable r = mock(Runnable.class);
+        final SocketHandler r = mock(SocketHandler.class);
         udp.submit(r);
         verify(executorService).submit(r);
     }

@@ -96,7 +96,7 @@ public class TCPTest {
 
     @Test
     public void testSubmit() {
-        final Runnable r = mock(Runnable.class);
+        final SocketHandler r = mock(SocketHandler.class);
         tcp.submit(r);
         verify(executorService).submit(r);
     }
