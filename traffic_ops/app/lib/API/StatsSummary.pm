@@ -81,8 +81,10 @@ sub create {
 	my $summary_time = $self->req->json->{summaryTime};
 	my $stat_date    = $self->req->json->{statDate};
 
+	my $alternative = "POST /api/1.4/stats_summary";
+
 	if ( !defined($stat_name) || !defined($stat_value) || !defined($stat_date) ) {
-		$self->alert( { ERROR => "Please provide a stat name, value, and date" } );
+		return $self->with_deprecation("Please provide a stat name, value, and date", "error", 500, $alternative);
 	}
 
 	my $insert = $self->db->resultset('StatsSummary')->create(
@@ -96,8 +98,7 @@ sub create {
 		}
 	);
 	$insert->insert();
-
-	return $self->success("Successfully added stats summary record");
+	return $self->with_deprecation("Successfully added stats summary record", "success", 200, $alternative);
 }
 
 1;

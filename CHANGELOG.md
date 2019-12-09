@@ -115,7 +115,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Portal - Turn off TLSv1
 
 ### Deprecated/Removed
-- The TO API `cachegroup_fallbacks` endpoint is now deprecated
+- Traffic Ops Golang Endpoints
+  - /api/1.1/cachegroup_fallbacks
+  - /api/1.1/stats_summary/create
 
 ## [3.0.0] - 2018-10-30
 ### Added
