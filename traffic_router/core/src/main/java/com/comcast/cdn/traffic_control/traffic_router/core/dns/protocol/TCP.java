@@ -74,7 +74,7 @@ public class TCP extends AbstractProtocol {
     /**
      * This class is package private for unit testing purposes.
      */
-    class TCPSocketHandler implements Runnable {
+    class TCPSocketHandler implements SocketHandler {
         private final Socket socket;
 
         /**
@@ -108,6 +108,13 @@ public class TCP extends AbstractProtocol {
             } catch (final Exception e) {
                 LOGGER.error(e.getMessage(), e);
             } finally {
+                cleanup();
+            }
+        }
+
+        @Override
+        public void cleanup() {
+            if (socket != null) {
                 try {
                     socket.close();
                 } catch (final IOException e) {

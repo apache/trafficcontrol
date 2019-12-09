@@ -83,7 +83,7 @@ public class UDP extends AbstractProtocol {
     /**
      * This class is package private for unit testing purposes.
      */
-    class UDPPacketHandler implements Runnable {
+    class UDPPacketHandler implements SocketHandler {
         private final DatagramPacket packet;
 
         /**
@@ -112,6 +112,11 @@ public class UDP extends AbstractProtocol {
             } catch (final Exception e) {
                 LOGGER.error(e.getMessage(), e);
             }
+        }
+
+        @Override
+        public void cleanup() {
+            // noop for UDP
         }
     }
 
