@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ToolsService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
+var ToolsService = function($http, $q, locationUtils, messageModel, ENV) {
 
 	this.getOSVersions = function() {
 		var request = $q.defer();
@@ -64,5 +64,5 @@ var ToolsService = function($http, $q, Restangular, locationUtils, messageModel,
 
 };
 
-ToolsService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
+ToolsService.$inject = ['$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ToolsService;
