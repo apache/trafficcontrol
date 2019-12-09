@@ -19,7 +19,11 @@ package tc
  * under the License.
  */
 
+import "database/sql"
+import "errors"
+
 import "github.com/apache/trafficcontrol/lib/go-rfc"
+import "github.com/apache/trafficcontrol/lib/go-util"
 
 // UserCredentials contains Traffic Ops login credentials
 type UserCredentials struct {
@@ -89,7 +93,7 @@ type User struct {
 	Username         *string    `json:"username" db:"username"`
 	RegistrationSent *TimeNoMod `json:"registrationSent" db:"registration_sent"`
 	LocalPassword    *string    `json:"localPasswd,omitempty" db:"local_passwd"`
-	RoleName         *string    `json:"roleName,omitempty" db:"-"`
+	RoleName         *string    `json:"roleName,omitempty" db:"rolename"`
 	commonUserFields
 }
 
@@ -138,4 +142,34 @@ type UserDeliveryServiceDeleteResponse struct {
 
 type UserPasswordResetRequest struct {
 	Email rfc.EmailAddress `json:"email"`
+}
+
+// UserRegistrationRequest is the request submitted by operators when they want to register a new
+// user.
+type UserRegistrationRequest struct {
+	Email rfc.EmailAddress `json:"email"`
+	// Role - despite being named "Role" - is actually merely the *ID* of a Role to give the new user.
+	Role     uint `json:"role"`
+	TenantID uint `json:"tenantId"`
+}
+
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator interface.
+func (urr *UserRegistrationRequest) Validate(tx *sql.Tx) error {
+	var errs = []error{}
+	if urr.Role == 0 {
+		errs = append(errs, errors.New("role: required and cannot be zero."))
+	}
+
+	if urr.TenantID == 0 {
+		errs = append(errs, errors.New("tenantId: required and cannot be zero."))
+	}
+
+	// This can only happen if an email isn't present in the request; the JSON parse handles actually
+	// invalid email addresses.
+	if urr.Email.Address.Address == "" {
+		errs = append(errs, errors.New("email: required"))
+	}
+
+	return util.JoinErrs(errs)
 }
