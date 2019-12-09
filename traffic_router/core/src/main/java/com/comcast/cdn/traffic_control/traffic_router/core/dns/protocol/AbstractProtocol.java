@@ -82,6 +82,7 @@ public abstract class AbstractProtocol implements Protocol {
     public void shutdown() {
         shutdownRequested = true;
         executorService.shutdownNow();
+        cancelService.shutdownNow();
     }
 
     /**
