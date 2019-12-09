@@ -23,22 +23,32 @@ import (
 
 // GetFederationsFederationResolversByID retrieves all Federation Resolvers belonging to Federation of ID.
 func (to *Session) GetFederationsFederationResolversByID(id int) (tc.FederationFederationResolversResponse, ReqInf, error) {
-	path := fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, id)
+	var (
+		path   = fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, id)
+		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
+		resp   tc.FederationFederationResolversResponse
+	)
+	httpResp, remoteAddr, err := to.request(http.MethodGet, path, nil)
+	reqInf.RemoteAddr = remoteAddr
+	if err != nil {
+		return resp, reqInf, err
+	}
+	defer httpResp.Body.Close()
 
-	data := tc.FederationFederationResolversResponse{}
-	inf, err := get(to, path, &data)
-	return data, inf, err
+	err = json.NewDecoder(httpResp.Body).Decode(&resp)
+
+	return resp, reqInf, err
 }
 
 // AssignFederationsFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) AssignFederationsFederationResolver(fedID int, ids []int, replace bool) (tc.Alerts, ReqInf, error) {
+func (to *Session) AssignFederationsFederationResolver(fedID int, ids []int, replace bool) (tc.AssignFederationFederationResolversResponse, ReqInf, error) {
 	var (
 		req = tc.AssignFederationResolversRequest{
 			Replace:        replace,
 			FedResolverIDs: ids,
 		}
 		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
-		resp   = tc.FederationFederationResolversResponse
+		resp   tc.AssignFederationFederationResolversResponse
 	)
 
 	reqBody, err := json.Marshal(req)
@@ -48,10 +58,11 @@ func (to *Session) AssignFederationsFederationResolver(fedID int, ids []int, rep
 
 	path := fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, fedID) //, req)
 	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody)
+	reqInf.RemoteAddr = remoteAddr
 	if err != nil {
 		return resp, reqInf, err
 	}
-	defer resp.Body.Close()
+	defer httpResp.Body.Close()
 
 	err = json.NewDecoder(httpResp.Body).Decode(&resp)
 
