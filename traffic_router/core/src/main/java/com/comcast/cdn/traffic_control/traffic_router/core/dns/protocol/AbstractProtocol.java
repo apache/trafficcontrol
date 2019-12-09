@@ -146,8 +146,8 @@ public abstract class AbstractProtocol implements Protocol {
 	protected void submit(final Runnable job) {
 		final int queueLength = executorService.getQueue().size();
 
-		if (queueLength >= getQueueDepth()) {
-			LOGGER.warn(String.format("%s request thread pool full and queue depth limit reached (%d >= %d); discarding request", this.getClass().getName(), queueLength, getQueueDepth()));
+		if (queueDepth > 0 && queueLength >= queueDepth) {
+			LOGGER.warn(String.format("%s request thread pool full and queue depth limit reached (%d >= %d); discarding request", this.getClass().getSimpleName(), queueLength, queueDepth));
 			return;
 		}
 
@@ -184,10 +184,6 @@ public abstract class AbstractProtocol implements Protocol {
 
 	public void setTaskTimeout(final int taskTimeout) {
 		this.taskTimeout = taskTimeout;
-	}
-
-	public int getQueueDepth() {
-		return queueDepth;
 	}
 
 	public void setQueueDepth(final int queueDepth) {
