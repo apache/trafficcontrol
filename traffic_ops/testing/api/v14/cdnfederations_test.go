@@ -33,7 +33,7 @@ func TestCDNFederations(t *testing.T) {
 	})
 }
 
-func TestFederationsFederationResolvers(t *testing.T) {
+func TestFederationFederationResolvers(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants, DeliveryServices, CDNFederations, FederationResolvers}, func() {
 		AssignTestFederationFederationResolvers(t)
 		GetTestFederationFederationResolvers(t)
@@ -175,7 +175,7 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 	}
 
 	for _, c := range testCases {
-		_, _, err := TOSession.AssignFederationsFederationResolver(c.fedID, c.resolverIDs, c.replace)
+		_, _, err := TOSession.AssignFederationFederationResolver(c.fedID, c.resolverIDs, c.replace)
 
 		if err != nil && !strings.Contains(err.Error(), c.err) {
 			t.Fatalf("error: expected error result %v, want: %v", err, c.err)
@@ -203,7 +203,7 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 	}
 
 	for _, c := range testCases {
-		resp, _, err := TOSession.GetFederationsFederationResolversByID(c.fedID)
+		resp, _, err := TOSession.GetFederationFederationResolversByID(c.fedID)
 		if err != nil {
 			t.Fatalf("Error getting federation federation resolvers by federation id: %d, err: %s", c.fedID, err.Error())
 		}

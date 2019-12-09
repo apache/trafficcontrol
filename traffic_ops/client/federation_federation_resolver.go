@@ -21,8 +21,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// GetFederationsFederationResolversByID retrieves all Federation Resolvers belonging to Federation of ID.
-func (to *Session) GetFederationsFederationResolversByID(id int) (tc.FederationFederationResolversResponse, ReqInf, error) {
+// GetFederationFederationResolversByID retrieves all Federation Resolvers belonging to Federation of ID.
+func (to *Session) GetFederationFederationResolversByID(id int) (tc.FederationFederationResolversResponse, ReqInf, error) {
 	var (
 		path   = fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, id)
 		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
@@ -40,8 +40,8 @@ func (to *Session) GetFederationsFederationResolversByID(id int) (tc.FederationF
 	return resp, reqInf, err
 }
 
-// AssignFederationsFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) AssignFederationsFederationResolver(fedID int, ids []int, replace bool) (tc.AssignFederationFederationResolversResponse, ReqInf, error) {
+// AssignFederationFederationResolver creates the Federation Resolver 'fr'.
+func (to *Session) AssignFederationFederationResolver(fedID int, ids []int, replace bool) (tc.AssignFederationFederationResolversResponse, ReqInf, error) {
 	var (
 		req = tc.AssignFederationResolversRequest{
 			Replace:        replace,

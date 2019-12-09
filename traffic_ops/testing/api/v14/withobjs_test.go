@@ -35,7 +35,6 @@ func WithObjs(t *testing.T, objs []TCObj, f func()) {
 
 type TCObj int
 
-// TODO (zo): does this need a new entry?
 const (
 	CacheGroups TCObj = iota
 	CacheGroupsDeliveryServices

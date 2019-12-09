@@ -36,8 +36,8 @@ type AssignFederationResolversRequest struct {
 	FedResolverIDs []int `json:"fedResolverIds"`
 }
 
-// FederationsFederationResolver represents an entry in federation_federation_resolvers.
-type FederationsFederationResolver struct {
+// FederationFederationResolver represents an entry in federation_federation_resolvers.
+type FederationFederationResolver struct {
 	Federation         int `json:"federation"`
 	FederationResolver int `json:"federation_resolver"`
 }
