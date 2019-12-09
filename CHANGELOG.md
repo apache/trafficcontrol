@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.4/cdns/name/:name/dnsseckeys `GET`
   - /api/1.4/user/login/oauth `POST`
   - /api/1.1/servers/:name/configfiles/ats `GET`
+  - /api/1.1/servers/:id/queue_update `POST`
   - /api/1.1/profiles/:name/configfiles/ats/* `GET`
   - /api/1.1/servers/:name/configfiles/ats/* `GET`
   - /api/1.1/cdns/:name/configfiles/ats/* `GET`
