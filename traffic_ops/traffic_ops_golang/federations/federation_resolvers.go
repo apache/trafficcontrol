@@ -29,8 +29,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-// GetFederationFederationResolvers returns a subset of federation_resolvers belonging to the federation ID supplied.
-func GetFederationFederationResolvers(w http.ResponseWriter, r *http.Request) {
+// GetFederationFederationResolversHandler returns a subset of federation_resolvers belonging to the federation ID supplied.
+func GetFederationFederationResolversHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -41,16 +41,15 @@ func GetFederationFederationResolvers(w http.ResponseWriter, r *http.Request) {
 	fedID := inf.IntParams["id"]
 	frs, _, err := dbhelpers.GetFederationResolversByFederationID(inf.Tx.Tx, fedID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, fmt.Errorf("database exception: %v", err), nil)
 		return
 	}
 
-	frsr := tc.FederationFederationResolversResponse{Response: frs}
-	api.WriteResp(w, r, frsr)
+	api.WriteResp(w, r, tc.FederationFederationResolversResponse{Response: frs})
 }
 
 // AssignFederationResolversToFederation associates one or more federation_resolver to the federation ID supplied.
-func AssignFederationResolversToFederation(w http.ResponseWriter, r *http.Request) {
+func AssignFederationResolversToFederationHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -58,36 +57,36 @@ func AssignFederationResolversToFederation(w http.ResponseWriter, r *http.Reques
 	}
 	defer inf.Close()
 
-	ffrr := tc.AssignFederationResolversRequest{}
-	fedID := inf.IntParams["id"]
-	if err := json.NewDecoder(r.Body).Decode(&ffrr); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+	var reqObj tc.AssignFederationResolversRequest
+	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, fmt.Errorf("malformed JSON: %v", err), nil)
 		return
 	}
-	// TODO: "Fed Resolver IDs must be an array"
 
+	fedID := inf.IntParams["id"]
 	name, _, err := dbhelpers.GetFederationNameFromID(fedID, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("database exception: %v", err), nil)
 		return
 	}
 
-	if ffrr.Replace {
+	if reqObj.Replace {
 		if _, err := inf.Tx.Tx.Exec(deleteFederationFederationResolversQuery, fedID); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("database exception: %v", err), nil)
 			return
 		}
 	}
-	for _, id := range ffrr.FedResolverIDs {
+
+	for _, id := range reqObj.FedResolverIDs {
 		if _, err := inf.Tx.Tx.Exec(associateFederationWithResolverQuery, fedID, id); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("database exception: %v", err), nil)
 			return
 		}
 	}
 
 	api.WriteRespAlertObj(
 		w, r, tc.SuccessLevel,
-		fmt.Sprintf("%d resolver(s) were assigned to the %s federation", len(ffrr.FedResolverIDs), name),
-		tc.AssignFederationFederationResolversResponse{Response: ffrr},
+		fmt.Sprintf("%d resolver(s) were assigned to the %s federation", len(reqObj.FedResolverIDs), name),
+		tc.AssignFederationFederationResolversResponse{Response: reqObj},
 	)
 }

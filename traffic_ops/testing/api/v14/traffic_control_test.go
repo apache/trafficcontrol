@@ -34,6 +34,7 @@ type TrafficControl struct {
 	Divisions                            []tc.Division                           `json:"divisions"`
 	Federations                          []tc.CDNFederation                      `json:"federations"`
 	FederationResolvers                  []tc.FederationResolver                 `json:"federation_resolvers"`
+	FederationsFederationResolvers       []tc.FederationsFederationResolver      `json:"federations_federation_resolvers"`
 	Origins                              []tc.Origin                             `json:"origins"`
 	Profiles                             []tc.Profile                            `json:"profiles"`
 	Parameters                           []tc.Parameter                          `json:"parameters"`

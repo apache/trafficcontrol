@@ -27,10 +27,17 @@ type FederationFederationResolversResponse struct {
 // AssignFederationFederationResolvers represents an API response of federation_resolver assignment to a federation.
 type AssignFederationFederationResolversResponse struct {
 	Response AssignFederationResolversRequest `json:"response"`
+	Alerts
 }
 
 // AssignFederationResolversRequest represents an API request/response for assigning federation_resolvers to a federation.
 type AssignFederationResolversRequest struct {
 	Replace        bool  `json:"replace"`
 	FedResolverIDs []int `json:"fedResolverIds"`
+}
+
+// FederationsFederationResolver represents an entry in federation_federation_resolvers.
+type FederationsFederationResolver struct {
+	Federation         int `json:"federation"`
+	FederationResolver int `json:"federation_resolver"`
 }

@@ -14,44 +14,46 @@ package client
    limitations under the License.
 */
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // GetFederationsFederationResolversByID retrieves all Federation Resolvers belonging to Federation of ID.
-func (to *Session) GetFederationsFederationResolversByID(id *int) (tc.FederationFederationResolversResponse, ReqInf, error) {
-	ffrs, inf, err := to.getFederationsFederationResolvers(id)
-	return ffrs, inf, err
-}
-
-// AssignFederationsFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) AssignFederationsFederationResolver(fedID int, ids []int) (tc.Alerts, ReqInf, error) {
-	/*var reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
-	var alerts tc.Alerts
-
-	req, err := json.Marshal(ffr)
-	if err != nil {
-		return alerts, reqInf, err
-	}
-
-	var resp *http.Response
-	resp, reqInf.RemoteAddr, err = to.request(http.MethodPost, fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, ffr.FederationID), req)
-	if err != nil {
-		return alerts, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, err
-	*/
-	return tc.Alerts{}, ReqInf{}, nil
-}
-
-func (to *Session) getFederationsFederationResolvers(id *int) (tc.FederationFederationResolversResponse, ReqInf, error) {
-	var path = fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, id)
+func (to *Session) GetFederationsFederationResolversByID(id int) (tc.FederationFederationResolversResponse, ReqInf, error) {
+	path := fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, id)
 
 	data := tc.FederationFederationResolversResponse{}
 	inf, err := get(to, path, &data)
 	return data, inf, err
+}
+
+// AssignFederationsFederationResolver creates the Federation Resolver 'fr'.
+func (to *Session) AssignFederationsFederationResolver(fedID int, ids []int, replace bool) (tc.Alerts, ReqInf, error) {
+	var (
+		req = tc.AssignFederationResolversRequest{
+			Replace:        replace,
+			FedResolverIDs: ids,
+		}
+		reqInf = ReqInf{CacheHitStatus: CacheHitStatusMiss}
+		resp   = tc.FederationFederationResolversResponse
+	)
+
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return resp, reqInf, err
+	}
+
+	path := fmt.Sprintf("%s/federations/%d/federation_resolvers", apiBase, fedID) //, req)
+	httpResp, remoteAddr, err := to.request(http.MethodPost, path, reqBody)
+	if err != nil {
+		return resp, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(httpResp.Body).Decode(&resp)
+
+	return resp, reqInf, err
 }
