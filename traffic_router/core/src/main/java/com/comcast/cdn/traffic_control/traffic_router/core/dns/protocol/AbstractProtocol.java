@@ -146,7 +146,7 @@ public abstract class AbstractProtocol implements Protocol {
 	protected void submit(final SocketHandler job) {
 		final int queueLength = executorService.getQueue().size();
 
-		if (queueDepth > 0 && queueLength >= queueDepth) {
+		if (queueDepth >= 0 && queueLength >= queueDepth) {
 			LOGGER.warn(String.format("%s request thread pool full and queue depth limit reached (%d >= %d); discarding request", this.getClass().getSimpleName(), queueLength, queueDepth));
 			job.cleanup();
 			return;
