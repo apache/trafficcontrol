@@ -22,7 +22,7 @@ public interface SocketHandler extends Runnable {
     public void cleanup();
 
     /**
-     * Cleanup method for implementing classes that must also implement Runnable.run().
+     * Cancel method for implementing classes that must also implement Runnable.run().
      */
     public void cancel();
 }
