@@ -95,7 +95,7 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
         }
     };
 
-    $scope.fallbackSelected = '';
+    $scope.fallbackSelected = null;
 
     $scope.draggedFallback = '';
 
@@ -123,7 +123,7 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
                 break;
             }
         }
-        $scope.fallbackSelected = '';
+        $scope.fallbackSelected = null;
     };
 
     $scope.updateForNewType = function() {
