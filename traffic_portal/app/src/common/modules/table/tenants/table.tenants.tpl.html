@@ -40,7 +40,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editTenant(t.id)" ng-repeat="t in ::tenants" ng-class="::{'active': isUserTenant(t)}">
-                <td data-search="^{{::t.name}}$">{{::t.name}}</td>
+                <td name="name" data-search="^{{::t.name}}$">{{::t.name}}</td>
                 <td data-search="^{{::t.active}}$">{{::t.active}}</td>
                 <td data-search="^{{::t.parentName}}$">{{::t.parentName}}</td>
             </tr>
