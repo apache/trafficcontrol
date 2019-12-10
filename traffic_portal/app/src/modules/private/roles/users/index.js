@@ -30,8 +30,8 @@ module.exports = angular.module('trafficPortal.private.roles.users', [])
 							roles: function($stateParams, roleService) {
 								return roleService.getRoles({ id: $stateParams.roleId });
 							},
-							roleUsers: function($stateParams, userService) {
-								return userService.getUsers({ roleId: $stateParams.roleId });
+							roleUsers: function(roles, userService) {
+								return userService.getUsers({ role: roles[0].name });
 							}
 						}
 					}
