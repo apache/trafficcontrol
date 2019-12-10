@@ -31,11 +31,13 @@ import (
 // TODO put somewhere more generic
 const AvailableStatusReported = "REPORTED"
 
+// AvailableTuple contains a boolean value to indicate whether IPv4 is available and a boolean value to indicate whether IPv6 is available.
 type AvailableTuple struct {
 	IPv4 bool
 	IPv6 bool
 }
 
+// SetAvailablility sets two booleans to indicate whether IPv4 is available and whether IPv6 is available.
 func (a *AvailableTuple) SetAvailability(usingIPv4 bool, isAvailable bool) {
 	if usingIPv4 {
 		a.IPv4 = isAvailable

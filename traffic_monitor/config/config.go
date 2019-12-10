@@ -49,6 +49,7 @@ const (
 	TMConfigBackupFile = "/opt/traffic_monitor/tmconfig.backup"
 )
 
+// PollingProtocol is a string value indicating whether to use IPv4, IPv6, or both.
 type PollingProtocol string
 
 const (
@@ -58,10 +59,12 @@ const (
 	InvalidPollingProtocol = PollingProtocol("invalid_polling_protocol")
 )
 
+// String returns a string representation of this PollingProtocol.
 func (t PollingProtocol) String() string {
 	return string(t)
 }
 
+// PollingProtocolFromString returns a PollingProtocol based on the string input.
 func PollingProtocolFromString(s string) PollingProtocol {
 	s = strings.ToLower(s)
 	switch s {
@@ -76,6 +79,7 @@ func PollingProtocolFromString(s string) PollingProtocol {
 	}
 }
 
+// UnmarshalJSON implements the json.Unmarshaller interface
 func (t *PollingProtocol) UnmarshalJSON(b []byte) error {
 	var s string
 	err := json.Unmarshal(b, &s)
