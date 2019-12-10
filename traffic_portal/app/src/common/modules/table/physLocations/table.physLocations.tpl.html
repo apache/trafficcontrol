@@ -43,7 +43,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editPhysLocation(pl.id)" ng-repeat="pl in ::physLocations">
-                <td data-search="^{{::pl.name}}$">{{::pl.name}}</td>
+                <td name="name" data-search="^{{::pl.name}}$">{{::pl.name}}</td>
                 <td data-search="^{{::pl.shortName}}$">{{::pl.shortName}}</td>
                 <td data-search="^{{::pl.address}}$">{{::pl.address}}</td>
                 <td data-search="^{{::pl.city}}$">{{::pl.city}}</td>
