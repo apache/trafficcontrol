@@ -76,6 +76,7 @@ public class TCP extends AbstractProtocol {
      */
     class TCPSocketHandler implements SocketHandler {
         private final Socket socket;
+        private boolean cancel;
 
         /**
          * This method is package private for unit testing purposes.
@@ -89,6 +90,11 @@ public class TCP extends AbstractProtocol {
         @Override
         @SuppressWarnings("PMD.EmptyCatchBlock")
         public void run() {
+            if (cancel) {
+                cleanup();
+                return;
+            }
+
             try {
                 socket.setSoTimeout(getReadTimeout());
                 final InetAddress client = socket.getInetAddress();
@@ -123,6 +129,11 @@ public class TCP extends AbstractProtocol {
             } catch (final IOException e) {
                 LOGGER.debug(e.getMessage(), e);
             }
+        }
+
+        @Override
+        public void cancel() {
+            this.cancel = true;
         }
     }
 

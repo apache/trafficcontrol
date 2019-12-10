@@ -85,6 +85,7 @@ public class UDP extends AbstractProtocol {
      */
     class UDPPacketHandler implements SocketHandler {
         private final DatagramPacket packet;
+        private boolean cancel;
 
         /**
          * This method is package private for unit testing purposes.
@@ -98,6 +99,11 @@ public class UDP extends AbstractProtocol {
         @Override
         @SuppressWarnings("PMD.EmptyCatchBlock")
         public void run() {
+            if (cancel) {
+                cleanup();
+                return;
+            }
+
             try {
                 final InetAddress client = packet.getAddress();
                 final byte[] request = new byte[packet.getLength()];
@@ -117,6 +123,11 @@ public class UDP extends AbstractProtocol {
         @Override
         public void cleanup() {
             // noop for UDP
+        }
+
+        @Override
+        public void cancel() {
+            this.cancel = true;
         }
     }
 

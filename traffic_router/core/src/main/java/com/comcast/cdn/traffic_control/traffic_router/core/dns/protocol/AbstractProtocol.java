@@ -146,15 +146,28 @@ public abstract class AbstractProtocol implements Protocol {
      */
 	protected void submit(final SocketHandler job) {
 		final int queueLength = executorService.getQueue().size();
+		Future<?> handler;
 
-		if (queueDepth >= 0 && queueLength >= queueDepth) {
-			LOGGER.warn(String.format("%s request thread pool full and queue depth limit reached (%d >= %d); discarding request", this.getClass().getSimpleName(), queueLength, queueDepth));
-			job.cleanup();
-			return;
+		if ((queueDepth > 0 && queueLength >= queueDepth) || (queueDepth == 0 && queueLength > 0)) {
+			LOGGER.warn(
+				String.format("%s request thread pool full and queue depth limit reached (%d >= %d); discarding request",
+				this.getClass().getSimpleName(), queueLength, queueDepth)
+			);
+
+			// causes the underlying SocketHandler inner class of each implementing protocol to call a cleanup() method
+			job.cancel();
+
+			// add to the cancellation thread pool instead of the task executor pool
+			handler = cancelService.submit(job);
+		} else {
+			handler = executorService.submit(job);
 		}
 
-		final Future<?> handler = executorService.submit(job);
-		cancelService.submit(new Runnable() {
+		cancelService.submit(getCanceler(handler));
+	}
+
+	private Runnable getCanceler(final Future<?> handler) {
+		return new Runnable() {
 			public void run() {
 				try {
 					handler.get(getTaskTimeout(), TimeUnit.MILLISECONDS);
@@ -162,7 +175,7 @@ public abstract class AbstractProtocol implements Protocol {
 					handler.cancel(true);
 				}
 			}
-		});
+		};
 	}
 
     private Message createServerFail(final Message query) {
